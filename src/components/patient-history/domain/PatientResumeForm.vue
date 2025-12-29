@@ -885,7 +885,26 @@ export default {
         </div>
 
         <div id="patient-history-resume" class="resume-content-modern">
-          <div id="personal-data" class="resume-section-modern">
+          <div
+            v-if="
+              patientHistoryData?.personalData &&
+              (patientHistoryData.personalData.name ||
+                patientHistoryData.personalData.lastName ||
+                patientHistoryData.personalData.idNumber ||
+                patientHistoryData.personalData.birthday ||
+                patientHistoryData.personalData.age ||
+                patientHistoryData.personalData.civilStatus ||
+                patientHistoryData.personalData.sex ||
+                patientHistoryData.personalData.occupation ||
+                patientHistoryData.personalData.addressText ||
+                patientHistoryData.personalData.addressCode ||
+                patientHistoryData.personalData.addressComplement ||
+                patientHistoryData.personalData.phone ||
+                patientHistoryData.personalData.email)
+            "
+            id="personal-data"
+            class="resume-section-modern"
+          >
             <div class="resume-section-header">
               <div class="section-header-icon">
                 <i class="bi bi-person-fill"></i>
@@ -894,483 +913,482 @@ export default {
             </div>
             <div class="resume-section-content">
               <div class="resume-data-grid">
-                <div class="resume-data-item">
+                <div v-if="patientHistoryData.personalData?.name" class="resume-data-item">
                   <div class="data-item-label">
                     <i class="bi bi-person me-1"></i>
                     {{ $t('patientHistoryView.name') }}
                   </div>
                   <div class="data-item-value">
-                    {{ patientHistoryData.personalData?.name || 'N/I' }}
+                    {{ patientHistoryData.personalData.name }}
                   </div>
                 </div>
-                <div class="resume-data-item">
+                <div v-if="patientHistoryData.personalData?.lastName" class="resume-data-item">
                   <div class="data-item-label">
                     <i class="bi bi-person-badge me-1"></i>
                     {{ $t('patientHistoryView.lastName') }}
                   </div>
                   <div class="data-item-value">
-                    {{ patientHistoryData.personalData?.lastName || 'N/I' }}
+                    {{ patientHistoryData.personalData.lastName }}
                   </div>
                 </div>
-                <div class="resume-data-item">
+                <div v-if="patientHistoryData.personalData?.idNumber" class="resume-data-item">
                   <div class="data-item-label">
                     <i class="bi bi-card-text me-1"></i>
                     {{ $t('patientHistoryView.idNumber') }}
                   </div>
                   <div class="data-item-value">
-                    {{ patientHistoryData.personalData?.idNumber || 'N/I' }}
+                    {{ patientHistoryData.personalData.idNumber }}
                   </div>
                 </div>
-                <div class="resume-data-item">
+                <div v-if="patientHistoryData.personalData?.birthday" class="resume-data-item">
                   <div class="data-item-label">
                     <i class="bi bi-calendar-event me-1"></i>
                     {{ $t('patientHistoryView.birthday') }}
                   </div>
                   <div class="data-item-value">
-                    {{ getDate(patientHistoryData.personalData?.birthday) || 'N/I' }}
+                    {{ getDate(patientHistoryData.personalData.birthday) }}
                   </div>
                 </div>
-                <div class="resume-data-item">
+                <div v-if="patientHistoryData.personalData?.age" class="resume-data-item">
                   <div class="data-item-label">
                     <i class="bi bi-calendar3 me-1"></i>
                     {{ $t('patientHistoryView.age') }}
                   </div>
                   <div class="data-item-value">
-                    {{ patientHistoryData.personalData?.age || 'N/I' }}
+                    {{ patientHistoryData.personalData.age }}
                   </div>
                 </div>
-                <div class="resume-data-item">
+                <div v-if="patientHistoryData.personalData?.civilStatus" class="resume-data-item">
                   <div class="data-item-label">
                     <i class="bi bi-heart me-1"></i>
                     {{ $t('patientHistoryView.civilStatus') }}
                   </div>
                   <div class="data-item-value">
-                    {{
-                      $t(`civilStatuses.${patientHistoryData.personalData?.civilStatus}`) || 'N/I'
-                    }}
+                    {{ $t(`civilStatuses.${patientHistoryData.personalData.civilStatus}`) }}
                   </div>
                 </div>
-                <div class="resume-data-item">
+                <div v-if="patientHistoryData.personalData?.sex" class="resume-data-item">
                   <div class="data-item-label">
                     <i class="bi bi-gender-ambiguous me-1"></i>
                     {{ $t('patientHistoryView.sex') }}
                   </div>
                   <div class="data-item-value">
-                    {{ $t(`sexs.${patientHistoryData.personalData?.sex}`) || 'N/I' }}
+                    {{ $t(`sexs.${patientHistoryData.personalData.sex}`) }}
                   </div>
                 </div>
-                <div class="resume-data-item">
+                <div v-if="patientHistoryData.personalData?.occupation" class="resume-data-item">
                   <div class="data-item-label">
                     <i class="bi bi-briefcase me-1"></i>
                     {{ $t('patientHistoryView.occupation') }}
                   </div>
                   <div class="data-item-value">
-                    {{ patientHistoryData.personalData?.occupation || 'N/I' }}
+                    {{ patientHistoryData.personalData.occupation }}
                   </div>
                 </div>
-                <div class="resume-data-item resume-data-item-full">
+                <div
+                  v-if="patientHistoryData.personalData?.addressText"
+                  class="resume-data-item resume-data-item-full"
+                >
                   <div class="data-item-label">
                     <i class="bi bi-geo-alt me-1"></i>
                     {{ $t('patientHistoryView.addressText') }}
                   </div>
                   <div class="data-item-value">
-                    {{ patientHistoryData.personalData?.addressText || 'N/I' }}
+                    {{ patientHistoryData.personalData.addressText }}
                   </div>
                 </div>
-                <div class="resume-data-item">
+                <div v-if="patientHistoryData.personalData?.addressCode" class="resume-data-item">
                   <div class="data-item-label">
                     <i class="bi bi-mailbox me-1"></i>
                     {{ $t('patientHistoryView.addressCode') }}
                   </div>
                   <div class="data-item-value">
-                    {{ patientHistoryData.personalData?.addressCode || 'N/I' }}
+                    {{ patientHistoryData.personalData.addressCode }}
                   </div>
                 </div>
-                <div class="resume-data-item">
+                <div
+                  v-if="patientHistoryData.personalData?.addressComplement"
+                  class="resume-data-item"
+                >
                   <div class="data-item-label">
                     <i class="bi bi-house-door me-1"></i>
                     {{ $t('patientHistoryView.addressComplement') }}
                   </div>
                   <div class="data-item-value">
-                    {{ patientHistoryData.personalData?.addressComplement || 'N/I' }}
+                    {{ patientHistoryData.personalData.addressComplement }}
                   </div>
                 </div>
-                <div class="resume-data-item">
+                <div v-if="patientHistoryData.personalData?.phone" class="resume-data-item">
                   <div class="data-item-label">
                     <i class="bi bi-telephone me-1"></i>
                     {{ $t('patientHistoryView.phone') }}
                   </div>
                   <div class="data-item-value">
-                    {{ patientHistoryData.personalData?.phone || 'N/I' }}
+                    {{ patientHistoryData.personalData.phone }}
                   </div>
                 </div>
-                <div class="resume-data-item">
+                <div v-if="patientHistoryData.personalData?.email" class="resume-data-item">
                   <div class="data-item-label">
                     <i class="bi bi-envelope me-1"></i>
                     {{ $t('patientHistoryView.email') || 'Email' }}
                   </div>
                   <div class="data-item-value">
-                    {{ patientHistoryData.personalData?.email || 'N/I' }}
-                  </div>
-                </div>
-                <div class="resume-data-item">
-                  <div class="data-item-label">
-                    <i class="bi bi-info-circle me-1"></i>
-                    {{ $t('patientHistoryView.font') }}
-                  </div>
-                  <div class="data-item-value">
-                    {{ $t(`booleans.${patientHistoryData.personalData?.font}`) || 'N/I' }}
+                    {{ patientHistoryData.personalData.email }}
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div id="consultationReason-data" class="resume-section-modern">
+          <div
+            v-if="
+              patientHistoryData.consultationReason &&
+              patientHistoryData.consultationReason.length > 0 &&
+              patientHistoryData.consultationReason[0]
+            "
+            id="consultationReason-data"
+            class="resume-section-modern"
+          >
+            <div class="resume-section-header">
+              <div class="section-header-icon">
+                <i class="bi bi-chat-dots"></i>
+              </div>
+              <h3 class="section-header-title">
+                {{ $t('patientHistoryView.consultationReason') }}
+              </h3>
+            </div>
+            <div class="resume-history-list">
+              <HistoryDetailsCard
+                v-for="(element, index) in patientHistoryData.consultationReason"
+                :key="`reason-${index}`"
+                :show="toggles['patient.history.view']"
+                :date="element.createdAt"
+                :content="element.reason"
+              />
+            </div>
+          </div>
+          <div
+            v-if="
+              patientHistoryData.currentIllness &&
+              patientHistoryData.currentIllness.length > 0 &&
+              patientHistoryData.currentIllness[0]
+            "
+            id="currentIllness-data"
+            class="resume-section-modern"
+          >
+            <div class="resume-section-header">
+              <div class="section-header-icon">
+                <i class="bi bi-activity"></i>
+              </div>
+              <h3 class="section-header-title">{{ $t('patientHistoryView.currentIllness') }}</h3>
+            </div>
+            <div class="resume-history-list">
+              <HistoryDetailsCard
+                v-for="(element, index) in patientHistoryData.currentIllness"
+                :key="`illness-${index}`"
+                :show="toggles['patient.history.view']"
+                :date="element.createdAt"
+                :content="element.illness"
+              />
+            </div>
+          </div>
+          <div
+            v-if="
+              patientHistoryData?.patientAnamnese &&
+              ((patientHistoryData.patientAnamnese.habitsDetails &&
+                Object.keys(patientHistoryData.patientAnamnese.habitsDetails).length > 0) ||
+                patientHistoryData.patientAnamnese.habits)
+            "
+            id="patientAnamnese-data"
+            class="resume-section-modern"
+          >
+            <div class="resume-section-header">
+              <div class="section-header-icon">
+                <i class="bi bi-clipboard-heart"></i>
+              </div>
+              <h3 class="section-header-title">{{ $t('patientHistoryView.patientAnamnese') }}</h3>
+            </div>
             <div
               v-if="
-                patientHistoryData.consultationReason &&
-                patientHistoryData.consultationReason.length > 0 &&
-                patientHistoryData.consultationReason[0]
+                toggles['patient.history.view'] &&
+                patientHistoryData.patientAnamnese &&
+                patientHistoryData.patientAnamnese.habitsDetails &&
+                Object.keys(patientHistoryData.patientAnamnese.habitsDetails).length > 0
               "
+              class="anamnese-details-modern"
             >
-              <div class="resume-section-header">
-                <div class="section-header-icon">
-                  <i class="bi bi-chat-dots"></i>
-                </div>
-                <h3 class="section-header-title">
-                  {{ $t('patientHistoryView.consultationReason') }}
-                </h3>
-              </div>
-              <div class="resume-history-list">
-                <HistoryDetailsCard
-                  v-for="(element, index) in patientHistoryData.consultationReason"
-                  :key="`reason-${index}`"
-                  :show="toggles['patient.history.view']"
-                  :date="element.createdAt"
-                  :content="element.reason"
-                />
-              </div>
-            </div>
-          </div>
-          <div id="currentIllness-data" class="resume-section-modern">
-            <div
-              v-if="
-                patientHistoryData.currentIllness &&
-                patientHistoryData.currentIllness.length > 0 &&
-                patientHistoryData.currentIllness[0]
-              "
-            >
-              <div class="resume-section-header">
-                <div class="section-header-icon">
-                  <i class="bi bi-activity"></i>
-                </div>
-                <h3 class="section-header-title">{{ $t('patientHistoryView.currentIllness') }}</h3>
-              </div>
-              <div class="resume-history-list">
-                <HistoryDetailsCard
-                  v-for="(element, index) in patientHistoryData.currentIllness"
-                  :key="`illness-${index}`"
-                  :show="toggles['patient.history.view']"
-                  :date="element.createdAt"
-                  :content="element.illness"
-                />
-              </div>
-            </div>
-          </div>
-          <div id="patientAnamnese-data" class="resume-section-modern">
-            <div v-if="patientHistoryData?.patientAnamnese">
-              <div class="resume-section-header">
-                <div class="section-header-icon">
-                  <i class="bi bi-clipboard-heart"></i>
-                </div>
-                <h3 class="section-header-title">{{ $t('patientHistoryView.patientAnamnese') }}</h3>
-              </div>
               <div
-                v-if="
-                  toggles['patient.history.view'] &&
-                  patientHistoryData.patientAnamnese &&
-                  patientHistoryData.patientAnamnese.habitsDetails
-                "
-                class="anamnese-details-modern"
+                v-for="item in Object.keys(patientHistoryData.patientAnamnese.habitsDetails)"
+                :key="item"
+                class="anamnese-item-modern"
               >
+                <div class="anamnese-item-title">
+                  <i class="bi bi-tag-fill me-2"></i>
+                  {{ patientHistoryData.patientAnamnese?.habitsDetails[item]?.title }}
+                </div>
+                <!-- YES NO-->
                 <div
-                  v-for="item in Object.keys(patientHistoryData.patientAnamnese.habitsDetails)"
-                  :key="item"
-                  class="anamnese-item-modern"
+                  v-if="
+                    patientHistoryData.patientAnamnese?.habitsDetails[item]?.characteristics?.yesNo
+                  "
+                  class="anamnese-item-content"
                 >
-                  <div class="anamnese-item-title">
-                    <i class="bi bi-tag-fill me-2"></i>
-                    {{ patientHistoryData.patientAnamnese?.habitsDetails[item]?.title }}
-                  </div>
-                  <!-- YES NO-->
-                  <div
-                    v-if="
-                      patientHistoryData.patientAnamnese?.habitsDetails[item]?.characteristics
-                        ?.yesNo
-                    "
-                    class="anamnese-item-content"
-                  >
-                    <div class="anamnese-yesno-badge">
-                      <i
-                        :class="`bi ${
-                          patientHistoryData.patientAnamnese.habitsDetails[item].answer?.answer
-                            ? 'bi-check-circle-fill text-success'
-                            : 'bi-x-circle-fill text-danger'
-                        } me-2`"
-                      ></i>
-                      <span>{{
+                  <div class="anamnese-yesno-badge">
+                    <i
+                      :class="`bi ${
                         patientHistoryData.patientAnamnese.habitsDetails[item].answer?.answer
-                          ? 'Sim'
-                          : 'Não'
-                      }}</span>
+                          ? 'bi-check-circle-fill text-success'
+                          : 'bi-x-circle-fill text-danger'
+                      } me-2`"
+                    ></i>
+                    <span>{{
+                      patientHistoryData.patientAnamnese.habitsDetails[item].answer?.answer
+                        ? 'Sim'
+                        : 'Não'
+                    }}</span>
+                  </div>
+                  <HistoryDetailsCard
+                    v-if="patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.result"
+                    :show="toggles['patient.history.view']"
+                    :content="
+                      patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.result.join(
+                        ', '
+                      )
+                    "
+                  />
+                </div>
+                <!-- SELECT N-->
+                <div
+                  v-else-if="
+                    patientHistoryData.patientAnamnese?.habitsDetails[item]?.characteristics
+                      ?.selectN
+                  "
+                >
+                  <HistoryDetailsCard
+                    :show="toggles['patient.history.view']"
+                    :content="
+                      patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.join(', ')
+                    "
+                  >
+                  </HistoryDetailsCard>
+                </div>
+                <!-- SELECT 1-->
+                <div
+                  v-else-if="
+                    patientHistoryData.patientAnamnese?.habitsDetails[item]?.characteristics
+                      ?.select1
+                  "
+                >
+                  <HistoryDetailsCard
+                    :show="toggles['patient.history.view']"
+                    :content="
+                      patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer.join(', ')
+                    "
+                  >
+                  </HistoryDetailsCard>
+                </div>
+                <!-- CHECK -->
+                <div
+                  v-else-if="
+                    patientHistoryData.patientAnamnese?.habitsDetails[item]?.characteristics?.check
+                  "
+                  class="anamnese-item-content"
+                >
+                  <div class="anamnese-check-details">
+                    <div
+                      v-if="
+                        patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer &&
+                        patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.actual !==
+                          undefined
+                      "
+                      class="anamnese-detail-item"
+                    >
+                      <span class="detail-label">
+                        <i class="bi bi-info-circle me-1"></i>
+                        {{ $t('businessPatientHistoryItemAdmin.actual') }}
+                      </span>
+                      <span class="detail-value">
+                        <i
+                          :class="`bi ${
+                            patientHistoryData.patientAnamnese.habitsDetails[item].answer.actual
+                              ? 'bi-check-circle-fill text-success'
+                              : 'bi-x-circle-fill text-danger'
+                          }`"
+                        ></i>
+                      </span>
                     </div>
-                    <HistoryDetailsCard
-                      v-if="patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.result"
-                      :show="toggles['patient.history.view']"
-                      :content="
-                        patientHistoryData.patientAnamnese?.habitsDetails[
-                          item
-                        ]?.answer?.result.join(', ')
+                    <div
+                      v-if="
+                        patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer &&
+                        patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.ageFrom
                       "
-                    />
-                  </div>
-                  <!-- SELECT N-->
-                  <div
-                    v-else-if="
-                      patientHistoryData.patientAnamnese?.habitsDetails[item]?.characteristics
-                        ?.selectN
-                    "
-                  >
-                    <HistoryDetailsCard
-                      :show="toggles['patient.history.view']"
-                      :content="
-                        patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.join(', ')
-                      "
+                      class="anamnese-detail-item"
                     >
-                    </HistoryDetailsCard>
-                  </div>
-                  <!-- SELECT 1-->
-                  <div
-                    v-else-if="
-                      patientHistoryData.patientAnamnese?.habitsDetails[item]?.characteristics
-                        ?.select1
-                    "
-                  >
-                    <HistoryDetailsCard
-                      :show="toggles['patient.history.view']"
-                      :content="
-                        patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer.join(', ')
+                      <span class="detail-label">
+                        <i class="bi bi-calendar-event me-1"></i>
+                        {{ $t('businessPatientHistoryItemAdmin.ageFrom') }}
+                      </span>
+                      <span class="detail-value">
+                        {{ patientHistoryData.patientAnamnese.habitsDetails[item].answer.ageFrom }}
+                      </span>
+                    </div>
+                    <div
+                      v-if="
+                        patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer &&
+                        patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.ageTo
                       "
+                      class="anamnese-detail-item"
                     >
-                    </HistoryDetailsCard>
-                  </div>
-                  <!-- CHECK -->
-                  <div
-                    v-else-if="
-                      patientHistoryData.patientAnamnese?.habitsDetails[item]?.characteristics
-                        ?.check
-                    "
-                    class="anamnese-item-content"
-                  >
-                    <div class="anamnese-check-details">
-                      <div
-                        v-if="
-                          patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer &&
-                          patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer
-                            ?.actual !== undefined
-                        "
-                        class="anamnese-detail-item"
-                      >
-                        <span class="detail-label">
-                          <i class="bi bi-info-circle me-1"></i>
-                          {{ $t('businessPatientHistoryItemAdmin.actual') }}
-                        </span>
-                        <span class="detail-value">
-                          <i
-                            :class="`bi ${
-                              patientHistoryData.patientAnamnese.habitsDetails[item].answer.actual
-                                ? 'bi-check-circle-fill text-success'
-                                : 'bi-x-circle-fill text-danger'
-                            }`"
-                          ></i>
-                        </span>
-                      </div>
-                      <div
-                        v-if="
-                          patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer &&
-                          patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.ageFrom
-                        "
-                        class="anamnese-detail-item"
-                      >
-                        <span class="detail-label">
-                          <i class="bi bi-calendar-event me-1"></i>
-                          {{ $t('businessPatientHistoryItemAdmin.ageFrom') }}
-                        </span>
-                        <span class="detail-value">
-                          {{
-                            patientHistoryData.patientAnamnese.habitsDetails[item].answer.ageFrom
-                          }}
-                        </span>
-                      </div>
-                      <div
-                        v-if="
-                          patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer &&
-                          patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.ageTo
-                        "
-                        class="anamnese-detail-item"
-                      >
-                        <span class="detail-label">
-                          <i class="bi bi-calendar3 me-1"></i>
-                          {{ $t('businessPatientHistoryItemAdmin.ageTo') }}
-                        </span>
-                        <span class="detail-value">
-                          {{ patientHistoryData.patientAnamnese.habitsDetails[item].answer.ageTo }}
-                        </span>
-                      </div>
-                      <div
-                        v-if="
-                          patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer &&
-                          patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.frequency
-                        "
-                        class="anamnese-detail-item"
-                      >
-                        <span class="detail-label">
-                          <i class="bi bi-arrow-repeat me-1"></i>
-                          {{ $t('businessPatientHistoryItemAdmin.frequency') }}
-                        </span>
-                        <span class="detail-value">
-                          {{
-                            $t(
-                              `patientHistoryItemFrequenciesTypes.${patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.frequency}`
-                            )
-                          }}
-                        </span>
-                      </div>
+                      <span class="detail-label">
+                        <i class="bi bi-calendar3 me-1"></i>
+                        {{ $t('businessPatientHistoryItemAdmin.ageTo') }}
+                      </span>
+                      <span class="detail-value">
+                        {{ patientHistoryData.patientAnamnese.habitsDetails[item].answer.ageTo }}
+                      </span>
+                    </div>
+                    <div
+                      v-if="
+                        patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer &&
+                        patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.frequency
+                      "
+                      class="anamnese-detail-item"
+                    >
+                      <span class="detail-label">
+                        <i class="bi bi-arrow-repeat me-1"></i>
+                        {{ $t('businessPatientHistoryItemAdmin.frequency') }}
+                      </span>
+                      <span class="detail-value">
+                        {{
+                          $t(
+                            `patientHistoryItemFrequenciesTypes.${patientHistoryData.patientAnamnese?.habitsDetails[item]?.answer?.frequency}`
+                          )
+                        }}
+                      </span>
                     </div>
                   </div>
-                  <!-- COMMENT -->
-                  <div
-                    v-if="
-                      patientHistoryData.patientAnamnese?.habitsDetails[item]?.characteristics
-                        ?.comment
-                    "
+                </div>
+                <!-- COMMENT -->
+                <div
+                  v-if="
+                    patientHistoryData.patientAnamnese?.habitsDetails[item]?.characteristics
+                      ?.comment
+                  "
+                >
+                  <HistoryDetailsCard
+                    :show="toggles['patient.history.view']"
+                    :content="patientHistoryData.patientAnamnese?.habitsDetails[item]?.comment"
                   >
-                    <HistoryDetailsCard
-                      :show="toggles['patient.history.view']"
-                      :content="patientHistoryData.patientAnamnese?.habitsDetails[item]?.comment"
-                    >
-                    </HistoryDetailsCard>
-                  </div>
+                  </HistoryDetailsCard>
                 </div>
-              </div>
-              <div class="resume-history-list">
-                <HistoryDetailsCard
-                  :show="toggles['patient.history.view']"
-                  :date="patientHistoryData.modifiedAt"
-                  :content="patientHistoryData.patientAnamnese?.habits"
-                />
               </div>
             </div>
-          </div>
-          <div id="functionalExam-data" class="resume-section-modern">
-            <div
-              v-if="
-                patientHistoryData?.functionalExam &&
-                patientHistoryData.functionalExam.length > 0 &&
-                patientHistoryData.functionalExam[0]
-              "
-            >
-              <div class="resume-section-header">
-                <div class="section-header-icon">
-                  <i class="bi bi-heart-pulse"></i>
-                </div>
-                <h3 class="section-header-title">{{ $t('patientHistoryView.functionalExam') }}</h3>
-              </div>
-              <div class="resume-history-list">
-                <HistoryDetailsCard
-                  v-for="(element, index) in patientHistoryData.functionalExam"
-                  :key="`functional-${index}`"
-                  :show="toggles['patient.history.view']"
-                  :date="element.createdAt"
-                  :content="element.exam"
-                />
-              </div>
+            <div v-if="patientHistoryData.patientAnamnese?.habits" class="resume-history-list">
+              <HistoryDetailsCard
+                :show="toggles['patient.history.view']"
+                :date="patientHistoryData.modifiedAt"
+                :content="patientHistoryData.patientAnamnese.habits"
+              />
             </div>
           </div>
-          <div id="physicalExam-data" class="resume-section-modern">
-            <div
-              v-if="
-                patientHistoryData.physicalExam &&
-                patientHistoryData.physicalExam.length > 0 &&
-                patientHistoryData.physicalExam[0]
-              "
-            >
-              <div class="resume-section-header">
-                <div class="section-header-icon">
-                  <i class="bi bi-thermometer-half"></i>
-                </div>
-                <h3 class="section-header-title">{{ $t('patientHistoryView.physicalExam') }}</h3>
+          <div
+            v-if="
+              patientHistoryData?.functionalExam &&
+              patientHistoryData.functionalExam.length > 0 &&
+              patientHistoryData.functionalExam[0]
+            "
+            id="functionalExam-data"
+            class="resume-section-modern"
+          >
+            <div class="resume-section-header">
+              <div class="section-header-icon">
+                <i class="bi bi-heart-pulse"></i>
               </div>
-              <div class="resume-history-list">
-                <HistoryDetailsWithItemsCard
-                  v-for="(element, index) in patientHistoryData.physicalExam"
-                  :key="`physical-${index}`"
-                  :show="toggles['patient.history.view']"
-                  :date="element.createdAt"
-                  :details="element.examDetails"
-                  :content="element.exam"
-                />
-              </div>
+              <h3 class="section-header-title">{{ $t('patientHistoryView.functionalExam') }}</h3>
+            </div>
+            <div class="resume-history-list">
+              <HistoryDetailsCard
+                v-for="(element, index) in patientHistoryData.functionalExam"
+                :key="`functional-${index}`"
+                :show="toggles['patient.history.view']"
+                :date="element.createdAt"
+                :content="element.exam"
+              />
             </div>
           </div>
-          <div id="diagnostic-data" class="resume-section-modern">
-            <div
-              v-if="
-                patientHistoryData.diagnostic &&
-                patientHistoryData.diagnostic.length > 0 &&
-                patientHistoryData.diagnostic[0]
-              "
-            >
-              <div class="resume-section-header">
-                <div class="section-header-icon">
-                  <i class="bi bi-clipboard-check"></i>
-                </div>
-                <h3 class="section-header-title">{{ $t('patientHistoryView.diagnostic') }}</h3>
+          <div
+            v-if="
+              patientHistoryData.physicalExam &&
+              patientHistoryData.physicalExam.length > 0 &&
+              patientHistoryData.physicalExam[0]
+            "
+            id="physicalExam-data"
+            class="resume-section-modern"
+          >
+            <div class="resume-section-header">
+              <div class="section-header-icon">
+                <i class="bi bi-thermometer-half"></i>
               </div>
-              <div class="resume-history-list">
-                <HistoryDetailsCard
-                  v-for="(element, index) in patientHistoryData.diagnostic"
-                  :key="`diagnostic-${index}`"
-                  :show="toggles['patient.history.view']"
-                  :date="element.createdAt"
-                  :content="element.diagnostic"
-                />
-              </div>
+              <h3 class="section-header-title">{{ $t('patientHistoryView.physicalExam') }}</h3>
+            </div>
+            <div class="resume-history-list">
+              <HistoryDetailsWithItemsCard
+                v-for="(element, index) in patientHistoryData.physicalExam"
+                :key="`physical-${index}`"
+                :show="toggles['patient.history.view']"
+                :date="element.createdAt"
+                :details="element.examDetails"
+                :content="element.exam"
+              />
             </div>
           </div>
-          <div id="medicalOrder-data" class="resume-section-modern">
-            <div
-              v-if="
-                patientHistoryData.medicalOrder &&
-                patientHistoryData.medicalOrder.length > 0 &&
-                patientHistoryData.medicalOrder[0]
-              "
-            >
-              <div class="resume-section-header">
-                <div class="section-header-icon">
-                  <i class="bi bi-prescription"></i>
-                </div>
-                <h3 class="section-header-title">{{ $t('patientHistoryView.medicalOrder') }}</h3>
+          <div
+            v-if="
+              patientHistoryData.diagnostic &&
+              patientHistoryData.diagnostic.length > 0 &&
+              patientHistoryData.diagnostic[0]
+            "
+            id="diagnostic-data"
+            class="resume-section-modern"
+          >
+            <div class="resume-section-header">
+              <div class="section-header-icon">
+                <i class="bi bi-clipboard-check"></i>
               </div>
-              <div class="resume-history-list">
-                <HistoryDetailsCard
-                  v-for="(element, index) in patientHistoryData.medicalOrder"
-                  :key="`medical-order-${index}`"
-                  :show="toggles['patient.history.view']"
-                  :date="element.createdAt"
-                  :content="element.medicalOrder"
-                />
+              <h3 class="section-header-title">{{ $t('patientHistoryView.diagnostic') }}</h3>
+            </div>
+            <div class="resume-history-list">
+              <HistoryDetailsCard
+                v-for="(element, index) in patientHistoryData.diagnostic"
+                :key="`diagnostic-${index}`"
+                :show="toggles['patient.history.view']"
+                :date="element.createdAt"
+                :content="element.diagnostic"
+              />
+            </div>
+          </div>
+          <div
+            v-if="
+              patientHistoryData.medicalOrder &&
+              patientHistoryData.medicalOrder.length > 0 &&
+              patientHistoryData.medicalOrder[0]
+            "
+            id="medicalOrder-data"
+            class="resume-section-modern"
+          >
+            <div class="resume-section-header">
+              <div class="section-header-icon">
+                <i class="bi bi-prescription"></i>
               </div>
+              <h3 class="section-header-title">{{ $t('patientHistoryView.medicalOrder') }}</h3>
+            </div>
+            <div class="resume-history-list">
+              <HistoryDetailsCard
+                v-for="(element, index) in patientHistoryData.medicalOrder"
+                :key="`medical-order-${index}`"
+                :show="toggles['patient.history.view']"
+                :date="element.createdAt"
+                :content="element.medicalOrder"
+              />
             </div>
           </div>
         </div>
@@ -1387,7 +1405,7 @@ export default {
 <style scoped>
 .patient-resume-modern {
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.25rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
     sans-serif;
 }
@@ -1400,11 +1418,11 @@ export default {
 
 .resume-header-modern {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  padding: 1rem 1.25rem;
-  margin-bottom: 0.75rem;
-  border-radius: 0.625rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.5rem;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 .resume-header-content {
@@ -1477,13 +1495,13 @@ export default {
 .resume-content-modern {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 .resume-history-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 .resume-item-card {
@@ -1595,12 +1613,12 @@ export default {
 
 .resume-section-modern {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  padding: 0.875rem 1rem;
-  border-radius: 0.625rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .resume-section-modern:hover {
@@ -1611,8 +1629,8 @@ export default {
 .resume-section-header {
   display: flex;
   align-items: center;
-  margin-bottom: 0.625rem;
-  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
   border-bottom: 2px solid rgba(0, 0, 0, 0.08);
 }
 
@@ -1669,10 +1687,10 @@ export default {
 }
 
 .data-item-label {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--color-text-secondary);
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.15rem;
   text-transform: uppercase;
   letter-spacing: 0.3px;
   display: flex;
@@ -1681,17 +1699,17 @@ export default {
 }
 
 .data-item-value {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: var(--color-text);
   word-break: break-word;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .resume-history-list {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
 /* PDF Export Styles */
@@ -1855,14 +1873,14 @@ export default {
 .anamnese-details-modern {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-top: 0.75rem;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .anamnese-item-modern {
-  padding: 0.75rem;
+  padding: 0.5rem 0.6rem;
   background: rgba(0, 0, 0, 0.015);
-  border-radius: 0.5rem;
+  border-radius: 0.4rem;
   border-left: 2px solid var(--azul-turno);
   transition: all 0.15s ease;
 }
@@ -1873,44 +1891,44 @@ export default {
 }
 
 .anamnese-item-title {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--color-text);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   display: flex;
   align-items: center;
-  padding-bottom: 0.4rem;
+  padding-bottom: 0.3rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .anamnese-item-content {
-  padding: 0.5rem 0;
+  padding: 0.35rem 0;
 }
 
 .anamnese-yesno-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.4rem 0.75rem;
+  padding: 0.3rem 0.6rem;
   background: rgba(0, 0, 0, 0.03);
-  border-radius: 0.375rem;
+  border-radius: 0.3rem;
   font-weight: 600;
-  font-size: 0.85rem;
-  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.4rem;
 }
 
 .anamnese-check-details {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
 .anamnese-detail-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.4rem 0.5rem;
+  padding: 0.3rem 0.4rem;
   background: rgba(0, 0, 0, 0.015);
-  border-radius: 0.3rem;
+  border-radius: 0.25rem;
 }
 
 .detail-label {

@@ -21,6 +21,14 @@ export default defineConfig(({ mode }) =>
       },
     },
     envDir: 'testbr',
+    server: {
+      https: false, // Set to true if you need HTTPS for reCAPTCHA testing
+      // Uncomment the following lines if you need HTTPS:
+      // https: {
+      //   key: fs.readFileSync('path/to/key.pem'),
+      //   cert: fs.readFileSync('path/to/cert.pem'),
+      // },
+    },
     // Build optimizations for better performance
     build: {
       // Target modern browsers for smaller bundles

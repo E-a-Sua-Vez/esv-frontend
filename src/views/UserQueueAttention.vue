@@ -440,6 +440,9 @@ export default {
     const getFormCompleted = async () => {
       if (state.attention && state.attention.id && state.attention.clientId) {
         const forms = await getFormsByClient(state.commerce.id, state.attention.clientId);
+        const attentionFilteredForms = forms.filter(
+          form => form.attentionId === state.attention.id,
+        );
         if (forms && forms.length > 0) {
           if (getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT')) {
             const filteredForms = forms.filter(form => form.type === 'FIRST_ATTENTION');
@@ -447,9 +450,23 @@ export default {
               state.formFirstAttentionCompleted = true;
             }
           }
+          if (getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT')) {
+            const filteredForms = attentionFilteredForms.filter(
+              form => form.type === 'PRE_ATTENTION'
+            );
+            if (filteredForms && filteredForms.length > 0) {
+              if (attentionFilteredForms && attentionFilteredForms.length > 0) {
+                state.formPreAttentionCompleted = true;
+              }
+            }
+          }
         }
-        // Solo llena formulario la primera vez
-        if (getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT')) {
+        // Solo llena formulario la primera vez para FIRST_ATTENTION
+        // Para PRE_ATTENTION se puede llenar cada vez si no está completado
+        if (
+          getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT') &&
+          !getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT')
+        ) {
           if (!state.formFirstAttentionCompleted) {
             state.showFormButton = true;
             state.form = getForm(
@@ -457,6 +474,45 @@ export default {
               state.attention.queueId,
               state.attention.servicesId
             );
+          } else {
+            state.showFormButton = false;
+          }
+        } else if (
+          !getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT') &&
+          getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT')
+        ) {
+          // Solo PRE_ATTENTION: mostrar si no está completado
+          if (!state.formPreAttentionCompleted) {
+            state.showFormButton = true;
+            state.form = getForm(
+              'PRE_ATTENTION',
+              state.attention.queueId,
+              state.attention.servicesId,
+            );
+          } else {
+            state.showFormButton = false;
+          }
+        } else if (
+          getActiveFeature(state.commerce, 'attention-first-form', 'PRODUCT') &&
+          getActiveFeature(state.commerce, 'attention-pre-form', 'PRODUCT')
+        ) {
+          // Ambos activos: priorizar FIRST_ATTENTION si no está completado, sino PRE_ATTENTION
+          if (!state.formFirstAttentionCompleted) {
+            state.showFormButton = true;
+            state.form = getForm(
+              'FIRST_ATTENTION',
+              state.attention.queueId,
+              state.attention.servicesId
+            );
+          } else if (!state.formPreAttentionCompleted) {
+            state.showFormButton = true;
+            state.form = getForm(
+              'PRE_ATTENTION',
+              state.attention.queueId,
+              state.attention.servicesId,
+            );
+          } else {
+            state.showFormButton = false;
           }
         } else {
           state.showFormButton = false;
@@ -695,7 +751,6 @@ export default {
         // Send access key via WhatsApp/Email when user clicks join
         await sendTelemedicineAccessKey(state.attention.telemedicineSessionId);
         // Optionally show a success message
-        console.log('Access key sent successfully');
       } catch (error) {
         console.error('Error sending access key:', error);
         // Don't block navigation, just log the error
@@ -1195,10 +1250,10 @@ export default {
                 <div class="attention-details-card">
                   <div class="attention-card-content">
                     <div class="mb-2">
-                      <span class="attention-details-title">
-                        <i class="bi bi-camera-video me-1"></i>
-                        {{ $t('userQueueBooking.telemedicine.title') }}
-                      </span>
+                      <div class="attention-notification-title">
+                        <i class="bi bi-camera-video"></i>
+                        <span class="fw-bold">{{ $t('userQueueBooking.telemedicine.title') }}</span>
+                      </div>
                     </div>
                     <div class="mb-2 d-flex flex-wrap gap-1 justify-content-center">
                       <span
@@ -1511,7 +1566,7 @@ export default {
 
               <div
                 id="cancel-process"
-                class="mb-3"
+                class="m-3"
                 v-if="!itsYourTurn() && !isTelemedicineSessionActive()"
               >
                 <button

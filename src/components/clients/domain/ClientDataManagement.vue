@@ -21,7 +21,7 @@ export default {
     commerces: { type: Array, default: undefined },
     closeModal: { type: Function, default: () => {} },
   },
-  async setup(props) {
+  async setup(props, { emit }) {
     const loading = ref(false);
     const alertError = ref('');
 
@@ -38,69 +38,156 @@ export default {
       clientData: undefined,
     });
 
-    onBeforeMount(() => {
-      state.clientData = client.value;
-    });
-
+    // ✅ Define receiveData first so it can be used in watchers and onBeforeMount
     const receiveData = data => {
       if (data) {
-        if (!state.newUser.clientId) {
-          state.newUser.clientId = client.value.id;
-        }
-        if (data.name) {
-          state.newUser.name = data.name;
-        }
-        if (data.lastName) {
-          state.newUser.lastName = data.lastName;
-        }
-        if (data.idNumber) {
-          state.newUser.idNumber = data.idNumber;
-        }
-        if (data.email) {
-          state.newUser.email = data.email;
-        }
-        if (data.birthday) {
-          state.newUser.birthday = data.birthday;
-        }
-        if (data.addressCode) {
-          state.newUser.addressCode = data.addressCode;
-        }
-        if (data.addressText) {
-          state.newUser.addressText = data.addressText;
-        }
-        if (data.addressComplement) {
-          state.newUser.addressComplement = data.addressComplement;
-        }
-        if (data.origin) {
-          state.newUser.origin = data.origin;
-        }
-        if (data.code1) {
-          state.newUser.code1 = data.code1;
-        }
-        if (data.code2) {
-          state.newUser.code2 = data.code2;
-        }
-        if (data.code3) {
-          state.newUser.code3 = data.code3;
-        }
-        if (data.healthAgreementId) {
-          state.newUser.healthAgreementId = data.healthAgreementId;
-        }
+        // ✅ Always set clientId when receiving data
+        state.newUser.clientId = client.value?.id || state.newUser.clientId;
+        // ✅ Set all fields, including empty strings to clear previous values
+        state.newUser.name = data.name || '';
+        state.newUser.lastName = data.lastName || '';
+        state.newUser.idNumber = data.idNumber || '';
+        state.newUser.email = data.email || '';
+        state.newUser.birthday = data.birthday || '';
+        state.newUser.addressCode = data.addressCode || '';
+        state.newUser.addressText = data.addressText || '';
+        state.newUser.addressComplement = data.addressComplement || '';
+        state.newUser.origin = data.origin || '';
+        state.newUser.code1 = data.code1 || '';
+        state.newUser.code2 = data.code2 || '';
+        state.newUser.code3 = data.code3 || '';
+        state.newUser.healthAgreementId = data.healthAgreementId || '';
+
+        // ✅ Debug: Log received data
+        console.log('🔍 ClientDataManagement - receiveData:', {
+          birthday: data.birthday,
+          origin: data.origin,
+          stateBirthday: state.newUser.birthday,
+          stateOrigin: state.newUser.origin,
+        });
         if (data.phoneCode && data.phone) {
-          state.phone = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
-          state.phoneCode = data.phoneCode.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
-          state.newUser.phone = `${state.phoneCode}${state.phone}`;
+          const cleanedPhone = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+          const cleanedPhoneCode = data.phoneCode.replace(
+            /[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g,
+            '',
+          );
+
+          // Verificar si el teléfono ya comienza con el código de área
+          if (cleanedPhone.startsWith(cleanedPhoneCode)) {
+            // El teléfono ya tiene el código de área, usarlo directamente
+            state.phone = cleanedPhone.slice(cleanedPhoneCode.length);
+            state.phoneCode = cleanedPhoneCode;
+            state.newUser.phone = cleanedPhone;
+          } else {
+            // El teléfono no tiene el código de área, concatenarlo
+            state.phone = cleanedPhone;
+            state.phoneCode = cleanedPhoneCode;
+            state.newUser.phone = `${cleanedPhoneCode}${cleanedPhone}`;
+          }
         } else if (data.phone) {
-          state.phoneCode = data.phone
-            .replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '')
-            .slice(0, 2);
-          state.phone = data.phone
-            .replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '')
-            .slice(2, data.phone.length);
-          state.newUser.phone = `${state.phoneCode}${state.phone}`;
+          // ✅ Extract phone code from phone if not provided separately
+          const cleanPhone = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+          state.phoneCode = cleanPhone.slice(0, 2);
+          state.phone = cleanPhone.slice(2);
+          state.newUser.phone = cleanPhone;
+        } else {
+          // ✅ Clear phone fields if no phone data
+          state.phone = '';
+          state.phoneCode = '';
+          state.newUser.phone = '';
         }
       }
     };
+
+    // ✅ Helper function to populate form from client data
+    const populateFormFromClient = clientData => {
+      if (!clientData) return;
+
+      // ✅ Extract personalInfo if it exists (from backend client structure)
+      const personalInfo = clientData.personalInfo || {};
+
+      // ✅ Try multiple possible locations for each field
+      // Priority: 1) Flat properties (userBirthday, userOrigin), 2) personalInfo object, 3) direct properties
+      const birthday =
+        clientData.userBirthday || personalInfo.birthday || clientData.birthday || '';
+
+      const origin = clientData.userOrigin || personalInfo.origin || clientData.origin || '';
+
+      const addressCode =
+        clientData.userAddressCode || personalInfo.addressCode || clientData.addressCode || '';
+
+      const addressText =
+        clientData.userAddressText || personalInfo.addressText || clientData.addressText || '';
+
+      const addressComplement =
+        clientData.userAddressComplement ||
+        personalInfo.addressComplement ||
+        clientData.addressComplement ||
+        '';
+
+      const code1 = clientData.userCode1 || personalInfo.code1 || clientData.code1 || '';
+
+      const code2 = clientData.userCode2 || personalInfo.code2 || clientData.code2 || '';
+
+      const code3 = clientData.userCode3 || personalInfo.code3 || clientData.code3 || '';
+
+      const healthAgreementId =
+        clientData.healthAgreementId ||
+        personalInfo.healthAgreementId ||
+        clientData.userHealthAgreementId ||
+        '';
+
+      // ✅ Debug: Log client data to verify values
+      console.log('🔍 ClientDataManagement - populateFormFromClient:', {
+        userBirthday: clientData.userBirthday,
+        userOrigin: clientData.userOrigin,
+        personalInfoBirthday: personalInfo.birthday,
+        personalInfoOrigin: personalInfo.origin,
+        extractedBirthday: birthday,
+        extractedOrigin: origin,
+        fullClient: clientData,
+        personalInfo,
+      });
+
+      receiveData({
+        name: clientData.userName || clientData.name || '',
+        lastName: clientData.userLastName || clientData.lastName || '',
+        idNumber: clientData.userIdNumber || clientData.idNumber || '',
+        email: clientData.userEmail || clientData.email || '',
+        birthday,
+        addressCode,
+        addressText,
+        addressComplement,
+        origin,
+        code1,
+        code2,
+        code3,
+        healthAgreementId,
+        phone: clientData.userPhone || clientData.phone || '',
+      });
+    };
+
+    // ✅ Initialize clientData from client prop immediately
+    onBeforeMount(() => {
+      if (client.value) {
+        state.clientData = client.value;
+        // ✅ Immediately populate form with client data when component mounts
+        populateFormFromClient(client.value);
+      }
+    });
+
+    // ✅ Watch for client prop changes to update clientData
+    watch(
+      () => client.value,
+      newClient => {
+        if (newClient) {
+          state.clientData = newClient;
+          // ✅ Populate form when client changes
+          populateFormFromClient(newClient);
+        }
+      },
+      { deep: true, immediate: true },
+    );
 
     const showConditions = () => {
       if (
@@ -291,7 +378,22 @@ export default {
               businessId: commerce.value.businessId,
             };
           }
-          await updateClient(client.value.id, body);
+          const updatedClient = await updateClient(client.value.id, body);
+          // Emit event with updated client data
+          if (updatedClient) {
+            // Merge updated data into client object to update the prop reactively
+            const updatedData = {
+              userName: updatedClient.name || updatedClient.userName,
+              userLastName: updatedClient.lastName || updatedClient.userLastName,
+              userIdNumber: updatedClient.idNumber || updatedClient.userIdNumber,
+              userEmail: updatedClient.email || updatedClient.userEmail,
+              userPhone: updatedClient.phone || updatedClient.userPhone,
+              ...(updatedClient.personalInfo || {}),
+            };
+            Object.assign(client.value, updatedData);
+            // Emit event to notify parent component
+            emit('client-updated', updatedData);
+          }
           closeModal();
         }
         loading.value = false;
@@ -313,27 +415,17 @@ export default {
       return showClientDataManagement;
     });
 
-    watch(changeData, async () => {
-      if (state.clientData) {
-        const clientData = state.clientData;
-        receiveData({
-          name: clientData.userName,
-          lastName: clientData.userLastName,
-          idNumber: clientData.userIdNumber,
-          email: clientData.userEmail,
-          birthday: clientData.userBirthday,
-          addressCode: clientData.userAddressCode,
-          addressText: clientData.userAddressText,
-          addressComplement: clientData.userAddressComplement,
-          origin: clientData.userOrigin,
-          code1: clientData.userCode1,
-          code2: clientData.userCode2,
-          code3: clientData.userCode3,
-          healthAgreementId: clientData.healthAgreementId,
-          phone: clientData.userPhone,
-        });
-      }
-    });
+    // ✅ Watch for showClientDataManagement to populate data when modal opens
+    watch(
+      () => showClientDataManagement.value,
+      isVisible => {
+        if (isVisible && client.value) {
+          state.clientData = client.value;
+          // ✅ Immediately populate form with client data when modal opens
+          populateFormFromClient(client.value);
+        }
+      },
+    );
 
     return {
       state,
@@ -357,7 +449,7 @@ export default {
     <div
       id="clientData-management"
       class="row"
-      v-if="showClientDataManagement === true && toggles['client.admin.edit']"
+      v-if="showClientDataManagement === true && toggles && toggles['client.admin.edit']"
     >
       <div class="content text-center">
         <Spinner :show="loading"></Spinner>
@@ -409,7 +501,7 @@ export default {
         </div>
       </div>
     </div>
-    <div v-if="showClientDataManagement === true && !toggles['client.admin.edit']">
+    <div v-if="showClientDataManagement === true && (!toggles || !toggles['client.admin.edit'])">
       <Message
         :icon="'bi-graph-up-arrow'"
         :title="$t('dashboard.message.1.title')"

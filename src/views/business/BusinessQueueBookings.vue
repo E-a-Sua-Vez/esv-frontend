@@ -65,7 +65,6 @@ export default {
         upcomingWeekCount: 0,
         totalActiveCount: 0,
       },
-      recentBookings: [],
       loadingStats: false,
     });
 
@@ -114,7 +113,6 @@ export default {
               state.queue = {};
               state.bookings = [];
               state.waitlists = [];
-              state.recentBookings = [];
               await loadQueues(newCommerce.id);
               await loadDashboardStats();
               loading.value = false;
@@ -199,20 +197,6 @@ export default {
         state.stats.totalActiveCount =
           (pendingBookings?.length || 0) + (confirmedBookings?.length || 0);
 
-        // Get recent bookings (last 5)
-        const recent = await getBookingsDetails(
-          commerce.value.id,
-          new DateModel().substractDays(7).toString(),
-          endOfMonth,
-          [commerce.value.id],
-          1,
-          5,
-          undefined,
-          undefined,
-          false
-        );
-        state.recentBookings = recent || [];
-
         state.loadingStats = false;
       } catch (error) {
         state.loadingStats = false;
@@ -221,52 +205,6 @@ export default {
 
     const openCalendar = () => {
       // Modal will be opened via data-bs-toggle
-    };
-
-    const viewTodayBookings = async () => {
-      try {
-        loading.value = true;
-        const today = new DateModel().toString();
-        const bookings = await getBookingsDetails(
-          commerce.value.id,
-          today,
-          today,
-          [commerce.value.id],
-          1,
-          50
-        );
-        state.recentBookings = bookings || [];
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || 500;
-        loading.value = false;
-      }
-    };
-
-    const viewPendingBookings = async () => {
-      try {
-        loading.value = true;
-        const today = new DateModel().toString();
-        const endOfMonth = new DateModel().endOfMonth().toString();
-        const bookings = await getBookingsDetails(
-          commerce.value.id,
-          today,
-          endOfMonth,
-          [commerce.value.id],
-          1,
-          50,
-          undefined,
-          undefined,
-          true,
-          undefined,
-          'PENDING'
-        );
-        state.recentBookings = bookings || [];
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || 500;
-        loading.value = false;
-      }
     };
 
     // Load stats after component mounts
@@ -314,8 +252,6 @@ export default {
       goBack,
       loadDashboardStats,
       openCalendar,
-      viewTodayBookings,
-      viewPendingBookings,
     };
   },
 };
@@ -390,68 +326,22 @@ export default {
           </div>
 
           <!-- Quick Actions -->
-          <div class="quick-actions-container mt-3">
+          <div class="quick-actions-container mt-1">
             <div class="row g-2 justify-content-center">
               <div class="col-auto">
                 <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3"
                   data-bs-toggle="modal"
                   data-bs-target="#modalAgenda"
                   :disabled="
                     !state.toggles['business.bookings.manage'] || state.queues.length === 0
                   "
                 >
-                  <i class="bi bi-calendar-check-fill"></i>
+                  <i class="bi bi-calendar-check-fill me-2"></i>
                   {{ $t('collaboratorBookingsView.schedules') }}
                 </button>
               </div>
-              <div class="col-auto">
-                <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                  @click="viewTodayBookings"
-                  :disabled="!state.toggles['business.bookings.manage']"
-                >
-                  <i class="bi bi-calendar-day"></i>
-                  {{ $t('collaboratorBookingsView.today') }}
-                </button>
-              </div>
-              <div class="col-auto">
-                <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                  @click="viewPendingBookings"
-                  :disabled="!state.toggles['business.bookings.manage']"
-                >
-                  <i class="bi bi-clock-history"></i>
-                  {{ $t('collaboratorBookingsView.pending') }}
-                </button>
-              </div>
             </div>
-          </div>
-
-          <!-- Recent Bookings -->
-          <div class="recent-bookings-container mt-4" v-if="state.recentBookings.length > 0">
-            <div class="section-header">
-              <h5 class="section-title">
-                <i class="bi bi-clock-history"></i>
-                {{ $t('collaboratorBookingsView.recentBookings') }}
-              </h5>
-            </div>
-            <div class="recent-bookings-list">
-              <div
-                class="booking-item-wrapper"
-                v-for="(booking, index) in state.recentBookings"
-                :key="`booking-${index}`"
-              >
-                <BookingDetailsCard :show="true" :booking="booking" :commerce="commerce" />
-              </div>
-            </div>
-          </div>
-          <div v-else-if="!loading && commerce && commerce.id" class="mt-4">
-            <Message
-              :icon="'bi-calendar-x'"
-              :title="$t('collaboratorBookingsView.noBookings.title')"
-              :content="$t('collaboratorBookingsView.noBookings.content')"
-            />
           </div>
         </div>
       </div>
@@ -539,66 +429,20 @@ export default {
         </div>
 
         <!-- Quick Actions -->
-        <div class="quick-actions-container mt-3">
+        <div class="quick-actions-container mt-1">
           <div class="row g-2 justify-content-center">
             <div class="col-auto">
               <button
-                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3"
                 data-bs-toggle="modal"
                 data-bs-target="#modalAgenda"
                 :disabled="!state.toggles['business.bookings.manage'] || state.queues.length === 0"
               >
-                <i class="bi bi-calendar-check-fill"></i>
+                <i class="bi bi-calendar-check-fill me-2"></i>
                 {{ $t('collaboratorBookingsView.schedules') }}
               </button>
             </div>
-            <div class="col-auto">
-              <button
-                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                @click="viewTodayBookings"
-                :disabled="!state.toggles['business.bookings.manage']"
-              >
-                <i class="bi bi-calendar-day"></i>
-                {{ $t('collaboratorBookingsView.today') }}
-              </button>
-            </div>
-            <div class="col-auto">
-              <button
-                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                @click="viewPendingBookings"
-                :disabled="!state.toggles['business.bookings.manage']"
-              >
-                <i class="bi bi-clock-history"></i>
-                {{ $t('collaboratorBookingsView.pending') }}
-              </button>
-            </div>
           </div>
-        </div>
-
-        <!-- Recent Bookings -->
-        <div class="recent-bookings-container mt-4" v-if="state.recentBookings.length > 0">
-          <div class="section-header">
-            <h5 class="section-title">
-              <i class="bi bi-clock-history"></i>
-              {{ $t('collaboratorBookingsView.recentBookings') }}
-            </h5>
-          </div>
-          <div class="recent-bookings-list">
-            <div
-              class="booking-item-wrapper"
-              v-for="(booking, index) in state.recentBookings"
-              :key="`booking-${index}`"
-            >
-              <BookingDetailsCard :show="true" :booking="booking" :commerce="state.commerce" />
-            </div>
-          </div>
-        </div>
-        <div v-else-if="!loading && commerce && commerce.id" class="mt-4">
-          <Message
-            :icon="'bi-calendar-x'"
-            :title="$t('collaboratorBookingsView.noBookings.title')"
-            :content="$t('collaboratorBookingsView.noBookings.content')"
-          />
         </div>
       </div>
     </div>

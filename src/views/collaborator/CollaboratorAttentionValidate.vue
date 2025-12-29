@@ -16,6 +16,9 @@ import {
   skip,
   getAttentionDetails,
   attend,
+  trackAttentionAccess,
+  getAvailableAttentiosnByQueue,
+  getProcessingAttentionDetailsByQueue,
 } from '../../application/services/attention';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
@@ -28,8 +31,15 @@ import {
 import { getPatientHistoryItemByCommerce } from '../../application/services/patient-history-item';
 import { getFormsByClient } from '../../application/services/form';
 import { getClientById } from '../../application/services/client';
+import { getCommerceById } from '../../application/services/commerce';
 import { getAverageAttentionDuration } from '../../application/services/queue';
 import { getSurveyPersonalizedByCommerceId } from '../../application/services/survey-personalized';
+import {
+  updatedAvailableAttentions,
+  updatedProcessingAttentions,
+  updatedTerminatedAttentions,
+  updatedAttentions,
+} from '../../application/firebase';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
@@ -42,7 +52,9 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import ProductAttentionManagement from '../../components/products/domain/ProductAttentionManagement.vue';
 import PatientHistoryManagement from '../../components/patient-history/domain/PatientHistoryManagement.vue';
 import AttentionDetailsCard from '../../components/clients/common/AttentionDetailsCard.vue';
+import ClientDetailsCard from '../../components/clients/common/ClientDetailsCard.vue';
 import AttentionDetailsNumber from '../../components/common/AttentionDetailsNumber.vue';
+import AttentionStepBar from '../../components/attentions/common/AttentionStepBar.vue';
 import Popper from 'vue3-popper';
 import TelemedicineSessionStarter from '../../components/telemedicine/domain/TelemedicineSessionStarter.vue';
 import TelemedicineVideoCall from '../../components/telemedicine/domain/TelemedicineVideoCall.vue';
@@ -68,7 +80,9 @@ export default {
     ProductAttentionManagement,
     PatientHistoryManagement,
     AttentionDetailsCard,
+    ClientDetailsCard,
     AttentionDetailsNumber,
+    AttentionStepBar,
     Popper,
     TelemedicineSessionStarter,
     TelemedicineVideoCall,
@@ -114,13 +128,127 @@ export default {
       clientConnected: false,
       connectionStatusInterval: null,
       surveyPersonalized: {},
+      queuePendingDetails: [],
+      queueProcessingDetails: [],
+      queueTerminatedDetails: [],
+      listUpdateKey: 0, // Key to force component re-render
     });
+
+    // Helper function to validate attention status/stage and redirect if needed (for /atender page)
+    const validateAndRedirectForAtender = (attention, commerceOverride = null) => {
+      if (!attention || !attention.id) return false;
+
+      // Use commerceOverride if provided, otherwise use state.commerce, fallback to attention.commerce or globalCommerce
+      const commerce =
+        commerceOverride || state.commerce || attention.commerce || globalCommerce.value;
+      if (!commerce) {
+        // If no commerce available, can't validate features, but can still check basic status
+        const isTerminated =
+          attention.status === 'TERMINATED' ||
+          attention.status === 'RATED' ||
+          attention.status === 'TERMINATED_RESERVE_CANCELLED' ||
+          attention.status === 'CANCELLED' ||
+          attention.status === 'SKIPED' ||
+          attention.status === 'USER_CANCELLED';
+        if (isTerminated) {
+          router.push({ path: `/interno/colaborador/atencion/${id}/terminated` });
+          return true;
+        }
+        return false;
+      }
+
+      const isStagesEnabled = getActiveFeature(commerce, 'attention-stages-enabled', 'PRODUCT');
+      const isCheckoutEnabled = getActiveFeature(commerce, 'attention-checkout-enabled', 'PRODUCT');
+
+      // Check if attention is terminated (any termination status)
+      const isTerminated =
+        attention.status === 'TERMINATED' ||
+        attention.status === 'RATED' ||
+        attention.status === 'TERMINATED_RESERVE_CANCELLED' ||
+        attention.status === 'CANCELLED' ||
+        attention.status === 'SKIPED' ||
+        attention.status === 'USER_CANCELLED';
+
+      if (isTerminated) {
+        // Redirect to terminated page
+        router.push({ path: `/interno/colaborador/atencion/${id}/terminated` });
+        return true;
+      }
+
+      if (isStagesEnabled && attention.currentStage) {
+        // Validate stage for atender page
+        if (attention.currentStage === 'CHECK_IN') {
+          router.push({ path: `/interno/colaborador/atencion/${id}/check-in` });
+          return true;
+        } else if (
+          ['PRE_CONSULTATION', 'CONSULTATION', 'POST_CONSULTATION'].includes(attention.currentStage)
+        ) {
+          // Already in the right page
+          return false;
+        } else if (isCheckoutEnabled && attention.currentStage === 'CHECKOUT') {
+          router.push({ path: `/interno/colaborador/atencion/${id}/checkout` });
+          return true;
+        } else if (attention.currentStage === 'TERMINATED') {
+          router.push({ path: `/interno/colaborador/atencion/${id}/terminated` });
+          return true;
+        }
+      } else if (!isStagesEnabled) {
+        // Traditional mode: check status
+        if (attention.status === 'PENDING') {
+          router.push({ path: `/interno/colaborador/atencion/${id}/check-in` });
+          return true;
+        } else if (attention.status === 'TERMINATED' || attention.status === 'RATED') {
+          router.push({ path: `/interno/colaborador/atencion/${id}/terminated` });
+          return true;
+        } else if (attention.status !== 'PROCESSING') {
+          // Not in processing, redirect to check-in
+          router.push({ path: `/interno/colaborador/atencion/${id}/check-in` });
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    // Firebase real-time listener for attention
+    const firebaseAttentions = updatedAttentions(id);
+
+    // Watch Firebase attention updates - MUST be deep and immediate to catch real-time changes
+    watch(
+      () => firebaseAttentions.value,
+      async newAttentions => {
+        if (newAttentions && Array.isArray(newAttentions) && newAttentions.length > 0) {
+          const firebaseAttention = newAttentions[0];
+          if (firebaseAttention && firebaseAttention.id) {
+            // Get commerce for validation (use state.commerce, fallback to firebaseAttention.commerce or globalCommerce)
+            const commerceForValidation =
+              state.commerce || firebaseAttention.commerce || globalCommerce.value;
+            // Validate and redirect if needed BEFORE updating state
+            if (validateAndRedirectForAtender(firebaseAttention, commerceForValidation)) {
+              return; // Stop here if redirecting
+            }
+
+            // Merge Firebase data with existing attention
+            state.attention = {
+              ...state.attention,
+              ...firebaseAttention,
+              // Preserve nested objects that might not come from Firebase
+              user: state.attention.user || firebaseAttention.user,
+              queue: state.attention.queue || firebaseAttention.queue,
+              commerce: state.attention.commerce || firebaseAttention.commerce,
+            };
+          }
+        }
+      },
+      { immediate: true, deep: true }
+    );
 
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.attention = await getAttentionDetails(id);
+        // Pass collaboratorId for security validation (optional, maintains backward compatibility)
+        state.attention = await getAttentionDetails(id, state.currentUser?.id);
         if (state.attention.id) {
           state.queue = state.attention.queue;
           // Use global commerce if it matches attention's commerce, otherwise use attention's commerce
@@ -133,6 +261,41 @@ export default {
               await store.setCurrentCommerce(state.commerce);
             }
           }
+
+          // Ensure commerce has features array - fetch full commerce if missing
+          if (
+            state.commerce &&
+            state.commerce.id &&
+            (!state.commerce.features || !Array.isArray(state.commerce.features))
+          ) {
+            try {
+              const fullCommerce = await getCommerceById(state.commerce.id);
+              if (fullCommerce && fullCommerce.features) {
+                state.commerce = fullCommerce;
+                await store.setCurrentCommerce(fullCommerce);
+              }
+            } catch (error) {
+              console.warn('Could not fetch full commerce with features:', error);
+            }
+          }
+
+          // Now that commerce is loaded, validate and redirect if needed
+          if (validateAndRedirectForAtender(state.attention, state.commerce)) {
+            loading.value = false;
+            return; // Stop here if redirecting
+          }
+
+          // Optional: Track that this collaborator is accessing the attention
+          // This is non-blocking and only for tracking purposes
+          if (state.currentUser?.id) {
+            try {
+              await trackAttentionAccess(state.attention.id, state.currentUser.id);
+            } catch (error) {
+              // Non-critical, just log if tracking fails
+              console.log('Could not track attention access:', error);
+            }
+          }
+
           state.commerceIds = [state.commerce.id];
 
           // Fetch estimated duration from queue as fallback
@@ -160,18 +323,9 @@ export default {
                 }
               }
             } catch (error) {
-              console.error(
-                'Failed to get queue estimated duration, trying queue.estimatedTime fallback:',
-                error
-              );
               // Fallback to queue.estimatedTime if API call fails
               if (state.queue.estimatedTime && state.queue.estimatedTime > 0) {
                 state.queueEstimatedDuration = state.queue.estimatedTime;
-                console.log(
-                  '✅ Set queueEstimatedDuration from queue.estimatedTime (fallback):',
-                  state.queueEstimatedDuration,
-                  'minutes'
-                );
                 // Force recomputation of attentionStats
                 statsUpdateTrigger.value++;
               } else {
@@ -206,18 +360,58 @@ export default {
           if (state.attention.userId) {
             state.user = state.attention.user;
           }
+
+          // Load permissions (togglesStock will be loaded when modal opens)
           state.toggles = await getPermissions('collaborator');
-          state.togglesStock = await getPermissions('products-stock');
+
+          // Load non-critical data in parallel (don't block page load)
+          const parallelLoads = [];
 
           // Load telemedicine session if available
           if (state.attention?.telemedicineSessionId) {
-            await loadTelemedicineSessionDetails();
+            parallelLoads.push(
+              loadTelemedicineSessionDetails().catch(err => {
+                console.error('Error loading telemedicine session:', err);
+              }),
+            );
           }
 
           // Load survey if attention is already terminated
           if (state.attention.status === 'TERMINATED' || state.attention.status === 'RATED') {
-            await loadSurveyPersonalized();
+            parallelLoads.push(
+              loadSurveyPersonalized().catch(err => {
+                console.error('Error loading survey:', err);
+              }),
+            );
           }
+
+          // Load client data if available (needed for ClientDetailsCard component)
+          if (state.attention.clientId) {
+            parallelLoads.push(
+              getClientById(state.attention.clientId)
+                .then(client => {
+                  if (client && client.id) {
+                    state.client = client;
+                  }
+                })
+                .catch(error => {
+                  console.error('Error loading client:', error);
+                  // Non-critical, continue without client data
+                })
+            );
+          }
+
+          // Load queue details for modal
+          if (state.queue && state.queue.id) {
+            parallelLoads.push(
+              loadQueueDetailsForModal().catch(err => {
+                console.error('Error loading queue details for modal:', err);
+              }),
+            );
+          }
+
+          // Wait for all parallel loads to complete (non-blocking)
+          await Promise.all(parallelLoads);
         }
         alertError.value = '';
         loading.value = false;
@@ -250,6 +444,229 @@ export default {
       }
     };
 
+    // Firebase listeners for different attention statuses (same pattern as CollaboratorQueueAttentions)
+    let pendingAttentionsRef = null;
+    let processingAttentionsRef = null;
+    let terminatedAttentionsRef = null;
+
+    // Store watcher stop functions for cleanup
+    let pendingWatcherStop = null;
+    let processingWatcherStop = null;
+    let terminatedWatcherStop = null;
+
+    // Function to update attention details from Firebase listeners (same as CollaboratorQueueAttentions)
+    const updateAttentionDetails = () => {
+      if (!state.queue || !state.queue.id) {
+        return;
+      }
+
+      // Get pending attentions from Firebase listener (already filtered by date and status)
+      const pendingArray = pendingAttentionsRef?.value || [];
+      const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
+
+      // Firebase already filters by today and PENDING status, just sort by number
+      const filteredPending = [...pendingList].filter(att => att && att.status === 'PENDING');
+      const sortedPending = [...filteredPending].sort((a, b) => {
+        const numA = a.number || 0;
+        const numB = b.number || 0;
+        return numA - numB;
+      });
+
+      // CRITICAL: Replace the entire array reference to force Vue reactivity
+      state.queuePendingDetails.splice(0, state.queuePendingDetails.length, ...sortedPending);
+
+      // Get processing attentions from Firebase listener (already filtered by date)
+      const processingArray = processingAttentionsRef?.value || [];
+      const processingList = Array.isArray(processingArray) ? processingArray : [];
+      console.log('🔍 [updateAttentionDetails] Processing Array from Firebase:', processingArray);
+      console.log('🔍 [updateAttentionDetails] Processing List length:', processingList.length);
+      if (processingList.length > 0) {
+        processingList.forEach((att, index) => {
+          console.log(`🔍 [updateAttentionDetails] Processing Attention ${index}:`, {
+            id: att.id,
+            number: att.number,
+            status: att.status,
+            currentStage: att.currentStage,
+            queueId: att.queueId,
+          });
+        });
+      }
+      state.queueProcessingDetails.splice(
+        0,
+        state.queueProcessingDetails.length,
+        ...processingList,
+      );
+
+      // Get terminated attentions from Firebase listener (already filtered by date)
+      const terminatedArray = terminatedAttentionsRef?.value || [];
+      const terminatedList = Array.isArray(terminatedArray) ? terminatedArray : [];
+      const sortedTerminated = [...terminatedList].sort((a, b) => {
+        const numA = a.number || 0;
+        const numB = b.number || 0;
+        return numB - numA;
+      });
+      state.queueTerminatedDetails.splice(
+        0,
+        state.queueTerminatedDetails.length,
+        ...sortedTerminated,
+      );
+
+      // Force component re-render by updating key
+      state.listUpdateKey++;
+    };
+
+    const loadQueueDetailsForModal = async () => {
+      if (!state.queue || !state.queue.id) return;
+
+      // Clean up previous listeners if they exist
+      if (pendingAttentionsRef && pendingAttentionsRef._unsubscribe) {
+        pendingAttentionsRef._unsubscribe();
+      }
+      if (processingAttentionsRef && processingAttentionsRef._unsubscribe) {
+        processingAttentionsRef._unsubscribe();
+      }
+      if (terminatedAttentionsRef && terminatedAttentionsRef._unsubscribe) {
+        terminatedAttentionsRef._unsubscribe();
+      }
+
+      // Clean up previous watchers if they exist
+      if (pendingWatcherStop) {
+        pendingWatcherStop();
+        pendingWatcherStop = null;
+      }
+      if (processingWatcherStop) {
+        processingWatcherStop();
+        processingWatcherStop = null;
+      }
+      if (terminatedWatcherStop) {
+        terminatedWatcherStop();
+        terminatedWatcherStop = null;
+      }
+
+      try {
+        // Initialize Firebase listeners for this queue (assign refs directly, not to .value)
+        pendingAttentionsRef = updatedAvailableAttentions(state.queue.id);
+        processingAttentionsRef = updatedProcessingAttentions(state.queue.id);
+        terminatedAttentionsRef = updatedTerminatedAttentions(state.queue.id);
+
+        // Set up watchers that call updateAttentionDetails (watch the ref's value)
+        pendingWatcherStop = watch(
+          () => pendingAttentionsRef?.value,
+          () => {
+            updateAttentionDetails();
+          },
+          { immediate: true, deep: true }
+        );
+
+        processingWatcherStop = watch(
+          () => processingAttentionsRef?.value,
+          () => {
+            updateAttentionDetails();
+          },
+          { immediate: true, deep: true }
+        );
+
+        terminatedWatcherStop = watch(
+          () => terminatedAttentionsRef?.value,
+          () => {
+            updateAttentionDetails();
+          },
+          { immediate: true, deep: true }
+        );
+
+        // Force initial update after a brief moment to ensure Firebase has initialized
+        await nextTick();
+        setTimeout(() => {
+          updateAttentionDetails();
+        }, 300);
+      } catch (error) {
+        console.error('Error setting up queue details listeners for modal:', error);
+        state.queuePendingDetails.splice(0, state.queuePendingDetails.length);
+        state.queueProcessingDetails.splice(0, state.queueProcessingDetails.length);
+        state.queueTerminatedDetails.splice(0, state.queueTerminatedDetails.length);
+      }
+    };
+
+    // Watch for queue ID to initialize Firebase listeners (similar to CollaboratorAttentionCheckIn)
+    watch(
+      () => state.queue?.id,
+      queueId => {
+        if (queueId) {
+          // Initialize attention listeners for modal (real-time updates)
+          if (!pendingAttentionsRef) {
+            // Clean up previous listeners if exist (shouldn't happen, but safety check)
+            if (pendingAttentionsRef && pendingAttentionsRef._unsubscribe) {
+              pendingAttentionsRef._unsubscribe();
+            }
+            if (processingAttentionsRef && processingAttentionsRef._unsubscribe) {
+              processingAttentionsRef._unsubscribe();
+            }
+            if (terminatedAttentionsRef && terminatedAttentionsRef._unsubscribe) {
+              terminatedAttentionsRef._unsubscribe();
+            }
+
+            // Clean up previous watchers if they exist
+            if (pendingWatcherStop) {
+              pendingWatcherStop();
+              pendingWatcherStop = null;
+            }
+            if (processingWatcherStop) {
+              processingWatcherStop();
+              processingWatcherStop = null;
+            }
+            if (terminatedWatcherStop) {
+              terminatedWatcherStop();
+              terminatedWatcherStop = null;
+            }
+
+            // Initialize Firebase listeners for this queue
+            console.log('🔍 [Atender] Initializing Firebase listeners for queue:', queueId);
+            pendingAttentionsRef = updatedAvailableAttentions(queueId);
+            processingAttentionsRef = updatedProcessingAttentions(queueId);
+            terminatedAttentionsRef = updatedTerminatedAttentions(queueId);
+            console.log('🔍 [Atender] Firebase listeners initialized:', {
+              pending: !!pendingAttentionsRef,
+              processing: !!processingAttentionsRef,
+              terminated: !!terminatedAttentionsRef,
+            });
+
+            // Set up watchers that call updateAttentionDetails (watch the ref's value)
+            pendingWatcherStop = watch(
+              () => pendingAttentionsRef?.value,
+              () => {
+                updateAttentionDetails();
+              },
+              { immediate: true, deep: true }
+            );
+
+            processingWatcherStop = watch(
+              () => processingAttentionsRef?.value,
+              () => {
+                updateAttentionDetails();
+              },
+              { immediate: true, deep: true }
+            );
+
+            terminatedWatcherStop = watch(
+              () => terminatedAttentionsRef?.value,
+              () => {
+                updateAttentionDetails();
+              },
+              { immediate: true, deep: true }
+            );
+
+            // Force initial update after a brief moment to ensure Firebase has initialized
+            nextTick(() => {
+              setTimeout(() => {
+                updateAttentionDetails();
+              }, 300);
+            });
+          }
+        }
+      },
+      { immediate: true }
+    );
+
     const finishCurrentAttention = async () => {
       try {
         loading.value = true;
@@ -258,7 +675,10 @@ export default {
         await finishAttention(state.attention.id, body);
 
         // Reload complete attention details to get updated status and all data
-        const updatedAttention = await getAttentionDetails(state.attention.id);
+        const updatedAttention = await getAttentionDetails(
+          state.attention.id,
+          state.currentUser?.id
+        );
 
         // Update all related state to ensure reactivity
         if (updatedAttention.queue) {
@@ -269,14 +689,50 @@ export default {
         }
         if (updatedAttention.commerce) {
           state.commerce = updatedAttention.commerce;
+          // Ensure commerce has features array - fetch full commerce if missing
+          if (
+            state.commerce &&
+            state.commerce.id &&
+            (!state.commerce.features || !Array.isArray(state.commerce.features))
+          ) {
+            try {
+              const fullCommerce = await getCommerceById(state.commerce.id);
+              if (fullCommerce && fullCommerce.features) {
+                state.commerce = fullCommerce;
+                await store.setCurrentCommerce(fullCommerce);
+              }
+            } catch (error) {
+              console.warn('Could not fetch full commerce with features:', error);
+            }
+          }
         }
 
         // Force reactivity by completely replacing the object
         state.attention = updatedAttention;
 
+        // Check if checkout is enabled and attention went to CHECKOUT
+        const isStagesEnabled = getActiveFeature(
+          state.commerce,
+          'attention-stages-enabled',
+          'PRODUCT'
+        );
+        const isCheckoutEnabled = getActiveFeature(
+          state.commerce,
+          'attention-checkout-enabled',
+          'PRODUCT'
+        );
+
+        if (isStagesEnabled && isCheckoutEnabled && updatedAttention.currentStage === 'CHECKOUT') {
+          // Redirect to checkout page
+          await nextTick();
+          router.push({ path: `/interno/colaborador/atencion/${state.attention.id}/checkout` });
+          return;
+        }
+
         // Load survey if attention is terminated
         if (updatedAttention.status === 'TERMINATED' || updatedAttention.status === 'RATED') {
           await loadSurveyPersonalized();
+          // Firebase listener will automatically update terminated attentions in real-time
         }
 
         await nextTick();
@@ -309,6 +765,54 @@ export default {
       }
     };
 
+    // Stage management functions
+    const getNextStages = currentStage => {
+      // Define valid stage transitions
+      const stageFlow = {
+        PENDING: ['CHECK_IN'],
+        CHECK_IN: ['PRE_CONSULTATION'],
+        PRE_CONSULTATION: ['CONSULTATION'],
+        CONSULTATION: ['POST_CONSULTATION'],
+        POST_CONSULTATION: ['CHECKOUT'],
+        CHECKOUT: ['TERMINATED'],
+      };
+      return stageFlow[currentStage] || [];
+    };
+
+    const advanceToNextStage = async (nextStage, notes = '') => {
+      try {
+        loading.value = true;
+        alertError.value = '';
+        if (!state.attention?.id) {
+          throw new Error('Atenção não encontrada');
+        }
+        const body = {
+          stage: nextStage,
+          notes: notes || undefined,
+          collaboratorId: state.currentUser?.id, // Include collaboratorId to track who took each stage
+        };
+        await advanceStage(state.attention.id, body);
+        // Reload attention details to get updated stage
+        const updatedAttention = await getAttentionDetails(
+          state.attention.id,
+          state.currentUser?.id
+        );
+        state.attention = updatedAttention;
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value =
+          error.response?.data?.message || error.message || 'Erro ao avançar etapa';
+        loading.value = false;
+      }
+    };
+
+    // Check if stages feature is enabled
+    const isStagesEnabled = computed(() => {
+      if (!state.commerce) return false;
+      return getActiveFeature(state.commerce, 'attention-stages-enabled', 'PRODUCT');
+    });
+
     const attendCurrentAttention = async () => {
       try {
         loading.value = true;
@@ -330,21 +834,55 @@ export default {
       }
     };
 
+    // Load stock data when modal opens (toggles and product consumptions)
+    const loadStockData = async () => {
+      try {
+        loading.value = true;
+
+        // Load togglesStock if not already loaded
+        if (!state.togglesStock || Object.keys(state.togglesStock).length === 0) {
+          state.togglesStock = await getPermissions('products-stock');
+        }
+
+        // Load product consumptions
+        const attentionId = state.attention.id || state.attention.attentionId;
+        if (attentionId) {
+          state.productConsumptions = await getProductsConsumptionsDetails(
+            undefined,
+            undefined,
+            1,
+            100,
+            false,
+            undefined,
+            undefined,
+            attentionId
+          );
+        }
+
+        loading.value = false;
+      } catch (error) {
+        console.error('Error loading stock data:', error);
+        loading.value = false;
+      }
+    };
+
     const getAttentionProducts = async () => {
       try {
         loading.value = true;
+        const attentionId = state.attention.id || state.attention.attentionId;
         state.productConsumptions = await getProductsConsumptionsDetails(
           undefined,
           undefined,
-          this.page,
-          this.limit,
-          this.asc,
+          1,
+          100,
+          false,
           undefined,
           undefined,
-          this.attention.attentionId
+          attentionId
         );
         loading.value = false;
       } catch (error) {
+        console.error('Error loading product consumptions:', error);
         loading.value = false;
       }
     };
@@ -370,6 +908,8 @@ export default {
         }
         if (forms && forms.length > 0) {
           state.patientForms = forms;
+        } else {
+          state.patientForms = [];
         }
         if (client && client.id) {
           state.client = client;
@@ -380,9 +920,16 @@ export default {
 
         loading.value = false;
       } catch (error) {
-        console.error('Error loading patient history:', error);
         loading.value = false;
       }
+    };
+
+    const openPatientHistoryModal = async () => {
+      // Load patient history data first
+      await getPatientHistory();
+
+      // Wait a bit for data to be ready
+      await nextTick();
     };
 
     // Force update trigger for live stats
@@ -397,6 +944,32 @@ export default {
         // Force reactivity update by incrementing trigger
         statsUpdateTrigger.value++;
       }, 30000); // Update every 30 seconds
+
+      // Setup modal listener for patient history modal
+      nextTick(() => {
+        const clientId = state.attention?.clientId;
+        if (clientId) {
+          const patientHistoryModal = document.getElementById(`patientHistoryModal-${clientId}`);
+          if (patientHistoryModal) {
+            patientHistoryModal.addEventListener('shown.bs.modal', async () => {
+              // Always load patient history when modal opens
+              await getPatientHistory();
+            });
+          }
+        }
+
+        // Setup modal listener for stock/products modal
+        const attentionId = state.attention?.id;
+        if (attentionId) {
+          const stockModal = document.getElementById(`attentionsProductsModal-${attentionId}`);
+          if (stockModal) {
+            stockModal.addEventListener('shown.bs.modal', async () => {
+              // Load stock data when modal opens (toggles and product consumptions)
+              await loadStockData();
+            });
+          }
+        }
+      });
     });
 
     onUnmounted(() => {
@@ -406,6 +979,34 @@ export default {
       if (state.connectionStatusInterval) {
         clearInterval(state.connectionStatusInterval);
       }
+      // Clean up Firebase listeners for queue modal
+      if (pendingAttentionsRef && pendingAttentionsRef._unsubscribe) {
+        pendingAttentionsRef._unsubscribe();
+      }
+      if (processingAttentionsRef && processingAttentionsRef._unsubscribe) {
+        processingAttentionsRef._unsubscribe();
+      }
+      if (terminatedAttentionsRef && terminatedAttentionsRef._unsubscribe) {
+        terminatedAttentionsRef._unsubscribe();
+      }
+
+      // Clean up watchers
+      if (pendingWatcherStop) {
+        pendingWatcherStop();
+        pendingWatcherStop = null;
+      }
+      if (processingWatcherStop) {
+        processingWatcherStop();
+        processingWatcherStop = null;
+      }
+      if (terminatedWatcherStop) {
+        terminatedWatcherStop();
+        terminatedWatcherStop = null;
+      }
+
+      pendingAttentionsRef = null;
+      processingAttentionsRef = null;
+      terminatedAttentionsRef = null;
     });
 
     // Telemedicine functions
@@ -415,11 +1016,6 @@ export default {
         state.telemedicineSession = await getTelemedicineSession(
           state.attention.telemedicineSessionId
         );
-        console.log('[CollaboratorAttentionValidate] Loaded telemedicine session:', {
-          id: state.telemedicineSession?.id,
-          status: state.telemedicineSession?.status,
-          type: state.telemedicineSession?.type,
-        });
 
         // If session is already active, start polling but don't auto-open the window
         // The doctor will click the button to open the session when ready
@@ -427,9 +1023,6 @@ export default {
           state.telemedicineSession?.status === 'active' ||
           state.telemedicineSession?.status === 'ACTIVE'
         ) {
-          console.log(
-            '[CollaboratorAttentionValidate] Session is already active, but not auto-opening window'
-          );
           startConnectionStatusPolling();
         }
       } catch (err) {
@@ -465,24 +1058,15 @@ export default {
 
     const handleStartTelemedicineSession = async () => {
       if (!state.attention?.telemedicineSessionId) {
-        console.warn('[CollaboratorAttentionValidate] No telemedicineSessionId in attention');
         return;
       }
       try {
         loading.value = true;
-        console.log(
-          '[CollaboratorAttentionValidate] Starting telemedicine session:',
-          state.attention.telemedicineSessionId
-        );
 
         // Verificar el estado actual de la sesión antes de intentar iniciarla
         let currentSession;
         try {
           currentSession = await getTelemedicineSession(state.attention.telemedicineSessionId);
-          console.log(
-            '[CollaboratorAttentionValidate] Current session status:',
-            currentSession.status
-          );
         } catch (error) {
           console.error('[CollaboratorAttentionValidate] Error fetching session:', error);
           // Si no podemos obtener la sesión, intentar recargar los detalles
@@ -494,66 +1078,25 @@ export default {
         }
 
         const sessionStatus = currentSession.status?.toLowerCase();
-        console.log('[CollaboratorAttentionValidate] Normalized session status:', sessionStatus);
 
         // Solo iniciar la sesión si está en estado SCHEDULED
         if (sessionStatus === 'scheduled') {
           try {
-            console.log('[CollaboratorAttentionValidate] Attempting to start scheduled session...');
             await startTelemedicineSession(state.attention.telemedicineSessionId);
-            console.log('[CollaboratorAttentionValidate] Session started successfully');
           } catch (error) {
-            console.error('[CollaboratorAttentionValidate] Error starting session:', error);
             // Si el error es 400, puede ser que la sesión ya cambió de estado
             if (error.response?.status === 400) {
-              console.warn(
-                '[CollaboratorAttentionValidate] Session start failed with 400 (might already be active), verifying...'
-              );
               // Recargar la sesión para verificar el estado actual
               try {
                 await loadTelemedicineSessionDetails();
                 const updatedSession = await getTelemedicineSession(
                   state.attention.telemedicineSessionId
                 );
-                const updatedStatus = updatedSession.status?.toLowerCase();
-                console.log(
-                  '[CollaboratorAttentionValidate] Updated session status:',
-                  updatedStatus
-                );
-                if (updatedStatus === 'active') {
-                  console.log(
-                    '[CollaboratorAttentionValidate] Session is already active, continuing...'
-                  );
-                  // Continuar con el flujo normal
-                } else {
-                  console.warn(
-                    '[CollaboratorAttentionValidate] Session status is still not active:',
-                    updatedStatus
-                  );
-                  // No lanzar error, simplemente continuar
-                }
-              } catch (verifyError) {
-                console.error(
-                  '[CollaboratorAttentionValidate] Error verifying session status:',
-                  verifyError
-                );
-                // No lanzar error, simplemente continuar
-              }
-            } else {
-              // Para otros errores, mostrar mensaje pero no bloquear
-              console.error('[CollaboratorAttentionValidate] Non-400 error:', error);
-              // No lanzar error, intentar continuar
+              } catch (verifyError) {}
             }
           }
         } else if (sessionStatus === 'active') {
-          console.log('[CollaboratorAttentionValidate] Session is already active, skipping start');
         } else {
-          console.warn(
-            '[CollaboratorAttentionValidate] Session status is',
-            sessionStatus,
-            '- cannot start, but continuing anyway'
-          );
-          // No bloquear el flujo, simplemente continuar sin iniciar
         }
 
         // Recargar detalles de la sesión para obtener el estado actualizado
@@ -562,24 +1105,6 @@ export default {
         // Esperar un momento para asegurar que el estado se actualice
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Debug: Log full session and attention data
-        console.log(
-          '[CollaboratorAttentionValidate] Full telemedicineSession object:',
-          JSON.stringify(state.telemedicineSession, null, 2)
-        );
-        console.log(
-          '[CollaboratorAttentionValidate] Full attention.telemedicineConfig:',
-          JSON.stringify(state.attention?.telemedicineConfig, null, 2)
-        );
-        console.log(
-          '[CollaboratorAttentionValidate] Session type from session:',
-          state.telemedicineSession?.type
-        );
-        console.log(
-          '[CollaboratorAttentionValidate] Session type from config:',
-          state.attention?.telemedicineConfig?.type
-        );
-
         // Open video/chat based on session type
         // Try multiple sources for the type
         const sessionType =
@@ -587,15 +1112,6 @@ export default {
           state.telemedicineSession?.sessionType ||
           state.attention?.telemedicineConfig?.type ||
           'VIDEO'; // Default to VIDEO if not specified
-
-        console.log('[CollaboratorAttentionValidate] Resolved session type:', sessionType);
-        console.log(
-          '[CollaboratorAttentionValidate] Session status:',
-          state.telemedicineSession?.status
-        );
-        console.log('[CollaboratorAttentionValidate] Session ID:', state.telemedicineSession?.id);
-        console.log('[CollaboratorAttentionValidate] Current user ID:', state.currentUser?.id);
-
         if (
           sessionType === 'VIDEO' ||
           sessionType === 'video' ||
@@ -604,10 +1120,6 @@ export default {
         ) {
           state.showTelemedicineVideo = true;
           state.telemedicineSessionType = 'video';
-          console.log(
-            '[CollaboratorAttentionValidate] ✅ Showing video component - showTelemedicineVideo:',
-            state.showTelemedicineVideo
-          );
         }
         if (
           sessionType === 'CHAT' ||
@@ -617,32 +1129,10 @@ export default {
         ) {
           state.showTelemedicineChat = true;
           state.telemedicineSessionType = 'chat';
-          console.log(
-            '[CollaboratorAttentionValidate] ✅ Showing chat component - showTelemedicineChat:',
-            state.showTelemedicineChat
-          );
         }
 
         // Force reactivity update
         await nextTick();
-
-        console.log('[CollaboratorAttentionValidate] Final state:', {
-          showTelemedicineVideo: state.showTelemedicineVideo,
-          showTelemedicineChat: state.showTelemedicineChat,
-          telemedicineSessionType: state.telemedicineSessionType,
-          sessionId: state.telemedicineSession?.id,
-          sessionStatus: state.telemedicineSession?.status,
-          willShowFloatingWindow: state.showTelemedicineVideo || state.showTelemedicineChat,
-        });
-
-        // Double check after a brief delay
-        setTimeout(() => {
-          console.log('[CollaboratorAttentionValidate] State check after delay:', {
-            showTelemedicineVideo: state.showTelemedicineVideo,
-            showTelemedicineChat: state.showTelemedicineChat,
-            sessionId: state.telemedicineSession?.id,
-          });
-        }, 1000);
 
         // Iniciar polling de estado de conexión
         if (isTelemedicineSessionActive()) {
@@ -651,10 +1141,6 @@ export default {
 
         loading.value = false;
       } catch (error) {
-        console.error(
-          '[CollaboratorAttentionValidate] Error starting telemedicine session:',
-          error
-        );
         alertError.value = error.response?.status || 500;
         loading.value = false;
       }
@@ -663,21 +1149,16 @@ export default {
     const closeTelemedicineVideo = () => {
       // Solo ocultar la ventana, no detener la sesión
       state.showTelemedicineVideo = false;
-      // No detener el polling, la sesión sigue activa
-      console.log('[CollaboratorAttentionValidate] Video window closed, session still active');
     };
 
     const closeTelemedicineChat = () => {
       // Solo ocultar la ventana, no detener la sesión
       state.showTelemedicineChat = false;
-      // No detener el polling, la sesión sigue activa
-      console.log('[CollaboratorAttentionValidate] Chat window closed, session still active');
     };
 
     const reopenTelemedicineSession = () => {
       // Reabrir la ventana de video/chat si la sesión está activa
       if (!isTelemedicineSessionActive()) {
-        console.warn('[CollaboratorAttentionValidate] Cannot reopen: session is not active');
         return;
       }
 
@@ -707,13 +1188,10 @@ export default {
       if (!state.connectionStatusInterval) {
         startConnectionStatusPolling();
       }
-
-      console.log('[CollaboratorAttentionValidate] Telemedicine session reopened');
     };
 
     const endTelemedicineSession = async () => {
       if (!state.attention?.telemedicineSessionId) {
-        console.warn('[CollaboratorAttentionValidate] No telemedicineSessionId to end');
         return;
       }
 
@@ -740,10 +1218,8 @@ export default {
         state.showTelemedicineChat = false;
         stopConnectionStatusPolling();
 
-        console.log('[CollaboratorAttentionValidate] Telemedicine session ended successfully');
         alertError.value = ''; // Clear any errors
       } catch (error) {
-        console.error('[CollaboratorAttentionValidate] Error ending telemedicine session:', error);
         alertError.value = error.response?.status || 500;
       } finally {
         loading.value = false;
@@ -866,7 +1342,6 @@ export default {
             endTime = now;
           }
         } catch (error) {
-          console.error('Error parsing processedAt date:', error);
           endTime = now; // Fallback to now if parsing fails
         }
       }
@@ -1070,6 +1545,7 @@ export default {
       loading,
       alertError,
       getPatientHistory,
+      openPatientHistoryModal,
       finishCurrentAttention,
       queueAttentions,
       skipAttention,
@@ -1077,6 +1553,7 @@ export default {
       isReactivated,
       getActiveFeature,
       getAttentionProducts,
+      loadStockData,
       attentionStats,
       statsUpdateTrigger,
       loadTelemedicineSessionDetails,
@@ -1093,6 +1570,10 @@ export default {
       isTelemedicineAttention,
       remoteVideoRef,
       telemedicineVideoCallRef,
+      // Stage management
+      isStagesEnabled,
+      getNextStages,
+      advanceToNextStage,
     };
   },
 };
@@ -1112,7 +1593,16 @@ export default {
           @goBack="queueAttentions"
         >
         </ComponentMenu>
-        <QueueName :queue="state.queue"> </QueueName>
+        <QueueName
+          :queue="state.queue"
+          :commerce="state.commerce"
+          :details="true"
+          :queue-pending-details="state.queuePendingDetails"
+          :queue-processing-details="state.queueProcessingDetails"
+          :queue-terminated-details="state.queueTerminatedDetails"
+          :list-update-key="state.listUpdateKey"
+        >
+        </QueueName>
         <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
@@ -1125,6 +1615,13 @@ export default {
             state.attention.status === 'REACTIVATED'
           "
         >
+          <!-- Step Bar -->
+          <AttentionStepBar
+            v-if="state.attention && state.attention.id"
+            :current-stage="state.attention.currentStage"
+            :status="state.attention.status"
+            :commerce="state.commerce"
+          />
           <div id="page-header" class="text-center">
             <div class="your-attention mt-4 mb-3">
               <span>{{ $t('collaboratorAttentionValidate.yourNumber') }}</span>
@@ -1136,6 +1633,7 @@ export default {
             :data="state.user"
             :attention="state.attention"
           ></AttentionNumber>
+
           <!-- Attention Statistics Cards -->
           <div v-if="attentionStats" class="attention-stats-grid mt-3">
             <!-- Elapsed Time Card (only show if attention does NOT come from a booking) -->
@@ -1264,9 +1762,30 @@ export default {
                     >
                   </div>
                 </div>
-                <div v-else class="stat-card-subvalue">Duração estimada não disponível</div>
+                <div v-else class="stat-card-subvalue">
+                  {{ $t('attentionStats.estimatedNotAvailable') }}
+                </div>
               </div>
             </div>
+          </div>
+          <!-- Client Management Section (Mobile) -->
+          <div
+            v-if="state.client && state.client.id && state.commerce && state.commerce.id"
+            class="client-management-section my-3 mx-2"
+          >
+            <h5 class="client-management-title">
+              {{ $t('collaboratorQueueAttentions.clientManagement') || 'Gestión del Cliente:' }}
+            </h5>
+            <ClientDetailsCard
+              :show="true"
+              :client="state.client"
+              :commerce="state.commerce"
+              :toggles="state.toggles"
+              :queues="state.commerce?.queues || []"
+              :management="true"
+              :attention="state.attention"
+              :queue="state.queue"
+            />
           </div>
           <!-- Button section for PENDING attentions that are current -->
           <div
@@ -1280,7 +1799,7 @@ export default {
           >
             <div class="actions">
               <span
-                ><strong>{{ $t('collaboratorQueueAttentions.actions.1.title.1') }}</strong></span
+                ><strong>{{ $t('collaboratorAttentionValidate.readyQuestion') }}</strong></span
               >
             </div>
             <div class="row mx-1">
@@ -1308,8 +1827,35 @@ export default {
             v-if="
               state.attention.status === 'PROCESSING' || state.attention.status === 'REACTIVATED'
             "
-            class="d-grid gap-2 my-2 mx-2"
+            class="d-grid gap-2 my-2"
           >
+            <!-- Estoque Card -->
+            <div
+              v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')"
+              class="estoque-card-compact my-3"
+            >
+              <div class="requirement-card-compact estoque-card">
+                <div class="requirement-icon-compact estoque-icon">
+                  <i class="bi bi-eyedropper"></i>
+                </div>
+                <div class="requirement-info-compact">
+                  <div class="requirement-title-compact">{{ $t('dashboard.stock') }}</div>
+                  <div class="requirement-subtitle-compact">
+                    {{ $t('products.attentionProducts') }}
+                  </div>
+                </div>
+                <button
+                  class="requirement-action-btn-compact estoque-btn"
+                  :disabled="loading"
+                  @click="loadStockData()"
+                  data-bs-toggle="modal"
+                  :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
+                >
+                  <i class="bi bi-box-seam"></i>
+                  <span>{{ $t('collaboratorAttentionValidate.actions.3.action') }}</span>
+                </button>
+              </div>
+            </div>
             <div class="mb-2">
               <label for="comment" class="form-label mt-2 comment-title">{{
                 $t('collaboratorAttentionValidate.comment.label')
@@ -1325,36 +1871,12 @@ export default {
             </div>
             <div class="actions">
               <span
-                ><strong>{{ $t('collaboratorQueueAttentions.actions.1.title.1') }}</strong></span
+                ><strong>{{ $t('collaboratorAttentionValidate.readyQuestion') }}</strong></span
               >
-            </div>
-            <div
-              v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')"
-              class="row mx-1"
-            >
-              <button
-                class="col btn btn-md btn-block btn-size fw-bold btn-secondary rounded-pill mb-1"
-                :disabled="!state.toggles['collaborator.attention.products'] || loading"
-                @click="getAttentionProducts()"
-                data-bs-toggle="modal"
-                :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
-              >
-                {{ $t('collaboratorAttentionValidate.actions.3.action') }}
-                <i class="bi bi-eyedropper"></i>
-              </button>
-              <button
-                class="col btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mb-1"
-                :disabled="!state.toggles['collaborator.attention.patient-history'] || loading"
-                @click="getPatientHistory()"
-                data-bs-toggle="modal"
-                :data-bs-target="`#patientHistoryModal-${state.attention.clientId}`"
-              >
-                {{ $t('dashboard.patientHistory') }} <i class="bi bi-file-medical-fill"></i>
-              </button>
             </div>
             <div class="row mx-1">
               <button
-                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-1"
+                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-1 attend-button"
                 :disabled="!state.toggles['collaborator.attention.finish'] || loading"
                 @click="finishCurrentAttention()"
               >
@@ -1502,7 +2024,16 @@ export default {
             </ComponentMenu>
           </div>
         </div>
-        <QueueName :queue="state.queue"> </QueueName>
+        <QueueName
+          :queue="state.queue"
+          :commerce="state.commerce"
+          :details="true"
+          :queue-pending-details="state.queuePendingDetails"
+          :queue-processing-details="state.queueProcessingDetails"
+          :queue-terminated-details="state.queueTerminatedDetails"
+          :list-update-key="state.listUpdateKey"
+        >
+        </QueueName>
         <div
           id="attention-processing"
           v-if="
@@ -1511,6 +2042,13 @@ export default {
             state.attention.status === 'REACTIVATED'
           "
         >
+          <!-- Step Bar -->
+          <AttentionStepBar
+            v-if="state.attention && state.attention.id"
+            :current-stage="state.attention.currentStage"
+            :status="state.attention.status"
+            :commerce="state.commerce"
+          />
           <div id="page-header" class="text-center">
             <div class="your-attention mt-4 mb-3">
               <span>{{ $t('collaboratorAttentionValidate.yourNumber') }}</span>
@@ -1650,9 +2188,30 @@ export default {
                     >
                   </div>
                 </div>
-                <div v-else class="stat-card-subvalue">Duração estimada não disponível</div>
+                <div v-else class="stat-card-subvalue">
+                  {{ $t('attentionStats.estimatedNotAvailable') }}
+                </div>
               </div>
             </div>
+          </div>
+          <!-- Client Management Section (Desktop) -->
+          <div
+            v-if="state.client && state.client.id && state.commerce && state.commerce.id"
+            class="client-management-section my-3"
+          >
+            <h5 class="client-management-title">
+              {{ $t('collaboratorQueueAttentions.clientManagement') || 'Gestión del Cliente:' }}
+            </h5>
+            <ClientDetailsCard
+              :show="true"
+              :client="state.client"
+              :commerce="state.commerce"
+              :toggles="state.toggles"
+              :queues="state.commerce?.queues || []"
+              :management="true"
+              :attention="state.attention"
+              :queue="state.queue"
+            />
           </div>
           <!-- Button section for PENDING attentions that are current -->
           <div
@@ -1666,7 +2225,7 @@ export default {
           >
             <div class="actions">
               <span
-                ><strong>{{ $t('collaboratorQueueAttentions.actions.1.title.1') }}</strong></span
+                ><strong>{{ $t('collaboratorAttentionValidate.readyQuestion') }}</strong></span
               >
             </div>
             <div class="row mx-1">
@@ -1694,8 +2253,35 @@ export default {
             v-if="
               state.attention.status === 'PROCESSING' || state.attention.status === 'REACTIVATED'
             "
-            class="d-grid gap-2 my-2 mx-2"
+            class="d-grid gap-2 my-2"
           >
+            <!-- Estoque Card -->
+            <div
+              v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')"
+              class="estoque-card-compact my-3"
+            >
+              <div class="requirement-card-compact estoque-card">
+                <div class="requirement-icon-compact estoque-icon">
+                  <i class="bi bi-eyedropper"></i>
+                </div>
+                <div class="requirement-info-compact">
+                  <div class="requirement-title-compact">{{ $t('dashboard.stock') }}</div>
+                  <div class="requirement-subtitle-compact">
+                    {{ $t('products.attentionProducts') }}
+                  </div>
+                </div>
+                <button
+                  class="requirement-action-btn-compact estoque-btn"
+                  :disabled="loading"
+                  @click="loadStockData()"
+                  data-bs-toggle="modal"
+                  :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
+                >
+                  <i class="bi bi-box-seam"></i>
+                  <span>{{ $t('collaboratorAttentionValidate.actions.3.action') }}</span>
+                </button>
+              </div>
+            </div>
             <div class="mb-2">
               <label for="comment" class="form-label mt-2 comment-title">{{
                 $t('collaboratorAttentionValidate.comment.label')
@@ -1711,32 +2297,8 @@ export default {
             </div>
             <div class="actions">
               <span
-                ><strong>{{ $t('collaboratorQueueAttentions.actions.1.title.1') }}</strong></span
+                ><strong>{{ $t('collaboratorAttentionValidate.readyQuestion') }}</strong></span
               >
-            </div>
-            <div
-              v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')"
-              class="row mx-1"
-            >
-              <button
-                class="col btn btn-md btn-block btn-size fw-bold btn-secondary rounded-pill mb-1"
-                :disabled="!state.toggles['collaborator.attention.products'] || loading"
-                @click="getAttentionProducts()"
-                data-bs-toggle="modal"
-                :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
-              >
-                {{ $t('collaboratorAttentionValidate.actions.3.action') }}
-                <i class="bi bi-eyedropper"></i>
-              </button>
-              <button
-                class="col btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mb-1"
-                :disabled="!state.toggles['collaborator.attention.patient-history'] || loading"
-                @click="getPatientHistory()"
-                data-bs-toggle="modal"
-                :data-bs-target="`#patientHistoryModal-${state.attention.clientId}`"
-              >
-                {{ $t('dashboard.patientHistory') }} <i class="bi bi-file-medical-fill"></i>
-              </button>
             </div>
             <!-- Telemedicine Section (Desktop) -->
             <div v-if="isTelemedicineAttention" class="row mx-1 mb-3">
@@ -1882,7 +2444,7 @@ export default {
             </div>
             <div class="row mx-1">
               <button
-                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-1"
+                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-1 attend-button"
                 :disabled="!state.toggles['collaborator.attention.finish'] || loading"
                 @click="finishCurrentAttention()"
               >
@@ -2098,14 +2660,6 @@ export default {
             >
             </ProductAttentionManagement>
           </div>
-          <div class="mx-2 mb-4 text-center">
-            <a
-              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-              >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
-            ></a>
-          </div>
         </div>
       </div>
     </div>
@@ -2134,7 +2688,10 @@ export default {
             ></button>
           </div>
           <Spinner :show="loading"></Spinner>
-          <div class="modal-body text-center mb-0" id="patient-history-component">
+          <div
+            class="modal-body text-center mb-0 patient-history-modal-body"
+            id="patient-history-component"
+          >
             <PatientHistoryManagement
               v-if="state.client && state.client.id && state.commerce && state.commerce.id"
               :show-patient-history-management="true"
@@ -2151,14 +2708,6 @@ export default {
               <Spinner :show="true"></Spinner>
               <p class="mt-3">Cargando historial del paciente...</p>
             </div>
-          </div>
-          <div class="mx-2 mb-4 text-center">
-            <a
-              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-              >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
-            ></a>
           </div>
         </div>
       </div>
@@ -2592,5 +3141,355 @@ export default {
 .attention-details-content {
   font-size: 0.85rem;
   color: rgba(0, 0, 0, 0.7);
+}
+
+/* ===== REQUIREMENT CARDS STYLES ===== */
+
+/* Requirement Card Container */
+.requirement-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.requirement-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.requirement-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--card-accent-color, #6b7280);
+  transition: background-color 0.3s ease;
+}
+
+/* Card Header */
+.requirement-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.requirement-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.requirement-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.requirement-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.3rem 0;
+  line-height: 1.2;
+}
+
+.requirement-subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+/* Action Button */
+.requirement-action-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.2rem;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: white;
+  background: var(--card-button-bg, #6b7280);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.requirement-action-btn:hover {
+  background: var(--card-button-hover-bg, #4b5563);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  color: white;
+  text-decoration: none;
+}
+
+.requirement-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.requirement-action-btn i {
+  font-size: 1.1rem;
+}
+
+/* Prontuário Card Specific Styles */
+.prontuario-card {
+  --card-accent-color: #10b981;
+  --card-button-bg: #10b981;
+  --card-button-hover-bg: #059669;
+}
+
+.prontuario-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.prontuario-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.prontuario-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* Estoque Card Specific Styles */
+.estoque-card {
+  --card-accent-color: #3b82f6;
+  --card-button-bg: #3b82f6;
+  --card-button-hover-bg: #2563eb;
+}
+
+.estoque-icon {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.estoque-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.estoque-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* Compact Estoque Card - Single Line Layout */
+.estoque-card-compact {
+  margin: 0;
+}
+
+.requirement-card-compact {
+  background: white;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+}
+
+.requirement-card-compact::before {
+  display: none;
+}
+
+.requirement-card-compact.estoque-card {
+  border-left: 4px solid var(--card-accent-color, #3b82f6);
+}
+
+.requirement-icon-compact {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.requirement-info-compact {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.requirement-title-compact {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.requirement-subtitle-compact {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.requirement-action-btn-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: white;
+  background: var(--card-button-bg, #3b82f6);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.requirement-action-btn-compact:hover {
+  background: var(--card-button-hover-bg, #2563eb);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: white;
+  text-decoration: none;
+}
+
+.requirement-action-btn-compact:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.requirement-action-btn-compact i {
+  font-size: 0.875rem;
+}
+
+/* Responsive Design for Cards */
+@media (max-width: 768px) {
+  .requirement-card {
+    padding: 1rem;
+    margin-bottom: 0.875rem;
+  }
+
+  .requirement-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.4rem;
+  }
+
+  .requirement-title {
+    font-size: 1rem;
+  }
+
+  .requirement-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .requirement-action-btn {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Patient History Modal Body - Fix for blank space */
+#patient-history-component.patient-history-modal-body {
+  display: flex !important;
+  flex-direction: column !important;
+  height: calc(100vh - 56px) !important; /* Viewport height minus modal header */
+  min-height: 600px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  position: relative;
+}
+
+#patient-history-component.patient-history-modal-body > * {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure modal-content has proper height */
+.modal-fullscreen .modal-content {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-fullscreen .modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Client Management Title */
+.client-management-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.8);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(0, 74, 173, 0.2);
+}
+
+/* Attend Button - Same size as check-in page */
+.attend-button {
+  width: 100% !important;
+  padding: 0.875rem 1.5rem !important;
+  font-size: 1.1rem !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.attend-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.attend-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.attend-button i {
+  font-size: 1.25rem;
 }
 </style>

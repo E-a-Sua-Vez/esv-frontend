@@ -24,14 +24,24 @@ export const getLeadsByStageFromBackend = async (stage, userId, businessId, comm
     stage,
     _t: Date.now(),
   };
-  if (userId) {
+  // For userId: if undefined (master users), send empty string so backend treats it as undefined
+  // If defined, send the value. This allows backend to distinguish between
+  // "explicitly don't filter" (empty string -> undefined) vs "use user.id from token"
+  if (userId !== undefined && userId !== null) {
     options.params.userId = userId;
+  } else if (userId === undefined) {
+    // Explicitly undefined (master user) - send empty string to indicate "don't filter by userId"
+    options.params.userId = '';
   }
-  if (businessId) {
+  if (businessId !== undefined && businessId !== null) {
     options.params.businessId = businessId;
+  } else if (businessId === undefined) {
+    options.params.businessId = '';
   }
-  if (commerceId) {
+  if (commerceId !== undefined && commerceId !== null) {
     options.params.commerceId = commerceId;
+  } else if (commerceId === undefined) {
+    options.params.commerceId = '';
   }
   options.paramsSerializer = params => qs.stringify(params);
   const { headers } = await getHeaders();

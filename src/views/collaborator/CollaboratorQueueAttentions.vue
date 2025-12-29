@@ -11,9 +11,6 @@ import {
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
-  getNextAvailableAttentionDetails,
-  getAvailableAttentiosnByQueue,
-  getProcessingAttentionDetailsByQueue,
   getAvailableAttentionDetailsByNumber,
   finishCancelledAttention,
 } from '../../application/services/attention';
@@ -23,9 +20,12 @@ import { globalStore } from '../../stores/index';
 import { attend } from '../../application/services/attention';
 import {
   updatedQueues,
-  updatedAttentionsByDateAndCommerceAndQueue,
+  updatedAvailableAttentions,
+  updatedProcessingAttentions,
+  updatedTerminatedAttentions,
 } from '../../application/firebase';
 import { getPermissions } from '../../application/services/permissions';
+import { getActiveFeature } from '../../shared/features';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
@@ -75,9 +75,11 @@ export default {
       pendingAttentions: [],
       queuePendingDetails: [],
       queueProcessingDetails: [],
+      queueTerminatedDetails: [],
       drawerOpen: false,
       usingIntelligentEstimation: false,
       intelligentEstimatedTime: null,
+      listUpdateKey: 0, // Key to force component re-render
     });
 
     onBeforeMount(async () => {
@@ -95,8 +97,10 @@ export default {
 
     const queues = updatedQueues(id);
 
-    const attentions = ref([]);
-    attentions.value = updatedAttentionsByDateAndCommerceAndQueue(id);
+    // Firebase listeners for different attention statuses
+    let pendingAttentionsRef = null;
+    let processingAttentionsRef = null;
+    let terminatedAttentionsRef = null;
 
     // Filter attentions by today's date
     const filterAttentionsByToday = attentions => {
@@ -145,106 +149,243 @@ export default {
       });
     };
 
+    // Function to update attention details from Firebase listeners
+    const updateAttentionDetails = () => {
+      if (!state.queue || !state.queue.id) {
+        return;
+      }
+
+      // Get pending attentions from Firebase listener (already filtered by date and status)
+      const pendingArray = pendingAttentionsRef?.value || [];
+
+      console.log('🔍 [updateAttentionDetails] Pending Array from Firebase:', pendingArray);
+      console.log('🔍 [updateAttentionDetails] Pending Array length:', pendingArray?.length || 0);
+
+      // Ensure we have an array and filter/sort properly
+      const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
+
+      console.log('🔍 [updateAttentionDetails] Pending List after array check:', pendingList);
+      console.log('🔍 [updateAttentionDetails] Pending List length:', pendingList.length);
+
+      // Log each attention details
+      if (pendingList.length > 0) {
+        pendingList.forEach((att, index) => {
+          console.log(`🔍 [updateAttentionDetails] Attention ${index}:`, {
+            id: att.id,
+            attentionId: att.attentionId,
+            number: att.number,
+            status: att.status,
+            createdAt: att.createdAt,
+            createdAtType: typeof att.createdAt,
+            queueId: att.queueId,
+            user: att.user,
+            fullObject: att,
+          });
+        });
+      }
+
+      // Firebase already filters by today and PENDING status, just sort by number
+      const filteredPending = [...pendingList].filter(att => att && att.status === 'PENDING');
+      console.log('🔍 [updateAttentionDetails] Filtered PENDING:', filteredPending);
+      console.log('🔍 [updateAttentionDetails] Filtered PENDING length:', filteredPending.length);
+
+      // Sort and create a new array to ensure Vue reactivity
+      const sortedPending = [...filteredPending].sort((a, b) => {
+        const numA = a.number || 0;
+        const numB = b.number || 0;
+        return numA - numB;
+      });
+
+      // CRITICAL: Replace the entire array reference to force Vue reactivity
+      // Using splice to replace all items at once - this maintains reactivity
+      state.queuePendingDetails.splice(0, state.queuePendingDetails.length, ...sortedPending);
+
+      // Force component re-render by updating key
+      state.listUpdateKey++;
+
+      console.log(
+        '🔍 [updateAttentionDetails] Final queuePendingDetails:',
+        state.queuePendingDetails,
+      );
+      console.log(
+        '🔍 [updateAttentionDetails] Final queuePendingDetails length:',
+        state.queuePendingDetails.length,
+      );
+      console.log('🔍 [updateAttentionDetails] Final queuePendingDetails (spread):', [
+        ...state.queuePendingDetails,
+      ]);
+      console.log(
+        '🔍 [updateAttentionDetails] Final queuePendingDetails isArray:',
+        Array.isArray(state.queuePendingDetails),
+      );
+      console.log('🔍 [updateAttentionDetails] listUpdateKey:', state.listUpdateKey);
+
+      // Get processing attentions from Firebase listener (already filtered by date)
+      const processingArray = processingAttentionsRef?.value || [];
+      const processingList = Array.isArray(processingArray) ? processingArray : [];
+      // Force Vue to detect the change
+      state.queueProcessingDetails.splice(
+        0,
+        state.queueProcessingDetails.length,
+        ...processingList,
+      );
+
+      // Get terminated attentions from Firebase listener (already filtered by date)
+      const terminatedArray = terminatedAttentionsRef?.value || [];
+      const terminatedList = Array.isArray(terminatedArray) ? terminatedArray : [];
+      // Sort by number (descending) to show most recent first
+      const sortedTerminated = [...terminatedList].sort((a, b) => {
+        const numA = a.number || 0;
+        const numB = b.number || 0;
+        return numB - numA;
+      });
+      // Force Vue to detect the change
+      state.queueTerminatedDetails.splice(
+        0,
+        state.queueTerminatedDetails.length,
+        ...sortedTerminated,
+      );
+
+      // Sync pendingAttentions with queuePendingDetails for backward compatibility
+      state.pendingAttentions.splice(
+        0,
+        state.pendingAttentions.length,
+        ...state.queuePendingDetails,
+      );
+
+      // Get the next available attention (first in sorted list - lowest number)
+      if (state.queuePendingDetails && state.queuePendingDetails.length > 0) {
+        const nextAttention = state.queuePendingDetails[0];
+        console.log('🔍 [updateAttentionDetails] Next Attention (first in list):', {
+          nextAttention,
+          id: nextAttention.attentionId || nextAttention.id,
+          number: nextAttention.number,
+          status: nextAttention.status,
+          createdAt: nextAttention.createdAt,
+          user: nextAttention.user,
+        });
+
+        if (nextAttention) {
+          state.attention = {
+            ...nextAttention,
+            id: nextAttention.attentionId || nextAttention.id,
+          };
+
+          console.log('🔍 [updateAttentionDetails] State.attention set to:', state.attention);
+
+          if (nextAttention.user) {
+            state.user = nextAttention.user;
+            console.log('🔍 [updateAttentionDetails] State.user set to:', state.user);
+          }
+        }
+      } else {
+        console.log('🔍 [updateAttentionDetails] No pending attentions found');
+        console.log(
+          '🔍 [updateAttentionDetails] pendingAttentionsRef exists:',
+          !!pendingAttentionsRef,
+        );
+        console.log(
+          '🔍 [updateAttentionDetails] pendingAttentionsRef.value:',
+          pendingAttentionsRef?.value,
+        );
+
+        // No pending attentions - only clear if we're sure there are none
+        // Don't clear if we're still loading
+        if (pendingAttentionsRef && pendingAttentionsRef.value !== undefined) {
+          state.attention = {};
+          state.user = {};
+        }
+      }
+
+      // Update intelligent estimation when attentions change (async, but don't await)
+      updateIntelligentEstimation();
+    };
+
+    // Store watcher stop functions for cleanup
+    let pendingWatcherStop = null;
+    let processingWatcherStop = null;
+    let terminatedWatcherStop = null;
+
     const getQueueValues = async (queue, oldQueue) => {
       loading.value = true;
       state.queue = queue;
       store.setCurrentQueue(queue);
       if (queue !== undefined && queue.id !== undefined) {
-        const allPendingDetails = await getAvailableAttentiosnByQueue(queue.id);
-        const allProcessingDetails = await getProcessingAttentionDetailsByQueue(queue.id);
-
-        // Filter by today's date and ensure only PENDING status
-        const todayPending = filterAttentionsByToday(allPendingDetails);
-        const filteredPending = todayPending.filter(att => att.status === 'PENDING');
-        // Sort by number (ascending) to show next attention first
-        state.queuePendingDetails = filteredPending.sort((a, b) => {
-          const numA = a.number || 0;
-          const numB = b.number || 0;
-          return numA - numB;
-        });
-        state.queueProcessingDetails = filterAttentionsByToday(allProcessingDetails);
-
-        // Sync pendingAttentions with queuePendingDetails for backward compatibility
-        state.pendingAttentions = [...state.queuePendingDetails];
-
-        // Get the next available attention (first in sorted list - lowest number)
-        if (state.queuePendingDetails && state.queuePendingDetails.length > 0) {
-          // Use the first pending attention (lowest number) - this is the correct next attention
-          const nextAttention = state.queuePendingDetails[0];
-          const nextAttentionNumber = nextAttention.number;
-          const nextAttentionId = nextAttention.attentionId || nextAttention.id;
-
-          if (nextAttentionNumber && nextAttentionId) {
-            try {
-              // Get full details using the specific attention number (this ensures we get the correct one)
-              // Note: function signature is (queueId, number)
-              state.attention = await getAvailableAttentionDetailsByNumber(
-                queue.id,
-                nextAttentionNumber
-              );
-
-              // Verify it's the correct attention
-              const attentionId = state.attention?.attentionId || state.attention?.id;
-              if (attentionId !== nextAttentionId) {
-                // If API returned wrong attention, use the one from sorted list
-                state.attention = {
-                  ...nextAttention,
-                  id: nextAttentionId,
-                };
-              }
-            } catch (error) {
-              // Fallback: use first attention from sorted list
-              state.attention = {
-                ...nextAttention,
-                id: nextAttentionId,
-              };
-            }
-          } else {
-            // Fallback: use first attention from sorted list
-            state.attention = {
-              ...nextAttention,
-              id: nextAttentionId,
-            };
-          }
-        } else {
-          // No pending attentions
-          state.attention = {};
+        // Clean up previous listeners if exist
+        if (pendingAttentionsRef && pendingAttentionsRef._unsubscribe) {
+          pendingAttentionsRef._unsubscribe();
+        }
+        if (processingAttentionsRef && processingAttentionsRef._unsubscribe) {
+          processingAttentionsRef._unsubscribe();
+        }
+        if (terminatedAttentionsRef && terminatedAttentionsRef._unsubscribe) {
+          terminatedAttentionsRef._unsubscribe();
         }
 
-        if (state.attention.user) {
-          state.user = state.attention.user;
-        } else if (state.queuePendingDetails && state.queuePendingDetails.length > 0) {
-          // Try to get user from the first pending attention
-          const firstAttention = state.queuePendingDetails[0];
-          if (firstAttention.user) {
-            state.user = firstAttention.user;
-          }
+        // Initialize Firebase listeners for this queue
+        pendingAttentionsRef = updatedAvailableAttentions(queue.id);
+        processingAttentionsRef = updatedProcessingAttentions(queue.id);
+        terminatedAttentionsRef = updatedTerminatedAttentions(queue.id);
+
+        // Clean up previous watchers if they exist
+        if (pendingWatcherStop) {
+          pendingWatcherStop();
         }
-        if (state.attention.commerce) {
-          state.commerce = state.attention.commerce;
+        if (processingWatcherStop) {
+          processingWatcherStop();
         }
-        // Always ensure commerce is loaded, even if not in attention
-        // Use global commerce if available and matches queue's commerceId, otherwise load from queue
+        if (terminatedWatcherStop) {
+          terminatedWatcherStop();
+        }
+
+        // Watch for changes in Firebase listeners - watch directly the ref value
+        pendingWatcherStop = watch(
+          () => pendingAttentionsRef?.value,
+          () => {
+            updateAttentionDetails();
+          },
+          { immediate: true, deep: true }
+        );
+
+        processingWatcherStop = watch(
+          () => processingAttentionsRef?.value,
+          () => {
+            updateAttentionDetails();
+          },
+          { immediate: true, deep: true }
+        );
+
+        terminatedWatcherStop = watch(
+          () => terminatedAttentionsRef?.value,
+          () => {
+            updateAttentionDetails();
+          },
+          { immediate: true, deep: true }
+        );
+
+        // Force initial update after a brief moment to ensure Firebase has initialized
+        // This handles the case where Firebase listeners haven't fired yet
+        await nextTick();
+        setTimeout(() => {
+          updateAttentionDetails();
+        }, 300);
+
+        // Load commerce if needed
         if (globalCommerce.value && globalCommerce.value.id === queue.commerceId) {
           state.commerce = globalCommerce.value;
         } else if (!state.commerce || !state.commerce.id) {
           state.commerce = await getCommerceById(queue.commerceId);
-          // Update global commerce if it matches
           if (state.commerce && state.commerce.id) {
             await store.setCurrentCommerce(state.commerce);
           }
         } else if (oldQueue && oldQueue.commerceId && queue.commerceId !== oldQueue.commerceId) {
-          // Only reload if commerceId changed
           state.commerce = await getCommerceById(queue.commerceId);
-          // Update global commerce
           if (state.commerce && state.commerce.id) {
             await store.setCurrentCommerce(state.commerce);
           }
         }
-        loading.value = false;
 
-        // Update intelligent estimation when queue changes
-        await updateIntelligentEstimation();
+        loading.value = false;
       } else {
         router.push({ path: '/not-found' });
       }
@@ -294,6 +435,22 @@ export default {
       { immediate: true }
     );
 
+    // Also watch the Firebase refs directly to ensure updates happen
+    // This is a backup mechanism in case the watchers inside getQueueValues don't fire
+    watch(
+      () => [
+        pendingAttentionsRef?.value,
+        processingAttentionsRef?.value,
+        terminatedAttentionsRef?.value,
+      ],
+      () => {
+        if (state.queue && state.queue.id) {
+          updateAttentionDetails();
+        }
+      },
+      { deep: true }
+    );
+
     const collaboratorQueues = () => {
       router.push({ path: `/interno/commerce/${state.commerce.id}/colaborador/filas` });
     };
@@ -317,6 +474,44 @@ export default {
       }
     };
 
+    const goToCheckIn = () => {
+      if (!state.attention || !state.attention.id) {
+        return;
+      }
+
+      const attentionId = state.attention.id || state.attention.attentionId;
+      if (!attentionId) {
+        return;
+      }
+
+      // Check if stages are enabled
+      const isStagesEnabled =
+        state.commerce && getActiveFeature(state.commerce, 'attention-stages-enabled', 'PRODUCT');
+
+      let path = `/interno/colaborador/atencion/${attentionId}/validar`;
+
+      if (isStagesEnabled && state.attention.currentStage) {
+        if (state.attention.currentStage === 'CHECK_IN') {
+          path = `/interno/colaborador/atencion/${attentionId}/check-in`;
+        } else if (
+          ['PRE_CONSULTATION', 'CONSULTATION', 'POST_CONSULTATION'].includes(
+            state.attention.currentStage
+          )
+        ) {
+          path = `/interno/colaborador/atencion/${attentionId}/atender`;
+        } else if (state.attention.currentStage === 'CHECKOUT') {
+          path = `/interno/colaborador/atencion/${attentionId}/checkout`;
+        }
+      } else if (isStagesEnabled && !state.attention.currentStage) {
+        // If stages enabled but no currentStage, treat PENDING as CHECK_IN
+        if (state.attention.status === 'PENDING') {
+          path = `/interno/colaborador/atencion/${attentionId}/check-in`;
+        }
+      }
+
+      router.push({ path });
+    };
+
     const finishCurrentCancelledAttention = async () => {
       try {
         loading.value = true;
@@ -332,105 +527,7 @@ export default {
       }
     };
 
-    watch(attentions, async (newData, oldData) => {
-      if (newData) {
-        // Filter by today and PENDING status
-        const todayAttentions = filterAttentionsByToday(newData);
-        state.pendingAttentions = todayAttentions.filter(att => att.status === 'PENDING');
-        store.setCurrentActiveAttentions(newData);
-
-        // Also update queuePendingDetails if queue is loaded
-        if (state.queue && state.queue.id) {
-          // Re-fetch queue details to sync with Firebase updates
-          const allPendingDetails = await getAvailableAttentiosnByQueue(state.queue.id);
-          const todayPending = filterAttentionsByToday(allPendingDetails);
-          const filteredPending = todayPending.filter(att => att.status === 'PENDING');
-          // Sort by number (ascending) to show next attention first
-          state.queuePendingDetails = filteredPending.sort((a, b) => {
-            const numA = a.number || 0;
-            const numB = b.number || 0;
-            return numA - numB;
-          });
-          // Sync pendingAttentions with queuePendingDetails
-          state.pendingAttentions = [...state.queuePendingDetails];
-
-          // Update the displayed attention to show the next available one
-          // This ensures the correct attention is shown when new attentions are added
-          if (state.queuePendingDetails && state.queuePendingDetails.length > 0) {
-            // Get the first pending attention (lowest number)
-            const nextAttention = state.queuePendingDetails[0];
-            const nextAttentionId = nextAttention.attentionId || nextAttention.id;
-
-            // Check if current attention is still valid (exists and is still pending)
-            const currentAttentionStillValid =
-              state.attention.id &&
-              state.queuePendingDetails.some(
-                att =>
-                  (att.attentionId || att.id) === state.attention.id && att.status === 'PENDING'
-              );
-
-            // Update if: current attention is invalid OR next attention is different
-            if (
-              !currentAttentionStillValid ||
-              (nextAttentionId && state.attention.id !== nextAttentionId)
-            ) {
-              try {
-                // Use the first attention from sorted list (lowest number)
-                const correctAttention = state.queuePendingDetails[0];
-                const correctAttentionId = correctAttention.attentionId || correctAttention.id;
-
-                // Try to get full details from API, but verify it's the correct one
-                const attentionDetails = await getNextAvailableAttentionDetails(state.queue.id);
-                const apiAttentionId = attentionDetails?.attentionId || attentionDetails?.id;
-
-                if (
-                  attentionDetails &&
-                  attentionDetails.id &&
-                  apiAttentionId === correctAttentionId
-                ) {
-                  // API returned the correct attention
-                  state.attention = attentionDetails;
-                  if (attentionDetails.user) {
-                    state.user = attentionDetails.user;
-                  }
-                  if (attentionDetails.commerce) {
-                    state.commerce = attentionDetails.commerce;
-                  }
-                } else {
-                  // API returned wrong attention, use the correct one from sorted list
-                  state.attention = {
-                    ...correctAttention,
-                    id: correctAttentionId,
-                  };
-                  if (correctAttention.user) {
-                    state.user = correctAttention.user;
-                  }
-                }
-              } catch (error) {
-                // Fallback: use first attention from sorted list
-                const firstAttention = state.queuePendingDetails[0];
-                state.attention = {
-                  ...firstAttention,
-                  id: firstAttention.attentionId || firstAttention.id,
-                };
-                if (firstAttention.user) {
-                  state.user = firstAttention.user;
-                }
-              }
-            }
-          } else if (state.queuePendingDetails.length === 0) {
-            // If no pending attentions, clear the current attention if it was pending
-            if (state.attention.status === 'PENDING') {
-              state.attention = {};
-              state.user = {};
-            }
-          }
-
-          // Update intelligent estimation when attentions change
-          await updateIntelligentEstimation();
-        }
-      }
-    });
+    // Watchers are now set up inside getQueueValues for each queue
 
     // Watch queuePendingDetails to update intelligent estimation when count changes
     watch(
@@ -467,6 +564,26 @@ export default {
     onUnmounted(() => {
       if (statsInterval) {
         clearInterval(statsInterval);
+      }
+      // Clean up Firebase listeners
+      if (pendingAttentionsRef && pendingAttentionsRef._unsubscribe) {
+        pendingAttentionsRef._unsubscribe();
+      }
+      if (processingAttentionsRef && processingAttentionsRef._unsubscribe) {
+        processingAttentionsRef._unsubscribe();
+      }
+      if (terminatedAttentionsRef && terminatedAttentionsRef._unsubscribe) {
+        terminatedAttentionsRef._unsubscribe();
+      }
+      // Clean up watchers
+      if (pendingWatcherStop) {
+        pendingWatcherStop();
+      }
+      if (processingWatcherStop) {
+        processingWatcherStop();
+      }
+      if (terminatedWatcherStop) {
+        terminatedWatcherStop();
       }
     });
 
@@ -569,6 +686,7 @@ export default {
       closeQueueDrawer,
       attentionStats,
       statsUpdateTrigger,
+      goToCheckIn,
     };
   },
 };
@@ -594,6 +712,8 @@ export default {
           :queue-processing-details="state.queueProcessingDetails"
           :details="true"
           :use-drawer="true"
+          :hide-see-queue="true"
+          :disable-click="true"
           @open-drawer="openQueueDrawer"
         >
         </QueueName>
@@ -601,75 +721,27 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div v-if="state.queuePendingDetails.length === 0" class="mt-2">
+
+        <!-- Queue Attention Details - Show lists directly on page -->
+        <div v-if="state.queue?.active" class="mt-4">
+          <QueueAttentionDetails
+            :key="`queue-details-${state.queue?.id}-${state.listUpdateKey}`"
+            :queue="state.queue"
+            :queue-pending-details="state.queuePendingDetails"
+            :queue-processing-details="state.queueProcessingDetails"
+            :queue-terminated-details="state.queueTerminatedDetails"
+            :commerce="state.commerce"
+            :on-close="null"
+          ></QueueAttentionDetails>
+        </div>
+
+        <div v-if="state.queuePendingDetails.length === 0 && !state.queue?.active" class="mt-2">
           <Message
             :title="$t('collaboratorQueueAttentions.message.1.title')"
             :content="$t('collaboratorQueueAttentions.message.1.content')"
             :icon="'bi bi-emoji-smile'"
           >
           </Message>
-        </div>
-        <div v-else id="attention">
-          <div v-if="state.attention.status === 'USER_CANCELLED'" class="your-attention mt-2">
-            <div class="your-attention mt-2">
-              <span>{{ $t('collaboratorQueueAttentions.numberCancelled') }}</span>
-            </div>
-            <AttentionNumber
-              :type="'secondary'"
-              :number="state.attention.number"
-              :data="state.user"
-              :attention="state.attention"
-            ></AttentionNumber>
-            <div class="d-grid gap-2 mt-3">
-              <button
-                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-1"
-                :disabled="!state.toggles['collaborator.attention.finish'] || loading"
-                @click="finishCurrentCancelledAttention()"
-              >
-                {{ $t('collaboratorQueueAttentions.actions.4.action') }}
-                <i class="bi bi-arrow-right"></i>
-              </button>
-            </div>
-          </div>
-          <div v-else>
-            <div class="your-attention mt-4 mb-3">
-              <span>{{ $t('collaboratorQueueAttentions.yourNumber') }}</span>
-            </div>
-            <AttentionNumber
-              :type="state.attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
-              :number="state.attention.number"
-              :data="state.user"
-              :attention="state.attention"
-            ></AttentionNumber>
-            <div class="waiting-people-modern-card" v-if="state.queuePendingDetails.length > 0">
-              <div class="waiting-people-content-modern">
-                <div class="waiting-people-icon-modern">
-                  <i class="bi bi-people-fill"></i>
-                </div>
-                <div class="waiting-people-text-modern">
-                  <span class="waiting-people-label-modern">{{
-                    $t('collaboratorQueueAttentions.toGoal.1')
-                  }}</span>
-                  <span class="waiting-people-value-modern">{{
-                    state.queuePendingDetails.length
-                  }}</span>
-                  <span class="waiting-people-label-modern">{{
-                    $t('collaboratorQueueAttentions.toGoal.2')
-                  }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="d-grid gap-2 my-2">
-              <button
-                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-                @click="attendAttention()"
-                :disabled="!state.toggles['collaborator.attention.attend'] || loading"
-              >
-                {{ $t('collaboratorQueueAttentions.actions.1.action') }}
-                <i class="bi bi-qr-code-scan"></i>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -713,161 +785,32 @@ export default {
           :queue-processing-details="state.queueProcessingDetails"
           :details="true"
           :use-drawer="true"
+          :hide-see-queue="true"
+          :disable-click="true"
           @open-drawer="openQueueDrawer"
         >
         </QueueName>
-        <div v-if="state.queuePendingDetails.length === 0" class="mt-2">
+
+        <!-- Queue Attention Details - Show lists directly on page -->
+        <div v-if="state.queue?.active" class="mt-4">
+          <QueueAttentionDetails
+            :key="`queue-details-${state.queue?.id}-${state.listUpdateKey}`"
+            :queue="state.queue"
+            :queue-pending-details="state.queuePendingDetails"
+            :queue-processing-details="state.queueProcessingDetails"
+            :queue-terminated-details="state.queueTerminatedDetails"
+            :commerce="state.commerce"
+            :on-close="null"
+          ></QueueAttentionDetails>
+        </div>
+
+        <div v-if="state.queuePendingDetails.length === 0 && !state.queue?.active" class="mt-2">
           <Message
             :title="$t('collaboratorQueueAttentions.message.1.title')"
             :content="$t('collaboratorQueueAttentions.message.1.content')"
             :icon="'bi bi-emoji-smile'"
           >
           </Message>
-        </div>
-        <div v-else id="attention">
-          <div v-if="state.attention.status === 'USER_CANCELLED'" class="your-attention mt-2">
-            <div class="your-attention mt-2">
-              <span>{{ $t('collaboratorQueueAttentions.numberCancelled') }}</span>
-            </div>
-            <AttentionNumber
-              :type="'secondary'"
-              :number="state.attention.number"
-              :data="state.user"
-              :attention="state.attention"
-            ></AttentionNumber>
-            <div class="d-grid gap-2 mt-3">
-              <button
-                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-1"
-                :disabled="!state.toggles['collaborator.attention.finish'] || loading"
-                @click="finishCurrentCancelledAttention()"
-              >
-                {{ $t('collaboratorQueueAttentions.actions.4.action') }}
-                <i class="bi bi-arrow-right"></i>
-              </button>
-            </div>
-          </div>
-          <div v-else>
-            <div class="your-attention mt-4 mb-3">
-              <span>{{ $t('collaboratorQueueAttentions.yourNumber') }}</span>
-            </div>
-            <AttentionNumber
-              :type="state.attention.type === 'NODEVICE' ? 'no-device' : 'primary'"
-              :number="state.attention.number"
-              :data="state.user"
-              :attention="state.attention"
-            ></AttentionNumber>
-            <!-- Attention Statistics Cards -->
-            <div v-if="attentionStats" class="attention-stats-grid mt-3">
-              <!-- Elapsed Time Card -->
-              <div
-                class="stat-card stat-card-time"
-                :class="`stat-card-${attentionStats.timeStatus}`"
-              >
-                <div class="stat-card-icon stat-card-icon-with-popper">
-                  <i class="bi bi-hourglass-split"></i>
-                  <Popper :class="'dark'" arrow hover placement="top" :z-index="10001">
-                    <template #content>
-                      <div class="popper-content">
-                        <div class="popper-title">Tempo de Espera - Indicadores de Cor</div>
-                        <div class="popper-item">
-                          <span class="popper-color" style="background: #00c2cb"></span>
-                          <span><strong>Verde:</strong> Menos de 10 minutos - Excelente</span>
-                        </div>
-                        <div class="popper-item">
-                          <span class="popper-color" style="background: #f9c322"></span>
-                          <span><strong>Amarelo:</strong> Menos de 1 hora - Bom</span>
-                        </div>
-                        <div class="popper-item">
-                          <span class="popper-color" style="background: #ff9800"></span>
-                          <span><strong>Laranja:</strong> Menos de 3 horas - Atenção</span>
-                        </div>
-                        <div class="popper-item">
-                          <span class="popper-color" style="background: #a52a2a"></span>
-                          <span><strong>Vermelho:</strong> Mais de 3 horas - Urgente</span>
-                        </div>
-                      </div>
-                    </template>
-                    <i class="bi bi-info-circle popper-trigger-icon"></i>
-                  </Popper>
-                </div>
-                <div class="stat-card-content">
-                  <div class="stat-card-label">
-                    Tempo de Espera
-                    <span class="spy-live-indicator" title="Actualización en tiempo real">
-                      <span class="spy-live-dot"></span>
-                    </span>
-                  </div>
-                  <div class="stat-card-value" :style="{ color: attentionStats.timeColor }">
-                    {{ attentionStats.elapsedTime }}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Creation Time Card -->
-              <div class="stat-card stat-card-creation">
-                <div class="stat-card-icon">
-                  <i class="bi bi-clock-history"></i>
-                </div>
-                <div class="stat-card-content">
-                  <div class="stat-card-label">Criado em</div>
-                  <div class="stat-card-value">{{ attentionStats.creationTime }}</div>
-                  <div class="stat-card-subvalue">{{ attentionStats.creationDate }}</div>
-                </div>
-              </div>
-
-              <!-- Pending Count Card -->
-              <div class="stat-card stat-card-pending" v-if="attentionStats.pendingCount > 0">
-                <div class="stat-card-icon">
-                  <i class="bi bi-people-fill"></i>
-                </div>
-                <div class="stat-card-content">
-                  <div class="stat-card-label">
-                    Na Fila
-                    <span class="spy-live-indicator" title="Actualización en tiempo real">
-                      <span class="spy-live-dot"></span>
-                    </span>
-                  </div>
-                  <div class="stat-card-value">{{ attentionStats.pendingCount }}</div>
-                </div>
-              </div>
-
-              <!-- Estimated Wait Card -->
-              <div class="stat-card stat-card-estimated" v-if="attentionStats.pendingCount > 0">
-                <div class="stat-card-icon">
-                  <i class="bi bi-stopwatch"></i>
-                </div>
-                <div class="stat-card-content">
-                  <div class="stat-card-label">
-                    Tempo Estimado
-                    <Popper
-                      v-if="attentionStats.usingIntelligentEstimation"
-                      :class="'dark'"
-                      arrow
-                      hover
-                      disable-click-away
-                      :content="$t('collaboratorQueuesView.intelligentEstimationTooltip')"
-                    >
-                      <span class="ai-badge ms-1">
-                        <i class="bi bi-stars"></i>
-                      </span>
-                    </Popper>
-                  </div>
-                  <div class="stat-card-value">{{ attentionStats.estimatedWaitTime }}</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="d-grid gap-2 my-2">
-              <button
-                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-                @click="attendAttention()"
-                :disabled="!state.toggles['collaborator.attention.attend'] || loading"
-              >
-                {{ $t('collaboratorQueueAttentions.actions.1.action') }}
-                <i class="bi bi-qr-code-scan"></i>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -892,6 +835,8 @@ export default {
               :queue="state.queue"
               :queue-pending-details="state.queuePendingDetails"
               :queue-processing-details="state.queueProcessingDetails"
+              :queue-terminated-details="state.queueTerminatedDetails"
+              :commerce="state.commerce"
               :on-close="closeQueueDrawer"
             ></QueueAttentionDetails>
           </div>

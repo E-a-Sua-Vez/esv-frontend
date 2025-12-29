@@ -18,6 +18,7 @@ import Warning from '../../components/common/Warning.vue';
 import PlanActivationName from '../../components/common/PlanActivationName.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import { USER_TYPES } from '../../shared/constants';
 
 export default {
   name: 'BusinessPlanActivationAdmin',
@@ -42,9 +43,10 @@ export default {
 
     const state = reactive({
       currentUser: {},
-      activations: {},
-      oldActivations: {},
-      oldActivationsList: {},
+      activations: [],
+      filtered: [],
+      oldActivations: [],
+      oldActivationsList: [],
       errorsValidate: false,
       extendedEntity: undefined,
       extendedOldEntity: undefined,
@@ -84,6 +86,16 @@ export default {
       goToDesactivate: false,
       searchString: '',
       toggles: {},
+      // Filtering state
+      searchText: '',
+      filterActive: '',
+      filterValidated: '',
+      // Pagination state
+      page: 1,
+      totalPages: 0,
+      limit: 10,
+      counter: 0,
+      limits: [10, 20, 50, 100],
     });
 
     onBeforeMount(async () => {
@@ -94,22 +106,14 @@ export default {
         state.activations = Array.isArray(activationsData)
           ? activationsData
           : activationsData?.data || activationsData || [];
+        state.filtered = state.activations;
         const oldActivationsData = await getValidatedPlanActivation(true);
         state.oldActivations = Array.isArray(oldActivationsData)
           ? oldActivationsData
           : oldActivationsData?.data || oldActivationsData || [];
         state.oldActivationsList = state.oldActivations;
         state.toggles = await getPermissions('activations', 'admin');
-
-        // Debug log
-        console.log('BusinessPlanActivationAdmin - Loaded data:', {
-          activations: state.activations,
-          activationsType: typeof state.activations,
-          isArray: Array.isArray(state.activations),
-          activationsLength: Array.isArray(state.activations) ? state.activations.length : 'N/A',
-          toggles: state.toggles,
-          viewPermission: state.toggles['activations.admin.view'],
-        });
+        refreshPagination();
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -183,8 +187,16 @@ export default {
             bankData: state.newPaymentData.bank,
           };
           await planValidate(activation.id, body);
-          state.activations = await getValidatedPlanActivation(false);
-          state.oldActivations = await getValidatedPlanActivation(true);
+          const activationsData = await getValidatedPlanActivation(false);
+          state.activations = Array.isArray(activationsData)
+            ? activationsData
+            : activationsData?.data || activationsData || [];
+          state.filtered = state.activations;
+          applyFilters();
+          const oldActivationsData = await getValidatedPlanActivation(true);
+          state.oldActivations = Array.isArray(oldActivationsData)
+            ? oldActivationsData
+            : oldActivationsData?.data || oldActivationsData || [];
           state.newPaymentData = {};
         }
         alertError.value = '';
@@ -208,8 +220,16 @@ export default {
         loading.value = true;
         if (activation.active === true) {
           await planDesactivate(activation.id);
-          state.activations = await getValidatedPlanActivation(false);
-          state.oldActivations = await getValidatedPlanActivation(true);
+          const activationsData = await getValidatedPlanActivation(false);
+          state.activations = Array.isArray(activationsData)
+            ? activationsData
+            : activationsData?.data || activationsData || [];
+          state.filtered = state.activations;
+          applyFilters();
+          const oldActivationsData = await getValidatedPlanActivation(true);
+          state.oldActivations = Array.isArray(oldActivationsData)
+            ? oldActivationsData
+            : oldActivationsData?.data || oldActivationsData || [];
           state.newPaymentData = {};
           state.goToDesactivate = false;
         }
@@ -221,12 +241,79 @@ export default {
       }
     };
 
+    // Filtering functions
+    const applyFilters = () => {
+      let filtered = [...state.activations];
+
+      // Search filter
+      if (state.searchText && state.searchText.trim().length > 0) {
+        const searchLower = state.searchText.toLowerCase().trim();
+        filtered = filtered.filter(activation => {
+          const businessName = (activation.business?.name || '').toLowerCase();
+          const planName = (activation.planPayedCopy?.name || '').toLowerCase();
+          return businessName.includes(searchLower) || planName.includes(searchLower);
+        });
+      }
+
+      // Active filter
+      if (state.filterActive !== '') {
+        const isActive = state.filterActive === 'true';
+        filtered = filtered.filter(activation => activation.active === isActive);
+      }
+
+      // Validated filter
+      if (state.filterValidated !== '') {
+        const isValidated = state.filterValidated === 'true';
+        filtered = filtered.filter(activation => activation.validated === isValidated);
+      }
+
+      state.filtered = filtered;
+      state.page = 1; // Reset to first page on filter
+      refreshPagination();
+    };
+
+    // Pagination methods
+    const refreshPagination = () => {
+      state.counter = state.filtered.length;
+      state.totalPages = Math.ceil(state.counter / state.limit) || 1;
+      if (state.page > state.totalPages) {
+        state.page = 1;
+      }
+    };
+
+    const setPage = pageIn => {
+      state.page = pageIn;
+    };
+
+    // Computed for paginated items
+    const paginatedItems = computed(() => {
+      const start = (state.page - 1) * state.limit;
+      const end = start + state.limit;
+      return state.filtered.slice(start, end);
+    });
+
+    // Watch for filter changes
+    const handleSearchChange = () => {
+      applyFilters();
+    };
+
+    const handleFilterChange = () => {
+      applyFilters();
+    };
+
+    const clearFilters = () => {
+      state.searchText = '';
+      state.filterActive = '';
+      state.filterValidated = '';
+      applyFilters();
+    };
+
     watch(
       () => state.searchString,
       () => {
         if (state.searchString.length >= 3) {
           state.oldActivations = state.oldActivationsList.filter(i =>
-            i.business.name.toLowerCase().startsWith(state.searchString.toLowerCase())
+            i.business?.name?.toLowerCase().startsWith(state.searchString.toLowerCase())
           );
         } else {
           state.oldActivations = state.oldActivationsList;
@@ -234,6 +321,9 @@ export default {
       },
       { immediate: true }
     );
+
+    // Computed para obtener el userType
+    const currentUserType = computed(() => store.getCurrentUserType);
 
     return {
       state,
@@ -246,6 +336,14 @@ export default {
       goToDesactivate,
       cancelDesactivate,
       desactivate,
+      handleSearchChange,
+      handleFilterChange,
+      clearFilters,
+      refreshPagination,
+      setPage,
+      paginatedItems,
+      currentUserType,
+      USER_TYPES,
     };
   },
 };
@@ -269,23 +367,6 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessPlanActivationAdmin">
-          <!-- DEBUG INFO -->
-          <div style="background: yellow; padding: 10px; margin: 10px; border: 2px solid red">
-            <strong>DEBUG INFO:</strong><br />
-            Loading: {{ loading }}<br />
-            Activations:
-            {{
-              Array.isArray(state.activations)
-                ? state.activations.length
-                : 'NOT ARRAY: ' + typeof state.activations
-            }}<br />
-            Activations Type: {{ typeof state.activations }}<br />
-            Has Toggles: {{ !!state.toggles && Object.keys(state.toggles).length > 0 }}<br />
-            View Permission: {{ state.toggles['activations.admin.view'] }}<br />
-            Toggles Keys: {{ state.toggles ? Object.keys(state.toggles).join(', ') : 'NO TOGGLES'
-            }}<br />
-            Activations Value: {{ JSON.stringify(state.activations).substring(0, 200) }}
-          </div>
           <div v-if="state.toggles['activations.admin.view']">
             <div v-if="!loading" id="businessPlanActivationAdmin-result" class="mt-4">
               <div>
@@ -295,23 +376,192 @@ export default {
                     :content="$t('businessPlanActivationAdmin.message.2.content')"
                   />
                 </div>
-                <div class="row mb-2">
-                  <div class="col text-label">
-                    <span>{{ $t('businessPlanActivationAdmin.listResult') }}</span>
-                    <span class="fw-bold m-2">{{ state.activations.length }}</span>
+                <!-- Search and Filters -->
+                <div class="search-filters-container mb-3">
+                  <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-6">
+                      <div class="search-input-wrapper">
+                        <i class="bi bi-search search-icon"></i>
+                        <input
+                          type="text"
+                          class="form-control search-input"
+                          v-model="state.searchText"
+                          @input="handleSearchChange"
+                          :placeholder="$t('common.search')"
+                        />
+                  </div>
+                </div>
+                    <div class="col-6 col-md-3">
+                      <select
+                        class="form-control filter-select"
+                        v-model="state.filterActive"
+                        @change="handleFilterChange"
+                      >
+                        <option value="">
+                          {{ $t('businessPlanActivationAdmin.active') }}: {{ $t('common.all') }}
+                        </option>
+                        <option value="true">{{ $t('active') }}</option>
+                        <option value="false">{{ $t('inactive') }}</option>
+                      </select>
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <select
+                        class="form-control filter-select"
+                        v-model="state.filterValidated"
+                        @change="handleFilterChange"
+                      >
+                        <option value="">
+                          {{ $t('businessPlanActivationAdmin.validated') }}: {{ $t('common.all') }}
+                        </option>
+                        <option value="true">{{ $t('businessPlan.planValidated') }}</option>
+                        <option value="false">{{ $t('businessPlan.planPending') }}</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="row g-2 mb-2">
+                    <div class="col-12 text-end">
+                      <button
+                        class="btn btn-sm btn-secondary rounded-pill px-3"
+                        @click="clearFilters"
+                        v-if="state.searchText || state.filterActive || state.filterValidated"
+                      >
+                        <i class="bi bi-x-circle"></i> {{ $t('common.reset') }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <!-- Pagination Mobile/Tablet -->
+                <div v-if="state.filtered && state.filtered.length > 0" class="mt-3 mb-3">
+                  <div
+                    class="d-flex justify-content-center align-items-center flex-wrap gap-2 mb-2"
+                  >
+                    <span class="badge bg-secondary px-2 py-2 m-1">
+                      {{ $t('businessPlanActivationAdmin.listResult') }} {{ state.counter }}
+                    </span>
+                    <span class="badge bg-secondary px-2 py-2 m-1">
+                      {{ $t('page') }} {{ state.page }} {{ $t('of') }} {{ state.totalPages }}
+                    </span>
+                    <select
+                      class="btn btn-sm btn-light fw-bold text-dark select mx-1"
+                      v-model="state.limit"
+                      @change="refreshPagination()"
+                    >
+                      <option v-for="lim in state.limits" :key="lim" :value="lim">
+                        {{ lim }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="centered mt-2" v-if="state.filtered">
+                    <nav>
+                      <ul class="pagination pagination-ul">
+                        <li class="page-item">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                            aria-label="First"
+                            @click="setPage(1)"
+                            :disabled="state.page === 1 || state.totalPages === 0"
+                          >
+                            <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
+                          </button>
+                        </li>
+                        <li class="page-item">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                            aria-label="Previous"
+                            @click="setPage(state.page - 1)"
+                            :disabled="state.page === 1 || state.totalPages === 0"
+                          >
+                            <span aria-hidden="true">&laquo;</span>
+                          </button>
+                        </li>
+                        <li>
+                          <select
+                            class="btn btn-md btn-light fw-bold text-dark select mx-1 py-1"
+                            v-model="state.page"
+                            :disabled="state.totalPages === 0"
+                          >
+                            <option v-for="pag in state.totalPages" :key="pag" :value="pag">
+                              {{ pag }}
+                            </option>
+                          </select>
+                        </li>
+                        <li class="page-item">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                            aria-label="Next"
+                            @click="setPage(state.page + 1)"
+                            :disabled="state.page === state.totalPages || state.totalPages === 0"
+                          >
+                            <span aria-hidden="true">&raquo;</span>
+                          </button>
+                        </li>
+                        <li class="page-item">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                            aria-label="Last"
+                            @click="setPage(state.totalPages)"
+                            :disabled="state.page === state.totalPages || state.totalPages === 1"
+                          >
+                            <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
+                          </button>
+                        </li>
+                      </ul>
+                    </nav>
                   </div>
                 </div>
                 <div
-                  v-for="(activation, index) in state.activations"
+                  v-for="(activation, index) in paginatedItems"
                   :key="index"
-                  class="result-card"
+                  class="activation-card"
                 >
-                  <div class="row">
-                    <div class="col-10">
-                      <PlanActivationName :activation="activation"></PlanActivationName>
+                  <div class="activation-card-header">
+                    <div class="row align-items-center g-2">
+                      <div class="col-auto">
+                        <div class="activation-icon-wrapper">
+                          <i
+                            :class="`bi bi-star${activation.active ? '-fill' : ''} activation-icon`"
+                          ></i>
                     </div>
-                    <div class="col-2">
-                      <a href="#" @click.prevent="showForm(index)">
+                      </div>
+                      <div class="col activation-name-wrapper">
+                        <h5 class="activation-title mb-0 fw-bold">
+                          {{ activation.business?.name || 'N/A' }}
+                        </h5>
+                        <div class="activation-meta">
+                          <span
+                            v-if="activation.planPayedCopy?.name"
+                            class="activation-plan-badge"
+                          >
+                            <i class="bi bi-tag"></i> {{ activation.planPayedCopy.name }}
+                          </span>
+                          <span
+                            :class="`badge rounded-pill ${
+                              activation.active ? 'bg-success' : 'bg-secondary'
+                            } ms-2`"
+                          >
+                            {{ activation.active ? $t('active') : $t('inactive') }}
+                          </span>
+                          <span
+                            :class="`badge rounded-pill ${
+                              activation.validated ? 'bg-primary' : 'bg-warning'
+                            } ms-2`"
+                          >
+                            {{
+                              activation.validated
+                                ? $t('businessPlan.planValidated')
+                                : $t('businessPlan.planPending')
+                            }}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="col-auto">
+                        <div class="activation-status-badges">
+                          <a
+                            href="#"
+                            @click.prevent="showForm(index)"
+                            class="activation-toggle-btn text-decoration-none"
+                            :class="{ active: state.extendedEntity === index }"
+                          >
                         <i
                           :id="index"
                           :class="`bi ${
@@ -319,12 +569,14 @@ export default {
                           }`"
                         ></i>
                       </a>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div
                     v-if="state.toggles['activations.admin.read']"
                     :class="{ show: state.extendedEntity === index }"
-                    class="detailed-data transition-slow"
+                    class="activation-details-container transition-slow"
                   >
                     <div class="form-fields-container">
                       <div class="form-group-modern">
@@ -456,14 +708,56 @@ export default {
                     <div
                       v-for="(activation, index) in state.oldActivations.slice(0, 10)"
                       :key="index"
-                      class="result-card"
+                      class="activation-card mb-4"
                     >
-                      <div class="row">
-                        <div class="col-10">
-                          <PlanActivationName :activation="activation"></PlanActivationName>
+                      <div class="activation-card-header">
+                        <div class="row align-items-center g-2">
+                          <div class="col-auto">
+                            <div class="activation-icon-wrapper">
+                              <i
+                                :class="`bi bi-star${activation.active ? '-fill' : ''} activation-icon`"
+                              ></i>
                         </div>
-                        <div class="col-2">
-                          <a href="#" @click.prevent="showOldForm(index)">
+                          </div>
+                          <div class="col activation-name-wrapper">
+                            <h5 class="activation-title mb-0 fw-bold">
+                              {{ activation.business?.name || 'N/A' }}
+                            </h5>
+                            <div class="activation-meta">
+                              <span
+                                v-if="activation.planPayedCopy?.name"
+                                class="activation-plan-badge"
+                              >
+                                <i class="bi bi-tag"></i> {{ activation.planPayedCopy.name }}
+                              </span>
+                              <span
+                                :class="`badge rounded-pill ${
+                                  activation.active ? 'bg-success' : 'bg-secondary'
+                                } ms-2`"
+                              >
+                                {{ activation.active ? $t('active') : $t('inactive') }}
+                              </span>
+                              <span
+                                :class="`badge rounded-pill ${
+                                  activation.validated ? 'bg-primary' : 'bg-warning'
+                                } ms-2`"
+                              >
+                                {{
+                                  activation.validated
+                                    ? $t('businessPlan.planValidated')
+                                    : $t('businessPlan.planPending')
+                                }}
+                              </span>
+                            </div>
+                          </div>
+                          <div class="col-auto">
+                            <div class="activation-status-badges">
+                              <a
+                                href="#"
+                                @click.prevent="showOldForm(index)"
+                                class="activation-toggle-btn text-decoration-none"
+                                :class="{ active: state.extendedOldEntity === index }"
+                              >
                             <i
                               :id="index"
                               :class="`bi ${
@@ -473,12 +767,14 @@ export default {
                               }`"
                             ></i>
                           </a>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       <div
                         v-if="state.toggles['activations.admin.read']"
                         :class="{ show: state.extendedOldEntity === index }"
-                        class="detailed-data transition-slow"
+                        class="activation-details-container transition-slow"
                       >
                         <div class="form-fields-container">
                           <div class="form-group-modern">
@@ -565,7 +861,7 @@ export default {
                           </div>
                         </div>
                       </div>
-                      <div class="col" v-if="state.extendedOldEntity === index">
+                      <div class="col-12 text-center" v-if="state.extendedOldEntity === index">
                         <button
                           class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                           @click="goToDesactivate()"
@@ -653,23 +949,190 @@ export default {
                     :content="$t('businessPlanActivationAdmin.message.2.content')"
                   />
                 </div>
-                <div class="row mb-2">
-                  <div class="col text-label">
-                    <span>{{ $t('businessPlanActivationAdmin.listResult') }}</span>
-                    <span class="fw-bold m-2">{{ state.activations.length }}</span>
+                <!-- Search and Filters -->
+                <div class="search-filters-container mb-3">
+                  <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-6">
+                      <div class="search-input-wrapper">
+                        <i class="bi bi-search search-icon"></i>
+                        <input
+                          type="text"
+                          class="form-control search-input"
+                          v-model="state.searchText"
+                          @input="handleSearchChange"
+                          :placeholder="$t('common.search')"
+                        />
+                      </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <select
+                        class="form-control filter-select"
+                        v-model="state.filterActive"
+                        @change="handleFilterChange"
+                      >
+                        <option value="">
+                          {{ $t('businessPlanActivationAdmin.active') }}: {{ $t('common.all') }}
+                        </option>
+                        <option value="true">{{ $t('active') }}</option>
+                        <option value="false">{{ $t('inactive') }}</option>
+                      </select>
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <select
+                        class="form-control filter-select"
+                        v-model="state.filterValidated"
+                        @change="handleFilterChange"
+                      >
+                        <option value="">
+                          {{ $t('businessPlanActivationAdmin.validated') }}: {{ $t('common.all') }}
+                        </option>
+                        <option value="true">{{ $t('businessPlan.planValidated') }}</option>
+                        <option value="false">{{ $t('businessPlan.planPending') }}</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="row g-2 mb-2">
+                    <div class="col-12 text-end">
+                      <button
+                        class="btn btn-sm btn-secondary rounded-pill px-3"
+                        @click="clearFilters"
+                        v-if="state.searchText || state.filterActive || state.filterValidated"
+                      >
+                        <i class="bi bi-x-circle"></i> {{ $t('common.reset') }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <!-- Pagination Desktop -->
+                <div v-if="state.filtered && state.filtered.length > 0" class="mt-3 mb-3">
+                  <div class="d-flex justify-content-center align-items-center flex-wrap gap-2 mb-2">
+                    <span class="badge bg-secondary px-2 py-2 m-1">
+                      {{ $t('businessPlanActivationAdmin.listResult') }} {{ state.counter }}
+                    </span>
+                    <span class="badge bg-secondary px-2 py-2 m-1">
+                      {{ $t('page') }} {{ state.page }} {{ $t('of') }} {{ state.totalPages }}
+                    </span>
+                    <select
+                      class="btn btn-sm btn-light fw-bold text-dark select mx-1"
+                      v-model="state.limit"
+                      @change="refreshPagination()"
+                    >
+                      <option v-for="lim in state.limits" :key="lim" :value="lim">
+                        {{ lim }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="centered mt-2" v-if="state.filtered">
+                    <nav>
+                      <ul class="pagination pagination-ul">
+                        <li class="page-item">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                            aria-label="First"
+                            @click="setPage(1)"
+                            :disabled="state.page === 1 || state.totalPages === 0"
+                          >
+                            <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
+                          </button>
+                        </li>
+                        <li class="page-item">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                            aria-label="Previous"
+                            @click="setPage(state.page - 1)"
+                            :disabled="state.page === 1 || state.totalPages === 0"
+                          >
+                            <span aria-hidden="true">&laquo;</span>
+                          </button>
+                        </li>
+                        <li>
+                          <select
+                            class="btn btn-md btn-light fw-bold text-dark select mx-1 py-1"
+                            v-model="state.page"
+                            :disabled="state.totalPages === 0"
+                          >
+                            <option v-for="pag in state.totalPages" :key="pag" :value="pag">
+                              {{ pag }}
+                            </option>
+                          </select>
+                        </li>
+                        <li class="page-item">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                            aria-label="Next"
+                            @click="setPage(state.page + 1)"
+                            :disabled="state.page === state.totalPages || state.totalPages === 0"
+                          >
+                            <span aria-hidden="true">&raquo;</span>
+                          </button>
+                        </li>
+                        <li class="page-item">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                            aria-label="Last"
+                            @click="setPage(state.totalPages)"
+                            :disabled="state.page === state.totalPages || state.totalPages === 1"
+                          >
+                            <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
+                          </button>
+                        </li>
+                      </ul>
+                    </nav>
                   </div>
                 </div>
                 <div
-                  v-for="(activation, index) in state.activations"
+                  v-for="(activation, index) in paginatedItems"
                   :key="index"
-                  class="result-card"
+                  class="activation-card mb-4"
                 >
-                  <div class="row">
-                    <div class="col-10">
-                      <PlanActivationName :activation="activation"></PlanActivationName>
+                  <div class="activation-card-header">
+                    <div class="row align-items-center g-2">
+                      <div class="col-auto">
+                        <div class="activation-icon-wrapper">
+                          <i
+                            :class="`bi bi-star${activation.active ? '-fill' : ''} activation-icon`"
+                          ></i>
                     </div>
-                    <div class="col-2">
-                      <a href="#" @click.prevent="showForm(index)">
+                      </div>
+                      <div class="col activation-name-wrapper">
+                        <h5 class="activation-title mb-0 fw-bold">
+                          {{ activation.business?.name || 'N/A' }}
+                        </h5>
+                        <div class="activation-meta">
+                          <span
+                            v-if="activation.planPayedCopy?.name"
+                            class="activation-plan-badge"
+                          >
+                            <i class="bi bi-tag"></i> {{ activation.planPayedCopy.name }}
+                          </span>
+                          <span
+                            :class="`badge rounded-pill ${
+                              activation.active ? 'bg-success' : 'bg-secondary'
+                            } ms-2`"
+                          >
+                            {{ activation.active ? $t('active') : $t('inactive') }}
+                          </span>
+                          <span
+                            :class="`badge rounded-pill ${
+                              activation.validated ? 'bg-primary' : 'bg-warning'
+                            } ms-2`"
+                          >
+                            {{
+                              activation.validated
+                                ? $t('businessPlan.planValidated')
+                                : $t('businessPlan.planPending')
+                            }}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="col-auto">
+                        <div class="activation-status-badges">
+                          <a
+                            href="#"
+                            @click.prevent="showForm(index)"
+                            class="activation-toggle-btn text-decoration-none"
+                            :class="{ active: state.extendedEntity === index }"
+                          >
                         <i
                           :id="index"
                           :class="`bi ${
@@ -677,12 +1140,14 @@ export default {
                           }`"
                         ></i>
                       </a>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div
                     v-if="state.toggles['activations.admin.read']"
                     :class="{ show: state.extendedEntity === index }"
-                    class="detailed-data transition-slow"
+                    class="activation-details-container transition-slow"
                   >
                     <div class="form-fields-container">
                       <div class="form-group-modern">
@@ -814,14 +1279,56 @@ export default {
                     <div
                       v-for="(activation, index) in state.oldActivations.slice(0, 10)"
                       :key="index"
-                      class="result-card"
+                      class="activation-card mb-4"
                     >
-                      <div class="row">
-                        <div class="col-10">
-                          <PlanActivationName :activation="activation"></PlanActivationName>
+                      <div class="activation-card-header">
+                        <div class="row align-items-center g-2">
+                          <div class="col-auto">
+                            <div class="activation-icon-wrapper">
+                              <i
+                                :class="`bi bi-star${activation.active ? '-fill' : ''} activation-icon`"
+                              ></i>
                         </div>
-                        <div class="col-2">
-                          <a href="#" @click.prevent="showOldForm(index)">
+                          </div>
+                          <div class="col activation-name-wrapper">
+                            <h5 class="activation-title mb-0 fw-bold">
+                              {{ activation.business?.name || 'N/A' }}
+                            </h5>
+                            <div class="activation-meta">
+                              <span
+                                v-if="activation.planPayedCopy?.name"
+                                class="activation-plan-badge"
+                              >
+                                <i class="bi bi-tag"></i> {{ activation.planPayedCopy.name }}
+                              </span>
+                              <span
+                                :class="`badge rounded-pill ${
+                                  activation.active ? 'bg-success' : 'bg-secondary'
+                                } ms-2`"
+                              >
+                                {{ activation.active ? $t('active') : $t('inactive') }}
+                              </span>
+                              <span
+                                :class="`badge rounded-pill ${
+                                  activation.validated ? 'bg-primary' : 'bg-warning'
+                                } ms-2`"
+                              >
+                                {{
+                                  activation.validated
+                                    ? $t('businessPlan.planValidated')
+                                    : $t('businessPlan.planPending')
+                                }}
+                              </span>
+                            </div>
+                          </div>
+                          <div class="col-auto">
+                            <div class="activation-status-badges">
+                              <a
+                                href="#"
+                                @click.prevent="showOldForm(index)"
+                                class="activation-toggle-btn text-decoration-none"
+                                :class="{ active: state.extendedOldEntity === index }"
+                              >
                             <i
                               :id="index"
                               :class="`bi ${
@@ -831,12 +1338,14 @@ export default {
                               }`"
                             ></i>
                           </a>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       <div
                         v-if="state.toggles['activations.admin.read']"
                         :class="{ show: state.extendedOldEntity === index }"
-                        class="detailed-data transition-slow"
+                        class="activation-details-container transition-slow"
                       >
                         <div class="form-fields-container">
                           <div class="form-group-modern">
@@ -923,7 +1432,7 @@ export default {
                           </div>
                         </div>
                       </div>
-                      <div class="col" v-if="state.extendedOldEntity === index">
+                      <div class="col-12 text-center" v-if="state.extendedOldEntity === index">
                         <button
                           class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                           @click="goToDesactivate()"
@@ -978,8 +1487,8 @@ export default {
 .form-fields-container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.5rem;
+  gap: 1rem;
+  padding: 0.75rem;
 }
 
 .form-group-modern {
@@ -1048,35 +1557,170 @@ export default {
   border: 1.5px solid var(--gris-clear);
 }
 
-.activation-details-container {
+.activation-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 251, 252, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 1px solid rgba(169, 169, 169, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.activation-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.activation-card-header {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(169, 169, 169, 0.1);
+  margin-bottom: 0.5rem;
+}
+
+.activation-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--azul-qr) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.activation-icon {
+  font-size: 1.3rem;
+  color: white;
+}
+
+.activation-name-wrapper {
+  min-width: 0;
+}
+
+.activation-title {
+  font-size: 1.1rem;
+  color: var(--gris-default);
+  margin-bottom: 0.25rem;
+}
+
+.activation-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.activation-plan-badge {
   font-size: 0.8rem;
-  margin-left: 0.5rem;
-  margin-right: 0.5rem;
+  color: var(--azul-turno);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.activation-status-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.activation-toggle-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(169, 169, 169, 0.1);
+  color: var(--gris-default);
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.activation-toggle-btn:hover {
+  background-color: rgba(169, 169, 169, 0.2);
+  color: var(--azul-turno);
+  transform: scale(1.05);
+}
+
+.activation-toggle-btn.active {
+  background-color: var(--azul-turno);
+  color: white;
+}
+
+.activation-details-container {
+  font-size: 0.85rem;
+  padding: 0.75rem;
+  background-color: rgba(250, 251, 252, 0.5);
+  border-radius: 6px;
   margin-top: 0.5rem;
-  margin-bottom: 0;
-  padding: 0.5rem;
-  background-color: rgba(248, 249, 250, 0.5);
-  border-radius: 5px;
+  max-height: 0px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  animation: slideDown 0.3s ease;
+}
+
+.activation-details-container.show {
+  max-height: 2000px !important;
+  overflow-y: auto;
+  padding: 1.25rem;
+  min-height: 300px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .is-disabled {
   opacity: 0.5;
 }
 
-.detailed-data {
-  width: 100%;
-  max-height: 0px;
-  height: auto;
-  overflow: hidden;
-  margin: 0px auto auto;
-  background-color: var(--color-background);
-  transition: max-height 0.3s ease;
+.search-filters-container {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
 }
 
-.detailed-data.show {
-  padding: 10px;
-  max-height: 2000px !important;
-  overflow-y: visible;
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--gris-default);
+}
+
+.search-input,
+.filter-select {
+  padding-left: 35px;
+  border-radius: 8px;
+  border-color: var(--gris-clear);
+}
+
+.filter-select {
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20256%20512%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M119.5%20326.9L3.5%20209.1c-4.7-4.7-4.7-12.3%200-17l7.1-7.1c4.7-4.7%2012.3-4.7%2017%200L128%20297.9l100.4-100.9c4.7-4.7%2012.3-4.7%2017%200l7.1%207.1c4.7%204.7%204.7%2012.3%200%2017L136.5%20326.9c-4.7%204.6-12.3%204.6-17-.1z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 0.8em;
+  padding-right: 2.5rem;
 }
 
 /* Desktop Layout Styles */

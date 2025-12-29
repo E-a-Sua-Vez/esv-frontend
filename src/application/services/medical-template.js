@@ -29,6 +29,11 @@ export const searchTemplates = async (commerceId, doctorId, searchDto) => {
   ).data;
 };
 
+// ✅ Helper para obtener todos los templates de un commerce
+export const getTemplatesByCommerce = async (commerceId, doctorId) => {
+  return searchTemplates(commerceId, doctorId, { limit: 1000 });
+};
+
 export const processTemplate = async (templateId, variables) =>
   (await requestBackend.post(`/${entity}/process`, { templateId, variables }, await getHeaders()))
     .data;

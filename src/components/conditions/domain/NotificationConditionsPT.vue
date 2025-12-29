@@ -508,6 +508,101 @@ export default {
       </li>
       <br />
     </ul>
+    <h5>Informações sobre a Lei Geral de Proteção de Dados (LGPD - Lei 13.709/2018)</h5>
+    <p>
+      Esta seção é especialmente importante para usuários localizados no Brasil. A Lei Geral de
+      Proteção de Dados (LGPD) regula o tratamento de dados pessoais no Brasil e estabelece direitos
+      e deveres para titulares de dados e controladores de dados.
+    </p>
+    <h5>O que é a LGPD?</h5>
+    <p>
+      A LGPD é uma lei brasileira que estabelece regras sobre coleta, armazenamento, tratamento e
+      compartilhamento de dados pessoais. Ela garante aos titulares de dados (você) maior controle
+      sobre suas informações pessoais e estabelece obrigações para as empresas que tratam esses
+      dados.
+    </p>
+    <h5>Seus Direitos sob a LGPD</h5>
+    <p>Como titular de dados, você tem os seguintes direitos:</p>
+    <ul>
+      <li>
+        <strong>Confirmação e Acesso:</strong> Você pode solicitar confirmação sobre o tratamento de
+        seus dados pessoais e obter acesso aos dados.
+      </li>
+      <li>
+        <strong>Correção:</strong> Você pode solicitar a correção de dados incompletos, inexatos ou
+        desatualizados.
+      </li>
+      <li>
+        <strong>Anonimização, Bloqueio ou Eliminação:</strong> Você pode solicitar a anonimização,
+        bloqueio ou eliminação de dados desnecessários, excessivos ou tratados em desconformidade
+        com a LGPD.
+      </li>
+      <li>
+        <strong>Portabilidade:</strong> Você pode solicitar a portabilidade de seus dados para outro
+        fornecedor de serviço.
+      </li>
+      <li>
+        <strong>Eliminação:</strong> Você pode solicitar a eliminação dos dados pessoais tratados
+        com seu consentimento.
+      </li>
+      <li>
+        <strong>Informação:</strong> Você pode obter informações sobre entidades públicas e privadas
+        com as quais compartilhamos seus dados.
+      </li>
+      <li>
+        <strong>Revogação do Consentimento:</strong> Você pode revogar seu consentimento a qualquer
+        momento.
+      </li>
+    </ul>
+    <h5>Base Legal para Tratamento de Dados</h5>
+    <p>Tratamos seus dados pessoais com base nas seguintes bases legais previstas na LGPD:</p>
+    <ul>
+      <li>
+        <strong>Consentimento:</strong> Quando você aceita nossos termos e condições, você está
+        fornecendo consentimento explícito para o tratamento de seus dados.
+      </li>
+      <li>
+        <strong>Execução de Contrato:</strong> Para cumprir obrigações contratuais relacionadas à
+        prestação de serviços.
+      </li>
+      <li>
+        <strong>Legítimo Interesse:</strong> Para melhorar nossos serviços e experiência do usuário.
+      </li>
+      <li>
+        <strong>Cumprimento de Obrigações Legais:</strong> Quando necessário para cumprir obrigações
+        legais ou regulatórias.
+      </li>
+    </ul>
+    <h5>Como Exercer Seus Direitos</h5>
+    <p>
+      Para exercer seus direitos sob a LGPD, você pode entrar em contato conosco através do email:
+      ola@easuavez.com ou através do nosso site. Responderemos sua solicitação no prazo de 15
+      (quinze) dias, conforme exigido pela lei.
+    </p>
+    <h5>Segurança dos Dados</h5>
+    <p>
+      Implementamos medidas técnicas e organizacionais adequadas para proteger seus dados pessoais
+      contra acesso não autorizado, perda, destruição ou alteração. Utilizamos criptografia,
+      controles de acesso e monitoramento contínuo para garantir a segurança de suas informações.
+    </p>
+    <h5>Compartilhamento de Dados</h5>
+    <p>
+      Podemos compartilhar seus dados pessoais apenas com terceiros que também estejam em
+      conformidade com a LGPD e apenas para os fins especificados nesta política. Não vendemos seus
+      dados pessoais.
+    </p>
+    <h5>Retenção de Dados</h5>
+    <p>
+      Mantemos seus dados pessoais apenas pelo tempo necessário para cumprir os propósitos para os
+      quais foram coletados, conforme exigido por lei ou regulamento aplicável. Dados de prontuários
+      médicos são mantidos por 20 anos, conforme exigido pela legislação brasileira.
+    </p>
+    <h5>Notificação de Incidentes</h5>
+    <p>
+      Em caso de incidente de segurança que possa causar risco ou dano relevante aos titulares,
+      notificaremos a Autoridade Nacional de Proteção de Dados (ANPD) e os titulares afetados,
+      conforme exigido pela LGPD.
+    </p>
     <h5>Informações sobre o Regulamento Geral de Proteção de Dados (GDPR)</h5>
     <p>
       Podemos coletar e usar informações sobre você se você estiver localizado no Espaço Econômico

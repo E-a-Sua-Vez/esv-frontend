@@ -1,5 +1,11 @@
 const CollaboratorAttentionValidate = () =>
   import('@/views/collaborator/CollaboratorAttentionValidate.vue');
+const CollaboratorAttentionCheckIn = () =>
+  import('@/views/collaborator/CollaboratorAttentionCheckIn.vue');
+const CollaboratorAttentionCheckout = () =>
+  import('@/views/collaborator/CollaboratorAttentionCheckout.vue');
+const CollaboratorAttentionTerminated = () =>
+  import('@/views/collaborator/CollaboratorAttentionTerminated.vue');
 const CollaboratorQueuesView = () => import('@/views/collaborator/CollaboratorQueuesView.vue');
 const CollaboratorQueueAttentions = () =>
   import('@/views/collaborator/CollaboratorQueueAttentions.vue');
@@ -25,6 +31,26 @@ const PrivateCollaboratorRoutes = [
     path: '/interno/colaborador/atencion/:id/validar',
     name: 'collaborator-attention-validate',
     component: CollaboratorAttentionValidate,
+  },
+  {
+    path: '/interno/colaborador/atencion/:id/check-in',
+    name: 'collaborator-attention-check-in',
+    component: CollaboratorAttentionCheckIn,
+  },
+  {
+    path: '/interno/colaborador/atencion/:id/atender',
+    name: 'collaborator-attention-attend',
+    component: CollaboratorAttentionValidate,
+  },
+  {
+    path: '/interno/colaborador/atencion/:id/checkout',
+    name: 'collaborator-attention-checkout',
+    component: CollaboratorAttentionCheckout,
+  },
+  {
+    path: '/interno/colaborador/atencion/:id/terminated',
+    name: 'collaborator-attention-terminated',
+    component: CollaboratorAttentionTerminated,
   },
   {
     path: '/interno/commerce/:id/colaborador/filas',

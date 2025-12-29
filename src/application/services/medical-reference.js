@@ -40,3 +40,21 @@ export const getReferencePdfUrl = async (id, expiresIn = 3600) => {
   const params = expiresIn ? `?expiresIn=${expiresIn}` : '';
   return (await requestBackend.get(`/${entity}/${id}/pdf-url${params}`, await getHeaders())).data;
 };
+
+/**
+ * Enviar referencia por email
+ */
+export const sendReferenceByEmail = async (id, emailData) =>
+  (await requestBackend.post(`/${entity}/${id}/send-email`, emailData, await getHeaders())).data;
+
+/**
+ * Assinar referência médica com certificado digital ICP-Brasil
+ */
+export const signReference = async (id, signatureData) =>
+  (await requestBackend.post(`/${entity}/${id}/sign`, signatureData, await getHeaders())).data;
+
+/**
+ * Verificar assinatura digital da referência médica
+ */
+export const verifyReferenceSignature = async id =>
+  (await requestBackend.post(`/${entity}/${id}/verify-signature`, {}, await getHeaders())).data;

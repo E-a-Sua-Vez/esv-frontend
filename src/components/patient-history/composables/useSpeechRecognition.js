@@ -1,4 +1,5 @@
 import { ref, onUnmounted } from 'vue';
+import { escapeVoiceTranscription } from '../../../shared/utils/security';
 
 /**
  * Composable for speech recognition (voice-to-text)
@@ -18,6 +19,13 @@ export function useSpeechRecognition() {
   // Initialize isSupported with checkSupport result
   const isSupported = ref(checkSupport());
 
+  // FIX Voice Sessions: Track active sessions globally
+  const activeSessions = new Set();
+
+  // FIX Voice Timeout: Default timeout (30 seconds)
+  const DEFAULT_TIMEOUT = 30000;
+  let timeoutId = null;
+
   // Initialize speech recognition
   const initRecognition = (language = 'pt-BR') => {
     if (!checkSupport()) {
@@ -32,6 +40,9 @@ export function useSpeechRecognition() {
       recognitionInstance.continuous = true; // Keep listening until stopped
       recognitionInstance.interimResults = true; // Show interim results
       recognitionInstance.lang = language; // Set language (pt-BR for Portuguese)
+
+      // FIX Voice Timeout: Set timeout
+      recognitionInstance.maxAlternatives = 1;
 
       recognitionInstance.onstart = () => {
         isListening.value = true;
@@ -67,7 +78,18 @@ export function useSpeechRecognition() {
   };
 
   // Start listening and transcribe to callback
-  const startListening = (onResult, onFinalResult, language = 'pt-BR') => {
+  const startListening = (onResult, onFinalResult, language = 'pt-BR', sessionId = 'default') => {
+    // FIX Voice Sessions: Only allow one active session
+    if (activeSessions.size > 0 && !activeSessions.has(sessionId)) {
+      error.value = 'Já existe uma sessão de voz ativa. Pare a sessão anterior primeiro.';
+      return false;
+    }
+
+    // FIX Voice Sessions: Stop any existing session for this ID
+    if (activeSessions.has(sessionId) && recognition.value) {
+      stopListening();
+    }
+
     if (!recognition.value) {
       initRecognition(language);
     }
@@ -77,15 +99,42 @@ export function useSpeechRecognition() {
       return false;
     }
 
-    let finalTranscript = '';
+    // Track processed final results to prevent duplicates
+    // Use a Set to store hashes of processed final results
+    const processedFinalResults = new Set();
+    let lastProcessedResultIndex = -1;
 
     recognition.value.onresult = event => {
       let interimTranscript = '';
+      let hasFinalResults = false;
+      let currentFinalText = '';
 
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      // Detect if recognition has restarted (resultIndex is 0 but we've processed results before)
+      // This can happen with continuous recognition
+      if (event.resultIndex === 0 && lastProcessedResultIndex >= 0) {
+        // Recognition restarted, reset tracking
+        processedFinalResults.clear();
+        lastProcessedResultIndex = -1;
+      }
+
+      // Only process new results (those after the last processed index)
+      for (
+        let i = Math.max(event.resultIndex, lastProcessedResultIndex + 1);
+        i < event.results.length;
+        i++
+      ) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
+          // Create a hash of the result to detect duplicates
+          const resultHash = `${i}-${transcript.trim()}`;
+
+          // Only process if we haven't seen this exact result before
+          if (!processedFinalResults.has(resultHash)) {
+            currentFinalText += transcript + ' ';
+            hasFinalResults = true;
+            processedFinalResults.add(resultHash);
+            lastProcessedResultIndex = i; // Update last processed index
+          }
         } else {
           interimTranscript += transcript;
         }
@@ -96,29 +145,66 @@ export function useSpeechRecognition() {
         onResult(interimTranscript);
       }
 
-      // Call final callback when speech ends
-      if (onFinalResult && finalTranscript) {
-        onFinalResult(finalTranscript.trim());
+      // Process final results immediately when available (only new results)
+      if (onFinalResult && hasFinalResults && currentFinalText.trim()) {
+        // FIX Voice Special Chars: Escape special characters
+        const escaped = escapeVoiceTranscription(currentFinalText.trim());
+        console.log('🎤 Speech recognition final result (immediate):', escaped);
+        onFinalResult(escaped);
+      }
+    };
+
+    // Also handle onend - but don't process again if already processed in onresult
+    const originalOnEnd = recognition.value.onend;
+    recognition.value.onend = () => {
+      // Reset for next session
+      processedFinalResults.clear();
+      lastProcessedResultIndex = -1;
+      isListening.value = false;
+      if (originalOnEnd) {
+        originalOnEnd();
       }
     };
 
     try {
       recognition.value.start();
+      activeSessions.add(sessionId);
+
+      // FIX Voice Timeout: Set timeout to auto-stop after 30 seconds
+      timeoutId = setTimeout(() => {
+        if (isListening.value) {
+          stopListening();
+          error.value = 'Timeout: Reconhecimento de voz parado automaticamente após 30 segundos';
+        }
+      }, DEFAULT_TIMEOUT);
+
       return true;
     } catch (err) {
       console.error('Error starting recognition:', err);
       error.value = 'Erro ao iniciar reconhecimento de voz';
       isListening.value = false;
+      activeSessions.delete(sessionId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
       return false;
     }
   };
 
   // Stop listening
-  const stopListening = () => {
+  const stopListening = (sessionId = 'default') => {
     if (recognition.value && isListening.value) {
       try {
         recognition.value.stop();
         isListening.value = false;
+        activeSessions.delete(sessionId);
+
+        // FIX Voice Timeout: Clear timeout
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
       } catch (err) {
         console.error('Error stopping recognition:', err);
       }

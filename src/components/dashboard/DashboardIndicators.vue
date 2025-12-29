@@ -868,7 +868,8 @@ export default {
               </div>
               <div class="summary-value-section">
                 <div class="summary-main-value" :class="getNPSClass(summaryMetrics.nps.value)">
-                  {{ summaryMetrics.nps.value > 0 ? '+' : '' }}{{ summaryMetrics.nps.value }}
+                  {{ summaryMetrics.nps.value > 0 ? '+' : ''
+                  }}{{ Math.round(summaryMetrics.nps.value) }}
                 </div>
                 <div class="summary-nps-label" :class="getNPSClass(summaryMetrics.nps.value)">
                   {{ getNPSLabel(summaryMetrics.nps.value) }}
@@ -1156,7 +1157,7 @@ export default {
           <div id="attention-nps-avg">
             <DetailsCard
               :show="!!toggles['dashboard.attention-nps-avg.view']"
-              :data="calculatedMetrics['survey.created'].nps || 0"
+              :data="Math.round(calculatedMetrics['survey.created'].nps || 0)"
               :subdata="calculatedMetrics['survey.created'].count_nps || 0"
               :title="$t('dashboard.items.attentions.24')"
               :show-tooltip="true"

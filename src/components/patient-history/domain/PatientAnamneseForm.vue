@@ -9,6 +9,7 @@ import HistoryDetailsCard from '../common/HistoryDetailsCard.vue';
 import TemplatePicker from '../../medical-templates/domain/TemplatePicker.vue';
 import { getPatientHistoryItemFrequenciesTypes } from '../../../shared/utils/data';
 import { useSpeechRecognition } from '../composables/useSpeechRecognition';
+import { useI18n } from 'vue-i18n';
 import { globalStore } from '../../../stores';
 
 export default {
@@ -33,6 +34,7 @@ export default {
     receiveData: { type: Function, default: () => {} },
   },
   async setup(props) {
+    const { t } = useI18n();
     const loading = ref(false);
     const store = globalStore();
 
@@ -72,37 +74,29 @@ export default {
         }
         state.patientHistoryItemFrequenciesTypes = getPatientHistoryItemFrequenciesTypes();
         if (patientHistoryData.value && patientHistoryData.value.id) {
-          state.oldPatientAnamnese = patientHistoryData.value.patientAnamnese;
-          state.habitsAux = state.oldPatientAnamnese.habitsDetails;
-          state.newPatientAnamnese = patientHistoryData.value.patientAnamnese;
-        } else if (patientForms.value && patientForms.value.length > 0) {
-          const patientFormFirstAttentions = patientForms.value.filter(
-            form => form.type === 'FIRST_ATTENTION'
-          );
-          state.patientFormFirstAttention =
-            patientFormFirstAttentions && patientFormFirstAttentions.length > 0
-              ? patientFormFirstAttentions[0]
-              : undefined;
-          if (state.patientFormFirstAttention && state.patientFormFirstAttention.id) {
-            const answers = state.patientFormFirstAttention.answers.filter(
-              ans => ans.type === 'PERSONAL_HISTORY'
-            );
-            if (answers && answers.length > 0) {
-              answers.forEach(element => {
-                if (element.id) {
-                  state.habitsAux[element.id] = { ...element.answer, ...element };
-                }
-              });
-            }
+          const patientAnamnese = patientHistoryData.value.patientAnamnese;
+          if (patientAnamnese) {
+            state.oldPatientAnamnese = patientAnamnese;
+            state.habitsAux = patientAnamnese.habitsDetails || {};
+            state.newPatientAnamnese = patientAnamnese;
           }
+        }
+        if (!state.newPatientAnamnese || !state.newPatientAnamnese.id) {
+          // REMOVED: Automatic loading from preprontuario forms
+          // This is now handled manually via PreprontuarioHistoryView component
         }
         // Only use cacheData if no saved data exists in patientHistoryData
         if ((!state.newPatientAnamnese || !state.newPatientAnamnese.id) && cacheData.value) {
           state.newPatientAnamnese = cacheData.value;
-          state.habitsAux = state.newPatientAnamnese.habitsDetails;
+          state.habitsAux = state.newPatientAnamnese?.habitsDetails || {};
+        }
+
+        // Ensure habitsAux is always an object
+        if (!state.habitsAux || typeof state.habitsAux !== 'object') {
+          state.habitsAux = {};
         }
         loading.value = false;
-      } catch (error) {
+      } catch (_error) {
         loading.value = false;
       }
     });
@@ -126,54 +120,121 @@ export default {
       // Show interim results (optional)
     };
 
-    const handleSpeechFinalResult = finalText => {
-      if (!activeSpeechField.value) return;
+    // Create a speech result handler that captures the field in its closure
+    const createSpeechResultHandler = field => finalText => {
+      if (!finalText || finalText.trim() === '') {
+        console.warn('⚠️ handleSpeechFinalResult: Empty final text');
+        return;
+      }
+
+      console.log('🎤 handleSpeechFinalResult called:', { finalText, field });
 
       // Format timestamp
       const now = new Date();
       const timestamp = `[${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
         2,
-        '0'
+        '0',
       )}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(
         2,
-        '0'
+        '0',
       )}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(
         2,
-        '0'
+        '0',
       )}]`;
       const timestampedText = `${timestamp} ${finalText}`;
 
-      if (activeSpeechField.value === 'general') {
+      if (field === 'general') {
         const currentText = state.newPatientAnamnese.habits || '';
         const newText =
           currentText && currentText.trim() !== ''
             ? `${currentText}\n\n${timestampedText}`
             : timestampedText;
         state.newPatientAnamnese.habits = newText;
+        console.log('✅ Updated general field:', newText);
       } else {
-        const { itemId, fieldName } = activeSpeechField.value;
+        const { itemId, fieldName } = field;
+
+        // Ensure the item exists in habitsAux and initialize field if needed
         if (!state.habitsAux[itemId]) {
           state.habitsAux[itemId] = { id: itemId };
         }
+        if (!state.habitsAux[itemId][fieldName]) {
+          state.habitsAux[itemId][fieldName] = '';
+        }
+
         const currentText = state.habitsAux[itemId][fieldName] || '';
         const newText =
           currentText && currentText.trim() !== ''
             ? `${currentText}\n\n${timestampedText}`
             : timestampedText;
-        state.habitsAux[itemId][fieldName] = newText;
-        state.newPatientAnamnese.habitsDetails = state.habitsAux;
+
+        // Force reactivity by creating a new object reference for the item
+        state.habitsAux[itemId] = {
+          ...state.habitsAux[itemId],
+          [fieldName]: newText,
+        };
+
+        // Force reactivity by reassigning the entire habitsAux object
+        state.habitsAux = { ...state.habitsAux };
+
+        // Update habitsDetails to trigger reactivity
+        state.newPatientAnamnese.habitsDetails = { ...state.habitsAux };
+
+        console.log('✅ Updated field:', { itemId, fieldName, newText });
       }
+
       sendData();
+    };
+
+    // Default handler that uses activeSpeechField (for backward compatibility)
+    const handleSpeechFinalResult = finalText => {
+      const currentField = activeSpeechField.value;
+
+      if (!currentField) {
+        console.warn('⚠️ handleSpeechFinalResult: No active speech field', {
+          finalText,
+          isListening: isListeningSpeech.value,
+          activeField: activeSpeechField.value,
+        });
+        return;
+      }
+
+      // Use the captured field handler
+      const handler = createSpeechResultHandler(currentField);
+      handler(finalText);
     };
 
     const toggleSpeechRecognition = (itemId = null, fieldName = 'comment') => {
       if (isListeningSpeech.value) {
-        stopSpeechListening();
-        activeSpeechField.value = null;
+        // Only reset if we're stopping the same field that's currently active
+        const currentField = activeSpeechField.value;
+        const isCurrentField =
+          itemId === null
+            ? currentField === 'general'
+            : currentField?.itemId === itemId && currentField?.fieldName === fieldName;
+
+        if (isCurrentField) {
+          stopSpeechListening();
+          activeSpeechField.value = null;
+        }
       } else {
-        activeSpeechField.value = itemId ? { itemId, fieldName } : 'general';
+        // Stop any existing recognition first
+        if (isListeningSpeech.value) {
+          stopSpeechListening();
+        }
+
+        // Set the active field before starting recognition
+        const fieldToActivate = itemId ? { itemId, fieldName } : 'general';
+        activeSpeechField.value = fieldToActivate;
+
+        // Create a handler that captures the field in its closure
+        // This ensures the field is always available even if activeSpeechField is reset
+        const fieldHandler = createSpeechResultHandler(fieldToActivate);
+
         const language = commerce.value?.localeInfo?.language || 'pt-BR';
-        startSpeechListening(handleSpeechResult, handleSpeechFinalResult, language);
+        // Use a unique sessionId for each field to prevent callback conflicts
+        const sessionId = itemId ? `anamnese-${itemId}-${fieldName}` : 'anamnese-general';
+        startSpeechListening(handleSpeechResult, fieldHandler, language, sessionId);
       }
     };
 
@@ -296,19 +357,21 @@ export default {
 
     const sendComment = (item, event) => {
       if (item && item.id) {
+        // Ensure the item exists in habitsAux
+        if (!state.habitsAux[item.id]) {
+          state.habitsAux[item.id] = { id: item.id };
+        }
+
         if (event.target.value) {
           const comment = event.target.value;
-          if (state.habitsAux[item.id]) {
-            state.habitsAux[item.id].comment = comment;
-          } else {
-            state.habitsAux[item.id] = { comment };
-          }
+          state.habitsAux[item.id].comment = comment;
         } else {
-          if (state.habitsAux[item.id]) {
-            state.habitsAux[item.id].comment = undefined;
-          }
+          state.habitsAux[item.id].comment = '';
         }
-        state.newPatientAnamnese.habitsDetails = state.habitsAux;
+
+        // Force reactivity
+        state.habitsAux[item.id] = { ...state.habitsAux[item.id] };
+        state.newPatientAnamnese.habitsDetails = { ...state.habitsAux };
         sendData();
       }
     };
@@ -478,27 +541,9 @@ export default {
         )
           state.oldPatientAnamnese = patientHistoryData.value.patientAnamnese;
         state.newPatientAnamnese = patientHistoryData.value.patientAnamnese;
-      } else if (patientForms.value && patientForms.value.length > 0) {
-        const patientFormFirstAttentions = patientForms.value.filter(
-          form => form.type === 'FIRST_ATTENTION'
-        );
-        state.patientFormFirstAttention =
-          patientFormFirstAttentions && patientFormFirstAttentions.length > 0
-            ? patientFormFirstAttentions[0]
-            : undefined;
-        if (state.patientFormFirstAttention && state.patientFormFirstAttention.id) {
-          const answers = state.patientFormFirstAttention.answers.filter(
-            ans => ans.type === 'PERSONAL_HISTORY'
-          );
-          if (answers && answers.length > 0) {
-            answers.forEach(element => {
-              if (element.id) {
-                state.habitsAux[element.id] = { ...element.answer, ...element };
-              }
-            });
-          }
-        }
       }
+      // REMOVED: Automatic loading from preprontuario forms
+      // This is now handled manually via PreprontuarioHistoryView component
       loading.value = false;
     });
 
@@ -601,30 +646,32 @@ export default {
                 v-if="item.characteristics.comment && item.characteristics.comment === true"
                 class="form-field-modern"
               >
-                <label class="form-label-modern" :for="`comment-select1-${item.id}`">
+                <label
+                  class="form-label-modern d-flex align-items-center flex-wrap"
+                  :for="`comment-select1-${item.id}`"
+                >
                   <i class="bi bi-chat-text me-1"></i>
                   {{ $t('businessPatientHistoryItemAdmin.comment') }}
                   <button
                     v-if="isSpeechSupported && toggles['patient.history.edit']"
                     type="button"
-                    class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
+                    class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
                     :class="{ 'btn-danger': isListeningForField(item.id) }"
                     @click="toggleSpeechRecognition(item.id, 'comment')"
                     :title="
-                      isListeningForField(item.id) ? 'Parar gravação' : 'Iniciar gravação de voz'
+                      isListeningForField(item.id)
+                        ? $t('patientHistoryView.stopRecording')
+                        : $t('patientHistoryView.startRecording')
                     "
                   >
                     <i :class="isListeningForField(item.id) ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
-                    <span class="ms-1 d-inline">{{
-                      isListeningForField(item.id) ? 'Gravando...' : 'Voz'
-                    }}</span>
                   </button>
                   <button
                     v-if="toggles['patient.history.edit']"
                     type="button"
                     class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
                     @click="clearCommentField(item.id)"
-                    title="Limpar campo"
+                    :title="$t('patientHistoryView.clearField')"
                   >
                     <i class="bi bi-eraser"></i>
                   </button>
@@ -636,7 +683,14 @@ export default {
                     class="form-control-modern"
                     rows="3"
                     :max="200"
-                    :value="state.habitsAux[item.id]?.comment"
+                    :value="state.habitsAux[item.id]?.comment || ''"
+                    @input="
+                      e => {
+                        if (!state.habitsAux[item.id]) state.habitsAux[item.id] = { id: item.id };
+                        state.habitsAux[item.id].comment = e.target.value;
+                        sendComment(item, e);
+                      }
+                    "
                     @keyup="sendComment(item, $event)"
                   ></textarea>
                   <div v-if="isListeningForField(item.id)" class="speech-recording-indicator">
@@ -699,23 +753,34 @@ export default {
                 v-if="item.characteristics.comment && item.characteristics.comment === true"
                 class="form-field-modern"
               >
-                <label class="form-label-modern" :for="`comment-selectN-${item.id}`">
+                <label
+                  class="form-label-modern d-flex align-items-center flex-wrap"
+                  :for="`comment-selectN-${item.id}`"
+                >
                   <i class="bi bi-chat-text me-1"></i>
                   {{ $t('businessPatientHistoryItemAdmin.comment') }}
                   <button
                     v-if="isSpeechSupported && toggles['patient.history.edit']"
                     type="button"
-                    class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
+                    class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
                     :class="{ 'btn-danger': isListeningForField(item.id) }"
                     @click="toggleSpeechRecognition(item.id, 'comment')"
                     :title="
-                      isListeningForField(item.id) ? 'Parar gravação' : 'Iniciar gravação de voz'
+                      isListeningForField(item.id)
+                        ? $t('patientHistoryView.stopRecording')
+                        : $t('patientHistoryView.startRecording')
                     "
                   >
                     <i :class="isListeningForField(item.id) ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
-                    <span class="ms-1 d-inline">{{
-                      isListeningForField(item.id) ? 'Gravando...' : 'Voz'
-                    }}</span>
+                  </button>
+                  <button
+                    v-if="toggles['patient.history.edit']"
+                    type="button"
+                    class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
+                    @click="clearCommentField(item.id)"
+                    :title="$t('patientHistoryView.clearField')"
+                  >
+                    <i class="bi bi-eraser"></i>
                   </button>
                 </label>
                 <div class="position-relative">
@@ -725,12 +790,19 @@ export default {
                     class="form-control-modern"
                     rows="3"
                     :max="200"
-                    :value="state.habitsAux[item.id]?.comment"
+                    :value="state.habitsAux[item.id]?.comment || ''"
+                    @input="
+                      e => {
+                        if (!state.habitsAux[item.id]) state.habitsAux[item.id] = { id: item.id };
+                        state.habitsAux[item.id].comment = e.target.value;
+                        sendComment(item, e);
+                      }
+                    "
                     @keyup="sendComment(item, $event)"
                   ></textarea>
                   <div v-if="isListeningForField(item.id)" class="speech-recording-indicator">
                     <span class="recording-dot"></span>
-                    <span class="ms-2">Gravando... Fale agora</span>
+                    <span class="ms-2">{{ $t('patientHistoryView.recordingMessage') }}</span>
                   </div>
                 </div>
               </div>
@@ -910,23 +982,34 @@ export default {
                 v-if="item.characteristics.comment && item.characteristics.comment === true"
                 class="form-field-modern"
               >
-                <label class="form-label-modern" :for="`comment-check-${item.id}`">
+                <label
+                  class="form-label-modern d-flex align-items-center flex-wrap"
+                  :for="`comment-check-${item.id}`"
+                >
                   <i class="bi bi-chat-text me-1"></i>
                   {{ $t('businessPatientHistoryItemAdmin.comment') }}
                   <button
                     v-if="isSpeechSupported && toggles['patient.history.edit']"
                     type="button"
-                    class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
+                    class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
                     :class="{ 'btn-danger': isListeningForField(item.id) }"
                     @click="toggleSpeechRecognition(item.id, 'comment')"
                     :title="
-                      isListeningForField(item.id) ? 'Parar gravação' : 'Iniciar gravação de voz'
+                      isListeningForField(item.id)
+                        ? $t('patientHistoryView.stopRecording')
+                        : $t('patientHistoryView.startRecording')
                     "
                   >
                     <i :class="isListeningForField(item.id) ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
-                    <span class="ms-1 d-inline">{{
-                      isListeningForField(item.id) ? 'Gravando...' : 'Voz'
-                    }}</span>
+                  </button>
+                  <button
+                    v-if="toggles['patient.history.edit']"
+                    type="button"
+                    class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
+                    @click="clearCommentField(item.id)"
+                    :title="$t('patientHistoryView.clearField')"
+                  >
+                    <i class="bi bi-eraser"></i>
                   </button>
                 </label>
                 <div class="position-relative">
@@ -937,11 +1020,18 @@ export default {
                     rows="3"
                     :max="200"
                     :value="state.habitsAux[item.id]?.comment || ''"
+                    @input="
+                      e => {
+                        if (!state.habitsAux[item.id]) state.habitsAux[item.id] = { id: item.id };
+                        state.habitsAux[item.id].comment = e.target.value;
+                        sendComment(item, e);
+                      }
+                    "
                     @keyup="sendComment(item, $event)"
                   ></textarea>
                   <div v-if="isListeningForField(item.id)" class="speech-recording-indicator">
                     <span class="recording-dot"></span>
-                    <span class="ms-2">Gravando... Fale agora</span>
+                    <span class="ms-2">{{ $t('patientHistoryView.recordingMessage') }}</span>
                   </div>
                 </div>
               </div>
@@ -959,23 +1049,34 @@ export default {
             </div>
             <div class="anamnese-item-content">
               <div class="form-field-modern">
-                <label class="form-label-modern" :for="`comment-only-${item.id}`">
+                <label
+                  class="form-label-modern d-flex align-items-center flex-wrap"
+                  :for="`comment-only-${item.id}`"
+                >
                   <i class="bi bi-chat-text me-1"></i>
                   {{ $t('businessPatientHistoryItemAdmin.comment') }}
                   <button
                     v-if="isSpeechSupported && toggles['patient.history.edit']"
                     type="button"
-                    class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
+                    class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
                     :class="{ 'btn-danger': isListeningForField(item.id) }"
                     @click="toggleSpeechRecognition(item.id, 'comment')"
                     :title="
-                      isListeningForField(item.id) ? 'Parar gravação' : 'Iniciar gravação de voz'
+                      isListeningForField(item.id)
+                        ? $t('patientHistoryView.stopRecording')
+                        : $t('patientHistoryView.startRecording')
                     "
                   >
                     <i :class="isListeningForField(item.id) ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
-                    <span class="ms-1 d-inline">{{
-                      isListeningForField(item.id) ? 'Gravando...' : 'Voz'
-                    }}</span>
+                  </button>
+                  <button
+                    v-if="toggles['patient.history.edit']"
+                    type="button"
+                    class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
+                    @click="clearCommentField(item.id)"
+                    :title="$t('patientHistoryView.clearField')"
+                  >
+                    <i class="bi bi-eraser"></i>
                   </button>
                 </label>
                 <div class="position-relative">
@@ -985,12 +1086,19 @@ export default {
                     class="form-control-modern"
                     rows="4"
                     :max="200"
-                    :value="state.habitsAux[item.id]?.comment"
+                    :value="state.habitsAux[item.id]?.comment || ''"
+                    @input="
+                      e => {
+                        if (!state.habitsAux[item.id]) state.habitsAux[item.id] = { id: item.id };
+                        state.habitsAux[item.id].comment = e.target.value;
+                        sendComment(item, e);
+                      }
+                    "
                     @keyup="sendComment(item, $event)"
                   ></textarea>
                   <div v-if="isListeningForField(item.id)" class="speech-recording-indicator">
                     <span class="recording-dot"></span>
-                    <span class="ms-2">Gravando... Fale agora</span>
+                    <span class="ms-2">{{ $t('patientHistoryView.recordingMessage') }}</span>
                   </div>
                 </div>
               </div>
@@ -1005,28 +1113,29 @@ export default {
         <div class="form-section-icon">
           <i class="bi bi-file-text"></i>
         </div>
-        <div class="form-section-title">
+        <div class="form-section-title d-flex align-items-center flex-wrap">
           <h4 class="form-title-text">{{ $t('businessPatientHistoryItemAdmin.comment') }}</h4>
           <p class="form-title-subtitle">Comentários gerais sobre a anamnese</p>
           <button
             v-if="isSpeechSupported && toggles['patient.history.edit']"
             type="button"
-            class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
+            class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
             :class="{ 'btn-danger': isListeningForField(null) }"
             @click="toggleSpeechRecognition()"
-            :title="isListeningForField(null) ? 'Parar gravação' : 'Iniciar gravação de voz'"
+            :title="
+              isListeningForField(null)
+                ? $t('patientHistoryView.stopRecording')
+                : $t('patientHistoryView.startRecording')
+            "
           >
             <i :class="isListeningForField(null) ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
-            <span class="ms-1 d-inline">{{
-              isListeningForField(null) ? 'Gravando...' : 'Voz'
-            }}</span>
           </button>
           <button
             v-if="toggles['patient.history.edit']"
             type="button"
             class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
             @click="clearGeneralField"
-            title="Limpar campo"
+            :title="$t('patientHistoryView.clearField')"
           >
             <i class="bi bi-eraser"></i>
           </button>
@@ -1057,7 +1166,7 @@ export default {
           ></textarea>
           <div v-if="isListeningForField(null)" class="speech-recording-indicator">
             <span class="recording-dot"></span>
-            <span class="ms-2">Gravando... Fale agora</span>
+            <span class="ms-2">{{ $t('patientHistoryView.recordingMessage') }}</span>
           </div>
           <div
             v-if="speechError && isListeningForField(null)"
@@ -1414,41 +1523,6 @@ export default {
 
   .option-item {
     width: 100%;
-  }
-}
-
-/* Speech Recognition Styles */
-.speech-recognition-btn {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.85rem;
-  border-radius: 0.5rem;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  vertical-align: middle;
-}
-
-.speech-recognition-btn span {
-  display: inline !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-.speech-recognition-btn:hover {
-  transform: scale(1.05);
-}
-
-.speech-recognition-btn.btn-danger {
-  animation: pulse-recording 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-recording {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
   }
 }
 

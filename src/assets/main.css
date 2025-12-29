@@ -609,15 +609,6 @@
   justify-content: center;
   display: flex;
 }
-.active {
-  background-color: var(--azul-turno);
-  border-top-left-radius: 1rem;
-  border-top-right-radius: 1rem;
-  line-height: 1rem;
-  border: 1.5px solid var(--azul-turno);
-  padding-top: 0.2rem;
-  padding-bottom: 0.2rem;
-}
 .desactived {
   background-color: var(--gris-tooltip);
   border-top-left-radius: 1rem;

@@ -52,7 +52,8 @@
     "error": "Error",
     "retry": "Retry",
     "pending": "Pending",
-    "viewDetails": "View Details"
+    "viewDetails": "View Details",
+    "save": "Save"
   },
   "noResults": "😓 No Results",
   "lostConnection": "Lost your internet connection. Please check your connection and realod the page.",
@@ -64,7 +65,12 @@
   "page": "Page",
   "of": "of",
   "add": "Add",
+  "save": "Save",
   "continue": "Next",
+  "update": "Update",
+  "cancel": "Cancel",
+  "active": "Active",
+  "inactive": "Inactive",
   "serviceStatus": "Service Status",
   "booleans": {
     "true": "Yes",
@@ -154,7 +160,8 @@
       "ALL_IN_ONE": "All in One",
       "ONLY_SURVEYS": "Just Smart Surveys",
       "QUEUES_BOOKING": "Just Queues and Bookings"
-    }
+    },
+    "attentionProducts": "Attention Products"
   },
   "surveys": {
     "types": {
@@ -260,6 +267,20 @@
     "GRAMS": "(g)",
     "LITERS": "(L)",
     "UNITS": "(U)"
+  },
+  "examOrder": {
+    "create": "Create Exam Order"
+  },
+  "prescription": {
+    "create": "Create Prescription"
+  },
+  "exams": {
+    "types": {
+      "laboratory": "Laboratory",
+      "imaging": "Imaging",
+      "procedure": "Procedure",
+      "other": "Other"
+    }
   },
   "outcomes": {
     "types": {
@@ -570,6 +591,14 @@
     "stock-product-recharge": {
       "title": "Replace Stock",
       "description": "Message Admin to Replace o Product on Low Level."
+    },
+    "attention-stages-enabled": {
+      "title": "Attention Stages Enabled",
+      "description": "Activates the stage system for attentions (Check-In, Pre-Consultation, Consultation, Post-Consultation, Check-Out)"
+    },
+    "attention-checkout-enabled": {
+      "title": "Check-Out Enabled",
+      "description": "Activates the Check-Out stage in the attention flow"
     }
   },
   "document": {
@@ -729,6 +758,7 @@
     "code3": "Code 3",
     "duration": "Duration: ",
     "totalDuration": "Total Duration: ",
+    "creating": "Creating...",
     "selectService": "Select the service:",
     "searchCollaboratorQueue": "🔎 Search by name or service",
     "searchServiceQueue": "🔎 Search by service",
@@ -766,6 +796,7 @@
       "email": "Should set your valid email",
       "phoneCode": "Should select the country code",
       "birthday": "Should set your birthday",
+      "birthdayError": "Please enter a valid date in dd/mm/yyyy format",
       "addressText": "Should set your address (text)",
       "addressCode": "Should set your address (zip)",
       "addressComplement": "Should set your address (complement)",
@@ -773,8 +804,22 @@
       "code1": "Should set your code 1",
       "code2": "Should set your code 2",
       "code3": "Should set your code 3",
-      "healthAgreementId": "Should select your health agreement"
+      "healthAgreementId": "Should select your health agreement",
+      "queueRequired": "Please select a valid queue before creating the booking",
+      "queueRequiredAttention": "Please select a valid queue before creating the attention"
     }
+  },
+  "nextAvailableSlot": {
+    "title": "Next available appointment",
+    "bookNow": "Book now",
+    "seeMoreTimes": "See more times",
+    "loading": "Loading...",
+    "searching": "Searching for next availability...",
+    "searchingError": "Error searching for next availability",
+    "noAvailability": "No upcoming availability",
+    "noAvailabilityDetails": "No available times in the next {days} days",
+    "inDays": "in {days} days",
+    "orSelectMoreOptions": "Or select more options:"
   },
   "attentionNumber": {
     "waitingTime": "Waiting time:",
@@ -1029,7 +1074,9 @@
       "1": "Read carefully and accept our",
       "2": "terms of use",
       "3": "and",
-      "4": "service."
+      "4": "service. By accepting, you consent to the processing of your personal data in accordance with",
+      "5": "Data Protection Laws",
+      "6": "and authorize the use of your data for communication and service delivery purposes."
     },
     "action": "Ok",
     "phoneTitle1": "Leave your Whatsapp number!",
@@ -1073,6 +1120,7 @@
     "hello-user": "Hello",
     "yourNumber": "You're processing the attention number:",
     "numberCancelled": "The number was Cancelled:",
+    "readyQuestion": "Has the Client already been attended?",
     "toGoal": {
       "1": "There's",
       "2": "users waiting."
@@ -1110,14 +1158,23 @@
         "content": "The attention was skipped."
       },
       "4": {
-        "title": "Not so fast!",
-        "content": "You can not attend this turn. Go back to the queue and attend the previous numbers in order."
+        "title": "Information",
+        "content": "This attention is not yet the next in the queue. You can manage it anyway, but the recommended order is to attend in order of arrival."
       },
       "5": {
         "title": "Cancelled!",
         "content": "The attention was cancelled. Go back to the queue to attend the next number."
+      },
+      "6": {
+        "title": "Attention Finished",
+        "content": "This attention has already been finished."
+      },
+      "7": {
+        "title": "Error Finishing Checkout",
+        "content": "An error occurred while finishing the attention checkout."
       }
     },
+    "finishCheckout": "Everything ready in this attention?",
     "capacitiesList": {
       "collaborator": {
         "attention": {
@@ -1157,6 +1214,10 @@
   "collaboratorQueuesView": {
     "welcome": "Queues of the Day Attention",
     "commerce": "Commerce:",
+    "checkIn": "Check-In",
+    "inAttention": "In Attention",
+    "checkOut": "Check-Out",
+    "terminated": "Terminated",
     "choose": "Choose the queue that you'll attend:",
     "module": "Your module of attention is:",
     "attentions": "In queue",
@@ -1454,7 +1515,7 @@
     "actions": {
       "1": {
         "title": {
-          "1": "Did the person show up?"
+          "1": "Everything ready for the attention?"
         },
         "action": "Attend"
       },
@@ -1475,7 +1536,8 @@
       "1": {
         "title": "Good job!",
         "content": "There's not more pending attentions."
-      }
+      },
+      "noNextAttention": "No more next pending attentions"
     },
     "capacitiesList": {
       "collaborator": {
@@ -1511,6 +1573,25 @@
           "product-stock": "Stock Control"
         }
       }
+    },
+    "stats": {
+      "waitTime": "Wait Time",
+      "waitTimeIndicators": "Wait Time - Color Indicators",
+      "createdAt": "Created at",
+      "inQueue": "In Queue",
+      "estimatedTime": "Estimated Time",
+      "liveUpdate": "Real-time update",
+      "colorIndicators": {
+        "green": "Green:",
+        "greenDesc": "Less than 10 minutes - Excellent",
+        "yellow": "Yellow:",
+        "yellowDesc": "Less than 1 hour - Good",
+        "orange": "Orange:",
+        "orangeDesc": "Less than 3 hours - Attention",
+        "red": "Red:",
+        "redDesc": "More than 3 hours - Urgent"
+      },
+      "loadingPatientHistory": "Loading patient history..."
     }
   },
   "businessLogin": {
@@ -1656,6 +1737,7 @@
   },
   "dashboard": {
     "title": "Performance Hub",
+    "loading": "Loading...",
     "clients": "Clients",
     "attentions": "Attentions",
     "commerce": "Commerce: ",
@@ -1665,6 +1747,7 @@
     "indicators": "Indicators",
     "graph": "Trends",
     "bookings": "Bookings",
+    "packages": "Packages",
     "details": "Details",
     "surveys": "Surveys",
     "waitlist": "Waitlist",
@@ -1672,6 +1755,10 @@
     "satisfaction": "Satisfaction",
     "surveys-management": "Surveys (Details)",
     "surveys-consolidated": "Surveys (Consolidated)",
+    "details": "Details",
+    "attentionDetails": "Attention Details",
+    "bookingDetails": "Booking Details",
+    "time": "Time",
     "seconds": "In Minutes",
     "intelligentEstimationTooltip": "This time was calculated using intelligent learning (median) based on historical data from completed services. The median is more robust than the average, not being affected by extreme values.",
     "queueDetails": {
@@ -1715,6 +1802,47 @@
     "lastMonth": "Last Month",
     "lastThreeMonths": "3 Months",
     "showAll": "Show all",
+    "prontuario": "Medical Records",
+    "medicalHistory": "Medical History",
+    "openProntuario": "Open Medical Records",
+    "clientProntuario": "Client Medical Records",
+    "noProntuario": "No Medical Records",
+    "loadingProntuario": "Loading Medical Records...",
+    "preprontuario": "Preprontuario",
+    "preprontuarioDetails": {
+      "status": "Preprontuario Status",
+      "completed": "Completed",
+      "pending": "Pending"
+    },
+    "preprontuarioHistory": {
+      "title": "Preprontuarios",
+      "subtitle": "View all preprontuarios completed by the client",
+      "noForms": "No preprontuarios found",
+      "noFormsDescription": "The client has not completed any preprontuarios yet.",
+      "questionsAndAnswers": "Questions and Answers",
+      "answer": "Answer",
+      "loadToProntuario": "Load to Prontuario",
+      "loadToPersonalData": "Load Personal Data",
+      "loadToAnamnese": "Load Anamnesis",
+      "loaded": "Loaded to Prontuario",
+      "alreadyLoaded": "This preprontuario has already been loaded to the prontuario.",
+      "loadedOn": "Loaded on",
+      "loadedSuccess": "Data loaded successfully!",
+      "cannotLoad": "This form cannot be loaded",
+      "noPersonalData": "This form does not contain personal data",
+      "noAnamneseData": "This form does not contain anamnesis data",
+      "loadError": "Error loading data"
+    },
+    "agreement": "Health Agreement",
+    "completed": "Completed",
+    "pending": "Pending",
+    "sendReminder": "Send Reminder",
+    "sending": "Sending...",
+    "messageSent": "Message sent!",
+    "messageAlreadySent": "Message already sent",
+    "refreshStatus": "Refresh status",
+    "stock": "Stock",
+    "close": "Close",
     "attentionsOf": "Attentions of ",
     "contactsOf": "Contacts of ",
     "addContact": "New Contact",
@@ -1741,8 +1869,19 @@
     "month": "Month",
     "year": "Year",
     "all": "All",
+    "status": "Status",
     "type": "Type:",
     "result": "Result:",
+    "attentionStatus": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "terminated": "Terminated",
+      "cancelled": "Cancelled",
+      "userCancelled": "Cancelled by User",
+      "rated": "Rated",
+      "skiped": "Skipped",
+      "reactivated": "Reactivated"
+    },
     "add": "Add",
     "answers": "Answers",
     "contact": "Contact",
@@ -1767,6 +1906,11 @@
     "userData": "User:",
     "queueData": "Queue/Service:",
     "contactInfo": "Contact Information",
+    "client": "Client",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "idNumber": "ID",
     "date": "Date",
     "contactMethod": "Contact Method:",
     "outcomes": "Outcomes",
@@ -1785,10 +1929,51 @@
       "examOrders": "Exam Orders",
       "booking": "Booking",
       "attention": "Attention",
+      "stage": {
+        "PENDING": "Pending",
+        "CHECK_IN": "Check-In",
+        "PRE_CONSULTATION": "Pre-Consultation",
+        "CONSULTATION": "Consultation",
+        "POST_CONSULTATION": "Post-Consultation",
+        "CHECKOUT": "Checkout",
+        "TERMINATED": "Terminated",
+        "CANCELLED": "Cancelled"
+      },
+      "filterByStage": "Filter by Stage",
+      "allStages": "All stages",
+      "advanceStage": "Advance Stage",
+      "advanceStage.selectNext": "Select the next stage",
+      "advanceStage.select": "Select...",
+      "advanceStage.selectStage": "Please select a stage",
+      "advanceStage.notes": "Notes (optional)",
+      "advanceStage.notesPlaceholder": "Add notes about this transition...",
+      "advanceStage.confirm": "Advance",
+      "advanceStage.noNextStages": {
+        "title": "No next stages",
+        "content": "This attention is already at the final stage or there are no next stages available."
+      },
+      "advanceStage.invalidTransition": "The selected stage is no longer valid. Please reload the page.",
+      "advanceStage.error": {
+        "validation": "Invalid stage transition. Please verify and try again.",
+        "notFound": "Attention not found. Please reload the page.",
+        "forbidden": "You do not have permission to advance stages.",
+        "conflict": "The attention was modified by another user. Please reload the page.",
+        "generic": "Error advancing stage. Please try again."
+      },
+      "currentStage": "Current Stage",
+      "stageHistory": "Stage History",
+      "current": "Current",
       "consultation": "Consultation",
       "control": "Control",
-      "prescription": "Prescription",
-      "examOrder": "Exam Order",
+      "prescription": {
+        "create": "Create Prescription"
+      },
+      "examOrder": {
+        "create": "Create Exam Order"
+      },
+      "reference": {
+        "create": "Create Reference"
+      },
       "fromBooking": "From Booking",
       "fromControl": "From Control",
       "comeback": "Comeback",
@@ -1809,6 +1994,36 @@
     "patientHistoryOf": "Medical History of",
     "pendingControls": "Controls",
     "pendingBookings": "Bookings",
+    "photoCapture": {
+      "title": "Patient Photo",
+      "takePhoto": "Take Photo",
+      "takePhotoDesc": "Use camera to take a new photo",
+      "uploadFile": "Upload File",
+      "uploadFileDesc": "Select photo from device",
+      "selectPhoto": "Select Photo",
+      "fileFormats": "JPG, PNG or WebP (max. 5MB)",
+      "capture": "Capture",
+      "capturing": "Capturing...",
+      "cancel": "Cancel",
+      "back": "Back",
+      "savePhoto": "Save Photo",
+      "retake": "Take Another",
+      "preview": "Photo preview",
+      "tryBackCamera": "Try Back Camera",
+      "errors": {
+        "captureFailed": "Error capturing photo. Please try again.",
+        "fileFormatNotSupported": "File format not supported. Use JPG, PNG or WebP.",
+        "fileTooLarge": "File is too large. Maximum 5MB allowed.",
+        "saveFailed": "Error saving photo. Please try again.",
+        "noCameraAccess": "Could not access any camera. Use the upload file option.",
+        "cameraDenied": "Camera access denied. Please allow camera access in your browser.",
+        "cameraNotFound": "No camera available found on this device.",
+        "cameraNotReadable": "Error accessing camera. It may be in use by another application.",
+        "cameraOverconstrained": "Camera does not meet the requested requirements.",
+        "cameraNotSupported": "Your browser does not support camera access. Use a modern browser.",
+        "cameraUnknown": "Error accessing camera: {error}"
+      }
+    },
     "bookingsOf": "Bookings of",
     "edit": "Edit",
     "dataOf": "Data of",
@@ -1906,6 +2121,7 @@
     "clientCard": {
       "tooltip": {
         "status": "Client status based on days since last attention",
+        "attentionStatus": "Attention status",
         "copy": "Copy client data",
         "attentions": "Total number of attentions",
         "survey": "Client has completed satisfaction survey",
@@ -1914,6 +2130,7 @@
         "daysSinceContact": "Days elapsed since last contact. Green: ≤90 days, Yellow: 91-180 days, Red: >180 days",
         "viewAttentions": "View client attention history",
         "viewBookings": "View client bookings and appointments",
+        "viewPackages": "View client packages and sessions",
         "viewHistory": "View patient medical history and controls",
         "editClient": "Edit client information",
         "viewContacts": "View contact history",
@@ -1953,7 +2170,9 @@
         "surveyInactive": "Survey inactive",
         "itemActive": "Item active",
         "itemInactive": "Item inactive",
-        "itemTag": "Item tag"
+        "itemTag": "Item tag",
+        "preprontuarioCompleted": "Preprontuario completed",
+        "preprontuarioPending": "Preprontuario pending"
       },
       "label": {
         "whatsapp": "WhatsApp",
@@ -2442,11 +2661,17 @@
     "surveys-admin": "Surveys",
     "manage-admin": "Manage",
     "control-admin": "Control",
+    "medical-management": "Medical Management",
     "go-minisite": "Minisite",
     "outcome-types-admin": "Outcome Types",
     "booking-manage": "Bookings 360° Vision",
     "company-admin": "Companies",
     "patient-history-item-admin": "Medical History Items",
+    "medications-admin": "Medications",
+    "medical-exams-admin": "Medical Exams",
+    "medical-templates-admin": "Medical Templates",
+    "pdf-templates-admin": "PDF Templates",
+    "audit-log": "Audit Log",
     "message": {
       "1": {
         "title": "Ups!",
@@ -2475,6 +2700,7 @@
           "surveys-admin": "Surveys Settings",
           "manage-admin": "Manage Artifacts",
           "control-admin": "Transactional Control",
+          "medical-management": "Medical Management",
           "product-admin": "Stock Control",
           "financial": "Financial Management",
           "marketing": "Marketing",
@@ -2482,7 +2708,12 @@
           "outcome-types-admin": "Outcome Types Management",
           "booking-manage": "Bookings 360° Vision",
           "company-admin": "Companies",
-          "patient-history-item-admin": "Medical History Items"
+          "patient-history-item-admin": "Medical History Items",
+          "medications-admin": "Manage Medications",
+          "medical-exams-admin": "Manage Medical Exams",
+          "medical-templates-admin": "Manage Medical Templates",
+          "pdf-templates-admin": "Manage PDF Templates",
+          "audit-log": "Audit and Compliance"
         }
       }
     }
@@ -2583,6 +2814,10 @@
     "forms-master-admin": "Forms",
     "permissions-master-admin": "Permissions"
   },
+  "businessMasterView": {
+    "backToBusinessAdmin": "Back to Business Management",
+    "choose": "What would you like to do today?"
+  },
   "businessSectionAtWorkView": {
     "welcome": "Welcome!",
     "welcome-user": "Welcome",
@@ -2606,6 +2841,8 @@
     "active": "Active:",
     "online": "Online:",
     "telemedicine": "Telemedicine:",
+    "telemedicineValue": "Telemedicine",
+    "creating": "Creating...",
     "telemedicineHelp": "Enables telemedicine option for this queue",
     "estimated": "Estimated time (min):",
     "listResult": "Results:",
@@ -2993,6 +3230,82 @@
     "incomeStatus": "Status",
     "fiscalNote": "Fiscal Note",
     "automatic": "Automatic",
+    "kpis": {
+      "totalIncomes": "Total Incomes",
+      "totalOutcomes": "Total Outcomes",
+      "netProfit": "Net Profit",
+      "profitMargin": "Profit Margin",
+      "averageDailyIncome": "Average Daily Income",
+      "daysUntilMonthEnd": "Days Until Month End",
+      "vsPreviousMonth": "vs previous month",
+      "vsPreviousPeriod": "vs previous period"
+    },
+    "distribution": {
+      "title": "Income Distribution by Type"
+    },
+    "trends": {
+      "title": "Trends Analysis (12 Months)",
+      "yearOverYear": "Year over Year Comparison",
+      "averageIncomes": "Average Incomes",
+      "averageOutcomes": "Average Outcomes",
+      "averageProfit": "Average Profit",
+      "averageMargin": "Average Margin"
+    },
+    "categories": {
+      "title": "Outcomes Category Analysis",
+      "distribution": "Expenses Distribution",
+      "topCategories": "Top 5 Expense Categories",
+      "comparison": "Category Comparison",
+      "category": "Category",
+      "currentPeriod": "Current Period",
+      "previousPeriod": "Previous Period",
+      "change": "Change",
+      "transactions": "transactions",
+      "uncategorized": "Uncategorized"
+    },
+    "filters": {
+      "amountRange": "Amount Range",
+      "minAmount": "Min Amount",
+      "maxAmount": "Max Amount",
+      "incomeType": "Income Type",
+      "paymentMethod": "Payment Method",
+      "all": "All"
+    },
+    "projectedCashFlow": "Projected Cash Flow",
+    "projectedCashFlowDescription": "Projection based on daily average of current period",
+    "projectedCashFlowDays": "Days remaining in the month: {days}",
+    "monthlyGoal": "Monthly Goal",
+    "alerts": {
+      "title": "Financial Alerts",
+      "allGood": "All good",
+      "expensesExceedIncome": "Expenses exceed income",
+      "lowMargin": "Low margin ({threshold}%)",
+      "pendingIncomes": "{count} pending incomes for {amount} (more than {days} days)",
+      "pendingOutcomes": "{count} pending outcomes for {amount} (more than {days} days)",
+      "unusualExpenses": "Unusual expenses: {percentage}% increase vs previous period",
+      "negativeProjectedCashFlow": "Negative projected cash flow: {amount}",
+      "behindMonthlyGoal": "Behind monthly goal: {progress}% progress"
+    },
+    "alerts": {
+      "title": "Financial Alerts",
+      "expensesExceedIncome": "Expenses exceed income this month",
+      "pendingPayments": "There are {count} pending payments for more than {days} days",
+      "lowMargin": "Profit margin is below {threshold}%",
+      "unusualExpense": "Unusual expense detected",
+      "allGood": "All good",
+      "health": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "warning": "Warning",
+        "critical": "Critical"
+      }
+    },
+    "comparison": {
+      "noData": "No data to compare",
+      "increase": "Increase",
+      "decrease": "Decrease",
+      "noChange": "No change"
+    },
     "message": {
       "1": {
         "title": "Oh no!",
@@ -3019,7 +3332,80 @@
       "outcomes": {
         "title": "Outcomes Report",
         "description": "Download report file of Financial Outcomes"
-      }
+      },
+      "cashFlow": {
+        "title": "Monthly Cash Flow Report",
+        "description": "Download monthly cash flow report as CSV",
+        "month": "Month",
+        "incomes": "Incomes",
+        "commissions": "Commissions",
+        "netIncomes": "Net Incomes",
+        "outcomes": "Outcomes",
+        "cashFlow": "Cash Flow",
+        "margin": "Margin",
+        "incomeCount": "Income Count",
+        "outcomeCount": "Outcome Count",
+        "summary": "SUMMARY",
+        "projections": "PROJECTIONS",
+        "nextMonth": "Next Month",
+        "nextQuarter": "Next Quarter",
+        "projectedIncome": "Projected Income",
+        "projectedOutcome": "Projected Outcome",
+        "projectedCashFlow": "Projected Cash Flow"
+      },
+      "serviceProfitability": {
+        "title": "Service Profitability Report",
+        "description": "Download service profitability report as CSV",
+        "serviceId": "Service ID",
+        "serviceName": "Service Name",
+        "transactionCount": "Transaction Count",
+        "attentionCount": "Attention Count",
+        "uniqueClients": "Unique Clients",
+        "totalIncomes": "Total Incomes",
+        "totalCommissions": "Total Commissions",
+        "netIncomes": "Net Incomes",
+        "totalOutcomes": "Total Outcomes",
+        "profit": "Profit",
+        "margin": "Margin",
+        "profitability": "Profitability",
+        "averageIncome": "Average Income"
+      },
+      "mostProfitableClients": {
+        "title": "Most Profitable Clients Report",
+        "description": "Download most profitable clients report as CSV",
+        "clientName": "Client Name",
+        "clientIdNumber": "ID Number",
+        "clientEmail": "Email",
+        "clientPhone": "Phone",
+        "transactionCount": "Transaction Count",
+        "attentionCount": "Attention Count",
+        "bookingCount": "Booking Count",
+        "totalIncomes": "Total Incomes",
+        "totalCommissions": "Total Commissions",
+        "netIncomes": "Net Incomes",
+        "averageTicket": "Average Ticket",
+        "lifetimeValue": "Lifetime Value (LTV)",
+        "firstPurchase": "First Purchase",
+        "lastPurchase": "Last Purchase",
+        "activeMonths": "Active Months",
+        "frequency": "Frequency"
+      },
+      "expensesByProvider": {
+        "title": "Expenses by Provider Report",
+        "description": "Download expenses grouped by provider report as CSV",
+        "providerName": "Provider Name",
+        "transactionCount": "Transaction Count",
+        "totalAmount": "Total Amount",
+        "averageAmount": "Average Amount",
+        "previousAmount": "Previous Period Amount",
+        "change": "Change %",
+        "firstExpense": "First Expense",
+        "lastExpense": "Last Expense",
+        "activeMonths": "Active Months",
+        "categories": "Categories"
+      },
+      "title": "Financial Reports",
+      "download": "Download"
     },
     "capacitiesList": {
       "financial": {
@@ -3056,6 +3442,7 @@
     "return": "Back",
     "products": "Products",
     "attentions": "Attentions",
+    "dashboard": "Dashboard",
     "consuptionsOf": "Consumptions of",
     "replacementsOf": "Replacements of",
     "replacementLevel": "Replacement level:",
@@ -3146,6 +3533,51 @@
       "replacement": "This product has not availability, get in touch with administrator"
     }
   },
+  "inventoryDashboard": {
+    "title": "Inventory Dashboard",
+    "dateFilters": "Date Filters",
+    "critical": "Critical",
+    "criticalDesc": "Require immediate action",
+    "attention": "In Attention",
+    "attentionDesc": "Monitor closely",
+    "optimal": "Optimal",
+    "optimalDesc": "Stock at adequate level",
+    "total": "Total",
+    "totalDesc": "Products in inventory",
+    "totalValue": "Total Value",
+    "totalValueDesc": "Inventory value",
+    "periodMetrics": "Period Metrics",
+    "consumption": "Consumption",
+    "dailyAverage": "Daily Average",
+    "transactions": "Transactions",
+    "vsPreviousPeriod": "vs previous period",
+    "replacement": "Recharges",
+    "netBalance": "Net Balance",
+    "ratio": "Recharge/Consumption Ratio",
+    "periodDays": "Period Days",
+    "activeAlerts": "Active Alerts",
+    "daysUntilStockout": "Days until stockout",
+    "daysUntilExpiration": "Days until expiration",
+    "recharge": "Recharge",
+    "alertCritical": "Critical Products",
+    "productsNeedAction": "products require immediate action",
+    "alertExpiring": "Products About to Expire",
+    "productsExpiring": "products expire in the next 30 days",
+    "alertAttention": "Products in Attention",
+    "productsMonitor": "products require monitoring",
+    "allGood": "All Good",
+    "noAlerts": "There are no active alerts at this time",
+    "criticalProducts": "Critical Products",
+    "stockoutIn": "Will run out in",
+    "expiringSoon": "About to Expire",
+    "expires": "Expires",
+    "trends": "Trends",
+    "comparativeChart": "Comparative Consumption vs Recharge",
+    "consumptionEvolution": "Consumption Evolution",
+    "replacementEvolution": "Recharge Evolution",
+    "noData": "No data",
+    "noDataDesc": "No inventory data available"
+  },
   "businessModulesAdmin": {
     "title": "Modules",
     "commerce": "Select a commerce:",
@@ -3187,6 +3619,141 @@
     },
     "validate": {
       "name": "You should enter the name"
+    }
+  },
+  "businessMedicationsAdmin": {
+    "title": "Medications",
+    "name": "Name:",
+    "commercialName": "Commercial Name:",
+    "atcCode": "ATC Code:",
+    "activePrinciple": "Active Principle:",
+    "presentation": "Presentation:",
+    "dosageForm": "Dosage Form:",
+    "route": "Route:",
+    "standardDosage": "Standard Dosage:",
+    "contraindications": "Contraindications:",
+    "interactions": "Interactions:",
+    "update": "Update",
+    "add": "Add",
+    "delete": "Delete",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "At this time there are no options to manage. Please verify that your plan is active or contact us."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no medications."
+      },
+      "4": {
+        "title": "Ups!",
+        "content": "No medications. Go to commerce administration and check the information."
+      }
+    },
+    "capacitiesList": {
+      "medications": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Medications",
+          "edit": "Edit the Medications",
+          "update": "Update the Medications",
+          "add": "Add Medications",
+          "delete": "Delete Medications",
+          "limit": "Limit amount of Medications"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "activePrinciple": "You should enter the active principle"
+    }
+  },
+  "businessMedicalExamsAdmin": {
+    "title": "Medical Exams",
+    "name": "Name:",
+    "code": "LOINC Code:",
+    "type": "Type:",
+    "category": "Category:",
+    "description": "Description:",
+    "preparation": "Preparation:",
+    "estimatedDuration": "Estimated Duration (min):",
+    "cost": "Cost:",
+    "update": "Update",
+    "add": "Add",
+    "delete": "Delete",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "At this time there are no options to manage. Please verify that your plan is active or contact us."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no medical exams."
+      },
+      "4": {
+        "title": "Select a Commerce",
+        "content": "You must select a commerce to manage medical exams"
+      }
+    },
+    "capacitiesList": {
+      "medical-exams": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Exams",
+          "edit": "Edit the Exams",
+          "update": "Update the Exams",
+          "add": "Add Exams",
+          "delete": "Delete Exams"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "type": "You should select the type"
+    }
+  },
+  "businessMedicalTemplatesAdmin": {
+    "title": "Medical Templates",
+    "name": "Name:",
+    "description": "Description:",
+    "type": "Type:",
+    "category": "Category:",
+    "content": "Content:",
+    "scope": "Scope:",
+    "update": "Update",
+    "add": "Add",
+    "delete": "Delete",
+    "contentHelp": "Use {'{{'}variableName{'}}'} for variables. System variables (replaced automatically): {'{{'}date{'}}'}, {'{{'}time{'}}'}, {'{{'}datetime{'}}'}. Custom variables must be provided when processing the template.",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "At this time there are no options to manage. Please verify that your plan is active or contact us."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no medical templates."
+      },
+      "4": {
+        "title": "Ups!",
+        "content": "No medical templates. Go to commerce administration and verify the information."
+      }
+    },
+    "capacitiesList": {
+      "medical-templates": {
+        "admin": {
+          "view": "Get to this section",
+          "read": "See the Templates",
+          "edit": "Edit the Templates",
+          "update": "Update the Templates",
+          "add": "Add Templates",
+          "delete": "Delete Templates",
+          "limit": "Limit amount of Medical Templates"
+        }
+      }
+    },
+    "validate": {
+      "name": "You should enter the name",
+      "content": "You should enter the content"
     }
   },
   "businessOutcomeTypesAdmin": {
@@ -3455,8 +4022,147 @@
     "attention": "Attention",
     "consultation": "Consultation",
     "control": "Control",
-    "prescription": "Prescription",
-    "examOrder": "Exam Order",
+    "prescription": {
+      "create": "Create Prescription",
+      "subtitle": "Prescribe medications for the patient",
+      "diagnosis": "Diagnosis",
+      "validUntil": "Valid Until",
+      "priority": "Priority",
+      "refillsAllowed": "Refills Allowed",
+      "addMedications": "Add Medications",
+      "searchMedication": "Search medication...",
+      "dosage": "Dosage",
+      "frequency": "Frequency",
+      "duration": "Duration",
+      "quantity": "Quantity",
+      "specialInstructions": "Special Instructions",
+      "generalInstructions": "General Instructions",
+      "internalNotes": "Internal Notes",
+      "prescribedMedications": "Prescribed Medications",
+      "addMedication": "Add Medication",
+      "createPrescription": "Create Prescription",
+      "clear": "Clear",
+      "generalInformation": "General Information",
+      "selectFrequency": "Select frequency",
+      "onceDay": "1 time per day",
+      "twiceDay": "2 times per day",
+      "threeTimesDay": "3 times per day",
+      "fourTimesDay": "4 times per day",
+      "every4h": "Every 4 hours",
+      "every6h": "Every 6 hours",
+      "every8h": "Every 8 hours",
+      "every12h": "Every 12 hours",
+      "asNeeded": "As needed",
+      "priorityLow": "Low",
+      "priorityNormal": "Normal",
+      "priorityHigh": "High",
+      "priorityUrgent": "Urgent",
+      "templates": "Templates",
+      "mostUsedTemplates": "Most Used Templates",
+      "interactionWarnings": "Interaction Warnings",
+      "createdSuccessfully": "Prescription created successfully!",
+      "viewPdf": "View PDF",
+      "downloadPdf": "Download PDF",
+      "printPdf": "Print PDF",
+      "sendEmail": "Send by Email",
+      "sendEmailTitle": "Send Prescription by Email",
+      "recipientEmail": "Recipient Email",
+      "recipientEmailPlaceholder": "example{'@'}email.com",
+      "emailSubject": "Subject",
+      "emailSubjectPlaceholder": "Medical Prescription",
+      "emailMessage": "Message",
+      "emailMessagePlaceholder": "Attached you will find the requested medical prescription.",
+      "emailSentSuccessfully": "Email sent successfully!",
+      "continue": "Continue",
+      "validate": {
+        "recipientEmail": "Recipient email is required and must be valid"
+      }
+    },
+    "examOrder": {
+      "create": "Create Exam Order",
+      "subtitle": "Request diagnostic exams for the patient",
+      "clinicalIndication": "Clinical Indication",
+      "diagnosis": "Diagnosis",
+      "urgency": "Urgency",
+      "scheduledDate": "Scheduled Date",
+      "requiresFasting": "Requires fasting",
+      "addExams": "Add Exams",
+      "searchExam": "Search exam by name or code...",
+      "allTypes": "All types",
+      "type": "Type",
+      "estimatedDuration": "Estimated Duration",
+      "specialInstructions": "Special Instructions",
+      "patientPreparation": "Patient Preparation",
+      "addExam": "Add Exam",
+      "requestedExams": "Requested Exams",
+      "additionalInformation": "Additional Information",
+      "internalNotes": "Internal Notes",
+      "createOrder": "Create Exam Order",
+      "clear": "Clear",
+      "generalInformation": "General Information",
+      "urgencyRoutine": "Routine",
+      "urgencyUrgent": "Urgent",
+      "urgencyStat": "STAT (Immediate)",
+      "urgencyAsap": "As soon as possible",
+      "templates": "Templates",
+      "orderTemplates": "Order Templates",
+      "createdSuccessfully": "Exam order created successfully!",
+      "viewPdf": "View PDF",
+      "downloadPdf": "Download PDF",
+      "printPdf": "Print PDF",
+      "sendEmail": "Send by Email",
+      "sendEmailTitle": "Send Exam Order by Email",
+      "recipientEmail": "Recipient Email",
+      "recipientEmailPlaceholder": "example{'@'}email.com",
+      "emailSubject": "Subject",
+      "emailSubjectPlaceholder": "Medical Exam Order",
+      "emailMessage": "Message",
+      "emailMessagePlaceholder": "Attached you will find the requested exam order.",
+      "emailSentSuccessfully": "Email sent successfully!",
+      "continue": "Continue",
+      "validate": {
+        "recipientEmail": "Recipient email is required and must be valid"
+      }
+    },
+    "reference": {
+      "create": "Create Reference",
+      "subtitle": "Refer the patient to another specialist or institution",
+      "destinationSpecialty": "Destination Specialty",
+      "specialistDoctor": "Specialist Doctor",
+      "destinationInstitution": "Destination Institution",
+      "urgency": "Urgency",
+      "preferredDate": "Preferred Date",
+      "requiresFollowUp": "Requires follow-up",
+      "reasonForReferral": "Reason for Referral",
+      "clinicalSummary": "Clinical Summary",
+      "principalDiagnosis": "Principal Diagnosis",
+      "expectedResult": "Expected Result",
+      "relevantHistory": "Relevant History",
+      "currentMedications": "Current Medications",
+      "allergies": "Allergies",
+      "recentVitalSigns": "Recent Vital Signs",
+      "specialInstructions": "Special Instructions",
+      "internalNotes": "Internal Notes",
+      "createReference": "Create Reference",
+      "clear": "Clear",
+      "referenceInformation": "Reference Information",
+      "clinicalInformation": "Clinical Information",
+      "patientHistory": "Patient History",
+      "additionalInformation": "Additional Information",
+      "preview": "Preview",
+      "medicalReference": "Medical Reference",
+      "specialty": "Specialty",
+      "doctor": "Doctor",
+      "institution": "Institution",
+      "reason": "Reason",
+      "urgencyRoutine": "Routine",
+      "urgencyUrgent": "Urgent",
+      "urgencyStat": "STAT (Immediate)",
+      "urgencyAsap": "As soon as possible",
+      "selectSpecialty": "Select specialty",
+      "templates": "Templates",
+      "referenceTemplates": "Reference Templates"
+    },
     "fromBooking": "From Booking",
     "fromControl": "From Control",
     "comeback": "Comeback",
@@ -3520,6 +4226,194 @@
     "physicalExam": "Physical Exam",
     "diagnostic": "Diagnostic",
     "medicalOrder": "Medical Order",
+    "medicalOrderSubtitle": "Record the patient's medical orders",
+    "prescription": {
+      "create": "Create Prescription",
+      "subtitle": "Prescribe medications for the patient",
+      "diagnosis": "Diagnosis",
+      "validUntil": "Valid until",
+      "priority": "Priority",
+      "refillsAllowed": "Refills allowed",
+      "addMedications": "Add Medications",
+      "searchMedication": "Search medication...",
+      "dosage": "Dosage",
+      "frequency": "Frequency",
+      "duration": "Duration",
+      "quantity": "Quantity",
+      "specialInstructions": "Special instructions",
+      "generalInstructions": "General Instructions",
+      "internalNotes": "Internal notes",
+      "prescribedMedications": "Prescribed Medications",
+      "addMedication": "Add Medication",
+      "createPrescription": "Create Prescription",
+      "clear": "Clear",
+      "generalInformation": "General Information",
+      "selectFrequency": "Select frequency",
+      "onceDay": "1 time per day",
+      "twiceDay": "2 times per day",
+      "threeTimesDay": "3 times per day",
+      "fourTimesDay": "4 times per day",
+      "every4h": "Every 4 hours",
+      "every6h": "Every 6 hours",
+      "every8h": "Every 8 hours",
+      "every12h": "Every 12 hours",
+      "asNeeded": "As needed",
+      "priorityLow": "Low",
+      "priorityNormal": "Normal",
+      "priorityHigh": "High",
+      "priorityUrgent": "Urgent",
+      "templates": "Templates",
+      "mostUsedTemplates": "Most Used Templates",
+      "interactionWarnings": "Interaction Warnings",
+      "createdSuccessfully": "Prescription created successfully!",
+      "viewPdf": "View PDF",
+      "downloadPdf": "Download PDF",
+      "printPdf": "Print PDF",
+      "sendEmail": "Send by Email",
+      "sendEmailTitle": "Send Prescription by Email",
+      "recipientEmail": "Recipient Email",
+      "recipientEmailPlaceholder": "example{'@'}email.com",
+      "emailSubject": "Subject",
+      "emailSubjectPlaceholder": "Medical Prescription",
+      "emailMessage": "Message",
+      "emailMessagePlaceholder": "Attached you will find the requested medical prescription.",
+      "emailSentSuccessfully": "Email sent successfully!",
+      "continue": "Continue",
+      "validate": {
+        "recipientEmail": "Recipient email is required and must be valid"
+      }
+    },
+    "examOrder": {
+      "create": "Create Exam Order",
+      "subtitle": "Request diagnostic exams for the patient",
+      "clinicalIndication": "Clinical Indication",
+      "diagnosis": "Diagnosis",
+      "urgency": "Urgency",
+      "scheduledDate": "Scheduled Date",
+      "requiresFasting": "Requires fasting",
+      "addExams": "Add Exams",
+      "searchExam": "Search exam by name or code...",
+      "allTypes": "All types",
+      "type": "Type",
+      "estimatedDuration": "Estimated Duration",
+      "specialInstructions": "Special Instructions",
+      "patientPreparation": "Patient Preparation",
+      "addExam": "Add Exam",
+      "requestedExams": "Requested Exams",
+      "additionalInformation": "Additional Information",
+      "internalNotes": "Internal Notes",
+      "createOrder": "Create Exam Order",
+      "clear": "Clear",
+      "generalInformation": "General Information",
+      "urgencyRoutine": "Routine",
+      "urgencyUrgent": "Urgent",
+      "urgencyStat": "STAT (Immediate)",
+      "urgencyAsap": "As soon as possible",
+      "templates": "Templates",
+      "orderTemplates": "Order Templates",
+      "createdSuccessfully": "Exam order created successfully!",
+      "viewPdf": "View PDF",
+      "downloadPdf": "Download PDF",
+      "printPdf": "Print PDF",
+      "sendEmail": "Send by Email",
+      "sendEmailTitle": "Send Exam Order by Email",
+      "recipientEmail": "Recipient Email",
+      "recipientEmailPlaceholder": "example{'@'}email.com",
+      "emailSubject": "Subject",
+      "emailSubjectPlaceholder": "Medical Exam Order",
+      "emailMessage": "Message",
+      "emailMessagePlaceholder": "Attached you will find the requested exam order.",
+      "emailSentSuccessfully": "Email sent successfully!",
+      "continue": "Continue",
+      "validate": {
+        "recipientEmail": "Recipient email is required and must be valid"
+      }
+    },
+    "reference": {
+      "create": "Create Reference",
+      "subtitle": "Refer the patient to another specialist or institution",
+      "destinationSpecialty": "Destination Specialty",
+      "specialistDoctor": "Specialist Doctor",
+      "destinationInstitution": "Destination Institution",
+      "urgency": "Urgency",
+      "preferredDate": "Preferred Date",
+      "requiresFollowUp": "Requires follow-up",
+      "reasonForReferral": "Reason for Referral",
+      "clinicalSummary": "Clinical Summary",
+      "principalDiagnosis": "Principal Diagnosis",
+      "expectedResult": "Expected Result",
+      "relevantHistory": "Relevant History",
+      "currentMedications": "Current Medications",
+      "allergies": "Allergies",
+      "recentVitalSigns": "Recent Vital Signs",
+      "specialInstructions": "Special Instructions",
+      "internalNotes": "Internal Notes",
+      "createReference": "Create Reference",
+      "clear": "Clear",
+      "referenceInformation": "Reference Information",
+      "clinicalInformation": "Clinical Information",
+      "patientHistory": "Patient History",
+      "additionalInformation": "Additional Information",
+      "preview": "Preview",
+      "medicalReference": "Medical Reference",
+      "specialty": "Specialty",
+      "doctor": "Doctor",
+      "institution": "Institution",
+      "reason": "Reason",
+      "urgencyRoutine": "Routine",
+      "urgencyUrgent": "Urgent",
+      "urgencyStat": "STAT (Immediate)",
+      "urgencyAsap": "As soon as possible",
+      "selectSpecialty": "Select specialty",
+      "templates": "Templates",
+      "referenceTemplates": "Reference Templates",
+      "createdSuccessfully": "Reference created successfully!",
+      "viewPdf": "View PDF",
+      "downloadPdf": "Download PDF",
+      "printPdf": "Print PDF",
+      "sendEmail": "Send by Email",
+      "sendEmailTitle": "Send Prescription by Email",
+      "recipientEmail": "Recipient Email",
+      "recipientEmailPlaceholder": "example{'@'}email.com",
+      "emailSubject": "Subject",
+      "emailSubjectPlaceholder": "Medical Prescription",
+      "emailMessage": "Message",
+      "emailMessagePlaceholder": "Please find the requested medical prescription attached.",
+      "send": "Send",
+      "cancel": "Cancel",
+      "emailSentSuccessfully": "Email sent successfully!",
+      "continue": "Continue",
+      "validate": {
+        "recipientEmail": "Recipient email is required and must be valid"
+      }
+    },
+    "orderType": {
+      "prescription": "Prescription",
+      "exam": "Exams",
+      "reference": "Reference",
+      "text": "Free Text"
+    },
+    "historyTab": {
+      "prescription": "Prescriptions",
+      "exam": "Exams",
+      "reference": "References",
+      "text": "Free Text"
+    },
+    "startRecording": "Start voice recording",
+    "stopRecording": "Stop recording",
+    "clearField": "Clear field",
+    "recordingMessage": "Recording... Speak now",
+    "prescriptionRefilledSuccess": "Prescription refilled successfully",
+    "prescriptionRefilledError": "Error refilling prescription",
+    "dispensationRecordedSuccess": "Dispensation recorded successfully",
+    "dispensationRecordedError": "Error recording dispensation",
+    "examOrderCompletedSuccess": "Exam order marked as completed",
+    "examOrderCompletedError": "Error completing exam order",
+    "referenceAcceptedSuccess": "Reference accepted successfully",
+    "referenceAcceptedError": "Error accepting reference",
+    "referenceAttendedSuccess": "Reference marked as attended",
+    "referenceAttendedError": "Error marking reference as attended",
+    "returnReportPrompt": "Enter return report (optional):",
     "documents": "Documents",
     "control": "Controls",
     "resume": "Resume",
@@ -3742,6 +4636,15 @@
     "attentionHour": "Attention Hours:",
     "attentionDays": "Attention Days:",
     "add": "Add",
+    "selectBusiness": "Select a business:",
+    "searchOrSelectBusiness": "Search or select business",
+    "viewAsBusiness": "Business User View",
+    "commerce": "Commerce:",
+    "accessAsBusiness": "Access as Business User",
+    "noCommerces": "This business has no available commerces",
+    "selectCommerce": "Select commerce",
+    "selectAction": "Select an action for this business:",
+    "manageBusiness": "Manage Business",
     "keyNameHelp": "Identifier used for the URL of the minisite.",
     "tagHelp": "Short identifier of the business used in the digital product.",
     "listResult": "Results:",
@@ -3908,6 +4811,9 @@
     "add": "Add",
     "users": "Users",
     "email": "Email:",
+    "allModules": "All Modules",
+    "allCategories": "All Categories",
+    "clearFilters": "Clear Filters",
     "message": {
       "1": {
         "title": "Ups!",
@@ -4090,6 +4996,7 @@
     "return": "Back",
     "validated": "Validate",
     "desactivate": "Desactivate",
+    "active": "Active",
     "paymentMethod": "Payment method:",
     "amount": "Amount:",
     "number": "Id. TRX:",
@@ -4338,8 +5245,13 @@
     "reject": "Reject",
     "filterByStatus": "Filter by Status",
     "filterByTime": "Filter by Time Since Creation",
+    "filterByTemperature": "Filter by Priority",
     "clearStatusFilter": "Clear Status Filter",
     "clearTimeFilter": "Clear Time Filter",
+    "temperature": "Priority",
+    "temperatureQuente": "Hot (Red)",
+    "temperatureMorno": "Warm (Green)",
+    "temperatureFrio": "Cold (Blue)",
     "timeIndicator": {
       "green": "Less than 1 month",
       "yellow": "1-3 months",
@@ -4441,6 +5353,52 @@
         "validate": "Validate plan activation - Section Plan Activation"
       }
     },
+    "audit-log": {
+      "admin": {
+        "view": "Get to this Section - Audit Log",
+        "read": "Read data - Section Audit Log",
+        "export": "Export data - Section Audit Log",
+        "limit": "Limit of data - Section Audit Log"
+      },
+      "title": "Audit Log",
+      "refresh": "Refresh",
+      "export": "Export",
+      "filters": {
+        "action": "Action",
+        "entityType": "Entity Type",
+        "search": "Search",
+        "searchPlaceholder": "Search by user, email, entity, IP..."
+      },
+      "summary": {
+        "total": "Total Records",
+        "byAction": "By Action",
+        "byEntityType": "By Entity Type",
+        "uniqueUsers": "Unique Users"
+      },
+      "logs": "Logs",
+      "noLogs": "No audit logs found",
+      "message": {
+        "1": {
+          "title": "Oops!",
+          "content": "At this time there are no options to manage. Verify that your plan is active or contact us."
+        },
+        "noCommerce": {
+          "title": "Select a Commerce",
+          "content": "You must select a commerce to view audit logs"
+        }
+      },
+      "table": {
+        "timestamp": "Timestamp",
+        "user": "User",
+        "action": "Action",
+        "entityType": "Type",
+        "entityId": "Entity ID",
+        "result": "Result",
+        "ipAddress": "IP Address",
+        "details": "Details",
+        "viewDetails": "View Details"
+      }
+    },
     "client": {
       "notify": {
         "whatsapp": "Field of Number Whatsapp para notifications",
@@ -4537,7 +5495,8 @@
         "edit": "Edit data - Section Manage Surveys",
         "update": "Update data - Section Manage Surveys",
         "add": "Add data Section - Manage Surveys",
-        "limit": "Limit of data Section - Manage Surveys"
+        "limit": "Limit of data Section - Manage Surveys",
+        "unavailable": "Delete Surveys - Section Manage Surveys"
       }
     },
     "configuration": {
@@ -4559,6 +5518,13 @@
         "read": "Read data - Section Manage Documents",
         "edit": "Edit data - Section Manage Documents",
         "add": "Add data - Section Manage Documents"
+      }
+    },
+    "document-commerce": {
+      "admin": {
+        "view": "Get to this Section - Manage Commerce Documents",
+        "edit": "Edit Commerce Documents",
+        "add": "Add Commerce Documents"
       }
     },
     "dashboard": {
@@ -4616,6 +5582,27 @@
       "attention-hour-distribution": {
         "view": "Get to attention's hour-distribution - Seção Performance Hub"
       },
+      "booking-day-distribution": {
+        "view": "Get to Booking Day Distribution - Section Performance Hub"
+      },
+      "booking-flow": {
+        "view": "Get to Booking Flow - Section Performance Hub"
+      },
+      "booking-hour-distribution": {
+        "view": "Get to Booking Hour Distribution - Section Performance Hub"
+      },
+      "booking-number-evolution": {
+        "view": "Get to Booking Number Evolution - Section Performance Hub"
+      },
+      "booking-number": {
+        "view": "Get to Booking Number - Section Performance Hub"
+      },
+      "graphs-attentions": {
+        "view": "Get to Attentions Graphs - Section Performance Hub"
+      },
+      "graphs-bookings": {
+        "view": "Get to Bookings Graphs - Section Performance Hub"
+      },
       "surveys-consolidated-nps-evolution": {
         "view": "Get to the NPS Evolution - Section Performance Hub"
       },
@@ -4670,6 +5657,25 @@
         "download": "Download Estado del Sistema"
       }
     },
+    "financial": {
+      "incomes": {
+        "add": "Add Income - Financial Section",
+        "confirm": "Confirm Income - Financial Section",
+        "view": "View Incomes - Financial Section"
+      },
+      "outcomes": {
+        "add": "Add Outcome - Financial Section",
+        "view": "View Outcomes - Financial Section"
+      },
+      "reports": {
+        "incomes": "View Income Report - Financial Section",
+        "outcomes": "View Outcome Report - Financial Section",
+        "resume": "View Financial Summary - Financial Section"
+      },
+      "resume": {
+        "view": "View Financial Summary - Financial Section"
+      }
+    },
     "modules": {
       "admin": {
         "view": "Get to this Section -- Manage Modules",
@@ -4677,7 +5683,8 @@
         "edit": "Edit data - Section Manage Modules",
         "update": "Update data - Section Manage Modules",
         "add": "Add data - Section Manage Modules",
-        "limit": "Limit of data - Section Manage Modules"
+        "limit": "Limit of data - Section Manage Modules",
+        "unavailable": "Delete Modules - Section Manage Modules"
       }
     },
     "queues": {
@@ -4688,7 +5695,8 @@
         "update": "Update data - Section Attend Queues of the Day",
         "add": "Add data - Section Attend Queues of the Day",
         "limit": "Limit of data - Section Attend Queues of the Day",
-        "queue-limit": "Limit of attentions daily of the Queues"
+        "queue-limit": "Limit of attentions daily of the Queues",
+        "unavailable": "Delete Queues - Section Attend Queues of the Day"
       }
     },
     "reports": {
@@ -4698,11 +5706,14 @@
         "notifications": "Download Inform of notifications",
         "bookings": "Download Booking Report",
         "waitlist": "Download Waitlist Report",
+        "waitlists": "Download Waitlist Report",
         "client-contacts": "Download Client Contacts Report",
         "clients": "Download Client Report",
         "booking-payments": "Download Booking Payments Report",
         "attention-payments": "Download Attention Payments Report",
-        "attention-products": "Dowload Attention Stock Use Report"
+        "attention-products": "Dowload Attention Stock Use Report",
+        "incomes": "Download Income Report",
+        "outcomes": "Download Outcome Report"
       }
     },
     "collaborator": {
@@ -4774,7 +5785,14 @@
     "permissions": {
       "admin": {
         "plans": "Get to the Plans permissions",
-        "roles": "Get to the Roles permissions"
+        "roles": "Get to the Roles permissions",
+        "users": "See the Users Permissions",
+        "collaborators": "See the Collaborators Permissions"
+      },
+      "collaborators": {
+        "view": "View permissions - Section Collaborators Permissions",
+        "add": "Add permissions - Section Collaborators Permissions",
+        "update": "Update permissions - Section Collaborators Permissions"
       }
     },
     "services": {
@@ -4794,7 +5812,8 @@
         "edit": "Edit data - Section Manage Products",
         "update": "Update data - Section Manage Products",
         "add": "Add data - Section Manage Products",
-        "limit": "Limit of data - Section Manage Products"
+        "limit": "Limit of data - Section Manage Products",
+        "unavailable": "Delete Products - Section Manage Products"
       }
     },
     "products-stock": {
@@ -4824,7 +5843,106 @@
         "edit": "Edit data - Section Manage Client Documents",
         "update": "Update data - Section Manage Client Documents",
         "add": "Add data - Section Manage Client Documents",
+        " add": "Add data - Section Manage Client Documents",
         "limit": "Limit of data - Section Manage Client Documents"
+      }
+    },
+    "leadPipeline": {
+      "admin": {
+        "view": "Get to this Section - Sales Pipeline",
+        "read": "Read data - Section Sales Pipeline",
+        "edit": "Edit data - Section Sales Pipeline",
+        "update": "Update data - Section Sales Pipeline",
+        "add": "Add data - Section Sales Pipeline",
+        "limit": "Limit of data - Section Sales Pipeline"
+      }
+    },
+    "medical-exams": {
+      "admin": {
+        "view": "Get to this Section - Manage Medical Exams",
+        "read": "Read data - Section Manage Medical Exams",
+        "edit": "Edit data - Section Manage Medical Exams",
+        "update": "Update data - Section Manage Medical Exams",
+        "add": "Add data - Section Manage Medical Exams",
+        "delete": "Delete data - Section Manage Medical Exams",
+        "limit": "Limit of data - Section Manage Medical Exams"
+      }
+    },
+    "medical-templates": {
+      "admin": {
+        "view": "Get to this Section - Manage Medical Templates",
+        "read": "Read data - Section Manage Medical Templates",
+        "edit": "Edit data - Section Manage Medical Templates",
+        "update": "Update data - Section Manage Medical Templates",
+        "add": "Add data - Section Manage Medical Templates",
+        "delete": "Delete data - Section Manage Medical Templates",
+        "limit": "Limit of data - Section Manage Medical Templates"
+      }
+    },
+    "medications": {
+      "admin": {
+        "view": "Get to this Section - Manage Medications",
+        "read": "Read data - Section Manage Medications",
+        "edit": "Edit data - Section Manage Medications",
+        "update": "Update data - Section Manage Medications",
+        "add": "Add data - Section Manage Medications",
+        "delete": "Delete data - Section Manage Medications",
+        "limit": "Limit of data - Section Manage Medications"
+      }
+    },
+    "pdf-templates": {
+      "admin": {
+        "view": "Get to this Section - Manage PDF Templates",
+        "read": "Read data - Section Manage PDF Templates",
+        "edit": "Edit data - Section Manage PDF Templates",
+        "update": "Update data - Section Manage PDF Templates",
+        "add": "Add data - Section Manage PDF Templates",
+        "delete": "Delete data - Section Manage PDF Templates",
+        "limit": "Limit of data - Section Manage PDF Templates"
+      },
+      "capacitiesList": {
+        "admin": {
+          "view": "Get to this Section - Manage PDF Templates",
+          "read": "Read data - Section Manage PDF Templates",
+          "edit": "Edit data - Section Manage PDF Templates",
+          "update": "Update data - Section Manage PDF Templates",
+          "add": "Add data - Section Manage PDF Templates",
+          "delete": "Delete data - Section Manage PDF Templates",
+          "limit": "Limit of data - Section Manage PDF Templates"
+        }
+      }
+    },
+    "forms": {
+      "admin": {
+        "view": "Get to this Section - Manage Forms",
+        "read": "Read data - Section Manage Forms",
+        "edit": "Edit data - Section Manage Forms",
+        "update": "Update data - Section Manage Forms",
+        "add": "Add data - Section Manage Forms",
+        "limit": "Limit of data - Section Manage Forms",
+        "unavailable": "Delete Forms - Section Manage Forms"
+      }
+    },
+    "outcome-types": {
+      "admin": {
+        "view": "Get to this Section - Manage Outcome Types",
+        "read": "Read data - Section Manage Outcome Types",
+        "edit": "Edit data - Section Manage Outcome Types",
+        "update": "Update data - Section Manage Outcome Types",
+        "add": "Add data - Section Manage Outcome Types",
+        "limit": "Limit of data - Section Manage Outcome Types",
+        "unavailable": "Delete Outcome Types - Section Manage Outcome Types"
+      }
+    },
+    "patient-history-item": {
+      "admin": {
+        "view": "Get to this Section - Manage Medical History Items",
+        "read": "Read data - Section Manage Medical History Items",
+        "edit": "Edit data - Section Manage Medical History Items",
+        "update": "Update data - Section Manage Medical History Items",
+        "add": "Add data - Section Manage Medical History Items",
+        "limit": "Limit of data - Section Manage Medical History Items",
+        "unavailable": "Delete Medical History Items - Section Manage Medical History Items"
       }
     },
     "patient": {
@@ -4837,6 +5955,446 @@
         "control-edit": "Edit Control Patient - Section Manage Medical History",
         "control-update": "Update Control Patien - Section Manage Medical History",
         "download": "Download History - Section Manage Medical History"
+      }
+    }
+  },
+  "attentionCreation": {
+    "createBooking": "Create a Booking",
+    "preselectedQueue": "Preselected Queue",
+    "canChangeBelow": "You can change the selection below if needed",
+    "telemedicineConsultation": "Telemedicine Consultation",
+    "scheduledDateTime": "Scheduled Date and Time",
+    "usingSelectedBlockDateTime": "Using the selected block's date and time",
+    "selectBlockDateTimeFirst": "Please select the block date and time first",
+    "video": "Video",
+    "completeRequiredFields": "Please complete all required fields",
+    "selectQueueService": "Please select a queue/service",
+    "errorCreatingBooking": "Error creating booking",
+    "errorCreatingAttention": "Error creating attention",
+    "completeFollowingRequiredFields": "Please complete the following required fields",
+    "unknownError": "Unknown error",
+    "creatingAttention": "Creating attention...",
+    "confirmCreation": "Confirm attention creation",
+    "preselectedTime": "Preselected Time",
+    "preselected": "Preselected",
+    "available": "Available",
+    "reserved": "Reserved",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "selectedDate": "Selected Date",
+    "loadingAvailableHours": "Loading available hours...",
+    "telemedicineNote": "Telemedicine Consultation",
+    "telemedicineScheduleNote": "Date and time will be set by the selected block below"
+  },
+  "package": {
+    "package": "Package",
+    "status": "Package status",
+    "sessionsLeft": "remaining",
+    "pause": "Pause",
+    "reanudar": "Resume",
+    "bookSession": "Book Session",
+    "cancel": "Cancel",
+    "active": "Active",
+    "sessionsRemaining": "sessions remaining",
+    "lowSessions": "Low Sessions",
+    "needAttention": "Require attention",
+    "expiringSoon": "Expiring Soon",
+    "within7Days": "Within 7 days",
+    "completed": "Completed",
+    "finished": "Finished",
+    "all": "All",
+    "expired": "Expired",
+    "cancelled": "Cancelled",
+    "quickFilters": "Quick Filters",
+    "activePackages": "Active Packages",
+    "completedPackages": "Completed Packages",
+    "expiredPackages": "Expired Packages",
+    "cancelledPackages": "Cancelled Packages",
+    "noPackages": "No packages",
+    "noPackagesMessage": "No packages found with the selected filters",
+    "copy": "Copy",
+    "details": "Details",
+    "services": "Services",
+    "type": "Type",
+    "actions": "Actions",
+    "created": "Created",
+    "attentionsAndBookings": "Attentions and Bookings",
+    "pendingAttentions": "Pending/Terminated Attentions",
+    "pendingBookings": "Pending Bookings",
+    "noAttentionsOrBookings": "No attentions or bookings for this package",
+    "createReservation": "Create Reservation/Attention",
+    "maxSessionsReached": "Maximum package sessions reached",
+    "overview": "Package Overview",
+    "sessions": "Sessions",
+    "recommendedDates": "Recommended Dates",
+    "expiration": "Expiration",
+    "days": "days",
+    "daysLeft": "days left",
+    "totalAmount": "Total Amount",
+    "paid": "Paid",
+    "lastSession": "Last Session",
+    "nextRecommended": "Next Recommended",
+    "confirmPause": "Pause this package?",
+    "confirmCancel": "Cancel this package? This action cannot be undone.",
+    "errorPause": "Error pausing the package",
+    "errorResume": "Error resuming the package",
+    "errorCancel": "Error cancelling the package",
+    "status": {
+      "ACTIVE": "Active",
+      "CONFIRMED": "Confirmed",
+      "REQUESTED": "Requested",
+      "PAUSED": "Paused",
+      "COMPLETED": "Completed",
+      "EXPIRED": "Expired",
+      "CANCELLED": "Cancelled",
+      "SUSPENDED": "Suspended"
+    },
+    "metrics": {
+      "title": "Package Metrics",
+      "completionRate": "Completion Rate",
+      "noShowRate": "No-Show Rate",
+      "abandonmentRate": "Abandonment Rate",
+      "attendanceRate": "Attendance Rate",
+      "mostRequested": "Most Requested Packages",
+      "totalCreated": "Created",
+      "active": "Active",
+      "completed": "Completed",
+      "status": {
+        "completed": "Completion",
+        "noshow": "No-Show",
+        "abandoned": "Abandonment"
+      },
+      "description": {
+        "completion": "Completed sessions vs. total",
+        "noshow": "Bookings cancelled without attention",
+        "abandonment": "Packages cancelled with used sessions"
+      },
+      "tooltip": {
+        "completionRate": "The completion rate measures the percentage of sessions consumed relative to total sessions sold. A high value indicates that clients are completing their packages.",
+        "attendanceRate": "The attendance rate measures the percentage of bookings that were attended (inverse of no-show rate). A high value indicates good client attendance."
+      }
+    }
+  },
+  "attentionStepBar": {
+    "steps": {
+      "checkin": "Check-In",
+      "processing": "In Attendance",
+      "checkout": "Check-Out",
+      "terminated": "Terminated"
+    }
+  },
+  "attentionStats": {
+    "waitTime": "Wait Time",
+    "waitTimeIndicators": "Wait Time - Color Indicators",
+    "green": "Green:",
+    "yellow": "Yellow:",
+    "orange": "Orange:",
+    "red": "Red:",
+    "greenDesc": "Less than 10 minutes - Excellent",
+    "yellowDesc": "Less than 1 hour - Good",
+    "orangeDesc": "Less than 3 hours - Attention",
+    "redDesc": "More than 3 hours - Urgent",
+    "realTimeUpdate": "Real-time update",
+    "createdAt": "Created at",
+    "inQueue": "In Queue",
+    "estimatedTime": "Estimated Time",
+    "processingTime": "Processing Time",
+    "totalDuration": "Total Attention Duration",
+    "expectedDuration": "Expected duration:",
+    "remainingTime": "Remaining time:",
+    "underTime": "Time under expected",
+    "exceededTime": "Exceeded time:",
+    "estimatedNotAvailable": "Estimated duration not available",
+    "attentionDetails": "Attention Information",
+    "processedAt": "Attended at",
+    "services": "Service(s)",
+    "collaborator": "Collaborator",
+    "bookingDate": "Booking on",
+    "packageSession": "Package Session",
+    "attentionType": {
+      "label": "Attention Type",
+      "telemedicine": "Telemedicine",
+      "presential": "Presential"
+    },
+    "surveyResults": "Customer Satisfaction Survey Results",
+    "csat": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "poor": "Can improve"
+    },
+    "nps": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "poor": "Can improve"
+    },
+    "timeline": "Attention Timeline",
+    "notApplicable": "Not applicable",
+    "pending": "Pending",
+    "timelineSteps": {
+      "booking": "Booking Created",
+      "checkin": "Check-In",
+      "processing": "In Progress",
+      "checkout": "Check-Out",
+      "terminated": "Terminated",
+      "survey": "Satisfaction Survey",
+      "cancelled": "Cancelled",
+      "cancelledByUser": "Cancelled by User",
+      "skipped": "Skipped",
+      "surveySentPending": "Sent, pending response",
+      "surveyNotSent": "Not sent",
+      "terminatedBySystem": "System"
+    }
+  },
+  "pdfTemplates": {
+    "title": "PDF Templates",
+    "searchPlaceholder": "Search templates...",
+    "addTemplate": "Add Template",
+    "name": "Name",
+    "description": "Description",
+    "documentType": "Document Type",
+    "scope": "Scope",
+    "pageSize": "Page Size",
+    "isDefault": "Default Template",
+    "setAsDefault": "Set as Default",
+    "preview": "Preview PDF",
+    "update": "Update",
+    "delete": "Delete",
+    "message": {
+      "1": {
+        "title": "Ups!",
+        "content": "At this time there are no options to manage. Please verify that your plan is active or contact us."
+      },
+      "2": {
+        "title": "Oh no!",
+        "content": "At this time there are no PDF templates."
+      },
+      "4": {
+        "title": "Select a Commerce",
+        "content": "You must select a commerce to manage PDF templates"
+      }
+    },
+    "canvasEditor": {
+      "header": "Header Editor",
+      "footer": "Footer Editor",
+      "content": "Content Editor"
+    }
+  },
+  "digitalSignature": {
+    "title": "Digital Signature",
+    "upload": "Upload Signature",
+    "current": "Current Signature",
+    "crm": "CRM",
+    "crmState": "CRM State",
+    "uploadSuccess": "Digital signature updated successfully",
+    "uploadError": "Error updating digital signature",
+    "uploadHelp": "Select an image of your signature (PNG, JPG, etc.)",
+    "icp": {
+      "title": "ICP-Brasil Digital Signature",
+      "certificate": "Digital Certificate (.pem, .crt, .cer, .pfx)",
+      "certificateHelp": "Select the ICP-Brasil digital certificate file",
+      "privateKey": "Private Key (.pem, .key)",
+      "privateKeyHelp": "Select the certificate private key file",
+      "password": "Certificate Password",
+      "passwordPlaceholder": "Enter password (if required)",
+      "passwordHelp": "Digital certificate password (usually not required for A1 certificates)",
+      "validate": "Validate Certificate",
+      "sign": "Sign Document",
+      "signed": "Document Signed",
+      "signedAt": "Signed on",
+      "signedBy": "Signed by",
+      "verify": "Verify Signature",
+      "verifying": "Verifying...",
+      "valid": "Valid signature",
+      "invalid": "Invalid signature",
+      "certificateInfo": "Certificate Information",
+      "issuer": "Issuer",
+      "subject": "Signer",
+      "validFrom": "Valid from",
+      "validTo": "Valid until",
+      "processing": "Processing signature...",
+      "errorReadingCertificate": "Error reading certificate file",
+      "errorReadingPrivateKey": "Error reading private key file",
+      "certificateRequired": "Certificate is required",
+      "invalidCertificate": "Invalid certificate",
+      "errorValidating": "Error validating certificate",
+      "cannotSign": "Cannot sign. Validate certificate first.",
+      "errorSigning": "Error signing document",
+      "errorVerifying": "Error verifying signature"
+    }
+  },
+  "auditLog": {
+    "title": "Audit Log",
+    "refresh": "Refresh",
+    "export": "Export Report",
+    "noLogs": "No logs found",
+    "filters": {
+      "action": "Action",
+      "entityType": "Entity Type",
+      "search": "Search",
+      "searchPlaceholder": "Search by user, email, entity..."
+    },
+    "summary": {
+      "total": "Total Logs",
+      "byAction": "By Action",
+      "byEntityType": "By Entity Type",
+      "uniqueUsers": "Unique Users"
+    },
+    "logs": "Audit Logs",
+    "table": {
+      "timestamp": "Date/Time",
+      "user": "User",
+      "action": "Action",
+      "entityType": "Type",
+      "entityId": "Entity ID",
+      "result": "Result",
+      "ipAddress": "IP Address",
+      "details": "Details",
+      "viewDetails": "View Details"
+    }
+  },
+  "audit-log": {
+    "title": "Audit Log",
+    "refresh": "Refresh",
+    "export": "Export",
+    "capacitiesList": {
+      "admin": {
+        "view": "Get to this Section - Audit Log",
+        "read": "Read data - Section Audit Log",
+        "export": "Export data - Section Audit Log",
+        "limit": "Limit of data - Section Audit Log"
+      }
+    },
+    "filters": {
+      "action": "Action",
+      "entityType": "Entity Type",
+      "search": "Search",
+      "searchPlaceholder": "Search by user, email, entity, IP..."
+    },
+    "summary": {
+      "total": "Total Records",
+      "byAction": "By Action",
+      "byEntityType": "By Entity Type",
+      "uniqueUsers": "Unique Users"
+    },
+    "logs": "Logs",
+    "noLogs": "No audit logs found",
+    "message": {
+      "1": {
+        "title": "Oops!",
+        "content": "At this time there are no options to manage. Verify that your plan is active or contact us."
+      },
+      "noCommerce": {
+        "title": "Select a Commerce",
+        "content": "You must select a commerce to view audit logs"
+      }
+    },
+    "table": {
+      "timestamp": "Timestamp",
+      "user": "User",
+      "action": "Action",
+      "entityType": "Type",
+      "entityId": "Entity ID",
+      "result": "Result",
+      "ipAddress": "IP Address",
+      "details": "Details",
+      "viewDetails": "View Details"
+    }
+  },
+  "lgpd": {
+    "title": "LGPD - Consents and Portability",
+    "consent": {
+      "title": "LGPD Consent Management",
+      "noConsents": "No consents registered",
+      "newConsent": "New Consent",
+      "consentType": "Consent Type",
+      "selectType": "Select type",
+      "purpose": "Purpose",
+      "purposePlaceholder": "Describe the purpose of data processing",
+      "description": "Description",
+      "descriptionPlaceholder": "Detailed description (optional)",
+      "expiresAt": "Expiration Date",
+      "expiresAtHelp": "Leave blank for indefinite consent",
+      "consentMethod": "Consent Method",
+      "create": "Create Consent",
+      "creating": "Creating...",
+      "deny": "Deny Consent",
+      "revoke": "Revoke",
+      "confirmRevoke": "Are you sure you want to revoke this consent?",
+      "grantedAt": "Granted on",
+      "types": {
+        "DATA_PROCESSING": "Data Processing",
+        "DATA_SHARING": "Data Sharing",
+        "MARKETING": "Marketing and Communications",
+        "RESEARCH": "Scientific Research",
+        "THIRD_PARTY": "Third Party Sharing",
+        "DATA_EXPORT": "Data Export",
+        "TELEMEDICINE": "Telemedicine",
+        "BIOMETRIC": "Biometric Data"
+      },
+      "status": {
+        "GRANTED": "Granted",
+        "DENIED": "Denied",
+        "REVOKED": "Revoked",
+        "EXPIRED": "Expired",
+        "PENDING": "Pending"
+      },
+      "errorCreating": "Error creating consent",
+      "errorDenying": "Error denying consent",
+      "errorRevoking": "Error revoking consent"
+    },
+    "portability": {
+      "title": "Data Portability (LGPD)",
+      "description": "You can request a copy of all your personal data in a structured and commonly used format.",
+      "download": "Download My Data",
+      "generating": "Generating portability file...",
+      "noConsent": "You need to grant consent for data export before you can download your data.",
+      "lastExport": "Last Export",
+      "fileName": "File Name",
+      "generatedAt": "Generated on",
+      "expiresAt": "Expires on",
+      "error": "Error generating portability file"
+    }
+  },
+  "documentVerification": {
+    "verifying": "Verifying document...",
+    "retry": "Try again",
+    "valid": {
+      "title": "Valid Document"
+    },
+    "invalid": {
+      "title": "Invalid Document"
+    },
+    "error": {
+      "title": "Verification Error"
+    },
+    "documentInfo": {
+      "title": "Document Information",
+      "prescriptionId": "Prescription ID",
+      "examOrderId": "Exam Order ID",
+      "referenceId": "Reference ID",
+      "date": "Issue Date",
+      "doctorName": "Doctor Name",
+      "doctorLicense": "CRM",
+      "doctorOriginName": "Origin Doctor",
+      "commerceName": "Clinic/Commerce"
+    },
+    "integrity": {
+      "title": "Integrity Verification",
+      "valid": "Document is intact and authentic",
+      "tampered": "Document may have been tampered",
+      "hash": "Document Hash"
+    }
+  },
+  "pdf-templates": {
+    "capacitiesList": {
+      "admin": {
+        "view": "Get to this Section - Manage PDF Templates",
+        "read": "Read data - Section Manage PDF Templates",
+        "edit": "Edit data - Section Manage PDF Templates",
+        "update": "Update data - Section Manage PDF Templates",
+        "add": "Add data - Section Manage PDF Templates",
+        "delete": "Delete data - Section Manage PDF Templates",
+        "limit": "Limit of data - Section Manage PDF Templates"
       }
     }
   }

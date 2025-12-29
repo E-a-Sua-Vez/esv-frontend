@@ -35,6 +35,18 @@ export const BOOKING_STATUS = {
   CANCELLED: 'CANCELLED',
 };
 
+// Attention stages (for attention-stages-enabled feature)
+export const ATTENTION_STAGE = {
+  PENDING: 'PENDING',
+  CHECK_IN: 'CHECK_IN',
+  PRE_CONSULTATION: 'PRE_CONSULTATION',
+  CONSULTATION: 'CONSULTATION',
+  POST_CONSULTATION: 'POST_CONSULTATION',
+  CHECKOUT: 'CHECKOUT',
+  TERMINATED: 'TERMINATED',
+  CANCELLED: 'CANCELLED',
+};
+
 // Storage keys
 export const STORAGE_KEYS = {
   CURRENT_USER: 'currentUser',

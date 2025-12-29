@@ -7,6 +7,13 @@ import {
   getClientDocument,
   addClientDocument,
   availableDocument,
+  searchDocuments,
+  getDocumentCategories,
+  getDocumentUrgencyLevels,
+  updateDocumentTags,
+  linkDocumentToAttention,
+  trackDocumentAccess,
+  trackDocumentDownload,
 } from '../../../application/services/document';
 import Warning from '../../common/Warning.vue';
 import Spinner from '../../common/Spinner.vue';
@@ -14,6 +21,11 @@ import Toggle from '@vueform/toggle';
 import Message from '../../common/Message.vue';
 import HistoryDetailsCard from '../common/HistoryDetailsCard.vue';
 import DragDropFileUpload from '../../common/DragDropFileUpload.vue';
+import DocumentViewer from '../../document-management/DocumentViewer.vue';
+import DocumentSearch from '../../document-management/DocumentSearch.vue';
+import DocumentBatchOperations from '../../document-management/DocumentBatchOperations.vue';
+import DocumentTreeView from '../../document-management/DocumentTreeView.vue';
+import DocumentImageCarousel from '../../document-management/DocumentImageCarousel.vue';
 
 export default {
   name: 'DocumentsForm',
@@ -25,6 +37,11 @@ export default {
     Message,
     HistoryDetailsCard,
     DragDropFileUpload,
+    DocumentViewer,
+    DocumentSearch,
+    DocumentBatchOperations,
+    DocumentTreeView,
+    DocumentImageCarousel,
   },
   props: {
     commerce: { type: Object, default: {} },
@@ -57,16 +74,26 @@ export default {
     const state = reactive({
       newDocuments: {},
       oldDocuments: [],
+      filteredDocuments: [],
       documentList: [],
       captcha: false,
       documentsError: false,
       asc: true,
       showHistory: false,
+      showViewer: false,
+      selectedDocument: null,
+      selectedDocuments: [],
+      selectionMode: false,
       errorsAdd: [],
       togglesDocuments: [],
       newDocument: {},
       optionSelected: {},
       file: undefined,
+      searchText: '',
+      activeFilters: {},
+      viewMode: 'list', // 'list' or 'tree'
+      showImageCarousel: false,
+      selectedImageIndex: 0,
     });
 
     onBeforeMount(async () => {
@@ -80,9 +107,22 @@ export default {
           state.documentList = state.documentList.sort((a, b) => b.order - a.order);
         }
         if (patientHistoryData.value && patientHistoryData.value.id) {
-          state.oldDocuments = patientHistoryData.value.patientDocument.filter(
-            doc => doc.available
-          );
+          // Map PatientDocument to Document objects for display
+          // PatientDocument has structure: { documents: Document, comment, details, attentionId, createdAt, createdBy }
+          state.oldDocuments = patientHistoryData.value.patientDocument
+            .filter(patientDoc => patientDoc.documents && patientDoc.documents.available)
+            .map(patientDoc => {
+              // Merge PatientDocument metadata with Document for display
+              const doc = { ...patientDoc.documents };
+              // Preserve PatientDocument-specific fields
+              doc.patientDocumentComment = patientDoc.comment;
+              doc.patientDocumentDetails = patientDoc.details;
+              doc.patientDocumentAttentionId = patientDoc.attentionId;
+              doc.patientDocumentCreatedAt = patientDoc.createdAt;
+              doc.patientDocumentCreatedBy = patientDoc.createdBy;
+              return doc;
+            });
+          state.filteredDocuments = [...state.oldDocuments];
         }
         // Only use cacheData if no saved data exists in patientHistoryData
         if (!state.oldDocuments && cacheData.value) {
@@ -108,6 +148,35 @@ export default {
       }
     };
 
+    // Check if document is auto-generated (prescription, exam order, or reference PDF)
+    const isGeneratedDocument = doc => {
+      if (!doc || !doc.option) return false;
+      return ['prescription_pdf', 'exam_order_pdf', 'reference_pdf'].includes(doc.option);
+    };
+
+    // Get document type label for generated documents
+    const getGeneratedDocumentType = doc => {
+      if (!doc || !doc.option) return null;
+      const typeMap = {
+        prescription_pdf: {
+          label: 'Receta Médica',
+          icon: 'bi-prescription',
+          color: 'badge-success',
+        },
+        exam_order_pdf: {
+          label: 'Orden de Examen',
+          icon: 'bi-clipboard-data',
+          color: 'badge-info',
+        },
+        reference_pdf: {
+          label: 'Referencia Médica',
+          icon: 'bi-arrow-right-circle',
+          color: 'badge-warning',
+        },
+      };
+      return typeMap[doc.option] || null;
+    };
+
     const checkAsc = event => {
       if (event.target.checked) {
         state.asc = true;
@@ -127,6 +196,7 @@ export default {
           );
         }
         state.oldDocuments = elementsSorted.filter(doc => doc.available);
+        applyFilters();
       }
     };
 
@@ -184,6 +254,174 @@ export default {
       state.errorsAdd = [error];
     };
 
+    // Enhanced document management functions
+    const handleSearch = searchText => {
+      state.searchText = searchText;
+      applyFilters();
+    };
+
+    const handleFiltersChanged = filters => {
+      state.activeFilters = filters;
+      applyFilters();
+    };
+
+    const applyFilters = () => {
+      let filtered = [...state.oldDocuments];
+
+      // Apply search text filter
+      if (state.searchText) {
+        const searchLower = state.searchText.toLowerCase();
+        filtered = filtered.filter(
+          doc =>
+            doc.name?.toLowerCase().includes(searchLower) ||
+            doc.details?.name?.toLowerCase().includes(searchLower) ||
+            doc.documentMetadata?.clinicalNotes?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      // Apply category filter
+      if (state.activeFilters.category) {
+        filtered = filtered.filter(doc => doc.category === state.activeFilters.category);
+      }
+
+      // Apply urgency filter
+      if (state.activeFilters.urgency) {
+        filtered = filtered.filter(doc => doc.urgency === state.activeFilters.urgency);
+      }
+
+      // Apply date range filter
+      if (state.activeFilters.dateFrom) {
+        const fromDate = new Date(state.activeFilters.dateFrom);
+        filtered = filtered.filter(doc => new Date(doc.createdAt) >= fromDate);
+      }
+      if (state.activeFilters.dateTo) {
+        const toDate = new Date(state.activeFilters.dateTo);
+        toDate.setHours(23, 59, 59, 999); // End of day
+        filtered = filtered.filter(doc => new Date(doc.createdAt) <= toDate);
+      }
+
+      // Apply tags filter
+      if (state.activeFilters.tags && state.activeFilters.tags.length > 0) {
+        filtered = filtered.filter(doc =>
+          state.activeFilters.tags.some(tag => doc.tags?.includes(tag)),
+        );
+      }
+
+      state.filteredDocuments = filtered;
+    };
+
+    const selectDocument = async document => {
+      // Track document access
+      try {
+        await trackDocumentAccess(document.id, 'view', 'collaborator');
+      } catch (error) {
+        console.warn('Failed to track document access:', error);
+      }
+
+      // Check if it's an image document
+      const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
+      const isImage =
+        imageTypes.includes(document.format) ||
+        /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(document.name);
+
+      if (isImage) {
+        openImageCarousel(document, state.filteredDocuments);
+      } else {
+        state.selectedDocument = document;
+        state.showViewer = true;
+      }
+    };
+
+    const closeViewer = () => {
+      state.showViewer = false;
+      state.selectedDocument = null;
+    };
+
+    const closeImageCarousel = () => {
+      state.showImageCarousel = false;
+      state.selectedImageIndex = 0;
+    };
+
+    const openImageCarousel = (document, documents) => {
+      // Find the index of the selected document in the image documents
+      const imageDocuments = documents.filter(doc => {
+        const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
+        return imageTypes.includes(doc.format) || /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(doc.name);
+      });
+
+      const index = imageDocuments.findIndex(doc => doc.id === document.id);
+      state.selectedImageIndex = Math.max(0, index);
+      state.showImageCarousel = true;
+    };
+
+    const downloadDocument = async document => {
+      try {
+        // Track document download
+        await trackDocumentDownload(document.id, 'collaborator');
+
+        // In a real implementation, this would trigger the actual download
+        const downloadUrl = document.url || `/api/documents/${document.id}/download`;
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = document.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error('Error downloading document:', error);
+      }
+    };
+
+    const handleDocumentAnnotation = annotation => {
+      // Handle document annotations
+    };
+
+    // Batch operations
+    const toggleSelectionMode = () => {
+      state.selectionMode = !state.selectionMode;
+      if (!state.selectionMode) {
+        state.selectedDocuments = [];
+      }
+    };
+
+    const toggleDocumentSelection = document => {
+      const index = state.selectedDocuments.findIndex(doc => doc.id === document.id);
+      if (index > -1) {
+        state.selectedDocuments.splice(index, 1);
+      } else {
+        state.selectedDocuments.push(document);
+      }
+    };
+
+    const selectAllDocuments = () => {
+      state.selectedDocuments = [...state.filteredDocuments];
+    };
+
+    const clearSelection = () => {
+      state.selectedDocuments = [];
+      state.selectionMode = false;
+    };
+
+    const handleBatchDocumentsUpdated = updatedDocuments => {
+      // Update documents in the list
+      updatedDocuments.forEach(updatedDoc => {
+        const index = state.oldDocuments.findIndex(doc => doc.id === updatedDoc.id);
+        if (index > -1) {
+          state.oldDocuments[index] = updatedDoc;
+        }
+      });
+      applyFilters();
+      clearSelection();
+    };
+
+    const handleBatchDocumentsDeleted = deletedDocuments => {
+      // Remove documents from the list
+      const deletedIds = deletedDocuments.map(doc => doc.id);
+      state.oldDocuments = state.oldDocuments.filter(doc => !deletedIds.includes(doc.id));
+      applyFilters();
+      clearSelection();
+    };
+
     const validateAdd = () => {
       state.errorsAdd = [];
       if (state.optionSelected) {
@@ -204,6 +442,13 @@ export default {
         state.newDocument.documentMetadata = JSON.stringify(documentMetadata);
         state.newDocument.reportType = 'patient_documents';
         state.newDocument.details = JSON.stringify(state.optionSelected);
+
+        // Enhanced ecosystem integration
+        state.newDocument.patientHistoryId = patientHistoryData.value?.id;
+        state.newDocument.category = state.optionSelected.category || 'OTHER';
+        state.newDocument.urgency = 'NORMAL';
+        state.newDocument.tags = [];
+        state.newDocument.isConfidential = false;
       } else {
         state.errorsAdd.push('businessDocument.validate.feature');
       }
@@ -289,10 +534,23 @@ export default {
           patientHistoryData.value.patientDocument &&
           patientHistoryData.value.patientDocument.length > 0 &&
           patientHistoryData.value.patientDocument[0]
-        )
-          state.oldDocuments = patientHistoryData.value.patientDocument.filter(
-            doc => doc.available
-          );
+        ) {
+          // Map PatientDocument to Document objects for display
+          state.oldDocuments = patientHistoryData.value.patientDocument
+            .filter(patientDoc => patientDoc.documents && patientDoc.documents.available)
+            .map(patientDoc => {
+              // Merge PatientDocument metadata with Document for display
+              const doc = { ...patientDoc.documents };
+              // Preserve PatientDocument-specific fields
+              doc.patientDocumentComment = patientDoc.comment;
+              doc.patientDocumentDetails = patientDoc.details;
+              doc.patientDocumentAttentionId = patientDoc.attentionId;
+              doc.patientDocumentCreatedAt = patientDoc.createdAt;
+              doc.patientDocumentCreatedBy = patientDoc.createdBy;
+              return doc;
+            });
+          state.filteredDocuments = [...state.oldDocuments];
+        }
       }
       loading.value = false;
     });
@@ -312,9 +570,25 @@ export default {
       executeDownload,
       executeDelete,
       documentIcon,
+      isGeneratedDocument,
+      getGeneratedDocumentType,
       handleFileSelected,
       handleFileRemoved,
       handleFileError,
+      handleSearch,
+      handleFiltersChanged,
+      selectDocument,
+      closeViewer,
+      closeImageCarousel,
+      openImageCarousel,
+      downloadDocument,
+      handleDocumentAnnotation,
+      toggleSelectionMode,
+      toggleDocumentSelection,
+      selectAllDocuments,
+      clearSelection,
+      handleBatchDocumentsUpdated,
+      handleBatchDocumentsDeleted,
     };
   },
 };
@@ -333,9 +607,56 @@ export default {
 
     <Spinner :show="loading"></Spinner>
 
+    <!-- Document Viewer Modal -->
+    <div v-if="state.showViewer" class="document-viewer-modal" @click="closeViewer">
+      <div class="viewer-modal-content" @click.stop>
+        <button @click="closeViewer" class="close-viewer-btn">
+          <i class="bi bi-x-lg"></i>
+        </button>
+        <DocumentViewer
+          :documents="state.filteredDocuments"
+          :initial-document="state.selectedDocument"
+          :can-annotate="state.togglesDocuments['document-client.admin.edit']"
+          :commerce="commerce"
+          :client="clientData"
+          @annotation-added="handleDocumentAnnotation"
+        />
+      </div>
+    </div>
+
+    <!-- Image Carousel Modal -->
+    <DocumentImageCarousel
+      :show="state.showImageCarousel"
+      :documents="state.filteredDocuments"
+      :initial-index="state.selectedImageIndex"
+      @close="closeImageCarousel"
+      @download="downloadDocument"
+    />
+
     <div class="form-layout-modern">
-      <!-- Upload Section -->
+      <!-- Search and Upload Section -->
       <div class="form-input-section">
+        <!-- Document Search -->
+        <DocumentSearch @search="handleSearch" @filters-changed="handleFiltersChanged" />
+
+        <!-- Tree View Component -->
+        <DocumentTreeView
+          v-if="state.viewMode === 'tree'"
+          :documents="
+            state.filteredDocuments.filter(
+              doc =>
+                doc.available &&
+                doc.active === true &&
+                doc.details &&
+                doc.details.characteristics &&
+                doc.details.characteristics.document === true
+            )
+          "
+          @document-selected="selectDocument"
+          @document-preview="selectDocument"
+          @document-download="downloadDocument"
+        />
+
         <div
           v-if="state.documentList && state.documentList.length > 0"
           class="upload-section-modern"
@@ -454,6 +775,26 @@ export default {
               <i class="bi bi-clock-history history-header-icon"></i>
               <h4 class="history-header-title">{{ $t('patientHistoryView.history') }}</h4>
             </div>
+
+            <div class="history-actions">
+              <button
+                @click="toggleSelectionMode"
+                class="selection-mode-btn"
+                :class="{ active: state.selectionMode }"
+                :title="state.selectionMode ? 'Salir del modo selección' : 'Modo selección'"
+              >
+                <i class="bi bi-check-square"></i>
+              </button>
+
+              <button
+                v-if="state.selectionMode && state.filteredDocuments.length > 0"
+                @click="selectAllDocuments"
+                class="select-all-btn"
+                title="Seleccionar todos"
+              >
+                <i class="bi bi-check-all"></i>
+              </button>
+            </div>
             <div class="history-sort-control">
               <label class="sort-toggle-label" for="asc-documents">
                 <input
@@ -473,10 +814,28 @@ export default {
             </div>
           </div>
 
+          <!-- View Mode Toggle -->
+          <div class="view-mode-selector">
+            <button
+              @click="state.viewMode = 'tree'"
+              :class="['view-mode-btn', { active: state.viewMode === 'tree' }]"
+            >
+              <i class="bi bi-diagram-3"></i>
+              Árbol
+            </button>
+            <button
+              @click="state.viewMode = 'list'"
+              :class="['view-mode-btn', { active: state.viewMode === 'list' }]"
+            >
+              <i class="bi bi-list-ul"></i>
+              Lista
+            </button>
+          </div>
+
           <div class="history-timeline">
-            <div class="documents-list">
+            <div v-if="state.viewMode === 'list'" class="documents-list">
               <div
-                v-for="item in state.oldDocuments.filter(
+                v-for="item in state.filteredDocuments.filter(
                   doc =>
                     doc.available &&
                     doc.active === true &&
@@ -485,23 +844,68 @@ export default {
                     doc.details.characteristics.document === true
                 )"
                 :key="item.id"
-                class="document-card-modern"
+                class="document-card-modern clickable"
+                :class="{
+                  selected: state.selectedDocuments.some(doc => doc.id === item.id),
+                  'selection-mode': state.selectionMode,
+                }"
+                @click="state.selectionMode ? toggleDocumentSelection(item) : selectDocument(item)"
               >
+                <!-- Selection checkbox -->
+                <div v-if="state.selectionMode" class="selection-checkbox">
+                  <input
+                    type="checkbox"
+                    :checked="state.selectedDocuments.some(doc => doc.id === item.id)"
+                    @click.stop="toggleDocumentSelection(item)"
+                  />
+                </div>
                 <div class="document-card-content">
                   <div class="document-card-main">
                     <div class="document-badges">
-                      <span class="badge badge-primary" v-if="item.details?.tag">{{
-                        item.details.tag
-                      }}</span>
-                      <span class="badge badge-secondary" v-if="item.details?.name">{{
-                        item.details.name
-                      }}</span>
+                      <!-- Generated Document Badge -->
+                      <span
+                        v-if="isGeneratedDocument(item)"
+                        :class="[
+                          'badge',
+                          getGeneratedDocumentType(item)?.color || 'badge-success',
+                          'badge-generated',
+                        ]"
+                        :title="`Documento generado automáticamente: ${
+                          getGeneratedDocumentType(item)?.label
+                        }`"
+                      >
+                        <i
+                          :class="`bi ${
+                            getGeneratedDocumentType(item)?.icon || 'bi-file-earmark-pdf'
+                          } me-1`"
+                        ></i>
+                        {{ getGeneratedDocumentType(item)?.label }}
+                      </span>
+                      <!-- Regular Document Badges -->
+                      <span
+                        class="badge badge-primary"
+                        v-if="item.details?.tag && !isGeneratedDocument(item)"
+                        >{{ item.details.tag }}</span
+                      >
+                      <span
+                        class="badge badge-secondary"
+                        v-if="item.details?.name && !isGeneratedDocument(item)"
+                        >{{ item.details.name }}</span
+                      >
                     </div>
                     <div class="document-meta">
                       <i :class="`bi ${documentIcon(item.format)} document-type-icon`"></i>
                       <span class="document-date" v-if="item.createdAt">{{
                         getDateAndHour(item.createdAt)
                       }}</span>
+                      <!-- Auto-generated indicator -->
+                      <span
+                        v-if="isGeneratedDocument(item)"
+                        class="auto-generated-indicator"
+                        title="Generado automáticamente"
+                      >
+                        <i class="bi bi-magic"></i>
+                      </span>
                     </div>
                   </div>
                   <div class="document-actions">
@@ -527,6 +931,15 @@ export default {
         </template>
       </div>
     </div>
+
+    <!-- Batch Operations -->
+    <DocumentBatchOperations
+      :selected-documents="state.selectedDocuments"
+      :loading="loading"
+      @clear-selection="clearSelection"
+      @documents-updated="handleBatchDocumentsUpdated"
+      @documents-deleted="handleBatchDocumentsDeleted"
+    />
   </div>
 </template>
 
@@ -538,14 +951,63 @@ export default {
   padding: 0;
 }
 
+/* Document Viewer Modal */
+.document-viewer-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.viewer-modal-content {
+  position: relative;
+  width: 95vw;
+  height: 90vh;
+  max-width: 1400px;
+  background: white;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.close-viewer-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.close-viewer-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
 /* Upload Section */
 .upload-section-modern {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  border-radius: 0.875rem;
+  border-radius: 0.5rem;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
 
 .upload-section-header {
@@ -860,6 +1322,52 @@ export default {
   border-bottom: 2px solid rgba(0, 0, 0, 0.05);
 }
 
+.history-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.selection-mode-btn,
+.select-all-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  background: white;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.selection-mode-btn:hover,
+.select-all-btn:hover {
+  background: #f8f9fa;
+  color: #495057;
+  border-color: #adb5bd;
+}
+
+.selection-mode-btn.active {
+  background: var(--azul-turno);
+  color: white;
+  border-color: var(--azul-turno);
+}
+
+.select-all-btn {
+  background: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+
+.select-all-btn:hover {
+  background: #218838;
+  border-color: #1e7e34;
+}
+
 .history-header-content {
   display: flex;
   align-items: center;
@@ -950,30 +1458,64 @@ export default {
 
 .document-card-modern {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  padding: 1rem;
-  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
 }
 
 .document-card-modern:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.document-card-modern.clickable {
+  cursor: pointer;
+}
+
+.document-card-modern.clickable:hover {
+  border-color: var(--azul-turno);
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.2);
+}
+
+.document-card-modern.selection-mode {
+  position: relative;
+  padding-left: 3rem;
+}
+
+.document-card-modern.selected {
+  border-color: var(--azul-turno);
+  background: rgba(0, 123, 255, 0.05);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+}
+
+.selection-checkbox {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1;
+}
+
+.selection-checkbox input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
 }
 
 .document-card-content {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .document-card-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .document-badges {
@@ -997,6 +1539,60 @@ export default {
 .badge-secondary {
   background: rgba(0, 0, 0, 0.05);
   color: var(--color-text);
+}
+
+.badge-generated {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  animation: pulse 2s infinite;
+}
+
+.badge-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+}
+
+.badge-info {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  color: white;
+}
+
+.badge-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  color: #212529;
+}
+
+.auto-generated-indicator {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  color: #28a745;
+  font-size: 0.875rem;
+  animation: sparkle 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
 }
 
 .document-meta {
@@ -1068,6 +1664,46 @@ export default {
     align-items: flex-start;
     gap: 0.5rem;
   }
+}
+
+/* View Mode Selector */
+.view-mode-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 0.375rem;
+  border: 1px solid #e9ecef;
+}
+
+.view-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #495057;
+}
+
+.view-mode-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.view-mode-btn.active {
+  background: var(--azul-turno);
+  border-color: var(--azul-turno);
+  color: white;
+}
+
+.view-mode-btn i {
+  font-size: 0.875rem;
 }
 
 @media (max-width: 768px) {

@@ -6,7 +6,10 @@ import {
   getPaymentMethods,
   getPaymentTypes,
 } from '../../shared/utils/data';
-import { getAvailablePackageByClient } from '../../application/services/package';
+import {
+  getAvailablePackagesForService,
+  getActivePackagesByClient,
+} from '../../application/services/package';
 import { getPendingIncomeByPackage } from '../../application/services/income';
 import Message from '../common/Message.vue';
 
@@ -17,6 +20,7 @@ export default {
     id: { type: String, default: undefined },
     commerce: { type: Object, default: {} },
     clientId: { type: String, default: undefined },
+    serviceId: { type: String, default: undefined }, // NEW: Service ID to filter packages
     confirmPayment: { type: Boolean, default: false },
     errorsAdd: { type: Array, default: [] },
     receiveData: { type: Function, default: () => {} },
@@ -24,7 +28,7 @@ export default {
   async setup(props) {
     const loading = ref(false);
 
-    const { id, commerce, clientId, errorsAdd, confirmPayment } = toRefs(props);
+    const { id, commerce, clientId, serviceId, errorsAdd, confirmPayment } = toRefs(props);
 
     const { receiveData } = props;
 
@@ -55,7 +59,17 @@ export default {
         state.paymentMethods = getPaymentMethods();
         state.paymentFicalNoteTypes = getPaymentFiscalNoteTypes();
         if (confirmPayment.value === true && commerce.value.id && clientId.value) {
-          state.packages = await getAvailablePackageByClient(commerce.value.id, clientId.value);
+          // Intelligent package loading: filter by service if provided
+          if (serviceId.value) {
+            state.packages = await getAvailablePackagesForService(
+              commerce.value.id,
+              serviceId.value,
+              clientId.value
+            );
+          } else {
+            // Load all active packages for client
+            state.packages = await getActivePackagesByClient(commerce.value.id, clientId.value);
+          }
         }
         loading.value = false;
       } catch (error) {
@@ -88,29 +102,47 @@ export default {
 
     const selectPackage = async pack => {
       if (pack && pack.id) {
+        state.selectedPackage = pack;
         state.newConfirmationData.packageId = pack.id;
         state.newConfirmationData.proceduresTotalNumber = pack.proceduresAmount;
+
+        // Intelligent procedure number calculation using proceduresUsed
         if (id.value && (pack.firstBookingId === id.value || pack.firstAttentionId === id.value)) {
           state.newConfirmationData.procedureNumber = 1;
         } else {
-          if (pack.bookingsId || pack.attentionsId) {
-            let procedures = 0;
-            const bookingProcedures =
-              pack.bookingsId && pack.bookingsId.length >= 0 ? pack.bookingsId.length : 0;
-            const attentionProcedures =
-              pack.attentionsId && pack.attentionsId.length >= 0 ? pack.attentionsId.length : 0;
-            if (bookingProcedures >= attentionProcedures) {
-              procedures = bookingProcedures;
+          // Use proceduresUsed if available (more accurate)
+          if (pack.proceduresUsed !== undefined && pack.proceduresUsed !== null) {
+            state.newConfirmationData.procedureNumber = pack.proceduresUsed + 1;
+          } else {
+            // Fallback to old method
+            if (pack.bookingsId || pack.attentionsId) {
+              let procedures = 0;
+              const bookingProcedures =
+                pack.bookingsId && pack.bookingsId.length >= 0 ? pack.bookingsId.length : 0;
+              const attentionProcedures =
+                pack.attentionsId && pack.attentionsId.length >= 0 ? pack.attentionsId.length : 0;
+              if (bookingProcedures >= attentionProcedures) {
+                procedures = bookingProcedures;
+              } else {
+                procedures = attentionProcedures;
+              }
+              state.newConfirmationData.procedureNumber = procedures + 1;
             } else {
-              procedures = attentionProcedures;
+              state.newConfirmationData.procedureNumber = 1;
             }
-            state.newConfirmationData.procedureNumber = procedures + 1;
           }
         }
-        state.pendingIncomes = await getPendingIncomeByPackage(
-          commerce.value.id,
-          state.selectedPackage.id
-        );
+
+        // Clear packageId if procedure number exceeds available sessions
+        if (state.newConfirmationData.procedureNumber > (pack.proceduresLeft || 0)) {
+          alert('No hay sesiones disponibles en este paquete');
+          state.newConfirmationData.packageId = undefined;
+          state.selectedPackage = {};
+          sendData();
+          return;
+        }
+
+        state.pendingIncomes = await getPendingIncomeByPackage(commerce.value.id, pack.id);
         if (state.pendingIncomes && state.pendingIncomes.length === 0) {
           state.newConfirmationData.packagePaid = true;
         } else {
@@ -118,13 +150,21 @@ export default {
         }
         sendData();
       } else if (pack === 'NEW') {
+        state.selectedPackage = {};
+        state.newConfirmationData.packageId = undefined;
         state.pendingIncomes = undefined;
         state.newConfirmationData.procedureNumber = 1;
         state.newConfirmationData.proceduresTotalNumber = 1;
+        state.newConfirmationData.packagePaid = false;
+        sendData();
       } else if (pack === 'NONE') {
+        state.selectedPackage = {};
+        state.newConfirmationData.packageId = undefined;
         state.pendingIncomes = undefined;
         state.newConfirmationData.procedureNumber = 1;
         state.newConfirmationData.proceduresTotalNumber = 1;
+        state.newConfirmationData.packagePaid = false;
+        sendData();
       }
       state.selectedPayment = undefined;
       state.newConfirmationData.processPaymentNow = false;
@@ -197,20 +237,76 @@ export default {
       <div class="payment-form-content">
         <div v-if="state.packages && state.packages.length > 0" class="payment-form-field">
           <label class="payment-form-label">
-            {{ $t('collaboratorBookingsView.packages') }}
+            <i class="bi bi-box-seam-fill"></i>
+            {{ $t('collaboratorBookingsView.packages') || 'Paquetes' }}
           </label>
           <select
             class="payment-form-select"
             v-model="state.selectedPackage"
             @change="selectPackage(state.selectedPackage)"
-            id="types"
+            id="package-select"
           >
-            <option v-for="typ in state.packages" :key="typ.name" :value="typ">
-              {{ typ.name }}
+            <option :value="undefined">
+              {{ $t('package.selectPackage') || 'Seleccionar paquete' }}
             </option>
-            <option key="NEW" value="NEW">NUEVO</option>
-            <option key="NONE" value="NONE">NINGUNO</option>
+            <option
+              v-for="pkg in state.packages"
+              :key="pkg.id"
+              :value="pkg"
+              :disabled="(pkg.proceduresLeft || 0) <= 0"
+            >
+              {{ pkg.name }} - {{ pkg.proceduresLeft || 0 }}
+              {{ $t('package.sessionsLeft') || 'sesiones' }}
+              <template v-if="pkg.expireAt">
+                ({{ $t('package.expires') || 'Vence' }}:
+                {{ new Date(pkg.expireAt).toLocaleDateString() }})
+              </template>
+            </option>
+            <option key="NEW" value="NEW">
+              {{ $t('package.newPackage') || 'NUEVO PAQUETE' }}
+            </option>
+            <option key="NONE" value="NONE">
+              {{ $t('package.none') || 'NINGUNO' }}
+            </option>
           </select>
+          <!-- Intelligent Package Info Display -->
+          <div v-if="state.selectedPackage && state.selectedPackage.id" class="package-info-card">
+            <div class="package-info-row">
+              <span class="package-info-label"
+                >{{ $t('package.sessionsRemaining') || 'Sesiones' }}:</span
+              >
+              <span class="package-info-value">
+                <strong>{{ state.selectedPackage.proceduresLeft || 0 }}</strong> /
+                {{ state.selectedPackage.proceduresAmount || 0 }}
+              </span>
+            </div>
+            <div v-if="state.selectedPackage.expireAt" class="package-info-row">
+              <span class="package-info-label"
+                >{{ $t('package.expiration') || 'Vencimiento' }}:</span
+              >
+              <span class="package-info-value">
+                {{ new Date(state.selectedPackage.expireAt).toLocaleDateString() }}
+              </span>
+            </div>
+            <div v-if="state.selectedPackage.lastSessionDate" class="package-info-row">
+              <span class="package-info-label"
+                >{{ $t('package.lastSession') || 'Última sesión' }}:</span
+              >
+              <span class="package-info-value">
+                {{ new Date(state.selectedPackage.lastSessionDate).toLocaleDateString() }}
+              </span>
+            </div>
+            <div
+              v-if="
+                (state.selectedPackage.proceduresLeft || 0) <= 3 &&
+                (state.selectedPackage.proceduresLeft || 0) > 0
+              "
+              class="package-warning"
+            >
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              {{ $t('package.lowSessionsWarning') || 'Quedan pocas sesiones en este paquete' }}
+            </div>
+          </div>
         </div>
         <div class="payment-form-field" id="payment-procedure-total-number-form-add">
           <label class="payment-form-label">
@@ -594,5 +690,57 @@ export default {
   align-items: center;
   justify-content: center;
   display: flex;
+}
+
+/* Intelligent Package Info Card */
+.package-info-card {
+  margin-top: 0.5rem;
+  padding: 0.625rem;
+  background: rgba(245, 246, 247, 0.6);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.package-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+.package-info-label {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.package-info-value {
+  font-weight: 700;
+  color: #000000;
+}
+
+.package-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  background: rgba(249, 195, 34, 0.1);
+  border: 1px solid rgba(249, 195, 34, 0.3);
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #f9c322;
+  margin-top: 0.25rem;
+}
+
+.package-warning i {
+  font-size: 0.875rem;
+}
+
+.payment-form-label i {
+  margin-right: 0.375rem;
+  color: rgba(0, 0, 0, 0.6);
 }
 </style>

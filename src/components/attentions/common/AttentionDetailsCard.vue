@@ -8,6 +8,7 @@ import {
   attentionPaymentConfirm,
   transferAttention,
   getPendingCommerceAttentions,
+  advanceStage,
 } from '../../../application/services/attention';
 import { getActiveFeature } from '../../../shared/features';
 import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data';
@@ -68,9 +69,12 @@ export default {
       goToTransfer: false,
       goToCancel: false,
       goToConfirm: false,
+      goToAdvanceStage: false,
+      selectedNextStage: '',
+      stageNotes: '',
       checked: false,
       queuesToTransfer: [],
-      queueToTransfer: {},
+      queueToTransfer: null,
       queue: {},
       store,
       ATTENTION_STATUS, // Expose ATTENTION_STATUS to template
@@ -119,9 +123,11 @@ export default {
     // Clean up polling interval
     this.stopConnectionStatusPolling();
   },
+  emits: ['open-modal', 'updatedAttentions'],
   methods: {
     showDetails() {
-      this.extendedEntity = !this.extendedEntity;
+      // Emit event to parent to open modal instead of expanding inline
+      this.$emit('open-modal', this.attention);
     },
     showPaymentDetails() {
       this.extendedPaymentEntity = !this.extendedPaymentEntity;
@@ -216,84 +222,129 @@ export default {
       }
     },
     async toTransfer() {
-      this.loading = true;
-      if (this.attention && this.attention.queueId) {
-        this.queue = await getQueueById(this.attention.queueId);
-      }
-      const queuesToTransfer = this.queues; //this.queues.filter(queue => queue.type === 'COLLABORATOR');
-      if (queuesToTransfer && queuesToTransfer.length > 0) {
-        const attentions = await getPendingCommerceAttentions(this.commerce.id);
-        if (attentions && attentions.length > 0) {
-          const groupedAttentions = attentions.reduce((acc, book) => {
-            const type = book.queueId;
-            if (!acc[type]) {
-              acc[type] = [];
-            }
-            acc[type].push(book);
-            return acc;
-          }, {});
-          let limit = 1; //queuesToTransfer.length;
-          if (
-            this.queue.serviceInfo !== undefined &&
-            this.queue.serviceInfo.blockLimit !== undefined &&
-            this.queue.serviceInfo.blockLimit > 0
-          ) {
-            limit = this.queue.serviceInfo.blockLimit;
+      try {
+        this.loading = true;
+        // Reset queuesToTransfer
+        this.queuesToTransfer = [];
+        this.queueToTransfer = null;
+
+        if (this.attention && this.attention.queueId) {
+          try {
+            this.queue = await getQueueById(this.attention.queueId);
+          } catch (error) {
+            console.error('Error loading queue:', error);
+            this.queue = {};
           }
-          queuesToTransfer.forEach(queue => {
-            const attentionsByQueue = groupedAttentions[queue.id];
-            if (attentionsByQueue && attentionsByQueue.length > 0) {
-              const attentionsReserved = attentionsByQueue.map(attention => {
-                if (attention.block) {
-                  if (attention.block.blockNumbers && attention.block.blockNumbers.length > 0) {
-                    return [...attention.block.blockNumbers];
-                  } else {
-                    return attention.block.number;
-                  }
-                }
-              });
-              const totalBlocksReserved = attentionsReserved.flat(Infinity).sort();
-              const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
-              const blockedBlocks = [];
-              uniqueBlocksReserved.forEach(block => {
-                const times = totalBlocksReserved.filter(reserved => reserved === block).length;
-                if (times >= limit - 1) {
-                  blockedBlocks.push(block);
-                }
-              });
-              let blocksToCheck = [];
-              if (this.attention.block) {
-                blocksToCheck = this.attention.block.blockNumbers || [this.attention.block.number];
+        }
+
+        const queuesToTransfer = this.queues; //this.queues.filter(queue => queue.type === 'COLLABORATOR');
+        if (!queuesToTransfer || queuesToTransfer.length === 0) {
+          this.loading = false;
+          return;
+        }
+
+        if (!this.commerce || !this.commerce.id) {
+          console.error('Commerce or commerce.id is not available');
+          // If commerce is not available, just add all queues
+          this.queuesToTransfer = [...queuesToTransfer];
+          this.loading = false;
+          return;
+        }
+
+        try {
+          const attentions = await getPendingCommerceAttentions(this.commerce.id);
+          if (attentions && attentions.length > 0) {
+            const groupedAttentions = attentions.reduce((acc, book) => {
+              const type = book.queueId;
+              if (!acc[type]) {
+                acc[type] = [];
               }
-              const availableBlocks = blocksToCheck
-                .flat()
-                .filter(block => blockedBlocks.includes(block));
-              if (availableBlocks.length === 0) {
+              acc[type].push(book);
+              return acc;
+            }, {});
+            let limit = 1; //queuesToTransfer.length;
+            if (
+              this.queue.serviceInfo !== undefined &&
+              this.queue.serviceInfo.blockLimit !== undefined &&
+              this.queue.serviceInfo.blockLimit > 0
+            ) {
+              limit = this.queue.serviceInfo.blockLimit;
+            }
+            queuesToTransfer.forEach(queue => {
+              const attentionsByQueue = groupedAttentions[queue.id];
+              if (attentionsByQueue && attentionsByQueue.length > 0) {
+                const attentionsReserved = attentionsByQueue.map(attention => {
+                  if (attention.block) {
+                    if (attention.block.blockNumbers && attention.block.blockNumbers.length > 0) {
+                      return [...attention.block.blockNumbers];
+                    } else {
+                      return attention.block.number;
+                    }
+                  }
+                });
+                const totalBlocksReserved = attentionsReserved.flat(Infinity).sort();
+                const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+                const blockedBlocks = [];
+                uniqueBlocksReserved.forEach(block => {
+                  const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+                  if (times >= limit - 1) {
+                    blockedBlocks.push(block);
+                  }
+                });
+                let blocksToCheck = [];
+                if (this.attention.block) {
+                  blocksToCheck = this.attention.block.blockNumbers || [
+                    this.attention.block.number,
+                  ];
+                }
+                const availableBlocks = blocksToCheck
+                  .flat()
+                  .filter(block => blockedBlocks.includes(block));
+                if (availableBlocks.length === 0) {
+                  this.queuesToTransfer.push(queue);
+                }
+              } else {
                 this.queuesToTransfer.push(queue);
               }
-            } else {
-              this.queuesToTransfer.push(queue);
-            }
-          });
+            });
+          } else {
+            // If no attentions, add all queues
+            this.queuesToTransfer = [...queuesToTransfer];
+          }
+        } catch (error) {
+          console.error('Error loading pending attentions:', error);
+          // On error, add all queues as fallback
+          this.queuesToTransfer = [...queuesToTransfer];
         }
+      } catch (error) {
+        console.error('Error in toTransfer:', error);
+        this.alertError = error.message || 'Error al cargar las filas para transferir';
+      } finally {
+        this.loading = false;
       }
-      this.loading = false;
     },
     async transfer() {
       try {
         this.loading = true;
-        if (this.attention && this.attention.id) {
-          const body = {
-            queueId: this.queueToTransfer,
-          };
-          await transferAttention(this.attention.id, body);
-          this.$emit('updatedAttentions');
+        if (!this.attention || !this.attention.id) {
+          throw new Error('Atención no disponible');
         }
-        this.loading = false;
+        if (!this.queueToTransfer) {
+          throw new Error('Por favor seleccione una fila para transferir');
+        }
+        const body = {
+          queueId: this.queueToTransfer,
+        };
+        await transferAttention(this.attention.id, body);
+        this.$emit('updatedAttentions');
         this.goToTransfer = false;
+        this.queueToTransfer = null;
+        this.queuesToTransfer = [];
       } catch (error) {
+        console.error('Error transferring attention:', error);
+        this.alertError = error.message || 'Error al transferir la atención';
+      } finally {
         this.loading = false;
-        this.alertError = error.message;
       }
     },
     goTransfer() {
@@ -316,6 +367,57 @@ export default {
     },
     confirmCancel() {
       this.goToConfirm = false;
+    },
+    goAdvanceStage() {
+      this.goToAdvanceStage = !this.goToAdvanceStage;
+      if (this.goToAdvanceStage) {
+        this.selectedNextStage = '';
+        this.stageNotes = '';
+      }
+    },
+    cancelAdvanceStage() {
+      this.goToAdvanceStage = false;
+      this.selectedNextStage = '';
+      this.stageNotes = '';
+    },
+    async confirmAdvanceStage() {
+      if (!this.selectedNextStage) {
+        this.alertError =
+          this.$t('attention.advanceStage.selectStage') || 'Por favor selecciona una etapa';
+        return;
+      }
+      try {
+        this.loading = true;
+        this.alertError = '';
+        if (this.attention && this.attention.id) {
+          const body = {
+            stage: this.selectedNextStage,
+            notes: this.stageNotes || undefined,
+          };
+          await advanceStage(this.attention.id, body);
+          this.$emit('updatedAttentions');
+          this.goToAdvanceStage = false;
+          this.selectedNextStage = '';
+          this.stageNotes = '';
+        }
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+        this.alertError =
+          error.response?.data?.message || error.message || 'Error al avanzar etapa';
+      }
+    },
+    getNextStages(currentStage) {
+      // Define transiciones válidas (puede ser más estricto en el futuro)
+      const stageFlow = {
+        PENDING: ['CHECK_IN'],
+        CHECK_IN: ['PRE_CONSULTATION'],
+        PRE_CONSULTATION: ['CONSULTATION'],
+        CONSULTATION: ['POST_CONSULTATION'],
+        POST_CONSULTATION: ['CHECKOUT'],
+        CHECKOUT: ['TERMINATED'],
+      };
+      return stageFlow[currentStage] || [];
     },
     receiveData(data) {
       if (data) {
@@ -561,6 +663,16 @@ export default {
         <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold">
           {{ attention.number }}</span
         >
+        <span
+          v-if="
+            getActiveFeature(commerce, 'attention-stages-enabled', 'PRODUCT') &&
+            attention.currentStage
+          "
+          class="badge rounded-pill bg-info stage-badge mx-1 fw-bold"
+          :title="$t(`attention.stage.${attention.currentStage}`)"
+        >
+          {{ $t(`attention.stage.${attention.currentStage}`) }}
+        </span>
       </div>
       <div class="col lefted fw-bold" v-if="attention.user && attention.user.name">
         {{ attention.user.name.split(' ')[0].toUpperCase() || 'N/I' }}
@@ -606,538 +718,7 @@ export default {
         </div>
       </div>
     </div>
-    <div class="details-arrow">
-      <div class="centered mb-2"></div>
-      <div
-        :id="`#data-attention-${attention.number}`"
-        :class="{ show: extendedEntity }"
-        class="detailed-data transition-slow"
-      >
-        <div class="row m-0 centered">
-          <div class="d-block col-12 col-md-4">
-            <div class="col-12 fw-bold">
-              <i class="bi bi-person-circle mx-1"></i> {{ attention.user.name || 'N/I' }}
-              {{ attention.user.lastName || '' }}
-              <div class="row">
-                <a class="copy-icon" @click="copyBooking()">
-                  <i class="bi bi-file-earmark-spreadsheet"></i>
-                </a>
-              </div>
-            </div>
-            <Spinner :show="loading"></Spinner>
-          </div>
-          <div class="d-block d-md-none col-12 col-md-8">
-            <div class="centered">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'https://wa.me/' + attention.user.phone"
-                target="_blank"
-              >
-                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i>
-                {{ attention.user.phone || 'N/I' }}
-              </a>
-            </div>
-            <div class="centered">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'mailto:' + attention.user.email"
-                target="_blank"
-              >
-                <i class="bi bi-envelope mx-1"></i> {{ attention.user.email || 'N/I' }}
-              </a>
-            </div>
-            <div class="centered">
-              <i class="bi bi-person-vcard mx-1"></i> {{ attention.user.idNumber || 'N/I' }}
-            </div>
-          </div>
-          <div class="d-none d-md-block col-12 col-md-8">
-            <div class="lefted">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'https://wa.me/' + attention.user.phone"
-                target="_blank"
-              >
-                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i>
-                {{ attention.user.phone || 'N/I' }}
-              </a>
-            </div>
-            <div class="lefted">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'mailto:' + attention.user.email"
-                target="_blank"
-              >
-                <i class="bi bi-envelope mx-1"></i> {{ attention.user.email || 'N/I' }}
-              </a>
-            </div>
-            <div class="lefted">
-              <i class="bi bi-person-vcard mx-1"></i> {{ attention.user.idNumber || 'N/I' }}
-            </div>
-          </div>
-        </div>
-        <hr />
-        <div
-          class="row mx-1 centered"
-          v-if="attention.paid === true && attention.paymentConfirmationData"
-        >
-          <div class="">
-            <i class="bi bi-check-circle-fill mx-1"> </i>
-            <span class="mb-1">{{ $t('collaboratorBookingsView.paymentData') }}</span>
-          </div>
-          <div v-if="attention.paymentConfirmationData">
-            <span
-              v-if="
-                attention.paymentConfirmationData.proceduresTotalNumber &&
-                attention.paymentConfirmationData.procedureNumber
-              "
-              class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"
-            >
-              {{ attention.paymentConfirmationData.procedureNumber }}
-              {{ $t('collaboratorBookingsView.procedureNumber') }}
-              {{ attention.paymentConfirmationData.proceduresTotalNumber }}</span
-            >
-            <span
-              v-if="attention.paymentConfirmationData.paymentFiscalNote"
-              class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"
-            >
-              {{
-                $t(`paymentFiscalNotes.${attention.paymentConfirmationData.paymentFiscalNote}`)
-              }}</span
-            >
-            <span
-              v-if="attention.paymentConfirmationData.paymentType"
-              class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"
-            >
-              {{ $t(`paymentTypes.${attention.paymentConfirmationData.paymentType}`) }}</span
-            >
-            <span
-              v-if="attention.paymentConfirmationData.paymentMethod"
-              class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"
-            >
-              {{
-                $t(`paymentClientMethods.${attention.paymentConfirmationData.paymentMethod}`)
-              }}</span
-            >
-            <span
-              v-if="attention.paymentConfirmationData.paymentAmount"
-              class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold"
-            >
-              <i class="bi bi-coin mx-1"> </i>
-              {{ attention.paymentConfirmationData.paymentAmount }}</span
-            >
-            <span
-              v-if="attention.paymentConfirmationData.paymentCommission"
-              class="badge rounded-pill yellow-5-area metric-keyword-tag mx-1 fw-bold"
-            >
-              <i class="bi bi-coin mx-1"> </i>
-              {{ attention.paymentConfirmationData.paymentCommission }}</span
-            >
-            <span
-              v-if="attention.paymentConfirmationData.paymentDate"
-              class="badge rounded-pill bg-secondary metric-keyword-tag mx-1 fw-bold"
-            >
-              {{ getDate(attention.paymentConfirmationData.paymentDate) }}</span
-            >
-          </div>
-          <hr />
-        </div>
-        <div class="row mx-1 centered">
-          <!-- PAYMENT -->
-          <div
-            class="col-6"
-            v-if="getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')"
-          >
-            <div>
-              <h5>
-                <span
-                  class="centered confirm-payment"
-                  href="#"
-                  @click.prevent="showPaymentDetails()"
-                >
-                  <i class="bi bi-cash-coin icon"></i>
-                  <span class="step-title fw-bold">{{
-                    $t('collaboratorBookingsView.paymentConfirm')
-                  }}</span>
-                  <i
-                    class="dark"
-                    :class="`bi ${extendedPaymentEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-                  ></i>
-                </span>
-                <div v-if="extendedPaymentEntity" class="index"></div>
-              </h5>
-            </div>
-          </div>
-          <!-- TRANSFER -->
-          <div
-            class="col-6"
-            v-if="getActiveFeature(commerce, 'attention-transfer-queue', 'PRODUCT')"
-          >
-            <div>
-              <h5>
-                <span
-                  class="centered confirm-payment"
-                  href="#"
-                  @click.prevent="showTransferDetails()"
-                >
-                  <i class="bi bi-arrow-left-right icon"></i>
-                  <span class="step-title fw-bold">{{
-                    $t('collaboratorBookingsView.transferQueue')
-                  }}</span>
-                  <i
-                    class="dark"
-                    :class="`bi ${extendedTransferEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-                  ></i>
-                </span>
-                <div v-if="extendedTransferEntity" class="index"></div>
-              </h5>
-            </div>
-          </div>
-        </div>
-        <!-- PAYMENT -->
-        <div class="row centered">
-          <div>
-            <div :class="{ show: extendedPaymentEntity }" class="detailed-data transition-slow">
-              <div
-                v-if="!attention.paid"
-                :class="{ show: extendedPaymentEntity }"
-                class="detailed-data transition-slow"
-              >
-                <PaymentForm
-                  :id="attention.id"
-                  :commerce="commerce"
-                  :client-id="attention.clientId"
-                  :confirm-payment="
-                    getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')
-                  "
-                  :errors-add="errorsAdd"
-                  :receive-data="receiveData"
-                >
-                </PaymentForm>
-                <button
-                  class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2 card-action"
-                  @click="goConfirm()"
-                  :disabled="attention.paid || !toggles['collaborator.attention.payment-confirm']"
-                >
-                  <i class="bi bi-person-check-fill"> </i>
-                  {{ $t('collaboratorBookingsView.confirm') }}
-                </button>
-                <AreYouSure
-                  :show="goToConfirm"
-                  :yes-disabled="toggles['collaborator.attention.payment-confirm']"
-                  :no-disabled="toggles['collaborator.attention.payment-confirm']"
-                  @actionYes="confirm()"
-                  @actionNo="confirmCancel()"
-                >
-                </AreYouSure>
-              </div>
-              <div v-else>
-                <Message
-                  :title="$t('collaboratorBookingsView.message.8.title')"
-                  :content="$t('collaboratorBookingsView.message.8.content')"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- TRANSFER -->
-        <div
-          class="row centered mt-1"
-          v-if="getActiveFeature(commerce, 'attention-transfer-queue', 'PRODUCT')"
-        >
-          <div :class="{ show: extendedTransferEntity }" class="detailed-data transition-slow">
-            <div v-if="queuesToTransfer && queuesToTransfer.length > 0">
-              <div>
-                <div class="text-label mb-2">
-                  {{ $t('collaboratorBookingsView.selectQueueToTransfer') }}
-                </div>
-                <div class="text-label h6">
-                  <span class="fw-bold"> {{ queue.name }}</span>
-                </div>
-                <div class="text-label">
-                  <i class="bi bi-arrow-left-right h5"></i>
-                </div>
-                <select
-                  class="btn btn-sm btn-light fw-bold text-dark select"
-                  aria-label=".form-select-sm"
-                  v-model="queueToTransfer"
-                >
-                  <option
-                    v-for="queue in queuesToTransfer"
-                    :key="queue.id"
-                    :value="queue.id"
-                    id="select-block"
-                  >
-                    {{ queue.name }}
-                  </option>
-                </select>
-              </div>
-              <button
-                class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 mt-2 card-action"
-                @click="goTransfer()"
-                :disabled="!queueToTransfer || !toggles['collaborator.attention.transfer']"
-              >
-                <i class="bi bi-person-check-fill"> </i>
-                {{ $t('collaboratorBookingsView.transfer') }}
-              </button>
-            </div>
-            <div v-else>
-              <Message
-                :title="$t('collaboratorBookingsView.message.6.title')"
-                :content="$t('collaboratorBookingsView.message.6.content')"
-              />
-            </div>
-            <AreYouSure
-              :show="goToTransfer"
-              :yes-disabled="toggles['collaborator.attention.transfer']"
-              :no-disabled="toggles['collaborator.attention.transfer']"
-              @actionYes="transfer()"
-              @actionNo="cancelTransfer()"
-            >
-            </AreYouSure>
-            <hr />
-          </div>
-        </div>
-        <!-- Botón de Telemedicina (si aplica) -->
-        <div v-if="attention.telemedicineSessionId && !loading" class="row mt-2 mb-2">
-          <div class="col-12">
-            <!-- Telemedicine Info Display -->
-            <div
-              v-if="attention.telemedicineConfig"
-              class="telemedicine-info-card p-3 bg-light rounded mb-3"
-            >
-              <h6 class="fw-bold mb-2">
-                <i class="bi bi-camera-video me-2"></i>
-                Información de Telemedicina
-              </h6>
-              <div class="row g-2 small">
-                <div class="col-12">
-                  <strong>Tipo:</strong>
-                  <span class="ms-2">
-                    <span
-                      v-if="
-                        attention.telemedicineConfig.type === 'VIDEO' ||
-                        attention.telemedicineConfig.type === 'video'
-                      "
-                      >Video</span
-                    >
-                    <span
-                      v-else-if="
-                        attention.telemedicineConfig.type === 'CHAT' ||
-                        attention.telemedicineConfig.type === 'chat'
-                      "
-                      >Chat</span
-                    >
-                    <span
-                      v-else-if="
-                        attention.telemedicineConfig.type === 'BOTH' ||
-                        attention.telemedicineConfig.type === 'both'
-                      "
-                      >Video y Chat</span
-                    >
-                  </span>
-                </div>
-                <div class="col-12" v-if="attention.telemedicineConfig.scheduledAt">
-                  <strong>Fecha y Hora:</strong>
-                  <span class="ms-2">
-                    {{ formatTelemedicineDate(attention.telemedicineConfig.scheduledAt) }}
-                  </span>
-                </div>
-                <div class="col-12" v-if="attention.telemedicineConfig.recordingEnabled">
-                  <span class="badge bg-info">
-                    <i class="bi bi-record-circle me-1"></i>
-                    Grabación Habilitada
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Telemedicine Session Status & Details -->
-            <div
-              v-if="telemedicineSession"
-              class="telemedicine-session-status p-3 bg-light rounded mb-3"
-            >
-              <h6 class="fw-bold mb-3">
-                <i class="bi bi-info-circle me-2"></i>
-                {{ $t('telemedicineSession.sessionStatus') }}
-              </h6>
-
-              <!-- Session Status -->
-              <div class="mb-2">
-                <span class="fw-bold me-2">{{ $t('telemedicineSession.status') }}</span>
-                <span :class="getTelemedicineStatusClass(telemedicineSession.status)">
-                  <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem"></i>
-                  {{ getTelemedicineStatusText(telemedicineSession.status) }}
-                </span>
-              </div>
-
-              <!-- Scheduled Time -->
-              <div v-if="telemedicineSession.scheduledAt" class="mb-2">
-                <span class="fw-bold me-2">{{ $t('telemedicineSession.scheduledFor') }}</span>
-                <span>{{ formatTelemedicineTime(telemedicineSession.scheduledAt) }}</span>
-              </div>
-
-              <!-- Access Key Status (only show that it was sent, not the actual key) -->
-              <div v-if="telemedicineSession.status === 'scheduled'" class="mb-2">
-                <span class="fw-bold me-2">{{ $t('telemedicineSession.accessKey') }}</span>
-                <span v-if="isAccessKeyActivated()" class="text-success">
-                  <i class="bi bi-check-circle-fill me-1"></i>
-                  <span v-if="telemedicineSession.accessKeySent">{{
-                    $t('telemedicineSession.accessKeySent')
-                  }}</span>
-                  <span v-else>{{ $t('telemedicineSession.accessKeyAvailable') }}</span>
-                  <small class="d-block text-muted mt-1">
-                    {{ $t('telemedicineSession.accessKeySentViaWhatsAppEmail') }}
-                  </small>
-                </span>
-                <span v-else class="text-muted">
-                  <i class="bi bi-clock me-1"></i>
-                  {{ $t('telemedicineSession.accessKeyActivation') }} {{ getTimeUntilActivation() }}
-                  <small class="d-block text-muted mt-1">
-                    {{ $t('telemedicineSession.accessKeyActivationNote') }}
-                  </small>
-                </span>
-              </div>
-
-              <!-- Access Key Validated (only show status, not the key) -->
-              <div v-if="telemedicineSession.accessKeyValidated" class="mb-2">
-                <span class="fw-bold me-2">{{ $t('telemedicineSession.accessKeyValidated') }}</span>
-                <span class="text-success">
-                  <i class="bi bi-check-circle-fill me-1"></i>
-                  {{ formatTelemedicineTime(telemedicineSession.accessKeyValidatedAt) }}
-                </span>
-                <span class="ms-2 text-success">
-                  <i class="bi bi-person-check-fill"></i>
-                  {{ $t('telemedicineSession.clientConnected') }}
-                </span>
-              </div>
-
-              <!-- Session Started -->
-              <div v-if="telemedicineSession.startedAt" class="mb-2">
-                <span class="fw-bold me-2">{{ $t('telemedicineSession.started') }}</span>
-                <span>{{ formatTelemedicineTime(telemedicineSession.startedAt) }}</span>
-              </div>
-
-              <!-- Session Ended -->
-              <div v-if="telemedicineSession.endedAt" class="mb-2">
-                <span class="fw-bold me-2">{{ $t('telemedicineSession.ended') }}</span>
-                <span>{{ formatTelemedicineTime(telemedicineSession.endedAt) }}</span>
-                <span v-if="telemedicineSession.duration" class="ms-2 text-muted">
-                  ({{ $t('telemedicineSession.duration') }}
-                  {{ Math.floor(telemedicineSession.duration / 60) }} min)
-                </span>
-              </div>
-
-              <!-- Recording -->
-              <div v-if="telemedicineSession.recordingUrl" class="mb-2">
-                <span class="fw-bold me-2">{{ $t('telemedicineSession.recording') }}</span>
-                <a :href="telemedicineSession.recordingUrl" target="_blank" class="text-primary">
-                  <i class="bi bi-play-circle me-1"></i>
-                  {{ $t('telemedicineSession.viewRecording') }}
-                </a>
-              </div>
-
-              <!-- Active Session Indicator -->
-              <div
-                v-if="telemedicineSession.status === 'active'"
-                class="alert alert-success mb-0 mt-2"
-              >
-                <i class="bi bi-broadcast me-2"></i>
-                <strong>{{ $t('telemedicineSession.activeSession') }}</strong> -
-                {{ $t('telemedicineSession.activeSessionNote') }}
-              </div>
-            </div>
-
-            <!-- Client Access Link -->
-            <div class="telemedicine-client-access p-3 bg-primary bg-opacity-10 rounded mb-3">
-              <h6 class="fw-bold mb-2">
-                <i class="bi bi-link-45deg me-2"></i>
-                {{ $t('telemedicineSession.clientAccessLink') }}
-              </h6>
-              <div class="input-group">
-                <input
-                  :id="`telemedicine-link-${attention.id}`"
-                  type="text"
-                  class="form-control form-control-sm"
-                  :value="getClientAccessLink()"
-                  readonly
-                />
-                <button
-                  class="btn btn-sm btn-outline-primary"
-                  type="button"
-                  @click="copyClientAccessLink(attention.id)"
-                  :title="$t('telemedicineSession.copyLink')"
-                >
-                  <i class="bi bi-clipboard"></i>
-                </button>
-              </div>
-              <div
-                v-if="telemedicineSession && !isAccessKeyActivated()"
-                class="mt-2 small text-muted"
-              >
-                <i class="bi bi-info-circle me-1"></i>
-                {{ $t('telemedicineSession.linkActivationNote') }}
-              </div>
-              <div v-else class="mt-2 small text-muted">
-                <i class="bi bi-info-circle me-1"></i>
-                {{ $t('telemedicineSession.linkShareNote') }}
-              </div>
-            </div>
-
-            <TelemedicineSessionStarter
-              :session-id="attention.telemedicineSessionId"
-              :attention-id="attention.id"
-              :user-type="'doctor'"
-              @session-started="handleTelemedicineSessionStarted"
-              @error="handleTelemedicineError"
-            />
-          </div>
-        </div>
-        <div class="row mt-2" v-if="!loading">
-          <div class="col-6">
-            <button
-              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2 card-action"
-              @click="goToAttention()"
-              :disabled="
-                attention.status === 'USER_CANCELED' ||
-                attention.cancelled ||
-                !toggles['collaborator.attention.attend']
-              "
-            >
-              <i class="bi bi-qr-code"> </i> {{ $t('collaboratorBookingsView.attend') }}
-            </button>
-          </div>
-          <div class="col-6">
-            <button
-              class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-2 card-action"
-              @click="goCancel()"
-              :disabled="
-                attention.status === 'USER_CANCELED' ||
-                attention.cancelled ||
-                !toggles['collaborator.attention.cancel']
-              "
-            >
-              <i class="bi bi-person-x-fill"> </i> {{ $t('collaboratorBookingsView.cancel') }}
-            </button>
-          </div>
-          <AreYouSure
-            :show="goToCancel"
-            :yes-disabled="toggles['collaborator.attention.cancel']"
-            :no-disabled="toggles['collaborator.attention.cancel']"
-            @actionYes="cancel()"
-            @actionNo="cancelCancel()"
-          >
-          </AreYouSure>
-        </div>
-        <div class="row m-0 mt-1 centered">
-          <div class="col">
-            <span class="metric-card-details mx-1"><strong>Id:</strong> {{ attention.id }}</span>
-            <span class="metric-card-details"
-              ><strong>Date:</strong> {{ getDate(attention.createdAt) }}</span
-            >
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Inline details removed - now using modal for details display -->
 
     <!-- Floating Telemedicine Windows (for doctor to work while video is active) -->
     <TelemedicineFloatingWindow
@@ -1229,6 +810,10 @@ export default {
   font-size: 1rem;
   font-weight: 600;
   line-height: 0.7rem;
+}
+.stage-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
 }
 .copy-icon {
   color: var(--gris-default);

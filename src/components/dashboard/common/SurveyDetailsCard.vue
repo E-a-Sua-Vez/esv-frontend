@@ -424,45 +424,47 @@ export default {
         </div>
       </Transition>
     </div>
-    <!-- Modal Survey Answers -->
-    <div
-      class="modal fade"
-      :id="`surveyModal-${survey.surveyid}`"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-10"
-      aria-labelledby="staticBackdropLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold">
-              <i class="bi bi-qr-code"></i> {{ $t('dashboard.surveyOf') }}
-              {{ survey.name?.split(' ')[0] || 'N/I' }}
-            </h5>
-            <button
-              class="btn-close"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <Spinner :show="loading"></Spinner>
-          <div class="modal-body text-center mb-0">
-            <SurveyDetails :show="true" :survey-in="survey"> </SurveyDetails>
-          </div>
-          <div class="mx-2 mb-4 text-center">
-            <a
-              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-              >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
-            ></a>
+    <!-- Modal Survey Answers - Use Teleport to render outside component to avoid overflow/position issues -->
+    <Teleport to="body">
+      <div
+        class="modal fade"
+        :id="`surveyModal-${survey.surveyid}`"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-10"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header border-0 centered active-name">
+              <h5 class="modal-title fw-bold">
+                <i class="bi bi-qr-code"></i> {{ $t('dashboard.surveyOf') }}
+                {{ survey.name?.split(' ')[0] || 'N/I' }}
+              </h5>
+              <button
+                class="btn-close"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <Spinner :show="loading"></Spinner>
+            <div class="modal-body text-center mb-0">
+              <SurveyDetails :show="true" :survey-in="survey"> </SurveyDetails>
+            </div>
+            <div class="mx-2 mb-4 text-center">
+              <a
+                class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+                >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
+              ></a>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
@@ -892,10 +894,10 @@ export default {
   color: #004aad;
 }
 
-/* Action Buttons Grid */
+/* Action Buttons - Uniform Style */
 .action-buttons-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
   gap: 0.5rem;
 }
 
@@ -903,23 +905,33 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.625rem;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
+  justify-content: center;
+  gap: 0.1875rem;
+  padding: 0.25rem 0.375rem;
+  min-height: 40px;
+  width: 100%;
   border: none;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.7rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  text-align: center;
+  position: relative;
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.1) 0%, rgba(0, 194, 203, 0.05) 100%);
+  color: #004aad;
+  border: 1.5px solid rgba(0, 74, 173, 0.2);
 }
 
-.action-btn:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.9);
+.action-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.2) 0%, rgba(0, 194, 203, 0.1) 100%);
+  border-color: rgba(0, 74, 173, 0.4);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.15);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 74, 173, 0.1);
 }
 
 .action-btn:disabled {
@@ -928,7 +940,38 @@ export default {
 }
 
 .action-btn i {
-  font-size: 1rem;
+  font-size: 0.9375rem;
+}
+
+.action-btn span {
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.action-btn .notification-dot {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  font-size: 0.5rem;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.5rem;
+}
+
+.notification-dot.green {
+  color: #00c2cb;
+}
+
+.notification-dot.yellow {
+  color: #f9c322;
 }
 
 /* Info Badges */
@@ -1097,6 +1140,10 @@ export default {
     flex-wrap: wrap;
     gap: 0.375rem;
   }
+
+  .action-buttons-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 576px) {
@@ -1120,6 +1167,10 @@ export default {
 
   .client-row-content {
     gap: 0.4375rem;
+  }
+
+  .action-buttons-grid {
+    grid-template-columns: 1fr;
   }
 }
 

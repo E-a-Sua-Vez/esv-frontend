@@ -33,11 +33,9 @@ export default {
     business: { type: Object, default: undefined },
     services: { type: Array, default: undefined },
     filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
+    clientDetailsOpened: { type: Boolean, default: true },
   },
   data() {
-    // Set default dates: 1 month before today to today
-    const today = new Date().toISOString().slice(0, 10);
-    const oneMonthAgo = new DateModel(today).substractMonths(1).toString();
     return {
       loading: false,
       counter: 0,
@@ -63,8 +61,8 @@ export default {
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
-      startDate: oneMonthAgo,
-      endDate: today,
+      startDate: undefined,
+      endDate: undefined,
       togglesClient: {},
       _skipWatch: false, // Flag to skip watch during manual sync
     };
@@ -82,13 +80,25 @@ export default {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
         this.page = page ? page : this.page;
-        // Ensure searchText is passed correctly (even if empty string)
-        const searchTextParam =
-          this.searchText !== null && this.searchText !== undefined ? this.searchText : undefined;
 
-        // Ensure dates are properly formatted (YYYY-MM-DD) or undefined
-        const startDateParam = this.startDate && this.startDate !== '' ? this.startDate : undefined;
-        const endDateParam = this.endDate && this.endDate !== '' ? this.endDate : undefined;
+        // CRITICAL: Normalize all filter values to ensure consistency between mobile and desktop
+        // Helper to normalize string values (empty string -> undefined, trim whitespace)
+        const normalizeString = value => {
+          if (value === null || value === undefined) return undefined;
+          const str = String(value).trim();
+          return str === '' ? undefined : str;
+        };
+
+        // Normalize searchText - empty string becomes undefined
+        const searchTextParam = normalizeString(this.searchText);
+
+        // Normalize dates - empty string becomes undefined, ensure YYYY-MM-DD format
+        const startDateParam = normalizeString(this.startDate);
+        const endDateParam = normalizeString(this.endDate);
+
+        // Normalize queueId and serviceId - empty string becomes undefined
+        const queueIdParam = normalizeString(this.queueId);
+        const serviceIdParam = normalizeString(this.serviceId);
 
         this.clients = await getClientsDetails(
           this.business.id,
@@ -103,18 +113,30 @@ export default {
           this.contactable,
           this.contacted,
           searchTextParam,
-          this.queueId,
+          queueIdParam,
           this.survey,
           this.asc,
           this.contactResultType,
           undefined,
-          this.serviceId,
+          serviceIdParam,
           this.pendingControls,
           this.pendingBookings,
           this.firstAttentionForm,
           this.ratingType,
           this.npsType
         );
+        // 🔍 DEBUG: Verificar IDs recibidos del query-stack
+        if (this.clients && this.clients.length > 0) {
+          console.log(
+            '🔍 DEBUG Client IDs from query-stack:',
+            this.clients.map(c => ({
+              id: c.id,
+              userId: c.userId,
+              userName: c.userName,
+              userEmail: c.userEmail,
+            })),
+          );
+        }
         if (this.clients && this.clients.length > 0) {
           const { counter } = this.clients[0];
           this.counter = counter;
@@ -312,7 +334,13 @@ export default {
       this.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
       await this.refresh(1);
     },
-    closeAddModal() {
+    async loadTogglesIfNeeded() {
+      // Lazy load toggles only when needed (e.g., when opening add modal)
+      if (!this.togglesClient || Object.keys(this.togglesClient).length === 0) {
+        this.togglesClient = await getPermissions('client', 'admin');
+      }
+    },
+    async closeAddModal() {
       const modalCloseButton = document.getElementById('close-modal-client-add');
       modalCloseButton.click();
       setTimeout(async () => {
@@ -423,22 +451,19 @@ export default {
       immediate: true,
       deep: true,
       async handler(newVal, oldVal) {
-        // Load toggles even when filtersLocation is 'slot' to enable modal functionality
-        if (this.showClientManagement === true || this.filtersLocation === 'slot') {
+        // Only load toggles when component is actually shown (lazy loading)
+        // For filtersLocation === 'slot', we don't need toggles unless add modal is opened
+        if (this.showClientManagement === true) {
+          // Load toggles only when component becomes visible for the first time
           if (!this.togglesClient || Object.keys(this.togglesClient).length === 0) {
             this.togglesClient = await getPermissions('client', 'admin');
           }
-          if (this.showClientManagement === true) {
-            // Auto-expand filters when component becomes visible for the first time
-            if (
-              !oldVal ||
-              (oldVal && !oldVal.showClientManagement && newVal.showClientManagement)
-            ) {
-              this.showFilterOptions = true;
-            }
-            this.page = 1;
-            this.refresh();
+          // Auto-expand filters when component becomes visible for the first time
+          if (!oldVal || (oldVal && !oldVal.showClientManagement && newVal.showClientManagement)) {
+            this.showFilterOptions = true;
           }
+          this.page = 1;
+          this.refresh();
         }
       },
     },
@@ -1135,6 +1160,7 @@ export default {
                   <ClientDetailsCard
                     :show="true"
                     :client="client"
+                    :details-opened="this.clientDetailsOpened"
                     :commerce="this.commerce"
                     :toggles="this.toggles"
                     :start-date="this.startDate"

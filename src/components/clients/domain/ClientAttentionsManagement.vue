@@ -4,25 +4,25 @@ import Popper from 'vue3-popper';
 import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import AttentionDetailsCard from '../../clients/common/AttentionDetailsCard.vue';
+import AttentionDetailsModal from '../../attentions/common/AttentionDetailsModal.vue';
 import { getAttentionsDetails } from '../../../application/services/query-stack';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { DateModel } from '../../../shared/utils/date.model';
+import { ATTENTION_STATUS } from '../../../shared/constants';
 
 export default {
   name: 'ClientAttentionsManagement',
-  components: { Message, SimpleDownloadCard, Spinner, Popper, AttentionDetailsCard },
-  props: {
-    showClientAttentionsManagement: { type: Boolean, default: false },
-    toggles: { type: Object, default: undefined },
-    client: { type: Object, default: undefined },
-    commerce: { type: Object, default: undefined },
-    commerces: { type: Array, default: undefined },
-    queues: { type: Array, default: undefined },
-    services: { type: Array, default: undefined },
-    attentionsIn: { type: Array, default: undefined },
+  components: {
+    Message,
+    SimpleDownloadCard,
+    Spinner,
+    Popper,
+    AttentionDetailsCard,
+    AttentionDetailsModal,
   },
   data() {
     return {
+      ATTENTION_STATUS, // Expose constant to template
       loading: false,
       counter: 0,
       attentions: [],
@@ -36,15 +36,33 @@ export default {
       searchText: undefined,
       queueId: undefined,
       serviceId: undefined,
+      status: undefined,
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
       startDate: undefined,
       endDate: undefined,
+      showAttentionModal: false,
+      selectedAttention: undefined,
+      attentionsLoaded: false, // Flag to track if attentions have been loaded
     };
   },
+  props: {
+    showClientAttentionsManagement: { type: Boolean, default: false },
+    toggles: { type: Object, default: undefined },
+    client: { type: Object, default: undefined },
+    commerce: { type: Object, default: undefined },
+    commerces: { type: Array, default: undefined },
+    queues: { type: Array, default: undefined },
+    services: { type: Array, default: undefined },
+    attentionsIn: { type: Array, default: undefined },
+  },
   methods: {
-    async refresh() {
+    async refresh(force = false) {
+      // Don't refresh if already loaded and not forcing (unless filters changed)
+      if (this.attentionsLoaded && !force && this.attentions && this.attentions.length > 0) {
+        return;
+      }
       try {
         this.loading = true;
         let commerceIds = [this.commerce.id];
@@ -70,9 +88,15 @@ export default {
           this.survey,
           this.asc,
           undefined,
-          this.serviceId
+          this.serviceId,
+          undefined,
+          undefined, // id - not used
+          undefined, // userId - not used when filtering by clientId
+          this.client?.id, // ✅ Pass clientId to filter by client (this is the client ID from query-stack)
+          this.status
         );
         this.updatePaginationData();
+        this.attentionsLoaded = true; // Mark as loaded
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -89,6 +113,7 @@ export default {
       this.searchText = undefined;
       this.queueId = undefined;
       this.serviceId = undefined;
+      this.status = undefined;
       this.page = 1;
       this.limit = 10;
       this.startDate = undefined;
@@ -124,6 +149,18 @@ export default {
     showFilters() {
       this.showFilterOptions = !this.showFilterOptions;
     },
+    openAttentionModal(attention) {
+      this.selectedAttention = attention;
+      this.showAttentionModal = true;
+    },
+    closeAttentionModal() {
+      this.showAttentionModal = false;
+      this.selectedAttention = undefined;
+    },
+    async handleAttentionUpdated() {
+      await this.refresh(true); // Force refresh after updating attention
+      this.closeAttentionModal();
+    },
     async exportToCSV() {
       try {
         this.loading = true;
@@ -151,7 +188,12 @@ export default {
           this.survey,
           this.asc,
           undefined,
-          this.serviceId
+          this.serviceId,
+          undefined,
+          undefined,
+          undefined,
+          this.client?.id,
+          this.status
         );
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
@@ -195,10 +237,70 @@ export default {
       this.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
       await this.refresh();
     },
+    getPackageColor(packageId) {
+      // Generate a consistent color based on packageId
+      if (!packageId) return null;
+      let hash = 0;
+      for (let i = 0; i < packageId.length; i++) {
+        hash = packageId.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      // Generate colors in a pleasant palette (pastels)
+      const colors = [
+        { bg: 'rgba(74, 144, 226, 0.12)', border: '#4a90e2', accent: '#4a90e2' }, // Blue
+        { bg: 'rgba(0, 194, 203, 0.12)', border: '#00c2cb', accent: '#00c2cb' }, // Cyan
+        { bg: 'rgba(108, 99, 255, 0.12)', border: '#6c63ff', accent: '#6c63ff' }, // Purple
+        { bg: 'rgba(255, 159, 64, 0.12)', border: '#ff9f40', accent: '#ff9f40' }, // Orange
+        { bg: 'rgba(255, 107, 107, 0.12)', border: '#ff6b6b', accent: '#ff6b6b' }, // Red
+        { bg: 'rgba(72, 187, 120, 0.12)', border: '#48bb78', accent: '#48bb78' }, // Green
+        { bg: 'rgba(237, 137, 54, 0.12)', border: '#ed8936', accent: '#ed8936' }, // Orange-alt
+        { bg: 'rgba(129, 140, 248, 0.12)', border: '#818cf8', accent: '#818cf8' }, // Indigo
+      ];
+      const index = Math.abs(hash) % colors.length;
+      return colors[index];
+    },
   },
   computed: {
+    groupedAttentions() {
+      // Group attentions by packageId
+      const grouped = {};
+      const withoutPackage = [];
+
+      this.attentions.forEach(attention => {
+        if (attention.packageId) {
+          const packageId = attention.packageId;
+          if (!grouped[packageId]) {
+            grouped[packageId] = {
+              packageId,
+              packageName: attention.packageName || 'Paquete',
+              packageProceduresTotalNumber: attention.packageProceduresTotalNumber || 0,
+              attentions: [],
+            };
+          }
+          grouped[packageId].attentions.push(attention);
+        } else {
+          withoutPackage.push(attention);
+        }
+      });
+
+      // Sort attentions within each package by procedure number
+      Object.keys(grouped).forEach(packageId => {
+        grouped[packageId].attentions.sort((a, b) => {
+          const numA = a.packageProcedureNumber || 0;
+          const numB = b.packageProcedureNumber || 0;
+          return numA - numB;
+        });
+      });
+
+      // Convert to array format for template
+      const groups = Object.values(grouped).map(group => ({
+        ...group,
+        color: this.getPackageColor(group.packageId),
+      }));
+
+      return { groups, withoutPackage };
+    },
     changeData() {
-      const { page, daysSinceType, survey, asc, queueId, limit, serviceId } = this;
+      const { page, daysSinceType, survey, asc, queueId, limit, serviceId, status } = this;
       return {
         page,
         daysSinceType,
@@ -207,14 +309,16 @@ export default {
         queueId,
         limit,
         serviceId,
+        status,
       };
     },
   },
   watch: {
     changeData: {
-      immediate: true,
+      immediate: false, // Don't trigger on mount - attentions load lazily when modal opens
       deep: true,
       async handler(oldData, newData) {
+        // Only refresh if oldData exists (not initial mount) and something actually changed
         if (
           oldData &&
           newData &&
@@ -224,10 +328,12 @@ export default {
             oldData.asc !== newData.asc ||
             oldData.limit !== newData.limit ||
             oldData.queueId !== newData.queueId ||
-            oldData.serviceId !== newData.serviceId)
+            oldData.serviceId !== newData.serviceId ||
+            oldData.status !== newData.status)
         ) {
           this.page = 1;
-          await this.refresh();
+          this.attentionsLoaded = false; // Reset flag when filters change
+          await this.refresh(true); // Force refresh when filters change
         }
       },
     },
@@ -250,6 +356,11 @@ export default {
       },
     },
   },
+  mounted() {
+    // Don't load attentions on mount - wait until modal is actually opened (lazy loading)
+    // This prevents unnecessary API calls when the component is mounted but not visible
+    // Attentions will be loaded when the modal is shown via the event listener in ClientDetailsCard
+  },
 };
 </script>
 
@@ -258,7 +369,9 @@ export default {
     id="attentions-management"
     class="row"
     v-if="
-      showClientAttentionsManagement === true && toggles['dashboard.attentions-management.view']
+      showClientAttentionsManagement === true &&
+      toggles &&
+      toggles['dashboard.attentions-management.view']
     "
   >
     <div class="col">
@@ -266,15 +379,6 @@ export default {
         <Spinner :show="loading"></Spinner>
         <div v-if="!loading">
           <div>
-            <SimpleDownloadCard
-              :download="toggles['dashboard.reports.attentions-management']"
-              :title="$t('dashboard.reports.attentions-management.title')"
-              :show-tooltip="true"
-              :description="$t('dashboard.reports.attentions-management.description')"
-              :icon="'bi-file-earmark-spreadsheet'"
-              @download="exportToCSV"
-              :can-download="toggles['dashboard.reports.attentions-management'] === true"
-            ></SimpleDownloadCard>
             <div class="my-2 row metric-card">
               <div class="col-12">
                 <span class="metric-card-subtitle">
@@ -395,6 +499,36 @@ export default {
                   </select>
                 </div>
                 <div class="col-12 col-md my-1 filter-card">
+                  <label class="metric-card-subtitle mx-2" for="select-status">
+                    {{ $t('dashboard.status') || 'Estado' }}:
+                  </label>
+                  <select
+                    class="btn btn-sm btn-light fw-bold text-dark select"
+                    v-model="status"
+                    id="select-status"
+                  >
+                    <option :value="undefined">{{ $t('dashboard.all') || 'Todos' }}</option>
+                    <option :value="ATTENTION_STATUS.PENDING">
+                      {{ $t('dashboard.attentionStatus.pending') || 'Pendiente' }}
+                    </option>
+                    <option :value="ATTENTION_STATUS.PROCESSING">
+                      {{ $t('dashboard.attentionStatus.processing') || 'En Proceso' }}
+                    </option>
+                    <option :value="ATTENTION_STATUS.TERMINATED">
+                      {{ $t('dashboard.attentionStatus.terminated') || 'Terminado' }}
+                    </option>
+                    <option :value="ATTENTION_STATUS.CANCELLED">
+                      {{ $t('dashboard.attentionStatus.cancelled') || 'Cancelado' }}
+                    </option>
+                    <option :value="ATTENTION_STATUS.USER_CANCELLED">
+                      {{ $t('dashboard.attentionStatus.userCancelled') || 'Cancelado por Usuario' }}
+                    </option>
+                    <option :value="ATTENTION_STATUS.RATED">
+                      {{ $t('dashboard.attentionStatus.rated') || 'Calificado' }}
+                    </option>
+                  </select>
+                </div>
+                <div class="col-12 col-md my-1 filter-card">
                   <input
                     type="radio"
                     class="btn btn-check btn-sm"
@@ -477,7 +611,7 @@ export default {
                 </div>
               </div>
             </div>
-            <div class="my-3">
+            <div class="my-3 text-center">
               <span class="badge bg-secondary px-3 py-2 m-1"
                 >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
               </span>
@@ -548,13 +682,86 @@ export default {
               </nav>
             </div>
             <div v-if="attentions && attentions.length > 0">
+              <!-- Grouped by Package -->
               <div
-                class="row"
-                v-for="(attention, index) in attentions"
-                :key="`attentions-${index}`"
+                v-for="group in groupedAttentions.groups"
+                :key="`package-group-${group.packageId}`"
+                class="package-attentions-group"
+                :style="`--package-color: ${group.color.accent}; --package-bg: ${group.color.bg};`"
               >
-                <AttentionDetailsCard :show="true" :attention="attention" :commerce="commerce">
-                </AttentionDetailsCard>
+                <!-- Package Header -->
+                <div class="package-group-header">
+                  <div
+                    class="package-group-indicator"
+                    :style="`background-color: ${group.color.accent};`"
+                  ></div>
+                  <div class="package-group-info">
+                    <div class="package-group-title">
+                      <i class="bi bi-box-seam-fill package-icon"></i>
+                      <span class="package-name">{{ group.packageName }}</span>
+                      <span class="package-sessions-count">
+                        <span v-if="group.packageProceduresTotalNumber > 0">
+                          ({{ group.attentions.length }} / {{ group.packageProceduresTotalNumber }}
+                          {{ $t('dashboard.attentions') || 'sesiones' }})
+                        </span>
+                        <span v-else>
+                          ({{ group.attentions.length }}
+                          {{ $t('dashboard.attentions') || 'sesiones' }})
+                        </span>
+                      </span>
+                    </div>
+                    <div class="package-group-progress">
+                      <div class="package-progress-bar">
+                        <div
+                          class="package-progress-fill"
+                          :style="`width: ${
+                            (group.attentions.length /
+                              (group.packageProceduresTotalNumber || group.attentions.length)) *
+                            100
+                          }%; background-color: ${group.color.accent};`"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Package Attentions -->
+                <div class="package-attentions-list">
+                  <div
+                    class="row attention-row-with-package"
+                    v-for="(attention, index) in group.attentions"
+                    :key="`package-${group.packageId}-attention-${index}`"
+                  >
+                    <AttentionDetailsCard
+                      :show="true"
+                      :attention="attention"
+                      :commerce="commerce"
+                      :package-color="group.color"
+                      @open-modal="openAttentionModal"
+                    >
+                    </AttentionDetailsCard>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Attentions without Package -->
+              <div
+                v-if="groupedAttentions.withoutPackage.length > 0"
+                class="attentions-without-package"
+              >
+                <div
+                  class="row"
+                  v-for="(attention, index) in groupedAttentions.withoutPackage"
+                  :key="`no-package-attention-${index}`"
+                >
+                  <AttentionDetailsCard
+                    :show="true"
+                    :attention="attention"
+                    :commerce="commerce"
+                    @open-modal="openAttentionModal"
+                  >
+                  </AttentionDetailsCard>
+                </div>
               </div>
             </div>
             <div v-else>
@@ -568,16 +775,27 @@ export default {
         </div>
       </div>
     </div>
-  </div>
-  <div
-    v-if="
-      showClientAttentionsManagement === true && !toggles['dashboard.attentions-management.view']
-    "
-  >
-    <Message
-      :icon="'bi-graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
+    <div
+      v-if="
+        showClientAttentionsManagement === true &&
+        (!toggles || !toggles['dashboard.attentions-management.view'])
+      "
+    >
+      <Message
+        :icon="'bi-graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
+    </div>
+    <!-- Attention Details Modal -->
+    <AttentionDetailsModal
+      :show="showAttentionModal"
+      :attention="selectedAttention"
+      :commerce="commerce"
+      :queues="queues"
+      :toggles="toggles"
+      @close="closeAttentionModal"
+      @attention-updated="handleAttentionUpdated"
     />
   </div>
 </template>
@@ -639,5 +857,173 @@ export default {
 .select {
   border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
+}
+
+/* Package Grouping Styles */
+.package-attentions-group {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.package-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  background: var(--package-bg, rgba(74, 144, 226, 0.08));
+  border-radius: 8px;
+  border-left: 4px solid var(--package-color, #4a90e2);
+  transition: all 0.2s ease;
+}
+
+.package-group-header:hover {
+  background: var(--package-bg, rgba(74, 144, 226, 0.15));
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.package-group-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  animation: packagePulse 2s ease-in-out infinite;
+}
+
+@keyframes packagePulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+.package-group-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.package-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.8);
+  flex-wrap: wrap;
+}
+
+.package-icon {
+  color: var(--package-color, #4a90e2);
+  font-size: 1rem;
+}
+
+.package-name {
+  color: var(--package-color, #4a90e2);
+  font-weight: 700;
+}
+
+.package-sessions-count {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  margin-left: 0.25rem;
+}
+
+.package-group-progress {
+  width: 100%;
+}
+
+.package-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.package-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+.package-attentions-list {
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 2px dashed var(--package-color, rgba(74, 144, 226, 0.3));
+  position: relative;
+}
+
+.package-attentions-list::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--package-color, rgba(74, 144, 226, 0.3)) 0%,
+    transparent 100%
+  );
+}
+
+.attention-row-with-package {
+  position: relative;
+  margin-bottom: 0.25rem;
+}
+
+.attention-row-with-package::before {
+  content: '';
+  position: absolute;
+  left: -1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--package-color, #4a90e2);
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 2px var(--package-color, rgba(74, 144, 226, 0.2));
+  z-index: 1;
+}
+
+.attentions-without-package {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .package-group-header {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .package-group-title {
+    font-size: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .package-attentions-list {
+    margin-left: 0.5rem;
+    padding-left: 0.75rem;
+  }
+
+  .attention-row-with-package::before {
+    left: -1rem;
+    width: 6px;
+    height: 6px;
+  }
 }
 </style>

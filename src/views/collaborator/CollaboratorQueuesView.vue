@@ -5,7 +5,6 @@ import { getCommerceById } from '../../application/services/commerce';
 import { getActiveModulesByCommerceId } from '../../application/services/module';
 import {
   getGroupedQueueByCommerceId,
-  getEstimatedWaitTime,
   getAverageAttentionDuration,
 } from '../../application/services/queue';
 import { getCollaboratorById, updateModule } from '../../application/services/collaborator';
@@ -15,6 +14,7 @@ import { getPermissions } from '../../application/services/permissions';
 import {
   updatedAvailableAttentionsByCommerce,
   updatedProcessingAttentionsByCommerce,
+  updatedTerminatedAttentionsByCommerce,
 } from '../../application/firebase';
 import { getQueueByCommerce } from '../../application/services/queue';
 import { getActiveFeature } from '../../shared/features';
@@ -67,11 +67,12 @@ export default {
       captcha: false,
       queueStatus: {},
       queueProcessingStatus: {},
+      queueTerminatedStatus: {}, // Track terminated attentions count per queue
       toggles: {},
-      queueIntelligentEstimation: {}, // Track which queues use intelligent estimation
-      queueEstimatedTimes: {}, // Cache for estimated wait times
       queueAverageDurations: {}, // Cache for average attention durations
       queueAverageDurationsIntelligent: {}, // Track which queues use intelligent estimation for average
+      queueAverageDurationsLoaded: {}, // Track which queues have already loaded their average duration
+      queueAverageDurationsLoading: {}, // Track which queues are currently loading to prevent concurrent calls
     });
 
     const loadCommerceData = async () => {
@@ -172,6 +173,9 @@ export default {
           state.modules = [];
           state.queue = {};
           state.queueStatus = {};
+          state.queueTerminatedStatus = {}; // Reset terminated status when commerce changes
+          state.queueAverageDurationsLoaded = {}; // Reset loaded flags when commerce changes
+          state.queueAverageDurationsLoading = {}; // Reset loading flags when commerce changes
 
           await loadCommerceData();
 
@@ -200,8 +204,16 @@ export default {
             loading.value = true;
             await initQueues();
             // Re-check queue status after queues are reloaded
-            if (attentionsWrapper.value && attentionsWrapper.value.value) {
-              await checkQueueStatus(attentionsWrapper.value);
+            if (
+              attentionsWrapper.value &&
+              processingAttentionsWrapper.value &&
+              terminatedAttentionsWrapper.value
+            ) {
+              await checkQueueStatus(
+                attentionsWrapper.value,
+                processingAttentionsWrapper.value,
+                terminatedAttentionsWrapper.value
+              );
             }
             loading.value = false;
           } catch (error) {
@@ -220,14 +232,26 @@ export default {
         if (newLength > 0 && newLength !== oldLength) {
           initializeQueueStatus();
           // If listener is already initialized, check status
-          if (attentionsWrapper.value && processingAttentionsWrapper.value) {
-            await checkQueueStatus(attentionsWrapper.value, processingAttentionsWrapper.value);
+          if (
+            attentionsWrapper.value &&
+            processingAttentionsWrapper.value &&
+            terminatedAttentionsWrapper.value
+          ) {
+            await checkQueueStatus(
+              attentionsWrapper.value,
+              processingAttentionsWrapper.value,
+              terminatedAttentionsWrapper.value
+            );
           }
         }
       }
     );
 
-    const checkQueueStatus = async (attentionsRef, processingAttentionsRef) => {
+    const checkQueueStatus = async (
+      attentionsRef,
+      processingAttentionsRef,
+      terminatedAttentionsRef
+    ) => {
       // Ensure we have queues loaded first
       if (!state.queues || state.queues.length === 0) {
         return;
@@ -247,6 +271,12 @@ export default {
         Array.isArray(processingAttentionsRef.value)
           ? processingAttentionsRef.value
           : [];
+      const terminatedAttentionsArray =
+        terminatedAttentionsRef &&
+        terminatedAttentionsRef.value &&
+        Array.isArray(terminatedAttentionsRef.value)
+          ? terminatedAttentionsRef.value
+          : [];
 
       try {
         // Group pending attentions by queue
@@ -261,43 +291,92 @@ export default {
           return acc;
         }, {});
 
-        // Group processing attentions by queue
-        const filteredProcessingByQueue = processingAttentionsArray.reduce((acc, attention) => {
+        // Check if stages are enabled for this commerce
+        const isStagesEnabled =
+          commerce.value && getActiveFeature(commerce.value, 'attention-stages-enabled', 'PRODUCT');
+
+        // Group terminated attentions by queue FIRST
+        // Also create a Set of terminated attention IDs to avoid double counting
+        const terminatedAttentionIds = new Set();
+        const filteredTerminatedByQueue = terminatedAttentionsArray.reduce((acc, attention) => {
           if (attention && attention.queueId) {
             const queueId = attention.queueId;
             if (!acc[queueId]) {
               acc[queueId] = [];
             }
             acc[queueId].push(attention);
+            // Track terminated attention IDs
+            if (attention.id) {
+              terminatedAttentionIds.add(attention.id);
+            }
           }
           return acc;
         }, {});
 
+        // Group processing attentions by queue, separating CHECKOUT stage attentions
+        const filteredProcessingByQueue = {};
+        const checkoutAttentionsByQueue = {}; // Atentions in CHECKOUT stage (but not yet terminated)
+
+        processingAttentionsArray.forEach(attention => {
+          if (attention && attention.queueId) {
+            const queueId = attention.queueId;
+            const attentionId = attention.id || attention.attentionId;
+
+            // Check if attention is already fully terminated (should not be in processing array, but check to be safe)
+            const isTerminated =
+              attention.status === 'TERMINATED' ||
+              attention.status === 'RATED' ||
+              attention.status === 'SKIPED' ||
+              (isStagesEnabled && attention.currentStage === 'TERMINATED') ||
+              (attentionId && terminatedAttentionIds.has(attentionId));
+
+            // If stages enabled and attention is in CHECKOUT stage (but NOT terminated), count it as checkout
+            if (isStagesEnabled && attention.currentStage === 'CHECKOUT' && !isTerminated) {
+              if (!checkoutAttentionsByQueue[queueId]) {
+                checkoutAttentionsByQueue[queueId] = [];
+              }
+              checkoutAttentionsByQueue[queueId].push(attention);
+            } else if (!isTerminated) {
+              // Regular processing attention (not in CHECKOUT stage and not terminated)
+              if (!filteredProcessingByQueue[queueId]) {
+                filteredProcessingByQueue[queueId] = [];
+              }
+              filteredProcessingByQueue[queueId].push(attention);
+            }
+            // If isTerminated, skip it (should be in terminatedAttentionsArray instead)
+          }
+        });
+
         // Update all queues
         state.queues.forEach(queue => {
           if (queue && queue.id) {
-            // Always update average duration (independent of pending count)
-            updateQueueAverageDuration(queue.id);
-
             // Update pending count
             if (filteredPendingByQueue[queue.id]) {
               const pendingCount = filteredPendingByQueue[queue.id].length;
               state.queueStatus[queue.id] = pendingCount;
-              // Update estimated time with intelligent estimation
-              updateQueueEstimatedTime(queue.id, pendingCount);
             } else {
               // Explicitly set to 0 if no pending attentions for this queue
               state.queueStatus[queue.id] = 0;
-              updateQueueEstimatedTime(queue.id, 0);
             }
 
-            // Update processing count from Firebase
+            // Update processing count from Firebase (excluding CHECKOUT stage attentions)
             if (filteredProcessingByQueue[queue.id]) {
               state.queueProcessingStatus[queue.id] = filteredProcessingByQueue[queue.id].length;
             } else {
               // Explicitly set to 0 if no processing attentions for this queue
               state.queueProcessingStatus[queue.id] = 0;
             }
+
+            // Update terminated count from Firebase
+            // Include: terminated attentions + CHECKOUT stage attentions (when stages enabled)
+            let terminatedCount = 0;
+            if (filteredTerminatedByQueue[queue.id]) {
+              terminatedCount += filteredTerminatedByQueue[queue.id].length;
+            }
+            if (checkoutAttentionsByQueue[queue.id]) {
+              terminatedCount += checkoutAttentionsByQueue[queue.id].length;
+            }
+            state.queueTerminatedStatus[queue.id] = terminatedCount;
           }
         });
       } catch (error) {
@@ -311,9 +390,10 @@ export default {
     // Use wrapper refs so we can update them when commerce changes
     const attentionsWrapper = ref(null);
     const processingAttentionsWrapper = ref(null);
+    const terminatedAttentionsWrapper = ref(null);
     let attentions = null;
     let processingAttentions = null;
-    const attentionsUnsubscribe = null;
+    let terminatedAttentions = null;
 
     // Initialize attentions listeners with commerce from store or route
     const initializeAttentionsListener = commerceId => {
@@ -321,6 +401,7 @@ export default {
         // If no commerce, clear attentions and reset status
         attentionsWrapper.value = null;
         processingAttentionsWrapper.value = null;
+        terminatedAttentionsWrapper.value = null;
         initializeQueueStatus();
         return;
       }
@@ -334,22 +415,37 @@ export default {
         processingAttentions._unsubscribe();
         processingAttentions = null;
       }
+      if (terminatedAttentions && terminatedAttentions._unsubscribe) {
+        terminatedAttentions._unsubscribe();
+        terminatedAttentions = null;
+      }
 
       // Reset queue status before creating new listeners
       initializeQueueStatus();
 
-      // Create new listeners for both pending and processing attentions
+      // Create new listeners for pending, processing, and terminated attentions
       attentions = updatedAvailableAttentionsByCommerce(commerceId);
       attentionsWrapper.value = attentions;
 
       processingAttentions = updatedProcessingAttentionsByCommerce(commerceId);
       processingAttentionsWrapper.value = processingAttentions;
 
+      terminatedAttentions = updatedTerminatedAttentionsByCommerce(commerceId);
+      terminatedAttentionsWrapper.value = terminatedAttentions;
+
       // Force initial check after a brief moment to allow Firebase to initialize
       // The watch will handle updates, but we ensure initial state is correct
       setTimeout(() => {
-        if (attentionsWrapper.value && processingAttentionsWrapper.value) {
-          checkQueueStatus(attentionsWrapper.value, processingAttentionsWrapper.value);
+        if (
+          attentionsWrapper.value &&
+          processingAttentionsWrapper.value &&
+          terminatedAttentionsWrapper.value
+        ) {
+          checkQueueStatus(
+            attentionsWrapper.value,
+            processingAttentionsWrapper.value,
+            terminatedAttentionsWrapper.value
+          );
         }
       }, 100);
     };
@@ -379,9 +475,28 @@ export default {
       }
       // Initialize queue status after queues are loaded
       initializeQueueStatus();
+
+      // NOTE: Average duration loading is disabled - not showing this data
+      // // Load average durations for all queues (only once when queues are loaded)
+      // if (state.queues && state.queues.length > 0) {
+      //   state.queues.forEach(queue => {
+      //     if (queue && queue.id) {
+      //       updateQueueAverageDuration(queue.id);
+      //     }
+      //   });
+      // }
+
       // Trigger checkQueueStatus if listener is already initialized
-      if (attentionsWrapper.value && processingAttentionsWrapper.value) {
-        await checkQueueStatus(attentionsWrapper.value, processingAttentionsWrapper.value);
+      if (
+        attentionsWrapper.value &&
+        processingAttentionsWrapper.value &&
+        terminatedAttentionsWrapper.value
+      ) {
+        await checkQueueStatus(
+          attentionsWrapper.value,
+          processingAttentionsWrapper.value,
+          terminatedAttentionsWrapper.value
+        );
       }
     };
 
@@ -407,6 +522,9 @@ export default {
       store.setCurrentQueue(state.queue);
       if (captchaEnabled) {
         await validateCaptchaOk(true);
+      } else {
+        // If no captcha, navigate directly to attentions page
+        await getLineAttentions();
       }
     };
 
@@ -453,14 +571,27 @@ export default {
           if (queue && queue.id) {
             state.queueStatus[queue.id] = 0;
             state.queueProcessingStatus[queue.id] = 0;
+            state.queueTerminatedStatus[queue.id] = 0;
           }
         });
       }
     };
-
     // Function to update average attention duration for a queue
     const updateQueueAverageDuration = async queueId => {
       if (!queueId) return;
+
+      // Skip if already loaded to avoid redundant API calls
+      if (state.queueAverageDurationsLoaded[queueId]) {
+        return;
+      }
+
+      // Skip if currently loading to prevent concurrent calls
+      if (state.queueAverageDurationsLoading[queueId]) {
+        return;
+      }
+
+      // Mark as loading
+      state.queueAverageDurationsLoading[queueId] = true;
 
       try {
         const result = await getAverageAttentionDuration(queueId, 'median');
@@ -477,6 +608,8 @@ export default {
           }
           state.queueAverageDurations[queueId] = display;
           state.queueAverageDurationsIntelligent[queueId] = result.success || false;
+          state.queueAverageDurationsLoaded[queueId] = true; // Mark as loaded
+          state.queueAverageDurationsLoading[queueId] = false; // Mark as not loading
         } else {
           // Fallback: use queue's estimatedTime if available
           const queue = state.queues.find(q => q.id === queueId);
@@ -492,9 +625,13 @@ export default {
             }
             state.queueAverageDurations[queueId] = display;
             state.queueAverageDurationsIntelligent[queueId] = false;
+            state.queueAverageDurationsLoaded[queueId] = true; // Mark as loaded
+            state.queueAverageDurationsLoading[queueId] = false; // Mark as not loading
           } else {
             state.queueAverageDurations[queueId] = 'N/A';
             state.queueAverageDurationsIntelligent[queueId] = false;
+            state.queueAverageDurationsLoaded[queueId] = true; // Mark as loaded
+            state.queueAverageDurationsLoading[queueId] = false; // Mark as not loading
           }
         }
       } catch (error) {
@@ -516,64 +653,9 @@ export default {
           state.queueAverageDurations[queueId] = 'N/A';
         }
         state.queueAverageDurationsIntelligent[queueId] = false;
+        state.queueAverageDurationsLoaded[queueId] = true; // Mark as loaded even on error
+        state.queueAverageDurationsLoading[queueId] = false; // Mark as not loading
       }
-    };
-
-    // Function to update estimated time for a queue
-    const updateQueueEstimatedTime = async (queueId, pendingCount) => {
-      if (!queueId) return;
-
-      let estimatedMinutes = 0;
-      let usingIntelligentEstimation = false;
-
-      if (pendingCount > 0) {
-        try {
-          const intelligentEstimation = await getEstimatedWaitTime(queueId, pendingCount, 'p75');
-
-          if (intelligentEstimation && intelligentEstimation.estimatedTime) {
-            // Parse HH:MM format to minutes
-            const [hours, minutes] = intelligentEstimation.estimatedTime.split(':').map(Number);
-            estimatedMinutes = hours * 60 + minutes;
-            usingIntelligentEstimation = intelligentEstimation.usingIntelligentEstimation || false;
-          } else {
-            // Fallback: use queue's estimatedTime if available
-            const queue = state.queues.find(q => q.id === queueId);
-            if (queue && queue.estimatedTime) {
-              estimatedMinutes = pendingCount * queue.estimatedTime;
-            } else {
-              // Final fallback: 5 minutes per pending attention
-              estimatedMinutes = pendingCount * 5;
-            }
-          }
-        } catch (error) {
-          console.warn('Failed to get intelligent estimation for queue', queueId, error);
-          // Use queue's estimatedTime as fallback
-          const queue = state.queues.find(q => q.id === queueId);
-          if (queue && queue.estimatedTime) {
-            estimatedMinutes = pendingCount * queue.estimatedTime;
-          } else {
-            // Final fallback: 5 minutes per pending attention
-            estimatedMinutes = pendingCount * 5;
-          }
-        }
-      } else {
-        // No pending attentions - show 0 min
-        estimatedMinutes = 0;
-      }
-
-      // Format display
-      const estimatedHours = Math.floor(estimatedMinutes / 60);
-      const estimatedMins = Math.floor(estimatedMinutes % 60);
-      let estimatedDisplay = '';
-      if (estimatedHours > 0) {
-        estimatedDisplay = `${estimatedHours}h ${estimatedMins}min`;
-      } else {
-        estimatedDisplay = `${estimatedMins} min`;
-      }
-
-      // Update reactive state - always update, even if 0
-      state.queueEstimatedTimes[queueId] = estimatedDisplay;
-      state.queueIntelligentEstimation[queueId] = usingIntelligentEstimation;
     };
 
     // Function to get queue metrics - accessing reactive state directly
@@ -583,21 +665,17 @@ export default {
         return {
           pending: 0,
           processing: 0,
+          terminated: 0,
           total: 0,
-          estimatedWaitTime: '0 min',
           priority: 'low',
           priorityColor: '#28a745',
-          usingIntelligentEstimation: false,
         };
       }
 
       const pending = state.queueStatus[queueId] || 0;
       const processing = state.queueProcessingStatus[queueId] || 0;
-      const total = pending + processing;
-
-      // Get estimated time from reactive state (updated asynchronously)
-      const estimatedWaitTime = state.queueEstimatedTimes[queueId] || '0 min';
-      const usingIntelligentEstimation = state.queueIntelligentEstimation[queueId] || false;
+      const terminated = state.queueTerminatedStatus[queueId] || 0;
+      const total = pending + processing + terminated;
 
       // Determine priority/urgency
       let priority = 'low';
@@ -613,13 +691,15 @@ export default {
       return {
         pending,
         processing,
+        terminated,
         total,
-        estimatedWaitTime,
         priority,
         priorityColor,
-        usingIntelligentEstimation,
       };
     };
+
+    // Debounce timer for attention watcher
+    let attentionWatcherTimer = null;
 
     // Watch attentions ref values for changes (both pending and processing)
     // Watch the wrappers so we can track when the refs themselves change
@@ -629,6 +709,7 @@ export default {
         try {
           const currentAttentionsRef = attentionsWrapper.value;
           const currentProcessingAttentionsRef = processingAttentionsWrapper.value;
+          const currentTerminatedAttentionsRef = terminatedAttentionsWrapper.value;
           const pendingArray =
             currentAttentionsRef &&
             currentAttentionsRef.value !== undefined &&
@@ -643,15 +724,23 @@ export default {
             Array.isArray(currentProcessingAttentionsRef.value)
               ? currentProcessingAttentionsRef.value
               : [];
-          // Return a string representation for deep comparison (combine both)
+          const terminatedArray =
+            currentTerminatedAttentionsRef &&
+            currentTerminatedAttentionsRef.value !== undefined &&
+            currentTerminatedAttentionsRef.value !== null &&
+            Array.isArray(currentTerminatedAttentionsRef.value)
+              ? currentTerminatedAttentionsRef.value
+              : [];
+          // Return a string representation for deep comparison (combine all three)
           return JSON.stringify({
             pending: pendingArray.map(a => ({ id: a.id, queueId: a.queueId })),
             processing: processingArray.map(a => ({ id: a.id, queueId: a.queueId })),
+            terminated: terminatedArray.map(a => ({ id: a.id, queueId: a.queueId })),
           });
         } catch (error) {
           // Error accessing attentions.value
         }
-        return JSON.stringify({ pending: [], processing: [] });
+        return JSON.stringify({ pending: [], processing: [], terminated: [] });
       },
       async (newValue, oldValue) => {
         // Only process if value actually changed
@@ -659,16 +748,33 @@ export default {
           return;
         }
 
-        // Get the actual arrays from the refs
-        const currentAttentionsRef = attentionsWrapper.value;
-        const currentProcessingAttentionsRef = processingAttentionsWrapper.value;
-        if (!currentAttentionsRef || !currentProcessingAttentionsRef) {
-          initializeQueueStatus();
-          return;
+        // Clear existing timer
+        if (attentionWatcherTimer) {
+          clearTimeout(attentionWatcherTimer);
         }
 
-        // Always call checkQueueStatus - it will handle empty arrays correctly
-        await checkQueueStatus(currentAttentionsRef, currentProcessingAttentionsRef);
+        // Debounce: wait 300ms before processing to batch rapid Firebase updates
+        attentionWatcherTimer = setTimeout(async () => {
+          // Get the actual arrays from the refs
+          const currentAttentionsRef = attentionsWrapper.value;
+          const currentProcessingAttentionsRef = processingAttentionsWrapper.value;
+          const currentTerminatedAttentionsRef = terminatedAttentionsWrapper.value;
+          if (
+            !currentAttentionsRef ||
+            !currentProcessingAttentionsRef ||
+            !currentTerminatedAttentionsRef
+          ) {
+            initializeQueueStatus();
+            return;
+          }
+
+          // Always call checkQueueStatus - it will handle empty arrays correctly
+          await checkQueueStatus(
+            currentAttentionsRef,
+            currentProcessingAttentionsRef,
+            currentTerminatedAttentionsRef
+          );
+        }, 300); // 300ms debounce for Firebase updates
       },
       { immediate: true }
     );
@@ -681,7 +787,41 @@ export default {
       if (processingAttentions && processingAttentions._unsubscribe) {
         processingAttentions._unsubscribe();
       }
+      if (terminatedAttentions && terminatedAttentions._unsubscribe) {
+        terminatedAttentions._unsubscribe();
+      }
+      // Clear attention watcher timer
+      if (attentionWatcherTimer) {
+        clearTimeout(attentionWatcherTimer);
+      }
     });
+
+    // Computed property to sort queues: COLLABORATOR queues first, then SELECT_SERVICE (geral), then others
+    const sortedQueues = computed(() => {
+      if (!state.queues || state.queues.length === 0) return [];
+
+      // Filter active queues only
+      const activeQueues = state.queues.filter(queue => queue && queue.active && queue.id);
+
+      // 1. Collaborator queues (dedicated to this collaborator)
+      const collaboratorQueues = activeQueues.filter(
+        queue => queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator?.id
+      );
+
+      // 2. General queues (SELECT_SERVICE type)
+      const generalQueues = activeQueues.filter(queue => queue.type === 'SELECT_SERVICE');
+
+      // 3. Other queues (not COLLABORATOR and not SELECT_SERVICE)
+      const otherQueues = activeQueues.filter(
+        queue => queue.type !== 'COLLABORATOR' && queue.type !== 'SELECT_SERVICE'
+      );
+
+      return [...collaboratorQueues, ...generalQueues, ...otherQueues];
+    });
+
+    // Helper function to check if a queue is dedicated to the collaborator
+    const isDedicatedQueue = queue =>
+      queue && queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator?.id;
 
     return {
       siteKey,
@@ -700,6 +840,8 @@ export default {
       isActiveModules,
       goBack,
       getQueueMetrics,
+      sortedQueues,
+      isDedicatedQueue,
     };
   },
 };
@@ -735,19 +877,21 @@ export default {
         </div>
         <div id="queues" v-if="isActiveModules() && !loading">
           <div v-if="isActiveCommerce()">
-            <div class="choose-attention mb-4">
+            <div class="choose-attention">
               <span>{{ $t('collaboratorQueuesView.choose') }}</span>
             </div>
-            <div class="queues-grid">
-              <template v-for="queue in state.queues">
+            <div class="queues-rows">
+              <template v-for="queue in sortedQueues">
                 <div
                   v-if="queue && queue.active && queue.id"
                   :key="queue.id"
-                  class="queue-card-modern"
+                  class="queue-row-modern"
                   :class="{
-                    'queue-card-high-priority': getQueueMetrics(queue.id).priority === 'high',
-                    'queue-card-medium-priority': getQueueMetrics(queue.id).priority === 'medium',
-                    'queue-card-low-priority': getQueueMetrics(queue.id).priority === 'low',
+                    'queue-row-dedicated': isDedicatedQueue(queue),
+                    'queue-row-compact': !isDedicatedQueue(queue),
+                    'queue-row-high-priority': getQueueMetrics(queue.id).priority === 'high',
+                    'queue-row-medium-priority': getQueueMetrics(queue.id).priority === 'medium',
+                    'queue-row-low-priority': getQueueMetrics(queue.id).priority === 'low',
                   }"
                 >
                   <div v-if="captchaEnabled === true">
@@ -756,34 +900,34 @@ export default {
                       @verify="validateCaptchaOk"
                       @error="validateCaptchaError"
                     >
-                      <div class="queue-card-content" @click="getQueue(queue)">
-                        <div class="queue-card-header">
-                          <div class="queue-card-icon-wrapper">
+                      <div class="queue-row-content" @click="getQueue(queue)">
+                        <div class="queue-row-header">
+                          <div class="queue-row-icon-wrapper">
                             <i
                               v-if="queue.type === 'COLLABORATOR'"
-                              class="bi bi-person-fill queue-card-icon"
+                              class="bi bi-person-fill queue-row-icon"
                             ></i>
-                            <i v-else class="bi bi-people-fill queue-card-icon"></i>
+                            <i v-else class="bi bi-people-fill queue-row-icon"></i>
                           </div>
-                          <div class="queue-card-title-section">
-                            <h5 class="queue-card-title">{{ queue.name }}</h5>
+                          <div class="queue-row-title-section">
+                            <h5 class="queue-row-title">{{ queue.name }}</h5>
                             <span
                               v-if="queue.type === 'COLLABORATOR'"
-                              class="queue-card-badge queue-card-badge-collaborator"
+                              class="queue-row-badge queue-row-badge-collaborator"
                             >
                               <i class="bi bi-person-badge"></i>
                               {{ $t('collaboratorQueuesView.dedicated') }}
                             </span>
                           </div>
                         </div>
-                        <div class="queue-card-metrics">
+                        <div class="queue-row-metrics">
                           <div class="queue-metric-item">
                             <div class="queue-metric-icon queue-metric-pending">
                               <i class="bi bi-clock-history"></i>
                             </div>
                             <div class="queue-metric-content">
                               <div class="queue-metric-label">
-                                {{ $t('collaboratorQueuesView.pending') }}
+                                Checkin
                                 <span
                                   class="spy-live-indicator"
                                   title="Actualización en tiempo real"
@@ -801,44 +945,26 @@ export default {
                               <i class="bi bi-play-circle-fill"></i>
                             </div>
                             <div class="queue-metric-content">
-                              <div class="queue-metric-label">
-                                {{ $t('collaboratorQueuesView.processing') }}
-                              </div>
+                              <div class="queue-metric-label">En Atendimento</div>
                               <div class="queue-metric-value queue-metric-value-processing">
                                 {{ getQueueMetrics(queue.id).processing }}
                               </div>
                             </div>
                           </div>
-                          <!-- Average Attention Duration - Always shown -->
-                          <div class="queue-metric-item queue-metric-estimated">
-                            <div class="queue-metric-icon queue-metric-time">
-                              <i class="bi bi-clock-history"></i>
+                          <div class="queue-metric-item">
+                            <div class="queue-metric-icon queue-metric-terminated">
+                              <i class="bi bi-check-circle-fill"></i>
                             </div>
                             <div class="queue-metric-content">
-                              <div class="queue-metric-label">
-                                Tempo Médio
-                                <Popper
-                                  v-if="state.queueAverageDurationsIntelligent[queue.id]"
-                                  :class="'dark'"
-                                  arrow
-                                  disable-click-away
-                                  :content="
-                                    $t('collaboratorQueuesView.intelligentEstimationTooltip')
-                                  "
-                                >
-                                  <span class="ai-badge ms-1">
-                                    <i class="bi bi-stars"></i>
-                                  </span>
-                                </Popper>
-                              </div>
-                              <div class="queue-metric-value queue-metric-value-time">
-                                {{ state.queueAverageDurations[queue.id] || 'N/A' }}
+                              <div class="queue-metric-label">Checkout</div>
+                              <div class="queue-metric-value queue-metric-value-terminated">
+                                {{ getQueueMetrics(queue.id).terminated }}
                               </div>
                             </div>
                           </div>
                         </div>
-                        <div class="queue-card-footer">
-                          <div class="queue-card-status">
+                        <div class="queue-row-footer">
+                          <div class="queue-row-status">
                             <span
                               :class="`queue-status-indicator queue-status-${
                                 queue.active ? 'active' : 'inactive'
@@ -850,42 +976,40 @@ export default {
                                 : $t('collaboratorQueuesView.inactive')
                             }}</span>
                           </div>
-                          <div class="queue-card-action">
+                          <div class="queue-row-action">
                             <i class="bi bi-arrow-right-circle"></i>
                           </div>
                         </div>
                       </div>
                     </VueRecaptcha>
                   </div>
-                  <div v-else class="queue-card-content" @click="getQueue(queue)">
-                    <div class="queue-card-header">
-                      <div class="queue-card-icon-wrapper">
+                  <div v-else class="queue-row-content" @click="getQueue(queue)">
+                    <div class="queue-row-header">
+                      <div class="queue-row-icon-wrapper">
                         <i
                           v-if="queue.type === 'COLLABORATOR'"
-                          class="bi bi-person-fill queue-card-icon"
+                          class="bi bi-person-fill queue-row-icon"
                         ></i>
-                        <i v-else class="bi bi-people-fill queue-card-icon"></i>
+                        <i v-else class="bi bi-people-fill queue-row-icon"></i>
                       </div>
-                      <div class="queue-card-title-section">
-                        <h5 class="queue-card-title">{{ queue.name }}</h5>
+                      <div class="queue-row-title-section">
+                        <h5 class="queue-row-title">{{ queue.name }}</h5>
                         <span
                           v-if="queue.type === 'COLLABORATOR'"
-                          class="queue-card-badge queue-card-badge-collaborator"
+                          class="queue-row-badge queue-row-badge-collaborator"
                         >
                           <i class="bi bi-person-badge"></i>
                           {{ $t('collaboratorQueuesView.dedicated') }}
                         </span>
                       </div>
                     </div>
-                    <div class="queue-card-metrics">
+                    <div class="queue-row-metrics">
                       <div class="queue-metric-item">
                         <div class="queue-metric-icon queue-metric-pending">
                           <i class="bi bi-clock-history"></i>
                         </div>
                         <div class="queue-metric-content">
-                          <div class="queue-metric-label">
-                            {{ $t('collaboratorQueuesView.pending') }}
-                          </div>
+                          <div class="queue-metric-label">Checkin</div>
                           <div class="queue-metric-value queue-metric-value-pending">
                             {{ getQueueMetrics(queue.id).pending }}
                           </div>
@@ -896,17 +1020,26 @@ export default {
                           <i class="bi bi-play-circle-fill"></i>
                         </div>
                         <div class="queue-metric-content">
-                          <div class="queue-metric-label">
-                            {{ $t('collaboratorQueuesView.processing') }}
-                          </div>
+                          <div class="queue-metric-label">En Atendimento</div>
                           <div class="queue-metric-value queue-metric-value-processing">
                             {{ getQueueMetrics(queue.id).processing }}
                           </div>
                         </div>
                       </div>
+                      <div class="queue-metric-item">
+                        <div class="queue-metric-icon queue-metric-terminated">
+                          <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <div class="queue-metric-content">
+                          <div class="queue-metric-label">Checkout</div>
+                          <div class="queue-metric-value queue-metric-value-terminated">
+                            {{ getQueueMetrics(queue.id).terminated }}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div class="queue-card-footer">
-                      <div class="queue-card-status">
+                    <div class="queue-row-footer">
+                      <div class="queue-row-status">
                         <span
                           :class="`queue-status-indicator queue-status-${
                             queue.active ? 'active' : 'inactive'
@@ -918,7 +1051,7 @@ export default {
                             : $t('collaboratorQueuesView.inactive')
                         }}</span>
                       </div>
-                      <div class="queue-card-action">
+                      <div class="queue-row-action">
                         <i class="bi bi-arrow-right-circle"></i>
                       </div>
                     </div>
@@ -982,19 +1115,21 @@ export default {
         </div>
         <div id="queues" v-if="isActiveModules() && !loading">
           <div v-if="isActiveCommerce()">
-            <div class="choose-attention mb-4">
+            <div class="choose-attention">
               <span>{{ $t('collaboratorQueuesView.choose') }}</span>
             </div>
-            <div class="queues-grid">
-              <template v-for="queue in state.queues">
+            <div class="queues-rows">
+              <template v-for="queue in sortedQueues">
                 <div
                   v-if="queue && queue.active && queue.id"
                   :key="queue.id"
-                  class="queue-card-modern"
+                  class="queue-row-modern"
                   :class="{
-                    'queue-card-high-priority': getQueueMetrics(queue.id).priority === 'high',
-                    'queue-card-medium-priority': getQueueMetrics(queue.id).priority === 'medium',
-                    'queue-card-low-priority': getQueueMetrics(queue.id).priority === 'low',
+                    'queue-row-dedicated': isDedicatedQueue(queue),
+                    'queue-row-compact': !isDedicatedQueue(queue),
+                    'queue-row-high-priority': getQueueMetrics(queue.id).priority === 'high',
+                    'queue-row-medium-priority': getQueueMetrics(queue.id).priority === 'medium',
+                    'queue-row-low-priority': getQueueMetrics(queue.id).priority === 'low',
                   }"
                 >
                   <div v-if="captchaEnabled === true">
@@ -1003,34 +1138,34 @@ export default {
                       @verify="validateCaptchaOk"
                       @error="validateCaptchaError"
                     >
-                      <div class="queue-card-content" @click="getQueue(queue)">
-                        <div class="queue-card-header">
-                          <div class="queue-card-icon-wrapper">
+                      <div class="queue-row-content" @click="getQueue(queue)">
+                        <div class="queue-row-header">
+                          <div class="queue-row-icon-wrapper">
                             <i
                               v-if="queue.type === 'COLLABORATOR'"
-                              class="bi bi-person-fill queue-card-icon"
+                              class="bi bi-person-fill queue-row-icon"
                             ></i>
-                            <i v-else class="bi bi-people-fill queue-card-icon"></i>
+                            <i v-else class="bi bi-people-fill queue-row-icon"></i>
                           </div>
-                          <div class="queue-card-title-section">
-                            <h5 class="queue-card-title">{{ queue.name }}</h5>
+                          <div class="queue-row-title-section">
+                            <h5 class="queue-row-title">{{ queue.name }}</h5>
                             <span
                               v-if="queue.type === 'COLLABORATOR'"
-                              class="queue-card-badge queue-card-badge-collaborator"
+                              class="queue-row-badge queue-row-badge-collaborator"
                             >
                               <i class="bi bi-person-badge"></i>
                               {{ $t('collaboratorQueuesView.dedicated') }}
                             </span>
                           </div>
                         </div>
-                        <div class="queue-card-metrics">
+                        <div class="queue-row-metrics">
                           <div class="queue-metric-item">
                             <div class="queue-metric-icon queue-metric-pending">
                               <i class="bi bi-clock-history"></i>
                             </div>
                             <div class="queue-metric-content">
                               <div class="queue-metric-label">
-                                {{ $t('collaboratorQueuesView.pending') }}
+                                Checkin
                                 <span
                                   class="spy-live-indicator"
                                   title="Actualización en tiempo real"
@@ -1048,44 +1183,26 @@ export default {
                               <i class="bi bi-play-circle-fill"></i>
                             </div>
                             <div class="queue-metric-content">
-                              <div class="queue-metric-label">
-                                {{ $t('collaboratorQueuesView.processing') }}
-                              </div>
+                              <div class="queue-metric-label">En Atendimento</div>
                               <div class="queue-metric-value queue-metric-value-processing">
                                 {{ getQueueMetrics(queue.id).processing }}
                               </div>
                             </div>
                           </div>
-                          <!-- Average Attention Duration - Always shown -->
-                          <div class="queue-metric-item queue-metric-estimated">
-                            <div class="queue-metric-icon queue-metric-time">
-                              <i class="bi bi-clock-history"></i>
+                          <div class="queue-metric-item">
+                            <div class="queue-metric-icon queue-metric-terminated">
+                              <i class="bi bi-check-circle-fill"></i>
                             </div>
                             <div class="queue-metric-content">
-                              <div class="queue-metric-label">
-                                Tempo Médio
-                                <Popper
-                                  v-if="state.queueAverageDurationsIntelligent[queue.id]"
-                                  :class="'dark'"
-                                  arrow
-                                  disable-click-away
-                                  :content="
-                                    $t('collaboratorQueuesView.intelligentEstimationTooltip')
-                                  "
-                                >
-                                  <span class="ai-badge ms-1">
-                                    <i class="bi bi-stars"></i>
-                                  </span>
-                                </Popper>
-                              </div>
-                              <div class="queue-metric-value queue-metric-value-time">
-                                {{ state.queueAverageDurations[queue.id] || 'N/A' }}
+                              <div class="queue-metric-label">Checkout</div>
+                              <div class="queue-metric-value queue-metric-value-terminated">
+                                {{ getQueueMetrics(queue.id).terminated }}
                               </div>
                             </div>
                           </div>
                         </div>
-                        <div class="queue-card-footer">
-                          <div class="queue-card-status">
+                        <div class="queue-row-footer">
+                          <div class="queue-row-status">
                             <span
                               :class="`queue-status-indicator queue-status-${
                                 queue.active ? 'active' : 'inactive'
@@ -1097,42 +1214,40 @@ export default {
                                 : $t('collaboratorQueuesView.inactive')
                             }}</span>
                           </div>
-                          <div class="queue-card-action">
+                          <div class="queue-row-action">
                             <i class="bi bi-arrow-right-circle"></i>
                           </div>
                         </div>
                       </div>
                     </VueRecaptcha>
                   </div>
-                  <div v-else class="queue-card-content" @click="getQueue(queue)">
-                    <div class="queue-card-header">
-                      <div class="queue-card-icon-wrapper">
+                  <div v-else class="queue-row-content" @click="getQueue(queue)">
+                    <div class="queue-row-header">
+                      <div class="queue-row-icon-wrapper">
                         <i
                           v-if="queue.type === 'COLLABORATOR'"
-                          class="bi bi-person-fill queue-card-icon"
+                          class="bi bi-person-fill queue-row-icon"
                         ></i>
-                        <i v-else class="bi bi-people-fill queue-card-icon"></i>
+                        <i v-else class="bi bi-people-fill queue-row-icon"></i>
                       </div>
-                      <div class="queue-card-title-section">
-                        <h5 class="queue-card-title">{{ queue.name }}</h5>
+                      <div class="queue-row-title-section">
+                        <h5 class="queue-row-title">{{ queue.name }}</h5>
                         <span
                           v-if="queue.type === 'COLLABORATOR'"
-                          class="queue-card-badge queue-card-badge-collaborator"
+                          class="queue-row-badge queue-row-badge-collaborator"
                         >
                           <i class="bi bi-person-badge"></i>
                           {{ $t('collaboratorQueuesView.dedicated') }}
                         </span>
                       </div>
                     </div>
-                    <div class="queue-card-metrics">
+                    <div class="queue-row-metrics">
                       <div class="queue-metric-item">
                         <div class="queue-metric-icon queue-metric-pending">
                           <i class="bi bi-clock-history"></i>
                         </div>
                         <div class="queue-metric-content">
-                          <div class="queue-metric-label">
-                            {{ $t('collaboratorQueuesView.pending') }}
-                          </div>
+                          <div class="queue-metric-label">Checkin</div>
                           <div class="queue-metric-value queue-metric-value-pending">
                             {{ getQueueMetrics(queue.id).pending }}
                           </div>
@@ -1143,17 +1258,26 @@ export default {
                           <i class="bi bi-play-circle-fill"></i>
                         </div>
                         <div class="queue-metric-content">
-                          <div class="queue-metric-label">
-                            {{ $t('collaboratorQueuesView.processing') }}
-                          </div>
+                          <div class="queue-metric-label">En Atendimento</div>
                           <div class="queue-metric-value queue-metric-value-processing">
                             {{ getQueueMetrics(queue.id).processing }}
                           </div>
                         </div>
                       </div>
+                      <div class="queue-metric-item">
+                        <div class="queue-metric-icon queue-metric-terminated">
+                          <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <div class="queue-metric-content">
+                          <div class="queue-metric-label">Checkout</div>
+                          <div class="queue-metric-value queue-metric-value-terminated">
+                            {{ getQueueMetrics(queue.id).terminated }}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div class="queue-card-footer">
-                      <div class="queue-card-status">
+                    <div class="queue-row-footer">
+                      <div class="queue-row-status">
                         <span
                           :class="`queue-status-indicator queue-status-${
                             queue.active ? 'active' : 'inactive'
@@ -1165,7 +1289,7 @@ export default {
                             : $t('collaboratorQueuesView.inactive')
                         }}</span>
                       </div>
-                      <div class="queue-card-action">
+                      <div class="queue-row-action">
                         <i class="bi bi-arrow-right-circle"></i>
                       </div>
                     </div>
@@ -1187,11 +1311,15 @@ export default {
 </template>
 <style scoped>
 .choose-attention {
+  padding-top: 1rem;
   padding-bottom: 1rem;
+  margin-top: 0;
+  margin-bottom: 0;
   font-size: 1.1rem;
   font-weight: 700;
   color: rgba(0, 0, 0, 0.85);
   letter-spacing: 0.01em;
+  text-align: center;
 }
 
 .select {
@@ -1203,20 +1331,20 @@ export default {
   font-size: 0.7rem;
 }
 
-/* Modern Queue Cards Grid */
-.queues-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+/* Modern Queue Rows Layout */
+.queues-rows {
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 1rem;
   padding: 0;
 }
 
-/* Queue Card Modern Design */
-.queue-card-modern {
+/* Queue Row Modern Design */
+.queue-row-modern {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 251, 252, 0.98) 100%);
   border-radius: 14px;
-  padding: 0.875rem 1rem;
+  padding: 1rem 1.25rem;
   border: 2px solid rgba(169, 169, 169, 0.12);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1226,7 +1354,56 @@ export default {
   backdrop-filter: blur(10px);
 }
 
-.queue-card-modern::before {
+/* Dedicated queue (collaborator's queue) - keeps full padding */
+.queue-row-modern.queue-row-dedicated {
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Compact queue (other queues) - very reduced vertical padding */
+.queue-row-modern.queue-row-compact {
+  padding: 0.25rem 1.25rem;
+}
+
+/* Reduce internal element sizes for compact queues */
+.queue-row-modern.queue-row-compact .queue-row-icon-wrapper {
+  width: 36px;
+  height: 36px;
+}
+
+.queue-row-modern.queue-row-compact .queue-row-icon {
+  font-size: 1.2rem;
+}
+
+.queue-row-modern.queue-row-compact .queue-row-title {
+  font-size: 0.95rem;
+  margin: 0 0 0.2rem 0;
+}
+
+.queue-row-modern.queue-row-compact .queue-row-metrics {
+  padding: 0.4rem 0.75rem;
+}
+
+.queue-row-modern.queue-row-compact .queue-metric-item {
+  padding: 0.35rem 0.6rem;
+  min-width: 110px;
+}
+
+.queue-row-modern.queue-row-compact .queue-metric-icon {
+  width: 28px;
+  height: 28px;
+  font-size: 0.9rem;
+}
+
+.queue-row-modern.queue-row-compact .queue-metric-value {
+  font-size: 1rem;
+}
+
+.queue-row-modern.queue-row-compact .queue-metric-label {
+  font-size: 0.45rem;
+}
+
+.queue-row-modern::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1238,7 +1415,7 @@ export default {
   z-index: 1;
 }
 
-.queue-card-modern::after {
+.queue-row-modern::after {
   content: '';
   position: absolute;
   top: -50%;
@@ -1250,51 +1427,55 @@ export default {
   transition: opacity 0.4s ease;
 }
 
-.queue-card-modern:hover {
-  transform: translateY(-6px) scale(1.02);
+.queue-row-modern:hover {
+  transform: translateX(6px) scale(1.01);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 0 6px 16px rgba(0, 0, 0, 0.1);
   border-color: rgba(0, 74, 173, 0.3);
 }
 
-.queue-card-modern:hover::after {
+.queue-row-modern:hover::after {
   opacity: 1;
 }
 
-.queue-card-modern.queue-card-high-priority {
+.queue-row-modern.queue-row-high-priority {
   --queue-priority-color: #dc3545;
   border-left: 5px solid #dc3545;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 245, 245, 0.98) 100%);
 }
 
-.queue-card-modern.queue-card-medium-priority {
+.queue-row-modern.queue-row-medium-priority {
   --queue-priority-color: #ffc107;
   border-left: 5px solid #ffc107;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 251, 245, 0.98) 100%);
 }
 
-.queue-card-modern.queue-card-low-priority {
+.queue-row-modern.queue-row-low-priority {
   --queue-priority-color: #28a745;
   border-left: 5px solid #28a745;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 255, 248, 0.98) 100%);
 }
 
-.queue-card-content {
+.queue-row-content {
   display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
   position: relative;
   z-index: 2;
+  cursor: pointer;
 }
 
-.queue-card-header {
+.queue-row-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.75rem;
+  flex: 0 0 auto;
+  min-width: 200px;
 }
 
-.queue-card-icon-wrapper {
-  width: 40px;
-  height: 40px;
+.queue-row-icon-wrapper {
+  width: 48px;
+  height: 48px;
   border-radius: 10px;
   background: linear-gradient(135deg, rgba(0, 74, 173, 0.15) 0%, rgba(0, 194, 203, 0.15) 100%);
   display: flex;
@@ -1305,31 +1486,31 @@ export default {
   transition: all 0.3s ease;
 }
 
-.queue-card-modern:hover .queue-card-icon-wrapper {
+.queue-row-modern:hover .queue-row-icon-wrapper {
   transform: scale(1.1) rotate(5deg);
   box-shadow: 0 6px 20px rgba(0, 74, 173, 0.25);
 }
 
-.queue-card-icon {
-  font-size: 1.25rem;
+.queue-row-icon {
+  font-size: 1.5rem;
   color: #004aad;
   transition: all 0.3s ease;
 }
 
-.queue-card-modern:hover .queue-card-icon {
+.queue-row-modern:hover .queue-row-icon {
   color: #00c2cb;
 }
 
-.queue-card-title-section {
+.queue-row-title-section {
   flex: 1;
   min-width: 0;
 }
 
-.queue-card-title {
-  font-size: 1rem;
+.queue-row-title {
+  font-size: 1.1rem;
   font-weight: 800;
   color: rgba(0, 0, 0, 0.9);
-  margin: 0 0 0.35rem 0;
+  margin: 0 0 0.25rem 0;
   line-height: 1.3;
   letter-spacing: -0.02em;
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 74, 173, 0.8) 100%);
@@ -1338,7 +1519,7 @@ export default {
   background-clip: text;
 }
 
-.queue-card-badge {
+.queue-row-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -1351,39 +1532,35 @@ export default {
   box-shadow: 0 1px 3px rgba(0, 74, 173, 0.12);
 }
 
-.queue-card-badge-collaborator {
+.queue-row-badge-collaborator {
   background: linear-gradient(135deg, rgba(0, 74, 173, 0.15) 0%, rgba(0, 194, 203, 0.15) 100%);
   color: #004aad;
   border: 1px solid rgba(0, 74, 173, 0.2);
 }
 
-.queue-card-metrics {
+.queue-row-metrics {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.6rem;
-  border-top: 1px solid rgba(169, 169, 169, 0.1);
-  border-bottom: 1px solid rgba(169, 169, 169, 0.1);
+  gap: 1.5rem;
+  padding: 0.6rem 1rem;
+  border-left: 1px solid rgba(169, 169, 169, 0.1);
+  border-right: 1px solid rgba(169, 169, 169, 0.1);
   background: linear-gradient(135deg, rgba(248, 249, 250, 0.5) 0%, rgba(255, 255, 255, 0.5) 100%);
   border-radius: 8px;
-  margin: 0.15rem 0;
+  flex: 1 1 auto;
+  justify-content: center;
 }
 
 .queue-metric-item {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.3rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 7px;
   transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.6);
-  flex: 1 1 calc(50% - 0.25rem);
-  min-width: 0;
-}
-
-.queue-metric-item.queue-metric-estimated {
-  flex: 1 1 100%;
+  flex: 0 0 auto;
+  min-width: 120px;
 }
 
 .queue-metric-item:hover {
@@ -1420,6 +1597,12 @@ export default {
   background: linear-gradient(135deg, rgba(0, 194, 203, 0.2) 0%, rgba(0, 123, 255, 0.2) 100%);
   color: #00c2cb;
   border: 2px solid rgba(0, 194, 203, 0.3);
+}
+
+.queue-metric-terminated {
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(32, 201, 151, 0.2) 100%);
+  color: #28a745;
+  border: 2px solid rgba(40, 167, 69, 0.3);
 }
 
 .queue-metric-time {
@@ -1499,6 +1682,14 @@ export default {
   background-clip: text;
 }
 
+.queue-metric-value-terminated {
+  color: #28a745;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .queue-metric-value-time {
   color: #f9c322;
   background: linear-gradient(135deg, #f9c322 0%, #ff9800 100%);
@@ -1507,16 +1698,17 @@ export default {
   background-clip: text;
 }
 
-.queue-card-footer {
+.queue-row-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 0.4rem;
-  border-top: 1px solid rgba(169, 169, 169, 0.1);
-  margin-top: 0.1rem;
+  flex: 0 0 auto;
+  min-width: 180px;
+  padding-left: 1rem;
+  border-left: 1px solid rgba(169, 169, 169, 0.1);
 }
 
-.queue-card-status {
+.queue-row-status {
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -1560,20 +1752,20 @@ export default {
   letter-spacing: 0.03em;
 }
 
-.queue-card-action {
+.queue-row-action {
   font-size: 1.25rem;
   color: #004aad;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(0, 74, 173, 0.1) 0%, rgba(0, 194, 203, 0.1) 100%);
 }
 
-.queue-card-modern:hover .queue-card-action {
+.queue-row-modern:hover .queue-row-action {
   transform: translateX(6px) scale(1.1);
   color: #00c2cb;
   background: linear-gradient(135deg, rgba(0, 74, 173, 0.2) 0%, rgba(0, 194, 203, 0.2) 100%);
@@ -1614,39 +1806,165 @@ export default {
   }
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments - Mobile: Keep row style but more compact */
 @media (max-width: 768px) {
-  .queues-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .queues-rows {
+    gap: 0.5rem;
   }
 
-  .queue-card-modern {
-    padding: 0.875rem 1rem;
-    border-radius: 14px;
+  .queue-row-modern {
+    padding: 0.5rem 0.75rem;
+    border-radius: 12px;
   }
 
-  .queue-card-icon-wrapper {
-    width: 40px;
-    height: 40px;
+  .queue-row-modern.queue-row-dedicated {
+    padding: 0.75rem 0.75rem;
+    margin-bottom: 0.5rem;
   }
 
-  .queue-card-icon {
-    font-size: 1.25rem;
+  .queue-row-modern.queue-row-compact {
+    padding: 0.2rem 0.75rem;
   }
 
-  .queue-card-title {
+  .queue-row-content {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+  }
+
+  .queue-row-header {
+    min-width: 100%;
+    width: 100%;
+    flex: 0 0 100%;
+    justify-content: center;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .queue-row-title-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .queue-row-icon-wrapper {
+    width: 32px;
+    height: 32px;
+  }
+
+  .queue-row-modern.queue-row-compact .queue-row-icon-wrapper {
+    width: 28px;
+    height: 28px;
+  }
+
+  .queue-row-icon {
     font-size: 1rem;
+  }
+
+  .queue-row-modern.queue-row-compact .queue-row-icon {
+    font-size: 0.9rem;
+  }
+
+  .queue-row-title {
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  .queue-row-modern.queue-row-compact .queue-row-title {
+    font-size: 0.85rem;
+  }
+
+  .queue-row-badge {
+    font-size: 0.5rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .queue-row-metrics {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid rgba(169, 169, 169, 0.1);
+    border-bottom: 1px solid rgba(169, 169, 169, 0.1);
+    width: 100%;
+    flex: 0 0 auto;
+    justify-content: center;
+  }
+
+  .queue-row-modern.queue-row-compact .queue-row-metrics {
+    padding: 0.3rem 0.4rem;
+    gap: 0.4rem;
+  }
+
+  .queue-metric-item {
+    min-width: auto;
+    flex: 0 0 auto;
+    padding: 0.3rem 0.5rem;
+    gap: 0.4rem;
+  }
+
+  .queue-row-modern.queue-row-compact .queue-metric-item {
+    padding: 0.25rem 0.4rem;
+    min-width: 90px;
   }
 
   .queue-metric-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 1rem;
+    width: 24px;
+    height: 24px;
+    font-size: 0.85rem;
+  }
+
+  .queue-row-modern.queue-row-compact .queue-metric-icon {
+    width: 22px;
+    height: 22px;
+    font-size: 0.8rem;
   }
 
   .queue-metric-value {
-    font-size: 1.15rem;
+    font-size: 0.95rem;
+  }
+
+  .queue-row-modern.queue-row-compact .queue-metric-value {
+    font-size: 0.9rem;
+  }
+
+  .queue-metric-label {
+    font-size: 0.4rem;
+  }
+
+  .queue-row-modern.queue-row-compact .queue-metric-label {
+    font-size: 0.38rem;
+  }
+
+  .queue-row-footer {
+    min-width: 100%;
+    width: 100%;
+    flex: 0 0 100%;
+    padding-left: 0;
+    padding-top: 0.5rem;
+    border-left: none;
+    border-top: 1px solid rgba(169, 169, 169, 0.1);
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .queue-row-status {
+    justify-content: center;
+  }
+
+  .queue-status-text {
+    font-size: 0.6rem;
+  }
+
+  .queue-row-action {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
   }
 }
 

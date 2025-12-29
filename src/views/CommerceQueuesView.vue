@@ -1,6 +1,7 @@
 <script>
 import { ref, reactive, onBeforeMount, computed, watch, onUnmounted, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { getCommerceByKeyName } from '../application/services/commerce';
 import { getQueueById, getGroupedQueueByCommerceId } from '../application/services/queue';
 import { getClientById } from '../application/services/client';
@@ -34,6 +35,8 @@ import { Timestamp, query, where, orderBy, onSnapshot } from 'firebase/firestore
 import ClientForm from '../components/domain/ClientForm.vue';
 import QueueForm from '../components/domain/QueueForm.vue';
 import ServiceForm from '../components/domain/ServiceForm.vue';
+import NextAvailableSlot from '../components/bookings/common/NextAvailableSlot.vue';
+import PackageReminderBanner from '../components/common/PackageReminderBanner.vue';
 import { v4 as uuidv4 } from 'uuid';
 import { validateIdNumber } from '../shared/utils/idNumber';
 import { DateModel } from '../shared/utils/date.model';
@@ -50,8 +53,11 @@ export default {
     ClientForm,
     QueueForm,
     ServiceForm,
+    NextAvailableSlot,
+    PackageReminderBanner,
   },
   async setup() {
+    const { t } = useI18n();
     const router = useRouter();
     const route = useRoute();
     const store = globalStore();
@@ -85,6 +91,17 @@ export default {
     const loadingHours = ref(false);
     const loadingService = ref(false);
     const alertError = ref('');
+    const alertErrorMessage = ref('');
+    const packageReminderInfo = ref(null);
+    const loadingPackageReminder = ref(false);
+
+    // Helper function to clear both error states
+    const clearError = () => {
+      alertError.value = '';
+      alertErrorMessage.value = '';
+    };
+    const bookingTimeoutId = ref(null);
+    const isMounted = ref(true);
     const calendar = ref(null);
     const dateMask = ref({
       modelValue: 'YYYY-MM-DD',
@@ -143,9 +160,13 @@ export default {
       queue: {},
       services: [],
       selectedServices: [],
+      selectedProcedureAmount: null, // Selected procedure amount from proceduresList
+      activePackagesForService: [], // Active packages for the selected service
+      loadingActivePackages: false, // Loading state for active packages check
       currentChannel: 'QR',
       newUser: {},
       errorsAdd: [],
+      birthdayError: false,
       phone: '',
       phoneCode: '',
       accept: false,
@@ -174,6 +195,7 @@ export default {
       showReserve: false,
       waitlistCreated: false,
       canBook: false,
+      isQuickSlotSelection: false,
       totalServicesResquested: 0,
       totalDurationRequested: 0,
       amountofBlocksNeeded: 0,
@@ -287,6 +309,11 @@ export default {
     });
 
     onUnmounted(() => {
+      isMounted.value = false;
+      if (bookingTimeoutId.value) {
+        clearTimeout(bookingTimeoutId.value);
+        bookingTimeoutId.value = null;
+      }
       if (unsubscribeBookings) {
         unsubscribeBookings();
       }
@@ -343,20 +370,37 @@ export default {
           state.newUser.healthAgreementId = data.healthAgreementId;
         }
         if (data.phoneCode && data.phone) {
-          state.phone = data.phone.replace(/[\s~`!@#$%^&*(){}[\];:"'<,.>?/\\|_+=-]/g, '');
-          state.phoneCode = data.phoneCode.replace(/[\s~`!@#$%^&*(){}[\];:"'<,.>?/\\|_+=-]/g, '');
-          state.newUser.phone = `${state.phoneCode}${state.phone}`;
+          const cleanedPhone = data.phone.replace(/[\s~`!@#$%^&*(){}[\];:"'<,.>?/\\|_+=-]/g, '');
+          const cleanedPhoneCode = data.phoneCode.replace(
+            /[\s~`!@#$%^&*(){}[\];:"'<,.>?/\\|_+=-]/g,
+            '',
+          );
+
+          // Verificar si el teléfono ya comienza con el código de área
+          if (cleanedPhone.startsWith(cleanedPhoneCode)) {
+            // El teléfono ya tiene el código de área, usarlo directamente
+            state.phone = cleanedPhone.slice(cleanedPhoneCode.length);
+            state.phoneCode = cleanedPhoneCode;
+            state.newUser.phone = cleanedPhone;
+          } else {
+            // El teléfono no tiene el código de área, concatenarlo
+            state.phone = cleanedPhone;
+            state.phoneCode = cleanedPhoneCode;
+            state.newUser.phone = `${cleanedPhoneCode}${cleanedPhone}`;
+          }
         } else if (data.phone) {
-          state.phoneCode = data.phone
-            .replace(/[\s~`!@#$%^&*(){}[\];:"'<,.>?/\\|_+=-]/g, '')
-            .slice(0, 2);
-          state.phone = data.phone
-            .replace(/[\s~`!@#$%^&*(){}[\];:"'<,.>?/\\|_+=-]/g, '')
-            .slice(2, data.phone.length);
-          state.newUser.phone = `${state.phoneCode}${state.phone}`;
+          const cleanedPhone = data.phone.replace(/[\s~`!@#$%^&*(){}[\];:"'<,.>?/\\|_+=-]/g, '');
+          // Extraer código de área (primeros 2 dígitos) y el resto del número
+          state.phoneCode = cleanedPhone.slice(0, 2);
+          state.phone = cleanedPhone.slice(2);
+          state.newUser.phone = cleanedPhone;
         }
         if (data.accept !== undefined) {
           state.accept = data.accept;
+        }
+        // Handle validation error states
+        if (data.birthdayError !== undefined) {
+          state.birthdayError = data.birthdayError;
         }
       }
     };
@@ -393,6 +437,13 @@ export default {
 
     const receiveSelectedServices = async services => {
       state.selectedServices = services;
+
+      // Clear selectedProcedureAmount when services change (user might select different service)
+      state.selectedProcedureAmount = null;
+
+      // Check for active packages when service is selected
+      await checkActivePackagesForService();
+
       state.totalDurationRequested = state.selectedServices.reduce(
         (acc, service) =>
           acc + (service.serviceInfo.blockTime || service.serviceInfo.estimatedTime),
@@ -603,7 +654,13 @@ export default {
               if (state.phoneCode === 'xx') {
                 state.phoneCode = '';
               }
-              user.phone = state.phoneCode + state.phone.replace(/^0+/, '');
+              // Si state.newUser.phone ya tiene el teléfono completo, usarlo directamente
+              // De lo contrario, concatenar phoneCode + phone
+              if (state.newUser.phone && state.newUser.phone.length > 0) {
+                user.phone = state.newUser.phone;
+              } else {
+                user.phone = state.phoneCode + state.phone.replace(/^0+/, '');
+              }
             }
             if (!state.phone || state.phone.length === 0) {
               state.errorsAdd.push('commerceQueuesView.validate.phone');
@@ -721,15 +778,14 @@ export default {
         return undefined;
       }
       // Convert block to plain object to avoid Firestore serialization issues
-      if (block.blockNumbers && block.blocks) {
-        // Multiple blocks case
+      // Backend validation rejects nested arrays, so we only send blockNumbers for multiple blocks
+      if (block.blockNumbers && block.blockNumbers.length > 0) {
+        // Multiple blocks case - only send blockNumbers, not blocks array
         return {
           blockNumbers: block.blockNumbers,
-          blocks: block.blocks.map(b => ({
-            number: b.number,
-            hourFrom: b.hourFrom,
-            hourTo: b.hourTo,
-          })),
+          number: block.number || block.blockNumbers[0],
+          hourFrom: block.hourFrom,
+          hourTo: block.hourTo,
         };
       } else if (block.number) {
         // Single block case
@@ -759,6 +815,11 @@ export default {
               acceptTermsAndConditions: state.accept,
             };
           }
+          // Validate queueId before making the request
+          if (!state.queue || !state.queue.id || typeof state.queue.id !== 'string') {
+            throw new Error(t('commerceQueuesView.validate.queueRequiredAttention'));
+          }
+
           let body = {
             queueId: state.queue.id,
             channel: state.currentChannel,
@@ -772,17 +833,42 @@ export default {
           }
           if (state.selectedServices && state.selectedServices.length > 0) {
             const servicesId = state.selectedServices.map(serv => serv.id);
-            const servicesDetails = state.selectedServices.map(serv => ({
-              id: serv.id,
-              name: serv.name,
-              tag: serv.tag,
-              procedures: serv.serviceInfo.procedures || 1,
-            }));
+            const servicesDetails = state.selectedServices.map(serv => {
+              // Use selectedProcedureAmount if available, otherwise fallback to procedures or proceduresList
+              let proceduresValue = serv.serviceInfo?.procedures || 1;
+              if (state.selectedProcedureAmount) {
+                proceduresValue = state.selectedProcedureAmount;
+              } else if (
+                serv.serviceInfo?.proceduresList &&
+                serv.serviceInfo.proceduresList.trim()
+              ) {
+                // If proceduresList exists but no amount selected, use first value from list
+                const proceduresList = serv.serviceInfo.proceduresList
+                  .trim()
+                  .split(',')
+                  .map(p => parseInt(p.trim(), 10))
+                  .filter(p => !isNaN(p) && p > 0);
+                if (proceduresList.length > 0) {
+                  proceduresValue = proceduresList[0];
+                }
+              }
+              return {
+                id: serv.id,
+                name: serv.name,
+                tag: serv.tag,
+                procedures: proceduresValue,
+              };
+            });
             body = {
               ...body,
               servicesId,
               servicesDetails,
             };
+
+            // Add selectedProcedureAmount as a separate field for backend processing
+            if (state.selectedProcedureAmount) {
+              body.selectedProcedureAmount = state.selectedProcedureAmount;
+            }
           }
           // Add telemedicine config if enabled for walkin queues
           if (state.isTelemedicine && state.telemedicineConfig) {
@@ -839,7 +925,20 @@ export default {
         loadingService.value = false;
       } catch (error) {
         loadingService.value = false;
-        alertError.value = error.response.status || 500;
+        const status = error.response?.status || 500;
+        alertError.value = status;
+        // Extract detailed error message from backend
+        const errorMessage = error.response?.data?.message;
+        if (errorMessage) {
+          // Handle array of messages (NestJS validation format)
+          if (Array.isArray(errorMessage)) {
+            alertErrorMessage.value = errorMessage.join('. ');
+          } else {
+            alertErrorMessage.value = errorMessage;
+          }
+        } else {
+          alertErrorMessage.value = '';
+        }
       }
     };
 
@@ -847,7 +946,7 @@ export default {
       const timeout = Math.random() * 1000 + 1000;
       try {
         loadingService.value = true;
-        alertError.value = '';
+        clearError();
         if (validate(state.newUser)) {
           state.currentChannel = store.getCurrentAttentionChannel;
           const bodyUser = buildUserBody(state.newUser);
@@ -861,6 +960,11 @@ export default {
               acceptTermsAndConditions: state.accept,
             };
           }
+          // Validate queueId before making the request
+          if (!state.queue || !state.queue.id || typeof state.queue.id !== 'string') {
+            throw new Error(t('commerceQueuesView.validate.queueRequired'));
+          }
+
           let body = {
             queueId: state.queue.id,
             channel: state.currentChannel,
@@ -872,13 +976,52 @@ export default {
           };
           if (state.selectedServices && state.selectedServices.length > 0) {
             const servicesId = state.selectedServices.map(serv => serv.id);
-            const servicesDetails = state.selectedServices.map(serv => ({
-              id: serv.id,
-              name: serv.name,
-              tag: serv.tag,
-              procedures: serv.serviceInfo.procedures || 1,
-            }));
+            const servicesDetails = state.selectedServices.map(serv => {
+              // Use selectedProcedureAmount if available, otherwise fallback to procedures or proceduresList
+              let proceduresValue = serv.serviceInfo?.procedures || 1;
+              if (state.selectedProcedureAmount) {
+                // Ensure it's a number
+                proceduresValue =
+                  parseInt(state.selectedProcedureAmount, 10) || state.selectedProcedureAmount;
+                console.log(
+                  '📋 Using selectedProcedureAmount for booking:',
+                  proceduresValue,
+                  'from state:',
+                  state.selectedProcedureAmount,
+                );
+              } else if (
+                serv.serviceInfo?.proceduresList &&
+                serv.serviceInfo.proceduresList.trim()
+              ) {
+                // If proceduresList exists but no amount selected, use first value from list
+                const proceduresList = serv.serviceInfo.proceduresList
+                  .trim()
+                  .split(',')
+                  .map(p => parseInt(p.trim(), 10))
+                  .filter(p => !isNaN(p) && p > 0);
+                if (proceduresList.length > 0) {
+                  proceduresValue = proceduresList[0];
+                }
+              }
+              console.log('📋 servicesDetails item:', {
+                id: serv.id,
+                name: serv.name,
+                procedures: proceduresValue,
+              });
+              return {
+                id: serv.id,
+                name: serv.name,
+                tag: serv.tag,
+                procedures: proceduresValue,
+              };
+            });
+            console.log('📋 Final servicesDetails for booking:', servicesDetails);
             body = { ...body, servicesId, servicesDetails };
+
+            // Add selectedProcedureAmount as a separate field for backend processing
+            if (state.selectedProcedureAmount) {
+              body.selectedProcedureAmount = state.selectedProcedureAmount;
+            }
           }
           // Add telemedicine config if enabled - use the booking/attention block date and time
           if (state.isTelemedicine && state.telemedicineConfig) {
@@ -918,33 +1061,131 @@ export default {
             state.queue.id,
             formattedDate(state.date || state.specificCalendarDate)
           );
-          setTimeout(async () => {
+          bookingTimeoutId.value = setTimeout(async () => {
+            // Check if component is still mounted before updating state
+            if (!isMounted.value) {
+              return;
+            }
             try {
               const booking = await createBooking(body);
+              console.log('✅ Booking created successfully:', booking);
+
+              // Check again after async operation
+              if (!isMounted.value) {
+                console.warn('⚠️ Component unmounted, skipping redirect');
+                return;
+              }
+
+              // Validate booking was created successfully
+              if (!booking || !booking.id) {
+                console.error('❌ Booking created but missing ID:', booking);
+                loadingService.value = false;
+                alertError.value = 500;
+                alertErrorMessage.value =
+                  'La reserva se creó pero no se pudo obtener la información. Por favor, verifica tus reservas.';
+                return;
+              }
+
               const user = store.getCurrentUserType;
+              const currentRoute = route.name;
+              console.log('📍 Current route:', currentRoute);
+              console.log('👤 User type:', user);
+              console.log('🎫 Booking ID:', booking.id);
+
+              // Determine which route to use based on current route and user type
+              let targetRoute;
+              const routeParams = { id: booking.id };
+
               if (user && user === 'collaborator') {
-                router.push({
-                  name: 'collaborator-queue-booking',
-                  params: { id: booking.id },
-                });
+                targetRoute = 'collaborator-queue-booking';
               } else {
-                router.push({
-                  name: 'commerce-queue-booking',
-                  params: { id: booking.id },
+                targetRoute = 'commerce-queue-booking';
+              }
+
+              console.log('🚀 Attempting to navigate to:', targetRoute, routeParams);
+
+              try {
+                const result = await router.push({
+                  name: targetRoute,
+                  params: routeParams,
                 });
+                console.log('✅ Navigation successful:', result);
+                loadingService.value = false;
+              } catch (routerError) {
+                console.error('❌ Error redirecting to booking page:', routerError);
+                console.error('Router error details:', {
+                  message: routerError.message,
+                  name: routerError.name,
+                  stack: routerError.stack,
+                });
+
+                // If router push fails, show success message and clear form
+                loadingService.value = false;
+                clearError();
+
+                // Show success message - the booking was created even if redirect failed
+                const bookingNumber = booking.number || booking.id;
+                alertError.value = '';
+                alertErrorMessage.value = `¡Reserva creada exitosamente! Número de reserva: ${bookingNumber}. Puedes acceder a ella desde el menú de reservas.`;
+
+                // Clear the form state
+                state.block = {};
+                state.date = undefined;
+                state.specificCalendarDate = undefined;
+
+                // Try alternative: reload the page with booking info in query
+                // This might work better for public routes
+                setTimeout(() => {
+                  if (isMounted.value) {
+                    console.log('🔄 Attempting page reload with booking info');
+                    window.location.href = `${window.location.pathname}?bookingCreated=${booking.id}`;
+                  }
+                }, 2000);
+              }
+            } catch (error) {
+              // Check again after error
+              if (!isMounted.value) {
+                return;
               }
               loadingService.value = false;
-            } catch (error) {
-              loadingService.value = false;
-              alertError.value = error.response.status || 500;
+              const status = error.response?.status || 500;
+              alertError.value = status;
+              // Extract detailed error message from backend
+              const errorMessage = error.response?.data?.message;
+              if (errorMessage) {
+                // Handle array of messages (NestJS validation format)
+                if (Array.isArray(errorMessage)) {
+                  alertErrorMessage.value = errorMessage.join('. ');
+                } else {
+                  alertErrorMessage.value = errorMessage;
+                }
+              } else {
+                alertErrorMessage.value = '';
+              }
             }
           }, timeout);
         } else {
           loadingService.value = false;
         }
       } catch (error) {
-        loadingService.value = false;
-        alertError.value = error.response.status || 500;
+        // Only update state if component is still mounted
+        if (isMounted.value) {
+          loadingService.value = false;
+          const status = error.response?.status || 500;
+          alertError.value = status;
+          // Extract detailed error message from backend
+          const errorMessage = error.response?.data?.message;
+          if (errorMessage) {
+            // Handle array of messages (NestJS validation format)
+            if (Array.isArray(errorMessage)) {
+              alertErrorMessage.value = errorMessage.join('. ');
+            } else {
+              alertErrorMessage.value = errorMessage;
+            }
+          } else {
+            alertErrorMessage.value = '';
+          }
+        }
       }
     };
 
@@ -994,7 +1235,7 @@ export default {
     const getWaitList = async () => {
       try {
         loadingService.value = true;
-        alertError.value = '';
+        clearError();
         if (validate(state.newUser)) {
           state.currentChannel = store.getCurrentAttentionChannel;
           const bodyUser = buildUserBody(state.newUser);
@@ -1047,11 +1288,26 @@ export default {
       }
     };
 
+    // Helper function to check if today is available
+    const isTodayAvailable = () => {
+      const attentionDays = state.queue.serviceInfo?.attentionDays || [];
+      if (attentionDays.length === 0) return true; // No restriction
+      const today = new Date();
+      let todayDayOfWeek = today.getDay();
+      if (todayDayOfWeek === 0) todayDayOfWeek = 7; // Sunday becomes 7
+      return attentionDays.includes(todayDayOfWeek);
+    };
+
     const getBlocksByDay = () => {
       console.log('🔷 getBlocksByDay() called');
       console.log('🔷 Current date:', state.date);
       console.log('🔷 state.blocksByDay:', state.blocksByDay);
       if (!state.date || state.date === 'TODAY') {
+        // Check if today is available before returning blocks
+        if (!isTodayAvailable()) {
+          console.log('❌ getBlocksByDay - Today is not available, returning empty array');
+          return [];
+        }
         const day = new Date().getDay();
         console.log('🔷 Today is day:', day);
         const blocks = state.blocksByDay[day];
@@ -1113,13 +1369,31 @@ export default {
     };
 
     const bookingsAvailables = () => {
+      console.log('🔍 bookingsAvailables() called');
+      console.log('🔍 state.block:', state.block);
+      console.log(
+        '🔍 state.availableBookingBlocks:',
+        state.availableBookingBlocks?.length || 0,
+        'blocks',
+      );
+      console.log(
+        '🔍 Available block numbers:',
+        state.availableBookingBlocks?.map(b => b.number) || [],
+      );
+
       const blockAvailable = state.availableBookingBlocks.filter(
         block => block.number === state.block.number
       );
+
+      console.log('🔍 Looking for block number:', state.block.number);
+      console.log('🔍 Found matching blocks:', blockAvailable.length);
+
       if (!blockAvailable || blockAvailable.length === 0) {
+        console.log('❌ Block NOT available - setting bookingAvailable = false');
         state.bookingAvailable = false;
         alertError.value = '';
       } else {
+        console.log('✅ Block IS available - setting bookingAvailable = true');
         state.bookingAvailable = true;
       }
     };
@@ -1163,6 +1437,17 @@ export default {
       state.showToday = true;
       state.showReserve = false;
       state.showPickHours = true; // Ensure showPickHours is true so Confirm button appears
+
+      // Check if today is available
+      if (!isTodayAvailable()) {
+        console.log('❌ showToday() - Today is not available');
+        state.availableAttentionBlocks = [];
+        state.availableAttentionSuperBlocks = [];
+        state.availableBookingBlocks = [];
+        state.blocks = [];
+        loadingHours.value = false;
+        return;
+      }
 
       // Ensure hours are loaded when switching to "Hoje"
       const hasBookingBlock = getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT');
@@ -1287,26 +1572,40 @@ export default {
     };
 
     const getAvailableBookingBlocks = bookings => {
+      console.log('📊 getAvailableBookingBlocks() called');
+      console.log('📊 Received bookings:', bookings?.length || 0);
+      console.log('📊 state.blocks:', state.blocks?.length || 0);
+      console.log('📊 Queue type:', state.queue.type);
+      console.log('📊 Current date:', state.date);
+
       state.availableBookingBlocks = [];
       let availableBlocks = [];
       let queueBlocks = [];
       if (state.queue.type !== 'SELECT_SERVICE') {
         if (state.blocks) {
           queueBlocks = state.blocks;
+          console.log('📊 Queue blocks:', queueBlocks?.length || 0);
           if (queueBlocks && queueBlocks.length > 0) {
             let bookingsReserved = [];
             if (bookings && bookings.length > 0) {
-              bookingsReserved = bookings.map(booking => {
-                if (
-                  booking.block &&
-                  booking.block.blockNumbers &&
-                  booking.block.blockNumbers.length > 0
-                ) {
-                  return [...booking.block.blockNumbers];
-                } else {
-                  return booking.block.number;
-                }
-              });
+              bookingsReserved = bookings
+                .map(booking => {
+                  if (
+                    booking.block &&
+                    booking.block.blockNumbers &&
+                    booking.block.blockNumbers.length > 0
+                  ) {
+                    return [...booking.block.blockNumbers];
+                  } else if (
+                    booking.block &&
+                    booking.block.number !== undefined &&
+                    booking.block.number !== null
+                  ) {
+                    return booking.block.number;
+                  }
+                  return null;
+                })
+                .filter(item => item !== null);
               let limit = 0;
               if (
                 state.queue.serviceInfo !== undefined &&
@@ -1320,13 +1619,47 @@ export default {
               const blockedBlocks = [];
               uniqueBlocksReserved.forEach(block => {
                 const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+                // Use >= to match backend validation: alreadyBooked.length >= blockLimit
                 if (times >= limit) {
                   blockedBlocks.push(block);
                 }
               });
               availableBlocks = queueBlocks.filter(block => !blockedBlocks.includes(block.number));
+              console.log('📊 Blocked blocks:', blockedBlocks);
+              console.log('📊 Available blocks after filtering:', availableBlocks?.length || 0);
             } else {
               availableBlocks = queueBlocks;
+              console.log('📊 No bookings - all blocks available:', availableBlocks?.length || 0);
+            }
+
+            // Filter out past hours if the selected date is today
+            const isToday =
+              state.date === 'TODAY' ||
+              (state.date && state.date === new Date().toISOString().slice(0, 10));
+
+            if (isToday) {
+              const now = new Date();
+              const currentHour = now.getHours();
+              const currentMinute = now.getMinutes();
+              const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+              const beforeFiltering = availableBlocks.length;
+              availableBlocks = availableBlocks.filter(block => {
+                if (!block.hourFrom) return false;
+
+                const [blockHour, blockMinute] = block.hourFrom.split(':').map(Number);
+                const blockTimeInMinutes = blockHour * 60 + (blockMinute || 0);
+
+                // Only include blocks that start at least 30 minutes from now
+                return blockTimeInMinutes > currentTimeInMinutes + 30;
+              });
+
+              console.log(
+                '📊 Filtered past hours for today:',
+                beforeFiltering,
+                '→',
+                availableBlocks.length,
+              );
             }
           }
         }
@@ -1359,17 +1692,24 @@ export default {
                 candidateQueues.forEach(queue => {
                   const bookings = state.groupedBookingsByQueue[queue.id];
                   if (bookings && bookings.length > 0) {
-                    const reserved = bookings.map(booking => {
-                      if (
-                        booking.block &&
-                        booking.block.blockNumbers &&
-                        booking.block.blockNumbers.length > 0
-                      ) {
-                        return [...booking.block.blockNumbers];
-                      } else {
-                        return booking.block.number;
-                      }
-                    });
+                    const reserved = bookings
+                      .map(booking => {
+                        if (
+                          booking.block &&
+                          booking.block.blockNumbers &&
+                          booking.block.blockNumbers.length > 0
+                        ) {
+                          return [...booking.block.blockNumbers];
+                        } else if (
+                          booking.block &&
+                          booking.block.number !== undefined &&
+                          booking.block.number !== null
+                        ) {
+                          return booking.block.number;
+                        }
+                        return null;
+                      })
+                      .filter(item => item !== null);
                     bookingsReserved.push(reserved);
                   }
                 });
@@ -1387,6 +1727,7 @@ export default {
                   const blockedBlocks = [];
                   uniqueBlocksReserved.forEach(block => {
                     const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+                    // Use >= to match backend validation: alreadyBooked.length >= blockLimit
                     if (times >= limit) {
                       blockedBlocks.push(block);
                     }
@@ -1403,6 +1744,8 @@ export default {
         }
       }
       state.availableBookingBlocks = availableBlocks;
+      console.log('📊 Final availableBookingBlocks:', state.availableBookingBlocks?.length || 0);
+      console.log('📊 Block numbers:', state.availableBookingBlocks?.map(b => b.number) || []);
     };
 
     const getAvailableAttentionBlocks = async attentions => {
@@ -1412,8 +1755,16 @@ export default {
       console.log('🟣 State blocks:', state.blocks?.length || 0);
       console.log('🟣 State date:', state.date);
 
-      // If blocks are missing and date is TODAY, reload them
+      // If blocks are missing and date is TODAY, reload them (but only if today is available)
       if ((!state.blocks || state.blocks.length === 0) && state.date === 'TODAY') {
+        if (!isTodayAvailable()) {
+          console.log(
+            '❌ getAvailableAttentionBlocks - Today is not available, NOT reloading blocks',
+          );
+          state.availableAttentionBlocks = [];
+          return;
+        }
+
         console.log('🟣 Blocks missing for TODAY, reloading...');
         if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
           console.log('🟣 blocksByDay is empty, loading...');
@@ -1471,7 +1822,7 @@ export default {
               const blockedBlocks = [];
               uniqueBlocksReserved.forEach(block => {
                 const times = totalBlocksReserved.filter(reserved => reserved === block).length;
-                if (times >= limit) {
+                if (times > limit) {
                   blockedBlocks.push(block);
                 }
               });
@@ -1551,6 +1902,7 @@ export default {
                   const blockedBlocks = [];
                   uniqueBlocksReserved.forEach(block => {
                     const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+                    // Use >= to match backend validation: alreadyBooked.length >= blockLimit
                     if (times >= limit) {
                       blockedBlocks.push(block);
                     }
@@ -1824,15 +2176,24 @@ export default {
           const bookings = bookingsGroupedByDate[date] || [];
           const blocks = state.blocksBySpecificCalendarDate[date] || [];
           const blocksNumbers = blocks.map(block => block.number);
-          const bookingsReserved = bookings.map(
-            booking => booking.block.blockNumbers || booking.block.number
-          );
+          const bookingsReserved = bookings
+            .map(booking => {
+              if (booking.block) {
+                if (booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
+                  return booking.block.blockNumbers;
+                } else if (booking.block.number !== undefined && booking.block.number !== null) {
+                  return booking.block.number;
+                }
+              }
+              return null;
+            })
+            .filter(item => item !== null);
           const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
           const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
           uniqueBlocksReserved.forEach(block => {
             const times = totalBlocksReserved.filter(reserved => reserved === block).length;
             if (
-              times >= limit &&
+              times > limit &&
               blocksNumbers.every(block => totalBlocksReserved.includes(block)) &&
               !forDeletion.includes(date)
             ) {
@@ -1903,6 +2264,148 @@ export default {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    // Handle quick slot selection from NextAvailableSlot component
+    const handleQuickSlotSelection = async slotData => {
+      console.log('🚀 Quick slot selection started:', {
+        date: slotData.date,
+        block: slotData.block,
+        blockNumber: slotData.block?.number,
+        hourFrom: slotData.block?.hourFrom,
+        hourTo: slotData.block?.hourTo,
+      });
+
+      // Check if the selected date is today
+      const today = new Date().toISOString().slice(0, 10);
+      const isToday = slotData.date === today;
+
+      console.log('🚀 Is today?', isToday, 'Selected:', slotData.date, 'Today:', today);
+
+      // Set flag to protect state during quick selection
+      state.isQuickSlotSelection = true;
+
+      if (isToday) {
+        // For today: Set attention mode
+        console.log('🚀 Setting up for ATTENTION (today)');
+        state.date = 'TODAY';
+        state.specificCalendarDate = 'TODAY';
+        state.attentionBlock = slotData.block;
+        state.showToday = true;
+        state.showReserve = false;
+      } else {
+        // For future dates: Set booking mode
+        console.log('🚀 Setting up for BOOKING (future date)');
+        state.date = slotData.date;
+        state.specificCalendarDate = slotData.date;
+        state.block = slotData.block;
+        state.showToday = false;
+        state.showReserve = true;
+      }
+
+      // Load blocks and bookings for the selected date to ensure proper availability calculation
+      try {
+        if (isToday) {
+          // For today: Load blocks for attention mode
+          console.log('🔄 Loading blocks for TODAY (attention mode)');
+          if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
+            state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
+          }
+          state.blocks = getBlocksByDay(); // This will get today's blocks
+          console.log('🔄 Today blocks loaded:', state.blocks?.length || 0);
+        } else {
+          // For future dates: Load blocks for booking mode
+          if (state.specificCalendar) {
+            // For specific calendar, ensure we have the blocks loaded
+            if (!state.blocksBySpecificCalendarDate[slotData.date]) {
+              console.log('🔄 Loading specific calendar blocks for date:', slotData.date);
+              state.blocksBySpecificCalendarDate =
+                await getQueueBlockDetailsBySpecificDayByCommerceId(
+                  state.commerce.id,
+                  state.queue.id
+                );
+            }
+            const loadedBlocks = state.blocksBySpecificCalendarDate[slotData.date] || [];
+            console.log('🔄 Specific calendar blocks loaded:', loadedBlocks.length);
+            state.blocks = loadedBlocks;
+          } else {
+            // For regular calendar, ensure we have the blocks loaded
+            if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
+              console.log('🔄 Loading regular calendar blocks');
+              state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
+            }
+            // Convert date to day of week for regular calendar
+            const selectedDate = new Date(slotData.date + 'T00:00:00');
+            let dayOfWeek = selectedDate.getDay();
+            if (dayOfWeek === 0) dayOfWeek = 7; // Sunday becomes 7
+            const loadedBlocks = state.blocksByDay[dayOfWeek] || [];
+            console.log('🔄 Regular calendar blocks for day', dayOfWeek, ':', loadedBlocks.length);
+            state.blocks = loadedBlocks;
+          }
+        }
+
+        console.log('🔄 Final state.blocks after loading:', state.blocks?.length || 0);
+
+        if (isToday) {
+          // For today: Trigger attention availability calculations
+          console.log('📅 Processing for TODAY (attention mode)');
+
+          // Wait a bit for other watchers to settle, then trigger availability calculations
+          setTimeout(() => {
+            console.log(
+              '🔄 Triggering attentionsAvailables() after quick slot selection (debounced)',
+            );
+            attentionsAvailables();
+            // Clear the protection flag after a longer delay to ensure stability
+            setTimeout(() => {
+              console.log('🔄 Clearing protection flag');
+              state.isQuickSlotSelection = false;
+            }, 500);
+          }, 200);
+        } else {
+          // For future dates: Load bookings
+          console.log('📅 Loading bookings for date:', formattedDate(slotData.date));
+          const { unsubscribe } = await updatedBookings(formattedDate(slotData.date));
+          if (unsubscribeBookings) {
+            unsubscribeBookings();
+          }
+          unsubscribeBookings = unsubscribe;
+
+          // Wait a bit for other watchers to settle, then trigger availability calculations
+          setTimeout(() => {
+            console.log(
+              '🔄 Triggering bookingsAvailables() after quick slot selection (debounced)',
+            );
+            bookingsAvailables();
+            // Clear the protection flag after a longer delay to ensure stability
+            setTimeout(() => {
+              console.log('🔄 Clearing protection flag');
+              state.isQuickSlotSelection = false;
+            }, 500);
+          }, 200);
+        }
+      } catch (error) {
+        console.error('Error loading data for quick slot selection:', error);
+      }
+
+      // Scroll to confirmation area
+      setTimeout(() => {
+        const confirmButton = document.querySelector('.btn-confirm-sticky');
+        if (confirmButton) {
+          confirmButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+    };
+
+    // Handle show manual selection
+    const handleShowManualSelection = () => {
+      // Just scroll to the manual selection area
+      setTimeout(() => {
+        const manualSelection = document.querySelector('#booking .data-card');
+        if (manualSelection) {
+          manualSelection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    };
+
     const showFormStep = () => {
       if (state.showFillForm) {
         return 30;
@@ -1930,6 +2433,115 @@ export default {
       };
     });
 
+    // Check for active packages for the selected service
+    const checkActivePackagesForService = async () => {
+      // Reset state
+      state.activePackagesForService = [];
+      state.loadingActivePackages = true;
+
+      // Only check if we have selected services and a client
+      if (!state.selectedServices || state.selectedServices.length === 0) {
+        state.loadingActivePackages = false;
+        return;
+      }
+
+      const clientId = state.newUser?.clientId || state.newUser?.id;
+      if (!clientId || !state.commerce?.id) {
+        state.loadingActivePackages = false;
+        return;
+      }
+
+      const serviceId = state.selectedServices[0]?.id;
+      if (!serviceId) {
+        state.loadingActivePackages = false;
+        return;
+      }
+
+      try {
+        const { getAvailablePackagesForService } = await import('../application/services/package');
+        const availablePackages = await getAvailablePackagesForService(
+          state.commerce.id,
+          serviceId,
+          clientId
+        );
+
+        if (availablePackages && availablePackages.length > 0) {
+          // Filter for active packages with pending sessions
+          const activePackages = availablePackages.filter(pkg => {
+            const isActive = ['ACTIVE', 'CONFIRMED', 'REQUESTED'].includes(pkg.status);
+            const hasPendingSessions = (pkg.proceduresLeft || 0) > 0;
+            return isActive && hasPendingSessions;
+          });
+
+          state.activePackagesForService = activePackages || [];
+        } else {
+          state.activePackagesForService = [];
+        }
+      } catch (error) {
+        console.error('[CommerceQueuesView] Error checking active packages:', error);
+        state.activePackagesForService = [];
+      } finally {
+        state.loadingActivePackages = false;
+      }
+    };
+
+    // Check if procedure amount selection is needed
+    const needsProcedureAmountSelection = computed(() => {
+      // Only check if we have selected services
+      if (!state.selectedServices || state.selectedServices.length === 0) {
+        return false;
+      }
+
+      // If client has active packages for this service, don't show selector
+      // (the attention/booking will be associated to the existing package)
+      if (state.activePackagesForService && state.activePackagesForService.length > 0) {
+        return false;
+      }
+
+      // Check if any selected service has proceduresList
+      const serviceWithProceduresList = state.selectedServices.find(service => {
+        const proceduresList = service.serviceInfo?.proceduresList;
+        return proceduresList && proceduresList.trim() && proceduresList.trim().length > 0;
+      });
+
+      return !!serviceWithProceduresList;
+    });
+
+    // Get available procedure amounts from proceduresList
+    const availableProcedureAmounts = computed(() => {
+      if (!state.selectedServices || state.selectedServices.length === 0) {
+        return [];
+      }
+
+      // Get the first service with proceduresList (assuming single service selection for packages)
+      const serviceWithProceduresList = state.selectedServices.find(service => {
+        const proceduresList = service.serviceInfo?.proceduresList;
+        return proceduresList && proceduresList.trim() && proceduresList.trim().length > 0;
+      });
+
+      if (!serviceWithProceduresList) {
+        return [];
+      }
+
+      const proceduresList = serviceWithProceduresList.serviceInfo.proceduresList.trim();
+      // Parse comma-separated values and convert to numbers
+      return proceduresList
+        .split(',')
+        .map(item => parseInt(item.trim(), 10))
+        .filter(num => !isNaN(num) && num > 0)
+        .sort((a, b) => a - b);
+    });
+
+    // Check if procedure amount selection is required and completed
+    const isProcedureAmountSelectionValid = computed(() => {
+      // If no procedure selection is needed, it's valid
+      if (!needsProcedureAmountSelection.value) {
+        return true;
+      }
+      // If procedure selection is needed, check if it's selected
+      return !!state.selectedProcedureAmount;
+    });
+
     const changeAttention = computed(() => {
       const { allAttentions } = state;
       return {
@@ -1943,6 +2555,166 @@ export default {
         allBookings,
       };
     });
+
+    // Load package reminder info when services and client are selected
+    const loadPackageReminderInfo = async () => {
+      if (loadingPackageReminder.value || !isMounted.value) return;
+
+      const clientId = state.newUser?.clientId || state.newUser?.id;
+      if (!clientId || !state.commerce?.id) {
+        packageReminderInfo.value = null;
+        return;
+      }
+
+      if (!state.selectedServices || state.selectedServices.length === 0) {
+        packageReminderInfo.value = null;
+        return;
+      }
+
+      const serviceId = state.selectedServices[0]?.id;
+      if (!serviceId) {
+        packageReminderInfo.value = null;
+        return;
+      }
+
+      try {
+        loadingPackageReminder.value = true;
+        const { getAvailablePackagesForService } = await import('../application/services/package');
+        const { getAttentionsDetails } = await import('../application/services/query-stack');
+        const { getBookingsDetails } = await import('../application/services/query-stack');
+
+        const availablePackages = await getAvailablePackagesForService(
+          state.commerce.id,
+          serviceId,
+          clientId
+        );
+
+        if (availablePackages && availablePackages.length > 0) {
+          const activePackage = availablePackages.find(pkg => {
+            const isActive = ['ACTIVE', 'CONFIRMED', 'REQUESTED'].includes(pkg.status);
+            const hasPendingSessions = (pkg.proceduresLeft || 0) > 0;
+            return isActive && hasPendingSessions;
+          });
+
+          if (activePackage) {
+            let pendingAttentions = [];
+            let pendingBookings = [];
+
+            try {
+              const allAttentions = await getAttentionsDetails(
+                state.commerce.id,
+                undefined,
+                undefined,
+                undefined,
+                1,
+                100,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                clientId
+              );
+
+              pendingAttentions = (allAttentions || []).filter(att => {
+                const attPackageId = String(att.packageId || '').trim();
+                const pkgId = String(activePackage.id || '').trim();
+                return (
+                  attPackageId === pkgId &&
+                  attPackageId !== '' &&
+                  (att.status === 'PENDING' || att.status === 'TERMINATED')
+                );
+              });
+
+              const allBookings = await getBookingsDetails(
+                state.commerce.id,
+                null,
+                null,
+                null,
+                1,
+                100,
+                null,
+                null,
+                false,
+                null,
+                null,
+                null,
+                clientId
+              );
+
+              pendingBookings = (allBookings || []).filter(booking => {
+                const bookingPackageId = String(booking.packageId || '').trim();
+                const pkgId = String(activePackage.id || '').trim();
+                return (
+                  bookingPackageId === pkgId &&
+                  bookingPackageId !== '' &&
+                  booking.status === 'PENDING'
+                );
+              });
+            } catch (error) {
+              console.error('Error loading package attentions/bookings:', error);
+            }
+
+            const proceduresUsed = activePackage.proceduresUsed || 0;
+            const currentSessionNumber =
+              proceduresUsed + pendingAttentions.length + pendingBookings.length + 1;
+            const totalSessions = activePackage.proceduresAmount || 0;
+            const serviceName = state.selectedServices[0]?.name || '';
+
+            if (isMounted.value) {
+              packageReminderInfo.value = {
+                id: activePackage.id,
+                name: activePackage.name,
+                serviceName,
+                currentSession: currentSessionNumber,
+                totalSessions,
+                sessionsRemaining: activePackage.proceduresLeft || 0,
+              };
+            }
+          } else {
+            if (isMounted.value) {
+              packageReminderInfo.value = null;
+            }
+          }
+        } else {
+          if (isMounted.value) {
+            packageReminderInfo.value = null;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading package reminder info:', error);
+        if (isMounted.value) {
+          packageReminderInfo.value = null;
+        }
+      } finally {
+        if (isMounted.value) {
+          loadingPackageReminder.value = false;
+        }
+      }
+    };
+
+    // Watch for changes in selected services or client ID to load package reminder and check active packages
+    watch(
+      () => [
+        state.selectedServices,
+        state.newUser?.clientId,
+        state.newUser?.id,
+        state.showPickQueue,
+      ],
+      () => {
+        if (isMounted.value && state.showPickQueue) {
+          loadPackageReminderInfo();
+          checkActivePackagesForService();
+        }
+      },
+      { deep: true }
+    );
 
     const changeAttentionBlock = computed(() => {
       const { attentionBlock } = state;
@@ -2017,7 +2789,14 @@ export default {
 
         // Removed scroll behavior - it was causing weird delays
       }
-      state.block = {};
+
+      // Don't reset block if we're in quick slot selection
+      if (!state.isQuickSlotSelection) {
+        state.block = {};
+      } else {
+        console.log('🛡️ Protected state.block from reset during quick selection');
+      }
+
       let currentDate;
       if (
         state.date === undefined ||
@@ -2218,6 +2997,18 @@ export default {
       console.log('🟠 State date:', state.date);
       if (state.date && state.date === 'TODAY') {
         console.log('🟠 Date is TODAY, processing...');
+
+        // Check if today is available
+        if (!isTodayAvailable()) {
+          console.log('❌ changeDate watcher - Today is not available');
+          state.availableAttentionBlocks = [];
+          state.availableAttentionSuperBlocks = [];
+          state.availableBookingBlocks = [];
+          state.blocks = [];
+          loadingHours.value = false;
+          return;
+        }
+
         if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
           console.log('🟠 booking-block-active is enabled');
 
@@ -2232,9 +3023,14 @@ export default {
             );
           }
 
-          state.blocks = getBlocksByDay();
-          console.log('🟠 Blocks loaded:', state.blocks?.length || 0);
-          state.block = {};
+          // Don't reset blocks/block if we're in quick slot selection
+          if (!state.isQuickSlotSelection) {
+            state.blocks = getBlocksByDay();
+            console.log('🟠 Blocks loaded:', state.blocks?.length || 0);
+            state.block = {};
+          } else {
+            console.log('🛡️ Protected state.blocks/block from reset during quick selection');
+          }
           if (unsubscribeAttentions) {
             unsubscribeAttentions();
           }
@@ -2255,8 +3051,30 @@ export default {
           await getAttention(undefined);
         }
       } else if (newData.date && newData.date !== oldData.date && newData.date !== 'TODAY') {
-        state.blocks = getBlocksByDay();
-        state.block = {};
+        console.log('🟠 Date changed to non-TODAY, updating blocks');
+        console.log('🟠 Current state.block:', state.block);
+        console.log('🟠 isQuickSlotSelection:', state.isQuickSlotSelection);
+
+        // Don't interfere if we're in the middle of a quick slot selection
+        if (state.isQuickSlotSelection) {
+          console.log('🟠 Quick slot selection in progress, skipping block reset');
+          return;
+        }
+
+        // Only reset blocks if we don't have a valid block already selected
+        if (!state.block || !state.block.number) {
+          console.log('🟠 No valid block selected, getting blocks for day');
+          state.blocks = getBlocksByDay();
+          state.block = {};
+        } else {
+          console.log('🟠 Valid block already selected, keeping current blocks');
+          // Still update blocks but don't reset the selected block
+          const newBlocks = getBlocksByDay();
+          if (newBlocks && newBlocks.length > 0) {
+            state.blocks = newBlocks;
+          }
+        }
+
         if (unsubscribeBookings) {
           unsubscribeBookings();
         }
@@ -2313,8 +3131,14 @@ export default {
         newData.specificCalendarDate &&
         newData.specificCalendarDate !== oldData.specificCalendarDate
       ) {
-        state.blocks = getBlocksBySpecificDay();
-        state.block = {};
+        // Don't reset blocks/block if we're in quick slot selection
+        if (!state.isQuickSlotSelection) {
+          state.blocks = getBlocksBySpecificDay();
+          state.block = {};
+        } else {
+          console.log('🛡️ Protected state.blocks/block from reset in specificCalendarDate watcher');
+        }
+
         if (unsubscribeBookings) {
           unsubscribeBookings();
         }
@@ -2564,7 +3388,8 @@ export default {
 
         // Birthday validation
         if (isValid && getActiveFeature(state.commerce, 'attention-user-birthday', 'USER')) {
-          if (!user.birthday || user.birthday.length === 0) {
+          // Birthday is required: must have a value AND no validation errors
+          if (!user.birthday || user.birthday.length === 0 || state.birthdayError === true) {
             isValid = false;
           }
         }
@@ -2629,6 +3454,7 @@ export default {
       loadingHours,
       loadingService,
       alertError,
+      alertErrorMessage,
       dateMask,
       disabledDates,
       calendarAttributes,
@@ -2677,11 +3503,19 @@ export default {
       showFillForm,
       showPickQueue,
       showPickHours,
+      handleQuickSlotSelection,
+      handleShowManualSelection,
       showFormStep,
       isFormValid,
       convertDuration,
       selectAttentionBlock,
       formatSelectedBlockDateTime,
+      needsProcedureAmountSelection,
+      availableProcedureAmounts,
+      isProcedureAmountSelectionValid,
+      packageReminderInfo,
+      loadingPackageReminder,
+      checkActivePackagesForService,
     };
   },
 };
@@ -2762,6 +3596,43 @@ export default {
               >
               </ServiceForm>
 
+              <!-- Procedure Amount Selection (if service has proceduresList) -->
+              <div
+                v-if="
+                  state.queue &&
+                  state.queue.id &&
+                  state.selectedServices &&
+                  state.selectedServices.length > 0 &&
+                  needsProcedureAmountSelection
+                "
+                class="row g-1 mt-3"
+              >
+                <div class="col col-md-10 offset-md-1 data-card">
+                  <div class="choose-attention py-2 mb-2">
+                    <i class="bi bi-list-check h5 m-1"></i>
+                    <span class="fw-bold h6">{{
+                      $t('attentionCreation.selectProcedureAmount') ||
+                      'Selecciona la cantidad de sesiones'
+                    }}</span>
+                  </div>
+                  <div class="time-slot-grid">
+                    <button
+                      v-for="amount in availableProcedureAmounts"
+                      :key="amount"
+                      type="button"
+                      class="time-slot-button"
+                      :class="{ 'time-slot-selected': state.selectedProcedureAmount === amount }"
+                      @click="state.selectedProcedureAmount = amount"
+                    >
+                      <div class="time-start">{{ amount }}</div>
+                      <div class="time-end">
+                        {{ $t('attentionCreation.sessions') || 'sesiones' }}
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <!-- Telemedicine Option for Walkin Queues (shown when queue is selected and telemedicine is enabled) -->
               <div
                 v-if="
@@ -2812,6 +3683,49 @@ export default {
                   <i class="bi bi-3-circle-fill h5"></i>
                   <span class="fw-bold h6"> {{ $t('commerceQueuesView.when') }} </span>
                 </div>
+
+                <!-- Next Available Slot Component -->
+                <div
+                  v-if="
+                    isActiveCommerce(state.commerce) &&
+                    !isQueueWalkin() &&
+                    state.queue &&
+                    state.queue.id
+                  "
+                  class="row g-1"
+                >
+                  <div class="col col-md-10 offset-md-1">
+                    <NextAvailableSlot
+                      :commerce="state.commerce"
+                      :queue="state.queue"
+                      :selected-services="state.selectedServices"
+                      @slot-selected="handleQuickSlotSelection"
+                      @show-manual-selection="handleShowManualSelection"
+                    />
+                  </div>
+                </div>
+
+                <!-- Connector between NextAvailableSlot and manual options -->
+                <div
+                  v-if="
+                    isActiveCommerce(state.commerce) &&
+                    !isQueueWalkin() &&
+                    state.queue &&
+                    state.queue.id
+                  "
+                  class="row g-1 mt-3"
+                >
+                  <div class="col col-md-10 offset-md-1">
+                    <div class="options-connector">
+                      <div class="connector-line"></div>
+                      <span class="connector-text">{{
+                        $t('nextAvailableSlot.orSelectMoreOptions')
+                      }}</span>
+                      <div class="connector-line"></div>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="row g-1">
                   <div class="col col-md-10 offset-md-1 data-card">
                     <div>
@@ -2972,7 +3886,12 @@ export default {
                                   type="button"
                                   class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
                                   @click="getAttention(undefined)"
-                                  :disabled="!state.accept || !state.queue.id"
+                                  :disabled="
+                                    !state.accept ||
+                                    !state.queue.id ||
+                                    !isProcedureAmountSelectionValid ||
+                                    loadingService
+                                  "
                                 >
                                   {{ $t('commerceQueuesView.confirm') }}
                                   <i class="bi bi-check-lg"></i>
@@ -3029,7 +3948,12 @@ export default {
                                   type="button"
                                   class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
                                   @click="getAttention(undefined)"
-                                  :disabled="!state.accept || !state.queue.id"
+                                  :disabled="
+                                    !state.accept ||
+                                    !state.queue.id ||
+                                    !isProcedureAmountSelectionValid ||
+                                    loadingService
+                                  "
                                 >
                                   {{ $t('commerceQueuesView.confirm') }}
                                   <i class="bi bi-check-lg"></i>
@@ -3668,7 +4592,7 @@ export default {
       </div>
       <Spinner :show="loading"></Spinner>
       <Spinner :show="loadingService"></Spinner>
-      <Alert :show="false" :stack="alertError"></Alert>
+      <Alert :show="false" :stack="alertError" :error-message="alertErrorMessage"></Alert>
 
       <!-- Sticky Bottom Navigation Bar -->
       <Transition name="slide-up">
@@ -3725,6 +4649,17 @@ export default {
                         </div>
                       </div>
 
+                      <!-- Sessions Info (if procedure amount is selected) -->
+                      <div class="summary-item" v-if="state.selectedProcedureAmount">
+                        <i class="bi bi-box-seam summary-icon"></i>
+                        <div class="summary-details">
+                          <span class="summary-label"
+                            >{{ $t('package.sessions') || 'Sesiones' }}:</span
+                          >
+                          <span class="summary-value">{{ state.selectedProcedureAmount }}</span>
+                        </div>
+                      </div>
+
                       <!-- Duration Info -->
                       <div class="summary-item" v-if="state.totalDurationRequested > 0">
                         <i class="bi bi-stopwatch-fill summary-icon"></i>
@@ -3734,6 +4669,19 @@ export default {
                           }}</span>
                           <span class="summary-value">{{
                             convertDuration(state.totalDurationRequested)
+                          }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Telemedicine Info (show whenever selected) -->
+                      <div class="summary-item" v-if="state.isTelemedicine">
+                        <i class="bi bi-camera-video summary-icon"></i>
+                        <div class="summary-details">
+                          <span class="summary-label">{{
+                            $t('telemedicineSession.sessionType')
+                          }}</span>
+                          <span class="summary-value">{{
+                            $t('commerceQueuesView.telemedicineValue')
                           }}</span>
                         </div>
                       </div>
@@ -3800,18 +4748,6 @@ export default {
                             </span>
                           </div>
                         </div>
-
-                        <!-- Telemedicine Info -->
-                        <div
-                          class="summary-item"
-                          v-if="state.isTelemedicine && state.telemedicineConfig"
-                        >
-                          <i class="bi bi-camera-video summary-icon"></i>
-                          <div class="summary-details">
-                            <span class="summary-label">Tipo de Consulta:</span>
-                            <span class="summary-value">Video</span>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </Transition>
@@ -3849,7 +4785,12 @@ export default {
                     "
                     class="btn btn-lg flex-grow-1 btn-size fw-bold btn-confirm-sticky rounded-pill px-5 py-3"
                     @click="getAttention(undefined)"
-                    :disabled="!state.accept || !state.queue.id"
+                    :disabled="
+                      !state.accept ||
+                      !state.queue.id ||
+                      !isProcedureAmountSelectionValid ||
+                      loadingService
+                    "
                   >
                     {{ $t('commerceQueuesView.confirm') }}
                     <i class="bi bi-check-circle-fill ms-2"></i>
@@ -3886,8 +4827,12 @@ export default {
                     :disabled="
                       !state.accept ||
                       !state.queue.id ||
+                      !isProcedureAmountSelectionValid ||
+                      loadingService ||
                       ((state.date === 'TODAY' || state.specificCalendarDate === 'TODAY') &&
-                        !state.attentionBlock)
+                        !state.attentionBlock) ||
+                      (state.isTelemedicine &&
+                        (!state.telemedicineConfig || !state.telemedicineConfig.scheduledAt))
                     "
                   >
                     {{ $t('commerceQueuesView.confirm') }}
@@ -4765,12 +5710,25 @@ export default {
   border: 1px solid rgba(68, 111, 252, 0.2);
 }
 
+.telemedicine-option .form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.telemedicine-option .form-check-input {
+  margin-top: 0 !important;
+  margin-left: 0 !important;
+  flex-shrink: 0;
+}
+
 .telemedicine-option .form-check-label {
   font-size: 1rem;
   color: var(--azul-turno);
   cursor: pointer;
   display: flex;
   align-items: center;
+  margin-bottom: 0;
 }
 
 .telemedicine-option .form-check-label i {
@@ -5064,6 +6022,51 @@ export default {
   .btn-back-sticky {
     font-size: 0.9rem;
     padding: 0.5rem 1rem !important;
+  }
+}
+
+/* Options Connector Styles */
+.options-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem 0;
+  gap: 1rem;
+}
+
+.connector-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(169, 169, 169, 0.3) 50%,
+    transparent 100%
+  );
+}
+
+.connector-text {
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1rem;
+  color: var(--azul-turno, #004aad);
+  white-space: nowrap;
+  padding: 0 0.75rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 1rem;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .options-connector {
+    margin: 1rem 0;
+    gap: 0.75rem;
+  }
+
+  .connector-text {
+    font-size: 0.85rem;
+    padding: 0 0.5rem;
   }
 }
 </style>

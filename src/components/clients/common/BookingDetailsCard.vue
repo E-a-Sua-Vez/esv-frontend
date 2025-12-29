@@ -4,6 +4,7 @@ import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { getDate } from '../../../shared/utils/date';
 import Spinner from '../../common/Spinner.vue';
 import { formatIdNumber } from '../../../shared/utils/idNumber';
+import { Modal } from 'bootstrap';
 
 export default {
   name: 'BookingDetailsCard',
@@ -14,80 +15,246 @@ export default {
     detailsOpened: { type: Boolean, default: false },
     commerce: { type: Object, default: undefined },
     disableClick: { type: Boolean, default: false },
+    packageColor: { type: Object, default: null },
+    showBookingModal: { type: Boolean, default: false },
   },
+  emits: ['open-modal'],
   data() {
     return {
       loading: false,
       extendedEntity: false,
     };
   },
+  errorCaptured(err, instance, info) {
+    console.error('BookingDetailsCard error captured:', err, info);
+    // Prevent error from propagating and crashing the app
+    return false;
+  },
   computed: {
     bookingFullName() {
-      if (!this.booking) return '';
-      const name = this.booking.userName?.trim() || '';
-      const lastName = this.booking.userLastName?.trim() || '';
-      return `${name} ${lastName}`.trim().toUpperCase() || 'N/I';
+      try {
+        if (!this.booking) return 'N/I';
+        const name = this.booking.userName?.trim() || this.booking.user?.name?.trim() || '';
+        const lastName =
+          this.booking.userLastName?.trim() || this.booking.user?.lastName?.trim() || '';
+        return `${name} ${lastName}`.trim().toUpperCase() || 'N/I';
+      } catch (error) {
+        console.error('Error computing bookingFullName:', error);
+        return 'N/I';
+      }
     },
     timeSlot() {
-      if (this.booking?.hourFrom && this.booking?.hourTo) {
-        return `${this.booking.hourFrom} - ${this.booking.hourTo}`;
+      try {
+        if (!this.booking) return '';
+        if (this.booking?.hourFrom && this.booking?.hourTo) {
+          return `${this.booking.hourFrom} - ${this.booking.hourTo}`;
+        }
+        if (this.booking?.block?.hourFrom && this.booking?.block?.hourTo) {
+          return `${this.booking.block.hourFrom} - ${this.booking.block.hourTo}`;
+        }
+        return '';
+      } catch (error) {
+        console.error('Error computing timeSlot:', error);
+        return '';
       }
-      return '';
+    },
+    bookingId() {
+      try {
+        if (!this.booking) return null;
+        return this.booking.bookingId || this.booking.id || null;
+      } catch (error) {
+        console.error('Error computing bookingId:', error);
+        return null;
+      }
     },
   },
   methods: {
-    showDetails() {
-      this.extendedEntity = !this.extendedEntity;
+    handleCardClick(event) {
+      try {
+        if (!event) {
+          console.warn('BookingDetailsCard: No event object');
+          return;
+        }
+        if (this.disableClick) {
+          if (event.preventDefault) event.preventDefault();
+          if (event.stopPropagation) event.stopPropagation();
+          return;
+        }
+        if (!this.booking) {
+          console.warn('BookingDetailsCard: No booking data available');
+          return;
+        }
+        this.showDetails(event);
+      } catch (error) {
+        console.error('Error in handleCardClick:', error);
+        // Prevent error from propagating
+        if (event && event.stopPropagation) {
+          event.stopPropagation();
+        }
+      }
+    },
+    showDetails(event) {
+      try {
+        if (!this.booking) {
+          console.warn('BookingDetailsCard: Cannot show details, booking is null');
+          return;
+        }
+        // If in modal context, emit event to parent to open modal
+        if (this.showBookingModal) {
+          try {
+            this.$emit('open-modal', this.booking);
+          } catch (emitError) {
+            console.error('Error emitting open-modal event:', emitError);
+          }
+        } else {
+          this.extendedEntity = !this.extendedEntity;
+        }
+      } catch (error) {
+        console.error('Error showing booking details:', error);
+        // Prevent error from propagating
+        if (event && event.stopPropagation) {
+          event.stopPropagation();
+        }
+      }
+    },
+    openBookingDetailsModal() {
+      if (!this.booking || !this.bookingId) return;
+      try {
+        const modalId = `bookingDetailsModal-${this.bookingId}`;
+        const modalElement = document.getElementById(modalId);
+        if (modalElement) {
+          const modal = new Modal(modalElement);
+          modal.show();
+        }
+      } catch (error) {
+        console.error('Error opening booking details modal:', error);
+      }
     },
     getDate(dateIn, timeZoneIn) {
-      return getDate(dateIn, timeZoneIn);
+      if (!dateIn) return 'N/I';
+      try {
+        return getDate(dateIn, timeZoneIn);
+      } catch (error) {
+        console.error('Error formatting date:', error);
+        return 'N/I';
+      }
     },
-    copyBooking() {
-      const textToCopy = jsonToCsv([this.booking]);
-      navigator.clipboard.writeText(textToCopy);
+    copyBooking(event) {
+      try {
+        if (event) {
+          if (event.stopPropagation) event.stopPropagation();
+          if (event.preventDefault) event.preventDefault();
+        }
+        if (!this.booking) {
+          console.warn('BookingDetailsCard: Cannot copy, booking is null');
+          return;
+        }
+        // Validate booking has properties before converting
+        if (
+          !this.booking ||
+          typeof this.booking !== 'object' ||
+          Object.keys(this.booking).length === 0
+        ) {
+          console.warn('BookingDetailsCard: Booking is empty or invalid');
+          return;
+        }
+        let textToCopy = '';
+        try {
+          // Ensure booking is a valid object with properties
+          const bookingArray = [this.booking];
+          if (bookingArray[0] && Object.keys(bookingArray[0]).length > 0) {
+            textToCopy = jsonToCsv(bookingArray);
+          } else {
+            throw new Error('Booking has no properties');
+          }
+        } catch (csvError) {
+          console.error('Error converting booking to CSV:', csvError);
+          // Fallback: create a simple text representation
+          try {
+            textToCopy = JSON.stringify(this.booking, null, 2);
+          } catch (jsonError) {
+            console.error('Error stringifying booking:', jsonError);
+            textToCopy = 'Error: Could not copy booking data';
+          }
+        }
+        if (textToCopy && navigator && navigator.clipboard) {
+          navigator.clipboard.writeText(textToCopy).catch(err => {
+            console.error('Error writing to clipboard:', err);
+          });
+        } else {
+          console.warn('BookingDetailsCard: Clipboard API not available');
+        }
+      } catch (error) {
+        console.error('Error copying booking data:', error);
+        // Prevent error from propagating
+        if (event && event.stopPropagation) {
+          event.stopPropagation();
+        }
+      }
     },
     clasifyStatus(status) {
-      if (status === undefined) {
+      try {
+        if (status === undefined || status === null) {
+          return 'bi-calendar-fill blue-icon';
+        } else if (status === 'PENDING') {
+          return 'bi-clock-fill yellow-icon';
+        } else if (status === 'CONFIRMED') {
+          return 'bi-check-circle-fill green-icon';
+        } else if (status === 'PROCESSED') {
+          return 'bi-qr-code green-icon';
+        } else {
+          return 'bi-calendar-fill red-icon';
+        }
+      } catch (error) {
+        console.error('Error classifying status:', error);
         return 'bi-calendar-fill blue-icon';
-      } else if (status === 'PENDING') {
-        return 'bi-clock-fill yellow-icon';
-      } else if (status === 'CONFIRMED') {
-        return 'bi-check-circle-fill green-icon';
-      } else if (status === 'PROCESSED') {
-        return 'bi-qr-code green-icon';
-      } else {
-        return 'bi-calendar-fill red-icon';
       }
     },
     getCardTypeClass() {
-      const status = this.booking?.status;
-      if (status === 'CONFIRMED' || status === 'PROCESSED') return 'client-card-success';
-      if (status === 'PENDING') return 'client-card-warning';
-      return 'client-card-error';
+      try {
+        if (!this.booking) return 'client-card-error';
+        const status = this.booking?.status;
+        if (status === 'CONFIRMED' || status === 'PROCESSED') return 'client-card-success';
+        if (status === 'PENDING') return 'client-card-warning';
+        return 'client-card-error';
+      } catch (error) {
+        console.error('Error getting card type class:', error);
+        return 'client-card-error';
+      }
     },
     getStatusIconClass() {
-      const status = this.booking?.status;
-      if (status === 'CONFIRMED' || status === 'PROCESSED') return 'icon-success';
-      if (status === 'PENDING') return 'icon-warning';
-      return 'icon-error';
+      try {
+        if (!this.booking) return 'icon-error';
+        const status = this.booking?.status;
+        if (status === 'CONFIRMED' || status === 'PROCESSED') return 'icon-success';
+        if (status === 'PENDING') return 'icon-warning';
+        return 'icon-error';
+      } catch (error) {
+        console.error('Error getting status icon class:', error);
+        return 'icon-error';
+      }
     },
     formatIdNumber(idNumber) {
-      return formatIdNumber(this.commerce, idNumber);
+      if (!idNumber || !this.commerce) return idNumber || 'N/I';
+      try {
+        return formatIdNumber(this.commerce, idNumber);
+      } catch (error) {
+        console.error('Error formatting ID number:', error);
+        return idNumber || 'N/I';
+      }
     },
   },
   watch: {
     detailsOpened: {
       immediate: true,
-      deep: true,
-      async handler() {
-        this.extendedEntity = this.detailsOpened;
-      },
-    },
-    extendedEntity: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        this.extendedEntity = this.extendedEntity;
+      handler(newVal) {
+        try {
+          if (newVal !== undefined && newVal !== null) {
+            this.extendedEntity = Boolean(newVal);
+          }
+        } catch (error) {
+          console.error('Error in detailsOpened watcher:', error);
+        }
       },
     },
   },
@@ -100,8 +267,10 @@ export default {
     <div
       class="client-row-card"
       :class="getCardTypeClass()"
-      :style="disableClick ? 'cursor: default;' : ''"
-      @click="disableClick ? null : showDetails()"
+      :style="`${packageColor ? `border-left-color: ${packageColor.border} !important;` : ''}${
+        disableClick ? 'cursor: default;' : 'cursor: pointer;'
+      }`"
+      @click="handleCardClick($event)"
     >
       <div class="client-row-content">
         <!-- Status Icon -->
@@ -110,21 +279,29 @@ export default {
             <div>{{ $t('dashboard.clientCard.tooltip.status') || 'Estado do agendamento' }}</div>
           </template>
           <div class="client-icon-mini" :class="getStatusIconClass()" @click.stop>
-            <i :class="`bi ${clasifyStatus(booking.status)}`"></i>
+            <i :class="`bi ${clasifyStatus(booking?.status)}`"></i>
           </div>
         </Popper>
 
         <!-- Service Badge -->
-        <div v-if="booking.servicesDetails || booking.packageId" class="service-badges-inline">
+        <div
+          v-if="
+            (booking?.servicesDetails &&
+              Array.isArray(booking.servicesDetails) &&
+              booking.servicesDetails.length > 0) ||
+            booking?.packageId
+          "
+          class="service-badges-inline"
+        >
           <span
-            v-for="serv in booking.servicesDetails"
-            :key="serv.id"
+            v-for="serv in booking?.servicesDetails || []"
+            :key="serv?.id || serv?.name || Math.random()"
             class="badge-mini service-tag-mini"
           >
-            {{ serv.name }}
+            {{ serv?.name || 'N/I' }}
           </span>
-          <span v-if="booking.packageId" class="badge-mini service-tag-mini bg-secondary">
-            <i class="bi bi-box-fill"></i> {{ booking.packageProcedureNumber }}
+          <span v-if="booking?.packageId" class="badge-mini service-tag-mini bg-secondary">
+            <i class="bi bi-box-fill"></i> {{ booking?.packageProcedureNumber || '' }}
           </span>
         </div>
 
@@ -138,17 +315,17 @@ export default {
                   {{ $t('dashboard.clientCard.tooltip.copy') || 'Copiar dados do agendamento' }}
                 </div>
               </template>
-              <button class="btn-copy-mini" @click.stop="copyBooking()">
+              <button class="btn-copy-mini" @click.stop="copyBooking($event)">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </button>
             </Popper>
           </div>
           <div class="client-meta-inline">
             <span class="client-id-inline">{{
-              formatIdNumber(booking.userIdNumber) || 'N/I'
+              formatIdNumber(booking?.userIdNumber || booking?.user?.idNumber) || 'N/I'
             }}</span>
             <Popper
-              v-if="booking.termsConditionsAcceptedCode"
+              v-if="booking?.termsConditionsAcceptedCode"
               :class="'dark'"
               arrow
               disable-click-away
@@ -161,7 +338,7 @@ export default {
               </template>
               <i class="bi bi-person-fill-check icon-mini-separated" @click.stop></i>
             </Popper>
-            <Popper v-if="booking.paid" :class="'dark'" arrow disable-click-away hover>
+            <Popper v-if="booking?.paid" :class="'dark'" arrow disable-click-away hover>
               <template #content>
                 <div>{{ $t('dashboard.clientCard.tooltip.paid') || 'Agendamento pago' }}</div>
               </template>
@@ -173,12 +350,12 @@ export default {
         <!-- Status Indicators - Inline -->
         <div class="status-inline">
           <div class="status-badge-inline time-badge" @click.stop>
-            <i :class="`bi ${clasifyStatus(booking.status)}`"></i>
+            <i :class="`bi ${clasifyStatus(booking?.status)}`"></i>
             <span v-if="timeSlot">{{ timeSlot }}</span>
           </div>
           <div class="status-badge-inline date-badge" @click.stop>
             <i class="bi bi-calendar-fill"></i>
-            <span>{{ getDate(booking.date) }}</span>
+            <span>{{ getDate(booking?.date) }}</span>
           </div>
         </div>
 
@@ -212,7 +389,7 @@ export default {
                 </template>
                 <a
                   class="data-item-compact whatsapp"
-                  :href="'https://wa.me/' + booking.userPhone"
+                  :href="'https://wa.me/' + (booking.userPhone || booking.user?.phone || '')"
                   target="_blank"
                   @click.stop
                 >
@@ -221,7 +398,7 @@ export default {
                   }}</span>
                   <div class="data-value">
                     <i class="bi bi-whatsapp"></i>
-                    <span>{{ booking.userPhone || 'N/I' }}</span>
+                    <span>{{ booking.userPhone || booking.user?.phone || 'N/I' }}</span>
                   </div>
                 </a>
               </Popper>
@@ -231,7 +408,7 @@ export default {
                 </template>
                 <a
                   class="data-item-compact email"
-                  :href="'mailto:' + booking.userEmail"
+                  :href="'mailto:' + (booking.userEmail || booking.user?.email || '')"
                   target="_blank"
                   @click.stop
                 >
@@ -240,7 +417,7 @@ export default {
                   }}</span>
                   <div class="data-value">
                     <i class="bi bi-envelope"></i>
-                    <span>{{ booking.userEmail || 'N/I' }}</span>
+                    <span>{{ booking.userEmail || booking.user?.email || 'N/I' }}</span>
                   </div>
                 </a>
               </Popper>
@@ -252,7 +429,9 @@ export default {
                   <span class="data-label">{{ $t('dashboard.clientCard.label.id') || 'ID' }}</span>
                   <div class="data-value">
                     <i class="bi bi-person-vcard"></i>
-                    <span>{{ formatIdNumber(booking.userIdNumber) || 'N/I' }}</span>
+                    <span>{{
+                      formatIdNumber(booking.userIdNumber || booking.user?.idNumber) || 'N/I'
+                    }}</span>
                   </div>
                 </div>
               </Popper>
@@ -260,7 +439,7 @@ export default {
           </div>
 
           <!-- Payment Data Section -->
-          <div v-if="booking.paid" class="info-section">
+          <div v-if="booking?.paid" class="info-section">
             <div class="info-section-header">
               <i class="bi bi-check-circle-fill"></i>
               <span class="info-section-title">{{
@@ -300,7 +479,7 @@ export default {
                 <span class="badge-label">{{ $t('paymentData.paymentCommission') }}</span>
                 <span class="badge-value">{{ booking.paymentCommission }}</span>
               </span>
-              <span v-if="booking.packageId && booking.packageName" class="info-badge">
+              <span v-if="booking?.packageId && booking?.packageName" class="info-badge">
                 <span class="badge-label">{{ $t('paymentData.package') }}</span>
                 <span class="badge-value">{{ booking.packageName }}</span>
                 <span class="badge-subvalue"
@@ -315,10 +494,10 @@ export default {
           <!-- Booking Data Section -->
           <div
             v-if="
-              booking.queueName ||
-              (booking.commerceName && booking.commerceTag) ||
-              booking.servicesDetails ||
-              booking.termsConditionsToAcceptedAt
+              booking?.queueName ||
+              (booking?.commerceName && booking?.commerceTag) ||
+              booking?.servicesDetails ||
+              booking?.termsConditionsToAcceptedAt
             "
             class="info-section"
           >
@@ -339,16 +518,27 @@ export default {
                   >{{ booking.commerceName }} - {{ booking.commerceTag }}</span
                 >
               </span>
-              <span v-if="booking.servicesDetails" class="info-badge services-badge">
+              <span
+                v-if="
+                  booking?.servicesDetails &&
+                  Array.isArray(booking.servicesDetails) &&
+                  booking.servicesDetails.length > 0
+                "
+                class="info-badge services-badge"
+              >
                 <span class="badge-label">{{ $t('paymentData.service') }}</span>
-                <span v-for="serv in booking.servicesDetails" :key="serv.id" class="service-tag">
-                  {{ serv.name }}
+                <span
+                  v-for="serv in booking.servicesDetails"
+                  :key="serv?.id || serv?.name || Math.random()"
+                  class="service-tag"
+                >
+                  {{ serv?.name || 'N/I' }}
                 </span>
               </span>
-              <span v-if="booking.termsConditionsToAcceptedAt" class="info-badge">
+              <span v-if="booking?.termsConditionsToAcceptedAt" class="info-badge">
                 <i class="bi bi-calendar-fill"></i>
                 <span class="badge-label">{{ $t('paymentData.termsAccepted') }}</span>
-                <span class="badge-value">{{ getDate(booking.termsConditionsToAcceptedAt) }}</span>
+                <span class="badge-value">{{ getDate(booking?.termsConditionsToAcceptedAt) }}</span>
               </span>
             </div>
           </div>
@@ -357,17 +547,250 @@ export default {
           <div class="info-section metadata-section">
             <div class="metadata-item-compact">
               <span class="metadata-label">ID:</span>
-              <span class="metadata-value">{{ booking.bookingId }}</span>
+              <span class="metadata-value">{{
+                bookingId || booking.bookingId || booking.id || 'N/I'
+              }}</span>
               <span class="metadata-separator">•</span>
               <span class="metadata-label"
                 >{{ $t('dashboard.clientCard.date') || $t('dashboard.date') || 'Fecha' }}:</span
               >
-              <span class="metadata-value">{{ getDate(booking.createdDate) }}</span>
+              <span class="metadata-value">{{ getDate(booking.createdDate || booking.date) }}</span>
             </div>
           </div>
         </div>
       </Transition>
     </div>
+
+    <!-- Booking Details Modal - Matching Attention Details Modal Style -->
+    <Teleport to="body">
+      <div
+        v-if="booking && bookingId"
+        class="modal fade"
+        :id="`bookingDetailsModal-${bookingId}`"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="bookingDetailsModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-dialog-scrollable modal-lg attention-modal-dialog">
+          <div class="modal-content attention-modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+              <h5 class="modal-title" id="bookingDetailsModalLabel">
+                <i class="bi bi-calendar-fill"></i>
+                {{ $t('dashboard.bookingDetails') || 'Detalles de la Reserva' }}
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+              <Spinner :show="loading"></Spinner>
+
+              <!-- Client Info Section - Matching Attention Style -->
+              <div class="attention-client-info">
+                <div class="attention-client-header">
+                  <div class="attention-client-name-section">
+                    <div class="attention-client-avatar">
+                      <i class="bi bi-person-circle"></i>
+                    </div>
+                    <div class="attention-client-details">
+                      <span class="attention-client-name">{{ bookingFullName }}</span>
+                      <button
+                        class="btn-copy-mini"
+                        @click="copyBooking($event)"
+                        title="Copiar datos"
+                      >
+                        <i class="bi bi-file-earmark-spreadsheet"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="attention-client-contact">
+                  <a
+                    class="attention-contact-item whatsapp-item"
+                    :href="'https://wa.me/' + (booking.userPhone || booking.user?.phone || '')"
+                    target="_blank"
+                  >
+                    <div class="contact-icon-wrapper whatsapp-bg">
+                      <i class="bi bi-whatsapp"></i>
+                    </div>
+                    <span class="contact-text">{{
+                      booking?.userPhone || booking?.user?.phone || 'N/I'
+                    }}</span>
+                  </a>
+                  <a
+                    class="attention-contact-item email-item"
+                    :href="'mailto:' + (booking?.userEmail || booking?.user?.email || '')"
+                    target="_blank"
+                  >
+                    <div class="contact-icon-wrapper email-bg">
+                      <i class="bi bi-envelope"></i>
+                    </div>
+                    <span class="contact-text">{{
+                      booking?.userEmail || booking?.user?.email || 'N/I'
+                    }}</span>
+                  </a>
+                  <div class="attention-contact-item id-item">
+                    <div class="contact-icon-wrapper id-bg">
+                      <i class="bi bi-person-vcard"></i>
+                    </div>
+                    <span class="contact-text">{{
+                      formatIdNumber(booking?.userIdNumber || booking?.user?.idNumber) || 'N/I'
+                    }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Booking Context Info -->
+              <div
+                v-if="
+                  booking?.queueName ||
+                  booking?.commerceName ||
+                  (booking?.servicesDetails &&
+                    Array.isArray(booking.servicesDetails) &&
+                    booking.servicesDetails.length > 0) ||
+                  booking?.date ||
+                  booking?.createdDate ||
+                  timeSlot
+                "
+                class="attention-context-info-compact"
+              >
+                <div v-if="booking?.queueName" class="attention-context-item-inline">
+                  <i class="bi bi-person-lines-fill"></i>
+                  <span class="attention-context-label-inline">Fila</span>
+                  <span class="attention-context-value-inline">{{
+                    booking?.queueName || 'N/I'
+                  }}</span>
+                </div>
+                <div v-if="booking?.commerceName" class="attention-context-item-inline">
+                  <i class="bi bi-building"></i>
+                  <span class="attention-context-label-inline">Comercio</span>
+                  <span class="attention-context-value-inline">{{
+                    booking?.commerceName || 'N/I'
+                  }}</span>
+                </div>
+                <div
+                  v-if="booking?.date || booking?.createdDate"
+                  class="attention-context-item-inline"
+                >
+                  <i class="bi bi-calendar-event"></i>
+                  <span class="attention-context-label-inline">Fecha</span>
+                  <span class="attention-context-value-inline">{{
+                    getDate(booking?.date || booking?.createdDate)
+                  }}</span>
+                </div>
+                <div v-if="timeSlot" class="attention-context-item-inline">
+                  <i class="bi bi-clock-fill"></i>
+                  <span class="attention-context-label-inline">Hora</span>
+                  <span class="attention-context-value-inline">{{ timeSlot }}</span>
+                </div>
+                <div
+                  v-if="
+                    booking?.servicesDetails &&
+                    Array.isArray(booking.servicesDetails) &&
+                    booking.servicesDetails.length > 0
+                  "
+                  class="attention-context-item-inline"
+                >
+                  <i class="bi bi-scissors"></i>
+                  <span class="attention-context-label-inline">Servicio(s)</span>
+                  <span class="attention-context-value-inline">
+                    {{
+                      booking.servicesDetails
+                        .map(s => s?.name || 'N/I')
+                        .filter(Boolean)
+                        .join(', ') || 'N/I'
+                    }}
+                  </span>
+                </div>
+                <div v-if="booking?.status" class="attention-context-item-inline">
+                  <i :class="`bi ${clasifyStatus(booking?.status)}`"></i>
+                  <span class="attention-context-label-inline">Estado</span>
+                  <span class="attention-context-value-inline">{{ booking?.status || 'N/I' }}</span>
+                </div>
+              </div>
+
+              <div class="attention-divider"></div>
+
+              <!-- Payment Data Section -->
+              <div
+                v-if="booking?.paid !== undefined && booking?.paid === true"
+                class="attention-confirmation-badges"
+              >
+                <div class="attention-confirmation-header">
+                  <i class="bi bi-check-circle-fill"></i>
+                  <span>{{
+                    $t('collaboratorBookingsView.paymentData') || 'Dados de Pagamento'
+                  }}</span>
+                </div>
+                <div class="attention-confirmation-tags">
+                  <span v-if="booking?.paymentType" class="badge-mini confirmation-tag">
+                    {{ $t(`paymentTypes.${booking.paymentType}`) }}
+                  </span>
+                  <span v-if="booking?.paymentMethod" class="badge-mini confirmation-tag">
+                    {{ $t(`paymentClientMethods.${booking.paymentMethod}`) }}
+                  </span>
+                  <span
+                    v-if="
+                      booking?.paymentMethod &&
+                      booking.paymentMethod === 'HEALTH_AGREEMENT' &&
+                      booking?.healthAgreementId &&
+                      booking?.healthAgreementName
+                    "
+                    class="badge-mini confirmation-tag"
+                  >
+                    {{ booking?.healthAgreementName }}
+                  </span>
+                  <span
+                    v-if="booking?.paymentAmount"
+                    class="badge-mini confirmation-tag payment-amount"
+                  >
+                    <i class="bi bi-coin"></i>
+                    {{ booking?.paymentAmount }}
+                  </span>
+                  <span
+                    v-if="booking?.paymentCommission"
+                    class="badge-mini confirmation-tag payment-commission"
+                  >
+                    <i class="bi bi-coin"></i>
+                    {{ booking?.paymentCommission }}
+                  </span>
+                  <span
+                    v-if="booking?.packageId && booking?.packageName"
+                    class="badge-mini confirmation-tag"
+                  >
+                    {{ booking?.packageName }}
+                    <span class="badge-subvalue"
+                      >{{ booking?.packageProcedureNumber }} /
+                      {{ booking?.packageProceduresTotalNumber }}</span
+                    >
+                    <i v-if="booking?.packagePaid" class="bi bi-check-circle-fill green-icon"></i>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Metadata Footer -->
+              <div class="attention-metadata-footer">
+                <span class="metric-card-details"
+                  ><strong>Id:</strong>
+                  {{ bookingId || booking.bookingId || booking.id || 'N/I' }}</span
+                >
+                <span class="metric-card-details"
+                  ><strong>Date:</strong> {{ getDate(booking?.createdDate || booking?.date) }}</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -1005,5 +1428,350 @@ export default {
 .contact-data-grid {
   position: relative;
   overflow: visible;
+}
+
+/* Modal Dialog - Matching Attention Style */
+.attention-modal-dialog {
+  max-width: 1200px !important;
+  width: 95vw !important;
+}
+
+.attention-modal-content {
+  border-radius: 0.5rem !important;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+/* Modal Header - Matching Attention Style */
+.modal-header {
+  background: linear-gradient(
+    135deg,
+    var(--azul-turno, #004aad) 0%,
+    var(--verde-tu, #00c2cb) 100%
+  ) !important;
+  color: white !important;
+  border-bottom: none !important;
+  padding: 1rem 1.25rem !important;
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+
+.modal-title {
+  color: white !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.modal-title i {
+  color: white !important;
+  font-size: 1.125rem !important;
+}
+
+.btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%) !important;
+  opacity: 0.9 !important;
+}
+
+.btn-close:hover {
+  opacity: 1 !important;
+}
+
+/* Modal Body */
+.modal-body {
+  background: #f8f9fa !important;
+  padding: 1.25rem !important;
+}
+
+/* Client Info Section - Matching Attention Style */
+.attention-client-info {
+  margin-bottom: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.attention-client-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.375rem;
+  padding-bottom: 0.375rem;
+  border-bottom: 1px solid rgba(169, 169, 169, 0.2);
+}
+
+.attention-client-name-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.attention-client-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 194, 203, 0.12);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.attention-client-avatar i {
+  font-size: 1.125rem;
+  color: #00c2cb;
+}
+
+.attention-client-details {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.attention-client-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  flex: 1;
+  min-width: 0;
+}
+
+.attention-client-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.attention-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 6px;
+  text-decoration: none;
+  color: rgba(0, 0, 0, 0.7);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.attention-contact-item:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(0, 194, 203, 0.3);
+  text-decoration: none;
+  color: rgba(0, 0, 0, 0.85);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 194, 203, 0.1);
+}
+
+.contact-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.whatsapp-bg {
+  background: rgba(37, 211, 102, 0.12);
+  color: #25d366;
+}
+
+.email-bg {
+  background: rgba(0, 122, 255, 0.12);
+  color: #007aff;
+}
+
+.id-bg {
+  background: rgba(0, 194, 203, 0.12);
+  color: #00c2cb;
+}
+
+.contact-icon-wrapper i {
+  font-size: 0.7rem;
+}
+
+.contact-text {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.whatsapp-item:hover .whatsapp-bg {
+  background: rgba(37, 211, 102, 0.25);
+}
+
+.email-item:hover .email-bg {
+  background: rgba(0, 122, 255, 0.25);
+}
+
+.id-item:hover .id-bg {
+  background: rgba(0, 194, 203, 0.2);
+}
+
+.attention-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(169, 169, 169, 0.2), transparent);
+  margin: 0.5rem 0;
+}
+
+/* Context Info - Matching Attention Style */
+.attention-context-info-compact {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.attention-context-item-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+}
+
+.attention-context-item-inline i {
+  color: #00c2cb;
+  font-size: 0.8125rem;
+  flex-shrink: 0;
+}
+
+.attention-context-label-inline {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.attention-context-value-inline {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* Confirmation Badges - Matching Attention Style */
+.attention-confirmation-badges {
+  margin-bottom: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.attention-confirmation-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+  padding-bottom: 0.375rem;
+  border-bottom: 1px solid rgba(169, 169, 169, 0.2);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #000000;
+  letter-spacing: -0.01em;
+}
+
+.attention-confirmation-header i {
+  color: #00c2cb;
+  font-size: 1rem;
+}
+
+.attention-confirmation-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.confirmation-tag {
+  background: rgba(169, 169, 169, 0.15);
+  color: rgba(0, 0, 0, 0.7);
+  padding: 0.375rem 0.625rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+}
+
+.confirmation-tag.payment-amount {
+  background: rgba(0, 194, 203, 0.12);
+  color: #00c2cb;
+  border-color: rgba(0, 194, 203, 0.25);
+}
+
+.confirmation-tag.payment-commission {
+  background: rgba(249, 195, 34, 0.12);
+  color: #f9c322;
+  border-color: rgba(249, 195, 34, 0.25);
+}
+
+.badge-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 0.35rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.badge-subvalue {
+  font-size: 0.7rem;
+  color: rgba(0, 0, 0, 0.6);
+  background: rgba(169, 169, 169, 0.1);
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  margin-left: 0.25rem;
+}
+
+/* Metadata Footer */
+.attention-metadata-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(169, 169, 169, 0.2);
+  font-size: 0.6875rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.metric-card-details {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.metric-card-details strong {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
 }
 </style>

@@ -467,11 +467,7 @@ export default {
       :loading="loading"
     ></slot>
 
-    <div
-      id="surveys-consolidated"
-      class="row"
-      v-if="showSurveyConsolidated === true && toggles['dashboard.surveys-consolidated.view']"
-    >
+    <div id="surveys-consolidated" class="row" v-if="showSurveyConsolidated === true">
       <div v-if="state.calculatedSurveyMetricsYear">
         <SimpleDownloadCard
           :download="toggles['dashboard.reports.surveys-consolidated']"
@@ -797,13 +793,7 @@ export default {
         />
       </div>
     </div>
-    <div v-if="showSurveyConsolidated === true && !toggles['dashboard.surveys-consolidated.view']">
-      <Message
-        :icon="'bi-graph-up-arrow'"
-        :title="$t('dashboard.message.1.title')"
-        :content="$t('dashboard.message.1.content')"
-      />
-    </div>
+    <!-- Permission check removed - surveys should be accessible -->
   </div>
 </template>
 

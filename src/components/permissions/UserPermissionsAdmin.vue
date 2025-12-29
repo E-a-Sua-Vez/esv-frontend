@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, computed } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import {
@@ -58,6 +58,16 @@ export default {
       searchString: '',
       email: '',
       user: undefined,
+      selectedModule: null,
+      selectedCategory: null,
+      availableModules: [],
+      availableCategories: [],
+      page: 1,
+      limit: 10,
+      limits: [10, 20, 50, 100],
+      totalPages: 0,
+      counter: 0,
+      allFilteredPermissions: [],
     });
 
     onBeforeMount(async () => {
@@ -176,6 +186,106 @@ export default {
       }
     };
 
+    const getModule = name => {
+      if (name) {
+        const [module] = name.split('.');
+        return module;
+      }
+      return null;
+    };
+
+    const getCategory = name => {
+      if (name) {
+        const parts = name.split('.');
+        if (parts.length >= 2) {
+          return parts[1];
+        }
+      }
+      return null;
+    };
+
+    const extractUniqueModulesAndCategories = permissions => {
+      const modules = new Set();
+      const categories = new Set();
+      permissions.forEach(permission => {
+        const module = getModule(permission.name);
+        const category = getCategory(permission.name);
+        if (module) modules.add(module);
+        if (category) categories.add(category);
+      });
+      return {
+        modules: Array.from(modules).sort(),
+        categories: Array.from(categories).sort(),
+      };
+    };
+
+    const filterPermissions = () => {
+      if (!state.user || !state.user.permissions) {
+        state.allFilteredPermissions = [];
+        state.permissions = [];
+        state.counter = 0;
+        state.totalPages = 0;
+        return;
+      }
+
+      let filtered = [...state.user.permissions];
+
+      // Filter by search string
+      if (state.searchString && state.searchString.length >= 3) {
+        filtered = filtered.filter(i =>
+          i.name.toLowerCase().includes(state.searchString.toLowerCase())
+        );
+      }
+
+      // Filter by module
+      if (state.selectedModule) {
+        filtered = filtered.filter(i => getModule(i.name) === state.selectedModule);
+      }
+
+      // Filter by category
+      if (state.selectedCategory) {
+        filtered = filtered.filter(i => getCategory(i.name) === state.selectedCategory);
+      }
+
+      // Sort filtered permissions
+      state.allFilteredPermissions = filtered.sort((a, b) => {
+        if (a.name < b.name) {
+          return -1;
+        }
+        if (a.name > b.name) {
+          return 1;
+        }
+        return 0;
+      });
+
+      // Apply pagination
+      updatePaginationData();
+    };
+
+    const updatePaginationData = () => {
+      if (state.allFilteredPermissions && state.allFilteredPermissions.length > 0) {
+        state.counter = state.allFilteredPermissions.length;
+        const total = state.counter / state.limit;
+        const totalB = Math.trunc(total);
+        state.totalPages =
+          totalB <= 0 ? 1 : state.counter % state.limit === 0 ? totalB : totalB + 1;
+
+        // Apply pagination slice
+        const startIndex = (state.page - 1) * state.limit;
+        const endIndex = startIndex + state.limit;
+        state.permissions = state.allFilteredPermissions.slice(startIndex, endIndex);
+      } else {
+        state.counter = 0;
+        state.totalPages = 0;
+        state.permissions = [];
+      }
+    };
+
+    const setPage = pageIn => {
+      state.page = pageIn;
+      updatePaginationData();
+    };
+
     const refresh = async () => {
       if (state.rolSelected) {
         if (state.rolSelected.name === 'collaborator') {
@@ -196,18 +306,21 @@ export default {
               });
             });
             state.user.permissions = permissions;
-            state.permissions = permissions;
           }
         }
-        state.permissions = state.permissions.sort((a, b) => {
-          if (a.name < b.name) {
-            return -1;
-          }
-          if (a.name > b.name) {
-            return 1;
-          }
-          return 0;
-        });
+
+        // Extract unique modules and categories
+        const { modules, categories } = extractUniqueModulesAndCategories(permissions);
+        state.availableModules = modules;
+        state.availableCategories = categories;
+
+        // Reset filters and pagination
+        state.selectedModule = null;
+        state.selectedCategory = null;
+        state.searchString = '';
+        state.page = 1;
+
+        filterPermissions();
       }
     };
 
@@ -230,24 +343,39 @@ export default {
       state.user = undefined;
       state.email = '';
       state.permissions = [];
+      state.selectedModule = null;
+      state.selectedCategory = null;
+      state.searchString = '';
+      state.availableModules = [];
+      state.availableCategories = [];
+      state.page = 1;
+      state.counter = 0;
+      state.totalPages = 0;
+      state.allFilteredPermissions = [];
+    };
+
+    const clearFilters = () => {
+      state.searchString = '';
+      state.selectedModule = null;
+      state.selectedCategory = null;
+      state.page = 1;
+      filterPermissions();
     };
 
     watch(
-      () => state.searchString,
+      () => [state.searchString, state.selectedModule, state.selectedCategory, state.limit],
       () => {
-        if (state.searchString.length >= 3) {
-          if (state.user && state.user.permissions.length > 0) {
-            state.permissions = state.user.permissions.filter(i =>
-              i.name.toLowerCase().startsWith(state.searchString.toLowerCase())
-            );
-          }
-        } else {
-          if (state.user) {
-            state.permissions = state.user.permissions;
-          }
-        }
+        state.page = 1; // Reset to first page when filters change
+        filterPermissions();
       },
       { immediate: true }
+    );
+
+    watch(
+      () => state.page,
+      () => {
+        updatePaginationData();
+      }
     );
 
     const getDate = date => {
@@ -271,6 +399,10 @@ export default {
       clear,
       search,
       getDate,
+      clearFilters,
+      getModule,
+      getCategory,
+      setPage,
     };
   },
 };
@@ -355,15 +487,59 @@ export default {
                 {{ state.user ? getDate(state.user.lastSignIn) : 'N/I' }} </span
               ><br />
             </div>
-            <div class="row g-1">
-              <input
-                min="1"
-                max="50"
-                type="text"
-                class="form-control"
-                v-model="state.searchString"
-                :placeholder="$t('enterSearcher')"
-              />
+            <div class="row g-1 mb-2">
+              <div class="col-md-6">
+                <input
+                  min="1"
+                  max="50"
+                  type="text"
+                  class="form-control"
+                  v-model="state.searchString"
+                  :placeholder="$t('enterSearcher')"
+                />
+              </div>
+              <div class="col-md-3">
+                <select
+                  class="btn btn-md fw-bold text-dark select w-100"
+                  v-model="state.selectedModule"
+                >
+                  <option :value="null">
+                    {{ $t('businessPermissionsAdmin.allModules') || 'Todos los Módulos' }}
+                  </option>
+                  <option v-for="module in state.availableModules" :key="module" :value="module">
+                    {{ module }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <select
+                  class="btn btn-md fw-bold text-dark select w-100"
+                  v-model="state.selectedCategory"
+                >
+                  <option :value="null">
+                    {{ $t('businessPermissionsAdmin.allCategories') || 'Todas las Categorías' }}
+                  </option>
+                  <option
+                    v-for="category in state.availableCategories"
+                    :key="category"
+                    :value="category"
+                  >
+                    {{ category }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="row g-1 mb-2">
+              <div class="col">
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-outline-secondary rounded-pill px-3"
+                  @click="clearFilters()"
+                  v-if="state.searchString || state.selectedModule || state.selectedCategory"
+                >
+                  <i class="bi bi-x-circle"></i>
+                  {{ $t('businessPermissionsAdmin.clearFilters') || 'Limpiar Filtros' }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -376,10 +552,6 @@ export default {
               />
             </div>
             <div class="row mb-2">
-              <div class="col-8 text-label">
-                <span>{{ $t('businessPermissionsAdmin.listResult') }}</span>
-                <span class="fw-bold m-2">{{ state.permissions.length }}</span>
-              </div>
               <div class="col-4">
                 <button
                   class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
@@ -457,6 +629,79 @@ export default {
                   </Warning>
                 </div>
               </div>
+            </div>
+            <div
+              v-if="state.permissions.length > 0 && state.toggles['roles.admin.read']"
+              class="my-2 d-flex align-items-center justify-content-center flex-wrap gap-2"
+            >
+              <span class="badge bg-secondary px-2 py-1">
+                {{ $t('businessAdmin.listResult') }} {{ state.counter }}
+              </span>
+              <span class="badge bg-secondary px-2 py-1">
+                {{ $t('page') }} {{ state.page }} {{ $t('of') }} {{ state.totalPages }}
+              </span>
+              <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="state.limit">
+                <option v-for="lim in state.limits" :key="lim" :value="lim">
+                  {{ lim }}
+                </option>
+              </select>
+            </div>
+            <div class="centered mt-2 mb-3" v-if="state.totalPages > 1">
+              <nav>
+                <ul class="pagination">
+                  <li class="page-item">
+                    <button
+                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                      aria-label="First"
+                      @click="setPage(1)"
+                      :disabled="state.page === 1 || state.totalPages === 0"
+                    >
+                      <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
+                    </button>
+                  </li>
+                  <li class="page-item">
+                    <button
+                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                      aria-label="Previous"
+                      @click="setPage(state.page - 1)"
+                      :disabled="state.page === 1 || state.totalPages === 0"
+                    >
+                      <span aria-hidden="true">&laquo;</span>
+                    </button>
+                  </li>
+                  <li>
+                    <select
+                      class="btn btn-md btn-light fw-bold text-dark select mx-1"
+                      v-model="state.page"
+                      :disabled="state.totalPages === 0"
+                    >
+                      <option v-for="pag in state.totalPages" :key="pag" :value="pag">
+                        {{ pag }}
+                      </option>
+                    </select>
+                  </li>
+                  <li class="page-item">
+                    <button
+                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                      aria-label="Next"
+                      @click="setPage(state.page + 1)"
+                      :disabled="state.page === state.totalPages || state.totalPages === 0"
+                    >
+                      <span aria-hidden="true">&raquo;</span>
+                    </button>
+                  </li>
+                  <li class="page-item">
+                    <button
+                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                      aria-label="Last"
+                      @click="setPage(state.totalPages)"
+                      :disabled="state.page === state.totalPages || state.totalPages === 0"
+                    >
+                      <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
             </div>
             <div
               class="roles-card mb-4"

@@ -86,18 +86,44 @@ export default {
         if (data.healthAgreementId) {
           state.newUser.healthAgreementId = data.healthAgreementId;
         }
+        // Check if birthday has validation error
+        state.birthdayError = data.birthdayError || false;
+
+        // Update errorsAdd reactively when birthday error changes
+        if (state.birthdayError) {
+          if (!state.errorsAdd.includes('commerceQueuesView.validate.birthday')) {
+            state.errorsAdd.push('commerceQueuesView.validate.birthday');
+          }
+        } else {
+          state.errorsAdd = state.errorsAdd.filter(
+            e => e !== 'commerceQueuesView.validate.birthday',
+          );
+        }
         if (data.phoneCode && data.phone) {
-          state.phone = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
-          state.phoneCode = data.phoneCode.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
-          state.newUser.phone = `${state.phoneCode}${state.phone}`;
+          const cleanedPhone = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+          const cleanedPhoneCode = data.phoneCode.replace(
+            /[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g,
+            '',
+          );
+
+          // Verificar si el teléfono ya comienza con el código de área
+          if (cleanedPhone.startsWith(cleanedPhoneCode)) {
+            // El teléfono ya tiene el código de área, usarlo directamente
+            state.phone = cleanedPhone.slice(cleanedPhoneCode.length);
+            state.phoneCode = cleanedPhoneCode;
+            state.newUser.phone = cleanedPhone;
+          } else {
+            // El teléfono no tiene el código de área, concatenarlo
+            state.phone = cleanedPhone;
+            state.phoneCode = cleanedPhoneCode;
+            state.newUser.phone = `${cleanedPhoneCode}${cleanedPhone}`;
+          }
         } else if (data.phone) {
-          state.phoneCode = data.phone
-            .replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '')
-            .slice(0, 2);
-          state.phone = data.phone
-            .replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '')
-            .slice(2, data.phone.length);
-          state.newUser.phone = `${state.phoneCode}${state.phone}`;
+          const cleanedPhone = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
+          // Extraer código de área (primeros 2 dígitos) y el resto del número
+          state.phoneCode = cleanedPhone.slice(0, 2);
+          state.phone = cleanedPhone.slice(2);
+          state.newUser.phone = cleanedPhone;
         }
       }
     };
@@ -169,7 +195,13 @@ export default {
               if (state.phoneCode === 'xx') {
                 state.phoneCode = '';
               }
-              user.phone = state.phoneCode + state.phone.replace(/^0+/, '');
+              // Si state.newUser.phone ya tiene el teléfono completo, usarlo directamente
+              // De lo contrario, concatenar phoneCode + phone
+              if (state.newUser.phone && state.newUser.phone.length > 0) {
+                user.phone = state.newUser.phone;
+              } else {
+                user.phone = state.phoneCode + state.phone.replace(/^0+/, '');
+              }
             }
             if (!state.phone || state.phone.length === 0) {
               state.errorsAdd.push('commerceQueuesView.validate.phone');
@@ -192,7 +224,9 @@ export default {
             }
           }
           if (getActiveFeature(state.commerce, 'attention-user-birthday', 'USER')) {
-            if (!user.birthday || user.birthday.length === 0) {
+            if (state.birthdayError) {
+              state.errorsAdd.push('commerceQueuesView.validate.birthday');
+            } else if (!user.birthday || user.birthday.length === 0) {
               state.errorsAdd.push('commerceQueuesView.validate.birthday');
             }
           }

@@ -26,3 +26,6 @@ export const updatePermissionsByRolName = async name => {
   }
   return rol;
 };
+
+export const syncRoles = async () =>
+  (await requestBackend.post('/rol/sync', {}, await getHeaders())).data;

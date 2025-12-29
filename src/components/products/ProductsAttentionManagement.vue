@@ -131,12 +131,22 @@ export default {
       } else {
         this.contactable = false;
       }
+      // If this is the content instance, refresh immediately
+      if (this.showProductStockManagement) {
+        this.page = 1;
+        await this.refresh();
+      }
     },
     async checkContacted(event) {
       if (event.target.checked) {
         this.contacted = true;
       } else {
         this.contacted = false;
+      }
+      // If this is the content instance, refresh immediately
+      if (this.showProductStockManagement) {
+        this.page = 1;
+        await this.refresh();
       }
     },
     async checkStock(event) {
@@ -145,6 +155,11 @@ export default {
       } else {
         this.stock = false;
       }
+      // If this is the content instance, refresh immediately
+      if (this.showProductStockManagement) {
+        this.page = 1;
+        await this.refresh();
+      }
     },
     async checkAsc(event) {
       if (event.target.checked) {
@@ -152,15 +167,35 @@ export default {
       } else {
         this.asc = false;
       }
+      // If this is the content instance, refresh immediately
+      if (this.showProductStockManagement) {
+        this.page = 1;
+        await this.refresh();
+      }
     },
     setContactResultType(type) {
       this.contactResultType = type;
+      // If this is the content instance, refresh immediately
+      if (this.showProductStockManagement) {
+        this.page = 1;
+        this.refresh();
+      }
     },
     setDaysSinceType(type) {
       this.daysSinceType = type;
+      // If this is the content instance, refresh immediately
+      if (this.showProductStockManagement) {
+        this.page = 1;
+        this.refresh();
+      }
     },
     setSearchText(text) {
       this.searchText = text;
+      // If this is the content instance, refresh immediately
+      if (this.showProductStockManagement) {
+        this.page = 1;
+        this.refresh();
+      }
     },
     setStartDate(date) {
       this.startDate = date;

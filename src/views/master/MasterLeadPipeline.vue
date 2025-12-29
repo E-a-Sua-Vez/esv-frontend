@@ -7,6 +7,7 @@ import {
   getLeadsByStage,
   getLeadsByStageFromBackend,
   updateLeadStage,
+  updateLead,
   addLeadContact,
   getLeadContacts,
   getLeadContactsFromBackend,
@@ -206,6 +207,9 @@ export default {
 
     // Time indicator filter - array of selected indicators ('green', 'yellow', 'red') - empty means show all
     const timeIndicatorFilter = ref([]);
+
+    // Temperature filter - array of selected temperatures ('QUENTE', 'MORNO', 'FRIO') - empty means show all
+    const temperatureFilter = ref([]);
     const showAnalytics = ref(false);
 
     const isMaster = computed(() => {
@@ -226,6 +230,7 @@ export default {
       company: '',
       message: '',
       source: 'manual',
+      temperature: 'MORNO', // Default to warm (green)
     });
 
     const leads = reactive({
@@ -240,7 +245,7 @@ export default {
       router.back();
     };
 
-    const loadLeads = async (useBackend = false) => {
+    const loadLeads = async (useBackend = true) => {
       try {
         loading.value = true;
         alertError.value = '';
@@ -287,6 +292,14 @@ export default {
             filtered = filtered.filter(lead => {
               const indicator = getTimeIndicator(lead);
               return indicator && timeIndicatorFilter.value.includes(indicator);
+            });
+          }
+
+          // Apply temperature filter if set
+          if (temperatureFilter.value && temperatureFilter.value.length > 0) {
+            filtered = filtered.filter(lead => {
+              const temperature = lead.temperature;
+              return temperature && temperatureFilter.value.includes(temperature.toUpperCase());
             });
           }
 
@@ -808,6 +821,67 @@ export default {
       newContact.type = CONTACT_TYPES.CALL;
       newContact.result = CONTACT_RESULTS.NO_RESPONSE;
       newContact.scheduledAt = undefined;
+      resetTemperatureField();
+    };
+
+    const updateLeadTemperature = async (leadId, temperature) => {
+      try {
+        if (!leadId) {
+          console.error('Lead ID is missing');
+          return;
+        }
+
+        loading.value = true;
+        alertError.value = '';
+
+        // Update lead temperature in backend
+        const updatedLead = await updateLead(leadId, { temperature });
+
+        // Update local state if this lead is currently selected
+        if (selectedLead.value && selectedLead.value.id === leadId) {
+          selectedLead.value.temperature = temperature;
+        }
+
+        // Update in leads arrays
+        for (const stage of Object.keys(leads)) {
+          if (leads[stage] && Array.isArray(leads[stage])) {
+            const leadIndex = leads[stage].findIndex(l => l.id === leadId);
+            if (leadIndex !== -1) {
+              leads[stage][leadIndex].temperature = temperature;
+              break;
+            }
+          }
+        }
+
+        loading.value = false;
+      } catch (error) {
+        console.error('Error updating lead temperature:', error);
+        alertError.value =
+          error?.response?.data?.message || error?.message || 'Error updating temperature';
+        loading.value = false;
+      }
+    };
+
+    const tempTemperature = ref('');
+
+    const resetTemperatureField = () => {
+      tempTemperature.value = '';
+    };
+
+    const handleTemperatureChange = event => {
+      // Store the selected value in tempTemperature, but don't update yet
+      tempTemperature.value = event.target.value || '';
+    };
+
+    const saveTemperature = async () => {
+      if (selectedLead.value && selectedLead.value.id && tempTemperature.value !== undefined) {
+        const newTemperature = tempTemperature.value || undefined;
+        await updateLeadTemperature(selectedLead.value.id, newTemperature);
+        // Update the selectedLead value to reflect the change
+        if (selectedLead.value) {
+          selectedLead.value.temperature = newTemperature;
+        }
+      }
     };
 
     const saveContact = async event => {
@@ -1735,6 +1809,28 @@ export default {
       return labels[indicator] || indicator;
     };
 
+    // Helper function to get temperature indicator (color class)
+    const getTemperatureIndicator = lead => {
+      if (!lead || !lead.temperature) return null;
+      const temp = lead.temperature.toUpperCase();
+      if (temp === 'QUENTE') return 'danger'; // Red
+      if (temp === 'MORNO') return 'success'; // Green
+      if (temp === 'FRIO') return 'primary'; // Blue
+      return null;
+    };
+
+    // Helper function to get temperature label
+    const getTemperatureLabel = temperature => {
+      if (!temperature) return '';
+      const temp = temperature.toUpperCase();
+      const labels = {
+        QUENTE: $t('leadPipeline.temperatureQuente') || 'Quente (Hot)',
+        MORNO: $t('leadPipeline.temperatureMorno') || 'Morno (Warm)',
+        FRIO: $t('leadPipeline.temperatureFrio') || 'Frio (Cold)',
+      };
+      return labels[temp] || temperature;
+    };
+
     // Helper function to get source label
     const getSourceLabel = source => {
       if (!source) return '';
@@ -1785,6 +1881,24 @@ export default {
     // Reset time indicator filters
     const resetTimeIndicatorFilters = () => {
       timeIndicatorFilter.value = [];
+      loadLeads();
+    };
+
+    // Toggle temperature filter
+    const toggleTemperatureFilter = temperature => {
+      const tempUpper = temperature.toUpperCase();
+      const index = temperatureFilter.value.indexOf(tempUpper);
+      if (index > -1) {
+        temperatureFilter.value.splice(index, 1);
+      } else {
+        temperatureFilter.value.push(tempUpper);
+      }
+      loadLeads();
+    };
+
+    // Reset temperature filters
+    const resetTemperatureFilters = () => {
+      temperatureFilter.value = [];
       loadLeads();
     };
 
@@ -2036,6 +2150,11 @@ export default {
 
       dateFilterFrom.value = oneMonthAgo.toISOString().split('T')[0];
       dateFilterTo.value = today.toISOString().split('T')[0];
+      // When clearing date filters for the pipeline, ensure we run queries
+      // using only the date range for all statuses (clear status/time filters)
+      statusFilter.value = [];
+      timeIndicatorFilter.value = [];
+      temperatureFilter.value = [];
       loadLeads(true);
     };
 
@@ -2390,6 +2509,7 @@ export default {
       newLead.phone = '';
       newLead.company = '';
       newLead.message = '';
+      newLead.temperature = 'MORNO'; // Reset to default
       alertError.value = '';
       errorsAdd.value = [];
       nameError.value = false;
@@ -2446,6 +2566,7 @@ export default {
           message: newLead.message?.trim() || '',
           source: 'manual',
           page: window.location.href,
+          temperature: newLead.temperature || 'MORNO', // Include temperature, default to MORNO
           businessId: user?.businessId,
           commerceId: user?.commerceId,
         };
@@ -2511,14 +2632,9 @@ export default {
         loading.value = false;
       } catch (error) {
         console.error('Error loading lead pipeline:', error);
-        // Fallback to query stack if backend fails
-        try {
-          await loadLeads(false);
-        } catch (fallbackError) {
-          const errorMsg =
-            error?.response?.status || error?.message || 'Error loading lead pipeline';
-          alertError.value = Array.isArray(errorMsg) ? errorMsg[0] : errorMsg;
-        }
+        // Always use backend - no fallback to query stack
+        const errorMsg = error?.response?.status || error?.message || 'Error loading lead pipeline';
+        alertError.value = Array.isArray(errorMsg) ? errorMsg[0] : errorMsg;
         loading.value = false;
       }
     });
@@ -2549,6 +2665,12 @@ export default {
           closeLeadDetails();
         });
       }
+
+      // Ensure initial load uses only date filters: clear status and time indicator filters
+      statusFilter.value = [];
+      timeIndicatorFilter.value = [];
+      // Use backend for initial, immediate results filtered only by dates
+      loadLeads(true);
     });
 
     onUnmounted(() => {
@@ -2595,6 +2717,11 @@ export default {
       closeLeadDetails,
       saveContact,
       archiveLead,
+      updateLeadTemperature,
+      handleTemperatureChange,
+      saveTemperature,
+      tempTemperature,
+      resetTemperatureField,
       formatDate,
       getContactResultIcon,
       getContactResultClass,
@@ -2619,13 +2746,18 @@ export default {
       resetDateFilters,
       statusFilter,
       timeIndicatorFilter,
+      temperatureFilter,
       getTimeIndicator,
       getTimeIndicatorLabel,
+      getTemperatureIndicator,
+      getTemperatureLabel,
       getSourceLabel,
       toggleStatusFilter,
       toggleTimeIndicatorFilter,
+      toggleTemperatureFilter,
       resetStatusFilters,
       resetTimeIndicatorFilters,
+      resetTemperatureFilters,
       pipelineStats,
       pipelineInsights,
       showAnalytics,
@@ -2745,6 +2877,47 @@ export default {
               </div>
             </div>
           </div>
+
+          <!-- Temperature Filters -->
+          <div class="row my-2">
+            <div class="col-12">
+              <label class="form-label small fw-bold mb-2">{{
+                $t('leadPipeline.filterByTemperature') || 'Filtrar por Prioridade'
+              }}</label>
+              <div class="d-flex flex-wrap gap-2 justify-content-center">
+                <button
+                  class="btn btn-sm rounded-pill"
+                  :class="
+                    temperatureFilter.includes('QUENTE') ? 'btn-danger' : 'btn-outline-danger'
+                  "
+                  @click="toggleTemperatureFilter('QUENTE')"
+                >
+                  <i class="bi bi-thermometer-half me-1"></i>
+                  {{ getTemperatureLabel('QUENTE') }}
+                </button>
+                <button
+                  class="btn btn-sm rounded-pill"
+                  :class="
+                    temperatureFilter.includes('MORNO') ? 'btn-success' : 'btn-outline-success'
+                  "
+                  @click="toggleTemperatureFilter('MORNO')"
+                >
+                  <i class="bi bi-thermometer-half me-1"></i>
+                  {{ getTemperatureLabel('MORNO') }}
+                </button>
+                <button
+                  class="btn btn-sm rounded-pill"
+                  :class="
+                    temperatureFilter.includes('FRIO') ? 'btn-primary' : 'btn-outline-primary'
+                  "
+                  @click="toggleTemperatureFilter('FRIO')"
+                >
+                  <i class="bi bi-thermometer-half me-1"></i>
+                  {{ getTemperatureLabel('FRIO') }}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div v-if="!loading" class="lead-pipeline-container">
@@ -2837,18 +3010,32 @@ export default {
                           <span class="lead-name-text">{{ lead.name }}</span>
                           <span class="lead-date-text">{{ formatDate(lead.createdAt) }}</span>
                         </div>
-                        <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
-                          <span
-                            class="badge rounded-pill"
-                            :class="{
-                              'bg-success': getTimeIndicator(lead) === 'green',
-                              'bg-warning': getTimeIndicator(lead) === 'yellow',
-                              'bg-danger': getTimeIndicator(lead) === 'red',
-                            }"
-                            :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                        <div class="d-flex gap-1 align-items-center">
+                          <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
+                            <span
+                              class="badge rounded-pill"
+                              :class="{
+                                'bg-success': getTimeIndicator(lead) === 'green',
+                                'bg-warning': getTimeIndicator(lead) === 'yellow',
+                                'bg-danger': getTimeIndicator(lead) === 'red',
+                              }"
+                              :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                            >
+                              <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
+                            </span>
+                          </div>
+                          <div
+                            class="lead-temperature-indicator"
+                            v-if="getTemperatureIndicator(lead)"
                           >
-                            <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
-                          </span>
+                            <span
+                              class="badge rounded-pill"
+                              :class="`bg-${getTemperatureIndicator(lead)}`"
+                              :title="getTemperatureLabel(lead.temperature)"
+                            >
+                              <i class="bi bi-thermometer-half" style="font-size: 0.6rem"></i>
+                            </span>
+                          </div>
                         </div>
                         <div class="lead-actions-mini">
                           <button
@@ -2950,18 +3137,32 @@ export default {
                             formatDate(lead.createdAt)
                           }}</span>
                         </div>
-                        <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
-                          <span
-                            class="badge rounded-pill"
-                            :class="{
-                              'bg-success': getTimeIndicator(lead) === 'green',
-                              'bg-warning': getTimeIndicator(lead) === 'yellow',
-                              'bg-danger': getTimeIndicator(lead) === 'red',
-                            }"
-                            :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                        <div class="d-flex gap-1 align-items-center">
+                          <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
+                            <span
+                              class="badge rounded-pill"
+                              :class="{
+                                'bg-success': getTimeIndicator(lead) === 'green',
+                                'bg-warning': getTimeIndicator(lead) === 'yellow',
+                                'bg-danger': getTimeIndicator(lead) === 'red',
+                              }"
+                              :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                            >
+                              <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
+                            </span>
+                          </div>
+                          <div
+                            class="lead-temperature-indicator"
+                            v-if="getTemperatureIndicator(lead)"
                           >
-                            <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
-                          </span>
+                            <span
+                              class="badge rounded-pill"
+                              :class="`bg-${getTemperatureIndicator(lead)}`"
+                              :title="getTemperatureLabel(lead.temperature)"
+                            >
+                              <i class="bi bi-thermometer-half" style="font-size: 0.6rem"></i>
+                            </span>
+                          </div>
                         </div>
                         <div class="lead-actions-mini">
                           <!-- Move to Waitlist (click "in contacto" logo) -->
@@ -3077,18 +3278,32 @@ export default {
                             formatDate(lead.updatedAt || lead.createdAt)
                           }}</span>
                         </div>
-                        <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
-                          <span
-                            class="badge rounded-pill"
-                            :class="{
-                              'bg-success': getTimeIndicator(lead) === 'green',
-                              'bg-warning': getTimeIndicator(lead) === 'yellow',
-                              'bg-danger': getTimeIndicator(lead) === 'red',
-                            }"
-                            :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                        <div class="d-flex gap-1 align-items-center">
+                          <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
+                            <span
+                              class="badge rounded-pill"
+                              :class="{
+                                'bg-success': getTimeIndicator(lead) === 'green',
+                                'bg-warning': getTimeIndicator(lead) === 'yellow',
+                                'bg-danger': getTimeIndicator(lead) === 'red',
+                              }"
+                              :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                            >
+                              <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
+                            </span>
+                          </div>
+                          <div
+                            class="lead-temperature-indicator"
+                            v-if="getTemperatureIndicator(lead)"
                           >
-                            <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
-                          </span>
+                            <span
+                              class="badge rounded-pill"
+                              :class="`bg-${getTemperatureIndicator(lead)}`"
+                              :title="getTemperatureLabel(lead.temperature)"
+                            >
+                              <i class="bi bi-thermometer-half" style="font-size: 0.6rem"></i>
+                            </span>
+                          </div>
                         </div>
                         <div class="lead-actions-mini">
                           <!-- Move back to IN_CONTACT (can be contacted again) -->
@@ -3166,18 +3381,32 @@ export default {
                             formatDate(lead.updatedAt || lead.createdAt)
                           }}</span>
                         </div>
-                        <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
-                          <span
-                            class="badge rounded-pill"
-                            :class="{
-                              'bg-success': getTimeIndicator(lead) === 'green',
-                              'bg-warning': getTimeIndicator(lead) === 'yellow',
-                              'bg-danger': getTimeIndicator(lead) === 'red',
-                            }"
-                            :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                        <div class="d-flex gap-1 align-items-center">
+                          <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
+                            <span
+                              class="badge rounded-pill"
+                              :class="{
+                                'bg-success': getTimeIndicator(lead) === 'green',
+                                'bg-warning': getTimeIndicator(lead) === 'yellow',
+                                'bg-danger': getTimeIndicator(lead) === 'red',
+                              }"
+                              :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                            >
+                              <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
+                            </span>
+                          </div>
+                          <div
+                            class="lead-temperature-indicator"
+                            v-if="getTemperatureIndicator(lead)"
                           >
-                            <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
-                          </span>
+                            <span
+                              class="badge rounded-pill"
+                              :class="`bg-${getTemperatureIndicator(lead)}`"
+                              :title="getTemperatureLabel(lead.temperature)"
+                            >
+                              <i class="bi bi-thermometer-half" style="font-size: 0.6rem"></i>
+                            </span>
+                          </div>
                         </div>
                         <div class="lead-actions-mini">
                           <!-- Move to Waitlist -->
@@ -3493,6 +3722,47 @@ export default {
               </div>
             </div>
           </div>
+
+          <!-- Temperature Filters -->
+          <div class="row my-2">
+            <div class="col-12">
+              <label class="form-label small fw-bold mb-2">{{
+                $t('leadPipeline.filterByTemperature') || 'Filtrar por Prioridade'
+              }}</label>
+              <div class="d-flex flex-wrap gap-2 justify-content-center">
+                <button
+                  class="btn btn-sm rounded-pill"
+                  :class="
+                    temperatureFilter.includes('QUENTE') ? 'btn-danger' : 'btn-outline-danger'
+                  "
+                  @click="toggleTemperatureFilter('QUENTE')"
+                >
+                  <i class="bi bi-thermometer-half me-1"></i>
+                  {{ getTemperatureLabel('QUENTE') }}
+                </button>
+                <button
+                  class="btn btn-sm rounded-pill"
+                  :class="
+                    temperatureFilter.includes('MORNO') ? 'btn-success' : 'btn-outline-success'
+                  "
+                  @click="toggleTemperatureFilter('MORNO')"
+                >
+                  <i class="bi bi-thermometer-half me-1"></i>
+                  {{ getTemperatureLabel('MORNO') }}
+                </button>
+                <button
+                  class="btn btn-sm rounded-pill"
+                  :class="
+                    temperatureFilter.includes('FRIO') ? 'btn-primary' : 'btn-outline-primary'
+                  "
+                  @click="toggleTemperatureFilter('FRIO')"
+                >
+                  <i class="bi bi-thermometer-half me-1"></i>
+                  {{ getTemperatureLabel('FRIO') }}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div v-if="!loading" class="lead-pipeline-container">
@@ -3584,18 +3854,32 @@ export default {
                           {{ formatDate(lead.createdAt) }}
                         </span>
                       </div>
-                      <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
-                        <span
-                          class="badge rounded-pill"
-                          :class="{
-                            'bg-success': getTimeIndicator(lead) === 'green',
-                            'bg-warning': getTimeIndicator(lead) === 'yellow',
-                            'bg-danger': getTimeIndicator(lead) === 'red',
-                          }"
-                          :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                      <div class="d-flex gap-1 align-items-center">
+                        <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
+                          <span
+                            class="badge rounded-pill"
+                            :class="{
+                              'bg-success': getTimeIndicator(lead) === 'green',
+                              'bg-warning': getTimeIndicator(lead) === 'yellow',
+                              'bg-danger': getTimeIndicator(lead) === 'red',
+                            }"
+                            :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                          >
+                            <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
+                          </span>
+                        </div>
+                        <div
+                          class="lead-temperature-indicator"
+                          v-if="getTemperatureIndicator(lead)"
                         >
-                          <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
-                        </span>
+                          <span
+                            class="badge rounded-pill"
+                            :class="`bg-${getTemperatureIndicator(lead)}`"
+                            :title="getTemperatureLabel(lead.temperature)"
+                          >
+                            <i class="bi bi-thermometer-half" style="font-size: 0.6rem"></i>
+                          </span>
+                        </div>
                       </div>
                       <div class="lead-actions-mini">
                         <button
@@ -3696,18 +3980,32 @@ export default {
                           }}
                         </span>
                       </div>
-                      <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
-                        <span
-                          class="badge rounded-pill"
-                          :class="{
-                            'bg-success': getTimeIndicator(lead) === 'green',
-                            'bg-warning': getTimeIndicator(lead) === 'yellow',
-                            'bg-danger': getTimeIndicator(lead) === 'red',
-                          }"
-                          :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                      <div class="d-flex gap-1 align-items-center">
+                        <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
+                          <span
+                            class="badge rounded-pill"
+                            :class="{
+                              'bg-success': getTimeIndicator(lead) === 'green',
+                              'bg-warning': getTimeIndicator(lead) === 'yellow',
+                              'bg-danger': getTimeIndicator(lead) === 'red',
+                            }"
+                            :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                          >
+                            <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
+                          </span>
+                        </div>
+                        <div
+                          class="lead-temperature-indicator"
+                          v-if="getTemperatureIndicator(lead)"
                         >
-                          <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
-                        </span>
+                          <span
+                            class="badge rounded-pill"
+                            :class="`bg-${getTemperatureIndicator(lead)}`"
+                            :title="getTemperatureLabel(lead.temperature)"
+                          >
+                            <i class="bi bi-thermometer-half" style="font-size: 0.6rem"></i>
+                          </span>
+                        </div>
                       </div>
                       <div class="lead-actions-mini">
                         <button
@@ -3829,18 +4127,32 @@ export default {
                           }}
                         </span>
                       </div>
-                      <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
-                        <span
-                          class="badge rounded-pill"
-                          :class="{
-                            'bg-success': getTimeIndicator(lead) === 'green',
-                            'bg-warning': getTimeIndicator(lead) === 'yellow',
-                            'bg-danger': getTimeIndicator(lead) === 'red',
-                          }"
-                          :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                      <div class="d-flex gap-1 align-items-center">
+                        <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
+                          <span
+                            class="badge rounded-pill"
+                            :class="{
+                              'bg-success': getTimeIndicator(lead) === 'green',
+                              'bg-warning': getTimeIndicator(lead) === 'yellow',
+                              'bg-danger': getTimeIndicator(lead) === 'red',
+                            }"
+                            :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                          >
+                            <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
+                          </span>
+                        </div>
+                        <div
+                          class="lead-temperature-indicator"
+                          v-if="getTemperatureIndicator(lead)"
                         >
-                          <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
-                        </span>
+                          <span
+                            class="badge rounded-pill"
+                            :class="`bg-${getTemperatureIndicator(lead)}`"
+                            :title="getTemperatureLabel(lead.temperature)"
+                          >
+                            <i class="bi bi-thermometer-half" style="font-size: 0.6rem"></i>
+                          </span>
+                        </div>
                       </div>
                       <div class="lead-actions-mini">
                         <button
@@ -3941,18 +4253,32 @@ export default {
                           }}
                         </span>
                       </div>
-                      <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
-                        <span
-                          class="badge rounded-pill"
-                          :class="{
-                            'bg-success': getTimeIndicator(lead) === 'green',
-                            'bg-warning': getTimeIndicator(lead) === 'yellow',
-                            'bg-danger': getTimeIndicator(lead) === 'red',
-                          }"
-                          :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                      <div class="d-flex gap-1 align-items-center">
+                        <div class="lead-time-indicator" v-if="getTimeIndicator(lead)">
+                          <span
+                            class="badge rounded-pill"
+                            :class="{
+                              'bg-success': getTimeIndicator(lead) === 'green',
+                              'bg-warning': getTimeIndicator(lead) === 'yellow',
+                              'bg-danger': getTimeIndicator(lead) === 'red',
+                            }"
+                            :title="getTimeIndicatorLabel(getTimeIndicator(lead))"
+                          >
+                            <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
+                          </span>
+                        </div>
+                        <div
+                          class="lead-temperature-indicator"
+                          v-if="getTemperatureIndicator(lead)"
                         >
-                          <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
-                        </span>
+                          <span
+                            class="badge rounded-pill"
+                            :class="`bg-${getTemperatureIndicator(lead)}`"
+                            :title="getTemperatureLabel(lead.temperature)"
+                          >
+                            <i class="bi bi-thermometer-half" style="font-size: 0.6rem"></i>
+                          </span>
+                        </div>
                       </div>
                       <div class="lead-actions-mini">
                         <button
@@ -4239,6 +4565,22 @@ export default {
                     "
                   ></textarea>
                 </div>
+                <div class="form-group-modern">
+                  <label class="form-label-modern">
+                    {{ $t('leadPipeline.temperature') || 'Priority' }}
+                  </label>
+                  <select class="form-control-modern" v-model="newLead.temperature">
+                    <option value="QUENTE">
+                      {{ $t('leadPipeline.temperatureQuente') || 'Quente (Hot - Red)' }}
+                    </option>
+                    <option value="MORNO">
+                      {{ $t('leadPipeline.temperatureMorno') || 'Morno (Warm - Green)' }}
+                    </option>
+                    <option value="FRIO">
+                      {{ $t('leadPipeline.temperatureFrio') || 'Frio (Cold - Blue)' }}
+                    </option>
+                  </select>
+                </div>
                 <div class="row g-1 errors" id="feedback" v-if="errorsAdd && errorsAdd.length > 0">
                   <Warning>
                     <template v-slot:message>
@@ -4405,6 +4747,49 @@ export default {
                         >
                           {{ getSourceLabel(selectedLead.source) }}
                         </span>
+                      </div>
+                    </div>
+                    <!-- Temperature Field -->
+                    <div class="form-group-modern">
+                      <label class="form-label-modern">{{
+                        $t('leadPipeline.temperature') || 'Prioridade'
+                      }}</label>
+                      <div class="d-flex gap-2 align-items-center">
+                        <select
+                          class="form-control-modern form-select-modern flex-grow-1"
+                          :value="tempTemperature || selectedLead?.temperature || ''"
+                          @change="handleTemperatureChange"
+                        >
+                          <option value="">
+                            {{ $t('leadPipeline.temperature') || 'Selecione' }}
+                          </option>
+                          <option value="QUENTE">
+                            {{ $t('leadPipeline.temperatureQuente') || 'Quente (Vermelho)' }}
+                          </option>
+                          <option value="MORNO">
+                            {{ $t('leadPipeline.temperatureMorno') || 'Morno (Verde)' }}
+                          </option>
+                          <option value="FRIO">
+                            {{ $t('leadPipeline.temperatureFrio') || 'Frio (Azul)' }}
+                          </option>
+                        </select>
+                        <button
+                          class="btn btn-sm btn-dark rounded-pill px-3"
+                          @click="saveTemperature"
+                          :disabled="
+                            loading ||
+                            tempTemperature === (selectedLead?.temperature || '') ||
+                            tempTemperature === ''
+                          "
+                          :title="
+                            tempTemperature === (selectedLead?.temperature || '')
+                              ? 'Sem mudanças para salvar'
+                              : 'Salvar temperatura'
+                          "
+                        >
+                          <i class="bi bi-check-lg me-1"></i>
+                          {{ $t('common.save') || 'Salvar' }}
+                        </button>
                       </div>
                     </div>
                     <div class="form-group-modern" v-if="selectedLead.message">

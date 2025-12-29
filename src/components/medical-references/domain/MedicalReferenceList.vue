@@ -1,163 +1,15 @@
-<template>
-  <div class="reference-list-modern">
-    <div class="list-header">
-      <div class="list-header-content">
-        <div class="list-header-icon">
-          <i class="bi bi-arrow-left-right"></i>
-        </div>
-        <div class="list-header-title">
-          <h4>Historial de Referencias Médicas</h4>
-          <p class="text-muted small mb-0">{{ references.length }} referencia(s)</p>
-        </div>
-      </div>
-      <div class="list-header-actions">
-        <button
-          v-if="toggles['patient.history.edit']"
-          type="button"
-          class="btn btn-sm btn-primary"
-          @click="$emit('create-new')"
-        >
-          <i class="bi bi-plus-circle me-1"></i>
-          Nueva Referencia
-        </button>
-      </div>
-    </div>
-
-    <div v-if="loading" class="loading-state">
-      <Spinner />
-    </div>
-
-    <div v-else-if="references.length === 0" class="empty-state">
-      <Message
-        title="No hay referencias registradas"
-        content="Aún no se han registrado referencias médicas para este paciente"
-      />
-    </div>
-
-    <div v-else class="references-timeline">
-      <div v-for="reference in sortedReferences" :key="reference.id" class="reference-card">
-        <div class="reference-card-header">
-          <div class="reference-meta">
-            <span class="reference-date-badge">
-              <i class="bi bi-calendar3 me-1"></i>
-              {{ getDate(reference.createdAt) }}
-            </span>
-            <span class="reference-status-badge" :class="getStatusClass(reference.status)">
-              {{ getStatusLabel(reference.status) }}
-            </span>
-            <span
-              v-if="reference.urgency"
-              class="reference-urgency-badge"
-              :class="getUrgencyClass(reference.urgency)"
-            >
-              {{ getUrgencyLabel(reference.urgency) }}
-            </span>
-          </div>
-          <div class="reference-actions">
-            <!-- PDF Button: Always visible, different states -->
-            <button
-              v-if="reference.pdfUrl"
-              type="button"
-              class="btn btn-sm btn-outline-danger"
-              @click="downloadPdf(reference.id)"
-              title="Descargar PDF"
-              :disabled="downloadingPdf === reference.id"
-            >
-              <i v-if="downloadingPdf !== reference.id" class="bi bi-file-earmark-pdf"></i>
-              <span v-else class="spinner-border spinner-border-sm" role="status"></span>
-              <span v-if="downloadingPdf !== reference.id" class="ms-1">PDF</span>
-            </button>
-            <button
-              v-else
-              type="button"
-              class="btn btn-sm btn-outline-secondary"
-              title="Generando PDF..."
-              disabled
-            >
-              <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-              <span>Generando PDF...</span>
-            </button>
-            <button
-              v-if="reference.status === 'PENDING' && toggles['patient.history.edit']"
-              type="button"
-              class="btn btn-sm btn-outline-success"
-              @click="$emit('accept', reference.id)"
-              title="Aceptar referencia"
-            >
-              <i class="bi bi-check-circle"></i>
-            </button>
-            <button
-              v-if="reference.status === 'ACCEPTED' && toggles['patient.history.edit']"
-              type="button"
-              class="btn btn-sm btn-outline-primary"
-              @click="$emit('attend', reference.id)"
-              title="Marcar como atendida"
-            >
-              <i class="bi bi-person-check"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="reference-destination">
-          <div class="reference-destination-info">
-            <i class="bi bi-arrow-right-circle me-2"></i>
-            <strong>Especialidad:</strong> {{ reference.specialtyDestination }}
-            <span v-if="reference.doctorDestinationName" class="ms-2">
-              - Dr(a). {{ reference.doctorDestinationName }}
-            </span>
-          </div>
-        </div>
-
-        <div v-if="reference.reason" class="reference-reason">
-          <strong>Motivo de referencia:</strong>
-          <p>{{ reference.reason }}</p>
-        </div>
-
-        <div v-if="reference.presumptiveDiagnosis" class="reference-diagnosis">
-          <strong>Diagnóstico presuntivo:</strong>
-          <p>{{ reference.presumptiveDiagnosis }}</p>
-        </div>
-
-        <div v-if="reference.studiesPerformed" class="reference-studies">
-          <strong>Estudios realizados:</strong>
-          <p>{{ reference.studiesPerformed }}</p>
-        </div>
-
-        <div v-if="reference.currentTreatment" class="reference-treatment">
-          <strong>Tratamiento actual:</strong>
-          <p>{{ reference.currentTreatment }}</p>
-        </div>
-
-        <div v-if="reference.returnReport" class="reference-return">
-          <strong>Informe de retorno:</strong>
-          <p>{{ reference.returnReport }}</p>
-        </div>
-
-        <div class="reference-footer">
-          <div class="reference-dates">
-            <span v-if="reference.acceptedDate">
-              <i class="bi bi-check-circle me-1"></i>
-              Aceptada: {{ getDate(reference.acceptedDate) }}
-            </span>
-            <span v-if="reference.attendedDate">
-              <i class="bi bi-person-check me-1"></i>
-              Atendida: {{ getDate(reference.attendedDate) }}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script>
-import { computed, ref, watch, onUnmounted } from 'vue';
+import { ref, computed, toRefs } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Spinner from '../../common/Spinner.vue';
 import Message from '../../common/Message.vue';
-import { getDate } from '../../../shared/utils/date';
+import { getDateAndHour } from '../../../shared/utils/date';
 import {
   downloadReferencePdf,
-  getReferenceById,
+  getReferencePdfUrl,
+  acceptReference,
+  markReferenceAsAttended,
+  rejectReference,
 } from '../../../application/services/medical-reference';
 
 export default {
@@ -167,402 +19,1127 @@ export default {
     Message,
   },
   props: {
-    references: {
-      type: Array,
-      default: () => [],
-    },
-    loading: {
-      type: Boolean,
-      default: false,
-    },
-    toggles: {
-      type: Object,
-      default: () => {},
-    },
-    sortAsc: {
-      type: Boolean,
-      default: true,
-    },
+    references: { type: Array, default: () => [] },
+    loading: { type: Boolean, default: false },
+    toggles: { type: Object, default: () => ({}) },
+    sortAsc: { type: Boolean, default: true },
   },
   emits: ['create-new', 'accept', 'attend', 'refresh'],
   setup(props, { emit }) {
-    const downloadingPdf = ref(null);
-    const pollingIntervals = ref({});
-    const sortedReferences = computed(() => {
-      const sorted = [...props.references];
-      if (props.sortAsc) {
-        return sorted.sort(
-          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-      } else {
-        return sorted.sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      }
+    const { t } = useI18n();
+    const actionLoading = ref({});
+    const showResponseModal = ref(false);
+    const selectedReference = ref(null);
+    const responseForm = ref({
+      response: '',
+      returnReport: '',
     });
 
-    const getStatusClass = status => {
-      const statusMap = {
-        PENDING: 'status-pending',
-        ACCEPTED: 'status-accepted',
-        REJECTED: 'status-rejected',
-        ATTENDED: 'status-attended',
+    const { references, loading, toggles, sortAsc } = toRefs(props);
+
+    // Computed sorted references
+    const sortedReferences = computed(() => {
+      if (!references.value || references.value.length === 0) return [];
+
+      const sorted = [...references.value].sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.referredAt);
+        const dateB = new Date(b.createdAt || b.referredAt);
+        return sortAsc.value ? dateA - dateB : dateB - dateA;
+      });
+
+      return sorted;
+    });
+
+    // Set loading state for specific action
+    const setActionLoading = (referenceId, action, state) => {
+      actionLoading.value = {
+        ...actionLoading.value,
+        [`${referenceId}-${action}`]: state,
       };
-      return statusMap[status] || 'status-default';
     };
 
-    const getStatusLabel = status => {
-      const labelMap = {
-        PENDING: 'Pendiente',
-        ACCEPTED: 'Aceptada',
-        REJECTED: 'Rechazada',
-        ATTENDED: 'Atendida',
-      };
-      return labelMap[status] || status;
-    };
+    // Check if action is loading
+    const isActionLoading = (referenceId, action) =>
+      actionLoading.value[`${referenceId}-${action}`] || false;
 
-    const getUrgencyClass = urgency => {
-      const urgencyMap = {
-        routine: 'urgency-routine',
-        urgent: 'urgency-urgent',
-        emergency: 'urgency-emergency',
-      };
-      return urgencyMap[urgency] || 'urgency-default';
-    };
-
-    const getUrgencyLabel = urgency => {
-      const labelMap = {
-        routine: 'Rutina',
-        urgent: 'Urgente',
-        emergency: 'Emergencia',
-      };
-      return labelMap[urgency] || urgency;
-    };
-
-    const downloadPdf = async referenceId => {
+    // Download reference PDF
+    const handleDownloadPdf = async reference => {
       try {
-        downloadingPdf.value = referenceId;
-        const blob = await downloadReferencePdf(referenceId);
+        setActionLoading(reference.id, 'download', true);
+        const pdfBlob = await downloadReferencePdf(reference.id);
 
-        // Crear URL del blob y descargar
-        const url = window.URL.createObjectURL(blob);
+        // Create download link
+        const url = window.URL.createObjectURL(pdfBlob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `medical-reference-${referenceId}.pdf`;
+        link.download = `referencia-${reference.id}-${new Date().toISOString().split('T')[0]}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
       } catch (error) {
-        console.error('Error downloading PDF:', error);
-        alert('Error al descargar el PDF. Por favor, intente nuevamente.');
+        console.error('Error downloading reference PDF:', error);
       } finally {
-        downloadingPdf.value = null;
+        setActionLoading(reference.id, 'download', false);
       }
     };
 
-    // Polling para verificar si el PDF está listo
-    const startPollingForPdf = referenceId => {
-      // No iniciar polling si ya está activo para esta referencia
-      if (pollingIntervals.value[referenceId]) {
-        return;
-      }
-
-      // Solo hacer polling para referencias recientes (menos de 5 minutos)
-      const reference = props.references.find(r => r.id === referenceId);
-      if (!reference) return;
-
-      const referenceAge = Date.now() - new Date(reference.createdAt).getTime();
-      const maxPollingAge = 5 * 60 * 1000; // 5 minutos
-
-      if (referenceAge > maxPollingAge) {
-        return; // No hacer polling para referencias antiguas
-      }
-
-      let attempts = 0;
-      const maxAttempts = 20; // Máximo 20 intentos (2 minutos con intervalo de 6 segundos)
-
-      pollingIntervals.value[referenceId] = setInterval(async () => {
-        attempts++;
-
-        try {
-          const updatedReference = await getReferenceById(referenceId);
-
-          // Si el PDF ya está disponible, actualizar la lista
-          if (updatedReference.pdfUrl) {
-            stopPollingForPdf(referenceId);
-            // Emitir evento para refrescar la lista
-            emit('refresh');
-            return;
-          }
-
-          // Si excedemos los intentos máximos, detener polling
-          if (attempts >= maxAttempts) {
-            stopPollingForPdf(referenceId);
-          }
-        } catch (error) {
-          console.error(`Error polling PDF for reference ${referenceId}:`, error);
-          stopPollingForPdf(referenceId);
-        }
-      }, 6000); // Verificar cada 6 segundos
-    };
-
-    const stopPollingForPdf = referenceId => {
-      if (pollingIntervals.value[referenceId]) {
-        clearInterval(pollingIntervals.value[referenceId]);
-        delete pollingIntervals.value[referenceId];
+    // View reference PDF
+    const handleViewPdf = async reference => {
+      try {
+        setActionLoading(reference.id, 'view', true);
+        const pdfUrl = await getReferencePdfUrl(reference.id, 3600); // 1 hour expiry
+        window.open(pdfUrl.url, '_blank');
+      } catch (error) {
+        console.error('Error viewing reference PDF:', error);
+        // Fallback to download
+        await handleDownloadPdf(reference);
+      } finally {
+        setActionLoading(reference.id, 'view', false);
       }
     };
 
-    const stopAllPolling = () => {
-      Object.keys(pollingIntervals.value).forEach(referenceId => {
-        stopPollingForPdf(referenceId);
-      });
+    // Accept reference
+    const handleAccept = async reference => {
+      selectedReference.value = reference;
+      responseForm.value = {
+        response: '',
+        returnReport: '',
+      };
+      showResponseModal.value = true;
     };
 
-    // Iniciar polling para referencias sin PDF
-    watch(
-      () => props.references,
-      newReferences => {
-        newReferences.forEach(reference => {
-          if (!reference.pdfUrl) {
-            startPollingForPdf(reference.id);
-          } else {
-            stopPollingForPdf(reference.id);
-          }
-        });
-      },
-      { immediate: true }
-    );
+    // Submit acceptance
+    const submitAcceptance = async () => {
+      if (!selectedReference.value) return;
 
-    onUnmounted(() => {
-      stopAllPolling();
-    });
+      try {
+        setActionLoading(selectedReference.value.id, 'accept', true);
+        await acceptReference(selectedReference.value.id, responseForm.value.response);
+        showResponseModal.value = false;
+        selectedReference.value = null;
+        emit('accept', selectedReference.value.id);
+        emit('refresh');
+      } catch (error) {
+        console.error('Error accepting reference:', error);
+      } finally {
+        setActionLoading(selectedReference.value.id, 'accept', false);
+      }
+    };
+
+    // Mark as attended
+    const handleAttend = async reference => {
+      const returnReport = prompt('Informe de retorno (opcional):') || '';
+
+      try {
+        setActionLoading(reference.id, 'attend', true);
+        await markReferenceAsAttended(reference.id, returnReport);
+        emit('attend', reference.id);
+        emit('refresh');
+      } catch (error) {
+        console.error('Error marking reference as attended:', error);
+      } finally {
+        setActionLoading(reference.id, 'attend', false);
+      }
+    };
+
+    // Reject reference
+    const handleReject = async reference => {
+      const reason = prompt('Motivo del rechazo:');
+      if (!reason) return;
+
+      try {
+        setActionLoading(reference.id, 'reject', true);
+        await rejectReference(reference.id, reason);
+        emit('refresh');
+      } catch (error) {
+        console.error('Error rejecting reference:', error);
+      } finally {
+        setActionLoading(reference.id, 'reject', false);
+      }
+    };
+
+    // Get status badge class
+    const getStatusBadgeClass = status => {
+      const statusClasses = {
+        PENDING: 'badge-warning',
+        ACCEPTED: 'badge-info',
+        SCHEDULED: 'badge-primary',
+        ATTENDED: 'badge-success',
+        REJECTED: 'badge-danger',
+        CANCELLED: 'badge-secondary',
+        EXPIRED: 'badge-secondary',
+      };
+      return statusClasses[status] || 'badge-secondary';
+    };
+
+    // Get status text
+    const getStatusText = status => {
+      const statusTexts = {
+        PENDING: 'Pendiente',
+        ACCEPTED: 'Aceptada',
+        SCHEDULED: 'Programada',
+        ATTENDED: 'Atendida',
+        REJECTED: 'Rechazada',
+        CANCELLED: 'Cancelada',
+        EXPIRED: 'Vencida',
+      };
+      return statusTexts[status] || status;
+    };
+
+    // Get urgency badge class
+    const getUrgencyBadgeClass = urgency => {
+      const urgencyClasses = {
+        ROUTINE: 'urgency-routine',
+        URGENT: 'urgency-urgent',
+        STAT: 'urgency-stat',
+        ASAP: 'urgency-asap',
+      };
+      return urgencyClasses[urgency] || 'urgency-routine';
+    };
+
+    // Get urgency text
+    const getUrgencyText = urgency => {
+      const urgencyTexts = {
+        ROUTINE: 'Rutina',
+        URGENT: 'Urgente',
+        STAT: 'STAT',
+        ASAP: 'ASAP',
+      };
+      return urgencyTexts[urgency] || urgency;
+    };
+
+    // Get specialty text
+    const getSpecialtyText = specialty => {
+      const specialties = {
+        CARDIOLOGY: 'Cardiología',
+        DERMATOLOGY: 'Dermatología',
+        ENDOCRINOLOGY: 'Endocrinología',
+        GASTROENTEROLOGY: 'Gastroenterología',
+        GYNECOLOGY: 'Ginecología',
+        NEUROLOGY: 'Neurología',
+        ONCOLOGY: 'Oncología',
+        OPHTHALMOLOGY: 'Oftalmología',
+        ORTHOPEDICS: 'Ortopedia',
+        OTOLARYNGOLOGY: 'Otorrinolaringología',
+        PEDIATRICS: 'Pediatría',
+        PSYCHIATRY: 'Psiquiatría',
+        PULMONOLOGY: 'Neumología',
+        RHEUMATOLOGY: 'Reumatología',
+        UROLOGY: 'Urología',
+        GENERAL_SURGERY: 'Cirugía General',
+        PLASTIC_SURGERY: 'Cirugía Plástica',
+        EMERGENCY: 'Emergencias',
+        INTERNAL_MEDICINE: 'Medicina Interna',
+        FAMILY_MEDICINE: 'Medicina Familiar',
+        OTHER: 'Otra Especialidad',
+      };
+      return specialties[specialty] || specialty;
+    };
+
+    // Check if can accept
+    const canAccept = reference => reference.status === 'PENDING';
+
+    // Check if can attend
+    const canAttend = reference => ['ACCEPTED', 'SCHEDULED'].includes(reference.status);
+
+    // Check if can reject
+    const canReject = reference => reference.status === 'PENDING';
 
     return {
+      t,
+      loading,
+      toggles,
       sortedReferences,
-      getDate,
-      getStatusClass,
-      getStatusLabel,
-      getUrgencyClass,
-      getUrgencyLabel,
-      downloadPdf,
-      downloadingPdf,
+      showResponseModal,
+      selectedReference,
+      responseForm,
+      getDateAndHour,
+      handleDownloadPdf,
+      handleViewPdf,
+      handleAccept,
+      submitAcceptance,
+      handleAttend,
+      handleReject,
+      isActionLoading,
+      getStatusBadgeClass,
+      getStatusText,
+      getUrgencyBadgeClass,
+      getUrgencyText,
+      getSpecialtyText,
+      canAccept,
+      canAttend,
+      canReject,
     };
   },
 };
 </script>
+
+<template>
+  <div class="reference-list-modern">
+    <Spinner :show="loading" />
+
+    <!-- Header -->
+    <div class="list-header">
+      <div class="list-header-content">
+        <h5 class="list-title">
+          <i class="bi bi-arrow-left-right me-2"></i>
+          Referencias Médicas
+        </h5>
+        <p class="list-subtitle">Historial de referencias a especialistas</p>
+      </div>
+
+      <button
+        class="btn-create-new"
+        @click="$emit('create-new')"
+        :disabled="!toggles['patient.history.edit']"
+      >
+        <i class="bi bi-plus-circle me-2"></i>
+        Nueva Referencia
+      </button>
+    </div>
+
+    <!-- References List -->
+    <div v-if="sortedReferences.length > 0" class="references-container">
+      <div v-for="reference in sortedReferences" :key="reference.id" class="reference-card">
+        <!-- Card Header -->
+        <div class="reference-header">
+          <div class="reference-info">
+            <div class="reference-date">
+              <i class="bi bi-calendar3 me-1"></i>
+              {{ getDateAndHour(reference.createdAt || reference.referredAt) }}
+            </div>
+            <div class="reference-id">ID: {{ reference.id.slice(-8) }}</div>
+          </div>
+
+          <div class="reference-badges">
+            <span :class="['status-badge', getStatusBadgeClass(reference.status)]">
+              {{ getStatusText(reference.status) }}
+            </span>
+            <span :class="['urgency-badge', getUrgencyBadgeClass(reference.urgency)]">
+              {{ getUrgencyText(reference.urgency) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Reference Details -->
+        <div class="reference-content">
+          <!-- Specialty and Doctor -->
+          <div class="specialty-info">
+            <div class="specialty-main">
+              <strong>{{ getSpecialtyText(reference.referredToSpecialty) }}</strong>
+              <span v-if="reference.referredToDoctor" class="doctor-name">
+                Dr. {{ reference.referredToDoctor }}
+              </span>
+            </div>
+            <div v-if="reference.referredToInstitution" class="institution-name">
+              <i class="bi bi-building me-1"></i>
+              {{ reference.referredToInstitution }}
+            </div>
+          </div>
+
+          <!-- Reason for Referral -->
+          <div v-if="reference.reasonForReferral" class="reason-section">
+            <strong>Motivo de la Referencia:</strong>
+            <p>{{ reference.reasonForReferral }}</p>
+          </div>
+
+          <!-- Clinical Summary -->
+          <div v-if="reference.clinicalSummary" class="clinical-summary">
+            <strong>Resumen Clínico:</strong>
+            <p>{{ reference.clinicalSummary }}</p>
+          </div>
+
+          <!-- Diagnosis -->
+          <div v-if="reference.diagnosis" class="diagnosis">
+            <strong>Diagnóstico:</strong> {{ reference.diagnosis }}
+          </div>
+
+          <!-- Preferred Date -->
+          <div v-if="reference.preferredDate" class="preferred-date">
+            <i class="bi bi-calendar-event me-1"></i>
+            <strong>Fecha Preferida:</strong> {{ getDateAndHour(reference.preferredDate) }}
+          </div>
+
+          <!-- Follow Up Required -->
+          <div v-if="reference.followUpRequired" class="follow-up-info">
+            <i class="bi bi-arrow-repeat me-1"></i>
+            <strong>Requiere seguimiento</strong>
+          </div>
+
+          <!-- Additional Instructions -->
+          <div v-if="reference.additionalInstructions" class="additional-instructions">
+            <strong>Instrucciones Adicionales:</strong>
+            <p>{{ reference.additionalInstructions }}</p>
+          </div>
+
+          <!-- Current Medications -->
+          <div v-if="reference.currentMedications" class="medications-info">
+            <strong>Medicamentos Actuales:</strong>
+            <p>{{ reference.currentMedications }}</p>
+          </div>
+
+          <!-- Allergies -->
+          <div v-if="reference.allergies" class="allergies-info">
+            <strong>Alergias:</strong>
+            <p>{{ reference.allergies }}</p>
+          </div>
+
+          <!-- Vital Signs -->
+          <div v-if="reference.vitalSigns" class="vital-signs">
+            <strong>Signos Vitales:</strong>
+            <p>{{ reference.vitalSigns }}</p>
+          </div>
+
+          <!-- Expected Outcome -->
+          <div v-if="reference.expectedOutcome" class="expected-outcome">
+            <strong>Resultado Esperado:</strong>
+            <p>{{ reference.expectedOutcome }}</p>
+          </div>
+
+          <!-- Reference Meta -->
+          <div class="reference-meta">
+            <div v-if="reference.referringDoctorName" class="meta-item">
+              <i class="bi bi-person-badge me-1"></i>
+              <span>Referido por: Dr. {{ reference.referringDoctorName }}</span>
+            </div>
+            <div v-if="reference.scheduledDate" class="meta-item">
+              <i class="bi bi-calendar-check me-1"></i>
+              <span>Programado: {{ getDateAndHour(reference.scheduledDate) }}</span>
+            </div>
+          </div>
+
+          <!-- Response Section -->
+          <div v-if="reference.response" class="response-section">
+            <h6 class="response-title">
+              <i class="bi bi-chat-square-text me-1"></i>
+              Respuesta del Especialista
+            </h6>
+            <div class="response-content">{{ reference.response }}</div>
+            <div v-if="reference.responseDate" class="response-date">
+              {{ getDateAndHour(reference.responseDate) }}
+            </div>
+          </div>
+
+          <!-- Return Report -->
+          <div v-if="reference.returnReport" class="return-report-section">
+            <h6 class="return-report-title">
+              <i class="bi bi-file-medical me-1"></i>
+              Informe de Retorno
+            </h6>
+            <div class="return-report-content">{{ reference.returnReport }}</div>
+            <div v-if="reference.attendedDate" class="return-report-date">
+              {{ getDateAndHour(reference.attendedDate) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Actions -->
+        <div class="reference-actions">
+          <!-- View/Download PDF -->
+          <button
+            class="action-btn btn-view"
+            @click="handleViewPdf(reference)"
+            :disabled="isActionLoading(reference.id, 'view')"
+            title="Ver referencia"
+          >
+            <Spinner v-if="isActionLoading(reference.id, 'view')" :show="true" size="sm" />
+            <i v-else class="bi bi-eye"></i>
+          </button>
+
+          <button
+            class="action-btn btn-download"
+            @click="handleDownloadPdf(reference)"
+            :disabled="isActionLoading(reference.id, 'download')"
+            title="Descargar PDF"
+          >
+            <Spinner v-if="isActionLoading(reference.id, 'download')" :show="true" size="sm" />
+            <i v-else class="bi bi-download"></i>
+          </button>
+
+          <!-- Accept -->
+          <button
+            v-if="canAccept(reference)"
+            class="action-btn btn-accept"
+            @click="handleAccept(reference)"
+            :disabled="isActionLoading(reference.id, 'accept') || !toggles['patient.history.edit']"
+            title="Aceptar referencia"
+          >
+            <Spinner v-if="isActionLoading(reference.id, 'accept')" :show="true" size="sm" />
+            <i v-else class="bi bi-check-circle"></i>
+          </button>
+
+          <!-- Attend -->
+          <button
+            v-if="canAttend(reference)"
+            class="action-btn btn-attend"
+            @click="handleAttend(reference)"
+            :disabled="isActionLoading(reference.id, 'attend') || !toggles['patient.history.edit']"
+            title="Marcar como atendida"
+          >
+            <Spinner v-if="isActionLoading(reference.id, 'attend')" :show="true" size="sm" />
+            <i v-else class="bi bi-person-check"></i>
+          </button>
+
+          <!-- Reject -->
+          <button
+            v-if="canReject(reference)"
+            class="action-btn btn-reject"
+            @click="handleReject(reference)"
+            :disabled="isActionLoading(reference.id, 'reject') || !toggles['patient.history.edit']"
+            title="Rechazar referencia"
+          >
+            <Spinner v-if="isActionLoading(reference.id, 'reject')" :show="true" size="sm" />
+            <i v-else class="bi bi-x-circle"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else-if="!loading" class="empty-state">
+      <Message
+        :title="t('reference.list.empty.title') || 'No hay referencias médicas'"
+        :content="
+          t('reference.list.empty.content') ||
+          'Este paciente no tiene referencias médicas registradas. Haga clic en &quot;Nueva Referencia&quot; para crear la primera.'
+        "
+      />
+    </div>
+
+    <!-- Response Modal -->
+    <div v-if="showResponseModal" class="modal-overlay" @click="showResponseModal = false">
+      <div class="response-modal" @click.stop>
+        <div class="modal-header">
+          <h5>Aceptar Referencia</h5>
+          <button class="btn-close-modal" @click="showResponseModal = false">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+
+        <div class="modal-content">
+          <div class="form-field">
+            <label class="form-label">Respuesta del Especialista</label>
+            <textarea
+              v-model="responseForm.response"
+              class="form-control"
+              rows="4"
+              placeholder="Ingrese su respuesta a la referencia (opcional)"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-accept-reference" @click="submitAcceptance">
+            <i class="bi bi-check-circle me-2"></i>
+            Aceptar Referencia
+          </button>
+
+          <button class="btn-cancel-modal" @click="showResponseModal = false">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .reference-list-modern {
   width: 100%;
 }
 
+/* Header */
 .list-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
 }
 
 .list-header-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+  flex: 1;
 }
 
-.list-header-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 0.75rem;
-  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+.list-title {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 0.25rem 0;
 }
 
-.list-header-title h4 {
+.list-subtitle {
+  font-size: 0.85rem;
+  color: var(--color-text);
+  opacity: 0.7;
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
 }
 
-.loading-state,
-.empty-state {
-  padding: 3rem;
-  text-align: center;
+.btn-create-new {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.references-timeline {
+.btn-create-new:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-create-new:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* References Container */
+.references-container {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
+/* Reference Card */
 .reference-card {
   background: white;
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  border-radius: 0.75rem;
+  border: 2px solid rgba(0, 0, 0, 0.05);
+  border-radius: 0.875rem;
   padding: 1.25rem;
   transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.reference-card::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .reference-card:hover {
-  transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 123, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
 }
 
-.reference-card-header {
+/* Card Header */
+.reference-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.reference-meta {
+.reference-info {
   display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-.reference-date-badge {
-  display: inline-flex;
+.reference-date {
+  display: flex;
   align-items: center;
-  padding: 0.35rem 0.75rem;
-  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
-  color: white;
-  border-radius: 0.5rem;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
-}
-
-.reference-status-badge,
-.reference-urgency-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.35rem 0.75rem;
-  border-radius: 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.status-pending {
-  background: #ffc107;
-  color: #000;
-}
-
-.status-accepted {
-  background: #17a2b8;
-  color: white;
-}
-
-.status-rejected {
-  background: #dc3545;
-  color: white;
-}
-
-.status-attended {
-  background: #28a745;
-  color: white;
-}
-
-.urgency-routine {
-  background: #6c757d;
-  color: white;
-}
-
-.urgency-urgent {
-  background: #fd7e14;
-  color: white;
-}
-
-.urgency-emergency {
-  background: #dc3545;
-  color: white;
-}
-
-.reference-destination {
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  background: rgba(0, 123, 255, 0.05);
-  border-radius: 0.5rem;
-  border-left: 3px solid var(--azul-turno);
-}
-
-.reference-destination-info {
-  font-size: 1rem;
   color: var(--color-text);
 }
 
-.reference-reason,
-.reference-diagnosis,
-.reference-studies,
-.reference-treatment,
-.reference-return {
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 0.5rem;
+.reference-id {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  opacity: 0.6;
+  font-family: monospace;
 }
 
-.reference-reason p,
-.reference-diagnosis p,
-.reference-studies p,
-.reference-treatment p,
-.reference-return p {
-  margin: 0.5rem 0 0 0;
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
-
-.reference-footer {
+.reference-badges {
   display: flex;
-  justify-content: space-between;
+  gap: 0.5rem;
   align-items: center;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Badges */
+.status-badge,
+.urgency-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-success {
+  background: rgba(40, 167, 69, 0.2);
+  color: #155724;
+}
+
+.badge-info {
+  background: rgba(23, 162, 184, 0.2);
+  color: #0c5460;
+}
+
+.badge-warning {
+  background: rgba(255, 193, 7, 0.2);
+  color: #856404;
+}
+
+.badge-danger {
+  background: rgba(220, 53, 69, 0.2);
+  color: #721c24;
+}
+
+.badge-secondary {
+  background: rgba(108, 117, 125, 0.2);
+  color: #495057;
+}
+
+.badge-primary {
+  background: rgba(0, 123, 255, 0.2);
+  color: #004085;
+}
+
+.urgency-routine {
+  background: rgba(40, 167, 69, 0.1);
+  color: #155724;
+}
+
+.urgency-urgent {
+  background: rgba(255, 193, 7, 0.1);
+  color: #856404;
+}
+
+.urgency-stat {
+  background: rgba(220, 53, 69, 0.1);
+  color: #721c24;
+}
+
+.urgency-asap {
+  background: rgba(255, 107, 0, 0.1);
+  color: #cc4400;
+}
+
+/* Card Content */
+.reference-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.specialty-info {
+  background: rgba(0, 123, 255, 0.05);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  border-left: 4px solid var(--azul-turno);
+}
+
+.specialty-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.specialty-main strong {
+  font-size: 1.1rem;
+  color: var(--azul-turno);
+}
+
+.doctor-name {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  opacity: 0.8;
+}
+
+.institution-name {
+  display: flex;
+  align-items: center;
   font-size: 0.85rem;
   color: var(--color-text);
   opacity: 0.7;
 }
 
-.reference-dates {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
+.reason-section,
+.clinical-summary {
+  font-size: 0.9rem;
+  color: var(--color-text);
 }
 
+.reason-section p,
+.clinical-summary p {
+  margin: 0.5rem 0 0 0;
+  line-height: 1.5;
+}
+
+.diagnosis {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  padding: 0.5rem;
+  background: rgba(40, 167, 69, 0.05);
+  border-radius: 0.375rem;
+}
+
+.preferred-date,
+.follow-up-info {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--azul-turno);
+  background: rgba(0, 123, 255, 0.05);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+}
+
+.additional-instructions,
+.medications-info,
+.allergies-info,
+.vital-signs,
+.expected-outcome {
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.additional-instructions p,
+.medications-info p,
+.allergies-info p,
+.vital-signs p,
+.expected-outcome p {
+  margin: 0.5rem 0 0 0;
+  line-height: 1.4;
+}
+
+/* Meta Information */
+.reference-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  opacity: 0.8;
+}
+
+/* Response Section */
+.response-section {
+  background: rgba(23, 162, 184, 0.05);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.response-title {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0c5460;
+  margin: 0 0 0.75rem 0;
+}
+
+.response-content {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.response-date {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  opacity: 0.7;
+}
+
+/* Return Report Section */
+.return-report-section {
+  background: rgba(40, 167, 69, 0.05);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.return-report-title {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #155724;
+  margin: 0 0 0.75rem 0;
+}
+
+.return-report-content {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.return-report-date {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  opacity: 0.7;
+}
+
+/* Actions */
+.reference-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.btn-view {
+  background: rgba(0, 123, 255, 0.1);
+  color: var(--azul-turno);
+}
+
+.btn-view:hover:not(:disabled) {
+  background: rgba(0, 123, 255, 0.2);
+}
+
+.btn-download {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.btn-download:hover:not(:disabled) {
+  background: rgba(40, 167, 69, 0.2);
+}
+
+.btn-accept {
+  background: rgba(23, 162, 184, 0.1);
+  color: #17a2b8;
+}
+
+.btn-accept:hover:not(:disabled) {
+  background: rgba(23, 162, 184, 0.2);
+}
+
+.btn-attend {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.btn-attend:hover:not(:disabled) {
+  background: rgba(40, 167, 69, 0.2);
+}
+
+.btn-reject {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.btn-reject:hover:not(:disabled) {
+  background: rgba(220, 53, 69, 0.2);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  padding: 2rem;
+}
+
+/* Response Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.response-modal {
+  background: white;
+  border-radius: 0.75rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.modal-header h5 {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.btn-close-modal {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.btn-close-modal:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.modal-content {
+  padding: 1.25rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  background: white;
+  resize: vertical;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding: 1.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.btn-accept-reference {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-accept-reference:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-cancel-modal {
+  padding: 0.75rem 1.5rem;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text);
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel-modal:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .reference-card-header {
+  .list-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .reference-header {
+    flex-direction: column;
     gap: 0.75rem;
   }
 
-  .reference-footer {
+  .reference-badges {
+    align-self: flex-start;
+  }
+
+  .specialty-main {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .reference-meta {
+    flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .reference-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .response-modal {
+    width: 95%;
+    margin: 1rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .btn-accept-reference,
+  .btn-cancel-modal {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>

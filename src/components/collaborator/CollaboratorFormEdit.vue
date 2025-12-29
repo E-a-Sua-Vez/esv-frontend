@@ -1,12 +1,14 @@
 <script>
 import CollaboratorFormBasicFields from './CollaboratorFormBasicFields.vue';
 import CollaboratorFormRelations from './CollaboratorFormRelations.vue';
+import DigitalSignatureUpload from './DigitalSignatureUpload.vue';
 
 export default {
   name: 'CollaboratorFormEdit',
   components: {
     CollaboratorFormBasicFields,
     CollaboratorFormRelations,
+    DigitalSignatureUpload,
   },
   props: {
     collaborator: { type: Object, required: true },
@@ -32,6 +34,15 @@ export default {
       set(value) {
         this.$emit('update:collaborator', value);
       },
+    },
+  },
+  methods: {
+    handleSignatureUpdated(updatedData) {
+      // Actualizar el colaborador con los nuevos datos de firma
+      this.$emit('update:collaborator', {
+        ...this.collaborator,
+        ...updatedData,
+      });
     },
   },
 };
@@ -62,6 +73,15 @@ export default {
       :show-commerce="showCommerce"
       :show-service="showService"
     />
+    <div class="mt-3">
+      <DigitalSignatureUpload
+        :collaborator-id="collaborator.id"
+        :current-signature="collaborator.digitalSignature"
+        :current-crm="collaborator.crm"
+        :current-crm-state="collaborator.crmState"
+        @updated="handleSignatureUpdated"
+      />
+    </div>
   </div>
 </template>
 

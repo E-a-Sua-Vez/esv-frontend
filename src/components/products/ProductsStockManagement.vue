@@ -62,9 +62,20 @@ export default {
   async beforeMount() {
     this.productToggles = await getPermissions('products');
   },
+  async mounted() {
+    // Load data if component is visible when mounted
+    if (this.showProductStockManagement === true && this.commerce && this.commerce.id && this.business && this.business.id) {
+      await this.refresh();
+    }
+  },
   methods: {
     async refresh() {
       try {
+        // Don't refresh if commerce or business are not available
+        if (!this.commerce || !this.commerce.id || !this.business || !this.business.id) {
+          return;
+        }
+
         this.loading = true;
         // Clear previous products IMMEDIATELY to avoid showing stale data
         this.products = [];
@@ -138,12 +149,22 @@ export default {
       } else {
         this.expired = false;
       }
+      // If this is the content instance, refresh immediately
+      if (this.showProductStockManagement) {
+        this.page = 1;
+        await this.refresh();
+      }
     },
     async checkReplacement(event) {
       if (event.target.checked) {
         this.replacement = true;
       } else {
         this.replacement = false;
+      }
+      // If this is the content instance, refresh immediately
+      if (this.showProductStockManagement) {
+        this.page = 1;
+        await this.refresh();
       }
     },
     async checkAsc(event) {
@@ -152,9 +173,19 @@ export default {
       } else {
         this.asc = false;
       }
+      // If this is the content instance, refresh immediately
+      if (this.showProductStockManagement) {
+        this.page = 1;
+        await this.refresh();
+      }
     },
     setProductStatus(status) {
       this.productStatus = status;
+      // If this is the content instance, refresh immediately
+      if (this.showProductStockManagement) {
+        this.page = 1;
+        this.refresh();
+      }
     },
     setSearchText(text) {
       this.searchText = text;
@@ -310,8 +341,32 @@ export default {
         ) {
           this.page = 1;
         }
-        // Only refresh if this is not the initial mount (oldData exists)
+        // Refresh if data changed, or if this is the first time showing (oldData doesn't exist but component is visible)
         if (oldData) {
+          this.refresh();
+        } else if (!oldData && this.showProductStockManagement && this.commerce && this.commerce.id && this.business && this.business.id) {
+          // First time showing - load initial data
+          this.refresh();
+        }
+      },
+    },
+    showProductStockManagement: {
+      immediate: false,
+      handler(newVal) {
+        // When the component becomes visible, load the data
+        if (newVal === true && this.commerce && this.commerce.id && this.business && this.business.id) {
+          // Reset to first page when showing
+          this.page = 1;
+          this.refresh();
+        }
+      },
+    },
+    commerce: {
+      immediate: false,
+      handler(newVal) {
+        // When commerce changes and component is visible, reload data
+        if (this.showProductStockManagement === true && newVal && newVal.id && this.business && this.business.id) {
+          this.page = 1;
           this.refresh();
         }
       },

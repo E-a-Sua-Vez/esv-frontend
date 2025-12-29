@@ -8,6 +8,8 @@ import { getBookingsDetails } from '../../../application/services/query-stack';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { DateModel } from '../../../shared/utils/date.model';
 import BookingDetailsCard from '../../clients/common/BookingDetailsCard.vue';
+import BookingDetailsCardFull from '../../bookings/common/BookingDetailsCard.vue';
+import { Modal } from 'bootstrap';
 
 export default {
   name: 'ClientBookingsManagement',
@@ -18,6 +20,7 @@ export default {
     Popper,
     AttentionDetailsCard,
     BookingDetailsCard,
+    BookingDetailsCardFull,
   },
   props: {
     showClientBookingsManagement: { type: Boolean, default: false },
@@ -44,15 +47,23 @@ export default {
       searchText: undefined,
       queueId: undefined,
       serviceId: undefined,
+      packageId: undefined,
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
       startDate: undefined,
       endDate: undefined,
+      selectedBookingForModal: null,
+      showBookingDetailsModal: false,
+      bookingsLoaded: false, // Flag to track if bookings have been loaded
     };
   },
   methods: {
-    async refresh() {
+    async refresh(force = false) {
+      // Don't refresh if already loaded and not forcing (unless filters changed)
+      if (this.bookingsLoaded && !force && this.bookings && this.bookings.length > 0) {
+        return;
+      }
       try {
         this.loading = true;
         let commerceIds = [this.commerce.id];
@@ -73,9 +84,12 @@ export default {
           this.queueId,
           this.asc,
           this.serviceId,
-          this.status
+          this.status,
+          this.client?.id,
+          this.packageId
         );
         this.updatePaginationData();
+        this.bookingsLoaded = true; // Mark as loaded
         this.loading = false;
       } catch (error) {
         this.loading = false;
@@ -85,6 +99,81 @@ export default {
       this.page = pageIn;
       await this.refresh();
     },
+    openBookingDetailsModal(booking) {
+      try {
+        if (!booking) {
+          console.warn('ClientBookingsManagement: Cannot open modal, booking is null');
+          return;
+        }
+        // Transform booking data to match BookingDetailsCardFull format if needed
+        const bookingData = {
+          ...booking,
+          bookingId: booking.bookingId || booking.id,
+          id: booking.id || booking.bookingId,
+          user: booking.user || {
+            name: booking.userName,
+            lastName: booking.userLastName,
+            phone: booking.userPhone,
+            email: booking.userEmail,
+            idNumber: booking.userIdNumber,
+          },
+          services: booking.servicesDetails || booking.services || [],
+          servicesDetails: booking.servicesDetails || booking.services || [],
+        };
+        this.selectedBookingForModal = bookingData;
+        this.showBookingDetailsModal = true;
+        // Use nextTick to ensure DOM is updated before showing modal
+        this.$nextTick(() => {
+          try {
+            const modalElement = document.getElementById('bookingDetailsModal');
+            if (modalElement) {
+              const modal = new Modal(modalElement, {
+                backdrop: true,
+                keyboard: true,
+              });
+              modal.show();
+              // Listen for modal hidden event to clean up
+              const handleModalHidden = () => {
+                this.showBookingDetailsModal = false;
+                this.selectedBookingForModal = null;
+                modalElement.removeEventListener('hidden.bs.modal', handleModalHidden);
+              };
+              modalElement.addEventListener('hidden.bs.modal', handleModalHidden);
+            } else {
+              console.warn('ClientBookingsManagement: Modal element not found');
+            }
+          } catch (error) {
+            console.error('Error showing modal:', error);
+            this.showBookingDetailsModal = false;
+            this.selectedBookingForModal = null;
+          }
+        });
+      } catch (error) {
+        console.error('Error in openBookingDetailsModal:', error);
+        this.showBookingDetailsModal = false;
+        this.selectedBookingForModal = null;
+      }
+    },
+    closeBookingDetailsModal() {
+      const modalElement = document.getElementById('bookingDetailsModal');
+      if (modalElement) {
+        const modal = Modal.getInstance(modalElement);
+        if (modal) {
+          modal.hide();
+        } else {
+          // If modal instance doesn't exist, just hide it manually
+          this.showBookingDetailsModal = false;
+          this.selectedBookingForModal = null;
+        }
+      } else {
+        this.showBookingDetailsModal = false;
+        this.selectedBookingForModal = null;
+      }
+    },
+    handleBookingUpdated(updatedBooking) {
+      // Refresh bookings list when a booking is updated
+      this.refresh();
+    },
     async clear() {
       this.status = undefined;
       this.survey = undefined;
@@ -92,6 +181,7 @@ export default {
       this.searchText = undefined;
       this.queueId = undefined;
       this.serviceId = undefined;
+      this.packageId = undefined;
       this.page = 1;
       this.limit = 10;
       this.startDate = undefined;
@@ -142,7 +232,9 @@ export default {
           this.queueId,
           this.asc,
           this.serviceId,
-          this.status
+          this.status,
+          this.client?.id,
+          this.packageId
         );
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
@@ -185,10 +277,70 @@ export default {
       this.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
       await this.refresh();
     },
+    getPackageColor(packageId) {
+      // Generate a consistent color based on packageId
+      if (!packageId) return null;
+      let hash = 0;
+      for (let i = 0; i < packageId.length; i++) {
+        hash = packageId.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      // Generate colors in a pleasant palette (pastels)
+      const colors = [
+        { bg: 'rgba(74, 144, 226, 0.12)', border: '#4a90e2', accent: '#4a90e2' }, // Blue
+        { bg: 'rgba(0, 194, 203, 0.12)', border: '#00c2cb', accent: '#00c2cb' }, // Cyan
+        { bg: 'rgba(108, 99, 255, 0.12)', border: '#6c63ff', accent: '#6c63ff' }, // Purple
+        { bg: 'rgba(255, 159, 64, 0.12)', border: '#ff9f40', accent: '#ff9f40' }, // Orange
+        { bg: 'rgba(255, 107, 107, 0.12)', border: '#ff6b6b', accent: '#ff6b6b' }, // Red
+        { bg: 'rgba(72, 187, 120, 0.12)', border: '#48bb78', accent: '#48bb78' }, // Green
+        { bg: 'rgba(237, 137, 54, 0.12)', border: '#ed8936', accent: '#ed8936' }, // Orange-alt
+        { bg: 'rgba(129, 140, 248, 0.12)', border: '#818cf8', accent: '#818cf8' }, // Indigo
+      ];
+      const index = Math.abs(hash) % colors.length;
+      return colors[index];
+    },
   },
   computed: {
+    groupedBookings() {
+      // Group bookings by packageId
+      const grouped = {};
+      const withoutPackage = [];
+
+      this.bookings.forEach(booking => {
+        if (booking.packageId) {
+          const packageId = booking.packageId;
+          if (!grouped[packageId]) {
+            grouped[packageId] = {
+              packageId,
+              packageName: booking.packageName || 'Paquete',
+              packageProceduresTotalNumber: booking.packageProceduresTotalNumber || 0,
+              bookings: [],
+            };
+          }
+          grouped[packageId].bookings.push(booking);
+        } else {
+          withoutPackage.push(booking);
+        }
+      });
+
+      // Sort bookings within each package by procedure number
+      Object.keys(grouped).forEach(packageId => {
+        grouped[packageId].bookings.sort((a, b) => {
+          const numA = a.packageProcedureNumber || 0;
+          const numB = b.packageProcedureNumber || 0;
+          return numA - numB;
+        });
+      });
+
+      // Convert to array format for template
+      const groups = Object.values(grouped).map(group => ({
+        ...group,
+        color: this.getPackageColor(group.packageId),
+      }));
+
+      return { groups, withoutPackage };
+    },
     changeData() {
-      const { page, status, survey, asc, queueId, limit, serviceId } = this;
+      const { page, status, survey, asc, queueId, limit, serviceId, packageId } = this;
       return {
         page,
         status,
@@ -197,14 +349,35 @@ export default {
         queueId,
         limit,
         serviceId,
+        packageId,
       };
+    },
+    availablePackages() {
+      // Get unique packages from bookings (use newBookings if available, otherwise bookings)
+      const bookingsToCheck =
+        this.newBookings && this.newBookings.length > 0 ? this.newBookings : this.bookings;
+      const packagesMap = new Map();
+      if (bookingsToCheck && bookingsToCheck.length > 0) {
+        bookingsToCheck.forEach(booking => {
+          if (booking.packageId && booking.packageName) {
+            if (!packagesMap.has(booking.packageId)) {
+              packagesMap.set(booking.packageId, {
+                id: booking.packageId,
+                name: booking.packageName,
+              });
+            }
+          }
+        });
+      }
+      return Array.from(packagesMap.values());
     },
   },
   watch: {
     changeData: {
-      immediate: true,
+      immediate: false, // Don't trigger on mount - bookings load lazily when modal opens
       deep: true,
       async handler(oldData, newData) {
+        // Only refresh if oldData exists (not initial mount) and something actually changed
         if (
           oldData &&
           newData &&
@@ -212,10 +385,12 @@ export default {
             oldData.asc !== newData.asc ||
             oldData.limit !== newData.limit ||
             oldData.queueId !== newData.queueId ||
-            oldData.serviceId !== newData.serviceId)
+            oldData.serviceId !== newData.serviceId ||
+            oldData.packageId !== newData.packageId)
         ) {
           this.page = 1;
-          await this.refresh();
+          this.bookingsLoaded = false; // Reset flag when filters change
+          await this.refresh(true); // Force refresh when filters change
         }
       },
     },
@@ -238,6 +413,11 @@ export default {
       },
     },
   },
+  mounted() {
+    // Don't load bookings on mount - wait until modal is actually opened (lazy loading)
+    // This prevents unnecessary API calls when the component is mounted but not visible
+    // Bookings will be loaded when the modal is shown via the event listener in ClientDetailsCard
+  },
 };
 </script>
 
@@ -246,22 +426,17 @@ export default {
     <div
       id="bookings-management"
       class="row"
-      v-if="showClientBookingsManagement === true && toggles['dashboard.bookings-management.view']"
+      v-if="
+        showClientBookingsManagement === true &&
+        toggles &&
+        toggles['dashboard.bookings-management.view']
+      "
     >
       <div class="col">
         <div id="attention-management-component">
           <Spinner :show="loading"></Spinner>
           <div v-if="!loading">
             <div>
-              <SimpleDownloadCard
-                :download="toggles['dashboard.reports.bookings-management']"
-                :title="$t('dashboard.reports.bookings-management.title')"
-                :show-tooltip="true"
-                :description="$t('dashboard.reports.bookings-management.description')"
-                :icon="'bi-file-earmark-spreadsheet'"
-                @download="exportToCSV"
-                :can-download="toggles['dashboard.reports.bookings-management'] === true"
-              ></SimpleDownloadCard>
               <div class="my-2 row metric-card">
                 <div class="col-12">
                   <span class="metric-card-subtitle">
@@ -387,6 +562,24 @@ export default {
                       </option>
                     </select>
                   </div>
+                  <div
+                    class="col-12 col-md my-1 filter-card"
+                    v-if="availablePackages && availablePackages.length > 0"
+                  >
+                    <label class="metric-card-subtitle mx-2" for="select-package">
+                      {{ $t('dashboard.packages') || 'Paquete' }}:
+                    </label>
+                    <select
+                      class="btn btn-sm btn-light fw-bold text-dark select"
+                      v-model="packageId"
+                      id="select-package"
+                    >
+                      <option :value="undefined">{{ $t('dashboard.all') || 'Todos' }}</option>
+                      <option v-for="pkg in availablePackages" :key="pkg.id" :value="pkg.id">
+                        {{ pkg.name }}
+                      </option>
+                    </select>
+                  </div>
                   <div class="col-12 col-md my-1 filter-card">
                     <input
                       type="radio"
@@ -466,7 +659,7 @@ export default {
                   </div>
                 </div>
               </div>
-              <div class="my-3">
+              <div class="my-3 text-center">
                 <span class="badge bg-secondary px-3 py-2 m-1"
                   >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
                 </span>
@@ -537,9 +730,90 @@ export default {
                 </nav>
               </div>
               <div v-if="bookings && bookings.length > 0">
-                <div class="row" v-for="(booking, index) in bookings" :key="`bookings-${index}`">
-                  <BookingDetailsCard :show="true" :booking="booking" :commerce="commerce">
-                  </BookingDetailsCard>
+                <!-- Grouped by Package -->
+                <div
+                  v-for="group in groupedBookings.groups"
+                  :key="`package-group-${group.packageId}`"
+                  class="package-attentions-group"
+                  :style="`--package-color: ${group.color.accent}; --package-bg: ${group.color.bg};`"
+                >
+                  <!-- Package Header -->
+                  <div class="package-group-header">
+                    <div
+                      class="package-group-indicator"
+                      :style="`background-color: ${group.color.accent};`"
+                    ></div>
+                    <div class="package-group-info">
+                      <div class="package-group-title">
+                        <i class="bi bi-box-seam-fill package-icon"></i>
+                        <span class="package-name">{{ group.packageName }}</span>
+                        <span class="package-sessions-count">
+                          <span v-if="group.packageProceduresTotalNumber > 0">
+                            ({{ group.bookings.length }} / {{ group.packageProceduresTotalNumber }}
+                            {{ $t('dashboard.bookings') || $t('bookings') || 'Reservas' }})
+                          </span>
+                          <span v-else>
+                            ({{ group.bookings.length }}
+                            {{ $t('dashboard.bookings') || $t('bookings') || 'Reservas' }})
+                          </span>
+                        </span>
+                      </div>
+                      <div class="package-group-progress">
+                        <div class="package-progress-bar">
+                          <div
+                            class="package-progress-fill"
+                            :style="`width: ${
+                              (group.bookings.length /
+                                (group.packageProceduresTotalNumber || group.bookings.length)) *
+                              100
+                            }%; background-color: ${group.color.accent};`"
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Package Bookings -->
+                  <div class="package-attentions-list">
+                    <div
+                      class="row attention-row-with-package"
+                      v-for="(booking, index) in group.bookings"
+                      :key="`package-${group.packageId}-booking-${index}`"
+                    >
+                      <BookingDetailsCard
+                        :show="true"
+                        :booking="booking"
+                        :commerce="commerce"
+                        :package-color="group.color"
+                        :disable-click="false"
+                        :show-booking-modal="true"
+                        @open-modal="openBookingDetailsModal"
+                      >
+                      </BookingDetailsCard>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bookings without Package -->
+                <div
+                  v-if="groupedBookings.withoutPackage.length > 0"
+                  class="attentions-without-package"
+                >
+                  <div
+                    class="row"
+                    v-for="(booking, index) in groupedBookings.withoutPackage"
+                    :key="`no-package-booking-${index}`"
+                  >
+                    <BookingDetailsCard
+                      :show="true"
+                      :booking="booking"
+                      :commerce="commerce"
+                      :disable-click="false"
+                      :show-booking-modal="true"
+                      @open-modal="openBookingDetailsModal"
+                    >
+                    </BookingDetailsCard>
+                  </div>
                 </div>
               </div>
               <div v-else>
@@ -555,7 +829,10 @@ export default {
       </div>
     </div>
     <div
-      v-if="showClientBookingsManagement === true && !toggles['dashboard.bookings-management.view']"
+      v-if="
+        showClientBookingsManagement === true &&
+        (!toggles || !toggles['dashboard.bookings-management.view'])
+      "
     >
       <Message
         :icon="'bi-graph-up-arrow'"
@@ -563,10 +840,111 @@ export default {
         :content="$t('dashboard.message.1.content')"
       />
     </div>
+
+    <!-- Booking Details Modal - Similar to BookingCalendar -->
+    <Teleport to="body">
+      <div
+        v-if="showBookingDetailsModal && selectedBookingForModal"
+        class="modal fade"
+        id="bookingDetailsModal"
+        tabindex="-1"
+        aria-labelledby="bookingDetailsModalLabel"
+        aria-hidden="true"
+        data-bs-backdrop="true"
+        data-bs-keyboard="true"
+      >
+        <div
+          class="modal-dialog modal-dialog-scrollable modal-lg attention-modal-dialog"
+          @click.stop
+        >
+          <div class="modal-content attention-modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="bookingDetailsModalLabel">
+                <i class="bi bi-calendar-fill"></i>
+                {{ $t('dashboard.bookingDetails') || 'Detalhes da Reserva' }}
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                @click="closeBookingDetailsModal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <Spinner :show="loading"></Spinner>
+              <BookingDetailsCardFull
+                v-if="selectedBookingForModal"
+                :booking="selectedBookingForModal"
+                :show="true"
+                :details-opened="true"
+                :toggles="toggles"
+                :commerce="commerce"
+                :queues="queues"
+                @booking-updated="handleBookingUpdated"
+              >
+              </BookingDetailsCardFull>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <style scoped>
+/* Modal Dialog - Matching Attention Style */
+.attention-modal-dialog {
+  max-width: 1200px !important;
+  width: 95vw !important;
+}
+
+.attention-modal-content {
+  border-radius: 0.5rem !important;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+/* Modal Header - Matching Attention Style */
+.modal-header {
+  background: linear-gradient(
+    135deg,
+    var(--azul-turno, #004aad) 0%,
+    var(--verde-tu, #00c2cb) 100%
+  ) !important;
+  color: white !important;
+  border-bottom: none !important;
+  padding: 1rem 1.25rem !important;
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+
+.modal-title {
+  color: white !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.modal-title i {
+  color: white !important;
+  font-size: 1.125rem !important;
+}
+
+.btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%) !important;
+  opacity: 0.9 !important;
+}
+
+.btn-close:hover {
+  opacity: 1 !important;
+}
+
+/* Modal Body */
+.modal-body {
+  background: #f8f9fa !important;
+  padding: 1.25rem !important;
+}
+
 .metric-card {
   background-color: var(--color-background);
   padding: 0.5rem;
@@ -623,5 +1001,173 @@ export default {
 .select {
   border-radius: 0.5rem;
   border: 1.5px solid var(--gris-clear);
+}
+
+/* Package Grouping Styles */
+.package-attentions-group {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.package-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  background: var(--package-bg, rgba(74, 144, 226, 0.08));
+  border-radius: 8px;
+  border-left: 4px solid var(--package-color, #4a90e2);
+  transition: all 0.2s ease;
+}
+
+.package-group-header:hover {
+  background: var(--package-bg, rgba(74, 144, 226, 0.15));
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.package-group-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  animation: packagePulse 2s ease-in-out infinite;
+}
+
+@keyframes packagePulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+.package-group-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.package-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.8);
+  flex-wrap: wrap;
+}
+
+.package-icon {
+  color: var(--package-color, #4a90e2);
+  font-size: 1rem;
+}
+
+.package-name {
+  color: var(--package-color, #4a90e2);
+  font-weight: 700;
+}
+
+.package-sessions-count {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  margin-left: 0.25rem;
+}
+
+.package-group-progress {
+  width: 100%;
+}
+
+.package-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.package-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+.package-attentions-list {
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 2px dashed var(--package-color, rgba(74, 144, 226, 0.3));
+  position: relative;
+}
+
+.package-attentions-list::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--package-color, rgba(74, 144, 226, 0.3)) 0%,
+    transparent 100%
+  );
+}
+
+.attention-row-with-package {
+  position: relative;
+  margin-bottom: 0.25rem;
+}
+
+.attention-row-with-package::before {
+  content: '';
+  position: absolute;
+  left: -1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--package-color, #4a90e2);
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 2px var(--package-color, rgba(74, 144, 226, 0.2));
+  z-index: 1;
+}
+
+.attentions-without-package {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .package-group-header {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .package-group-title {
+    font-size: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .package-attentions-list {
+    margin-left: 0.5rem;
+    padding-left: 0.75rem;
+  }
+
+  .attention-row-with-package::before {
+    left: -1rem;
+    width: 6px;
+    height: 6px;
+  }
 }
 </style>

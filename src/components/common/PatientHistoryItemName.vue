@@ -1,11 +1,29 @@
 <script>
 import Popper from 'vue3-popper';
+import { onBeforeUnmount, onErrorCaptured } from 'vue';
 
 export default {
   name: 'PatientHistoryItemName',
   components: { Popper },
   props: {
     item: { type: Object, default: () => ({ name: '', active: false, tag: '', type: '' }) },
+  },
+  setup() {
+    // Capture errors from child components (like Popper) during unmount
+    onErrorCaptured((err, instance, info) => {
+      // Silently ignore errors during unmount from vue3-popper
+      if (info && info.includes('beforeUnmount') && err.message && err.message.includes('disconnect')) {
+        return false; // Prevent error from propagating
+      }
+      return true; // Let other errors propagate normally
+    });
+
+    onBeforeUnmount(() => {
+      // Give Popper a chance to clean up before we unmount
+      // The error handler above will catch any cleanup errors
+    });
+
+    return {};
   },
   computed: {
     statusClass() {

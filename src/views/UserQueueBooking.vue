@@ -93,11 +93,66 @@ export default {
       return beforeYou;
     };
 
+    const hasBookingBlock = () => {
+      if (!state.booking.block) return false;
+      // Check if block has hourFrom/hourTo at root level
+      if (state.booking.block.hourFrom && state.booking.block.hourTo) return true;
+      // Check if block has blocks array with at least one block that has hourFrom/hourTo
+      if (
+        state.booking.block.blocks &&
+        Array.isArray(state.booking.block.blocks) &&
+        state.booking.block.blocks.length > 0
+      ) {
+        const firstBlock = state.booking.block.blocks[0];
+        if (firstBlock && firstBlock.hourFrom && firstBlock.hourTo) return true;
+      }
+      return false;
+    };
+
+    const getBookingBlockDisplay = () => {
+      if (!state.booking.block) {
+        return { hourFrom: '', hourTo: '' };
+      }
+      // If root has hourFrom/hourTo, use those
+      if (state.booking.block.hourFrom && state.booking.block.hourTo) {
+        return {
+          hourFrom: state.booking.block.hourFrom,
+          hourTo: state.booking.block.hourTo,
+        };
+      }
+      // Otherwise, check blocks array
+      if (
+        state.booking.block.blocks &&
+        Array.isArray(state.booking.block.blocks) &&
+        state.booking.block.blocks.length > 0
+      ) {
+        const firstBlock = state.booking.block.blocks[0];
+        const lastBlock = state.booking.block.blocks[state.booking.block.blocks.length - 1];
+        if (firstBlock && firstBlock.hourFrom && lastBlock && lastBlock.hourTo) {
+          return {
+            hourFrom: firstBlock.hourFrom,
+            hourTo: lastBlock.hourTo,
+          };
+        }
+      }
+      return { hourFrom: '', hourTo: '' };
+    };
+
     const getBookingDetailsFromService = async id => {
       try {
-        state.booking = await getBookingDetails(id);
-        state.queue = state.booking.queue;
-        state.commerce = state.booking.commerce;
+        const bookingData = await getBookingDetails(id);
+        state.booking = bookingData;
+        state.queue = bookingData.queue;
+        state.commerce = bookingData.commerce;
+
+        // Debug: Log booking block structure
+        console.log('[UserQueueBooking] Booking data:', bookingData);
+        console.log(
+          '[UserQueueBooking] Booking block:',
+          JSON.stringify(bookingData.block, null, 2),
+        );
+        console.log('[UserQueueBooking] Has booking block:', hasBookingBlock());
+        console.log('[UserQueueBooking] Block display:', getBookingBlockDisplay());
 
         // Calculate estimated time using intelligent estimation
         await calculateEstimatedTime();
@@ -344,6 +399,8 @@ export default {
       bookingActive,
       getEstimatedTime,
       getBeforeYou,
+      hasBookingBlock,
+      getBookingBlockDisplay,
       goToForm,
       showTelemedicineInstructions,
       toggleTelemedicineInstructions,
@@ -420,22 +477,19 @@ export default {
                         <strong>{{ getDate(state.booking.date) }}</strong>
                       </div>
                     </div>
-                    <div
-                      v-if="state.booking.block && state.booking.block.hourFrom"
-                      class="col-6 booking-details-card"
-                    >
+                    <div v-if="hasBookingBlock()" class="col-6 booking-details-card">
                       <div class="booking-card-content">
                         <span class="booking-details-title">
                           {{ $t('userQueueBooking.blockInfo') }}</span
                         >
                         <strong
-                          >{{ state.booking.block.hourFrom }} -
-                          {{ state.booking.block.hourTo }}</strong
+                          >{{ getBookingBlockDisplay().hourFrom }} -
+                          {{ getBookingBlockDisplay().hourTo }}</strong
                         >
                       </div>
                     </div>
                     <div
-                      v-else-if="state.beforeYou >= 0 && state.booking.date"
+                      v-else-if="!hasBookingBlock() && state.beforeYou >= 0 && state.booking.date"
                       class="col-6 booking-details-card"
                     >
                       <div class="booking-card-content">
@@ -459,7 +513,7 @@ export default {
                       </div>
                     </div>
                     <div
-                      v-else-if="state.beforeYou >= 0 && !state.booking.date"
+                      v-else-if="!hasBookingBlock() && state.beforeYou >= 0 && !state.booking.date"
                       class="col-12 booking-details-card"
                     >
                       <span class="booking-details-title">

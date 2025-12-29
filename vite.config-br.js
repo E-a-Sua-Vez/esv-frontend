@@ -85,6 +85,12 @@ export default defineConfig(({ mode }) =>
       hmr: {
         overlay: true,
       },
+      https: false, // Set to true if you need HTTPS for reCAPTCHA testing
+      // Uncomment the following lines if you need HTTPS:
+      // https: {
+      //   key: fs.readFileSync('path/to/key.pem'),
+      //   cert: fs.readFileSync('path/to/cert.pem'),
+      // },
     },
     // Build optimizations for better performance
     build: {

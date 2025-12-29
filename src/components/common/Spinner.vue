@@ -22,6 +22,7 @@ export default {
   </div>
   <div v-else class="text-left">
     <div
+      v-if="show"
       class="spinner-border spinner-border text-light my-2"
       style="width: 2rem; height: 2rem"
       role="status"

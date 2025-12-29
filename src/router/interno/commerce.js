@@ -146,6 +146,31 @@ const PrivateCommerceRoutes = [
     name: 'forms-admin',
     component: BusinessFormAdmin,
   },
+  {
+    path: '/interno/negocio/medications-admin',
+    name: 'business-medications-admin',
+    component: () => import('../../views/business/BusinessMedicationsAdmin.vue'),
+  },
+  {
+    path: '/interno/negocio/medical-exams-admin',
+    name: 'business-medical-exams-admin',
+    component: () => import('../../views/business/BusinessMedicalExamsAdmin.vue'),
+  },
+  {
+    path: '/interno/negocio/medical-templates-admin',
+    name: 'business-medical-templates-admin',
+    component: () => import('../../views/business/BusinessMedicalTemplatesAdmin.vue'),
+  },
+  {
+    path: '/interno/negocio/pdf-templates-admin',
+    name: 'business-pdf-templates-admin',
+    component: () => import('../../views/business/BusinessPdfTemplatesAdmin.vue'),
+  },
+  {
+    path: '/interno/negocio/audit-log',
+    name: 'business-audit-log',
+    component: () => import('../../views/business/BusinessAuditLog.vue'),
+  },
 ];
 
 export default PrivateCommerceRoutes;

@@ -106,3 +106,22 @@ export const getExamOrderPdfUrl = async (id, expiresIn = 3600) => {
     await requestBackend.get(`/medical-exam-order/${id}/pdf-url${params}`, await getHeaders())
   ).data;
 };
+
+/**
+ * Enviar orden de examen por email
+ */
+export const sendExamOrderByEmail = async (id, emailData) =>
+  (await requestBackend.post(`/medical-exam-order/${id}/send-email`, emailData, await getHeaders()))
+    .data;
+
+/**
+ * Assinar ordem de exame com certificado digital ICP-Brasil
+ */
+export const signExamOrder = async (id, signatureData) =>
+  (await requestBackend.post(`/${entity}/${id}/sign`, signatureData, await getHeaders())).data;
+
+/**
+ * Verificar assinatura digital da ordem de exame
+ */
+export const verifyExamOrderSignature = async id =>
+  (await requestBackend.post(`/${entity}/${id}/verify-signature`, {}, await getHeaders())).data;

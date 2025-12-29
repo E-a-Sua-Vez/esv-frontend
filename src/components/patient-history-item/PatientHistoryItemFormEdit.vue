@@ -42,7 +42,7 @@ export default {
     />
     <div id="item-id-form" class="row -2 mb-g3">
       <div class="row item-details-container">
-        <div class="col">
+        <div class="col text-center">
           <span><strong>Id:</strong> {{ item.id }}</span>
         </div>
       </div>

@@ -444,17 +444,17 @@ export default {
                             class="centered"
                             v-bind="calculatedMetrics.attentionQueuesProps"
                           />
-                          <div class="col-12 mt-2">
+                          <div class="col-12 mt-1">
                             <div
-                              class="row centered m-1"
+                              class="row centered mx-0 my-0"
                               v-for="(option, ind) in calculatedMetrics['attention.created']
                                 .attentionQueues.labels"
                               :key="`option.${ind}`"
                             >
-                              <div class="col-6 centered">
+                              <div class="col-6 centered px-1">
                                 <span class="metric-card-title fw-bold"> {{ option }} </span>
                               </div>
-                              <div class="col-2 centered">
+                              <div class="col-2 centered px-1">
                                 <span class="badge rounded-pill bg-secondary metric-card-subtitle">
                                   {{
                                     calculatedMetrics['attention.created'].attentionQueues.datasets[
@@ -463,7 +463,7 @@ export default {
                                   }}
                                 </span>
                               </div>
-                              <div class="col-4 centered">
+                              <div class="col-4 centered px-1">
                                 <span class="badge rounded-pill bg-primary metric-card-subtitle">
                                   {{
                                     getPercentage(
@@ -501,24 +501,24 @@ export default {
                           >
                         </div>
                         <BarChart class="centered" v-bind="calculatedMetrics.attentionFlowProps" />
-                        <div class="col-12 mt-2">
+                        <div class="col-12 mt-1">
                           <div
-                            class="row centered m-1"
+                            class="row centered mx-0 my-0"
                             v-for="(option, ind) in calculatedMetrics['attention.created']
                               .attentionFlow.labels"
                             :key="`option.${ind}`"
                           >
-                            <div class="col-6 centered">
+                            <div class="col-6 centered px-1">
                               <span class="metric-card-title fw-bold"> {{ option }} </span>
                             </div>
-                            <div class="col-2 centered">
+                            <div class="col-2 centered px-1">
                               <span class="badge rounded-pill bg-secondary metric-card-subtitle">
                                 {{
                                   calculatedMetrics['attention.created'].attentionFlow.datasets[ind]
                                 }}
                               </span>
                             </div>
-                            <div class="col-4 centered">
+                            <div class="col-4 centered px-1">
                               <span class="badge rounded-pill bg-primary metric-card-subtitle">
                                 {{
                                   getPercentage(
@@ -531,7 +531,7 @@ export default {
                               </span>
                             </div>
                           </div>
-                          <hr class="mb-2" />
+                          <hr class="mb-1 mt-1" />
                         </div>
                         <div class="metric-conclusion mt-1">
                           <div class="row centered">
@@ -609,26 +609,26 @@ export default {
                           >
                         </div>
                         <BarChart class="centered" v-bind="calculatedMetrics.surveyFlowProps" />
-                        <div class="col-12 mt-2">
+                        <div class="col-12 mt-1">
                           <div
-                            class="row centered m-1"
+                            class="row centered mx-0 my-0"
                             v-for="(option, ind) in calculatedMetrics['attention.created']
                               .surveyFlow.labels"
                             :key="`option.${ind}`"
                           >
-                            <div class="col-6 centered">
+                            <div class="col-6 centered px-1">
                               <span class="metric-card-title fw-bold">
                                 {{ surveyLabel(option) }}
                               </span>
                             </div>
-                            <div class="col-2 centered">
+                            <div class="col-2 centered px-1">
                               <span class="badge rounded-pill bg-secondary metric-card-subtitle">
                                 {{
                                   calculatedMetrics['attention.created'].surveyFlow.datasets[ind]
                                 }}
                               </span>
                             </div>
-                            <div class="col-4 centered">
+                            <div class="col-4 centered px-1">
                               <span class="badge rounded-pill bg-primary metric-card-subtitle">
                                 {{
                                   getPercentageSurvey(
@@ -639,7 +639,7 @@ export default {
                               </span>
                             </div>
                           </div>
-                          <hr class="mb-2" />
+                          <hr class="mb-1 mt-1" />
                         </div>
                         <div class="metric-conclusion mt-1">
                           <div class="row centered">
@@ -1006,7 +1006,7 @@ export default {
                         <div class="centered booking-chart-container">
                           <BarChart class="centered" v-bind="calculatedMetrics.bookingFlowProps" />
                         </div>
-                        <div class="col-12 mt-3">
+                        <div class="col-12 mt-1">
                           <div class="booking-status-breakdown">
                             <div
                               class="booking-status-row"
@@ -1327,11 +1327,11 @@ export default {
 }
 .metric-card-graph {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  padding: 2rem 1.5rem;
-  margin: 1rem 0.5rem;
-  border-radius: 16px;
+  padding: 1.25rem 1rem;
+  margin: 0.75rem 0.5rem;
+  border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
@@ -1390,12 +1390,12 @@ export default {
 }
 
 .metric-conclusion {
-  padding: 1.25rem;
-  margin: 1rem 0 0 0;
-  font-size: 0.875rem;
-  line-height: 1.5rem;
+  padding: 0.75rem;
+  margin: 0.75rem 0 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4rem;
   background: linear-gradient(135deg, rgba(0, 74, 173, 0.03) 0%, rgba(0, 194, 203, 0.02) 100%);
-  border-radius: 12px;
+  border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   position: relative;
@@ -1425,15 +1425,15 @@ export default {
 }
 
 .metric-card-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.3;
   align-items: center;
   justify-content: center;
   display: flex;
   color: #000;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
   border-bottom: 2px solid rgba(0, 74, 173, 0.1);
   position: relative;
   transition: all 0.3s ease;
@@ -1466,7 +1466,7 @@ export default {
 
 /* Enhanced graph container */
 .centered {
-  padding: 1rem 0;
+  padding: 0.75rem 0;
   position: relative;
   transition: all 0.3s ease;
 }
@@ -1485,7 +1485,7 @@ export default {
 }
 
 .metric-conclusion .centered {
-  padding: 0.5rem;
+  padding: 0.35rem;
 }
 
 .metric-conclusion i {
@@ -1504,22 +1504,22 @@ export default {
   font-weight: 700;
 }
 
-/* Badge improvements */
+/* Badge improvements - Compact */
 .badge {
   font-weight: 600;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
 }
 
 .bg-primary {
   background: linear-gradient(135deg, var(--azul-turno) 0%, #446ffc 100%) !important;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 74, 173, 0.2);
+  box-shadow: 0 1px 4px rgba(0, 74, 173, 0.15);
 }
 
 .bg-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 74, 173, 0.25);
 }
 
 .bg-secondary {
@@ -1563,8 +1563,8 @@ export default {
 
 /* Booking-specific graph enhancements */
 .booking-chart-container {
-  padding: 1.5rem 0;
-  min-height: 300px;
+  padding: 1rem 0;
+  min-height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1574,17 +1574,17 @@ export default {
 .booking-status-breakdown {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
+  gap: 0.35rem;
+  padding: 0.25rem 0;
 }
 
 .booking-status-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
+  padding: 0.35rem 0.5rem;
   background: linear-gradient(135deg, rgba(0, 74, 173, 0.02) 0%, rgba(0, 194, 203, 0.01) 100%);
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   border: 1px solid rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
@@ -1597,7 +1597,7 @@ export default {
 
 .booking-status-label {
   flex: 1;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-text);
 }
@@ -1605,14 +1605,14 @@ export default {
 .booking-status-badges {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.4rem;
 }
 
 .booking-count-badge {
   font-weight: 600;
-  padding: 0.5rem 0.875rem;
-  font-size: 0.875rem;
-  min-width: 3rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  min-width: 2.5rem;
   text-align: center;
   background: rgba(0, 0, 0, 0.08) !important;
   color: #000 !important;
@@ -1620,9 +1620,9 @@ export default {
 
 .booking-percentage-badge {
   font-weight: 600;
-  padding: 0.5rem 0.875rem;
-  font-size: 0.875rem;
-  min-width: 4rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  min-width: 3rem;
   text-align: center;
   background: linear-gradient(135deg, var(--azul-turno) 0%, #446ffc 100%) !important;
 }
@@ -1650,6 +1650,33 @@ export default {
   color: var(--azul-turno);
   font-weight: 700;
   font-size: 1.05rem;
+}
+
+/* Compact metric rows styling */
+.col-12.mt-1 .row.centered {
+  padding: 0.25rem 0;
+  margin: 0;
+}
+
+.col-12.mt-1 .row.centered .col-6,
+.col-12.mt-1 .row.centered .col-2,
+.col-12.mt-1 .row.centered .col-4 {
+  padding: 0.25rem 0.5rem;
+}
+
+.col-12.mt-1 .badge {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.col-12.mt-1 .metric-card-title {
+  font-size: 0.85rem;
+  margin: 0;
+  padding: 0;
+}
+
+.col-12.mt-1 .metric-card-subtitle {
+  font-size: 0.75rem;
 }
 
 /* Responsive adjustments for booking graphs */

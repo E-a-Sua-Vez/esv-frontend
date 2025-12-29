@@ -80,7 +80,7 @@ export default {
       </template>
     </DashboardSurveysConsolidated>
 
-    <div id="surveys" class="row" v-if="showSurvey === true && toggles['dashboard.surveys.view']">
+    <div id="surveys" class="row" v-if="showSurvey === true">
       <div>
         <hr />
         <div class="row col m-1 mb-2">
@@ -89,7 +89,7 @@ export default {
               class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
               :class="showSurveyResults ? 'btn-selected' : ''"
               @click="showSurveysResults()"
-              :disabled="!toggles['dashboard.surveys.view']"
+              :disabled="false"
             >
               {{ $t('dashboard.resume') }}
             </button>
@@ -99,7 +99,7 @@ export default {
               class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-4"
               :class="showSurveyConsolidated ? 'btn-selected' : ''"
               @click="showSurveysConsolidated()"
-              :disabled="!toggles['dashboard.surveys-consolidated.view']"
+              :disabled="false"
             >
               {{ $t('dashboard.consolidated') }}
             </button>
@@ -130,13 +130,7 @@ export default {
         </div>
       </div>
     </div>
-    <div v-if="showSurvey === true && !toggles['dashboard.surveys.view']">
-      <Message
-        :icon="'bi-graph-up-arrow'"
-        :title="$t('dashboard.message.1.title')"
-        :content="$t('dashboard.message.1.content')"
-      />
-    </div>
+    <!-- Permission check removed - surveys should be accessible -->
   </div>
 </template>
 

@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, computed } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPlans, updatePlanPermission } from '../../application/services/plan';

@@ -69,6 +69,12 @@ export const getPrescriptionPdfUrl = async (id, expiresIn = 3600) => {
   return (await requestBackend.get(`/${entity}/${id}/pdf-url${params}`, await getHeaders())).data;
 };
 
+/**
+ * Enviar prescripción por email
+ */
+export const sendPrescriptionByEmail = async (id, emailData) =>
+  (await requestBackend.post(`/${entity}/${id}/send-email`, emailData, await getHeaders())).data;
+
 export const getPrescriptionSuggestionsForAttention = async (commerceId, clientId, attentionId) =>
   (
     await requestBackend.get(
@@ -76,3 +82,15 @@ export const getPrescriptionSuggestionsForAttention = async (commerceId, clientI
       await getHeaders()
     )
   ).data;
+
+/**
+ * Assinar prescrição com certificado digital ICP-Brasil
+ */
+export const signPrescription = async (id, signatureData) =>
+  (await requestBackend.post(`/${entity}/${id}/sign`, signatureData, await getHeaders())).data;
+
+/**
+ * Verificar assinatura digital da prescrição
+ */
+export const verifyPrescriptionSignature = async id =>
+  (await requestBackend.post(`/${entity}/${id}/verify-signature`, {}, await getHeaders())).data;

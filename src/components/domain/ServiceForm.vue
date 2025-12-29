@@ -13,6 +13,7 @@ export default {
     queue: { type: Object, default: {} },
     selectedServices: { type: Object, default: {} },
     receiveSelectedServices: { type: Function, default: () => {} },
+    preselectedServiceId: { type: String, default: null }, // Service ID to filter services
   },
   async setup(props) {
     const loading = ref(false);
@@ -42,8 +43,32 @@ export default {
         }
         if (queue.value && queue.value.id) {
           if (queue.value.services && queue.value.services.length > 0) {
-            state.services = queue.value.services;
-            refresh(queue.value.services);
+            // If preselectedServiceId is provided, filter to show only that service
+            if (props.preselectedServiceId) {
+              const filteredServices = queue.value.services.filter(
+                service => service.id === props.preselectedServiceId
+              );
+              if (filteredServices.length > 0) {
+                state.services = filteredServices;
+                // Auto-select the preselected service if not already selected
+                if (state.selectedServices.length === 0) {
+                  state.selectedServices = [...filteredServices];
+                  receiveSelectedServices(state.selectedServices);
+                }
+                refresh(filteredServices);
+                console.log(
+                  '[ServiceForm] Filtered services to preselected service only:',
+                  filteredServices,
+                );
+              } else {
+                state.services = queue.value.services;
+                refresh(queue.value.services);
+                console.log('[ServiceForm] Preselected service not found, showing all services');
+              }
+            } else {
+              state.services = queue.value.services;
+              refresh(queue.value.services);
+            }
           }
         }
         loading.value = false;
@@ -130,6 +155,19 @@ export default {
       }
     };
 
+    // Helper function to parse and format procedure amounts from proceduresList
+    const getProcedureAmounts = proceduresList => {
+      if (!proceduresList || !proceduresList.trim()) {
+        return [];
+      }
+      return proceduresList
+        .trim()
+        .split(',')
+        .map(item => parseInt(item.trim(), 10))
+        .filter(num => !isNaN(num) && num > 0)
+        .sort((a, b) => a - b);
+    };
+
     const changeSearchServiceText = computed(() => {
       const { searchServiceText } = state;
       return {
@@ -202,6 +240,7 @@ export default {
       isActiveQueues,
       checkService,
       serviceChecked,
+      getProcedureAmounts,
       convertDuration,
     };
   },
@@ -312,7 +351,30 @@ export default {
                         }}'</span
                       >
                       <span
-                        v-if="service.serviceInfo.procedures && service.serviceInfo.procedures > 1"
+                        v-if="
+                          service.serviceInfo.proceduresList &&
+                          service.serviceInfo.proceduresList.trim()
+                        "
+                        class="d-flex align-items-center flex-wrap gap-1"
+                      >
+                        <i class="bi bi-box-seam me-1"></i>
+                        <span class="fw-bold"
+                          >{{
+                            $t('commerceQueuesView.packagesAvailable') || 'Paquetes disponibles'
+                          }}:</span
+                        >
+                        <span
+                          class="badge bg-primary me-1"
+                          v-for="amount in getProcedureAmounts(service.serviceInfo.proceduresList)"
+                          :key="amount"
+                        >
+                          {{ amount }} {{ $t('package.sessions') || 'sesiones' }}
+                        </span>
+                      </span>
+                      <span
+                        v-else-if="
+                          service.serviceInfo.procedures && service.serviceInfo.procedures > 1
+                        "
                         ><i class="bi bi-person-up"></i> {{ $t('commerceQueuesView.procedures') }}
                         {{ service.serviceInfo.procedures }}</span
                       >

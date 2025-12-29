@@ -5,6 +5,7 @@ import { formatIdNumber } from '../../../shared/utils/idNumber';
 import Popper from 'vue3-popper';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
+import { ATTENTION_STATUS } from '../../../shared/constants';
 
 export default {
   name: 'AttentionManagementDetailsCard',
@@ -33,9 +34,11 @@ export default {
       return `${name} ${lastName}`.trim().toUpperCase() || 'N/I';
     },
   },
+  emits: ['open-modal'],
   methods: {
     showDetails() {
-      this.extendedEntity = !this.extendedEntity;
+      // Emit event to parent to open modal instead of expanding inline
+      this.$emit('open-modal', this.attention);
     },
     getDate(dateIn, timeZoneIn) {
       return getDate(dateIn, timeZoneIn);
@@ -57,9 +60,9 @@ export default {
     },
     getCardTypeClass() {
       const daysSince = this.attention?.daysSinceAttention || 0;
-      if (daysSince <= 90) return 'client-card-success';
-      if (daysSince <= 180) return 'client-card-warning';
-      return 'client-card-error';
+      if (daysSince <= 90) return 'attention-card-success';
+      if (daysSince <= 180) return 'attention-card-warning';
+      return 'attention-card-error';
     },
     getStatusIconClass() {
       const daysSince = this.attention?.daysSinceAttention || 0;
@@ -69,6 +72,61 @@ export default {
     },
     formatIdNumber(idNumber) {
       return formatIdNumber(this.commerce, idNumber);
+    },
+    getStatusBadgeClass() {
+      if (!this.attention?.status) return 'badge-secondary';
+      const status = this.attention.status;
+      if (status === ATTENTION_STATUS.TERMINATED || status === ATTENTION_STATUS.RATED) {
+        return 'badge-success';
+      }
+      if (status === ATTENTION_STATUS.PENDING || status === ATTENTION_STATUS.PROCESSING) {
+        return 'badge-warning';
+      }
+      if (
+        status === ATTENTION_STATUS.CANCELLED ||
+        status === ATTENTION_STATUS.USER_CANCELLED ||
+        status === ATTENTION_STATUS.SKIPED
+      ) {
+        return 'badge-danger';
+      }
+      return 'badge-secondary';
+    },
+    getStatusText() {
+      if (!this.attention?.status) return 'N/I';
+      const status = this.attention.status;
+      const statusMap = {
+        [ATTENTION_STATUS.PENDING]: this.$t('dashboard.attentionStatus.pending') || 'Pendiente',
+        [ATTENTION_STATUS.PROCESSING]:
+          this.$t('dashboard.attentionStatus.processing') || 'En Proceso',
+        [ATTENTION_STATUS.TERMINATED]:
+          this.$t('dashboard.attentionStatus.terminated') || 'Terminado',
+        [ATTENTION_STATUS.CANCELLED]: this.$t('dashboard.attentionStatus.cancelled') || 'Cancelado',
+        [ATTENTION_STATUS.USER_CANCELLED]:
+          this.$t('dashboard.attentionStatus.userCancelled') || 'Cancelado por Usuario',
+        [ATTENTION_STATUS.RATED]: this.$t('dashboard.attentionStatus.rated') || 'Calificado',
+        [ATTENTION_STATUS.SKIPED]: this.$t('dashboard.attentionStatus.skiped') || 'Omitido',
+        [ATTENTION_STATUS.REACTIVATED]:
+          this.$t('dashboard.attentionStatus.reactivated') || 'Reactivado',
+      };
+      return statusMap[status] || status;
+    },
+    getStatusIcon() {
+      if (!this.attention?.status) return 'bi-question-circle';
+      const status = this.attention.status;
+      if (status === ATTENTION_STATUS.TERMINATED || status === ATTENTION_STATUS.RATED) {
+        return 'bi-check-circle-fill';
+      }
+      if (status === ATTENTION_STATUS.PENDING || status === ATTENTION_STATUS.PROCESSING) {
+        return 'bi-clock-fill';
+      }
+      if (
+        status === ATTENTION_STATUS.CANCELLED ||
+        status === ATTENTION_STATUS.USER_CANCELLED ||
+        status === ATTENTION_STATUS.SKIPED
+      ) {
+        return 'bi-x-circle-fill';
+      }
+      return 'bi-info-circle-fill';
     },
   },
   watch: {
@@ -92,11 +150,11 @@ export default {
 
 <template>
   <div v-if="show && attention">
-    <!-- Ultra Compact Attention Row - Clickable -->
-    <div class="client-row-card" :class="getCardTypeClass()" @click="showDetails()">
-      <div class="client-row-content">
+    <!-- Modernized Attention Row Card - Matching Booking Style -->
+    <div class="attention-row-card" :class="getCardTypeClass()" @click.prevent="showDetails()">
+      <div class="attention-row-content">
         <!-- Status Icon -->
-        <Popper :class="'dark'" arrow hover>
+        <Popper :class="'dark'" arrow disable-click-away hover>
           <template #content>
             <div>
               {{
@@ -105,12 +163,12 @@ export default {
               }}
             </div>
           </template>
-          <div class="client-icon-mini" :class="getStatusIconClass()" @click.stop>
+          <div class="attention-icon-mini" :class="getStatusIconClass()" @click.stop>
             <i class="bi bi-qr-code"></i>
           </div>
         </Popper>
 
-        <!-- Service Badge -->
+        <!-- Service Badges -->
         <div v-if="attention.servicesDetails || attention.packageId" class="service-badges-inline">
           <span
             v-for="serv in attention.servicesDetails"
@@ -123,12 +181,34 @@ export default {
             <i class="bi bi-box-fill"></i> {{ attention.packageProcedureNumber }}
           </span>
         </div>
+        <!-- Status Badge -->
+        <div v-if="attention && attention.status !== undefined" class="status-badge-wrapper">
+          <Popper
+            :key="`status-badge-${attention.attentionId || attention.id || Math.random()}`"
+            :class="'dark'"
+            arrow
+            disable-click-away
+            hover
+          >
+            <template #content>
+              <div>
+                {{
+                  $t('dashboard.clientCard.tooltip.attentionStatus') || 'Estado del atendimento'
+                }}:
+                {{ getStatusText() }}
+              </div>
+            </template>
+            <span class="badge-mini status-badge" :class="getStatusBadgeClass()" @click.stop>
+              <i :class="`bi ${getStatusIcon()}`"></i> {{ getStatusText() }}
+            </span>
+          </Popper>
+        </div>
 
         <!-- Client Info - Horizontal -->
-        <div class="client-info-inline">
-          <div class="client-name-inline">
-            <span class="client-name-text">{{ attentionFullName }}</span>
-            <Popper :class="'dark'" arrow hover>
+        <div class="attention-info-inline">
+          <div class="attention-name-inline">
+            <span class="attention-name-text">{{ attentionFullName }}</span>
+            <Popper :class="'dark'" arrow disable-click-away hover>
               <template #content>
                 <div>
                   {{ $t('dashboard.clientCard.tooltip.copy') || 'Copiar dados do atendimento' }}
@@ -139,11 +219,11 @@ export default {
               </button>
             </Popper>
           </div>
-          <div class="client-meta-inline">
-            <span class="client-id-inline">{{
+          <div class="attention-meta-inline">
+            <span class="attention-id-inline">{{
               formatIdNumber(attention.userIdNumber) || 'N/I'
             }}</span>
-            <Popper v-if="attention.surveyId" :class="'dark'" arrow hover>
+            <Popper v-if="attention.surveyId" :class="'dark'" arrow disable-click-away hover>
               <template #content>
                 <div>
                   {{
@@ -158,6 +238,7 @@ export default {
               v-if="attention.paid !== undefined && attention.paid === true"
               :class="'dark'"
               arrow
+              disable-click-away
               hover
             >
               <template #content>
@@ -165,7 +246,13 @@ export default {
               </template>
               <i class="bi bi-coin icon-mini-separated blue-icon" @click.stop></i>
             </Popper>
-            <Popper v-if="attention.productCounter > 0" :class="'dark'" arrow hover>
+            <Popper
+              v-if="attention.productCounter > 0"
+              :class="'dark'"
+              arrow
+              disable-click-away
+              hover
+            >
               <template #content>
                 <div>
                   {{ $t('dashboard.clientCard.tooltip.products') || 'Atendimento possui produtos' }}
@@ -173,28 +260,10 @@ export default {
               </template>
               <i class="bi bi-eyedropper icon-mini-separated" @click.stop></i>
             </Popper>
-          </div>
-        </div>
-
-        <!-- Status Indicators - Inline -->
-        <div class="status-inline">
-          <Popper :class="'dark'" arrow hover>
-            <template #content>
-              <div>
-                {{
-                  $t('dashboard.clientCard.tooltip.daysSinceAttention') ||
-                  'Dias decorridos desde a última atenção'
-                }}
-              </div>
-            </template>
-            <div class="status-badge-inline" @click.stop>
+            <span class="attention-days-inline" v-if="attention.daysSinceAttention !== undefined">
               <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)}`"></i>
-              <span>{{ attention.daysSinceAttention || 0 }}</span>
-            </div>
-          </Popper>
-          <div class="status-badge-inline date-badge" @click.stop>
-            <i class="bi bi-clock-fill yellow-icon"></i>
-            <span>{{ getDate(attention.createdDate) }}</span>
+              {{ attention.daysSinceAttention || 0 }}
+            </span>
           </div>
         </div>
 
@@ -207,407 +276,229 @@ export default {
         </div>
       </div>
     </div>
-
-    <!-- Expandable Details Section -->
-    <div class="details-expandable-section">
-      <Spinner :show="loading"></Spinner>
-      <Transition name="details-expand">
-        <div v-if="extendedEntity" class="detailed-data">
-          <!-- Contact Information Section - Standardized -->
-          <div class="info-section compact-section">
-            <div class="info-section-header-compact">
-              <i class="bi bi-telephone-fill"></i>
-              <span class="info-section-title-compact">{{
-                $t('dashboard.clientCard.contactInfo') || $t('dashboard.contactInfo') || 'Contacto'
-              }}</span>
-            </div>
-            <div class="contact-data-grid">
-              <Popper :class="'dark'" arrow hover>
-                <template #content>
-                  <div>{{ $t('dashboard.clientCard.tooltip.whatsapp') || 'WhatsApp' }}</div>
-                </template>
-                <a
-                  class="data-item-compact whatsapp"
-                  :href="'https://wa.me/' + attention.userPhone"
-                  target="_blank"
-                  @click.stop
-                >
-                  <span class="data-label">{{
-                    $t('dashboard.clientCard.label.whatsapp') || 'WhatsApp'
-                  }}</span>
-                  <div class="data-value">
-                    <i class="bi bi-whatsapp"></i>
-                    <span>{{ attention.userPhone || 'N/I' }}</span>
-                  </div>
-                </a>
-              </Popper>
-              <Popper :class="'dark'" arrow hover>
-                <template #content>
-                  <div>{{ $t('dashboard.clientCard.tooltip.email') || 'Email' }}</div>
-                </template>
-                <a
-                  class="data-item-compact email"
-                  :href="'mailto:' + attention.userEmail"
-                  target="_blank"
-                  @click.stop
-                >
-                  <span class="data-label">{{
-                    $t('dashboard.clientCard.label.email') || 'Email'
-                  }}</span>
-                  <div class="data-value">
-                    <i class="bi bi-envelope"></i>
-                    <span>{{ attention.userEmail || 'N/I' }}</span>
-                  </div>
-                </a>
-              </Popper>
-              <Popper :class="'dark'" arrow hover>
-                <template #content>
-                  <div>{{ $t('dashboard.clientCard.tooltip.idNumber') || 'ID' }}</div>
-                </template>
-                <div class="data-item-compact" @click.stop>
-                  <span class="data-label">{{ $t('dashboard.clientCard.label.id') || 'ID' }}</span>
-                  <div class="data-value">
-                    <i class="bi bi-person-vcard"></i>
-                    <span>{{ formatIdNumber(attention.userIdNumber) || 'N/I' }}</span>
-                  </div>
-                </div>
-              </Popper>
-            </div>
-          </div>
-
-          <!-- Payment Data Section -->
-          <div v-if="attention.paid !== undefined && attention.paid === true" class="info-section">
-            <div class="info-section-header">
-              <i class="bi bi-check-circle-fill"></i>
-              <span class="info-section-title">{{
-                $t('collaboratorBookingsView.paymentData') || 'Dados de Pagamento'
-              }}</span>
-            </div>
-            <div class="info-badges">
-              <span v-if="attention.paymentType" class="info-badge">
-                <span class="badge-label">{{ $t('paymentData.paymentType') }}</span>
-                <span class="badge-value">{{ $t(`paymentTypes.${attention.paymentType}`) }}</span>
-              </span>
-              <span v-if="attention.paymentMethod" class="info-badge">
-                <span class="badge-label">{{ $t('paymentData.paymentMethod') }}</span>
-                <span class="badge-value">{{
-                  $t(`paymentClientMethods.${attention.paymentMethod}`)
-                }}</span>
-              </span>
-              <span v-if="attention.paymentAmount" class="info-badge">
-                <i class="bi bi-coin"></i>
-                <span class="badge-label">{{ $t('paymentData.paymentAmount') }}</span>
-                <span class="badge-value">{{ attention.paymentAmount }}</span>
-              </span>
-              <span v-if="attention.paymentCommission" class="info-badge">
-                <i class="bi bi-coin"></i>
-                <span class="badge-label">{{ $t('paymentData.paymentCommission') }}</span>
-                <span class="badge-value">{{ attention.paymentCommission }}</span>
-              </span>
-              <span v-if="attention.packageId && attention.packageName" class="info-badge">
-                <span class="badge-label">{{ $t('paymentData.package') }}</span>
-                <span class="badge-value">{{ attention.packageName }}</span>
-                <span class="badge-subvalue"
-                  >{{ attention.packageProcedureNumber }} /
-                  {{ attention.packageProceduresTotalNumber }}</span
-                >
-                <i v-if="attention.packagePaid" class="bi bi-check-circle-fill green-icon"></i>
-              </span>
-            </div>
-          </div>
-
-          <!-- Survey Data Section -->
-          <div v-if="attention.rating || attention.nps" class="info-section">
-            <div class="info-section-header">
-              <i class="bi bi-star-fill"></i>
-              <span class="info-section-title">{{
-                $t('dashboard.surveyData') || 'Dados da Pesquisa'
-              }}</span>
-            </div>
-            <div class="info-badges">
-              <span class="info-badge">
-                <i class="bi bi-star-fill yellow-icon"></i>
-                <span class="badge-label">CSAT</span>
-                <span class="badge-value">{{ attention.rating || 'N/I' }}</span>
-              </span>
-              <span class="info-badge">
-                <i class="bi bi-emoji-smile-fill blue-icon"></i>
-                <span class="badge-label">NPS</span>
-                <span class="badge-value">{{ attention.nps || 'N/I' }}</span>
-              </span>
-            </div>
-          </div>
-
-          <!-- Attention Data Section -->
-          <div
-            v-if="
-              attention.queueName ||
-              attention.collaboratorName ||
-              (attention.commerceName && attention.commerceTag) ||
-              attention.servicesDetails ||
-              attention.termsConditionsToAcceptedAt
-            "
-            class="info-section"
-          >
-            <div class="info-section-header">
-              <i class="bi bi-qr-code"></i>
-              <span class="info-section-title">{{
-                $t('dashboard.attData') || 'Dados do Atendimento'
-              }}</span>
-            </div>
-            <div class="info-badges">
-              <span v-if="attention.queueName" class="info-badge">
-                <span class="badge-label">{{ $t('dashboard.queueData') }}</span>
-                <span class="badge-value">{{ attention.queueName }}</span>
-              </span>
-              <span v-if="attention.collaboratorName" class="info-badge">
-                <i class="bi bi-person-fill"></i>
-                <span class="badge-label">{{ $t('dashboard.userData') }}</span>
-                <span class="badge-value">{{ attention.collaboratorName }}</span>
-              </span>
-              <span v-if="attention.commerceName && attention.commerceTag" class="info-badge">
-                <span class="badge-label">{{ $t('dashboard.commerceData') }}</span>
-                <span class="badge-value"
-                  >{{ attention.commerceName }} - {{ attention.commerceTag }}</span
-                >
-              </span>
-              <span v-if="attention.servicesDetails" class="info-badge services-badge">
-                <span class="badge-label">{{ $t('paymentData.service') }}</span>
-                <span v-for="serv in attention.servicesDetails" :key="serv.id" class="service-tag">
-                  {{ serv.name }}
-                </span>
-              </span>
-              <span v-if="attention.termsConditionsToAcceptedAt" class="info-badge">
-                <i class="bi bi-calendar-fill"></i>
-                <span class="badge-label">{{ $t('paymentData.termsAccepted') }}</span>
-                <span class="badge-value">{{
-                  getDate(attention.termsConditionsToAcceptedAt)
-                }}</span>
-              </span>
-            </div>
-          </div>
-
-          <!-- Metadata Section - Compact, Same Line -->
-          <div class="info-section metadata-section">
-            <div class="metadata-item-compact">
-              <span class="metadata-label">ID:</span>
-              <span class="metadata-value">{{ attention.attentionId }}</span>
-              <span class="metadata-separator">•</span>
-              <span class="metadata-label"
-                >{{ $t('dashboard.clientCard.date') || $t('dashboard.date') || 'Fecha' }}:</span
-              >
-              <span class="metadata-value">{{ getDate(attention.createdDate) }}</span>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </div>
   </div>
 </template>
 
 <style scoped>
-/* Ultra Compact Attention Row */
-.client-row-card {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 0.5rem 0.625rem;
-  margin: 0.25rem 0.375rem;
-  margin-bottom: 0;
-  border-radius: 8px;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  border: 1px solid rgba(169, 169, 169, 0.2);
-  border-bottom: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+/* Modernized Attention Row Card - Matching Booking Style */
+.attention-row-card {
+  background-color: #ffffff;
+  padding: 0.15rem 0.35rem;
+  margin: 0.25rem 0;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
   transition: all 0.2s ease;
-  position: relative;
-  overflow: visible;
   cursor: pointer;
-  z-index: 1;
 }
 
-.client-row-card:hover {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+.attention-row-card:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 1);
+  border-color: rgba(0, 194, 203, 0.2);
 }
 
-/* Card Type Variations - Ultra Compact */
-.client-row-card.client-card-success {
-  border-left: 2px solid #00c2cb;
+.attention-card-success {
+  border-left: 3px solid #10b981;
 }
 
-.client-row-card.client-card-success:hover {
-  background: rgba(0, 194, 203, 0.03);
+.attention-card-warning {
+  border-left: 3px solid #f59e0b;
 }
 
-.client-row-card.client-card-warning {
-  border-left: 2px solid #f9c322;
+.attention-card-error {
+  border-left: 3px solid #ef4444;
 }
 
-.client-row-card.client-card-warning:hover {
-  background: rgba(249, 195, 34, 0.03);
+.attention-card-info {
+  border-left: 3px solid var(--azul-turno);
 }
 
-.client-row-card.client-card-error {
-  border-left: 2px solid #a52a2a;
-}
-
-.client-row-card.client-card-error:hover {
-  background: rgba(165, 42, 42, 0.03);
-}
-
-/* Client Row Content - Ultra Compact Horizontal Layout */
-.client-row-content {
+.attention-row-content {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
-  position: relative;
-  z-index: 1;
 }
 
-.client-icon-mini {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+.attention-icon-mini {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
   flex-shrink: 0;
-  transition: all 0.2s ease;
-  cursor: help;
+  font-size: 0.75rem;
 }
 
-.client-icon-mini i {
-  font-size: 0.9375rem;
+.attention-icon-mini.icon-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
 }
 
-.client-row-card:hover .client-icon-mini {
-  transform: scale(1.05);
+.attention-icon-mini.icon-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
 }
 
-.icon-success {
-  background: rgba(0, 194, 203, 0.12);
-  color: #00c2cb;
+.attention-icon-mini.icon-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
 }
 
-.icon-warning {
-  background: rgba(249, 195, 34, 0.12);
-  color: #f9c322;
-}
-
-.icon-error {
-  background: rgba(165, 42, 42, 0.12);
-  color: #a52a2a;
+.attention-icon-mini.icon-info {
+  background: rgba(0, 194, 203, 0.1);
+  color: var(--azul-turno);
 }
 
 .service-badges-inline {
   display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.badge-mini {
+  display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  flex-wrap: wrap;
-  flex-shrink: 0;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 0.35rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.badge-mini.bg-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
 }
 
 .service-tag-mini {
-  background: rgba(0, 74, 173, 0.1);
-  color: #004aad;
-  padding: 0.125rem 0.375rem;
-  border-radius: 9999px;
-  font-size: 0.625rem;
-  font-weight: 600;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
+}
+
+.status-badge-wrapper {
+  display: flex;
+  align-items: center;
+  margin-left: 0.25rem;
+  flex-shrink: 0;
+}
+
+.status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.1875rem;
-  line-height: 1.2;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 0.35rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.service-tag-mini i {
-  font-size: 0.625rem;
+.status-badge.badge-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
 }
 
-.client-info-inline {
+.status-badge.badge-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+}
+
+.status-badge.badge-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+}
+
+.status-badge.badge-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: #ffffff;
+}
+
+.attention-info-inline {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.15rem;
   min-width: 0;
 }
 
-.client-name-inline {
+.attention-name-inline {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
-.client-name-text {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: #000000;
+.attention-name-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   line-height: 1.2;
-  letter-spacing: -0.01em;
 }
 
 .btn-copy-mini {
-  background: transparent;
-  border: none;
-  padding: 0.1875rem;
-  cursor: pointer;
-  color: rgba(0, 0, 0, 0.4);
-  transition: all 0.2s ease;
-  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6c757d;
+  flex-shrink: 0;
+  font-size: 0.7rem;
 }
 
 .btn-copy-mini:hover {
-  background: rgba(169, 169, 169, 0.1);
-  color: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 194, 203, 0.08);
+  border-color: var(--azul-turno);
+  color: var(--azul-turno);
 }
 
-.btn-copy-mini i {
-  font-size: 0.75rem;
-}
-
-.client-meta-inline {
+.attention-meta-inline {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: 0.35rem;
   flex-wrap: wrap;
 }
 
-.client-id-inline {
+.attention-id-inline {
   font-size: 0.6875rem;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.65);
 }
 
-.badge-mini {
-  background: rgba(0, 74, 173, 0.1);
-  color: #004aad;
-  padding: 0.125rem 0.375rem;
-  border-radius: 9999px;
-  font-size: 0.625rem;
+.attention-days-inline {
+  font-size: 0.6875rem;
   font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.1875rem;
-  cursor: help;
+  color: var(--azul-turno);
+  padding: 0.15rem 0.4rem;
+  background: rgba(0, 194, 203, 0.08);
+  border-radius: 0.3rem;
   line-height: 1.2;
-}
-
-.badge-mini i {
-  font-size: 0.625rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .icon-mini-separated {
-  font-size: 0.6875rem;
-  cursor: help;
-  line-height: 1;
-  margin-left: 0.25rem;
+  font-size: 0.75rem;
+  color: #6c757d;
+  opacity: 0.8;
+}
+
+.icon-mini-separated.blue-icon {
+  color: var(--azul-turno);
 }
 
 .collapse-icon-wrapper {
@@ -615,63 +506,12 @@ export default {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 .collapse-icon {
-  font-size: 0.875rem;
-  color: rgba(0, 0, 0, 0.5);
-  transition: transform 0.2s ease;
-  cursor: pointer;
-}
-
-.client-row-card:hover .collapse-icon {
-  color: rgba(0, 0, 0, 0.7);
-}
-
-.client-row-card[class*='extended'] .collapse-icon,
-.client-row-card:hover .collapse-icon {
-  transform: scale(1.1);
-}
-
-/* Status Inline - Ultra Compact */
-.status-inline {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.status-badge-inline {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.1875rem 0.4375rem;
-  background: rgba(169, 169, 169, 0.08);
-  border-radius: 9999px;
-  cursor: help;
-  transition: all 0.2s ease;
-  border: 1px solid rgba(169, 169, 169, 0.1);
-}
-
-.status-badge-inline:hover {
-  background: rgba(169, 169, 169, 0.15);
-  border-color: rgba(169, 169, 169, 0.2);
-}
-
-.status-badge-inline i {
   font-size: 0.75rem;
-}
-
-.status-badge-inline span {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #000000;
-  line-height: 1;
-}
-
-.date-badge {
-  cursor: default;
+  color: #6c757d;
+  transition: transform 0.2s ease;
 }
 
 /* Details Expandable Section */

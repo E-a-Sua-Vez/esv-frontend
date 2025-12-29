@@ -7,12 +7,12 @@ import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
-import SearchBar from '../../components/common/SearchBar.vue';
 import WelcomeMenu from '../../components/common/WelcomeMenu.vue';
+import { getBusinessLogoUrl } from '../../application/services/business-logo';
 
 export default {
   name: 'MasterMenu',
-  components: { CommerceLogo, Message, Spinner, Alert, SearchBar, WelcomeMenu },
+  components: { CommerceLogo, Message, Spinner, Alert, WelcomeMenu },
   async setup() {
     const router = useRouter();
     const loading = ref(false);
@@ -164,19 +164,12 @@ export default {
             </div>
           </div>
         </div>
-        <div id="searcher" class="mx-3">
-          <SearchBar
-            :list="state.businesses"
-            :label="$t('masterMenu.business')"
-            @selectItem="selectBusiness"
-          >
-          </SearchBar>
-        </div>
-        <div class="business-admin">
+        <!-- Business admin section removed - not needed in master menu -->
+        <div v-if="false" class="business-admin">
           <div v-if="state.business && state.business.id" class="card mt-1 mb-3">
             <div class="row d-flex m-1 business-title">
               <div class="col-4">
-                <img :src="state.business.logo" class="img-thumbnail rounded-start item-image" />
+                <CommerceLogo :src="state.business.logo" :business-id="state.business.id" />
               </div>
               <div class="col-7">
                 <span class="item-title fw-bold"> {{ state.business.name }} </span>
@@ -253,7 +246,7 @@ export default {
                       class="mb-1"
                     >
                       <div
-                        v-for="opt in state.manageControlSubMenuOption"
+                        v-for="opt in state.manageControlSubMenuOptions"
                         :key="opt"
                         class="centered mx-3"
                       >

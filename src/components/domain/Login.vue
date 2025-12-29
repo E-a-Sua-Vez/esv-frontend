@@ -38,6 +38,11 @@ export default {
       visible: false,
     };
   },
+  computed: {
+    isDevelopment() {
+      return import.meta.env.DEV;
+    },
+  },
   methods: {
     async login() {
       if (this.validate()) {
@@ -78,7 +83,7 @@ export default {
       if (this.password.length === 0 && this.email.length === 0) {
         this.errors.push('loginData.validate.common.1');
       }
-      if (!this.captcha) {
+      if (!this.captcha && !import.meta.env.DEV) {
         this.errors.push('loginData.validate.common.2');
       }
       if (this.errors.length === 0) {
@@ -91,8 +96,15 @@ export default {
         this.captcha = true;
       }
     },
-    validateCaptchaError() {
-      this.errors.push('clientNotifyData.validate.common.3');
+    validateCaptchaError(error) {
+      console.warn('reCAPTCHA error:', error);
+      // In development, we can be more lenient with reCAPTCHA errors
+      if (import.meta.env.DEV) {
+        console.warn('Development mode: reCAPTCHA error ignored');
+        this.captcha = true; // Allow login in development even if reCAPTCHA fails
+      } else {
+        this.errors.push('clientNotifyData.validate.common.3');
+      }
     },
     async authentication() {
       const result = await signIn(this.email, this.password, this.userType);
@@ -194,11 +206,15 @@ export default {
           </div>
           <div class="recaptcha-area">
             <VueRecaptcha
+              v-if="siteKey && !isDevelopment"
               :sitekey="siteKey"
               :size="'compact'"
               @verify="validateCaptchaOk"
               @error="validateCaptchaError"
             ></VueRecaptcha>
+            <div v-if="isDevelopment" class="dev-notice">
+              <small class="text-muted">Development mode: reCAPTCHA disabled</small>
+            </div>
           </div>
           <div class="btn-area">
             <button
@@ -284,7 +300,6 @@ export default {
 .login-container {
   display: flex;
   justify-content: center;
-  align-items: center;
   width: 100%;
   max-width: 100%;
   margin: 0 auto;

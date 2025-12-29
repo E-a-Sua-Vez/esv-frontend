@@ -538,100 +538,102 @@ export default {
       />
     </div>
     <!-- Modal Add -->
-    <div
-      class="modal fade"
-      :id="`add-configuration`"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="staticBackdropLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
-            <button
-              id="close-modal-config"
-              class="btn-close"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body text-center mb-0" id="attentions-component">
-            <Spinner :show="loading"></Spinner>
-            <Alert :show="loading" :stack="alertError"></Alert>
-            <div
-              id="add-configuration"
-              class="configuration-card mb-4"
-              v-if="state.showAdd && state.toggles['configuration.admin.add']"
-            >
-              <div class="row g-1">
-                <div id="configuration-feature-form-add" class="row g-1">
-                  <div class="col text-label">
-                    {{ $t('businessConfiguration.types') }}
+    <Teleport to="body">
+      <div
+        class="modal fade"
+        :id="`add-configuration`"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header border-0 centered active-name">
+              <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
+              <button
+                id="close-modal-config"
+                class="btn-close"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body text-center mb-0" id="attentions-component">
+              <Spinner :show="loading"></Spinner>
+              <Alert :show="loading" :stack="alertError"></Alert>
+              <div
+                id="add-configuration"
+                class="configuration-card mb-4"
+                v-if="state.showAdd && state.toggles['configuration.admin.add']"
+              >
+                <div class="row g-1">
+                  <div id="configuration-feature-form-add" class="row g-1">
+                    <div class="col text-label">
+                      {{ $t('businessConfiguration.types') }}
+                    </div>
+                    <div class="col">
+                      <select
+                        class="btn btn-md btn-light fw-bold text-dark select mx-2"
+                        v-model="state.typeSelected"
+                        @change="selectType()"
+                        id="types"
+                      >
+                        <option v-for="typ in state.types" :key="typ.id" :value="typ.id">
+                          {{ $t(`configuration.types.${typ.name}`) }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="configuration-feature-form-add" class="row g-1">
+                    <div class="col text-label">
+                      {{ $t('businessConfiguration.feature') }}
+                    </div>
+                    <div class="col">
+                      <select
+                        class="btn btn-md btn-light fw-bold text-dark select mx-2"
+                        v-model="state.optionSelected"
+                        id="features"
+                        v-bind:class="{ 'is-invalid': state.moduleError }"
+                      >
+                        <option v-for="opt in state.options" :key="opt.name" :value="opt">
+                          {{ $t(`configuration.${opt.name}.title`) }}
+                        </option>
+                      </select>
+                    </div>
                   </div>
                   <div class="col">
-                    <select
-                      class="btn btn-md btn-light fw-bold text-dark select mx-2"
-                      v-model="state.typeSelected"
-                      @change="selectType()"
-                      id="types"
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      @click="add(state.newConfiguration)"
                     >
-                      <option v-for="typ in state.types" :key="typ.id" :value="typ.id">
-                        {{ $t(`configuration.types.${typ.name}`) }}
-                      </option>
-                    </select>
+                      {{ $t('businessConfiguration.add') }} <i class="bi bi-save"></i>
+                    </button>
                   </div>
-                </div>
-                <div id="configuration-feature-form-add" class="row g-1">
-                  <div class="col text-label">
-                    {{ $t('businessConfiguration.feature') }}
+                  <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
+                    <Warning>
+                      <template v-slot:message>
+                        <li v-for="(error, index) in state.errorsAdd" :key="index">
+                          {{ $t(error) }}
+                        </li>
+                      </template>
+                    </Warning>
                   </div>
-                  <div class="col">
-                    <select
-                      class="btn btn-md btn-light fw-bold text-dark select mx-2"
-                      v-model="state.optionSelected"
-                      id="features"
-                      v-bind:class="{ 'is-invalid': state.moduleError }"
-                    >
-                      <option v-for="opt in state.options" :key="opt.name" :value="opt">
-                        {{ $t(`configuration.${opt.name}.title`) }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-                <div class="col">
-                  <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                    @click="add(state.newConfiguration)"
-                  >
-                    {{ $t('businessConfiguration.add') }} <i class="bi bi-save"></i>
-                  </button>
-                </div>
-                <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
-                  <Warning>
-                    <template v-slot:message>
-                      <li v-for="(error, index) in state.errorsAdd" :key="index">
-                        {{ $t(error) }}
-                      </li>
-                    </template>
-                  </Warning>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="mx-2 mb-4 text-center">
-            <a
-              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-              >{{ $t('close') }} <i class="bi bi-check-lg"></i
-            ></a>
+            <div class="mx-2 mb-4 text-center">
+              <a
+                class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+                >{{ $t('close') }} <i class="bi bi-check-lg"></i
+              ></a>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 

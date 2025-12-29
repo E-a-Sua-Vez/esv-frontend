@@ -1,7 +1,7 @@
 <template>
   <div class="patient-journey-modern">
     <!-- Header -->
-    <div class="modern-card mb-3">
+    <div class="modern-card mb-2">
       <div class="form-header-modern">
         <div class="form-header-icon">
           <i class="bi bi-diagram-3-fill"></i>
@@ -21,8 +21,8 @@
     </div>
 
     <!-- Summary Cards -->
-    <div v-if="journey && journey.summary" class="row g-3 mb-4">
-      <div class="col-md-3 col-sm-6">
+    <div v-if="journey && journey.summary" class="row g-2 mb-3 summary-cards-row">
+      <div class="col-md-3 col-sm-6 summary-card-col">
         <div class="summary-card modern-card">
           <div class="summary-icon summary-icon-blue">
             <i class="bi bi-calendar-check"></i>
@@ -33,10 +33,11 @@
             <div v-if="journey.summary.pendingBookings > 0" class="summary-badge">
               {{ journey.summary.pendingBookings }} {{ $t('common.pending') }}
             </div>
+            <div v-else class="summary-badge-placeholder"></div>
           </div>
         </div>
       </div>
-      <div class="col-md-3 col-sm-6">
+      <div class="col-md-3 col-sm-6 summary-card-col">
         <div class="summary-card modern-card">
           <div class="summary-icon summary-icon-green">
             <i class="bi bi-person-check"></i>
@@ -44,10 +45,11 @@
           <div class="summary-content">
             <div class="summary-value">{{ journey.summary.totalAttentions }}</div>
             <div class="summary-label">{{ $t('patientHistory.attentions') || 'Attentions' }}</div>
+            <div class="summary-badge-placeholder"></div>
           </div>
         </div>
       </div>
-      <div class="col-md-3 col-sm-6">
+      <div class="col-md-3 col-sm-6 summary-card-col">
         <div class="summary-card modern-card">
           <div class="summary-icon summary-icon-yellow">
             <i class="bi bi-journal-medical"></i>
@@ -57,10 +59,11 @@
             <div class="summary-label">
               {{ $t('patientHistory.consultations') || 'Consultations' }}
             </div>
+            <div class="summary-badge-placeholder"></div>
           </div>
         </div>
       </div>
-      <div class="col-md-3 col-sm-6">
+      <div class="col-md-3 col-sm-6 summary-card-col">
         <div class="summary-card modern-card">
           <div class="summary-icon summary-icon-orange">
             <i class="bi bi-calendar-event"></i>
@@ -71,13 +74,14 @@
             <div v-if="journey.summary.pendingControls > 0" class="summary-badge">
               {{ journey.summary.pendingControls }} {{ $t('common.pending') }}
             </div>
+            <div v-else class="summary-badge-placeholder"></div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Filters -->
-    <div class="modern-card mb-3">
+    <div class="modern-card mb-2">
       <div class="d-flex flex-wrap gap-2 align-items-center">
         <div class="filter-group">
           <label class="filter-label">{{ $t('common.filterByType') || 'Filter by Type:' }}</label>
@@ -460,73 +464,212 @@ export default {
 @import '../../../shared/styles/prontuario-common.css';
 
 .patient-journey-modern {
-  padding: 1.5rem;
-  background-color: var(--bg-color, #f8f9fa);
-  min-height: 100vh;
+  padding: 0;
+  width: 100%;
+}
+
+/* Summary Cards Row */
+.summary-cards-row {
+  display: flex;
+  align-items: stretch;
+}
+
+.summary-card-col {
+  display: flex;
 }
 
 /* Summary Cards */
 .summary-card {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  transition: transform 0.2s ease-in-out;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+.summary-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .summary-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+}
+
+.summary-card:hover::before {
+  opacity: 1;
+}
+
+/* Compact dashboard-like card overrides for patient journey */
+.patient-journey-modern .modern-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.patient-journey-modern .modern-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.patient-journey-modern .summary-card {
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  align-items: center;
+}
+
+.patient-journey-modern .summary-icon {
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+}
+
+.patient-journey-modern .summary-value {
+  font-size: 1.1rem;
+}
+
+/* Make timeline items more compact and aligned like dashboard cards */
+.patient-journey-modern .journey-timeline {
+  padding-left: 0.5rem;
+}
+
+.patient-journey-modern .timeline-item {
+  padding: 0.5rem;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.patient-journey-modern .timeline-item-icon {
+  width: 28px;
+  height: 28px;
+  font-size: 0.8rem;
+}
+
+.patient-journey-modern .timeline-item-title {
+  font-size: 0.85rem;
+  margin-bottom: 0.15rem;
+}
+
+.patient-journey-modern .timeline-item-description {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.patient-journey-modern .timeline-item-action .btn-modern {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.patient-journey-modern .timeline-item-header {
+  margin-bottom: 0.25rem;
+  gap: 0.3rem;
+}
+
+.patient-journey-modern .timeline-item-date {
+  font-size: 0.7rem;
+}
+
+.patient-journey-modern .timeline-item-relationships {
+  margin-top: 0.25rem;
+  padding-top: 0.25rem;
+  gap: 0.35rem;
+}
+
+.patient-journey-modern .relationship-link {
+  font-size: 0.65rem;
+}
+
+.patient-journey-modern .badge-modern {
+  padding: 0.15rem 0.35rem;
+  font-size: 0.65rem;
+  line-height: 1.2;
+  border-radius: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .patient-journey-modern .modern-card {
+    padding: 0.6rem 0.75rem;
+  }
+  .patient-journey-modern .summary-card {
+    padding: 0.5rem;
+  }
 }
 
 .summary-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--border-radius-md);
+  width: 36px;
+  height: 36px;
+  border-radius: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1rem;
   color: white;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .summary-icon-blue {
-  background-color: var(--azul-turno, #0d6efd);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
 }
 
 .summary-icon-green {
-  background-color: #28a745;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 .summary-icon-yellow {
-  background-color: #ffc107;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
 .summary-icon-orange {
-  background-color: #fd7e14;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
 }
 
 .summary-content {
   flex-grow: 1;
+  min-width: 0;
 }
 
 .summary-value {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--color-text);
+  line-height: 1.2;
 }
 
 .summary-label {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: var(--color-text-muted);
-  margin-top: 0.25rem;
+  margin-top: 0.2rem;
+  line-height: 1.2;
 }
 
 .summary-badge {
-  font-size: 0.75rem;
-  color: var(--color-warning);
-  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  color: #d97706;
+  margin-top: 0.2rem;
   font-weight: 600;
+  line-height: 1.2;
+  min-height: 1.2rem;
+}
+
+.summary-badge-placeholder {
+  min-height: 1.2rem;
+  visibility: hidden;
 }
 
 /* Filters */
@@ -537,7 +680,7 @@ export default {
 }
 
 .filter-label {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-text);
   white-space: nowrap;
@@ -546,153 +689,189 @@ export default {
 /* Timeline */
 .journey-timeline {
   position: relative;
-  padding-left: 2rem;
+  padding-left: 1.25rem;
 }
 
 .timeline-item-wrapper {
   position: relative;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .timeline-connector {
   position: absolute;
-  left: -1.5rem;
-  top: 3rem;
+  left: -1rem;
+  top: 2rem;
   width: 2px;
-  height: calc(100% + 0.5rem);
-  background-color: var(--border-color, #dee2e6);
+  height: calc(100% + 0.2rem);
+  background: linear-gradient(180deg, var(--azul-turno) 0%, rgba(13, 110, 253, 0.3) 100%);
+  opacity: 0.3;
 }
 
 .timeline-item {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem;
-  border-left: 4px solid transparent;
-  transition: all 0.2s ease-in-out;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .timeline-item:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
-.timeline-item-booking {
-  border-left-color: var(--azul-turno, #0d6efd);
+.timeline-item:hover::before {
+  opacity: 1;
 }
 
-.timeline-item-attention {
-  border-left-color: #28a745;
+.timeline-item-booking::before {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
 }
 
-.timeline-item-consultation {
-  border-left-color: #ffc107;
+.timeline-item-attention::before {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
-.timeline-item-control {
-  border-left-color: #fd7e14;
+.timeline-item-consultation::before {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
-.timeline-item-prescription {
-  border-left-color: #6f42c1;
+.timeline-item-control::before {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
 }
 
-.timeline-item-exam-order {
-  border-left-color: #dc3545;
+.timeline-item-prescription::before {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.timeline-item-exam-order::before {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
 .timeline-item-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--border-radius-md);
+  width: 28px;
+  height: 28px;
+  border-radius: 0.4rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 0.8rem;
   color: white;
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .icon-blue {
-  background-color: var(--azul-turno, #0d6efd);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
 }
 
 .icon-green {
-  background-color: #28a745;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 .icon-yellow {
-  background-color: #ffc107;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
 .icon-orange {
-  background-color: #fd7e14;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
 }
 
 .icon-purple {
-  background-color: #6f42c1;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
 }
 
 .icon-red {
-  background-color: #dc3545;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
 .timeline-item-content {
   flex-grow: 1;
+  min-width: 0;
 }
 
 .timeline-item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.3rem;
 }
 
 .timeline-item-date {
-  font-size: 0.875rem;
+  font-size: 0.7rem;
   color: var(--color-text-muted);
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
+}
+
+.timeline-item-date i {
+  font-size: 0.65rem;
+  opacity: 0.7;
 }
 
 .timeline-item-badges {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.3rem;
   flex-wrap: wrap;
 }
 
 .timeline-item-title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
+  line-height: 1.2;
 }
 
 .timeline-item-description {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
 }
 
 .timeline-item-relationships {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border-color, #dee2e6);
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .relationship-link {
-  font-size: 0.75rem;
-  color: var(--azul-turno, #0d6efd);
+  font-size: 0.65rem;
+  color: var(--azul-turno, #2563eb);
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
+  font-weight: 500;
+}
+
+.relationship-link i {
+  font-size: 0.65rem;
 }
 
 .timeline-item-action {
@@ -702,34 +881,36 @@ export default {
 /* Error State */
 .error-state-modern {
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 2.5rem 1rem;
   background: white;
-  border-radius: var(--border-radius-md);
-  box-shadow: var(--shadow-sm);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .error-state-modern-icon {
-  font-size: 4rem;
+  font-size: 3.5rem;
   color: var(--color-danger, #dc3545);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.5;
 }
 
 .error-state-modern-title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--color-text);
   margin-bottom: 0.5rem;
 }
 
 .error-state-modern-text {
-  font-size: 1rem;
+  font-size: 0.875rem;
   color: var(--color-text-muted);
   margin-bottom: 1rem;
 }
 
 @media (max-width: 768px) {
   .journey-timeline {
-    padding-left: 1rem;
+    padding-left: 0.75rem;
   }
 
   .timeline-item {
@@ -742,6 +923,7 @@ export default {
 
   .timeline-item-action .btn-modern {
     width: 100%;
+    justify-content: center;
   }
 }
 </style>

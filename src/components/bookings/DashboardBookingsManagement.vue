@@ -59,18 +59,42 @@ export default {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
         this.page = page ? page : this.page;
+
+        // CRITICAL: Normalize all filter values to ensure consistency between mobile and desktop
+        // Helper to normalize string values (empty string -> undefined, trim whitespace)
+        const normalizeString = value => {
+          if (value === null || value === undefined) return undefined;
+          const str = String(value).trim();
+          return str === '' ? undefined : str;
+        };
+
+        // Normalize all string parameters
+        const startDateParam = normalizeString(this.startDate);
+        const endDateParam = normalizeString(this.endDate);
+        const searchTextParam = normalizeString(this.searchText);
+        const queueIdParam = normalizeString(this.queueId);
+        const serviceIdParam = normalizeString(this.serviceId);
+
+        console.log('[DashboardBookingsManagement.refresh] Calling getBookingsDetails with:', {
+          asc: this.asc,
+          survey: this.survey,
+          status: this.status,
+        });
         this.newBookings = await getBookingsDetails(
           this.commerce.id,
-          this.startDate,
-          this.endDate,
+          startDateParam,
+          endDateParam,
           commerceIds,
           this.page,
           this.limit,
-          this.searchText,
-          this.queueId,
+          searchTextParam,
+          queueIdParam,
           this.asc,
-          this.serviceId,
-          this.status
+          serviceIdParam,
+          this.status,
+          undefined, // clientId
+          undefined, // packageId
+          this.survey // survey filter
         );
         this.updatePaginationData();
         this.loading = false;
@@ -83,6 +107,7 @@ export default {
       await this.refresh();
     },
     async clear() {
+      this._skipWatch = true;
       this.status = undefined;
       this.survey = undefined;
       this.asc = true;
@@ -93,7 +118,7 @@ export default {
       this.limit = 10;
       this.startDate = new DateModel().setDateOfMonth(1).toString();
       this.endDate = new DateModel(this.startDate).endOfMonth().toString();
-      await this.refresh();
+      this._skipWatch = false;
     },
     async checkAsc(event) {
       if (event.target.checked) {
@@ -136,7 +161,10 @@ export default {
           this.queueId,
           this.asc,
           this.serviceId,
-          this.status
+          this.status,
+          undefined, // clientId
+          undefined, // packageId
+          this.survey // survey filter
         );
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
@@ -207,7 +235,18 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, status, survey, asc, queueId, limit, serviceId } = this;
+      const {
+        page,
+        status,
+        survey,
+        asc,
+        queueId,
+        limit,
+        serviceId,
+        searchText,
+        startDate,
+        endDate,
+      } = this;
       return {
         page,
         status,
@@ -216,6 +255,9 @@ export default {
         queueId,
         limit,
         serviceId,
+        searchText,
+        startDate,
+        endDate,
       };
     },
     visible() {
@@ -230,6 +272,16 @@ export default {
       immediate: true,
       deep: true,
       async handler(oldData, newData) {
+        // CRITICAL: Check skipWatch flag FIRST - before any other logic
+        // This prevents watcher from firing during manual sync operations
+        if (this._skipWatch === true) {
+          return;
+        }
+        // Skip watch if this is a filter instance (filtersLocation === 'slot')
+        // Filter instances should not trigger refreshes - only content instances should
+        if (this.filtersLocation === 'slot') {
+          return;
+        }
         if (
           oldData &&
           newData &&
@@ -237,8 +289,17 @@ export default {
             oldData.limit !== newData.limit ||
             oldData.queueId !== newData.queueId ||
             oldData.status !== newData.status ||
-            oldData.serviceId !== newData.serviceId)
+            oldData.serviceId !== newData.serviceId ||
+            oldData.searchText !== newData.searchText ||
+            oldData.startDate !== newData.startDate ||
+            oldData.endDate !== newData.endDate ||
+            oldData.survey !== newData.survey)
         ) {
+          // Double-check skipWatch flag before calling refresh
+          // This prevents race conditions where flag might be cleared between checks
+          if (this._skipWatch === true) {
+            return;
+          }
           this.page = 1;
           await this.refresh();
         }
@@ -430,6 +491,7 @@ export default {
                           class="form-control"
                           v-model="searchText"
                           :placeholder="$t('dashboard.search')"
+                          @keyup.enter="refresh(1)"
                         />
                       </div>
                       <div class="col-2">

@@ -32,6 +32,11 @@ export default {
       passwordChanged: false,
     };
   },
+  computed: {
+    isDevelopment() {
+      return import.meta.env.DEV;
+    },
+  },
   methods: {
     closeModal() {
       this.$emit('close-modal');
@@ -47,7 +52,7 @@ export default {
         this.emailError = true;
         this.errors.push('loginData.validate.common.4');
       }
-      if (!this.captcha) {
+      if (!this.captcha && !import.meta.env.DEV) {
         this.errors.push('loginData.validate.common.2');
       }
       if (this.errors.length === 0) {
@@ -60,8 +65,15 @@ export default {
         this.captcha = true;
       }
     },
-    validateCaptchaError() {
-      this.errors.push('clientNotifyData.validate.common.3');
+    validateCaptchaError(error) {
+      console.warn('reCAPTCHA error:', error);
+      // In development, we can be more lenient with reCAPTCHA errors
+      if (import.meta.env.DEV) {
+        console.warn('Development mode: reCAPTCHA error ignored');
+        this.captcha = true; // Allow operation in development even if reCAPTCHA fails
+      } else {
+        this.errors.push('clientNotifyData.validate.common.3');
+      }
     },
     async sendEmail() {
       if (this.validate()) {
@@ -127,11 +139,15 @@ export default {
               </div>
               <div class="recaptcha-area">
                 <VueRecaptcha
+                  v-if="siteKey && !isDevelopment"
                   :sitekey="siteKey"
                   :size="'compact'"
                   @verify="validateCaptchaOk"
                   @error="validateCaptchaError"
                 ></VueRecaptcha>
+                <div v-if="isDevelopment" class="dev-notice">
+                  <small class="text-muted">Development mode: reCAPTCHA disabled</small>
+                </div>
               </div>
               <div class="btn-area">
                 <button

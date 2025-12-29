@@ -1,18 +1,14 @@
 <script>
-import { ref, reactive, onBeforeMount, computed, watch, nextTick } from 'vue';
+import { ref, reactive, onBeforeMount, nextTick, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
-import { getMetrics } from '../../application/services/query-stack';
-import { getCommerceById } from '../../application/services/commerce';
 import { getPermissions } from '../../application/services/permissions';
-import { getCollaboratorById } from '../../application/services/collaborator';
-import { getGroupedQueueByCommerceId } from '../../application/services/queue';
 import { getServiceByCommerce } from '../../application/services/service';
-import { getActiveFeature } from '../../shared/features';
 import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
+import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import DashboardSurveysManagement from '../../components/dashboard/DashboardSurveysManagement.vue';
 import DashboardAttentionsManagement from '../../components/attentions/DashboardAttentionsManagement.vue';
 import DashboardClientsManagement from '../../components/clients/DashboardClientsManagement.vue';
@@ -21,7 +17,6 @@ import DashboardAttentionsAndBookingsManagement from '../../components/attention
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
 import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
 import DateRangeFilters from '../../components/common/desktop/DateRangeFilters.vue';
-import Popper from 'vue3-popper';
 import { DateModel } from '../../shared/utils/date.model';
 
 export default {
@@ -31,6 +26,7 @@ export default {
     Message,
     Spinner,
     Alert,
+    ToggleCapabilities,
     DashboardSurveysManagement,
     DashboardAttentionsManagement,
     DashboardClientsManagement,
@@ -39,7 +35,6 @@ export default {
     DesktopContentLayout,
     DesktopFiltersPanel,
     DateRangeFilters,
-    Popper,
   },
   async setup() {
     const router = useRouter();
@@ -53,71 +48,16 @@ export default {
     const clientsContentRef = ref(null);
     const attentionsFilterRef = ref(null);
     const attentionsContentRef = ref(null);
+    const bookingsFilterRef = ref(null);
+    const bookingsContentRef = ref(null);
     const surveysFilterRef = ref(null);
     const surveysContentRef = ref(null);
 
     // Refs for timeout management
     const timeoutRefClients = ref(null);
     const timeoutRefAttentions = ref(null);
+    const timeoutRefBookings = ref(null);
     const timeoutRefSurveys = ref(null);
-
-    // Generate unique IDs for filter elements
-    const filterIds = {
-      clientsDaysSinceEarly: `clients-early-since-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      clientsDaysSinceMedium: `clients-medium-since-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      clientsDaysSinceLate: `clients-late-since-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      clientsDaysContactedEarly: `clients-early-contacted-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      clientsDaysContactedMedium: `clients-medium-contacted-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      clientsDaysContactedLate: `clients-late-contacted-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      clientsContactable: `clients-contactable-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      clientsContacted: `clients-contacted-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      clientsSurvey: `clients-survey-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      clientsAsc: `clients-asc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      attentionsDaysSinceEarly: `attentions-early-since-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      attentionsDaysSinceMedium: `attentions-medium-since-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      attentionsDaysSinceLate: `attentions-late-since-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      attentionsContactInterested: `attentions-interested-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      attentionsContactLater: `attentions-contact-later-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      attentionsContactRejected: `attentions-rejected-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      attentionsContactable: `attentions-contactable-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      attentionsContacted: `attentions-contacted-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      attentionsSurvey: `attentions-survey-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`,
-      attentionsAsc: `attentions-asc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    };
 
     const attentionCreated = {
       attentionNumber: 0,
@@ -144,19 +84,13 @@ export default {
       typesFlow: {},
     };
 
-    // Use global commerce and module from store
-    const commerce = computed(() => store.getCurrentCommerce);
-    const module = computed(() => store.getCurrentModule);
-
     const state = reactive({
       currentUser: {},
       business: {},
       activeBusiness: false,
-      selectedCommerces: ref([]),
       queues: ref([]),
       services: ref([]),
       queue: {},
-      collaborator: {},
       dateType: 'month',
       showClients: true,
       showAttentions: false,
@@ -170,136 +104,131 @@ export default {
       toggles: {},
       // Filter state for desktop layout
       filtersCollapsed: false,
+      startDate: undefined,
+      endDate: undefined,
+      searchText: undefined,
+      queueId: undefined,
+      serviceId: undefined,
+      allCommerces: ref([]),
     });
 
-    const loadCommerceData = async () => {
-      if (!commerce.value || !commerce.value.id) {
+    // Use global commerce from store
+    const commerce = computed(() => store.getCurrentCommerce);
+
+    // Compute selectedCommerces - use all commerces for Tracing components
+    const selectedCommerces = computed(() => {
+      if (state.allCommerces && state.allCommerces.length > 0) {
+        return state.allCommerces;
+      }
+      return [];
+    });
+
+    // Load queues from commerce object (already available in store, no need to fetch)
+    const loadCommerceQueues = commerce => {
+      if (!commerce) {
         state.queues = [];
+        return;
+      }
+      // Use queues from commerce object if available
+      if (commerce.queues && Array.isArray(commerce.queues)) {
+        state.queues = commerce.queues;
+      } else {
+        state.queues = [];
+      }
+    };
+
+    // Lazy load services only when needed (e.g., when attentions/clients tab is shown)
+    const loadServices = async commerceId => {
+      if (!commerceId) {
         state.services = [];
-        state.selectedCommerces = [];
+        return;
+      }
+      // Only load if not already loaded
+      if (state.services && state.services.length > 0) {
         return;
       }
       try {
-        // Use queues from store if available, otherwise fetch
-        if (commerce.value.queues && commerce.value.queues.length > 0) {
-          state.queues = commerce.value.queues;
-        } else {
-          const commerceData = await getCommerceById(commerce.value.id);
-          state.queues = commerceData.queues || [];
-          // Update store with full commerce data
-          if (commerceData && commerceData.id) {
-            await store.setCurrentCommerce(commerceData);
-          }
-        }
-        state.services = await getServiceByCommerce(commerce.value.id);
-        state.selectedCommerces = [commerce.value];
-        if (getActiveFeature(commerce.value, 'attention-queue-typegrouped', 'PRODUCT')) {
-          state.groupedQueues = await getGroupedQueueByCommerceId(commerce.value.id);
-          if (
-            Object.keys(state.groupedQueues).length > 0 &&
-            state.collaborator.type === 'STANDARD'
-          ) {
-            const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(
-              queue => queue.collaboratorId === state.collaborator.id
-            );
-            const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
-            const queues = [...collaboratorQueues, ...otherQueues];
-            state.queues = queues;
-          }
-        }
+        state.services = await getServiceByCommerce(commerceId);
       } catch (error) {
-        console.error(error);
+        state.services = [];
+      }
+    };
+
+    // Watch for commerce changes and reload data
+    watch(
+      commerce,
+      async (newCommerce, oldCommerce) => {
+        if (newCommerce && newCommerce.id && (!oldCommerce || oldCommerce.id !== newCommerce.id)) {
+          try {
+            loading.value = true;
+            // Immediately clear data to prevent showing old results
+            state.attentions = [];
+            state.filtered = [];
+            // Load queues from commerce object (no API call needed)
+            loadCommerceQueues(newCommerce);
+            // Clear services, they will be loaded lazily when needed
+            state.services = [];
+            loading.value = false;
+          } catch (error) {
+            loading.value = false;
+          }
+        }
+      },
+      { immediate: false }
+    );
+
+    // Handler to sync filter instance when content instance tab changes
+    const handleAttentionsTabChanged = event => {
+      if (attentionsFilterRef.value && event.type) {
+        if (event.type === 'attentions') {
+          attentionsFilterRef.value.showAttentionsResults = true;
+          attentionsFilterRef.value.showBookingsResults = false;
+        } else if (event.type === 'bookings') {
+          attentionsFilterRef.value.showAttentionsResults = false;
+          attentionsFilterRef.value.showBookingsResults = true;
+        }
       }
     };
 
     onBeforeMount(async () => {
       try {
         loading.value = true;
-        state.currentUser = store.getCurrentUser;
-        state.collaborator = state.currentUser;
-        if (!state.collaborator || !state.collaborator.id) {
-          state.collaborator = await getCollaboratorById(state.currentUser.id);
-        }
-        // Set initial commerce if not set - check both commerceId and commercesId
-        if (!commerce.value || !commerce.value.id) {
-          // First try commerceId (single commerce)
-          if (state.collaborator.commerceId) {
-            const initialCommerce = await getCommerceById(state.collaborator.commerceId);
-            if (initialCommerce && initialCommerce.id) {
-              await store.setCurrentCommerce(initialCommerce);
-            }
-          }
-          // If still no commerce, try commercesId (multiple commerces)
-          if (
-            (!commerce.value || !commerce.value.id) &&
-            state.collaborator.commercesId &&
-            state.collaborator.commercesId.length > 0
-          ) {
-            const firstCommerceId = state.collaborator.commercesId[0];
-            if (firstCommerceId) {
-              const initialCommerce = await getCommerceById(firstCommerceId);
-              if (initialCommerce && initialCommerce.id) {
-                await store.setCurrentCommerce(initialCommerce);
-              }
-            }
+        // Parallelize independent calls
+        const [currentUser, business, toggles] = await Promise.all([
+          store.getCurrentUser,
+          store.getActualBusiness(),
+          getPermissions('dashboard'),
+        ]);
+
+        state.currentUser = currentUser;
+        state.business = business;
+        state.toggles = toggles;
+
+        // Load commerces after business is loaded
+        state.allCommerces = await store.getAvailableCommerces(state.business.commerces);
+
+        // Initialize commerce in store if not set
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          if (state.allCommerces && state.allCommerces.length > 0) {
+            await store.setCurrentCommerce(state.allCommerces[0]);
           }
         }
-        await loadCommerceData();
-        state.toggles = await getPermissions('dashboard');
+
+        // Load queues from current commerce (no API call needed)
+        const commerceToUse = store.getCurrentCommerce;
+        if (commerceToUse) {
+          loadCommerceQueues(commerceToUse);
+          // Services will be loaded lazily when needed (when attentions/clients tab is shown)
+        }
+
         loading.value = false;
       } catch (error) {
         loading.value = false;
       }
     });
 
-    // Watch for commerce changes
-    watch(
-      commerce,
-      async (newCommerce, oldCommerce) => {
-        if (!newCommerce || !newCommerce.id) return;
-        if (oldCommerce && oldCommerce.id === newCommerce.id) return;
-        try {
-          loading.value = true;
-          // Clear data
-          state.queues = [];
-          state.services = [];
-          state.selectedCommerces = [];
-          state.calculatedMetrics = {
-            'attention.created': attentionCreated,
-            'survey.created': surveyCreated,
-            'notification.created': notificationCreated,
-          };
-          await loadCommerceData();
-          loading.value = false;
-        } catch (error) {
-          loading.value = false;
-        }
-      },
-      { deep: true }
-    );
-
-    // Watch for module changes
-    watch(
-      module,
-      async (newModule, oldModule) => {
-        if (oldModule && oldModule.id === newModule?.id) return;
-        try {
-          loading.value = true;
-          // Clear data
-          state.calculatedMetrics = {
-            'attention.created': attentionCreated,
-            'survey.created': surveyCreated,
-            'notification.created': notificationCreated,
-          };
-          loading.value = false;
-        } catch (error) {
-          loading.value = false;
-        }
-      },
-      { deep: true }
-    );
-
-    const isActiveBusiness = () => commerce.value && commerce.value.active === true;
+    const isActiveBusiness = () => state.business && state.business.active === true;
 
     const getLocalHour = hour => {
       const date = new Date();
@@ -319,23 +248,161 @@ export default {
       router.back();
     };
 
-    const showClients = () => {
+    const showClients = async () => {
       state.showClients = true;
       (state.showAttentions = false), (state.showSurveyManagement = false);
+      // Lazy load services when clients tab is shown
+      if (commerce.value && commerce.value.id) {
+        await loadServices(commerce.value.id);
+      }
     };
 
     const showSurveys = () => {
       state.showClients = false;
       (state.showAttentions = false), (state.showSurveyManagement = true);
+      // Set default date range: one month ago to today
+      nextTick(() => {
+        const today = new Date().toISOString().slice(0, 10);
+        const oneMonthAgo = new DateModel(today).substractMonths(1).toString();
+
+        // Set dates in filter instance (the one that exposes filters to the slot)
+        if (surveysFilterRef.value) {
+          const filterInstance = surveysFilterRef.value;
+          filterInstance.startDate = oneMonthAgo;
+          filterInstance.endDate = today;
+        }
+
+        // Set dates in content instance as well
+        if (surveysContentRef.value) {
+          const contentInstance = surveysContentRef.value;
+          contentInstance.startDate = oneMonthAgo;
+          contentInstance.endDate = today;
+        }
+
+        // Refresh with default dates
+        refreshSurveysContent();
+      });
     };
 
-    const showAttentions = () => {
+    const showAttentions = async () => {
       state.showClients = false;
       (state.showAttentions = true), (state.showSurveyManagement = false);
+      // Lazy load services when attentions tab is shown
+      if (commerce.value && commerce.value.id) {
+        await loadServices(commerce.value.id);
+      }
+      // Set default date range: one month ago to today
+      nextTick(() => {
+        const today = new Date().toISOString().slice(0, 10);
+        const oneMonthAgo = new DateModel(today).substractMonths(1).toString();
+
+        // Set dates in filter instance (the one that exposes filters to the slot)
+        if (attentionsFilterRef.value) {
+          const filterWrapper = attentionsFilterRef.value;
+          // The filter instance is the DashboardAttentionsManagement component
+          // We need to find it within the wrapper
+          nextTick(() => {
+            if (filterWrapper.$children && filterWrapper.$children.length > 0) {
+              const filterInstance = filterWrapper.$children.find(child => {
+                const name = child.$options?.name || child.$options?.__name;
+                return name === 'DashboardAttentionsManagement' && child.filtersLocation === 'slot';
+              });
+              if (filterInstance) {
+                filterInstance.startDate = oneMonthAgo;
+                filterInstance.endDate = today;
+              }
+            }
+          });
+        }
+
+        // Set dates in content instance
+        if (attentionsContentRef.value) {
+          const contentWrapper = attentionsContentRef.value;
+          const contentInstance = contentWrapper.$refs?.attentionsManagement;
+          if (contentInstance) {
+            contentInstance.startDate = oneMonthAgo;
+            contentInstance.endDate = today;
+          }
+        }
+
+        // Refresh with default dates
+        refreshAttentionsContentDelayed({ startDate: oneMonthAgo, endDate: today }, 100);
+      });
     };
 
     const handleFiltersToggle = collapsed => {
       state.filtersCollapsed = collapsed;
+    };
+
+    const handleDateQuickSelect = ({ type, startDate, endDate }) => {
+      state.startDate = startDate;
+      state.endDate = endDate;
+    };
+
+    const handleDateSearch = () => {
+      // Trigger refresh in child components if needed
+      // This will be handled by prop changes
+    };
+
+    // Helper functions for quick date buttons
+    const handleQuickDateSelect = (type, filterProps, contentType = 'clients') => {
+      try {
+        if (!filterProps) {
+          console.warn('handleQuickDateSelect: filterProps is undefined', { type, contentType });
+          return;
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+        let startDate, endDate;
+
+        if (type === 'today') {
+          const [year, month, day] = today.split('-');
+          startDate = `${year}-${month}-${day}`;
+          endDate = `${year}-${month}-${day}`;
+        } else if (type === 'currentMonth') {
+          const [year, month, day] = today.split('-');
+          startDate = `${year}-${month}-01`;
+          endDate = `${year}-${month}-${day}`;
+        } else if (type === 'lastMonth') {
+          startDate = new DateModel(today).substractMonths(1).startOfMonth().toString();
+          endDate = new DateModel(today).substractMonths(1).endOfMonth().toString();
+        } else if (type === 'lastThreeMonths') {
+          startDate = new DateModel(today).substractMonths(3).startOfMonth().toString();
+          endDate = new DateModel(today).substractMonths(1).endOfMonth().toString();
+        } else {
+          console.warn('handleQuickDateSelect: Unknown type', type);
+          return;
+        }
+
+        // Update filterProps dates
+        if (filterProps.setStartDate) {
+          filterProps.setStartDate(startDate);
+        } else if (filterProps) {
+          filterProps.startDate = startDate;
+        }
+        if (filterProps.setEndDate) {
+          filterProps.setEndDate(endDate);
+        } else if (filterProps) {
+          filterProps.endDate = endDate;
+        }
+
+        // Update filter instance directly based on content type
+        if (contentType === 'clients') {
+          if (clientsFilterRef.value) {
+            clientsFilterRef.value.startDate = startDate;
+            clientsFilterRef.value.endDate = endDate;
+          }
+          refreshClientsContentDelayed({ startDate, endDate });
+        } else if (contentType === 'surveys') {
+          if (surveysFilterRef.value) {
+            surveysFilterRef.value.startDate = startDate;
+            surveysFilterRef.value.endDate = endDate;
+          }
+          refreshSurveysContent({ startDate, endDate });
+        }
+      } catch (error) {
+        console.error('Error in handleQuickDateSelect:', error);
+      }
     };
 
     const handleCommerceChanged = async commerce => {
@@ -345,71 +412,233 @@ export default {
       }
     };
 
-    // Computed for selected commerces
-    const selectedCommerces = computed(() =>
-      commerce.value && commerce.value.id ? [commerce.value] : []
-    );
-
-    // Filter synchronization functions - simplified versions
+    // Wrapper function to refresh content instance when filters change - following ProductsStockManagement pattern
+    // CRITICAL: This function must sync ALL filter values exactly as they are in filterInstance
+    // to ensure mobile and desktop produce identical results
     const refreshClientsContent = (filterPropsOverride = null) => {
+      // Use nextTick to ensure filter instance values are updated
       nextTick(() => {
         nextTick(() => {
           if (clientsFilterRef.value && clientsContentRef.value) {
             const filterInstance = clientsFilterRef.value;
             const contentInstance = clientsContentRef.value;
-            if (!filterInstance || !contentInstance) return;
 
+            if (!filterInstance || !contentInstance) {
+              return;
+            }
+
+            // Clear previous data immediately
             contentInstance.clients = [];
             contentInstance.counter = 0;
             contentInstance.totalPages = 0;
+
+            // Set flag to skip watch during manual sync
             contentInstance._skipWatch = true;
+
+            // Sync all filter properties - read from filterPropsOverride if provided, otherwise from filterInstance
             contentInstance.page = 1;
 
-            // Sync filter properties
+            // Helper function to get value - prioritize override, then filterInstance, then undefined
+            // CRITICAL: Must handle undefined, null, empty string, and false values correctly
             const getValue = key => {
-              if (
-                filterPropsOverride &&
-                key in filterPropsOverride &&
-                filterPropsOverride[key] !== undefined &&
-                filterPropsOverride[key] !== null
-              ) {
+              // If override is provided and has the key (even if value is undefined/null), use it
+              if (filterPropsOverride && key in filterPropsOverride) {
                 return filterPropsOverride[key];
               }
+              // Otherwise, get from filterInstance (which may be undefined)
               return filterInstance[key];
             };
 
+            // Helper to normalize string values (empty string -> undefined, trim whitespace)
+            const normalizeString = value => {
+              if (value === null || value === undefined) return undefined;
+              const str = String(value).trim();
+              return str === '' ? undefined : str;
+            };
+
+            // Sync all filter values - EXACTLY as they are in filterInstance
+            // This ensures mobile and desktop use identical filter values
             contentInstance.daysSinceType = getValue('daysSinceType');
             contentInstance.daysSinceContacted = getValue('daysSinceContacted');
             contentInstance.contactResultType = getValue('contactResultType');
             contentInstance.contactable = getValue('contactable');
             contentInstance.contacted = getValue('contacted');
             contentInstance.survey = getValue('survey');
-            contentInstance.asc = getValue('asc') !== undefined ? getValue('asc') : true;
+            // For asc, default to true if undefined (matching mobile behavior)
+            const ascValue = getValue('asc');
+            contentInstance.asc = ascValue !== undefined ? ascValue : true;
+
+            // Normalize searchText - empty string becomes undefined (matching mobile behavior)
             const searchTextValue = getValue('searchText');
-            contentInstance.searchText =
-              searchTextValue !== null && searchTextValue !== undefined
-                ? searchTextValue
-                : undefined;
+            contentInstance.searchText = normalizeString(searchTextValue);
+
+            // Normalize queueId and serviceId - empty string becomes undefined
             const queueIdValue = getValue('queueId');
-            contentInstance.queueId =
-              queueIdValue !== undefined && queueIdValue !== '' ? queueIdValue : undefined;
+            contentInstance.queueId = normalizeString(queueIdValue);
+
             const serviceIdValue = getValue('serviceId');
-            contentInstance.serviceId =
-              serviceIdValue !== undefined && serviceIdValue !== '' ? serviceIdValue : undefined;
+            contentInstance.serviceId = normalizeString(serviceIdValue);
 
+            // Sync date filters - normalize to YYYY-MM-DD format or undefined
             const startDateValue = getValue('startDate');
-            const newStartDate =
-              startDateValue !== undefined && startDateValue !== null && startDateValue !== ''
-                ? String(startDateValue).trim()
-                : undefined;
-            const endDateValue = getValue('endDate');
-            const newEndDate =
-              endDateValue !== undefined && endDateValue !== null && endDateValue !== ''
-                ? String(endDateValue).trim()
-                : undefined;
+            contentInstance.startDate = normalizeString(startDateValue);
 
-            contentInstance.startDate = newStartDate;
-            contentInstance.endDate = newEndDate;
+            const endDateValue = getValue('endDate');
+            contentInstance.endDate = normalizeString(endDateValue);
+
+            // Sync client-specific filters
+            contentInstance.pendingControls = getValue('pendingControls');
+            contentInstance.pendingBookings = getValue('pendingBookings');
+            contentInstance.firstAttentionForm = getValue('firstAttentionForm');
+            contentInstance.ratingType = getValue('ratingType');
+            contentInstance.npsType = getValue('npsType');
+
+            // Clear skip flag and refresh
+            contentInstance._skipWatch = false;
+
+            // Force Vue to update the reactive properties
+            nextTick(() => {
+              nextTick(() => {
+                if (contentInstance && contentInstance.refresh) {
+                  contentInstance.refresh(1);
+                }
+              });
+            });
+          }
+        });
+      });
+    };
+
+    const refreshAttentionsContent = (filterPropsOverride = null) => {
+      // Use nextTick to ensure filter instance values are updated
+      nextTick(() => {
+        nextTick(() => {
+          if (attentionsFilterRef.value && attentionsContentRef.value) {
+            // Get the wrapper instance (DashboardAttentionsAndBookingsManagement)
+            const wrapperInstance = attentionsContentRef.value;
+
+            // Access the content instance (DashboardAttentionsManagement that shows results)
+            const contentInstance = wrapperInstance.$refs?.attentionsManagement;
+
+            // Get the filter instance (DashboardAttentionsManagement that exposes filters)
+            // This is a different instance from contentInstance - it's the one with filtersLocation='slot'
+            let filterInstance = null;
+
+            // The filter instance is in attentionsFilterRef.value, which is also a DashboardAttentionsAndBookingsManagement
+            // but it contains the filter-exposing DashboardAttentionsManagement instance
+            const filterWrapper = attentionsFilterRef.value;
+            if (filterWrapper && filterWrapper.$children && filterWrapper.$children.length > 0) {
+              // Find the DashboardAttentionsManagement with filtersLocation='slot'
+              filterInstance = filterWrapper.$children.find(child => {
+                const name = child.$options?.name || child.$options?.__name;
+                return name === 'DashboardAttentionsManagement' && child.filtersLocation === 'slot';
+              });
+            }
+
+            // Fallback: if we can't find the filter instance, use contentInstance
+            if (!filterInstance) {
+              filterInstance = contentInstance;
+            }
+
+            if (!contentInstance) {
+              return;
+            }
+
+            // Clear previous data immediately
+            contentInstance.attentions = [];
+            contentInstance.counter = 0;
+            contentInstance.totalPages = 0;
+
+            // Set flag to skip watch during manual sync
+            contentInstance._skipWatch = true;
+
+            // Sync all filter properties - read from filterPropsOverride if provided, otherwise from filterInstance
+            contentInstance.page = 1;
+
+            // Helper function to get value - prioritize override, then filterInstance, then undefined
+            // CRITICAL: Must handle undefined, null, empty string, and false values correctly
+            const getValue = key => {
+              // If override is provided and has the key (even if value is undefined/null), use it
+              if (filterPropsOverride && key in filterPropsOverride) {
+                return filterPropsOverride[key];
+              }
+              // Otherwise, get from filterInstance (which may be undefined)
+              return filterInstance ? filterInstance[key] : undefined;
+            };
+
+            // Helper to normalize string values (empty string -> undefined, trim whitespace)
+            const normalizeString = value => {
+              if (value === null || value === undefined) return undefined;
+              const str = String(value).trim();
+              return str === '' ? undefined : str;
+            };
+
+            // Sync all filter values - EXACTLY as they are in filterInstance
+            // This ensures mobile and desktop use identical filter values
+            contentInstance.daysSinceType = getValue('daysSinceType');
+            contentInstance.daysSinceContacted = getValue('daysSinceContacted');
+            contentInstance.contactResultType = getValue('contactResultType');
+
+            // Handle boolean values correctly: false is a valid value, only undefined should be treated as undefined
+            if (filterPropsOverride !== null && filterPropsOverride !== undefined) {
+              if (Object.prototype.hasOwnProperty.call(filterPropsOverride, 'contactable')) {
+                contentInstance.contactable = filterPropsOverride.contactable;
+              } else if (filterInstance) {
+                contentInstance.contactable = filterInstance.contactable;
+              } else {
+                contentInstance.contactable = undefined;
+              }
+
+              if (Object.prototype.hasOwnProperty.call(filterPropsOverride, 'contacted')) {
+                contentInstance.contacted = filterPropsOverride.contacted;
+              } else if (filterInstance) {
+                contentInstance.contacted = filterInstance.contacted;
+              } else {
+                contentInstance.contacted = undefined;
+              }
+
+              if (Object.prototype.hasOwnProperty.call(filterPropsOverride, 'survey')) {
+                contentInstance.survey = filterPropsOverride.survey;
+              } else if (filterInstance) {
+                contentInstance.survey = filterInstance.survey;
+              } else {
+                contentInstance.survey = undefined;
+              }
+
+              if (Object.prototype.hasOwnProperty.call(filterPropsOverride, 'asc')) {
+                contentInstance.asc = filterPropsOverride.asc;
+              } else if (filterInstance && filterInstance.asc !== undefined) {
+                contentInstance.asc = filterInstance.asc;
+              } else {
+                contentInstance.asc = false;
+              }
+            } else {
+              contentInstance.contactable = filterInstance ? filterInstance.contactable : undefined;
+              contentInstance.contacted = filterInstance ? filterInstance.contacted : undefined;
+              contentInstance.survey = filterInstance ? filterInstance.survey : undefined;
+              contentInstance.asc =
+                filterInstance && filterInstance.asc !== undefined ? filterInstance.asc : false;
+            }
+
+            // Normalize searchText - empty string becomes undefined (matching mobile behavior)
+            const searchTextValue = getValue('searchText');
+            contentInstance.searchText = normalizeString(searchTextValue);
+
+            // Normalize queueId and serviceId - empty string becomes undefined
+            const queueIdValue = getValue('queueId');
+            contentInstance.queueId = normalizeString(queueIdValue);
+
+            const serviceIdValue = getValue('serviceId');
+            contentInstance.serviceId = normalizeString(serviceIdValue);
+
+            // Sync date filters - normalize to YYYY-MM-DD format or undefined
+            const startDateValue = getValue('startDate');
+            contentInstance.startDate = normalizeString(startDateValue);
+
+            const endDateValue = getValue('endDate');
+            contentInstance.endDate = normalizeString(endDateValue);
+
+            // Clear skip flag and refresh
             contentInstance._skipWatch = false;
 
             nextTick(() => {
@@ -424,6 +653,362 @@ export default {
       });
     };
 
+    // Helper function to set skipWatch flag on bookings content instance
+    const setBookingsSkipWatch = (value = true) => {
+      if (attentionsContentRef.value && attentionsContentRef.value.$refs) {
+        const contentWrapper = attentionsContentRef.value.$refs.attentionsAndBookingsManagement;
+        if (contentWrapper && contentWrapper.$refs) {
+          const contentInstance = contentWrapper.$refs.bookingsManagement;
+          if (contentInstance) {
+            contentInstance._skipWatch = value;
+          }
+        }
+      }
+    };
+
+    const refreshBookingsContent = (filterPropsOverride = null) => {
+      console.log('[refreshBookingsContent] Called with filterPropsOverride:', filterPropsOverride);
+      // Use nextTick to ensure filter instance values are updated
+      nextTick(() => {
+        nextTick(() => {
+          if (attentionsFilterRef.value && attentionsContentRef.value) {
+            // Get the wrapper instance (DashboardAttentionsAndBookingsManagement)
+            const filterWrapper = attentionsFilterRef.value;
+            const contentWrapper = attentionsContentRef.value;
+
+            // CRITICAL: Set the refreshing flag IMMEDIATELY after getting the wrapper to prevent watchers from resetting states
+            // This must be done BEFORE accessing any properties that might trigger template re-evaluation
+            if (contentWrapper._isRefreshing === undefined) {
+              contentWrapper._isRefreshing = false;
+            }
+            // Use Vue.set or direct assignment to ensure reactivity
+            contentWrapper._isRefreshing = true;
+
+            // CRITICAL: Force update to ensure the flag is set before any template re-evaluation
+            contentWrapper.$forceUpdate();
+
+            // CRITICAL: Verify that bookings tab is active BEFORE doing anything
+
+            // CRITICAL: If bookings is not active, don't refresh - this prevents state resets
+            if (!contentWrapper.showBookingsResults) {
+              contentWrapper._isRefreshing = false;
+              return;
+            }
+
+            // CRITICAL: Ensure states are correct before proceeding
+            if (contentWrapper.showAttentionsResults) {
+              contentWrapper.showAttentionsResults = false;
+              contentWrapper.showBookingsResults = true;
+              // Force update to ensure the change is reflected
+              contentWrapper.$forceUpdate();
+            }
+
+            // CRITICAL: Double-check states are still correct before continuing
+            if (!contentWrapper.showBookingsResults || contentWrapper.showAttentionsResults) {
+              contentWrapper._isRefreshing = false;
+              return;
+            }
+
+            // Access the content instance (DashboardBookingsManagement that shows results)
+            // IMPORTANT: Make sure we're getting the bookingsManagement ref, not attentionsManagement
+            // The contentWrapper is DashboardAttentionsAndBookingsManagement, which has both
+            // attentionsManagement and bookingsManagement refs
+            let contentInstance = null;
+
+            // First, try to get bookingsManagement ref directly
+            if (contentWrapper.$refs && contentWrapper.$refs.bookingsManagement) {
+              contentInstance = contentWrapper.$refs.bookingsManagement;
+            }
+
+            // If refs are not available or didn't work, try to find it in $children
+            if (
+              !contentInstance &&
+              contentWrapper.$children &&
+              contentWrapper.$children.length > 0
+            ) {
+              contentInstance = contentWrapper.$children.find(child => {
+                const name = child.$options?.name || child.$options?.__name;
+                // Find DashboardBookingsManagement that is showing (not the one with filtersLocation='slot')
+                return (
+                  name === 'DashboardBookingsManagement' && child.showBookingsManagement === true
+                );
+              });
+            }
+
+            // Verify that contentInstance is actually a DashboardBookingsManagement component
+            if (contentInstance) {
+              const componentName =
+                contentInstance.$options?.name || contentInstance.$options?.__name;
+              if (componentName !== 'DashboardBookingsManagement') {
+                return;
+              }
+            }
+
+            // Get the filter instance (DashboardBookingsManagement that exposes filters)
+            let filterInstance = null;
+            if (filterWrapper && filterWrapper.$children && filterWrapper.$children.length > 0) {
+              // Find the DashboardBookingsManagement with filtersLocation='slot'
+              filterInstance = filterWrapper.$children.find(child => {
+                const name = child.$options?.name || child.$options?.__name;
+                return name === 'DashboardBookingsManagement' && child.filtersLocation === 'slot';
+              });
+            }
+
+            // Fallback: if we can't find the filter instance, use contentInstance
+            if (!filterInstance) {
+              filterInstance = contentInstance;
+            }
+
+            if (!contentInstance) {
+              return;
+            }
+
+            // CRITICAL: Set flag to skip watch BEFORE updating any values
+            // This prevents the watcher from firing during manual sync
+            contentInstance._skipWatch = true;
+
+            // Clear previous data immediately
+            contentInstance.bookings = [];
+            contentInstance.newBookings = [];
+            contentInstance.counter = 0;
+            contentInstance.totalPages = 0;
+
+            // Sync all filter properties - read from filterPropsOverride if provided, otherwise from filterInstance
+            contentInstance.page = 1;
+
+            // Helper function to get value - prioritize override, then filterInstance, then undefined
+            // CRITICAL: Must handle undefined, null, empty string, and false values correctly
+            const getValue = key => {
+              // If override is provided and has the key (even if value is undefined/null/false), use it
+              // Check if key exists in override object - this handles false values correctly
+              if (
+                filterPropsOverride !== null &&
+                filterPropsOverride !== undefined &&
+                key in filterPropsOverride
+              ) {
+                return filterPropsOverride[key];
+              }
+              // Otherwise, get from filterInstance (which may be undefined)
+              return filterInstance ? filterInstance[key] : undefined;
+            };
+
+            // Helper to normalize string values (empty string -> undefined, trim whitespace)
+            const normalizeString = value => {
+              if (value === null || value === undefined) return undefined;
+              const str = String(value).trim();
+              return str === '' ? undefined : str;
+            };
+
+            // Sync all filter values - EXACTLY as they are in filterInstance
+            // This ensures mobile and desktop use identical filter values
+            contentInstance.status = getValue('status');
+            // Sync survey filter - prioritize override, then filterInstance, then undefined
+            if (filterPropsOverride !== null && filterPropsOverride !== undefined) {
+              if (Object.prototype.hasOwnProperty.call(filterPropsOverride, 'survey')) {
+                console.log(
+                  '[refreshBookingsContent] Setting contentInstance.survey from override:',
+                  filterPropsOverride.survey,
+                );
+                contentInstance.survey = filterPropsOverride.survey;
+              } else if (filterInstance) {
+                console.log(
+                  '[refreshBookingsContent] Setting contentInstance.survey from filterInstance:',
+                  filterInstance.survey,
+                );
+                contentInstance.survey = filterInstance.survey;
+              } else {
+                contentInstance.survey = undefined;
+              }
+            } else if (filterInstance) {
+              console.log(
+                '[refreshBookingsContent] Setting contentInstance.survey from filterInstance (no override):',
+                filterInstance.survey,
+              );
+              contentInstance.survey = filterInstance.survey;
+            } else {
+              contentInstance.survey = undefined;
+            }
+
+            // Sync asc filter - prioritize override, then filterInstance, then default to true
+            if (filterPropsOverride !== null && filterPropsOverride !== undefined) {
+              if (Object.prototype.hasOwnProperty.call(filterPropsOverride, 'asc')) {
+                console.log(
+                  '[refreshBookingsContent] Setting contentInstance.asc from override:',
+                  filterPropsOverride.asc,
+                );
+                contentInstance.asc = filterPropsOverride.asc;
+              } else if (filterInstance && filterInstance.asc !== undefined) {
+                console.log(
+                  '[refreshBookingsContent] Setting contentInstance.asc from filterInstance:',
+                  filterInstance.asc,
+                );
+                contentInstance.asc = filterInstance.asc;
+              } else {
+                contentInstance.asc = true;
+              }
+            } else if (filterInstance && filterInstance.asc !== undefined) {
+              console.log(
+                '[refreshBookingsContent] Setting contentInstance.asc from filterInstance (no override):',
+                filterInstance.asc,
+              );
+              contentInstance.asc = filterInstance.asc;
+            } else {
+              contentInstance.asc = true;
+            }
+
+            console.log(
+              '[refreshBookingsContent] Final values - survey:',
+              contentInstance.survey,
+              'asc:',
+              contentInstance.asc,
+            );
+
+            // Normalize searchText - empty string becomes undefined (matching mobile behavior)
+            const searchTextValue = getValue('searchText');
+            contentInstance.searchText = normalizeString(searchTextValue);
+
+            // Normalize queueId and serviceId - empty string becomes undefined
+            const queueIdValue = getValue('queueId');
+            contentInstance.queueId = normalizeString(queueIdValue);
+
+            const serviceIdValue = getValue('serviceId');
+            contentInstance.serviceId = normalizeString(serviceIdValue);
+
+            // Sync date filters - normalize to YYYY-MM-DD format or undefined
+            const startDateValue = getValue('startDate');
+            contentInstance.startDate = normalizeString(startDateValue);
+
+            const endDateValue = getValue('endDate');
+            contentInstance.endDate = normalizeString(endDateValue);
+
+            // Final verification: make sure we're calling refresh on the correct component
+            const finalComponentName =
+              contentInstance.$options?.name || contentInstance.$options?.__name;
+            if (finalComponentName !== 'DashboardBookingsManagement') {
+              // Clear skip flag before returning
+              contentInstance._skipWatch = false;
+              return;
+            }
+
+            // Call refresh immediately - values are already synced above
+            // Use single nextTick to ensure DOM is updated
+            nextTick(async () => {
+              if (contentInstance && contentInstance.refresh) {
+                const verifyName =
+                  contentInstance.$options?.name || contentInstance.$options?.__name;
+                if (verifyName === 'DashboardBookingsManagement') {
+                  try {
+                    // Refresh with page 1 - skipWatch is still true
+                    await contentInstance.refresh(1);
+                    await nextTick();
+                    contentInstance._skipWatch = false;
+                  } catch (error) {
+                    contentInstance._skipWatch = false;
+                  }
+                } else {
+                  contentInstance._skipWatch = false;
+                }
+              } else {
+                contentInstance._skipWatch = false;
+              }
+
+              if (contentWrapper && contentWrapper._isRefreshing !== undefined) {
+                contentWrapper._isRefreshing = false;
+              }
+            });
+          } else {
+            // CRITICAL: Clear the refreshing flag even if refs are null
+            if (
+              attentionsContentRef.value &&
+              attentionsContentRef.value._isRefreshing !== undefined
+            ) {
+              attentionsContentRef.value._isRefreshing = false;
+            }
+          }
+        });
+      });
+    };
+
+    const refreshSurveysContent = (filterPropsOverride = null) => {
+      nextTick(() => {
+        nextTick(() => {
+          if (surveysFilterRef.value && surveysContentRef.value) {
+            const filterInstance = surveysFilterRef.value;
+            const contentInstance = surveysContentRef.value;
+
+            if (!filterInstance || !contentInstance) {
+              return;
+            }
+
+            // Clear previous data immediately
+            contentInstance.surveys = [];
+            contentInstance.counter = 0;
+            contentInstance.totalPages = 0;
+
+            // Set flag to skip watch during manual sync
+            contentInstance._skipWatch = true;
+            contentInstance.page = 1;
+
+            // Helper function to get value - prioritize override, then filterInstance, then undefined
+            // CRITICAL: Must handle undefined, null, empty string, and false values correctly
+            const getValue = key => {
+              // If override is provided and has the key (even if value is undefined/null), use it
+              if (filterPropsOverride && key in filterPropsOverride) {
+                return filterPropsOverride[key];
+              }
+              // Otherwise, get from filterInstance (which may be undefined)
+              return filterInstance[key];
+            };
+
+            // Helper to normalize string values (empty string -> undefined, trim whitespace)
+            const normalizeString = value => {
+              if (value === null || value === undefined) return undefined;
+              const str = String(value).trim();
+              return str === '' ? undefined : str;
+            };
+
+            // Sync all filter values - EXACTLY as they are in filterInstance
+            // This ensures mobile and desktop use identical filter values
+            contentInstance.ratingType = getValue('ratingType');
+            contentInstance.npsType = getValue('npsType');
+            contentInstance.contactable = getValue('contactable');
+            contentInstance.contacted = getValue('contacted');
+            contentInstance.keyWord = getValue('keyWord');
+
+            // Normalize searchText - empty string becomes undefined (matching mobile behavior)
+            const searchTextValue = getValue('searchText');
+            contentInstance.searchText = normalizeString(searchTextValue);
+
+            // Normalize queueId and serviceId - empty string becomes undefined
+            const queueIdValue = getValue('queueId');
+            contentInstance.queueId = normalizeString(queueIdValue);
+
+            const serviceIdValue = getValue('serviceId');
+            contentInstance.serviceId = normalizeString(serviceIdValue);
+
+            // Sync date filters - normalize to YYYY-MM-DD format or undefined
+            const startDateValue = getValue('startDate');
+            contentInstance.startDate = normalizeString(startDateValue);
+
+            const endDateValue = getValue('endDate');
+            contentInstance.endDate = normalizeString(endDateValue);
+
+            // Clear skip flag and refresh
+            contentInstance._skipWatch = false;
+
+            nextTick(() => {
+              nextTick(() => {
+                if (contentInstance && contentInstance.refresh) {
+                  contentInstance.refresh(1);
+                }
+              });
+            });
+          }
+        });
+      });
+    };
+
+    // Helper function to refresh clients content with delay
     const refreshClientsContentDelayed = (filterPropsOverride = null, delay = 50) => {
       if (timeoutRefClients.value) {
         clearTimeout(timeoutRefClients.value);
@@ -434,77 +1019,7 @@ export default {
       }, delay);
     };
 
-    // Refresh function for attentions content
-    const refreshAttentionsContent = (filterPropsOverride = null) => {
-      nextTick(() => {
-        nextTick(() => {
-          if (attentionsFilterRef.value && attentionsContentRef.value) {
-            const wrapperInstance = attentionsContentRef.value;
-            const contentInstance = wrapperInstance.$refs?.attentionsManagement;
-
-            if (!contentInstance) return;
-
-            // Get filter instance
-            let filterInstance = null;
-            const filterWrapper = attentionsFilterRef.value;
-            if (filterWrapper && filterWrapper.$children && filterWrapper.$children.length > 0) {
-              filterInstance = filterWrapper.$children.find(child => {
-                const name = child.$options?.name || child.$options?.__name;
-                return name === 'DashboardAttentionsManagement' && child.filtersLocation === 'slot';
-              });
-            }
-
-            if (!filterInstance) filterInstance = contentInstance;
-
-            contentInstance.attentions = [];
-            contentInstance.counter = 0;
-            contentInstance.totalPages = 0;
-            contentInstance._skipWatch = true;
-            contentInstance.page = 1;
-
-            const getValue = key => {
-              if (
-                filterPropsOverride &&
-                key in filterPropsOverride &&
-                filterPropsOverride[key] !== undefined &&
-                filterPropsOverride[key] !== null
-              ) {
-                return filterPropsOverride[key];
-              }
-              return filterInstance && filterInstance[key] !== undefined
-                ? filterInstance[key]
-                : contentInstance[key] !== undefined
-                ? contentInstance[key]
-                : undefined;
-            };
-
-            const startDateValue = getValue('startDate');
-            const newStartDate =
-              startDateValue !== undefined && startDateValue !== null && startDateValue !== ''
-                ? String(startDateValue).trim()
-                : undefined;
-            const endDateValue = getValue('endDate');
-            const newEndDate =
-              endDateValue !== undefined && endDateValue !== null && endDateValue !== ''
-                ? String(endDateValue).trim()
-                : undefined;
-
-            contentInstance.startDate = newStartDate;
-            contentInstance.endDate = newEndDate;
-            contentInstance._skipWatch = false;
-
-            nextTick(() => {
-              nextTick(() => {
-                if (contentInstance && contentInstance.refresh) {
-                  contentInstance.refresh(1);
-                }
-              });
-            });
-          }
-        });
-      });
-    };
-
+    // Helper function to refresh attentions content with delay
     const refreshAttentionsContentDelayed = (filterPropsOverride = null, delay = 50) => {
       if (timeoutRefAttentions.value) {
         clearTimeout(timeoutRefAttentions.value);
@@ -515,104 +1030,106 @@ export default {
       }, delay);
     };
 
-    const refreshSurveysContent = () => {
-      nextTick(() => {
-        nextTick(() => {
-          if (surveysFilterRef.value && surveysContentRef.value) {
-            const filterInstance = surveysFilterRef.value;
-            const contentInstance = surveysContentRef.value;
-            if (!filterInstance || !contentInstance) return;
-
-            contentInstance.surveys = [];
-            contentInstance.counter = 0;
-            contentInstance.totalPages = 0;
-            contentInstance._skipWatch = true;
-            contentInstance.page = 1;
-            contentInstance.ratingType = filterInstance.ratingType;
-            contentInstance.npsType = filterInstance.npsType;
-            contentInstance.contactable = filterInstance.contactable;
-            contentInstance.contacted = filterInstance.contacted;
-            contentInstance.keyWord = filterInstance.keyWord;
-            contentInstance.searchText =
-              filterInstance.searchText !== null && filterInstance.searchText !== undefined
-                ? filterInstance.searchText
-                : undefined;
-            contentInstance.queueId =
-              filterInstance.queueId !== undefined && filterInstance.queueId !== ''
-                ? filterInstance.queueId
-                : undefined;
-            contentInstance.serviceId =
-              filterInstance.serviceId !== undefined && filterInstance.serviceId !== ''
-                ? filterInstance.serviceId
-                : undefined;
-
-            const newStartDate =
-              filterInstance.startDate !== undefined &&
-              filterInstance.startDate !== null &&
-              filterInstance.startDate !== ''
-                ? String(filterInstance.startDate).trim()
-                : undefined;
-            const newEndDate =
-              filterInstance.endDate !== undefined &&
-              filterInstance.endDate !== null &&
-              filterInstance.endDate !== ''
-                ? String(filterInstance.endDate).trim()
-                : undefined;
-
-            contentInstance.startDate = newStartDate;
-            contentInstance.endDate = newEndDate;
-            contentInstance._skipWatch = false;
-
-            nextTick(() => {
-              nextTick(() => {
-                if (contentInstance && contentInstance.refresh) {
-                  contentInstance.refresh(1);
-                }
-              });
-            });
-          }
-        });
-      });
+    // Helper function to refresh bookings content with delay
+    const refreshBookingsContentDelayed = (filterPropsOverride = null, delay = 50) => {
+      if (timeoutRefBookings.value) {
+        clearTimeout(timeoutRefBookings.value);
+      }
+      timeoutRefBookings.value = setTimeout(() => {
+        refreshBookingsContent(filterPropsOverride);
+        timeoutRefBookings.value = null;
+      }, delay);
     };
 
-    const refreshSurveysContentDelayed = (filterPropsOverride = null, delay = 50) => {
-      if (timeoutRefSurveys.value) {
-        clearTimeout(timeoutRefSurveys.value);
+    // Helper functions for date quick buttons
+    const handleDateQuickButton = (filterProps, dateMethod, filterType) => {
+      // Calculate dates directly based on the method name
+      const today = new Date().toISOString().slice(0, 10);
+      let startDate, endDate;
+
+      // Determine which method was called by checking the method reference
+      const methodName =
+        dateMethod?.name || (typeof dateMethod === 'function' ? dateMethod.name : '');
+
+      if (methodName === 'getToday' || dateMethod === filterProps.getToday) {
+        const [year, month, day] = today.split('-');
+        startDate = `${year}-${month}-${day}`;
+        endDate = `${year}-${month}-${day}`;
+      } else if (methodName === 'getCurrentMonth' || dateMethod === filterProps.getCurrentMonth) {
+        const [year, month, day] = today.split('-');
+        startDate = `${year}-${month}-01`;
+        endDate = `${year}-${month}-${day}`;
+      } else if (methodName === 'getLastMonth' || dateMethod === filterProps.getLastMonth) {
+        startDate = new DateModel(today).substractMonths(1).toString();
+        endDate = new DateModel(startDate).endOfMonth().toString();
+      } else if (
+        methodName === 'getLastThreeMonths' ||
+        dateMethod === filterProps.getLastThreeMonths
+      ) {
+        startDate = new DateModel(today).substractMonths(3).toString();
+        endDate = new DateModel(today).substractMonths(1).endOfMonth().toString();
       }
-      timeoutRefSurveys.value = setTimeout(() => {
-        if (filterPropsOverride && surveysFilterRef.value) {
-          // Apply filter overrides to filter instance
-          if (filterPropsOverride.searchText !== undefined) {
-            surveysFilterRef.value.searchText = filterPropsOverride.searchText;
-          }
-          if (filterPropsOverride.queueId !== undefined) {
-            surveysFilterRef.value.queueId = filterPropsOverride.queueId;
-          }
-          if (filterPropsOverride.serviceId !== undefined) {
-            surveysFilterRef.value.serviceId = filterPropsOverride.serviceId;
-          }
-          if (filterPropsOverride.ratingType !== undefined) {
-            surveysFilterRef.value.ratingType = filterPropsOverride.ratingType;
-          }
-          if (filterPropsOverride.npsType !== undefined) {
-            surveysFilterRef.value.npsType = filterPropsOverride.npsType;
-          }
-          if (filterPropsOverride.contactable !== undefined) {
-            surveysFilterRef.value.contactable = filterPropsOverride.contactable;
-          }
-          if (filterPropsOverride.contacted !== undefined) {
-            surveysFilterRef.value.contacted = filterPropsOverride.contacted;
-          }
-          if (filterPropsOverride.startDate !== undefined) {
-            surveysFilterRef.value.startDate = filterPropsOverride.startDate;
-          }
-          if (filterPropsOverride.endDate !== undefined) {
-            surveysFilterRef.value.endDate = filterPropsOverride.endDate;
+
+      // Update filterProps dates
+      if (filterProps.setStartDate) {
+        filterProps.setStartDate(startDate);
+      } else {
+        filterProps.startDate = startDate;
+      }
+      if (filterProps.setEndDate) {
+        filterProps.setEndDate(endDate);
+      } else {
+        filterProps.endDate = endDate;
+      }
+
+      // Also call the original method to update the component's internal state
+      if (dateMethod && typeof dateMethod === 'function') {
+        dateMethod();
+      }
+
+      // Update filter instance directly based on filterType
+      if (filterType === 'attentions' && attentionsFilterRef.value) {
+        const filterWrapper = attentionsFilterRef.value;
+        if (filterWrapper.$children && filterWrapper.$children.length > 0) {
+          const filterInstance = filterWrapper.$children.find(child => {
+            const name = child.$options?.name || child.$options?.__name;
+            return name === 'DashboardAttentionsManagement' && child.filtersLocation === 'slot';
+          });
+          if (filterInstance) {
+            filterInstance.startDate = startDate;
+            filterInstance.endDate = endDate;
           }
         }
-        refreshSurveysContent();
-        timeoutRefSurveys.value = null;
-      }, delay);
+      } else if (filterType === 'bookings' && attentionsFilterRef.value) {
+        const filterWrapper = attentionsFilterRef.value;
+        if (filterWrapper.$children && filterWrapper.$children.length > 0) {
+          const filterInstance = filterWrapper.$children.find(child => {
+            const name = child.$options?.name || child.$options?.__name;
+            return name === 'DashboardBookingsManagement' && child.filtersLocation === 'slot';
+          });
+          if (filterInstance) {
+            filterInstance.startDate = startDate;
+            filterInstance.endDate = endDate;
+            // Force update to ensure reactivity
+            filterInstance.$forceUpdate();
+          }
+        }
+      }
+
+      // Refresh with the calculated dates immediately
+      // Use nextTick to ensure filter instance is updated before refreshing
+      nextTick(() => {
+        // Set skipWatch flag before updating to prevent duplicate calls
+        if (filterType === 'bookings') {
+          setBookingsSkipWatch(true);
+        }
+        const dateOverride = { startDate, endDate };
+        if (filterType === 'attentions') {
+          refreshAttentionsContentDelayed(dateOverride, 50);
+        } else if (filterType === 'bookings') {
+          refreshBookingsContentDelayed(dateOverride, 50);
+        }
+      });
     };
 
     return {
@@ -621,28 +1138,36 @@ export default {
       alertError,
       goBack,
       isActiveBusiness,
-      showAttentions,
-      showSurveys,
-      getLocalHour,
-      showClients,
       commerce,
-      module,
       selectedCommerces,
+      showClients,
+      showSurveys,
+      showAttentions,
+      getLocalHour,
       handleFiltersToggle,
+      handleDateQuickSelect,
+      handleDateSearch,
       handleCommerceChanged,
       refreshClientsContent,
       refreshClientsContentDelayed,
       refreshAttentionsContent,
       refreshAttentionsContentDelayed,
+      refreshBookingsContent,
+      refreshBookingsContentDelayed,
       refreshSurveysContent,
-      refreshSurveysContentDelayed,
+      handleDateQuickButton,
+      handleQuickDateSelect,
+      setBookingsSkipWatch,
+      handleAttentionsTabChanged,
+      DateModel,
       clientsFilterRef,
       clientsContentRef,
       attentionsFilterRef,
       attentionsContentRef,
+      bookingsFilterRef,
+      bookingsContentRef,
       surveysFilterRef,
       surveysContentRef,
-      filterIds,
     };
   },
 };
@@ -653,7 +1178,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="commerce?.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="commerce?.logo || state.business?.logo"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`dashboard.tracing.title`)"
           :toggles="state.toggles"
@@ -661,24 +1189,24 @@ export default {
           @goBack="goBack"
         >
         </ComponentMenu>
-        <div id="page-header" class="centered">
+        <div id="page-header" class="text-center">
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div id="tracing">
+        <div id="dashboard">
           <div v-if="isActiveBusiness()">
-            <div v-if="(!commerce || !commerce.id) && !loading" class="control-box">
+            <div v-if="!commerce" class="control-box">
               <Message
                 :title="$t('dashboard.message.3.title')"
                 :content="$t('dashboard.message.3.content')"
               />
             </div>
-            <div v-else-if="commerce && commerce.id && !loading" class="control-box">
+            <div v-else class="control-box">
               <div id="dashboard-controls">
                 <div class="row"></div>
               </div>
             </div>
-            <div v-if="!loading && commerce && commerce.id" id="tracing-result" class="mt-2">
+            <div v-if="!loading" id="dashboard-result" class="mt-2">
               <div class="row col mx-1 mt-3 mb-1 tabs-header-divider">
                 <div class="col-3 centered">
                   <button
@@ -723,6 +1251,7 @@ export default {
                   :commerces="selectedCommerces"
                   :business="state.business"
                   :services="state.services"
+                  :client-details-opened="false"
                 >
                 </DashboardClientsManagement>
                 <DashboardAttentionsAndBookingsManagement
@@ -769,10 +1298,10 @@ export default {
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading && commerce?.logo"
+                  v-if="!loading || commerce?.logo || state.business?.logo"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="commerce?.logo || $t('hubLogoBlanco')"
+                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>
@@ -788,15 +1317,18 @@ export default {
             </ComponentMenu>
           </div>
         </div>
-        <div id="tracing" v-if="isActiveBusiness()">
-          <div v-if="(!commerce || !commerce.id) && !loading" class="control-box">
+        <div id="dashboard" v-if="isActiveBusiness()">
+          <div
+            v-if="!commerce || (state.allCommerces && state.allCommerces.length === 0)"
+            class="control-box"
+          >
             <Message
               :title="$t('dashboard.message.3.title')"
               :content="$t('dashboard.message.3.content')"
             />
           </div>
           <DesktopContentLayout
-            v-else-if="commerce && commerce.id && !loading"
+            v-else
             :show-filters="true"
             :filters-sticky="true"
             @filters-toggle="handleFiltersToggle"
@@ -818,7 +1350,8 @@ export default {
                 @commerce-changed="handleCommerceChanged"
               >
                 <template #custom-filters>
-                  <!-- Filters for Clients tab -->
+                  <!-- Filters from child components - shown based on active tab -->
+                  <!-- Use a separate component instance just for filters, rendered normally (not hidden) -->
                   <DashboardClientsManagement
                     v-if="state.showClients"
                     :show-client-management="false"
@@ -831,38 +1364,19 @@ export default {
                     :business="state.business"
                     :services="Array.isArray(state.services) ? state.services : []"
                     filters-location="slot"
+                    :client-details-opened="false"
                     ref="clientsFilterRef"
                   >
                     <template #filters-exposed="filterProps">
+                      <!-- Render filters here - they will be visible in filters panel -->
                       <div class="filters-content-wrapper">
                         <!-- Date quick buttons -->
                         <div class="row my-2">
                           <div class="col-6 mb-2">
                             <button
                               class="btn btn-sm btn-dark rounded-pill w-100"
-                              @click="
-                                const today = new Date().toISOString().slice(0, 10);
-                                const [year, month, day] = today.split('-');
-                                const startDate = `${year}-${month}-${day}`;
-                                const endDate = `${year}-${month}-${day}`;
-                                if (filterProps.setStartDate) {
-                                  filterProps.setStartDate(startDate);
-                                } else {
-                                  filterProps.startDate = startDate;
-                                }
-                                if (filterProps.setEndDate) {
-                                  filterProps.setEndDate(endDate);
-                                } else {
-                                  filterProps.endDate = endDate;
-                                }
-                                if (clientsFilterRef.value) {
-                                  clientsFilterRef.value.startDate = startDate;
-                                  clientsFilterRef.value.endDate = endDate;
-                                }
-                                if (filterProps.getToday) filterProps.getToday();
-                                refreshClientsContentDelayed({ startDate, endDate });
-                              "
-                              :disabled="filterProps.loading"
+                              @click="handleQuickDateSelect('today', filterProps)"
+                              :disabled="filterProps?.loading"
                             >
                               {{ $t('dashboard.today') }}
                             </button>
@@ -870,29 +1384,8 @@ export default {
                           <div class="col-6 mb-2">
                             <button
                               class="btn btn-sm btn-dark rounded-pill w-100"
-                              @click="
-                                const today = new Date().toISOString().slice(0, 10);
-                                const [year, month, day] = today.split('-');
-                                const startDate = `${year}-${month}-01`;
-                                const endDate = `${year}-${month}-${day}`;
-                                if (filterProps.setStartDate) {
-                                  filterProps.setStartDate(startDate);
-                                } else {
-                                  filterProps.startDate = startDate;
-                                }
-                                if (filterProps.setEndDate) {
-                                  filterProps.setEndDate(endDate);
-                                } else {
-                                  filterProps.endDate = endDate;
-                                }
-                                if (clientsFilterRef.value) {
-                                  clientsFilterRef.value.startDate = startDate;
-                                  clientsFilterRef.value.endDate = endDate;
-                                }
-                                if (filterProps.getCurrentMonth) filterProps.getCurrentMonth();
-                                refreshClientsContentDelayed({ startDate, endDate });
-                              "
-                              :disabled="filterProps.loading"
+                              @click="handleQuickDateSelect('currentMonth', filterProps)"
+                              :disabled="filterProps?.loading"
                             >
                               {{ $t('dashboard.thisMonth') }}
                             </button>
@@ -900,30 +1393,8 @@ export default {
                           <div class="col-6 mb-2">
                             <button
                               class="btn btn-sm btn-dark rounded-pill w-100"
-                              @click="
-                                const today = new Date().toISOString().slice(0, 10);
-                                const startDate = new DateModel(today)
-                                  .substractMonths(1)
-                                  .toString();
-                                const endDate = new DateModel(startDate).endOfMonth().toString();
-                                if (filterProps.setStartDate) {
-                                  filterProps.setStartDate(startDate);
-                                } else {
-                                  filterProps.startDate = startDate;
-                                }
-                                if (filterProps.setEndDate) {
-                                  filterProps.setEndDate(endDate);
-                                } else {
-                                  filterProps.endDate = endDate;
-                                }
-                                if (clientsFilterRef.value) {
-                                  clientsFilterRef.value.startDate = startDate;
-                                  clientsFilterRef.value.endDate = endDate;
-                                }
-                                if (filterProps.getLastMonth) filterProps.getLastMonth();
-                                refreshClientsContentDelayed({ startDate, endDate });
-                              "
-                              :disabled="filterProps.loading"
+                              @click="handleQuickDateSelect('lastMonth', filterProps)"
+                              :disabled="filterProps?.loading"
                             >
                               {{ $t('dashboard.lastMonth') }}
                             </button>
@@ -931,46 +1402,20 @@ export default {
                           <div class="col-6 mb-2">
                             <button
                               class="btn btn-sm btn-dark rounded-pill w-100"
-                              @click="
-                                const today = new Date().toISOString().slice(0, 10);
-                                const startDate = new DateModel(today)
-                                  .substractMonths(3)
-                                  .toString();
-                                const endDate = new DateModel(today)
-                                  .substractMonths(1)
-                                  .endOfMonth()
-                                  .toString();
-                                if (filterProps.setStartDate) {
-                                  filterProps.setStartDate(startDate);
-                                } else {
-                                  filterProps.startDate = startDate;
-                                }
-                                if (filterProps.setEndDate) {
-                                  filterProps.setEndDate(endDate);
-                                } else {
-                                  filterProps.endDate = endDate;
-                                }
-                                if (clientsFilterRef.value) {
-                                  clientsFilterRef.value.startDate = startDate;
-                                  clientsFilterRef.value.endDate = endDate;
-                                }
-                                if (filterProps.getLastThreeMonths)
-                                  filterProps.getLastThreeMonths();
-                                refreshClientsContentDelayed({ startDate, endDate });
-                              "
-                              :disabled="filterProps.loading"
+                              @click="handleQuickDateSelect('lastThreeMonths', filterProps)"
+                              :disabled="filterProps?.loading"
                             >
                               {{ $t('dashboard.lastThreeMonths') }}
                             </button>
                           </div>
                         </div>
-                        <!-- Date Range Filters -->
+                        <!-- Date Range Filters with Search Button -->
                         <DateRangeFilters
                           :start-date="filterProps.startDate"
                           :end-date="filterProps.endDate"
                           :show-quick-buttons="false"
                           :disabled="filterProps.loading"
-                          :show-search-button="false"
+                          :show-search-button="true"
                           @update:startDate="
                             val => {
                               if (filterProps.setStartDate) {
@@ -978,13 +1423,10 @@ export default {
                               } else {
                                 filterProps.startDate = val;
                               }
+                              // Also update the filter instance directly
                               if (clientsFilterRef.value) {
                                 clientsFilterRef.value.startDate = val;
                               }
-                              refreshClientsContentDelayed({
-                                startDate: val,
-                                endDate: filterProps.endDate,
-                              });
                             }
                           "
                           @update:endDate="
@@ -994,23 +1436,28 @@ export default {
                               } else {
                                 filterProps.endDate = val;
                               }
+                              // Also update the filter instance directly
                               if (clientsFilterRef.value) {
                                 clientsFilterRef.value.endDate = val;
                               }
-                              refreshClientsContentDelayed({
-                                startDate: filterProps.startDate,
-                                endDate: val,
-                              });
                             }
                           "
+                          @search="
+                            refreshClientsContentDelayed({
+                              startDate: filterProps.startDate,
+                              endDate: filterProps.endDate,
+                            })
+                          "
                         />
-                        <!-- Search filter -->
+                        <!-- Additional filters from component -->
                         <div class="mb-3">
                           <label class="form-label fw-bold mb-2">{{
                             $t('dashboard.search') || 'Buscar'
                           }}</label>
                           <div class="d-flex gap-2">
                             <input
+                              min="1"
+                              max="50"
                               type="text"
                               class="form-control flex-grow-1"
                               :value="filterProps.searchText"
@@ -1022,6 +1469,7 @@ export default {
                                   } else {
                                     filterProps.searchText = newValue;
                                   }
+                                  // Also update the filter instance directly
                                   if (clientsFilterRef.value) {
                                     clientsFilterRef.value.searchText = newValue;
                                   }
@@ -1045,7 +1493,6 @@ export default {
                             </button>
                           </div>
                         </div>
-                        <!-- Queue filter -->
                         <div
                           class="mb-3"
                           v-if="filterProps.queues && filterProps.queues.length > 1"
@@ -1062,9 +1509,6 @@ export default {
                                 } else {
                                   filterProps.queueId = newQueueId;
                                 }
-                                if (clientsFilterRef.value) {
-                                  clientsFilterRef.value.queueId = newQueueId || undefined;
-                                }
                                 refreshClientsContentDelayed({ queueId: newQueueId || undefined });
                               }
                             "
@@ -1079,7 +1523,6 @@ export default {
                             </option>
                           </select>
                         </div>
-                        <!-- Service filter -->
                         <div
                           class="mb-3"
                           v-if="filterProps.services && filterProps.services.length > 1"
@@ -1098,9 +1541,6 @@ export default {
                                 } else {
                                   filterProps.serviceId = newServiceId;
                                 }
-                                if (clientsFilterRef.value) {
-                                  clientsFilterRef.value.serviceId = newServiceId || undefined;
-                                }
                                 refreshClientsContentDelayed({
                                   serviceId: newServiceId || undefined,
                                 });
@@ -1117,284 +1557,497 @@ export default {
                             </option>
                           </select>
                         </div>
-                        <!-- Days Since Type radio buttons -->
-                        <div class="col-12 col-md my-1 filter-card mb-3">
-                          <input
-                            type="radio"
-                            class="btn btn-check btn-sm"
-                            :checked="filterProps.daysSinceType === 'EARLY'"
-                            value="EARLY"
-                            name="clients-daysSince-type"
-                            :id="`clients-early-since-${Date.now()}`"
-                            autocomplete="off"
-                            @change="
-                              e => {
-                                const newDaysSinceType = e.target.checked ? 'EARLY' : undefined;
-                                if (clientsFilterRef.value) {
-                                  clientsFilterRef.value.daysSinceType = newDaysSinceType;
+                        <!-- Atendimentos Filters (from mobile) -->
+                        <div class="mb-3 filter-card">
+                          <label class="form-label fw-bold mb-2">{{
+                            $t('dashboard.tracing.filters.attention')
+                          }}</label>
+                          <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="EARLY"
+                              name="daysSince-type-clients"
+                              id="early-since-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.daysSinceType === 'EARLY'"
+                              @change="
+                                if (filterProps.setDaysSinceType) {
+                                  filterProps.setDaysSinceType('EARLY');
+                                } else {
+                                  filterProps.daysSinceType = 'EARLY';
                                 }
-                                refreshClientsContentDelayed({ daysSinceType: newDaysSinceType });
-                              }
-                            "
-                          />
-                          <label class="btn" :for="`clients-early-since-${Date.now()}`">
-                            <i :class="`bi bi-qr-code green-icon`"></i>
-                          </label>
-                          <input
-                            type="radio"
-                            class="btn btn-check btn-sm"
-                            :checked="filterProps.daysSinceType === 'MEDIUM'"
-                            value="MEDIUM"
-                            name="clients-daysSince-type"
-                            :id="`clients-medium-since-${Date.now()}`"
-                            autocomplete="off"
-                            @change="
-                              e => {
-                                const newDaysSinceType = e.target.checked ? 'MEDIUM' : undefined;
-                                if (clientsFilterRef.value) {
-                                  clientsFilterRef.value.daysSinceType = newDaysSinceType;
+                                refreshClientsContentDelayed({ daysSinceType: 'EARLY' });
+                              "
+                            />
+                            <label class="btn btn-sm" for="early-since-clients-desktop">
+                              <i class="bi bi-qr-code green-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="MEDIUM"
+                              name="daysSince-type-clients"
+                              id="medium-since-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.daysSinceType === 'MEDIUM'"
+                              @change="
+                                if (filterProps.setDaysSinceType) {
+                                  filterProps.setDaysSinceType('MEDIUM');
+                                } else {
+                                  filterProps.daysSinceType = 'MEDIUM';
                                 }
-                                refreshClientsContentDelayed({ daysSinceType: newDaysSinceType });
-                              }
-                            "
-                          />
-                          <label class="btn" :for="`clients-medium-since-${Date.now()}`">
-                            <i :class="`bi bi-qr-code yellow-icon`"></i>
-                          </label>
-                          <input
-                            type="radio"
-                            class="btn btn-check btn-sm"
-                            :checked="filterProps.daysSinceType === 'LATE'"
-                            value="LATE"
-                            name="clients-daysSince-type"
-                            :id="`clients-late-since-${Date.now()}`"
-                            autocomplete="off"
-                            @change="
-                              e => {
-                                const newDaysSinceType = e.target.checked ? 'LATE' : undefined;
-                                if (clientsFilterRef.value) {
-                                  clientsFilterRef.value.daysSinceType = newDaysSinceType;
+                                refreshClientsContentDelayed({ daysSinceType: 'MEDIUM' });
+                              "
+                            />
+                            <label class="btn btn-sm" for="medium-since-clients-desktop">
+                              <i class="bi bi-qr-code yellow-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="LATE"
+                              name="daysSince-type-clients"
+                              id="late-since-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.daysSinceType === 'LATE'"
+                              @change="
+                                if (filterProps.setDaysSinceType) {
+                                  filterProps.setDaysSinceType('LATE');
+                                } else {
+                                  filterProps.daysSinceType = 'LATE';
                                 }
-                                refreshClientsContentDelayed({ daysSinceType: newDaysSinceType });
-                              }
+                                refreshClientsContentDelayed({ daysSinceType: 'LATE' });
+                              "
+                            />
+                            <label class="btn btn-sm" for="late-since-clients-desktop">
+                              <i class="bi bi-qr-code red-icon"></i>
+                            </label>
+                          </div>
+                        </div>
+                        <!-- Contato Filter -->
+                        <div class="mb-3 filter-card">
+                          <label class="form-label fw-bold mb-2">{{
+                            $t('dashboard.tracing.filters.contact')
+                          }}</label>
+                          <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="EARLY"
+                              name="daysContacted-type-clients"
+                              id="early-contacted-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.daysSinceContacted === 'EARLY'"
+                              @change="
+                                if (filterProps.setDaysSinceContacted) {
+                                  filterProps.setDaysSinceContacted('EARLY');
+                                } else {
+                                  filterProps.daysSinceContacted = 'EARLY';
+                                }
+                                refreshClientsContentDelayed({ daysSinceContacted: 'EARLY' });
+                              "
+                            />
+                            <label class="btn btn-sm" for="early-contacted-clients-desktop">
+                              <i class="bi bi-chat-left-dots-fill green-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="MEDIUM"
+                              name="daysContacted-type-clients"
+                              id="medium-contacted-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.daysSinceContacted === 'MEDIUM'"
+                              @change="
+                                if (filterProps.setDaysSinceContacted) {
+                                  filterProps.setDaysSinceContacted('MEDIUM');
+                                } else {
+                                  filterProps.daysSinceContacted = 'MEDIUM';
+                                }
+                                refreshClientsContentDelayed({ daysSinceContacted: 'MEDIUM' });
+                              "
+                            />
+                            <label class="btn btn-sm" for="medium-contacted-clients-desktop">
+                              <i class="bi bi-chat-left-dots-fill yellow-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="LATE"
+                              name="daysContacted-type-clients"
+                              id="late-contacted-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.daysSinceContacted === 'LATE'"
+                              @change="
+                                if (filterProps.setDaysSinceContacted) {
+                                  filterProps.setDaysSinceContacted('LATE');
+                                } else {
+                                  filterProps.daysSinceContacted = 'LATE';
+                                }
+                                refreshClientsContentDelayed({ daysSinceContacted: 'LATE' });
+                              "
+                            />
+                            <label class="btn btn-sm" for="late-contacted-clients-desktop">
+                              <i class="bi bi-chat-left-dots-fill red-icon"></i>
+                            </label>
+                          </div>
+                        </div>
+                        <!-- Retorno de Contato Filter -->
+                        <div class="mb-3 filter-card">
+                          <label class="form-label fw-bold mb-2">{{
+                            $t('dashboard.tracing.filters.contactResult')
+                          }}</label>
+                          <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="INTERESTED"
+                              name="contactResultType-clients"
+                              id="interested-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.contactResultType === 'INTERESTED'"
+                              @change="
+                                if (filterProps.setContactResultType) {
+                                  filterProps.setContactResultType('INTERESTED');
+                                } else {
+                                  filterProps.contactResultType = 'INTERESTED';
+                                }
+                                refreshClientsContentDelayed({ contactResultType: 'INTERESTED' });
+                              "
+                            />
+                            <label class="btn btn-sm" for="interested-clients-desktop">
+                              <i class="bi bi-patch-check-fill green-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="CONTACT_LATER"
+                              name="contactResultType-clients"
+                              id="contact-later-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.contactResultType === 'CONTACT_LATER'"
+                              @change="
+                                if (filterProps.setContactResultType) {
+                                  filterProps.setContactResultType('CONTACT_LATER');
+                                } else {
+                                  filterProps.contactResultType = 'CONTACT_LATER';
+                                }
+                                refreshClientsContentDelayed({
+                                  contactResultType: 'CONTACT_LATER',
+                                });
+                              "
+                            />
+                            <label class="btn btn-sm" for="contact-later-clients-desktop">
+                              <i class="bi bi-patch-check-fill yellow-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="REJECTED"
+                              name="contactResultType-clients"
+                              id="rejected-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.contactResultType === 'REJECTED'"
+                              @change="
+                                if (filterProps.setContactResultType) {
+                                  filterProps.setContactResultType('REJECTED');
+                                } else {
+                                  filterProps.contactResultType = 'REJECTED';
+                                }
+                                refreshClientsContentDelayed({ contactResultType: 'REJECTED' });
+                              "
+                            />
+                            <label class="btn btn-sm" for="rejected-clients-desktop">
+                              <i class="bi bi-patch-check-fill red-icon"></i>
+                            </label>
+                          </div>
+                        </div>
+                        <!-- Checkboxes -->
+                        <div class="mb-3">
+                          <div class="form-check form-switch">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              :id="'contactable-clients-' + Math.random()"
+                              :checked="filterProps.contactable === true"
+                              @change="
+                                filterProps.checkContactable($event);
+                                refreshClientsContentDelayed({
+                                  contactable: $event.target.checked,
+                                });
+                              "
+                            />
+                            <label
+                              class="form-check-label"
+                              :for="'contactable-clients-' + Math.random()"
+                            >
+                              {{ $t('dashboard.contactable') }}
+                            </label>
+                          </div>
+                          <div class="form-check form-switch">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              :id="'contacted-clients-' + Math.random()"
+                              :checked="filterProps.contacted === true"
+                              @change="
+                                filterProps.checkContacted($event);
+                                refreshClientsContentDelayed({ contacted: $event.target.checked });
+                              "
+                            />
+                            <label
+                              class="form-check-label"
+                              :for="'contacted-clients-' + Math.random()"
+                            >
+                              {{ $t('dashboard.contacted') }}
+                            </label>
+                          </div>
+                          <div class="form-check form-switch">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              :id="'survey-clients-' + Math.random()"
+                              :checked="filterProps.survey === true"
+                              @change="
+                                filterProps.checkSurvey($event);
+                                refreshClientsContentDelayed({ survey: $event.target.checked });
+                              "
+                            />
+                            <label
+                              class="form-check-label"
+                              :for="'survey-clients-' + Math.random()"
+                            >
+                              {{ $t('dashboard.survey') }}
+                            </label>
+                          </div>
+                          <div class="form-check form-switch">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              :id="'asc-clients-' + Math.random()"
+                              :checked="filterProps.asc === true"
+                              @change="
+                                filterProps.checkAsc($event);
+                                refreshClientsContentDelayed({ asc: $event.target.checked });
+                              "
+                            />
+                            <label class="form-check-label" :for="'asc-clients-' + Math.random()">
+                              {{ filterProps.asc ? $t('dashboard.asc') : $t('dashboard.desc') }}
+                            </label>
+                          </div>
+                        </div>
+                        <!-- Clientes-specific filters -->
+                        <div class="mb-3">
+                          <div class="form-check form-switch">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              :id="'first-attention-form-' + Math.random()"
+                              :checked="filterProps.firstAttentionForm === true"
+                              @change="
+                                filterProps.checkFirstAttentionForm($event);
+                                refreshClientsContentDelayed({
+                                  firstAttentionForm: $event.target.checked,
+                                });
+                              "
+                            />
+                            <label
+                              class="form-check-label"
+                              :for="'first-attention-form-' + Math.random()"
+                            >
+                              {{ $t('dashboard.firstAttentionForm') }}
+                            </label>
+                          </div>
+                          <div class="form-check form-switch">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              :id="'pending-bookings-' + Math.random()"
+                              :checked="filterProps.pendingBookings === true"
+                              @change="
+                                filterProps.checkPendingBookings($event);
+                                refreshClientsContentDelayed({
+                                  pendingBookings: $event.target.checked,
+                                });
+                              "
+                            />
+                            <label
+                              class="form-check-label"
+                              :for="'pending-bookings-' + Math.random()"
+                            >
+                              {{ $t('dashboard.pendingBookings') }}
+                            </label>
+                          </div>
+                          <div class="form-check form-switch">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              :id="'pending-controls-' + Math.random()"
+                              :checked="filterProps.pendingControls === true"
+                              @change="
+                                filterProps.checkPendingControls($event);
+                                refreshClientsContentDelayed({
+                                  pendingControls: $event.target.checked,
+                                });
+                              "
+                            />
+                            <label
+                              class="form-check-label"
+                              :for="'pending-controls-' + Math.random()"
+                            >
+                              {{ $t('dashboard.pendingControls') }}
+                            </label>
+                          </div>
+                        </div>
+                        <!-- CSAT Filter (from Pesquisas) -->
+                        <div class="mb-3 filter-card">
+                          <label class="form-label fw-bold mb-2">{{
+                            $t('dashboard.surveysFilters.filters.rating')
+                          }}</label>
+                          <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="DETRACTOR"
+                              name="rating-type-clients"
+                              id="detractor-rating-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.ratingType === 'DETRACTOR'"
+                              @change="
+                                if (filterProps.setRatingType) {
+                                  filterProps.setRatingType('DETRACTOR');
+                                } else {
+                                  filterProps.ratingType = 'DETRACTOR';
+                                }
+                                refreshClientsContentDelayed({ ratingType: 'DETRACTOR' });
+                              "
+                            />
+                            <label class="btn btn btn-sm" for="detractor-rating-clients-desktop">
+                              <i class="bi bi-star-fill red-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="NEUTRO"
+                              name="rating-type-clients"
+                              id="neutro-rating-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.ratingType === 'NEUTRO'"
+                              @change="
+                                if (filterProps.setRatingType) {
+                                  filterProps.setRatingType('NEUTRO');
+                                } else {
+                                  filterProps.ratingType = 'NEUTRO';
+                                }
+                                refreshClientsContentDelayed({ ratingType: 'NEUTRO' });
+                              "
+                            />
+                            <label class="btn btn btn-sm" for="neutro-rating-clients-desktop">
+                              <i class="bi bi-star-half yellow-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="PROMOTOR"
+                              name="rating-type-clients"
+                              id="promotor-rating-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.ratingType === 'PROMOTOR'"
+                              @change="
+                                if (filterProps.setRatingType) {
+                                  filterProps.setRatingType('PROMOTOR');
+                                } else {
+                                  filterProps.ratingType = 'PROMOTOR';
+                                }
+                                refreshClientsContentDelayed({ ratingType: 'PROMOTOR' });
+                              "
+                            />
+                            <label class="btn btn btn-sm" for="promotor-rating-clients-desktop">
+                              <i class="bi bi-star-fill green-icon"></i>
+                            </label>
+                          </div>
+                        </div>
+                        <!-- NPS Filter (from Pesquisas) -->
+                        <div class="mb-3 filter-card">
+                          <label class="form-label fw-bold mb-2">{{
+                            $t('dashboard.surveysFilters.filters.nps')
+                          }}</label>
+                          <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="DETRACTOR"
+                              name="nps-type-clients"
+                              id="detractor-nps-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.npsType === 'DETRACTOR'"
+                              @change="
+                                if (filterProps.setNpsType) {
+                                  filterProps.setNpsType('DETRACTOR');
+                                } else {
+                                  filterProps.npsType = 'DETRACTOR';
+                                }
+                                refreshClientsContentDelayed({ npsType: 'DETRACTOR' });
+                              "
+                            />
+                            <label class="btn btn btn-sm" for="detractor-nps-clients-desktop">
+                              <i class="bi bi-emoji-frown-fill red-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="NEUTRO"
+                              name="nps-type-clients"
+                              id="neutro-nps-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.npsType === 'NEUTRO'"
+                              @change="
+                                if (filterProps.setNpsType) {
+                                  filterProps.setNpsType('NEUTRO');
+                                } else {
+                                  filterProps.npsType = 'NEUTRO';
+                                }
+                                refreshClientsContentDelayed({ npsType: 'NEUTRO' });
+                              "
+                            />
+                            <label class="btn btn btn-sm" for="neutro-nps-clients-desktop">
+                              <i class="bi bi-emoji-neutral-fill yellow-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="PROMOTOR"
+                              name="nps-type-clients"
+                              id="promotor-nps-clients-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.npsType === 'PROMOTOR'"
+                              @change="
+                                if (filterProps.setNpsType) {
+                                  filterProps.setNpsType('PROMOTOR');
+                                } else {
+                                  filterProps.npsType = 'PROMOTOR';
+                                }
+                                refreshClientsContentDelayed({ npsType: 'PROMOTOR' });
+                              "
+                            />
+                            <label class="btn btn btn-sm" for="promotor-nps-clients-desktop">
+                              <i class="bi bi-emoji-smile-fill green-icon"></i>
+                            </label>
+                          </div>
+                        </div>
+                        <!-- Clear button -->
+                        <div class="mb-3">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100"
+                            @click="
+                              filterProps.clear();
+                              refreshClientsContent();
                             "
-                          />
-                          <label class="btn" :for="`clients-late-since-${Date.now()}`">
-                            <i :class="`bi bi-qr-code red-icon`"></i>
-                          </label>
-                          <Popper
-                            :key="`clients-days-since-popper`"
-                            :class="'dark'"
-                            arrow
-                            disable-click-away
-                            hover
-                            :content="$t(`dashboard.tracing.filters.attention`)"
                           >
-                            <i class="bi bi-info-circle-fill h7 m-2"></i>
-                          </Popper>
-                        </div>
-                        <!-- Days Since Contacted radio buttons -->
-                        <div class="col-12 col-md my-1 filter-card mb-3">
-                          <input
-                            type="radio"
-                            class="btn btn-check btn-sm"
-                            :checked="filterProps.daysSinceContacted === 'EARLY'"
-                            value="EARLY"
-                            name="clients-daysContacted-type"
-                            :id="`clients-early-contacted-${Date.now()}`"
-                            autocomplete="off"
-                            @change="
-                              e => {
-                                const newDaysSinceContacted = e.target.checked
-                                  ? 'EARLY'
-                                  : undefined;
-                                if (clientsFilterRef.value) {
-                                  clientsFilterRef.value.daysSinceContacted = newDaysSinceContacted;
-                                }
-                                refreshClientsContentDelayed({
-                                  daysSinceContacted: newDaysSinceContacted,
-                                });
-                              }
-                            "
-                          />
-                          <label class="btn" :for="`clients-early-contacted-${Date.now()}`">
-                            <i :class="`bi bi-chat-left-dots-fill green-icon`"></i>
-                          </label>
-                          <input
-                            type="radio"
-                            class="btn btn-check btn-sm"
-                            :checked="filterProps.daysSinceContacted === 'MEDIUM'"
-                            value="MEDIUM"
-                            name="clients-daysContacted-type"
-                            :id="`clients-medium-contacted-${Date.now()}`"
-                            autocomplete="off"
-                            @change="
-                              e => {
-                                const newDaysSinceContacted = e.target.checked
-                                  ? 'MEDIUM'
-                                  : undefined;
-                                if (clientsFilterRef.value) {
-                                  clientsFilterRef.value.daysSinceContacted = newDaysSinceContacted;
-                                }
-                                refreshClientsContentDelayed({
-                                  daysSinceContacted: newDaysSinceContacted,
-                                });
-                              }
-                            "
-                          />
-                          <label class="btn" :for="`clients-medium-contacted-${Date.now()}`">
-                            <i :class="`bi bi-chat-left-dots-fill yellow-icon`"></i>
-                          </label>
-                          <input
-                            type="radio"
-                            class="btn btn-check btn-sm"
-                            :checked="filterProps.daysSinceContacted === 'LATE'"
-                            value="LATE"
-                            name="clients-daysContacted-type"
-                            :id="`clients-late-contacted-${Date.now()}`"
-                            autocomplete="off"
-                            @change="
-                              e => {
-                                const newDaysSinceContacted = e.target.checked ? 'LATE' : undefined;
-                                if (clientsFilterRef.value) {
-                                  clientsFilterRef.value.daysSinceContacted = newDaysSinceContacted;
-                                }
-                                refreshClientsContentDelayed({
-                                  daysSinceContacted: newDaysSinceContacted,
-                                });
-                              }
-                            "
-                          />
-                          <label class="btn" :for="`clients-late-contacted-${Date.now()}`">
-                            <i :class="`bi bi-chat-left-dots-fill red-icon`"></i>
-                          </label>
-                          <Popper
-                            :key="`clients-days-contacted-popper`"
-                            :class="'dark'"
-                            arrow
-                            disable-click-away
-                            hover
-                            :content="$t(`dashboard.tracing.filters.contact`)"
-                          >
-                            <i class="bi bi-info-circle-fill h7 m-2"></i>
-                          </Popper>
-                        </div>
-                        <!-- Contactable, Contacted, Survey, Asc checkboxes -->
-                        <div class="row">
-                          <div class="col-12 col-md-6">
-                            <div class="form-check form-switch centered">
-                              <input
-                                class="form-check-input m-1"
-                                :class="filterProps.contactable === false ? 'bg-danger' : ''"
-                                type="checkbox"
-                                :id="`clients-contactable-${Date.now()}`"
-                                :checked="filterProps.contactable === true"
-                                @click="
-                                  e => {
-                                    const newContactable = e.target.checked ? true : undefined;
-                                    if (filterProps.checkContactable) {
-                                      filterProps.checkContactable(e);
-                                    } else if (clientsFilterRef.value) {
-                                      clientsFilterRef.value.contactable = newContactable;
-                                    }
-                                    refreshClientsContentDelayed({ contactable: newContactable });
-                                  }
-                                "
-                              />
-                              <label
-                                class="form-check-label metric-card-subtitle"
-                                :for="`clients-contactable-${Date.now()}`"
-                              >
-                                {{ $t('dashboard.contactable') }}
-                              </label>
-                            </div>
-                          </div>
-                          <div class="col-12 col-md-6">
-                            <div class="form-check form-switch centered">
-                              <input
-                                class="form-check-input m-1"
-                                :class="filterProps.contacted === false ? 'bg-danger' : ''"
-                                type="checkbox"
-                                :id="`clients-contacted-${Date.now()}`"
-                                :checked="filterProps.contacted === true"
-                                @click="
-                                  e => {
-                                    const newContacted = e.target.checked ? true : undefined;
-                                    if (filterProps.checkContacted) {
-                                      filterProps.checkContacted(e);
-                                    } else if (clientsFilterRef.value) {
-                                      clientsFilterRef.value.contacted = newContacted;
-                                    }
-                                    refreshClientsContentDelayed({ contacted: newContacted });
-                                  }
-                                "
-                              />
-                              <label
-                                class="form-check-label metric-card-subtitle"
-                                :for="`clients-contacted-${Date.now()}`"
-                              >
-                                {{ $t('dashboard.contacted') }}
-                              </label>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="row">
-                          <div class="col-12 col-md-6">
-                            <div class="form-check form-switch centered">
-                              <input
-                                class="form-check-input m-1"
-                                :class="filterProps.survey === false ? 'bg-danger' : ''"
-                                type="checkbox"
-                                :id="`clients-survey-${Date.now()}`"
-                                :checked="filterProps.survey === true"
-                                @click="
-                                  e => {
-                                    const newSurvey = e.target.checked ? true : undefined;
-                                    if (filterProps.checkSurvey) {
-                                      filterProps.checkSurvey(e);
-                                    } else if (clientsFilterRef.value) {
-                                      clientsFilterRef.value.survey = newSurvey;
-                                    }
-                                    refreshClientsContentDelayed({ survey: newSurvey });
-                                  }
-                                "
-                              />
-                              <label
-                                class="form-check-label metric-card-subtitle"
-                                :for="`clients-survey-${Date.now()}`"
-                              >
-                                {{ $t('dashboard.survey') }}
-                              </label>
-                            </div>
-                          </div>
-                          <div class="col-12 col-md-6">
-                            <div class="form-check form-switch centered">
-                              <input
-                                class="form-check-input m-1"
-                                :class="filterProps.asc === false ? 'bg-danger' : ''"
-                                type="checkbox"
-                                :id="`clients-asc-${Date.now()}`"
-                                :checked="filterProps.asc === true"
-                                @click="
-                                  e => {
-                                    const newAsc = e.target.checked ? true : false;
-                                    if (filterProps.checkAsc) {
-                                      filterProps.checkAsc(e);
-                                    } else if (clientsFilterRef.value) {
-                                      clientsFilterRef.value.asc = newAsc;
-                                    }
-                                    refreshClientsContentDelayed({ asc: newAsc });
-                                  }
-                                "
-                              />
-                              <label
-                                class="form-check-label metric-card-subtitle"
-                                :for="`clients-asc-${Date.now()}`"
-                              >
-                                {{ filterProps.asc ? $t('dashboard.asc') : $t('dashboard.desc') }}
-                              </label>
-                            </div>
-                          </div>
+                            <i class="bi bi-eraser-fill"></i>
+                            {{ $t('dashboard.clear') || 'Limpiar' }}
+                          </button>
                         </div>
                       </div>
                     </template>
@@ -1414,30 +2067,21 @@ export default {
                     filters-location="slot"
                   >
                     <template #filters-exposed="filterProps">
+                      {{}}
                       <template v-if="filterProps.filterType === 'attentions'">
-                        <div class="filters-content-wrapper">
+                        {{}}
+                        <div class="filters-content-wrapper" key="attentions-filters">
                           <!-- Date quick buttons -->
                           <div class="row my-2">
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
                                 @click="
-                                  const today = new Date().toISOString().slice(0, 10);
-                                  const [year, month, day] = today.split('-');
-                                  const startDate = `${year}-${month}-${day}`;
-                                  const endDate = `${year}-${month}-${day}`;
-                                  if (filterProps.setStartDate) {
-                                    filterProps.setStartDate(startDate);
-                                  } else {
-                                    filterProps.startDate = startDate;
-                                  }
-                                  if (filterProps.setEndDate) {
-                                    filterProps.setEndDate(endDate);
-                                  } else {
-                                    filterProps.endDate = endDate;
-                                  }
-                                  if (filterProps.getToday) filterProps.getToday();
-                                  refreshAttentionsContentDelayed({ startDate, endDate });
+                                  handleDateQuickButton(
+                                    filterProps,
+                                    filterProps.getToday,
+                                    filterProps.filterType
+                                  )
                                 "
                                 :disabled="filterProps.loading"
                               >
@@ -1448,22 +2092,11 @@ export default {
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
                                 @click="
-                                  const today = new Date().toISOString().slice(0, 10);
-                                  const [year, month, day] = today.split('-');
-                                  const startDate = `${year}-${month}-01`;
-                                  const endDate = `${year}-${month}-${day}`;
-                                  if (filterProps.setStartDate) {
-                                    filterProps.setStartDate(startDate);
-                                  } else {
-                                    filterProps.startDate = startDate;
-                                  }
-                                  if (filterProps.setEndDate) {
-                                    filterProps.setEndDate(endDate);
-                                  } else {
-                                    filterProps.endDate = endDate;
-                                  }
-                                  if (filterProps.getCurrentMonth) filterProps.getCurrentMonth();
-                                  refreshAttentionsContentDelayed({ startDate, endDate });
+                                  handleDateQuickButton(
+                                    filterProps,
+                                    filterProps.getCurrentMonth,
+                                    filterProps.filterType
+                                  )
                                 "
                                 :disabled="filterProps.loading"
                               >
@@ -1474,23 +2107,11 @@ export default {
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
                                 @click="
-                                  const today = new Date().toISOString().slice(0, 10);
-                                  const startDate = new DateModel(today)
-                                    .substractMonths(1)
-                                    .toString();
-                                  const endDate = new DateModel(startDate).endOfMonth().toString();
-                                  if (filterProps.setStartDate) {
-                                    filterProps.setStartDate(startDate);
-                                  } else {
-                                    filterProps.startDate = startDate;
-                                  }
-                                  if (filterProps.setEndDate) {
-                                    filterProps.setEndDate(endDate);
-                                  } else {
-                                    filterProps.endDate = endDate;
-                                  }
-                                  if (filterProps.getLastMonth) filterProps.getLastMonth();
-                                  refreshAttentionsContentDelayed({ startDate, endDate });
+                                  handleDateQuickButton(
+                                    filterProps,
+                                    filterProps.getLastMonth,
+                                    filterProps.filterType
+                                  )
                                 "
                                 :disabled="filterProps.loading"
                               >
@@ -1501,27 +2122,11 @@ export default {
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
                                 @click="
-                                  const today = new Date().toISOString().slice(0, 10);
-                                  const startDate = new DateModel(today)
-                                    .substractMonths(3)
-                                    .toString();
-                                  const endDate = new DateModel(today)
-                                    .substractMonths(1)
-                                    .endOfMonth()
-                                    .toString();
-                                  if (filterProps.setStartDate) {
-                                    filterProps.setStartDate(startDate);
-                                  } else {
-                                    filterProps.startDate = startDate;
-                                  }
-                                  if (filterProps.setEndDate) {
-                                    filterProps.setEndDate(endDate);
-                                  } else {
-                                    filterProps.endDate = endDate;
-                                  }
-                                  if (filterProps.getLastThreeMonths)
-                                    filterProps.getLastThreeMonths();
-                                  refreshAttentionsContentDelayed({ startDate, endDate });
+                                  handleDateQuickButton(
+                                    filterProps,
+                                    filterProps.getLastThreeMonths,
+                                    filterProps.filterType
+                                  )
                                 "
                                 :disabled="filterProps.loading"
                               >
@@ -1529,13 +2134,13 @@ export default {
                               </button>
                             </div>
                           </div>
-                          <!-- Date Range Filters -->
+                          <!-- Date Range Filters with Search Button -->
                           <DateRangeFilters
                             :start-date="filterProps.startDate"
                             :end-date="filterProps.endDate"
                             :show-quick-buttons="false"
                             :disabled="filterProps.loading"
-                            :show-search-button="false"
+                            :show-search-button="true"
                             @update:startDate="
                               val => {
                                 if (filterProps.setStartDate) {
@@ -1543,8 +2148,12 @@ export default {
                                 } else {
                                   filterProps.startDate = val;
                                 }
-                                if (attentionsFilterRef.value) {
-                                  const filterWrapper = attentionsFilterRef.value;
+                                // Also update the filter instance directly
+                                if (
+                                  attentionsFilterRef &&
+                                  filterProps.filterType === 'attentions'
+                                ) {
+                                  const filterWrapper = attentionsFilterRef;
                                   if (
                                     filterWrapper.$children &&
                                     filterWrapper.$children.length > 0
@@ -1560,11 +2169,27 @@ export default {
                                       filterInstance.startDate = val;
                                     }
                                   }
+                                } else if (
+                                  attentionsFilterRef &&
+                                  filterProps.filterType === 'bookings'
+                                ) {
+                                  const filterWrapper = attentionsFilterRef;
+                                  if (
+                                    filterWrapper.$children &&
+                                    filterWrapper.$children.length > 0
+                                  ) {
+                                    const filterInstance = filterWrapper.$children.find(child => {
+                                      const name = child.$options?.name || child.$options?.__name;
+                                      return (
+                                        name === 'DashboardBookingsManagement' &&
+                                        child.filtersLocation === 'slot'
+                                      );
+                                    });
+                                    if (filterInstance) {
+                                      filterInstance.startDate = val;
+                                    }
+                                  }
                                 }
-                                refreshAttentionsContentDelayed({
-                                  startDate: val,
-                                  endDate: filterProps.endDate,
-                                });
                               }
                             "
                             @update:endDate="
@@ -1574,8 +2199,12 @@ export default {
                                 } else {
                                   filterProps.endDate = val;
                                 }
-                                if (attentionsFilterRef.value) {
-                                  const filterWrapper = attentionsFilterRef.value;
+                                // Also update the filter instance directly
+                                if (
+                                  attentionsFilterRef &&
+                                  filterProps.filterType === 'attentions'
+                                ) {
+                                  const filterWrapper = attentionsFilterRef;
                                   if (
                                     filterWrapper.$children &&
                                     filterWrapper.$children.length > 0
@@ -1591,21 +2220,52 @@ export default {
                                       filterInstance.endDate = val;
                                     }
                                   }
+                                } else if (
+                                  attentionsFilterRef &&
+                                  filterProps.filterType === 'bookings'
+                                ) {
+                                  const filterWrapper = attentionsFilterRef;
+                                  if (
+                                    filterWrapper.$children &&
+                                    filterWrapper.$children.length > 0
+                                  ) {
+                                    const filterInstance = filterWrapper.$children.find(child => {
+                                      const name = child.$options?.name || child.$options?.__name;
+                                      return (
+                                        name === 'DashboardBookingsManagement' &&
+                                        child.filtersLocation === 'slot'
+                                      );
+                                    });
+                                    if (filterInstance) {
+                                      filterInstance.endDate = val;
+                                    }
+                                  }
                                 }
+                              }
+                            "
+                            @search="
+                              if (filterProps.filterType === 'attentions') {
                                 refreshAttentionsContentDelayed({
                                   startDate: filterProps.startDate,
-                                  endDate: val,
+                                  endDate: filterProps.endDate,
+                                });
+                              } else if (filterProps.filterType === 'bookings') {
+                                refreshBookingsContentDelayed({
+                                  startDate: filterProps.startDate,
+                                  endDate: filterProps.endDate,
                                 });
                               }
                             "
                           />
-                          <!-- Search filter -->
+                          <!-- Search text filter - Only for Atendimentos, NOT for Reservas -->
                           <div class="mb-3" v-if="filterProps.filterType === 'attentions'">
                             <label class="form-label fw-bold mb-2">{{
                               $t('dashboard.search') || 'Buscar'
                             }}</label>
                             <div class="d-flex gap-2">
                               <input
+                                min="1"
+                                max="50"
                                 type="text"
                                 class="form-control flex-grow-1"
                                 :value="filterProps.searchText"
@@ -1617,6 +2277,63 @@ export default {
                                     } else {
                                       filterProps.searchText = newValue;
                                     }
+                                    // Also update the filter instance directly
+                                    if (
+                                      attentionsFilterRef &&
+                                      filterProps.filterType === 'attentions'
+                                    ) {
+                                      const filterWrapper = attentionsFilterRef;
+                                      if (
+                                        filterWrapper.$children &&
+                                        filterWrapper.$children.length > 0
+                                      ) {
+                                        const filterInstance = filterWrapper.$children.find(
+                                          child => {
+                                            const name =
+                                              child.$options?.name || child.$options?.__name;
+                                            return (
+                                              name === 'DashboardAttentionsManagement' &&
+                                              child.filtersLocation === 'slot'
+                                            );
+                                          }
+                                        );
+                                        if (filterInstance) {
+                                          filterInstance.searchText = newValue;
+                                        }
+                                      }
+                                    } else if (
+                                      bookingsFilterRef &&
+                                      filterProps.filterType === 'bookings'
+                                    ) {
+                                      const filterWrapper = bookingsFilterRef;
+                                      if (
+                                        filterWrapper.$children &&
+                                        filterWrapper.$children.length > 0
+                                      ) {
+                                        const filterInstance = filterWrapper.$children.find(
+                                          child => {
+                                            const name =
+                                              child.$options?.name || child.$options?.__name;
+                                            return (
+                                              name === 'DashboardBookingsManagement' &&
+                                              child.filtersLocation === 'slot'
+                                            );
+                                          }
+                                        );
+                                        if (filterInstance) {
+                                          filterInstance.searchText = newValue;
+                                        }
+                                      }
+                                    }
+                                  }
+                                "
+                                @keydown.enter.prevent="
+                                  if (filterProps.filterType === 'attentions') {
+                                    refreshAttentionsContentDelayed({
+                                      searchText: filterProps.searchText,
+                                      startDate: filterProps.startDate,
+                                      endDate: filterProps.endDate,
+                                    });
                                   }
                                 "
                                 :placeholder="$t('dashboard.search')"
@@ -1624,11 +2341,13 @@ export default {
                               <button
                                 class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
                                 @click="
-                                  refreshAttentionsContentDelayed({
-                                    searchText: filterProps.searchText,
-                                    startDate: filterProps.startDate,
-                                    endDate: filterProps.endDate,
-                                  })
+                                  if (filterProps.filterType === 'attentions') {
+                                    refreshAttentionsContentDelayed({
+                                      searchText: filterProps.searchText,
+                                      startDate: filterProps.startDate,
+                                      endDate: filterProps.endDate,
+                                    });
+                                  }
                                 "
                                 :disabled="filterProps.loading"
                                 style="flex-shrink: 0"
@@ -1637,14 +2356,9 @@ export default {
                               </button>
                             </div>
                           </div>
-                          <!-- Queue filter -->
                           <div
                             class="mb-3"
-                            v-if="
-                              filterProps.filterType === 'attentions' &&
-                              filterProps.queues &&
-                              filterProps.queues.length > 1
-                            "
+                            v-if="filterProps.queues && filterProps.queues.length > 1"
                           >
                             <label class="form-label fw-bold mb-2">{{
                               $t('dashboard.queue')
@@ -1660,9 +2374,15 @@ export default {
                                   } else {
                                     filterProps.queueId = newQueueId;
                                   }
-                                  refreshAttentionsContentDelayed({
-                                    queueId: newQueueId || undefined,
-                                  });
+                                  if (filterProps.filterType === 'attentions') {
+                                    refreshAttentionsContentDelayed({
+                                      queueId: newQueueId || undefined,
+                                    });
+                                  } else if (filterProps.filterType === 'bookings') {
+                                    refreshBookingsContentDelayed({
+                                      queueId: newQueueId || undefined,
+                                    });
+                                  }
                                 }
                               "
                             >
@@ -1676,14 +2396,9 @@ export default {
                               </option>
                             </select>
                           </div>
-                          <!-- Service filter -->
                           <div
                             class="mb-3"
-                            v-if="
-                              filterProps.filterType === 'attentions' &&
-                              filterProps.services &&
-                              filterProps.services.length > 1
-                            "
+                            v-if="filterProps.services && filterProps.services.length > 1"
                           >
                             <label class="form-label fw-bold mb-2">{{
                               $t('dashboard.service')
@@ -1699,9 +2414,15 @@ export default {
                                   } else {
                                     filterProps.serviceId = newServiceId;
                                   }
-                                  refreshAttentionsContentDelayed({
-                                    serviceId: newServiceId || undefined,
-                                  });
+                                  if (filterProps.filterType === 'attentions') {
+                                    refreshAttentionsContentDelayed({
+                                      serviceId: newServiceId || undefined,
+                                    });
+                                  } else if (filterProps.filterType === 'bookings') {
+                                    refreshBookingsContentDelayed({
+                                      serviceId: newServiceId || undefined,
+                                    });
+                                  }
                                 }
                               "
                             >
@@ -1715,287 +2436,31 @@ export default {
                               </option>
                             </select>
                           </div>
-                          <!-- Days Since Type radio buttons -->
-                          <div
-                            class="col-12 col-md my-1 filter-card mb-3"
-                            v-if="filterProps.filterType === 'attentions'"
-                          >
-                            <input
-                              type="radio"
-                              class="btn btn-check btn-sm"
-                              :checked="filterProps.daysSinceType === 'EARLY'"
-                              value="EARLY"
-                              name="attentions-daysSince-type"
-                              :id="`attentions-early-since-${Date.now()}`"
-                              autocomplete="off"
-                              @change="
-                                e => {
-                                  const newDaysSinceType = e.target.checked ? 'EARLY' : undefined;
-                                  if (attentionsFilterRef.value) {
-                                    const filterWrapper = attentionsFilterRef.value;
-                                    if (
-                                      filterWrapper.$children &&
-                                      filterWrapper.$children.length > 0
-                                    ) {
-                                      const filterInstance = filterWrapper.$children.find(child => {
-                                        const name = child.$options?.name || child.$options?.__name;
-                                        return (
-                                          name === 'DashboardAttentionsManagement' &&
-                                          child.filtersLocation === 'slot'
-                                        );
-                                      });
-                                      if (filterInstance) {
-                                        filterInstance.daysSinceType = newDaysSinceType;
-                                      }
-                                    }
-                                  }
-                                  refreshAttentionsContentDelayed({
-                                    daysSinceType: newDaysSinceType,
-                                  });
-                                }
-                              "
-                            />
-                            <label class="btn" :for="`attentions-early-since-${Date.now()}`">
-                              <i :class="`bi bi-qr-code green-icon`"></i>
-                            </label>
-                            <input
-                              type="radio"
-                              class="btn btn-check btn-sm"
-                              :checked="filterProps.daysSinceType === 'MEDIUM'"
-                              value="MEDIUM"
-                              name="attentions-daysSince-type"
-                              :id="`attentions-medium-since-${Date.now()}`"
-                              autocomplete="off"
-                              @change="
-                                e => {
-                                  const newDaysSinceType = e.target.checked ? 'MEDIUM' : undefined;
-                                  if (attentionsFilterRef.value) {
-                                    const filterWrapper = attentionsFilterRef.value;
-                                    if (
-                                      filterWrapper.$children &&
-                                      filterWrapper.$children.length > 0
-                                    ) {
-                                      const filterInstance = filterWrapper.$children.find(child => {
-                                        const name = child.$options?.name || child.$options?.__name;
-                                        return (
-                                          name === 'DashboardAttentionsManagement' &&
-                                          child.filtersLocation === 'slot'
-                                        );
-                                      });
-                                      if (filterInstance) {
-                                        filterInstance.daysSinceType = newDaysSinceType;
-                                      }
-                                    }
-                                  }
-                                  refreshAttentionsContentDelayed({
-                                    daysSinceType: newDaysSinceType,
-                                  });
-                                }
-                              "
-                            />
-                            <label class="btn" :for="`attentions-medium-since-${Date.now()}`">
-                              <i :class="`bi bi-qr-code yellow-icon`"></i>
-                            </label>
-                            <input
-                              type="radio"
-                              class="btn btn-check btn-sm"
-                              :checked="filterProps.daysSinceType === 'LATE'"
-                              value="LATE"
-                              name="attentions-daysSince-type"
-                              :id="`attentions-late-since-${Date.now()}`"
-                              autocomplete="off"
-                              @change="
-                                e => {
-                                  const newDaysSinceType = e.target.checked ? 'LATE' : undefined;
-                                  if (attentionsFilterRef.value) {
-                                    const filterWrapper = attentionsFilterRef.value;
-                                    if (
-                                      filterWrapper.$children &&
-                                      filterWrapper.$children.length > 0
-                                    ) {
-                                      const filterInstance = filterWrapper.$children.find(child => {
-                                        const name = child.$options?.name || child.$options?.__name;
-                                        return (
-                                          name === 'DashboardAttentionsManagement' &&
-                                          child.filtersLocation === 'slot'
-                                        );
-                                      });
-                                      if (filterInstance) {
-                                        filterInstance.daysSinceType = newDaysSinceType;
-                                      }
-                                    }
-                                  }
-                                  refreshAttentionsContentDelayed({
-                                    daysSinceType: newDaysSinceType,
-                                  });
-                                }
-                              "
-                            />
-                            <label class="btn" :for="`attentions-late-since-${Date.now()}`">
-                              <i :class="`bi bi-qr-code red-icon`"></i>
-                            </label>
-                            <Popper
-                              :key="`attentions-days-since-popper`"
-                              :class="'dark'"
-                              arrow
-                              disable-click-away
-                              :content="$t(`dashboard.tracing.filters.attention`)"
-                            >
-                              <i class="bi bi-info-circle-fill h7 m-2"></i>
-                            </Popper>
-                          </div>
-                          <!-- Contact Result Type radio buttons -->
-                          <div
-                            class="col-12 col-md my-1 filter-card mb-3"
-                            v-if="filterProps.filterType === 'attentions'"
-                          >
-                            <input
-                              type="radio"
-                              class="btn btn-check btn-sm"
-                              :checked="filterProps.contactResultType === 'INTERESTED'"
-                              value="INTERESTED"
-                              name="attentions-contactResultType-type"
-                              :id="`attentions-interested-${Date.now()}`"
-                              autocomplete="off"
-                              @change="
-                                e => {
-                                  const newContactResultType = e.target.checked
-                                    ? 'INTERESTED'
-                                    : undefined;
-                                  if (attentionsFilterRef.value) {
-                                    const filterWrapper = attentionsFilterRef.value;
-                                    if (
-                                      filterWrapper.$children &&
-                                      filterWrapper.$children.length > 0
-                                    ) {
-                                      const filterInstance = filterWrapper.$children.find(child => {
-                                        const name = child.$options?.name || child.$options?.__name;
-                                        return (
-                                          name === 'DashboardAttentionsManagement' &&
-                                          child.filtersLocation === 'slot'
-                                        );
-                                      });
-                                      if (filterInstance) {
-                                        filterInstance.contactResultType = newContactResultType;
-                                      }
-                                    }
-                                  }
-                                  refreshAttentionsContentDelayed({
-                                    contactResultType: newContactResultType,
-                                  });
-                                }
-                              "
-                            />
-                            <label class="btn" :for="`attentions-interested-${Date.now()}`">
-                              <i :class="`bi bi-patch-check-fill green-icon`"></i>
-                            </label>
-                            <input
-                              type="radio"
-                              class="btn btn-check btn-sm"
-                              :checked="filterProps.contactResultType === 'CONTACT_LATER'"
-                              value="CONTACT_LATER"
-                              name="attentions-contactResultType-type"
-                              :id="`attentions-contact-later-${Date.now()}`"
-                              autocomplete="off"
-                              @change="
-                                e => {
-                                  const newContactResultType = e.target.checked
-                                    ? 'CONTACT_LATER'
-                                    : undefined;
-                                  if (attentionsFilterRef.value) {
-                                    const filterWrapper = attentionsFilterRef.value;
-                                    if (
-                                      filterWrapper.$children &&
-                                      filterWrapper.$children.length > 0
-                                    ) {
-                                      const filterInstance = filterWrapper.$children.find(child => {
-                                        const name = child.$options?.name || child.$options?.__name;
-                                        return (
-                                          name === 'DashboardAttentionsManagement' &&
-                                          child.filtersLocation === 'slot'
-                                        );
-                                      });
-                                      if (filterInstance) {
-                                        filterInstance.contactResultType = newContactResultType;
-                                      }
-                                    }
-                                  }
-                                  refreshAttentionsContentDelayed({
-                                    contactResultType: newContactResultType,
-                                  });
-                                }
-                              "
-                            />
-                            <label class="btn" :for="`attentions-contact-later-${Date.now()}`">
-                              <i :class="`bi bi-patch-check-fill yellow-icon`"></i>
-                            </label>
-                            <input
-                              type="radio"
-                              class="btn btn-check btn-sm"
-                              :checked="filterProps.contactResultType === 'REJECTED'"
-                              value="REJECTED"
-                              name="attentions-contactResultType-type"
-                              :id="`attentions-rejected-${Date.now()}`"
-                              autocomplete="off"
-                              @change="
-                                e => {
-                                  const newContactResultType = e.target.checked
-                                    ? 'REJECTED'
-                                    : undefined;
-                                  if (attentionsFilterRef.value) {
-                                    const filterWrapper = attentionsFilterRef.value;
-                                    if (
-                                      filterWrapper.$children &&
-                                      filterWrapper.$children.length > 0
-                                    ) {
-                                      const filterInstance = filterWrapper.$children.find(child => {
-                                        const name = child.$options?.name || child.$options?.__name;
-                                        return (
-                                          name === 'DashboardAttentionsManagement' &&
-                                          child.filtersLocation === 'slot'
-                                        );
-                                      });
-                                      if (filterInstance) {
-                                        filterInstance.contactResultType = newContactResultType;
-                                      }
-                                    }
-                                  }
-                                  refreshAttentionsContentDelayed({
-                                    contactResultType: newContactResultType,
-                                  });
-                                }
-                              "
-                            />
-                            <label class="btn" :for="`attentions-rejected-${Date.now()}`">
-                              <i :class="`bi bi-patch-check-fill red-icon`"></i>
-                            </label>
-                            <Popper
-                              :key="`attentions-contact-result-popper`"
-                              :class="'dark'"
-                              arrow
-                              disable-click-away
-                              :content="$t(`dashboard.tracing.filters.contactResult`)"
-                            >
-                              <i class="bi bi-info-circle-fill h7 m-2"></i>
-                            </Popper>
-                          </div>
-                          <!-- Contactable, Contacted, Survey, Asc checkboxes -->
-                          <div class="row" v-if="filterProps.filterType === 'attentions'">
-                            <div class="col-12 col-md-6">
-                              <div class="form-check form-switch centered">
+                          <!-- Filters for Atendimentos (when filterType === 'attentions') -->
+                          <template v-if="filterProps.filterType === 'attentions'">
+                            <!-- Days Since Type filter -->
+                            <div class="mb-3">
+                              <label class="form-label fw-bold mb-2">{{
+                                $t('dashboard.tracing.filters.attention') || 'Días desde Atención'
+                              }}</label>
+                              <div class="d-flex gap-2 align-items-center">
                                 <input
-                                  class="form-check-input m-1"
-                                  :class="filterProps.contactable === false ? 'bg-danger' : ''"
-                                  type="checkbox"
-                                  :id="`attentions-contactable-${Date.now()}`"
-                                  :checked="filterProps.contactable === true"
-                                  @click="
-                                    e => {
-                                      const newContactable = e.target.checked ? true : undefined;
-                                      if (filterProps.checkContactable) {
-                                        filterProps.checkContactable(e);
-                                      } else if (attentionsFilterRef.value) {
-                                        const filterWrapper = attentionsFilterRef.value;
+                                  type="radio"
+                                  class="btn-check"
+                                  id="early-since-att-desktop"
+                                  value="EARLY"
+                                  :checked="filterProps.daysSinceType === 'EARLY'"
+                                  @change="
+                                    // Only process if this is the attentions tab
+                                    if (filterProps.filterType === 'attentions') {
+                                      if (filterProps.setDaysSinceType) {
+                                        filterProps.setDaysSinceType('EARLY');
+                                      } else {
+                                        filterProps.daysSinceType = 'EARLY';
+                                      }
+                                      // Also update the filter instance directly
+                                      if (attentionsFilterRef) {
+                                        const filterWrapper = attentionsFilterRef;
                                         if (
                                           filterWrapper.$children &&
                                           filterWrapper.$children.length > 0
@@ -2011,164 +2476,935 @@ export default {
                                             }
                                           );
                                           if (filterInstance) {
-                                            filterInstance.contactable = newContactable;
+                                            filterInstance.daysSinceType = 'EARLY';
                                           }
                                         }
                                       }
+                                      refreshAttentionsContentDelayed({ daysSinceType: 'EARLY' });
+                                    }
+                                  "
+                                />
+                                <label class="btn btn btn-sm" for="early-since-att-desktop">
+                                  <i class="bi bi-qr-code green-icon"></i>
+                                </label>
+                                <input
+                                  type="radio"
+                                  class="btn-check"
+                                  id="medium-since-att-desktop"
+                                  value="MEDIUM"
+                                  :checked="filterProps.daysSinceType === 'MEDIUM'"
+                                  @change="
+                                    // Only process if this is the attentions tab
+                                    if (filterProps.filterType === 'attentions') {
+                                      if (filterProps.setDaysSinceType) {
+                                        filterProps.setDaysSinceType('MEDIUM');
+                                      } else {
+                                        filterProps.daysSinceType = 'MEDIUM';
+                                      }
+                                      // Also update the filter instance directly
+                                      if (attentionsFilterRef) {
+                                        const filterWrapper = attentionsFilterRef;
+                                        if (
+                                          filterWrapper.$children &&
+                                          filterWrapper.$children.length > 0
+                                        ) {
+                                          const filterInstance = filterWrapper.$children.find(
+                                            child => {
+                                              const name =
+                                                child.$options?.name || child.$options?.__name;
+                                              return (
+                                                name === 'DashboardAttentionsManagement' &&
+                                                child.filtersLocation === 'slot'
+                                              );
+                                            }
+                                          );
+                                          if (filterInstance) {
+                                            filterInstance.daysSinceType = 'MEDIUM';
+                                          }
+                                        }
+                                      }
+                                      refreshAttentionsContentDelayed({ daysSinceType: 'MEDIUM' });
+                                    }
+                                  "
+                                />
+                                <label class="btn btn btn-sm" for="medium-since-att-desktop">
+                                  <i class="bi bi-qr-code yellow-icon"></i>
+                                </label>
+                                <input
+                                  type="radio"
+                                  class="btn-check"
+                                  id="late-since-att-desktop"
+                                  value="LATE"
+                                  :checked="filterProps.daysSinceType === 'LATE'"
+                                  @change="
+                                    // Only process if this is the attentions tab
+                                    if (filterProps.filterType === 'attentions') {
+                                      if (filterProps.setDaysSinceType) {
+                                        filterProps.setDaysSinceType('LATE');
+                                      } else {
+                                        filterProps.daysSinceType = 'LATE';
+                                      }
+                                      // Also update the filter instance directly
+                                      if (attentionsFilterRef) {
+                                        const filterWrapper = attentionsFilterRef;
+                                        if (
+                                          filterWrapper.$children &&
+                                          filterWrapper.$children.length > 0
+                                        ) {
+                                          const filterInstance = filterWrapper.$children.find(
+                                            child => {
+                                              const name =
+                                                child.$options?.name || child.$options?.__name;
+                                              return (
+                                                name === 'DashboardAttentionsManagement' &&
+                                                child.filtersLocation === 'slot'
+                                              );
+                                            }
+                                          );
+                                          if (filterInstance) {
+                                            filterInstance.daysSinceType = 'LATE';
+                                          }
+                                        }
+                                      }
+                                      refreshAttentionsContentDelayed({ daysSinceType: 'LATE' });
+                                    }
+                                  "
+                                />
+                                <label class="btn btn btn-sm" for="late-since-att-desktop">
+                                  <i class="bi bi-qr-code red-icon"></i>
+                                </label>
+                              </div>
+                            </div>
+                            <!-- Contact Result Type filter -->
+                            <div class="mb-3">
+                              <label class="form-label fw-bold mb-2">{{
+                                $t('dashboard.tracing.filters.contactResult') ||
+                                'Resultado Contacto'
+                              }}</label>
+                              <div class="d-flex gap-2 align-items-center">
+                                <input
+                                  type="radio"
+                                  class="btn-check"
+                                  id="interested-att-desktop"
+                                  value="INTERESTED"
+                                  :checked="filterProps.contactResultType === 'INTERESTED'"
+                                  @change="
+                                    if (filterProps.setContactResultType) {
+                                      filterProps.setContactResultType('INTERESTED');
+                                    } else {
+                                      filterProps.contactResultType = 'INTERESTED';
+                                    }
+                                    refreshAttentionsContentDelayed({
+                                      contactResultType: 'INTERESTED',
+                                    });
+                                  "
+                                />
+                                <label class="btn btn btn-sm" for="interested-att-desktop">
+                                  <i class="bi bi-patch-check-fill green-icon"></i>
+                                </label>
+                                <input
+                                  type="radio"
+                                  class="btn-check"
+                                  id="contact-later-att-desktop"
+                                  value="CONTACT_LATER"
+                                  :checked="filterProps.contactResultType === 'CONTACT_LATER'"
+                                  @change="
+                                    if (filterProps.setContactResultType) {
+                                      filterProps.setContactResultType('CONTACT_LATER');
+                                    } else {
+                                      filterProps.contactResultType = 'CONTACT_LATER';
+                                    }
+                                    refreshAttentionsContentDelayed({
+                                      contactResultType: 'CONTACT_LATER',
+                                    });
+                                  "
+                                />
+                                <label class="btn btn btn-sm" for="contact-later-att-desktop">
+                                  <i class="bi bi-patch-check-fill yellow-icon"></i>
+                                </label>
+                                <input
+                                  type="radio"
+                                  class="btn-check"
+                                  id="rejected-att-desktop"
+                                  value="REJECTED"
+                                  :checked="filterProps.contactResultType === 'REJECTED'"
+                                  @change="
+                                    if (filterProps.setContactResultType) {
+                                      filterProps.setContactResultType('REJECTED');
+                                    } else {
+                                      filterProps.contactResultType = 'REJECTED';
+                                    }
+                                    refreshAttentionsContentDelayed({
+                                      contactResultType: 'REJECTED',
+                                    });
+                                  "
+                                />
+                                <label class="btn btn btn-sm" for="rejected-att-desktop">
+                                  <i class="bi bi-patch-check-fill red-icon"></i>
+                                </label>
+                              </div>
+                            </div>
+                            <!-- Checkboxes for Atendimentos -->
+                            <div class="mb-3">
+                              <div class="form-check form-switch">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  :id="'contactable-att-' + Math.random()"
+                                  :checked="filterProps.contactable === true"
+                                  @change="
+                                    e => {
+                                      const newValue = e.target.checked;
+                                      if (filterProps.checkContactable) {
+                                        filterProps.checkContactable(e);
+                                      } else {
+                                        filterProps.contactable = newValue;
+                                      }
                                       refreshAttentionsContentDelayed({
-                                        contactable: newContactable,
+                                        contactable: newValue,
                                       });
                                     }
                                   "
                                 />
                                 <label
-                                  class="form-check-label metric-card-subtitle"
-                                  :for="`attentions-contactable-${Date.now()}`"
+                                  class="form-check-label"
+                                  :for="'contactable-att-' + Math.random()"
                                 >
                                   {{ $t('dashboard.contactable') }}
                                 </label>
                               </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                              <div class="form-check form-switch centered">
+                              <div class="form-check form-switch">
                                 <input
-                                  class="form-check-input m-1"
-                                  :class="filterProps.contacted === false ? 'bg-danger' : ''"
+                                  class="form-check-input"
                                   type="checkbox"
-                                  :id="`attentions-contacted-${Date.now()}`"
+                                  :id="'contacted-att-' + Math.random()"
                                   :checked="filterProps.contacted === true"
-                                  @click="
+                                  @change="
                                     e => {
-                                      const newContacted = e.target.checked ? true : undefined;
+                                      const newValue = e.target.checked;
                                       if (filterProps.checkContacted) {
                                         filterProps.checkContacted(e);
-                                      } else if (attentionsFilterRef.value) {
-                                        const filterWrapper = attentionsFilterRef.value;
-                                        if (
-                                          filterWrapper.$children &&
-                                          filterWrapper.$children.length > 0
-                                        ) {
-                                          const filterInstance = filterWrapper.$children.find(
-                                            child => {
-                                              const name =
-                                                child.$options?.name || child.$options?.__name;
-                                              return (
-                                                name === 'DashboardAttentionsManagement' &&
-                                                child.filtersLocation === 'slot'
-                                              );
-                                            }
-                                          );
-                                          if (filterInstance) {
-                                            filterInstance.contacted = newContacted;
-                                          }
-                                        }
+                                      } else {
+                                        filterProps.contacted = newValue;
                                       }
-                                      refreshAttentionsContentDelayed({ contacted: newContacted });
+                                      refreshAttentionsContentDelayed({
+                                        contacted: newValue,
+                                      });
                                     }
                                   "
                                 />
                                 <label
-                                  class="form-check-label metric-card-subtitle"
-                                  :for="`attentions-contacted-${Date.now()}`"
+                                  class="form-check-label"
+                                  :for="'contacted-att-' + Math.random()"
                                 >
                                   {{ $t('dashboard.contacted') }}
                                 </label>
                               </div>
-                            </div>
-                          </div>
-                          <div class="row" v-if="filterProps.filterType === 'attentions'">
-                            <div class="col-12 col-md-6">
-                              <div class="form-check form-switch centered">
+                              <div class="form-check form-switch">
                                 <input
-                                  class="form-check-input m-1"
-                                  :class="filterProps.survey === false ? 'bg-danger' : ''"
+                                  class="form-check-input"
                                   type="checkbox"
-                                  :id="`attentions-survey-${Date.now()}`"
+                                  :id="'survey-att-' + Math.random()"
                                   :checked="filterProps.survey === true"
-                                  @click="
+                                  @change="
                                     e => {
-                                      const newSurvey = e.target.checked ? true : undefined;
+                                      const newValue = e.target.checked;
                                       if (filterProps.checkSurvey) {
                                         filterProps.checkSurvey(e);
-                                      } else if (attentionsFilterRef.value) {
-                                        const filterWrapper = attentionsFilterRef.value;
-                                        if (
-                                          filterWrapper.$children &&
-                                          filterWrapper.$children.length > 0
-                                        ) {
-                                          const filterInstance = filterWrapper.$children.find(
-                                            child => {
-                                              const name =
-                                                child.$options?.name || child.$options?.__name;
-                                              return (
-                                                name === 'DashboardAttentionsManagement' &&
-                                                child.filtersLocation === 'slot'
-                                              );
-                                            }
-                                          );
-                                          if (filterInstance) {
-                                            filterInstance.survey = newSurvey;
-                                          }
-                                        }
+                                      } else {
+                                        filterProps.survey = newValue;
                                       }
-                                      refreshAttentionsContentDelayed({ survey: newSurvey });
+                                      refreshAttentionsContentDelayed({
+                                        survey: newValue,
+                                      });
                                     }
                                   "
                                 />
                                 <label
-                                  class="form-check-label metric-card-subtitle"
-                                  :for="`attentions-survey-${Date.now()}`"
+                                  class="form-check-label"
+                                  :for="'survey-att-' + Math.random()"
                                 >
                                   {{ $t('dashboard.survey') }}
                                 </label>
                               </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                              <div class="form-check form-switch centered">
+                              <div class="form-check form-switch">
                                 <input
-                                  class="form-check-input m-1"
-                                  :class="filterProps.asc === false ? 'bg-danger' : ''"
+                                  class="form-check-input"
                                   type="checkbox"
-                                  :id="`attentions-asc-${Date.now()}`"
+                                  :id="'asc-att-' + Math.random()"
                                   :checked="filterProps.asc === true"
-                                  @click="
+                                  @change="
                                     e => {
-                                      const newAsc = e.target.checked ? true : false;
+                                      const newValue = e.target.checked;
                                       if (filterProps.checkAsc) {
                                         filterProps.checkAsc(e);
-                                      } else if (attentionsFilterRef.value) {
-                                        const filterWrapper = attentionsFilterRef.value;
-                                        if (
-                                          filterWrapper.$children &&
-                                          filterWrapper.$children.length > 0
-                                        ) {
-                                          const filterInstance = filterWrapper.$children.find(
-                                            child => {
-                                              const name =
-                                                child.$options?.name || child.$options?.__name;
-                                              return (
-                                                name === 'DashboardAttentionsManagement' &&
-                                                child.filtersLocation === 'slot'
-                                              );
-                                            }
-                                          );
-                                          if (filterInstance) {
-                                            filterInstance.asc = newAsc;
-                                          }
-                                        }
+                                      } else {
+                                        filterProps.asc = newValue;
                                       }
-                                      refreshAttentionsContentDelayed({ asc: newAsc });
+                                      refreshAttentionsContentDelayed({ asc: newValue });
                                     }
                                   "
                                 />
-                                <label
-                                  class="form-check-label metric-card-subtitle"
-                                  :for="`attentions-asc-${Date.now()}`"
-                                >
+                                <label class="form-check-label" :for="'asc-att-' + Math.random()">
                                   {{ filterProps.asc ? $t('dashboard.asc') : $t('dashboard.desc') }}
                                 </label>
                               </div>
                             </div>
+                          </template>
+                          <!-- Clear button -->
+                          <div class="mb-3">
+                            <button
+                              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100"
+                              @click="
+                                filterProps.clear();
+                                if (filterProps.filterType === 'attentions') {
+                                  refreshAttentionsContent();
+                                } else if (filterProps.filterType === 'bookings') {
+                                  refreshBookingsContent();
+                                }
+                              "
+                            >
+                              <i class="bi bi-eraser-fill"></i>
+                              {{ $t('dashboard.clear') || 'Limpiar' }}
+                            </button>
+                          </div>
+                        </div>
+                      </template>
+                      <template v-else-if="filterProps.filterType === 'bookings'">
+                        <div class="filters-content-wrapper" key="bookings-filters">
+                          <!-- Date quick buttons -->
+                          <div class="row my-2">
+                            <div class="col-6 mb-2">
+                              <button
+                                class="btn btn-sm btn-dark rounded-pill w-100"
+                                @click="
+                                  handleDateQuickButton(
+                                    filterProps,
+                                    filterProps.getToday,
+                                    filterProps.filterType
+                                  )
+                                "
+                                :disabled="filterProps.loading"
+                              >
+                                {{ $t('dashboard.today') }}
+                              </button>
+                            </div>
+                            <div class="col-6 mb-2">
+                              <button
+                                class="btn btn-sm btn-dark rounded-pill w-100"
+                                @click="
+                                  handleDateQuickButton(
+                                    filterProps,
+                                    filterProps.getCurrentMonth,
+                                    filterProps.filterType
+                                  )
+                                "
+                                :disabled="filterProps.loading"
+                              >
+                                {{ $t('dashboard.thisMonth') }}
+                              </button>
+                            </div>
+                            <div class="col-6 mb-2">
+                              <button
+                                class="btn btn-sm btn-dark rounded-pill w-100"
+                                @click="
+                                  handleDateQuickButton(
+                                    filterProps,
+                                    filterProps.getLastMonth,
+                                    filterProps.filterType
+                                  )
+                                "
+                                :disabled="filterProps.loading"
+                              >
+                                {{ $t('dashboard.lastMonth') }}
+                              </button>
+                            </div>
+                            <div class="col-6 mb-2">
+                              <button
+                                class="btn btn-sm btn-dark rounded-pill w-100"
+                                @click="
+                                  handleDateQuickButton(
+                                    filterProps,
+                                    filterProps.getLastThreeMonths,
+                                    filterProps.filterType
+                                  )
+                                "
+                                :disabled="filterProps.loading"
+                              >
+                                {{ $t('dashboard.lastThreeMonths') }}
+                              </button>
+                            </div>
+                          </div>
+                          <!-- Date Range Filters with Search Button -->
+                          <DateRangeFilters
+                            :start-date="filterProps.startDate"
+                            :end-date="filterProps.endDate"
+                            :show-quick-buttons="false"
+                            :disabled="filterProps.loading"
+                            :show-search-button="true"
+                            @update:startDate="
+                              val => {
+                                if (filterProps.setStartDate) {
+                                  filterProps.setStartDate(val);
+                                } else {
+                                  filterProps.startDate = val;
+                                }
+                                if (attentionsFilterRef && filterProps.filterType === 'bookings') {
+                                  const filterWrapper = attentionsFilterRef;
+                                  if (
+                                    filterWrapper.$children &&
+                                    filterWrapper.$children.length > 0
+                                  ) {
+                                    const filterInstance = filterWrapper.$children.find(child => {
+                                      const name = child.$options?.name || child.$options?.__name;
+                                      return (
+                                        name === 'DashboardBookingsManagement' &&
+                                        child.filtersLocation === 'slot'
+                                      );
+                                    });
+                                    if (filterInstance) {
+                                      filterInstance.startDate = val;
+                                    }
+                                  }
+                                }
+                              }
+                            "
+                            @update:endDate="
+                              val => {
+                                if (filterProps.setEndDate) {
+                                  filterProps.setEndDate(val);
+                                } else {
+                                  filterProps.endDate = val;
+                                }
+                                if (attentionsFilterRef && filterProps.filterType === 'bookings') {
+                                  const filterWrapper = attentionsFilterRef;
+                                  if (
+                                    filterWrapper.$children &&
+                                    filterWrapper.$children.length > 0
+                                  ) {
+                                    const filterInstance = filterWrapper.$children.find(child => {
+                                      const name = child.$options?.name || child.$options?.__name;
+                                      return (
+                                        name === 'DashboardBookingsManagement' &&
+                                        child.filtersLocation === 'slot'
+                                      );
+                                    });
+                                    if (filterInstance) {
+                                      filterInstance.endDate = val;
+                                    }
+                                  }
+                                }
+                              }
+                            "
+                            @search="
+                              if (filterProps.filterType === 'bookings') {
+                                // Set skipWatch flag before updating to prevent duplicate calls
+                                setBookingsSkipWatch(true);
+                                refreshBookingsContentDelayed({
+                                  startDate: filterProps.startDate,
+                                  endDate: filterProps.endDate,
+                                });
+                              }
+                            "
+                          />
+                          <!-- Search text filter for Reservas -->
+                          <div class="mb-3">
+                            <label class="form-label fw-bold mb-2">{{
+                              $t('dashboard.search') || 'Buscar'
+                            }}</label>
+                            <div class="d-flex gap-2">
+                              <input
+                                min="1"
+                                max="50"
+                                type="text"
+                                class="form-control flex-grow-1"
+                                :value="filterProps.searchText"
+                                @input="
+                                  e => {
+                                    const newValue = e.target.value;
+                                    if (filterProps.setSearchText) {
+                                      filterProps.setSearchText(newValue);
+                                    } else {
+                                      filterProps.searchText = newValue;
+                                    }
+                                    if (
+                                      attentionsFilterRef &&
+                                      filterProps.filterType === 'bookings'
+                                    ) {
+                                      const filterWrapper = attentionsFilterRef;
+                                      if (
+                                        filterWrapper.$children &&
+                                        filterWrapper.$children.length > 0
+                                      ) {
+                                        const filterInstance = filterWrapper.$children.find(
+                                          child => {
+                                            const name =
+                                              child.$options?.name || child.$options?.__name;
+                                            return (
+                                              name === 'DashboardBookingsManagement' &&
+                                              child.filtersLocation === 'slot'
+                                            );
+                                          }
+                                        );
+                                        if (filterInstance) {
+                                          filterInstance.searchText = newValue;
+                                        }
+                                      }
+                                    }
+                                  }
+                                "
+                                @keydown.enter.prevent="
+                                  if (filterProps.filterType === 'bookings') {
+                                    setBookingsSkipWatch(true);
+                                    refreshBookingsContentDelayed({
+                                      searchText: filterProps.searchText,
+                                      startDate: filterProps.startDate,
+                                      endDate: filterProps.endDate,
+                                    });
+                                  }
+                                "
+                                :placeholder="$t('dashboard.search')"
+                              />
+                              <button
+                                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                                @click="
+                                  // Set skipWatch flag before updating to prevent duplicate calls
+                                  setBookingsSkipWatch(true);
+                                  refreshBookingsContentDelayed({
+                                    searchText: filterProps.searchText,
+                                    startDate: filterProps.startDate,
+                                    endDate: filterProps.endDate,
+                                  });
+                                "
+                                :disabled="filterProps.loading"
+                                style="flex-shrink: 0"
+                              >
+                                <i class="bi bi-search"></i>
+                              </button>
+                            </div>
+                          </div>
+                          <div
+                            class="mb-3"
+                            v-if="filterProps.queues && filterProps.queues.length > 1"
+                          >
+                            <label class="form-label fw-bold mb-2">{{
+                              $t('dashboard.queue')
+                            }}</label>
+                            <select
+                              class="form-select metric-controls"
+                              :value="filterProps.queueId"
+                              @change="
+                                e => {
+                                  const newQueueId = e.target.value;
+                                  // Set skipWatch flag before updating to prevent duplicate calls
+                                  setBookingsSkipWatch(true);
+                                  if (filterProps.setQueueId) {
+                                    filterProps.setQueueId(newQueueId);
+                                  } else {
+                                    filterProps.queueId = newQueueId;
+                                  }
+                                  if (filterProps.filterType === 'bookings') {
+                                    refreshBookingsContentDelayed({
+                                      queueId: newQueueId || undefined,
+                                    });
+                                  }
+                                }
+                              "
+                            >
+                              <option value="">{{ $t('dashboard.all') || 'Todos' }}</option>
+                              <option
+                                v-for="queue in filterProps.queues"
+                                :key="queue.name"
+                                :value="queue.id"
+                              >
+                                {{ queue.name }}
+                              </option>
+                            </select>
+                          </div>
+                          <div
+                            class="mb-3"
+                            v-if="filterProps.services && filterProps.services.length > 1"
+                          >
+                            <label class="form-label fw-bold mb-2">{{
+                              $t('dashboard.service')
+                            }}</label>
+                            <select
+                              class="form-select metric-controls"
+                              :value="filterProps.serviceId"
+                              @change="
+                                e => {
+                                  const newServiceId = e.target.value;
+                                  // Set skipWatch flag before updating to prevent duplicate calls
+                                  setBookingsSkipWatch(true);
+                                  if (filterProps.setServiceId) {
+                                    filterProps.setServiceId(newServiceId);
+                                  } else {
+                                    filterProps.serviceId = newServiceId;
+                                  }
+                                  if (filterProps.filterType === 'bookings') {
+                                    refreshBookingsContentDelayed({
+                                      serviceId: newServiceId || undefined,
+                                    });
+                                  }
+                                }
+                              "
+                            >
+                              <option value="">{{ $t('dashboard.all') || 'Todos' }}</option>
+                              <option
+                                v-for="service in filterProps.services"
+                                :key="service.name"
+                                :value="service.id"
+                              >
+                                {{ service.name }}
+                              </option>
+                            </select>
+                          </div>
+                          <!-- Status filter -->
+                          <div class="mb-3 filter-card">
+                            <label class="form-label fw-bold mb-2">{{
+                              $t('dashboard.tracing.filters.attention')
+                            }}</label>
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                              <input
+                                type="radio"
+                                class="btn-check btn-sm"
+                                value="CONFIRMED"
+                                name="status-bookings"
+                                id="confirmed-bookings-desktop"
+                                autocomplete="off"
+                                :checked="filterProps.status === 'CONFIRMED'"
+                                @change="
+                                  // Set skipWatch flag before updating to prevent duplicate calls
+                                  setBookingsSkipWatch(true);
+                                  if (filterProps.setStatus) {
+                                    filterProps.setStatus('CONFIRMED');
+                                  } else {
+                                    filterProps.status = 'CONFIRMED';
+                                  }
+                                  if (
+                                    attentionsFilterRef &&
+                                    filterProps.filterType === 'bookings'
+                                  ) {
+                                    const filterWrapper = attentionsFilterRef;
+                                    if (
+                                      filterWrapper.$children &&
+                                      filterWrapper.$children.length > 0
+                                    ) {
+                                      const filterInstance = filterWrapper.$children.find(child => {
+                                        const name = child.$options?.name || child.$options?.__name;
+                                        return (
+                                          name === 'DashboardBookingsManagement' &&
+                                          child.filtersLocation === 'slot'
+                                        );
+                                      });
+                                      if (filterInstance) {
+                                        filterInstance.status = 'CONFIRMED';
+                                      }
+                                    }
+                                  }
+                                  refreshBookingsContentDelayed({ status: 'CONFIRMED' });
+                                "
+                              />
+                              <label class="btn btn btn-sm" for="confirmed-bookings-desktop">
+                                <i class="bi bi-check-circle-fill green-icon"></i>
+                              </label>
+                              <input
+                                type="radio"
+                                class="btn-check btn-sm"
+                                value="PENDING"
+                                name="status-bookings"
+                                id="pending-bookings-desktop"
+                                autocomplete="off"
+                                :checked="filterProps.status === 'PENDING'"
+                                @change="
+                                  // Set skipWatch flag before updating to prevent duplicate calls
+                                  setBookingsSkipWatch(true);
+                                  if (filterProps.setStatus) {
+                                    filterProps.setStatus('PENDING');
+                                  } else {
+                                    filterProps.status = 'PENDING';
+                                  }
+                                  if (
+                                    attentionsFilterRef &&
+                                    filterProps.filterType === 'bookings'
+                                  ) {
+                                    const filterWrapper = attentionsFilterRef;
+                                    if (
+                                      filterWrapper.$children &&
+                                      filterWrapper.$children.length > 0
+                                    ) {
+                                      const filterInstance = filterWrapper.$children.find(child => {
+                                        const name = child.$options?.name || child.$options?.__name;
+                                        return (
+                                          name === 'DashboardBookingsManagement' &&
+                                          child.filtersLocation === 'slot'
+                                        );
+                                      });
+                                      if (filterInstance) {
+                                        filterInstance.status = 'PENDING';
+                                      }
+                                    }
+                                  }
+                                  refreshBookingsContentDelayed({ status: 'PENDING' });
+                                "
+                              />
+                              <label class="btn btn btn-sm" for="pending-bookings-desktop">
+                                <i class="bi bi-clock-fill yellow-icon"></i>
+                              </label>
+                              <input
+                                type="radio"
+                                class="btn-check btn-sm"
+                                value="PROCESSED"
+                                name="status-bookings"
+                                id="processed-bookings-desktop"
+                                autocomplete="off"
+                                :checked="filterProps.status === 'PROCESSED'"
+                                @change="
+                                  // Set skipWatch flag before updating to prevent duplicate calls
+                                  setBookingsSkipWatch(true);
+                                  if (filterProps.setStatus) {
+                                    filterProps.setStatus('PROCESSED');
+                                  } else {
+                                    filterProps.status = 'PROCESSED';
+                                  }
+                                  if (
+                                    attentionsFilterRef &&
+                                    filterProps.filterType === 'bookings'
+                                  ) {
+                                    const filterWrapper = attentionsFilterRef;
+                                    if (
+                                      filterWrapper.$children &&
+                                      filterWrapper.$children.length > 0
+                                    ) {
+                                      const filterInstance = filterWrapper.$children.find(child => {
+                                        const name = child.$options?.name || child.$options?.__name;
+                                        return (
+                                          name === 'DashboardBookingsManagement' &&
+                                          child.filtersLocation === 'slot'
+                                        );
+                                      });
+                                      if (filterInstance) {
+                                        filterInstance.status = 'PROCESSED';
+                                      }
+                                    }
+                                  }
+                                  refreshBookingsContentDelayed({ status: 'PROCESSED' });
+                                "
+                              />
+                              <label class="btn btn btn-sm" for="processed-bookings-desktop">
+                                <i class="bi bi-calendar-check-fill blue-icon"></i>
+                              </label>
+                              <input
+                                type="radio"
+                                class="btn-check btn-sm"
+                                value="RESERVE_CANCELLED"
+                                name="status-bookings"
+                                id="cancelled-bookings-desktop"
+                                autocomplete="off"
+                                :checked="filterProps.status === 'RESERVE_CANCELLED'"
+                                @change="
+                                  // Set skipWatch flag before updating to prevent duplicate calls
+                                  setBookingsSkipWatch(true);
+                                  if (filterProps.setStatus) {
+                                    filterProps.setStatus('RESERVE_CANCELLED');
+                                  } else {
+                                    filterProps.status = 'RESERVE_CANCELLED';
+                                  }
+                                  if (
+                                    attentionsFilterRef &&
+                                    filterProps.filterType === 'bookings'
+                                  ) {
+                                    const filterWrapper = attentionsFilterRef;
+                                    if (
+                                      filterWrapper.$children &&
+                                      filterWrapper.$children.length > 0
+                                    ) {
+                                      const filterInstance = filterWrapper.$children.find(child => {
+                                        const name = child.$options?.name || child.$options?.__name;
+                                        return (
+                                          name === 'DashboardBookingsManagement' &&
+                                          child.filtersLocation === 'slot'
+                                        );
+                                      });
+                                      if (filterInstance) {
+                                        filterInstance.status = 'RESERVE_CANCELLED';
+                                      }
+                                    }
+                                  }
+                                  refreshBookingsContentDelayed({ status: 'RESERVE_CANCELLED' });
+                                "
+                              />
+                              <label class="btn btn btn-sm" for="cancelled-bookings-desktop">
+                                <i class="bi bi-calendar-fill red-icon"></i>
+                              </label>
+                            </div>
+                          </div>
+                          <!-- Checkboxes for Reservas -->
+                          <div class="mb-3">
+                            <div class="form-check form-switch">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="survey-bookings-desktop"
+                                :checked="filterProps.survey === true"
+                                @change="
+                                  e => {
+                                    const newValue = e.target.checked;
+                                    console.log(
+                                      '[SURVEY TOGGLE] Clicked, target:',
+                                      e.target,
+                                      'checked:',
+                                      e.target.checked,
+                                      'newValue:',
+                                      newValue
+                                    );
+                                    setBookingsSkipWatch(true);
+                                    if (filterProps.setSurvey) {
+                                      filterProps.setSurvey(newValue);
+                                    } else {
+                                      filterProps.survey = newValue;
+                                    }
+                                    if (
+                                      attentionsFilterRef &&
+                                      filterProps.filterType === 'bookings'
+                                    ) {
+                                      const filterWrapper = attentionsFilterRef;
+                                      if (
+                                        filterWrapper.$children &&
+                                        filterWrapper.$children.length > 0
+                                      ) {
+                                        const filterInstance = filterWrapper.$children.find(
+                                          child => {
+                                            const name =
+                                              child.$options?.name || child.$options?.__name;
+                                            return (
+                                              name === 'DashboardBookingsManagement' &&
+                                              child.filtersLocation === 'slot'
+                                            );
+                                          }
+                                        );
+                                        if (filterInstance) {
+                                          filterInstance.survey = newValue;
+                                          console.log(
+                                            '[SURVEY TOGGLE] Updated filterInstance.survey to:',
+                                            newValue
+                                          );
+                                        }
+                                      }
+                                    }
+                                    if (filterProps.filterType === 'bookings') {
+                                      console.log(
+                                        '[SURVEY TOGGLE] Calling refreshBookingsContentDelayed with:',
+                                        { survey: newValue }
+                                      );
+                                      refreshBookingsContentDelayed({ survey: newValue });
+                                    }
+                                  }
+                                "
+                              />
+                              <label class="form-check-label" for="survey-bookings-desktop">
+                                {{ $t('dashboard.survey') }}
+                              </label>
+                            </div>
+                            <div class="form-check form-switch">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="asc-bookings-desktop"
+                                :checked="filterProps.asc === true"
+                                @change="
+                                  e => {
+                                    const newValue = e.target.checked;
+                                    console.log(
+                                      '[ASC TOGGLE] Clicked, target:',
+                                      e.target,
+                                      'checked:',
+                                      e.target.checked,
+                                      'newValue:',
+                                      newValue
+                                    );
+                                    setBookingsSkipWatch(true);
+                                    if (filterProps.setAsc) {
+                                      filterProps.setAsc(newValue);
+                                    } else {
+                                      filterProps.asc = newValue;
+                                    }
+                                    if (
+                                      attentionsFilterRef &&
+                                      filterProps.filterType === 'bookings'
+                                    ) {
+                                      const filterWrapper = attentionsFilterRef;
+                                      if (
+                                        filterWrapper.$children &&
+                                        filterWrapper.$children.length > 0
+                                      ) {
+                                        const filterInstance = filterWrapper.$children.find(
+                                          child => {
+                                            const name =
+                                              child.$options?.name || child.$options?.__name;
+                                            return (
+                                              name === 'DashboardBookingsManagement' &&
+                                              child.filtersLocation === 'slot'
+                                            );
+                                          }
+                                        );
+                                        if (filterInstance) {
+                                          filterInstance.asc = newValue;
+                                          console.log(
+                                            '[ASC TOGGLE] Updated filterInstance.asc to:',
+                                            newValue
+                                          );
+                                        }
+                                      }
+                                    }
+                                    if (filterProps.filterType === 'bookings') {
+                                      console.log(
+                                        '[ASC TOGGLE] Calling refreshBookingsContentDelayed with:',
+                                        { asc: newValue }
+                                      );
+                                      refreshBookingsContentDelayed({ asc: newValue });
+                                    }
+                                  }
+                                "
+                              />
+                              <label class="form-check-label" for="asc-bookings-desktop">
+                                {{ filterProps.asc ? $t('dashboard.asc') : $t('dashboard.desc') }}
+                              </label>
+                            </div>
+                          </div>
+                          <!-- Clear button -->
+                          <div class="mb-3">
+                            <button
+                              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100"
+                              @click="
+                                setBookingsSkipWatch(true);
+                                // Calculate default dates
+                                const today = new Date().toISOString().slice(0, 10);
+                                const firstOfMonth = new DateModel(today)
+                                  .setDateOfMonth(1)
+                                  .toString();
+                                const lastOfMonth = new DateModel(firstOfMonth)
+                                  .endOfMonth()
+                                  .toString();
+                                // Clear filter instance values
+                                filterProps.clear();
+                                // Pass explicit cleared values to ensure all filters are reset
+                                refreshBookingsContent({
+                                  status: undefined,
+                                  survey: undefined,
+                                  asc: true,
+                                  searchText: undefined,
+                                  queueId: undefined,
+                                  serviceId: undefined,
+                                  startDate: firstOfMonth,
+                                  endDate: lastOfMonth,
+                                  page: 1,
+                                });
+                              "
+                            >
+                              <i class="bi bi-eraser-fill"></i>
+                              {{ $t('dashboard.clear') || 'Limpiar' }}
+                            </button>
                           </div>
                         </div>
                       </template>
@@ -2177,6 +3413,7 @@ export default {
                   <!-- Filters for Surveys tab -->
                   <DashboardSurveysManagement
                     v-if="state.showSurveyManagement"
+                    ref="surveysFilterRef"
                     :show-survey-management="false"
                     :calculated-metrics="state.calculatedMetrics"
                     :toggles="state.toggles"
@@ -2187,7 +3424,6 @@ export default {
                     "
                     :services="Array.isArray(state.services) ? state.services : []"
                     filters-location="slot"
-                    ref="surveysFilterRef"
                   >
                     <template #filters-exposed="filterProps">
                       <div class="filters-content-wrapper">
@@ -2196,28 +3432,8 @@ export default {
                           <div class="col-6 mb-2">
                             <button
                               class="btn btn-sm btn-dark rounded-pill w-100"
-                              @click="
-                                const today = new Date().toISOString().slice(0, 10);
-                                const [year, month, day] = today.split('-');
-                                const startDate = `${year}-${month}-${day}`;
-                                const endDate = `${year}-${month}-${day}`;
-                                if (filterProps.setStartDate) {
-                                  filterProps.setStartDate(startDate);
-                                } else {
-                                  filterProps.startDate = startDate;
-                                }
-                                if (filterProps.setEndDate) {
-                                  filterProps.setEndDate(endDate);
-                                } else {
-                                  filterProps.endDate = endDate;
-                                }
-                                if (surveysFilterRef.value) {
-                                  surveysFilterRef.value.startDate = startDate;
-                                  surveysFilterRef.value.endDate = endDate;
-                                }
-                                refreshSurveysContent();
-                              "
-                              :disabled="filterProps.loading"
+                              @click="handleQuickDateSelect('today', filterProps, 'surveys')"
+                              :disabled="filterProps?.loading"
                             >
                               {{ $t('dashboard.today') }}
                             </button>
@@ -2225,28 +3441,8 @@ export default {
                           <div class="col-6 mb-2">
                             <button
                               class="btn btn-sm btn-dark rounded-pill w-100"
-                              @click="
-                                const today = new Date().toISOString().slice(0, 10);
-                                const [year, month, day] = today.split('-');
-                                const startDate = `${year}-${month}-01`;
-                                const endDate = `${year}-${month}-${day}`;
-                                if (filterProps.setStartDate) {
-                                  filterProps.setStartDate(startDate);
-                                } else {
-                                  filterProps.startDate = startDate;
-                                }
-                                if (filterProps.setEndDate) {
-                                  filterProps.setEndDate(endDate);
-                                } else {
-                                  filterProps.endDate = endDate;
-                                }
-                                if (surveysFilterRef.value) {
-                                  surveysFilterRef.value.startDate = startDate;
-                                  surveysFilterRef.value.endDate = endDate;
-                                }
-                                refreshSurveysContent();
-                              "
-                              :disabled="filterProps.loading"
+                              @click="handleQuickDateSelect('currentMonth', filterProps, 'surveys')"
+                              :disabled="filterProps?.loading"
                             >
                               {{ $t('dashboard.thisMonth') }}
                             </button>
@@ -2254,29 +3450,8 @@ export default {
                           <div class="col-6 mb-2">
                             <button
                               class="btn btn-sm btn-dark rounded-pill w-100"
-                              @click="
-                                const today = new Date().toISOString().slice(0, 10);
-                                const startDate = new DateModel(today)
-                                  .substractMonths(1)
-                                  .toString();
-                                const endDate = new DateModel(startDate).endOfMonth().toString();
-                                if (filterProps.setStartDate) {
-                                  filterProps.setStartDate(startDate);
-                                } else {
-                                  filterProps.startDate = startDate;
-                                }
-                                if (filterProps.setEndDate) {
-                                  filterProps.setEndDate(endDate);
-                                } else {
-                                  filterProps.endDate = endDate;
-                                }
-                                if (surveysFilterRef.value) {
-                                  surveysFilterRef.value.startDate = startDate;
-                                  surveysFilterRef.value.endDate = endDate;
-                                }
-                                refreshSurveysContent();
-                              "
-                              :disabled="filterProps.loading"
+                              @click="handleQuickDateSelect('lastMonth', filterProps, 'surveys')"
+                              :disabled="filterProps?.loading"
                             >
                               {{ $t('dashboard.lastMonth') }}
                             </button>
@@ -2285,43 +3460,21 @@ export default {
                             <button
                               class="btn btn-sm btn-dark rounded-pill w-100"
                               @click="
-                                const today = new Date().toISOString().slice(0, 10);
-                                const startDate = new DateModel(today)
-                                  .substractMonths(3)
-                                  .toString();
-                                const endDate = new DateModel(today)
-                                  .substractMonths(1)
-                                  .endOfMonth()
-                                  .toString();
-                                if (filterProps.setStartDate) {
-                                  filterProps.setStartDate(startDate);
-                                } else {
-                                  filterProps.startDate = startDate;
-                                }
-                                if (filterProps.setEndDate) {
-                                  filterProps.setEndDate(endDate);
-                                } else {
-                                  filterProps.endDate = endDate;
-                                }
-                                if (surveysFilterRef.value) {
-                                  surveysFilterRef.value.startDate = startDate;
-                                  surveysFilterRef.value.endDate = endDate;
-                                }
-                                refreshSurveysContent();
+                                handleQuickDateSelect('lastThreeMonths', filterProps, 'surveys')
                               "
-                              :disabled="filterProps.loading"
+                              :disabled="filterProps?.loading"
                             >
                               {{ $t('dashboard.lastThreeMonths') }}
                             </button>
                           </div>
                         </div>
-                        <!-- Date Range Filters -->
+                        <!-- Date Range Filters with Search Button -->
                         <DateRangeFilters
                           :start-date="filterProps.startDate"
                           :end-date="filterProps.endDate"
                           :show-quick-buttons="false"
                           :disabled="filterProps.loading"
-                          :show-search-button="false"
+                          :show-search-button="true"
                           @update:startDate="
                             val => {
                               if (filterProps.setStartDate) {
@@ -2329,13 +3482,10 @@ export default {
                               } else {
                                 filterProps.startDate = val;
                               }
+                              // Also update the filter instance directly
                               if (surveysFilterRef.value) {
                                 surveysFilterRef.value.startDate = val;
                               }
-                              refreshSurveysContentDelayed({
-                                startDate: val,
-                                endDate: filterProps.endDate,
-                              });
                             }
                           "
                           @update:endDate="
@@ -2345,363 +3495,324 @@ export default {
                               } else {
                                 filterProps.endDate = val;
                               }
+                              // Also update the filter instance directly
                               if (surveysFilterRef.value) {
                                 surveysFilterRef.value.endDate = val;
                               }
-                              refreshSurveysContentDelayed({
-                                startDate: filterProps.startDate,
-                                endDate: val,
-                              });
                             }
                           "
+                          @search="
+                            // Update filter instance with current date values before refreshing
+                            if (surveysFilterRef.value) {
+                              surveysFilterRef.value.startDate = filterProps.startDate;
+                              surveysFilterRef.value.endDate = filterProps.endDate;
+                            }
+                            refreshSurveysContent();
+                          "
                         />
-                        <!-- Search input -->
-                        <div class="row my-2">
-                          <div class="col-12">
-                            <label class="metric-card-subtitle mb-1" for="surveys-search-input">
-                              {{ $t('dashboard.search') }}
-                            </label>
-                            <div class="input-group">
-                              <input
-                                id="surveys-search-input"
-                                type="text"
-                                class="form-control"
-                                :value="filterProps.searchText || ''"
-                                @input="
-                                  e => {
-                                    const newSearchText = e.target.value;
-                                    if (filterProps.setSearchText) {
-                                      filterProps.setSearchText(newSearchText);
-                                    } else {
-                                      filterProps.searchText = newSearchText;
-                                    }
-                                    refreshSurveysContentDelayed({
-                                      searchText: newSearchText || undefined,
-                                    });
+                        <!-- Additional filters -->
+                        <div class="mb-3">
+                          <label class="form-label fw-bold mb-2">{{
+                            $t('dashboard.search') || 'Buscar'
+                          }}</label>
+                          <div class="d-flex gap-2">
+                            <input
+                              min="1"
+                              max="50"
+                              type="text"
+                              class="form-control flex-grow-1"
+                              :value="filterProps.searchText"
+                              @input="
+                                e => {
+                                  const newValue = e.target.value;
+                                  if (filterProps.setSearchText) {
+                                    filterProps.setSearchText(newValue);
+                                  } else {
+                                    filterProps.searchText = newValue;
                                   }
-                                "
-                                :placeholder="$t('dashboard.search')"
-                              />
-                              <button
-                                class="btn btn-sm btn-dark rounded-end"
-                                @click="refreshSurveysContent()"
-                                :disabled="filterProps.loading"
-                              >
-                                <i class="bi bi-search"></i>
-                              </button>
-                            </div>
+                                  // Also update the filter instance directly
+                                  if (surveysFilterRef.value) {
+                                    surveysFilterRef.value.searchText = newValue;
+                                  }
+                                }
+                              "
+                              :placeholder="$t('dashboard.search')"
+                            />
+                            <button
+                              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                              @click="
+                                // Update filter instance with current values before refreshing
+                                if (surveysFilterRef.value) {
+                                  surveysFilterRef.value.searchText = filterProps.searchText;
+                                  surveysFilterRef.value.startDate = filterProps.startDate;
+                                  surveysFilterRef.value.endDate = filterProps.endDate;
+                                }
+                                refreshSurveysContent();
+                              "
+                              :disabled="filterProps.loading"
+                              style="flex-shrink: 0"
+                            >
+                              <i class="bi bi-search"></i>
+                            </button>
                           </div>
                         </div>
-                        <!-- Queue filter -->
                         <div
-                          class="row my-2"
+                          class="mb-3"
                           v-if="filterProps.queues && filterProps.queues.length > 1"
                         >
-                          <div class="col-12">
-                            <label class="metric-card-subtitle mb-1" for="surveys-queue-select">
-                              {{ $t('dashboard.queue') }}
-                            </label>
-                            <select
-                              id="surveys-queue-select"
-                              class="form-select"
-                              :value="filterProps.queueId || ''"
-                              @change="
-                                e => {
-                                  const newQueueId = e.target.value;
-                                  if (filterProps.setQueueId) {
-                                    filterProps.setQueueId(newQueueId);
-                                  } else {
-                                    filterProps.queueId = newQueueId;
-                                  }
-                                  refreshSurveysContentDelayed({
-                                    queueId: newQueueId || undefined,
-                                  });
-                                }
-                              "
+                          <label class="form-label fw-bold mb-2">{{ $t('dashboard.queue') }}</label>
+                          <select
+                            class="form-select metric-controls"
+                            :value="filterProps.queueId"
+                            @change="
+                              e => {
+                                filterProps.queueId = e.target.value;
+                                refreshSurveysContent();
+                              }
+                            "
+                          >
+                            <option value="">{{ $t('dashboard.all') || 'Todos' }}</option>
+                            <option
+                              v-for="queue in filterProps.queues"
+                              :key="queue.name"
+                              :value="queue.id"
                             >
-                              <option value="">{{ $t('dashboard.all') || 'Todos' }}</option>
-                              <option
-                                v-for="queue in filterProps.queues"
-                                :key="queue.id"
-                                :value="queue.id"
-                              >
-                                {{ queue.name }}
-                              </option>
-                            </select>
-                          </div>
+                              {{ queue.name }}
+                            </option>
+                          </select>
                         </div>
-                        <!-- Service filter -->
                         <div
-                          class="row my-2"
+                          class="mb-3"
                           v-if="filterProps.services && filterProps.services.length > 1"
                         >
-                          <div class="col-12">
-                            <label class="metric-card-subtitle mb-1" for="surveys-service-select">
-                              {{ $t('dashboard.service') }}
-                            </label>
-                            <select
-                              id="surveys-service-select"
-                              class="form-select"
-                              :value="filterProps.serviceId || ''"
+                          <label class="form-label fw-bold mb-2">{{
+                            $t('dashboard.service')
+                          }}</label>
+                          <select
+                            class="form-select metric-controls"
+                            :value="filterProps.serviceId"
+                            @change="
+                              e => {
+                                filterProps.serviceId = e.target.value;
+                                refreshSurveysContent();
+                              }
+                            "
+                          >
+                            <option value="">{{ $t('dashboard.all') || 'Todos' }}</option>
+                            <option
+                              v-for="service in filterProps.services"
+                              :key="service.name"
+                              :value="service.id"
+                            >
+                              {{ service.name }}
+                            </option>
+                          </select>
+                        </div>
+                        <!-- CSAT Filter (from mobile) -->
+                        <div class="mb-3 filter-card">
+                          <label class="form-label fw-bold mb-2">{{
+                            $t('dashboard.surveysFilters.filters.rating')
+                          }}</label>
+                          <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="DETRACTOR"
+                              name="rating-type-surveys"
+                              id="detractor-rating-surveys-tracing"
+                              autocomplete="off"
+                              :checked="filterProps.ratingType === 'DETRACTOR'"
                               @change="
-                                e => {
-                                  const newServiceId = e.target.value;
-                                  if (filterProps.setServiceId) {
-                                    filterProps.setServiceId(newServiceId);
-                                  } else {
-                                    filterProps.serviceId = newServiceId;
-                                  }
-                                  refreshSurveysContentDelayed({
-                                    serviceId: newServiceId || undefined,
-                                  });
-                                }
+                                filterProps.setRatingType
+                                  ? filterProps.setRatingType('DETRACTOR')
+                                  : (filterProps.ratingType = 'DETRACTOR');
+                                refreshSurveysContent();
+                              "
+                            />
+                            <label class="btn btn btn-sm" for="detractor-rating-surveys-tracing">
+                              <i class="bi bi-star-fill red-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="NEUTRO"
+                              name="rating-type-surveys"
+                              id="neutro-rating-surveys-tracing"
+                              autocomplete="off"
+                              :checked="filterProps.ratingType === 'NEUTRO'"
+                              @change="
+                                filterProps.setRatingType
+                                  ? filterProps.setRatingType('NEUTRO')
+                                  : (filterProps.ratingType = 'NEUTRO');
+                                refreshSurveysContent();
+                              "
+                            />
+                            <label class="btn btn btn-sm" for="neutro-rating-surveys-tracing">
+                              <i class="bi bi-star-half yellow-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="PROMOTOR"
+                              name="rating-type-surveys"
+                              id="promotor-rating-surveys-tracing"
+                              autocomplete="off"
+                              :checked="filterProps.ratingType === 'PROMOTOR'"
+                              @change="
+                                filterProps.setRatingType
+                                  ? filterProps.setRatingType('PROMOTOR')
+                                  : (filterProps.ratingType = 'PROMOTOR');
+                                refreshSurveysContent();
+                              "
+                            />
+                            <label class="btn btn btn-sm" for="promotor-rating-surveys-tracing">
+                              <i class="bi bi-star-fill green-icon"></i>
+                            </label>
+                          </div>
+                        </div>
+                        <!-- NPS Filter (from mobile) -->
+                        <div class="mb-3 filter-card">
+                          <label class="form-label fw-bold mb-2">{{
+                            $t('dashboard.surveysFilters.filters.nps')
+                          }}</label>
+                          <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="DETRACTOR"
+                              name="nps-type-surveys"
+                              id="detractor-nps-surveys-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.npsType === 'DETRACTOR'"
+                              @change="
+                                filterProps.setNpsType
+                                  ? filterProps.setNpsType('DETRACTOR')
+                                  : (filterProps.npsType = 'DETRACTOR');
+                                refreshSurveysContent();
+                              "
+                            />
+                            <label class="btn btn btn-sm" for="detractor-nps-surveys-desktop">
+                              <i class="bi bi-emoji-frown-fill red-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="NEUTRO"
+                              name="nps-type-surveys"
+                              id="neutro-nps-surveys-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.npsType === 'NEUTRO'"
+                              @change="
+                                filterProps.setNpsType
+                                  ? filterProps.setNpsType('NEUTRO')
+                                  : (filterProps.npsType = 'NEUTRO');
+                                refreshSurveysContent();
+                              "
+                            />
+                            <label class="btn btn btn-sm" for="neutro-nps-surveys-desktop">
+                              <i class="bi bi-emoji-neutral-fill yellow-icon"></i>
+                            </label>
+                            <input
+                              type="radio"
+                              class="btn-check btn-sm"
+                              value="PROMOTOR"
+                              name="nps-type-surveys"
+                              id="promotor-nps-surveys-desktop"
+                              autocomplete="off"
+                              :checked="filterProps.npsType === 'PROMOTOR'"
+                              @change="
+                                filterProps.setNpsType
+                                  ? filterProps.setNpsType('PROMOTOR')
+                                  : (filterProps.npsType = 'PROMOTOR');
+                                refreshSurveysContent();
+                              "
+                            />
+                            <label class="btn btn btn-sm" for="promotor-nps-surveys-desktop">
+                              <i class="bi bi-emoji-smile-fill green-icon"></i>
+                            </label>
+                          </div>
+                        </div>
+                        <!-- Checkboxes (from mobile) -->
+                        <div class="mb-3">
+                          <div class="form-check form-switch">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              :id="'contactable-surveys-' + Math.random()"
+                              :checked="filterProps.contactable === true"
+                              @change="
+                                filterProps.checkContactable
+                                  ? filterProps.checkContactable($event)
+                                  : (filterProps.contactable = $event.target.checked);
+                                refreshSurveysContent();
+                              "
+                            />
+                            <label
+                              class="form-check-label"
+                              :for="'contactable-surveys-' + Math.random()"
+                            >
+                              {{ $t('dashboard.contactable') }}
+                            </label>
+                          </div>
+                          <div class="form-check form-switch">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              :id="'contacted-surveys-' + Math.random()"
+                              :checked="filterProps.contacted === true"
+                              @change="
+                                filterProps.checkContacted
+                                  ? filterProps.checkContacted($event)
+                                  : (filterProps.contacted = $event.target.checked);
+                                refreshSurveysContent();
+                              "
+                            />
+                            <label
+                              class="form-check-label"
+                              :for="'contacted-surveys-' + Math.random()"
+                            >
+                              {{ $t('dashboard.contacted') }}
+                            </label>
+                          </div>
+                        </div>
+                        <!-- KeyWord Filter (from mobile) -->
+                        <div
+                          class="mb-3 filter-card"
+                          v-if="filterProps.keyWords && filterProps.keyWords.length > 0"
+                        >
+                          <label class="form-label fw-bold mb-2">{{
+                            $t('dashboard.keyWord') || 'Palabra Clave'
+                          }}</label>
+                          <div class="d-flex flex-wrap gap-2">
+                            <span
+                              v-for="(word, ind) in filterProps.keyWords"
+                              :key="`word-${ind}`"
+                              class="badge rounded-pill"
+                              :class="word === filterProps.keyWord ? 'bg-primary' : 'bg-secondary'"
+                              style="cursor: pointer"
+                              @click="
+                                filterProps.setKeyWord
+                                  ? filterProps.setKeyWord(word)
+                                  : (filterProps.keyWord = word);
+                                refreshSurveysContent();
                               "
                             >
-                              <option value="">{{ $t('dashboard.all') || 'Todos' }}</option>
-                              <option
-                                v-for="service in filterProps.services"
-                                :key="service.id"
-                                :value="service.id"
-                              >
-                                {{ service.name }}
-                              </option>
-                            </select>
+                              {{ word }}
+                            </span>
                           </div>
                         </div>
-                        <!-- Rating Type radio buttons -->
-                        <div class="row my-2">
-                          <div class="col-12">
-                            <label class="metric-card-subtitle mb-1">
-                              {{ $t('dashboard.ratingType') }}
-                            </label>
-                            <div class="d-flex flex-wrap gap-2">
-                              <div class="form-check">
-                                <input
-                                  class="form-check-input"
-                                  type="radio"
-                                  name="surveys-rating-type"
-                                  :id="`surveys-rating-good-${Date.now()}`"
-                                  :value="'good'"
-                                  :checked="filterProps.ratingType === 'good'"
-                                  @change="
-                                    e => {
-                                      const newRatingType = e.target.checked ? 'good' : undefined;
-                                      if (filterProps.setRatingType) {
-                                        filterProps.setRatingType(newRatingType);
-                                      } else {
-                                        filterProps.ratingType = newRatingType;
-                                      }
-                                      refreshSurveysContentDelayed({ ratingType: newRatingType });
-                                    }
-                                  "
-                                />
-                                <label
-                                  class="form-check-label"
-                                  :for="`surveys-rating-good-${Date.now()}`"
-                                >
-                                  {{ $t('dashboard.good') }}
-                                </label>
-                              </div>
-                              <div class="form-check">
-                                <input
-                                  class="form-check-input"
-                                  type="radio"
-                                  name="surveys-rating-type"
-                                  :id="`surveys-rating-medium-${Date.now()}`"
-                                  :value="'medium'"
-                                  :checked="filterProps.ratingType === 'medium'"
-                                  @change="
-                                    e => {
-                                      const newRatingType = e.target.checked ? 'medium' : undefined;
-                                      if (filterProps.setRatingType) {
-                                        filterProps.setRatingType(newRatingType);
-                                      } else {
-                                        filterProps.ratingType = newRatingType;
-                                      }
-                                      refreshSurveysContentDelayed({ ratingType: newRatingType });
-                                    }
-                                  "
-                                />
-                                <label
-                                  class="form-check-label"
-                                  :for="`surveys-rating-medium-${Date.now()}`"
-                                >
-                                  {{ $t('dashboard.medium') }}
-                                </label>
-                              </div>
-                              <div class="form-check">
-                                <input
-                                  class="form-check-input"
-                                  type="radio"
-                                  name="surveys-rating-type"
-                                  :id="`surveys-rating-bad-${Date.now()}`"
-                                  :value="'bad'"
-                                  :checked="filterProps.ratingType === 'bad'"
-                                  @change="
-                                    e => {
-                                      const newRatingType = e.target.checked ? 'bad' : undefined;
-                                      if (filterProps.setRatingType) {
-                                        filterProps.setRatingType(newRatingType);
-                                      } else {
-                                        filterProps.ratingType = newRatingType;
-                                      }
-                                      refreshSurveysContentDelayed({ ratingType: newRatingType });
-                                    }
-                                  "
-                                />
-                                <label
-                                  class="form-check-label"
-                                  :for="`surveys-rating-bad-${Date.now()}`"
-                                >
-                                  {{ $t('dashboard.bad') }}
-                                </label>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <!-- NPS Type radio buttons -->
-                        <div class="row my-2">
-                          <div class="col-12">
-                            <label class="metric-card-subtitle mb-1">
-                              {{ $t('dashboard.npsType') }}
-                            </label>
-                            <div class="d-flex flex-wrap gap-2">
-                              <div class="form-check">
-                                <input
-                                  class="form-check-input"
-                                  type="radio"
-                                  name="surveys-nps-type"
-                                  :id="`surveys-nps-promoter-${Date.now()}`"
-                                  :value="'promoter'"
-                                  :checked="filterProps.npsType === 'promoter'"
-                                  @change="
-                                    e => {
-                                      const newNpsType = e.target.checked ? 'promoter' : undefined;
-                                      if (filterProps.setNpsType) {
-                                        filterProps.setNpsType(newNpsType);
-                                      } else {
-                                        filterProps.npsType = newNpsType;
-                                      }
-                                      refreshSurveysContentDelayed({ npsType: newNpsType });
-                                    }
-                                  "
-                                />
-                                <label
-                                  class="form-check-label"
-                                  :for="`surveys-nps-promoter-${Date.now()}`"
-                                >
-                                  {{ $t('dashboard.promoter') }}
-                                </label>
-                              </div>
-                              <div class="form-check">
-                                <input
-                                  class="form-check-input"
-                                  type="radio"
-                                  name="surveys-nps-type"
-                                  :id="`surveys-nps-neutral-${Date.now()}`"
-                                  :value="'neutral'"
-                                  :checked="filterProps.npsType === 'neutral'"
-                                  @change="
-                                    e => {
-                                      const newNpsType = e.target.checked ? 'neutral' : undefined;
-                                      if (filterProps.setNpsType) {
-                                        filterProps.setNpsType(newNpsType);
-                                      } else {
-                                        filterProps.npsType = newNpsType;
-                                      }
-                                      refreshSurveysContentDelayed({ npsType: newNpsType });
-                                    }
-                                  "
-                                />
-                                <label
-                                  class="form-check-label"
-                                  :for="`surveys-nps-neutral-${Date.now()}`"
-                                >
-                                  {{ $t('dashboard.neutral') }}
-                                </label>
-                              </div>
-                              <div class="form-check">
-                                <input
-                                  class="form-check-input"
-                                  type="radio"
-                                  name="surveys-nps-type"
-                                  :id="`surveys-nps-detractor-${Date.now()}`"
-                                  :value="'detractor'"
-                                  :checked="filterProps.npsType === 'detractor'"
-                                  @change="
-                                    e => {
-                                      const newNpsType = e.target.checked ? 'detractor' : undefined;
-                                      if (filterProps.setNpsType) {
-                                        filterProps.setNpsType(newNpsType);
-                                      } else {
-                                        filterProps.npsType = newNpsType;
-                                      }
-                                      refreshSurveysContentDelayed({ npsType: newNpsType });
-                                    }
-                                  "
-                                />
-                                <label
-                                  class="form-check-label"
-                                  :for="`surveys-nps-detractor-${Date.now()}`"
-                                >
-                                  {{ $t('dashboard.detractor') }}
-                                </label>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <!-- Contactable and Contacted checkboxes -->
-                        <div class="row my-2">
-                          <div class="col-12">
-                            <div class="d-flex flex-wrap gap-3">
-                              <div class="form-check">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  :id="`surveys-contactable-${Date.now()}`"
-                                  :checked="filterProps.contactable === true"
-                                  @change="
-                                    e => {
-                                      const newContactable = e.target.checked ? true : undefined;
-                                      if (surveysFilterRef.value) {
-                                        surveysFilterRef.value.contactable = newContactable;
-                                      }
-                                      refreshSurveysContentDelayed({ contactable: newContactable });
-                                    }
-                                  "
-                                />
-                                <label
-                                  class="form-check-label"
-                                  :for="`surveys-contactable-${Date.now()}`"
-                                >
-                                  {{ $t('dashboard.contactable') }}
-                                </label>
-                              </div>
-                              <div class="form-check">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  :id="`surveys-contacted-${Date.now()}`"
-                                  :checked="filterProps.contacted === true"
-                                  @change="
-                                    e => {
-                                      const newContacted = e.target.checked ? true : undefined;
-                                      if (surveysFilterRef.value) {
-                                        surveysFilterRef.value.contacted = newContacted;
-                                      }
-                                      refreshSurveysContentDelayed({ contacted: newContacted });
-                                    }
-                                  "
-                                />
-                                <label
-                                  class="form-check-label"
-                                  :for="`surveys-contacted-${Date.now()}`"
-                                >
-                                  {{ $t('dashboard.contacted') }}
-                                </label>
-                              </div>
-                            </div>
-                          </div>
+                        <!-- Clear button -->
+                        <div class="mb-3">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100"
+                            @click="
+                              filterProps.clear();
+                              refreshSurveysContent();
+                            "
+                          >
+                            <i class="bi bi-eraser-fill"></i>
+                            {{ $t('dashboard.clear') || 'Limpiar' }}
+                          </button>
                         </div>
                       </div>
                     </template>
@@ -2710,7 +3821,7 @@ export default {
               </DesktopFiltersPanel>
             </template>
             <template #content>
-              <div v-if="!loading" id="tracing-result" class="mt-2">
+              <div v-if="!loading" id="dashboard-result">
                 <div class="row col mx-1 mt-3 mb-1 tabs-header-divider">
                   <div class="col-3 centered">
                     <button
@@ -2748,6 +3859,7 @@ export default {
                 </div>
                 <div>
                   <DashboardClientsManagement
+                    ref="clientsContentRef"
                     :show-client-management="state.showClients"
                     :toggles="state.toggles"
                     :commerce="commerce"
@@ -2755,20 +3867,24 @@ export default {
                     :commerces="selectedCommerces"
                     :business="state.business"
                     :services="state.services"
-                    ref="clientsContentRef"
+                    filters-location="slot"
+                    :client-details-opened="false"
                   >
                   </DashboardClientsManagement>
                   <DashboardAttentionsAndBookingsManagement
+                    ref="attentionsContentRef"
                     :show-attention-management="state.showAttentions"
                     :toggles="state.toggles"
                     :commerce="commerce"
                     :queues="state.queues"
                     :commerces="selectedCommerces"
                     :services="state.services"
-                    ref="attentionsContentRef"
+                    filters-location="slot"
+                    @tab-changed="handleAttentionsTabChanged"
                   >
                   </DashboardAttentionsAndBookingsManagement>
                   <DashboardSurveysManagement
+                    ref="surveysContentRef"
                     :show-survey-management="state.showSurveyManagement"
                     :calculated-metrics="state.calculatedMetrics"
                     :toggles="state.toggles"
@@ -2776,19 +3892,19 @@ export default {
                     :queues="state.queues"
                     :commerces="selectedCommerces"
                     :services="state.services"
-                    ref="surveysContentRef"
+                    filters-location="slot"
                   >
                   </DashboardSurveysManagement>
                 </div>
               </div>
             </template>
           </DesktopContentLayout>
-          <div v-if="!isActiveBusiness() && !loading">
-            <Message
-              :title="$t('dashboard.message.1.title')"
-              :content="$t('dashboard.message.1.content')"
-            />
-          </div>
+        </div>
+        <div v-if="!isActiveBusiness() && !loading">
+          <Message
+            :title="$t('dashboard.message.1.title')"
+            :content="$t('dashboard.message.1.content')"
+          />
         </div>
       </div>
     </div>
@@ -2800,6 +3916,11 @@ export default {
   text-align: left;
   font-size: 1.1rem;
   font-weight: 700;
+}
+
+.tabs-header-divider {
+  border-bottom: 2px solid rgba(0, 0, 0, 0.15);
+  padding-bottom: 0.75rem;
 }
 .metric-subtitle {
   text-align: left;
@@ -2816,6 +3937,23 @@ export default {
   margin: 0.5rem;
   border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
+}
+/* Filter icon buttons - no borders, no background */
+.btn btn-sm {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0.25rem 0.5rem;
+}
+.btn btn-sm:hover,
+.btn btn-sm:focus,
+.btn btn-sm:active {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.btn btn-sm i {
+  font-size: 1.2rem;
 }
 .metric-card-title {
   font-size: 0.8rem;
@@ -2838,37 +3976,29 @@ export default {
   font-weight: 500;
 }
 
-.tabs-header-divider {
-  border-bottom: 2px solid rgba(0, 0, 0, 0.15);
-  padding-bottom: 0.75rem;
-}
-
-/* Desktop Layout Styles - Only affects the header row */
+/* Desktop Layout Styles */
 @media (min-width: 992px) {
   .desktop-header-row {
     align-items: center;
     margin-bottom: 1.5rem;
     padding: 0.5rem 0;
     justify-content: flex-start;
-    text-align: left;
   }
 
-  .desktop-header-row .desktop-logo-wrapper {
+  .desktop-logo-wrapper {
     padding-right: 1rem;
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    text-align: left;
   }
 
-  .desktop-header-row .desktop-commerce-logo {
+  .desktop-commerce-logo {
     display: flex;
     align-items: center;
     max-width: 150px;
-    text-align: left;
   }
 
-  .desktop-header-row .desktop-commerce-logo .logo-desktop {
+  .desktop-commerce-logo .logo-desktop {
     max-width: 120px;
     max-height: 100px;
     width: auto;
@@ -2876,17 +4006,28 @@ export default {
     margin-bottom: 0;
   }
 
-  .desktop-header-row #commerce-logo-desktop {
+  #commerce-logo-desktop {
     display: flex;
     align-items: center;
     justify-content: flex-start;
   }
 
-  .desktop-header-row .desktop-menu-wrapper {
+  .desktop-menu-wrapper {
     flex: 1 1 0%;
     min-width: 0;
     width: auto;
-    text-align: left;
+  }
+
+  #dashboard-result {
+    padding-left: 0;
+    padding-right: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .filters-content-wrapper {
+    width: 100%;
   }
 }
 </style>

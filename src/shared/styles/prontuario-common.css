@@ -1,54 +1,81 @@
 /**
  * Estilos compartidos para componentes del prontuario médico
- * Basado en el diseño system existente
+ * Optimizado para profesionales médicos - Máximo aprovechamiento de pantalla
+ * Basado en mejores prácticas de EHR (Electronic Health Records)
  */
 
-/* Variables de color del sistema */
+/* Variables de color del sistema - Optimizadas para contexto médico */
 :root {
-  --azul-turno: #446ffc;
-  --verde-tu: #2f407a;
-  --color-text: #333;
+  --azul-turno: #2563eb;
+  --verde-tu: #1e40af;
+  --color-text: #111827;
+  --color-text-secondary: #374151;
   --color-text-muted: #6b7280;
-  --border-color: rgba(0, 0, 0, 0.1);
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --color-text-light: #9ca3af;
+  --border-color: #e5e7eb;
+  --border-color-medium: #d1d5db;
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
   --gradient-primary: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
-  --border-radius-sm: 0.4rem;
+  --border-radius-sm: 0.375rem;
   --border-radius-md: 0.5rem;
   --border-radius-lg: 0.75rem;
+
+  /* Compact spacing system */
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.375rem;  /* 6px */
+  --spacing-md: 0.5rem;    /* 8px */
+  --spacing-lg: 0.75rem;   /* 12px */
+  --spacing-xl: 1rem;      /* 16px */
+
+  /* Compact typography */
+  --font-xs: 0.75rem;      /* 12px */
+  --font-sm: 0.8125rem;    /* 13px */
+  --font-base: 0.875rem;   /* 14px */
+  --font-lg: 0.9375rem;    /* 15px */
+  --font-xl: 1rem;         /* 16px */
+
+  /* Component heights - Compact */
+  --input-height-sm: 1.75rem;  /* 28px */
+  --input-height: 2rem;        /* 32px */
+  --button-height-sm: 1.75rem; /* 28px */
+  --button-height: 2rem;       /* 32px */
 }
 
-/* Formularios modernos */
+/* Formularios modernos - Optimización sutil manteniendo belleza */
 .patient-form-modern {
   width: 100%;
   height: 100%;
 }
 
 .form-field-modern {
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
 }
 
 .form-label-modern {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--color-text);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .form-label-modern i {
-  margin-right: 0.5rem;
+  margin-right: 0.4rem;
   color: var(--azul-turno);
 }
 
 .form-control-modern {
   width: 100%;
-  padding: 0.5rem 0.75rem;
+  padding: 0.4rem 0.7rem;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   color: var(--color-text);
   background: white;
   transition: all 0.2s ease;
@@ -66,31 +93,50 @@
   opacity: 0.6;
 }
 
-/* Cards modernos */
+/* Cards modernos - Compactos */
 .modern-card {
   background: white;
-  border-radius: var(--border-radius-lg);
-  padding: 1.25rem;
-  box-shadow: var(--shadow-md);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-xs);
+  border: 1px solid var(--border-color);
+  transition: box-shadow 0.2s ease;
 }
 
 .modern-card:hover {
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .modern-card-header {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  padding: 0.4rem 0.6rem;
-  border-radius: var(--border-radius-md);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  background: #f9fafb;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-sm);
+  box-shadow: var(--shadow-xs);
+  border: 1px solid var(--border-color);
+  transition: box-shadow 0.2s ease;
 }
 
 .modern-card-header:hover {
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Card compacto para formularios */
+.form-card-compact {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.form-card-compact-header {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+  background: #f9fafb;
+}
+
+.form-card-compact-body {
+  padding: var(--spacing-lg);
 }
 
 /* Form Header Modern - Estándar para todos los formularios del prontuario */
@@ -98,14 +144,14 @@
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
   border-bottom: 2px solid rgba(0, 0, 0, 0.05);
 }
 
 .form-header-icon {
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   border-radius: 0.75rem;
   background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
   display: flex;
@@ -122,11 +168,11 @@
 }
 
 .form-header-title {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--color-text);
   margin: 0 0 0.25rem 0;
-  line-height: 1.3;
+  line-height: 1;
 }
 
 .form-header-subtitle {
@@ -137,70 +183,82 @@
   line-height: 1.4;
 }
 
-/* Headers de sección */
+/* Headers de sección - Compactos */
 .section-header-modern {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .section-header-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--border-radius-lg);
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--border-radius-sm);
   background: var(--gradient-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 1.5rem;
+  font-size: var(--font-lg);
+  flex-shrink: 0;
 }
 
 .section-header-title h4 {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: var(--font-xl);
+  font-weight: 600;
   color: var(--color-text);
+  line-height: 1.2;
 }
 
 .section-header-title p {
   margin: 0;
-  font-size: 0.875rem;
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-sm);
   color: var(--color-text-muted);
+  line-height: 1.3;
 }
 
-/* Botones modernos */
+/* Botones modernos - Compactos */
 .btn-modern {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: none;
+  gap: var(--spacing-sm);
+  height: var(--button-height);
+  padding: 0 var(--spacing-lg);
+  border: 1px solid transparent;
   border-radius: var(--border-radius-sm);
-  font-weight: 600;
-  font-size: 0.875rem;
+  font-weight: 500;
+  font-size: var(--font-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   background: var(--gradient-primary);
   color: white;
+  white-space: nowrap;
 }
 
 .btn-modern:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  background: var(--verde-tu);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-modern:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn-modern-sm {
+  height: var(--button-height-sm);
+  padding: 0 var(--spacing-md);
+  font-size: var(--font-xs);
 }
 
 .btn-modern-outline {
   background: white;
-  border: 1px solid var(--azul-turno);
+  border-color: var(--azul-turno);
   color: var(--azul-turno);
 }
 
@@ -209,38 +267,85 @@
   color: white;
 }
 
-/* Estilos para botones btn-sm btn-primary - mismo estilo que btn-add-control */
+.btn-modern-secondary {
+  background: #f3f4f6;
+  color: var(--color-text-secondary);
+  border-color: var(--border-color-medium);
+}
+
+.btn-modern-secondary:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+/* Botones Bootstrap optimizados para prontuario */
 .patient-form-modern .btn.btn-sm.btn-primary,
-.patient-history-modern .btn.btn-sm.btn-primary {
+.patient-history-modern .btn.btn-sm.btn-primary,
+.prontuario-compact .btn.btn-sm.btn-primary {
   display: inline-flex;
   align-items: center;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  height: var(--button-height-sm);
+  padding: 0 var(--spacing-lg);
+  background: var(--gradient-primary);
   color: white;
   border: none;
-  border-radius: 0.75rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-sm);
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-xs);
+  white-space: nowrap;
 }
 
 .patient-form-modern .btn.btn-sm.btn-primary:hover:not(:disabled),
-.patient-history-modern .btn.btn-sm.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+.patient-history-modern .btn.btn-sm.btn-primary:hover:not(:disabled),
+.prontuario-compact .btn.btn-sm.btn-primary:hover:not(:disabled) {
+  background: var(--verde-tu);
+  box-shadow: var(--shadow-sm);
 }
 
 .patient-form-modern .btn.btn-sm.btn-primary:disabled,
-.patient-history-modern .btn.btn-sm.btn-primary:disabled {
-  opacity: 0.6;
+.patient-history-modern .btn.btn-sm.btn-primary:disabled,
+.prontuario-compact .btn.btn-sm.btn-primary:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .patient-form-modern .btn.btn-sm.btn-primary i,
-.patient-history-modern .btn.btn-sm.btn-primary i {
-  font-size: 0.9rem;
+.patient-history-modern .btn.btn-sm.btn-primary i,
+.prontuario-compact .btn.btn-sm.btn-primary i {
+  font-size: var(--font-sm);
+}
+
+/* Botones regulares también optimizados */
+.patient-form-modern .btn.btn-primary,
+.patient-history-modern .btn.btn-primary,
+.prontuario-compact .btn.btn-primary {
+  height: var(--button-height);
+  padding: 0 var(--spacing-xl);
+  font-size: var(--font-base);
+  font-weight: 500;
+  border-radius: var(--border-radius-sm);
+}
+
+/* Botones outline */
+.patient-form-modern .btn.btn-outline-primary,
+.patient-history-modern .btn.btn-outline-primary,
+.prontuario-compact .btn.btn-outline-primary {
+  height: var(--button-height);
+  padding: 0 var(--spacing-xl);
+  font-size: var(--font-base);
+  font-weight: 500;
+  border-radius: var(--border-radius-sm);
+  border-color: var(--azul-turno);
+  color: var(--azul-turno);
+}
+
+.patient-form-modern .btn.btn-outline-primary:hover,
+.patient-history-modern .btn.btn-outline-primary:hover,
+.prontuario-compact .btn.btn-outline-primary:hover {
+  background: var(--azul-turno);
+  color: white;
 }
 
 /* Badges */
@@ -279,41 +384,57 @@
   color: white;
 }
 
-/* Tablas modernas */
+/* Tablas modernas - Compactas */
 .table-modern {
   width: 100%;
   border-collapse: collapse;
   background: white;
-  border-radius: var(--border-radius-md);
+  border-radius: var(--border-radius-sm);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
+  font-size: var(--font-sm);
 }
 
 .table-modern thead {
-  background: var(--gradient-primary);
-  color: white;
-}
-
-.table-modern th {
-  padding: 0.75rem;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.table-modern td {
-  padding: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
-  font-size: 0.875rem;
+  background: #f3f4f6;
   color: var(--color-text);
 }
 
+.table-modern th {
+  padding: var(--spacing-md) var(--spacing-sm);
+  text-align: left;
+  font-weight: 600;
+  font-size: var(--font-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-modern td {
+  padding: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+  font-size: var(--font-sm);
+  color: var(--color-text);
+  vertical-align: top;
+}
+
 .table-modern tbody tr:hover {
-  background: rgba(68, 111, 252, 0.05);
+  background: #eff6ff;
 }
 
 .table-modern tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* Tabla extra compacta para listas largas */
+.table-compact {
+  font-size: var(--font-xs);
+}
+
+.table-compact th,
+.table-compact td {
+  padding: var(--spacing-xs) var(--spacing-sm);
 }
 
 /* Loading states */
@@ -357,34 +478,147 @@
   font-size: 0.875rem;
 }
 
-/* Mobile responsive */
+/* ===== MEDICAL FORM SPECIFIC STYLES ===== */
+
+/* Grid layouts for medical forms */
+.medical-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+.medical-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-lg);
+}
+
+.medical-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+}
+
+.medical-grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+/* Form sections with collapsible headers */
+.form-section-collapsible {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-lg);
+  overflow: hidden;
+}
+
+.form-section-header-collapsible {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-lg);
+  background: #f9fafb;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.form-section-header-collapsible:hover {
+  background: #f3f4f6;
+}
+
+.form-section-content-collapsible {
+  padding: var(--spacing-lg);
+}
+
+/* Input groups for related fields */
+.input-group-compact {
+  display: flex;
+  align-items: stretch;
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+}
+
+.input-group-compact .form-control-modern {
+  border-radius: 0;
+  border-right: none;
+}
+
+.input-group-compact .form-control-modern:first-child {
+  border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
+}
+
+.input-group-compact .form-control-modern:last-child {
+  border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+  border-right: 1px solid var(--border-color);
+}
+
+.input-group-compact .btn-modern {
+  border-radius: 0;
+}
+
+.input-group-compact .btn-modern:last-child {
+  border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1024px) {
+  .medical-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .medical-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
+  :root {
+    --spacing-xs: 0.2rem;
+    --spacing-sm: 0.3rem;
+    --spacing-md: 0.4rem;
+    --spacing-lg: 0.6rem;
+    --spacing-xl: 0.8rem;
+  }
+
   .section-header-modern {
-    flex-direction: column;
-    align-items: flex-start;
+    gap: var(--spacing-sm);
   }
 
   .section-header-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: var(--font-base);
   }
 
   .modern-card {
-    padding: 1rem;
+    padding: var(--spacing-lg);
   }
 
   .form-control-modern {
-    font-size: 16px; /* Evita zoom en iOS */
+    font-size: 16px; /* Prevents zoom on iOS */
   }
 
   .table-modern {
-    font-size: 0.8rem;
+    font-size: var(--font-xs);
   }
 
   .table-modern th,
   .table-modern td {
-    padding: 0.5rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .medical-grid-2,
+  .medical-grid-3,
+  .medical-grid-4,
+  .medical-grid-auto {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .form-card-compact-header,
+  .form-card-compact-body {
+    padding: var(--spacing-md);
   }
 }
 
@@ -408,4 +642,485 @@
 
 .skip-link:focus {
   top: 0;
+}
+
+/* ===== MODAL STYLES - Consistent with prontuario design ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: var(--spacing-xl);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-bottom: 1px solid var(--border-color);
+  background: #f9fafb;
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+}
+
+.modal-title {
+  font-size: var(--font-xl);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.modal-title i {
+  color: var(--azul-turno);
+  font-size: 1.25rem;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+}
+
+.btn-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text);
+}
+
+.modal-body {
+  padding: var(--spacing-xl);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.modal-body .form-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.modal-body .form-label {
+  display: block;
+  font-weight: 600;
+  font-size: var(--font-sm);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.modal-body .form-control {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-base);
+  color: var(--color-text);
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.modal-body .form-control:focus {
+  outline: none;
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+}
+
+.modal-body .form-control:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-top: 1px solid var(--border-color);
+  background: #f9fafb;
+  border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+}
+
+.modal-footer .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-xl);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-weight: 600;
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: var(--button-height);
+}
+
+.modal-footer .btn-secondary {
+  background: white;
+  color: var(--color-text);
+  border: 1px solid var(--border-color);
+}
+
+.modal-footer .btn-secondary:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: var(--border-color-medium);
+}
+
+.modal-footer .btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--shadow-xs);
+}
+
+.modal-footer .btn-primary:hover:not(:disabled) {
+  background: var(--verde-tu);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.modal-footer .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Email modal specific */
+.email-modal {
+  max-width: 600px;
+}
+
+/* ===== SPEECH RECOGNITION BUTTON STYLES ===== */
+
+/* Speech Recognition Styles - Modern and polished */
+.speech-recognition-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-radius: 0.75rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+  border: 1.5px solid #e2e8f0;
+  color: #475569;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  min-width: fit-content;
+}
+
+.speech-recognition-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.speech-recognition-btn:hover::before {
+  left: 100%;
+}
+
+.speech-recognition-btn:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #2563eb;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35), 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.speech-recognition-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+}
+
+.speech-recognition-btn span {
+  display: inline !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  margin-left: 0.4rem;
+  transition: color 0.25s ease;
+  white-space: nowrap;
+}
+
+.speech-recognition-btn i {
+  font-size: 1rem;
+  transition: transform 0.25s ease, color 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.speech-recognition-btn:hover i {
+  transform: scale(1.1);
+}
+
+.speech-recognition-btn.btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: #dc2626;
+  color: #ffffff;
+  animation: pulse-recording 2s ease-in-out infinite;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4), 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+.speech-recognition-btn.btn-danger:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border-color: #b91c1c;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5), 0 3px 6px rgba(239, 68, 68, 0.4);
+}
+
+.speech-recognition-btn.btn-danger i {
+  animation: mic-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-recording {
+  0%, 100% {
+    transform: translateY(-2px) scale(1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4), 0 2px 4px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5), 0 3px 6px rgba(239, 68, 68, 0.4);
+  }
+}
+
+@keyframes mic-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.9;
+  }
+}
+
+/* ===== REQUIREMENT CARDS STYLES ===== */
+
+/* Requirement Card Container */
+.requirement-card {
+  background: white;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.requirement-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.requirement-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--card-accent-color, #6b7280);
+  transition: background-color 0.3s ease;
+}
+
+/* Card Header */
+.requirement-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.requirement-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.requirement-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.requirement-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 0.15rem 0;
+  line-height: 1.2;
+}
+
+.requirement-subtitle {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Action Button */
+.requirement-action-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: white;
+  background: var(--card-button-bg, #6b7280);
+}
+
+.requirement-action-btn:hover {
+  background: var(--card-button-hover-bg, #4b5563);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: white;
+  text-decoration: none;
+}
+
+.requirement-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.requirement-action-btn i {
+  font-size: 1rem;
+}
+
+/* Prontuário Card Specific Styles */
+.prontuario-card {
+  --card-accent-color: #10b981;
+  --card-button-bg: #10b981;
+  --card-button-hover-bg: #059669;
+}
+
+.prontuario-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.prontuario-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.prontuario-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* Estoque Card Specific Styles */
+.estoque-card {
+  --card-accent-color: #3b82f6;
+  --card-button-bg: #3b82f6;
+  --card-button-hover-bg: #2563eb;
+}
+
+.estoque-icon {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.estoque-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.estoque-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* Responsive Design for Cards */
+@media (max-width: 768px) {
+  .requirement-card {
+    padding: 0.625rem;
+    margin-bottom: 0.625rem;
+  }
+
+  .requirement-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 1.1rem;
+  }
+
+  .requirement-title {
+    font-size: 0.85rem;
+  }
+
+  .requirement-subtitle {
+    font-size: 0.7rem;
+  }
+
+  .requirement-action-btn {
+    padding: 0.45rem 0.625rem;
+    font-size: 0.75rem;
+  }
 }

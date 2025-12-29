@@ -1,4 +1,6 @@
 <script>
+import { getBusinessLogoUrl } from '../../application/services/business-logo';
+
 export default {
   name: 'SearchBar',
   props: {
@@ -9,6 +11,8 @@ export default {
     return {
       searchString: '',
       selectedItem: undefined,
+      itemLogos: {},
+      logoLoading: {},
     };
   },
   methods: {
@@ -17,19 +21,91 @@ export default {
       this.selectedItem = item;
       this.$emit('selectItem', this.selectedItem);
     },
+    async loadLogoForItem(item) {
+      if (!item || !item.logo) {
+        return;
+      }
+
+      // Check if it's a business-logo path (format: /business-logos/{businessId}/{logoId})
+      if (item.logo.startsWith('/business-logos/')) {
+        const parts = item.logo.split('/');
+        if (parts.length === 4) {
+          const businessId = parts[2];
+          const logoId = parts[3];
+          const cacheKey = `${businessId}-${logoId}`;
+
+          // Return cached URL if available
+          if (this.itemLogos[item.id]) {
+            return;
+          }
+
+          // Check if already loading
+          if (this.logoLoading[cacheKey]) {
+            return;
+          }
+
+          try {
+            this.logoLoading[cacheKey] = true;
+            const url = await getBusinessLogoUrl(businessId, logoId);
+            if (url) {
+              this.itemLogos[item.id] = url;
+            }
+          } catch (error) {
+            console.error('Error loading business logo for SearchBar:', error);
+          } finally {
+            this.logoLoading[cacheKey] = false;
+          }
+        }
+      }
+    },
+    getItemLogo(item) {
+      if (!item || !item.logo) {
+        return null;
+      }
+
+      // If it's a business-logo path, use cached URL or trigger load
+      if (item.logo.startsWith('/business-logos/')) {
+        if (this.itemLogos[item.id]) {
+          return this.itemLogos[item.id];
+        }
+        // Trigger async load (will update when ready)
+        this.loadLogoForItem(item);
+        // Return null while loading (will show placeholder)
+        return null;
+      }
+      // Return original logo for static paths or URLs
+      return item.logo;
+    },
   },
   computed: {
     searchItem() {
-      if (this.searchString.length >= 3) {
-        const result = this.list.filter(
-          i =>
-            i.name?.toLowerCase().includes(this.searchString.toLowerCase()) ||
-            i.keyName?.toLowerCase().includes(this.searchString.toLowerCase()) ||
-            i.email?.toLowerCase().includes(this.searchString.toLowerCase()) ||
-            i.idNumber?.toLowerCase().includes(this.searchString.toLowerCase())
-        );
+      const q = (this.searchString || '').trim().toLowerCase();
+      if (q.length >= 3) {
+        // Support both array and object maps for `list`
+        const items = Array.isArray(this.list) ? this.list : Object.values(this.list || {});
+        const result = items.filter(i => {
+          if (!i) return false;
+          const name = (i.name || '').toString().toLowerCase();
+          const keyName = (i.keyName || '').toString().toLowerCase();
+          const email = (i.email || '').toString().toLowerCase();
+          const idNumber = (i.idNumber || '').toString().toLowerCase();
+          return (
+            name.includes(q) || keyName.includes(q) || email.includes(q) || idNumber.includes(q)
+          );
+        });
+
+        // Load logos for business-logo paths
+        this.$nextTick(() => {
+          result.forEach(item => {
+            if (item && item.logo && item.logo.startsWith('/business-logos/')) {
+              this.loadLogoForItem(item);
+            }
+          });
+        });
+
         return result;
       }
+      return [];
     },
   },
 };
@@ -38,7 +114,10 @@ export default {
 <template>
   <div class="search-bar-container">
     <div class="search-bar-wrapper">
-      <label class="search-bar-label">{{ label }}</label>
+      <label class="search-bar-label">
+        <i class="bi bi-building me-2"></i>
+        {{ label }}
+      </label>
       <div class="search-input-wrapper">
         <i class="bi bi-search search-icon"></i>
         <input
@@ -60,9 +139,16 @@ export default {
           @click="selectItem(item)"
         >
           <div class="search-result-image">
-            <img v-if="item.logo" :src="item.logo" class="result-image" loading="lazy" alt="Logo" />
+            <img
+              v-if="getItemLogo(item)"
+              :src="getItemLogo(item)"
+              class="result-image"
+              loading="lazy"
+              alt="Logo"
+              @error="loadLogoForItem(item)"
+            />
             <div v-else class="result-icon-placeholder">
-              <i class="bi bi-person-circle"></i>
+              <i class="bi bi-building"></i>
             </div>
           </div>
           <div class="search-result-content">
@@ -92,10 +178,17 @@ export default {
 }
 
 .search-bar-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #000000;
-  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--azul-turno, #004aad);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.search-bar-label i {
+  font-size: 1.2rem;
+  color: var(--azul-turno, #004aad);
 }
 
 .search-input-wrapper {

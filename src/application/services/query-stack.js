@@ -48,6 +48,34 @@ export const getFinancialMetrics = async (commercesId, from, to) => {
   return (await requestQuery.get('metrics/financial', options)).data;
 };
 
+export const getFinancialComparison = async (commercesId, from, to) => {
+  const options = {};
+  options.params = { from, to, commercesId };
+  options.paramsSerializer = params => qs.stringify(params);
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('metrics/financial/comparison', options)).data;
+};
+
+export const getFinancialTrends = async (commercesId, to) => {
+  const options = {};
+  options.params = { to, commercesId };
+  options.paramsSerializer = params => qs.stringify(params);
+  options.timeout = 120000; // 120 seconds - this endpoint processes 12 months of data sequentially
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('metrics/financial/trends', options)).data;
+};
+
+export const getOutcomesCategoryAnalysis = async (commercesId, from, to) => {
+  const options = {};
+  options.params = { from, to, commercesId };
+  options.paramsSerializer = params => qs.stringify(params);
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('metrics/financial/outcomes/categories', options)).data;
+};
+
 export const getAttentions = async (commerceId, from, to) => {
   const options = {};
   options.params = { from, to, commerceId, orderByDCreatedAt: 'true' };
@@ -172,6 +200,42 @@ export const getOutcomesResume = async (commerceId, commerceIds, from, to) => {
   const { headers } = await getHeaders();
   options.headers = headers;
   return (await requestQuery.get('reports/outcomes', options)).data;
+};
+
+export const getCashFlowMonthlyReport = async (commerceId, commerceIds, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId, commerceIds };
+  options.paramsSerializer = params => qs.stringify(params);
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/cash-flow-monthly', options)).data;
+};
+
+export const getServiceProfitabilityReport = async (commerceId, commerceIds, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId, commerceIds };
+  options.paramsSerializer = params => qs.stringify(params);
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/service-profitability', options)).data;
+};
+
+export const getMostProfitableClientsReport = async (commerceId, commerceIds, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId, commerceIds };
+  options.paramsSerializer = params => qs.stringify(params);
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/most-profitable-clients', options)).data;
+};
+
+export const getExpensesByProviderReport = async (commerceId, commerceIds, from, to) => {
+  const options = {};
+  options.params = { from, to, commerceId, commerceIds };
+  options.paramsSerializer = params => qs.stringify(params);
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('reports/expenses-by-provider', options)).data;
 };
 
 export const getSurveys = async (commerceId, from, to) => {
@@ -336,7 +400,10 @@ export const getAttentionsDetails = async (
   contactResultType = undefined,
   serviceId = undefined,
   stock = undefined,
-  id = undefined
+  id = undefined,
+  userId = undefined,
+  clientId = undefined,
+  status = undefined
 ) => {
   const options = {};
   // Convert boolean values to strings for API compatibility
@@ -349,7 +416,7 @@ export const getAttentionsDetails = async (
     from,
     to,
     commerceId,
-    commerceIds,
+    ...(commerceIds ? { commerceIds } : {}), // Only include if defined
     page,
     limit,
     daysSinceType,
@@ -364,6 +431,9 @@ export const getAttentionsDetails = async (
     serviceId,
     stock: convertBool(stock),
     id,
+    userId,
+    clientId,
+    status,
     // Add timestamp to prevent 304 cache responses
     _t: Date.now(),
   };
@@ -431,7 +501,10 @@ export const getBookingsDetails = async (
   queueId = undefined,
   asc = true,
   serviceId = undefined,
-  status = undefined
+  status = undefined,
+  clientId = undefined,
+  packageId = undefined,
+  survey = undefined
 ) => {
   const options = {};
   // Convert boolean values to strings for API compatibility
@@ -444,7 +517,7 @@ export const getBookingsDetails = async (
     from,
     to,
     commerceId,
-    commerceIds,
+    ...(commerceIds ? { commerceIds } : {}), // Only include if defined
     page,
     limit,
     searchText,
@@ -452,6 +525,9 @@ export const getBookingsDetails = async (
     asc: convertBool(asc),
     serviceId,
     status,
+    clientId,
+    packageId,
+    survey: convertBool(survey), // Convert survey boolean to string
     // Add timestamp to prevent 304 cache responses
     _t: Date.now(),
   };
@@ -694,13 +770,20 @@ export const getProductsConsumptionsDetails = async (
   return (await requestQuery.get('product/consumptions', options)).data;
 };
 
-export const getProductsKpis = async (commerceId = undefined, commerceIds = undefined) => {
+export const getProductsKpis = async (
+  commerceId = undefined,
+  commerceIds = undefined,
+  from = undefined,
+  to = undefined
+) => {
   const options = {};
   options.params = {
     commerceId,
     commerceIds,
     _t: Date.now(), // Prevent cache
   };
+  if (from) options.params.from = from;
+  if (to) options.params.to = to;
   options.paramsSerializer = params => qs.stringify(params);
   const { headers } = await getHeaders();
   options.headers = headers;

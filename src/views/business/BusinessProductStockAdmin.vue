@@ -17,6 +17,7 @@ import InventoryDashboard from '../../components/products/InventoryDashboard.vue
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
 import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
 import DateRangeFilters from '../../components/common/desktop/DateRangeFilters.vue';
+import { DateModel } from '../../shared/utils/date.model';
 
 export default {
   name: 'BusinessProductStockAdmin',
@@ -40,6 +41,11 @@ export default {
 
     const loading = ref(false);
     const alertError = ref('');
+    const productsContentRef = ref(null);
+    const attentionsContentRef = ref(null);
+    const dashboardContentRef = ref(null);
+    const filterIdCounter = ref(Date.now());
+    const attentionsFilterIdCounter = ref(Date.now() + 1);
 
     const state = reactive({
       currentUser: {},
@@ -168,6 +174,21 @@ export default {
       }
     };
 
+    const handleDashboardDateQuickSelect = (type, filterProps) => {
+      // Use the methods exposed by the slot to ensure proper synchronization
+      if (!dashboardContentRef.value) return;
+
+      if (type === 'today') {
+        dashboardContentRef.value.getToday();
+      } else if (type === 'currentMonth') {
+        dashboardContentRef.value.getCurrentMonth();
+      } else if (type === 'lastMonth') {
+        dashboardContentRef.value.getLastMonth();
+      } else if (type === 'lastThreeMonths') {
+        dashboardContentRef.value.getLastThreeMonths();
+      }
+    };
+
     return {
       state,
       loading,
@@ -182,6 +203,12 @@ export default {
       handleQuickRecharge,
       commerce,
       selectedCommerces,
+      productsContentRef,
+      attentionsContentRef,
+      dashboardContentRef,
+      filterIdCounter,
+      attentionsFilterIdCounter,
+      handleDashboardDateQuickSelect,
     };
   },
 };
@@ -246,10 +273,12 @@ export default {
               </div>
               <div>
                 <InventoryDashboard
+                  ref="dashboardContentRef"
                   v-if="state.showDashboard"
                   :show="state.showDashboard"
                   :commerce="commerce"
                   :commerces="selectedCommerces"
+                  filters-location="slot"
                   @quick-recharge="handleQuickRecharge"
                 ></InventoryDashboard>
               </div>
@@ -324,6 +353,7 @@ export default {
               v-if="!loading"
               :show-filters="true"
               :filters-sticky="true"
+              :initial-collapsed="false"
               @filters-toggle="handleFiltersToggle"
             >
               <template #filters="{ onToggle, collapsed }">
@@ -343,6 +373,102 @@ export default {
                   @commerce-changed="handleCommerceChanged"
                 >
                   <template #custom-filters>
+                    <!-- Filters for Dashboard tab -->
+                    <InventoryDashboard
+                      v-if="state.showDashboard"
+                      :show="false"
+                      :commerce="commerce"
+                      :commerces="selectedCommerces"
+                      filters-location="slot"
+                    >
+                      <template #filters-exposed="filterProps">
+                        <div class="filters-content-wrapper">
+                          <!-- Date quick buttons -->
+                          <div class="row my-2">
+                            <div class="col-6 mb-2">
+                              <button
+                                class="btn btn-sm btn-dark rounded-pill w-100"
+                                @click="handleDashboardDateQuickSelect('today', filterProps)"
+                                :disabled="filterProps.loading"
+                              >
+                                {{ $t('dashboard.today') }}
+                              </button>
+                            </div>
+                            <div class="col-6 mb-2">
+                              <button
+                                class="btn btn-sm btn-dark rounded-pill w-100"
+                                @click="handleDashboardDateQuickSelect('currentMonth', filterProps)"
+                                :disabled="filterProps.loading"
+                              >
+                                {{ $t('dashboard.thisMonth') }}
+                              </button>
+                            </div>
+                            <div class="col-6 mb-2">
+                              <button
+                                class="btn btn-sm btn-dark rounded-pill w-100"
+                                @click="handleDashboardDateQuickSelect('lastMonth', filterProps)"
+                                :disabled="filterProps.loading"
+                              >
+                                {{ $t('dashboard.lastMonth') }}
+                              </button>
+                            </div>
+                            <div class="col-6 mb-2">
+                              <button
+                                class="btn btn-sm btn-dark rounded-pill w-100"
+                                @click="handleDashboardDateQuickSelect('lastThreeMonths', filterProps)"
+                                :disabled="filterProps.loading"
+                              >
+                                {{ $t('dashboard.lastThreeMonths') }}
+                              </button>
+                            </div>
+                          </div>
+                          <!-- Date Range Filters with Search Button -->
+                          <DateRangeFilters
+                            :start-date="filterProps.startDate"
+                            :end-date="filterProps.endDate"
+                            :show-quick-buttons="false"
+                            :disabled="filterProps.loading"
+                            :show-search-button="true"
+                            @update:startDate="
+                              val => {
+                                filterProps.startDate = val;
+                                if (dashboardContentRef) {
+                                  dashboardContentRef.startDate = val;
+                                }
+                              }
+                            "
+                            @update:endDate="
+                              val => {
+                                filterProps.endDate = val;
+                                if (dashboardContentRef) {
+                                  dashboardContentRef.endDate = val;
+                                }
+                              }
+                            "
+                            @search="
+                              () => {
+                                if (dashboardContentRef) {
+                                  dashboardContentRef.startDate = filterProps.startDate;
+                                  dashboardContentRef.endDate = filterProps.endDate;
+                                  dashboardContentRef.loadKpis();
+                                }
+                              }
+                            "
+                            @quick-select="
+                              ({ startDate, endDate }) => {
+                                filterProps.startDate = startDate;
+                                filterProps.endDate = endDate;
+                                if (dashboardContentRef) {
+                                  dashboardContentRef.startDate = startDate;
+                                  dashboardContentRef.endDate = endDate;
+                                  dashboardContentRef.loadKpis();
+                                }
+                              }
+                            "
+                          />
+                        </div>
+                      </template>
+                    </InventoryDashboard>
                     <!-- Filters for Products tab -->
                     <ProductsStockManagement
                       v-if="state.showProducts"
@@ -371,11 +497,24 @@ export default {
                                     filterProps.searchText = e.target.value;
                                   }
                                 "
+                                @keyup.enter="
+                                  if (productsContentRef) {
+                                    productsContentRef.searchText = filterProps.searchText;
+                                    productsContentRef.page = 1;
+                                    productsContentRef.refresh();
+                                  }
+                                "
                                 :placeholder="$t('businessProductStockAdmin.search')"
                               />
                               <button
                                 class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
-                                @click="filterProps.refresh()"
+                                @click="
+                                  if (productsContentRef) {
+                                    productsContentRef.searchText = filterProps.searchText;
+                                    productsContentRef.page = 1;
+                                    productsContentRef.refresh();
+                                  }
+                                "
                                 :disabled="filterProps.loading"
                                 style="flex-shrink: 0"
                               >
@@ -392,43 +531,58 @@ export default {
                               <input
                                 type="radio"
                                 class="btn-check"
-                                :id="'good-status-' + Math.random()"
-                                :value="'GOOD'"
+                                :id="`product-status-good-${filterIdCounter}`"
+                                name="product-status-filter"
+                                value="GOOD"
                                 :checked="filterProps.productStatus === 'GOOD'"
                                 @change="
                                   filterProps.productStatus = 'GOOD';
-                                  filterProps.refresh();
+                                  if (productsContentRef) {
+                                    productsContentRef.productStatus = 'GOOD';
+                                    productsContentRef.page = 1;
+                                    productsContentRef.refresh();
+                                  }
                                 "
                               />
-                              <label class="btn btn-sm" :for="'good-status-' + Math.random()">
+                              <label class="btn btn-sm" :for="`product-status-good-${filterIdCounter}`">
                                 <i class="bi bi-battery-full green-icon h5"></i>
                               </label>
                               <input
                                 type="radio"
                                 class="btn-check"
-                                :id="'medium-status-' + Math.random()"
-                                :value="'MEDIUM'"
+                                :id="`product-status-medium-${filterIdCounter}`"
+                                name="product-status-filter"
+                                value="MEDIUM"
                                 :checked="filterProps.productStatus === 'MEDIUM'"
                                 @change="
                                   filterProps.productStatus = 'MEDIUM';
-                                  filterProps.refresh();
+                                  if (productsContentRef) {
+                                    productsContentRef.productStatus = 'MEDIUM';
+                                    productsContentRef.page = 1;
+                                    productsContentRef.refresh();
+                                  }
                                 "
                               />
-                              <label class="btn btn-sm" :for="'medium-status-' + Math.random()">
+                              <label class="btn btn-sm" :for="`product-status-medium-${filterIdCounter}`">
                                 <i class="bi bi-battery-half yellow-icon h5"></i>
                               </label>
                               <input
                                 type="radio"
                                 class="btn-check"
-                                :id="'low-status-' + Math.random()"
-                                :value="'LOW'"
+                                :id="`product-status-low-${filterIdCounter}`"
+                                name="product-status-filter"
+                                value="LOW"
                                 :checked="filterProps.productStatus === 'LOW'"
                                 @change="
                                   filterProps.productStatus = 'LOW';
-                                  filterProps.refresh();
+                                  if (productsContentRef) {
+                                    productsContentRef.productStatus = 'LOW';
+                                    productsContentRef.page = 1;
+                                    productsContentRef.refresh();
+                                  }
                                 "
                               />
-                              <label class="btn btn-sm" :for="'low-status-' + Math.random()">
+                              <label class="btn btn-sm" :for="`product-status-low-${filterIdCounter}`">
                                 <i class="bi bi-battery red-icon h5"></i>
                               </label>
                               <i
@@ -443,11 +597,19 @@ export default {
                               <input
                                 class="form-check-input"
                                 type="checkbox"
-                                :id="'expired-' + Math.random()"
+                                :id="`product-filter-expired-${filterIdCounter}`"
                                 :checked="filterProps.expired === true"
-                                @change="filterProps.checkExpired($event)"
+                                @change="
+                                  const isChecked = $event.target.checked;
+                                  filterProps.expired = isChecked ? true : false;
+                                  if (productsContentRef) {
+                                    productsContentRef.expired = isChecked ? true : false;
+                                    productsContentRef.page = 1;
+                                    productsContentRef.refresh();
+                                  }
+                                "
                               />
-                              <label class="form-check-label" :for="'expired-' + Math.random()">
+                              <label class="form-check-label" :for="`product-filter-expired-${filterIdCounter}`">
                                 {{ $t('businessProductStockAdmin.expired') }}
                               </label>
                             </div>
@@ -455,11 +617,19 @@ export default {
                               <input
                                 class="form-check-input"
                                 type="checkbox"
-                                :id="'replacement-' + Math.random()"
+                                :id="`product-filter-replacement-${filterIdCounter}`"
                                 :checked="filterProps.replacement === true"
-                                @change="filterProps.checkReplacement($event)"
+                                @change="
+                                  const isChecked = $event.target.checked;
+                                  filterProps.replacement = isChecked ? true : false;
+                                  if (productsContentRef) {
+                                    productsContentRef.replacement = isChecked ? true : false;
+                                    productsContentRef.page = 1;
+                                    productsContentRef.refresh();
+                                  }
+                                "
                               />
-                              <label class="form-check-label" :for="'replacement-' + Math.random()">
+                              <label class="form-check-label" :for="`product-filter-replacement-${filterIdCounter}`">
                                 {{ $t('businessProductStockAdmin.replacement') }}
                               </label>
                             </div>
@@ -467,11 +637,19 @@ export default {
                               <input
                                 class="form-check-input"
                                 type="checkbox"
-                                :id="'asc-' + Math.random()"
+                                :id="`product-filter-asc-${filterIdCounter}`"
                                 :checked="filterProps.asc === true"
-                                @change="filterProps.checkAsc($event)"
+                                @change="
+                                  const isChecked = $event.target.checked;
+                                  filterProps.asc = isChecked;
+                                  if (productsContentRef) {
+                                    productsContentRef.asc = isChecked;
+                                    productsContentRef.page = 1;
+                                    productsContentRef.refresh();
+                                  }
+                                "
                               />
-                              <label class="form-check-label" :for="'asc-' + Math.random()">
+                              <label class="form-check-label" :for="`product-filter-asc-${filterIdCounter}`">
                                 {{ filterProps.asc ? $t('dashboard.asc') : $t('dashboard.desc') }}
                               </label>
                             </div>
@@ -480,7 +658,24 @@ export default {
                           <div class="mb-3">
                             <button
                               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100"
-                              @click="filterProps.clear()"
+                              @click="
+                                // Clear filter instance
+                                filterProps.productStatus = undefined;
+                                filterProps.expired = undefined;
+                                filterProps.replacement = undefined;
+                                filterProps.asc = true;
+                                filterProps.searchText = undefined;
+                                // Clear and refresh content instance
+                                if (productsContentRef) {
+                                  productsContentRef.productStatus = undefined;
+                                  productsContentRef.expired = undefined;
+                                  productsContentRef.replacement = undefined;
+                                  productsContentRef.asc = true;
+                                  productsContentRef.searchText = undefined;
+                                  productsContentRef.page = 1;
+                                  productsContentRef.refresh();
+                                }
+                              "
                             >
                               <i class="bi bi-eraser-fill"></i>
                               {{ $t('dashboard.clear') || 'Limpiar' }}
@@ -507,7 +702,12 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getToday()"
+                                @click="
+                                  filterProps.getToday();
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.getToday();
+                                  }
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.today') }}
@@ -516,7 +716,12 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getCurrentMonth()"
+                                @click="
+                                  filterProps.getCurrentMonth();
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.getCurrentMonth();
+                                  }
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.thisMonth') }}
@@ -525,7 +730,12 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getLastMonth()"
+                                @click="
+                                  filterProps.getLastMonth();
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.getLastMonth();
+                                  }
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.lastMonth') }}
@@ -534,7 +744,12 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getLastThreeMonths()"
+                                @click="
+                                  filterProps.getLastThreeMonths();
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.getLastThreeMonths();
+                                  }
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.lastThreeMonths') }}
@@ -551,14 +766,29 @@ export default {
                             @update:startDate="
                               val => {
                                 filterProps.startDate = val;
+                                if (attentionsContentRef) {
+                                  attentionsContentRef.startDate = val;
+                                }
                               }
                             "
                             @update:endDate="
                               val => {
                                 filterProps.endDate = val;
+                                if (attentionsContentRef) {
+                                  attentionsContentRef.endDate = val;
+                                }
                               }
                             "
-                            @search="() => filterProps.refresh(1)"
+                            @search="
+                              () => {
+                                if (attentionsContentRef) {
+                                  attentionsContentRef.startDate = filterProps.startDate;
+                                  attentionsContentRef.endDate = filterProps.endDate;
+                                  attentionsContentRef.page = 1;
+                                  attentionsContentRef.refresh();
+                                }
+                              }
+                            "
                           />
                           <!-- Search input -->
                           <div class="mb-3">
@@ -572,6 +802,18 @@ export default {
                               @input="
                                 e => {
                                   filterProps.searchText = e.target.value;
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.searchText = e.target.value;
+                                  }
+                                }
+                              "
+                              @keyup.enter="
+                                () => {
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.searchText = filterProps.searchText;
+                                    attentionsContentRef.page = 1;
+                                    attentionsContentRef.refresh();
+                                  }
                                 }
                               "
                               :placeholder="$t('dashboard.search')"
@@ -590,8 +832,13 @@ export default {
                               :value="filterProps.queueId"
                               @change="
                                 e => {
-                                  filterProps.queueId = e.target.value;
-                                  filterProps.refresh(1);
+                                  const value = e.target.value || undefined;
+                                  filterProps.queueId = value;
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.queueId = value;
+                                    attentionsContentRef.page = 1;
+                                    attentionsContentRef.refresh();
+                                  }
                                 }
                               "
                             >
@@ -618,8 +865,13 @@ export default {
                               :value="filterProps.serviceId"
                               @change="
                                 e => {
-                                  filterProps.serviceId = e.target.value;
-                                  filterProps.refresh(1);
+                                  const value = e.target.value || undefined;
+                                  filterProps.serviceId = value;
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.serviceId = value;
+                                    attentionsContentRef.page = 1;
+                                    attentionsContentRef.refresh();
+                                  }
                                 }
                               "
                             >
@@ -642,43 +894,58 @@ export default {
                               <input
                                 type="radio"
                                 class="btn-check"
-                                :id="'early-since-att-' + Math.random()"
-                                :value="'EARLY'"
+                                :id="`attention-days-early-${attentionsFilterIdCounter}`"
+                                name="attention-days-since-filter"
+                                value="EARLY"
                                 :checked="filterProps.daysSinceType === 'EARLY'"
                                 @change="
                                   filterProps.daysSinceType = 'EARLY';
-                                  filterProps.refresh(1);
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.daysSinceType = 'EARLY';
+                                    attentionsContentRef.page = 1;
+                                    attentionsContentRef.refresh();
+                                  }
                                 "
                               />
-                              <label class="btn btn-sm" :for="'early-since-att-' + Math.random()">
+                              <label class="btn btn-sm" :for="`attention-days-early-${attentionsFilterIdCounter}`">
                                 <i class="bi bi-qr-code green-icon"></i>
                               </label>
                               <input
                                 type="radio"
                                 class="btn-check"
-                                :id="'medium-since-att-' + Math.random()"
-                                :value="'MEDIUM'"
+                                :id="`attention-days-medium-${attentionsFilterIdCounter}`"
+                                name="attention-days-since-filter"
+                                value="MEDIUM"
                                 :checked="filterProps.daysSinceType === 'MEDIUM'"
                                 @change="
                                   filterProps.daysSinceType = 'MEDIUM';
-                                  filterProps.refresh(1);
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.daysSinceType = 'MEDIUM';
+                                    attentionsContentRef.page = 1;
+                                    attentionsContentRef.refresh();
+                                  }
                                 "
                               />
-                              <label class="btn btn-sm" :for="'medium-since-att-' + Math.random()">
+                              <label class="btn btn-sm" :for="`attention-days-medium-${attentionsFilterIdCounter}`">
                                 <i class="bi bi-qr-code yellow-icon"></i>
                               </label>
                               <input
                                 type="radio"
                                 class="btn-check"
-                                :id="'late-since-att-' + Math.random()"
-                                :value="'LATE'"
+                                :id="`attention-days-late-${attentionsFilterIdCounter}`"
+                                name="attention-days-since-filter"
+                                value="LATE"
                                 :checked="filterProps.daysSinceType === 'LATE'"
                                 @change="
                                   filterProps.daysSinceType = 'LATE';
-                                  filterProps.refresh(1);
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.daysSinceType = 'LATE';
+                                    attentionsContentRef.page = 1;
+                                    attentionsContentRef.refresh();
+                                  }
                                 "
                               />
-                              <label class="btn btn-sm" :for="'late-since-att-' + Math.random()">
+                              <label class="btn btn-sm" :for="`attention-days-late-${attentionsFilterIdCounter}`">
                                 <i class="bi bi-qr-code red-icon"></i>
                               </label>
                               <i
@@ -696,43 +963,58 @@ export default {
                               <input
                                 type="radio"
                                 class="btn-check"
-                                :id="'interested-att-' + Math.random()"
-                                :value="'INTERESTED'"
+                                :id="`attention-contact-interested-${attentionsFilterIdCounter}`"
+                                name="attention-contact-result-filter"
+                                value="INTERESTED"
                                 :checked="filterProps.contactResultType === 'INTERESTED'"
                                 @change="
                                   filterProps.contactResultType = 'INTERESTED';
-                                  filterProps.refresh(1);
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.contactResultType = 'INTERESTED';
+                                    attentionsContentRef.page = 1;
+                                    attentionsContentRef.refresh();
+                                  }
                                 "
                               />
-                              <label class="btn btn-sm" :for="'interested-att-' + Math.random()">
+                              <label class="btn btn-sm" :for="`attention-contact-interested-${attentionsFilterIdCounter}`">
                                 <i class="bi bi-patch-check-fill green-icon"></i>
                               </label>
                               <input
                                 type="radio"
                                 class="btn-check"
-                                :id="'contact-later-att-' + Math.random()"
-                                :value="'CONTACT_LATER'"
+                                :id="`attention-contact-later-${attentionsFilterIdCounter}`"
+                                name="attention-contact-result-filter"
+                                value="CONTACT_LATER"
                                 :checked="filterProps.contactResultType === 'CONTACT_LATER'"
                                 @change="
                                   filterProps.contactResultType = 'CONTACT_LATER';
-                                  filterProps.refresh(1);
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.contactResultType = 'CONTACT_LATER';
+                                    attentionsContentRef.page = 1;
+                                    attentionsContentRef.refresh();
+                                  }
                                 "
                               />
-                              <label class="btn btn-sm" :for="'contact-later-att-' + Math.random()">
+                              <label class="btn btn-sm" :for="`attention-contact-later-${attentionsFilterIdCounter}`">
                                 <i class="bi bi-patch-check-fill yellow-icon"></i>
                               </label>
                               <input
                                 type="radio"
                                 class="btn-check"
-                                :id="'rejected-att-' + Math.random()"
-                                :value="'REJECTED'"
+                                :id="`attention-contact-rejected-${attentionsFilterIdCounter}`"
+                                name="attention-contact-result-filter"
+                                value="REJECTED"
                                 :checked="filterProps.contactResultType === 'REJECTED'"
                                 @change="
                                   filterProps.contactResultType = 'REJECTED';
-                                  filterProps.refresh(1);
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.contactResultType = 'REJECTED';
+                                    attentionsContentRef.page = 1;
+                                    attentionsContentRef.refresh();
+                                  }
                                 "
                               />
-                              <label class="btn btn-sm" :for="'rejected-att-' + Math.random()">
+                              <label class="btn btn-sm" :for="`attention-contact-rejected-${attentionsFilterIdCounter}`">
                                 <i class="bi bi-patch-check-fill red-icon"></i>
                               </label>
                               <i
@@ -747,13 +1029,21 @@ export default {
                               <input
                                 class="form-check-input"
                                 type="checkbox"
-                                :id="'contactable-att-' + Math.random()"
+                                :id="`attention-filter-contactable-${attentionsFilterIdCounter}`"
                                 :checked="filterProps.contactable === true"
-                                @change="filterProps.checkContactable($event)"
+                                @change="
+                                  const isChecked = $event.target.checked;
+                                  filterProps.contactable = isChecked ? true : false;
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.contactable = isChecked ? true : false;
+                                    attentionsContentRef.page = 1;
+                                    attentionsContentRef.refresh();
+                                  }
+                                "
                               />
                               <label
                                 class="form-check-label"
-                                :for="'contactable-att-' + Math.random()"
+                                :for="`attention-filter-contactable-${attentionsFilterIdCounter}`"
                               >
                                 {{ $t('dashboard.contactable') }}
                               </label>
@@ -762,13 +1052,21 @@ export default {
                               <input
                                 class="form-check-input"
                                 type="checkbox"
-                                :id="'contacted-att-' + Math.random()"
+                                :id="`attention-filter-contacted-${attentionsFilterIdCounter}`"
                                 :checked="filterProps.contacted === true"
-                                @change="filterProps.checkContacted($event)"
+                                @change="
+                                  const isChecked = $event.target.checked;
+                                  filterProps.contacted = isChecked ? true : false;
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.contacted = isChecked ? true : false;
+                                    attentionsContentRef.page = 1;
+                                    attentionsContentRef.refresh();
+                                  }
+                                "
                               />
                               <label
                                 class="form-check-label"
-                                :for="'contacted-att-' + Math.random()"
+                                :for="`attention-filter-contacted-${attentionsFilterIdCounter}`"
                               >
                                 {{ $t('dashboard.contacted') }}
                               </label>
@@ -777,11 +1075,22 @@ export default {
                               <input
                                 class="form-check-input"
                                 type="checkbox"
-                                :id="'stock-att-' + Math.random()"
+                                :id="`attention-filter-stock-${attentionsFilterIdCounter}`"
                                 :checked="filterProps.stock === true"
-                                @change="filterProps.checkStock($event)"
+                                @change="
+                                  const isChecked = $event.target.checked;
+                                  filterProps.stock = isChecked ? true : false;
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.stock = isChecked ? true : false;
+                                    attentionsContentRef.page = 1;
+                                    attentionsContentRef.refresh();
+                                  }
+                                "
                               />
-                              <label class="form-check-label" :for="'stock-att-' + Math.random()">
+                              <label
+                                class="form-check-label"
+                                :for="`attention-filter-stock-${attentionsFilterIdCounter}`"
+                              >
                                 {{ $t('dashboard.stock') }}
                               </label>
                             </div>
@@ -789,11 +1098,22 @@ export default {
                               <input
                                 class="form-check-input"
                                 type="checkbox"
-                                :id="'asc-att-' + Math.random()"
+                                :id="`attention-filter-asc-${attentionsFilterIdCounter}`"
                                 :checked="filterProps.asc === true"
-                                @change="filterProps.checkAsc($event)"
+                                @change="
+                                  const isChecked = $event.target.checked;
+                                  filterProps.asc = isChecked;
+                                  if (attentionsContentRef) {
+                                    attentionsContentRef.asc = isChecked;
+                                    attentionsContentRef.page = 1;
+                                    attentionsContentRef.refresh();
+                                  }
+                                "
                               />
-                              <label class="form-check-label" :for="'asc-att-' + Math.random()">
+                              <label
+                                class="form-check-label"
+                                :for="`attention-filter-asc-${attentionsFilterIdCounter}`"
+                              >
                                 {{ filterProps.asc ? $t('dashboard.asc') : $t('dashboard.desc') }}
                               </label>
                             </div>
@@ -802,7 +1122,36 @@ export default {
                           <div class="mb-3">
                             <button
                               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100"
-                              @click="filterProps.clear()"
+                              @click="
+                                // Clear filter instance
+                                filterProps.daysSinceType = undefined;
+                                filterProps.contactResultType = undefined;
+                                filterProps.contactable = undefined;
+                                filterProps.contacted = undefined;
+                                filterProps.stock = undefined;
+                                filterProps.asc = false;
+                                filterProps.searchText = undefined;
+                                filterProps.queueId = undefined;
+                                filterProps.serviceId = undefined;
+                                filterProps.startDate = undefined;
+                                filterProps.endDate = undefined;
+                                // Clear and refresh content instance
+                                if (attentionsContentRef) {
+                                  attentionsContentRef.daysSinceType = undefined;
+                                  attentionsContentRef.contactResultType = undefined;
+                                  attentionsContentRef.contactable = undefined;
+                                  attentionsContentRef.contacted = undefined;
+                                  attentionsContentRef.stock = undefined;
+                                  attentionsContentRef.asc = false;
+                                  attentionsContentRef.searchText = undefined;
+                                  attentionsContentRef.queueId = undefined;
+                                  attentionsContentRef.serviceId = undefined;
+                                  attentionsContentRef.startDate = undefined;
+                                  attentionsContentRef.endDate = undefined;
+                                  attentionsContentRef.page = 1;
+                                  attentionsContentRef.refresh();
+                                }
+                              "
                             >
                               <i class="bi bi-eraser-fill"></i>
                               {{ $t('dashboard.clear') || 'Limpiar' }}
@@ -859,6 +1208,7 @@ export default {
                   @quick-recharge="handleQuickRecharge"
                 ></InventoryDashboard>
                 <ProductsStockManagement
+                  ref="productsContentRef"
                   :show-product-stock-management="state.showProducts"
                   :toggles="state.toggles"
                   :commerce="commerce"
@@ -870,6 +1220,7 @@ export default {
                 >
                 </ProductsStockManagement>
                 <ProductsAttentionManagement
+                  ref="attentionsContentRef"
                   :show-product-stock-management="state.showAttentions"
                   :toggles="state.toggles"
                   :commerce="commerce"

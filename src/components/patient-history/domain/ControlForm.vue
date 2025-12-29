@@ -46,6 +46,11 @@ export default {
       showHistory: false,
     });
 
+    // Speech Recognition
+    const isListeningSpeech = ref(false);
+    const isSpeechSupported = ref(false);
+    let speechRecognition = null;
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
@@ -59,6 +64,10 @@ export default {
         if (!state.oldControl && cacheData.value) {
           state.newControl = cacheData.value;
         }
+
+        // Initialize Speech Recognition
+        initializeSpeechRecognition();
+
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -172,6 +181,51 @@ export default {
       loading.value = false;
     });
 
+    // Speech Recognition Functions
+    const initializeSpeechRecognition = () => {
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        isSpeechSupported.value = true;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        speechRecognition = new SpeechRecognition();
+        speechRecognition.continuous = true;
+        speechRecognition.interimResults = true;
+        speechRecognition.lang = 'pt-BR';
+
+        speechRecognition.onresult = event => {
+          let finalTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            }
+          }
+          if (finalTranscript) {
+            state.result = (state.result || '') + finalTranscript + ' ';
+          }
+        };
+
+        speechRecognition.onerror = event => {
+          console.error('Speech recognition error:', event.error);
+          isListeningSpeech.value = false;
+        };
+
+        speechRecognition.onend = () => {
+          isListeningSpeech.value = false;
+        };
+      }
+    };
+
+    const toggleSpeechRecognition = () => {
+      if (!speechRecognition) return;
+
+      if (isListeningSpeech.value) {
+        speechRecognition.stop();
+        isListeningSpeech.value = false;
+      } else {
+        speechRecognition.start();
+        isListeningSpeech.value = true;
+      }
+    };
+
     return {
       state,
       loading,
@@ -183,6 +237,10 @@ export default {
       addControl,
       showAdd,
       updateControl,
+      // Speech Recognition
+      isListeningSpeech,
+      isSpeechSupported,
+      toggleSpeechRecognition,
     };
   },
 };
@@ -283,6 +341,19 @@ export default {
                 <label class="form-label-modern" for="control-result">
                   <i class="bi bi-file-text me-1"></i>
                   {{ $t('businessPatientHistoryItemAdmin.comment') || 'Resultado/Comentário' }}
+                  <button
+                    v-if="isSpeechSupported && toggles['patient.history.edit']"
+                    type="button"
+                    class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
+                    :class="{ 'btn-danger': isListeningSpeech }"
+                    @click="toggleSpeechRecognition"
+                    :title="isListeningSpeech ? 'Parar gravação' : 'Iniciar gravação de voz'"
+                  >
+                    <i :class="isListeningSpeech ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
+                    <span class="ms-1 d-inline">{{
+                      isListeningSpeech ? 'Gravando...' : 'Voz'
+                    }}</span>
+                  </button>
                 </label>
                 <textarea
                   id="control-result"
@@ -560,12 +631,12 @@ export default {
 .btn-add-control {
   display: inline-flex;
   align-items: center;
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem;
   background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
   color: white;
   border: none;
   border-radius: 0.75rem;
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;

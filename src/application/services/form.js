@@ -20,3 +20,12 @@ export const getFormsByClientAndType = async (commerceId, clientId, type) =>
       await getHeaders()
     )
   ).data;
+
+export const markFormAsLoadedToProntuario = async (formId, userId) =>
+  (
+    await requestBackend.patch(
+      `/${entity}/${formId}/load-to-prontuario`,
+      { userId },
+      await getHeaders()
+    )
+  ).data;

@@ -255,6 +255,10 @@ export default {
             <a href="#conditionsModal" data-bs-toggle="modal" data-bs-target="#conditionsModal">
               {{ $t('clientNotifyData.accept.2') }}</a
             >
+            {{ $t('clientNotifyData.accept.3') }}
+            {{ $t('clientNotifyData.accept.4') }}
+            <strong>{{ $t('clientNotifyData.accept.5') }}</strong>
+            {{ $t('clientNotifyData.accept.6') }}
           </label>
         </div>
         <div class="mt-3" v-if="!confirmed">

@@ -90,12 +90,13 @@ export default {
 
       // 4. Análisis de NPS
       if (survey.nps !== undefined) {
+        const roundedNps = Math.round(survey.nps);
         if (survey.nps < 0) {
           recs.push({
             type: 'error',
             icon: 'bi-megaphone-fill',
             title: 'NPS Negativo',
-            message: `NPS: ${survey.nps > 0 ? '+' : ''}${survey.nps}`,
+            message: `NPS: ${roundedNps > 0 ? '+' : ''}${roundedNps}`,
             recommendation: 'Acción urgente: Contactar detractores y mejorar experiencia.',
             impact: 'Crítica',
             priority: 'critical',
@@ -105,7 +106,7 @@ export default {
             type: 'success',
             icon: 'bi-megaphone-fill',
             title: 'NPS Excelente',
-            message: `NPS: +${survey.nps} - Clientes muy satisfechos.`,
+            message: `NPS: +${roundedNps} - Clientes muy satisfechos.`,
             recommendation: 'Mantén el nivel de servicio y considera programas de lealtad.',
             impact: 'Media',
             priority: 'low',

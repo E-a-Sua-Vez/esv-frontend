@@ -3,6 +3,7 @@ import Popper from 'vue3-popper';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { getDate } from '../../../shared/utils/date';
 import Spinner from '../../common/Spinner.vue';
+import { ATTENTION_STATUS } from '../../../shared/constants';
 
 export default {
   name: 'AttentionDetailsCard',
@@ -11,6 +12,7 @@ export default {
     show: { type: Boolean, default: true },
     attention: { type: Object, default: undefined },
     detailsOpened: { type: Boolean, default: false },
+    packageColor: { type: Object, default: null },
   },
   data() {
     return {
@@ -18,9 +20,11 @@ export default {
       extendedEntity: false,
     };
   },
+  emits: ['open-modal'],
   methods: {
     showDetails() {
-      this.extendedEntity = !this.extendedEntity;
+      // Emit event to parent to open modal instead of expanding inline
+      this.$emit('open-modal', this.attention);
     },
     getDate(dateIn, timeZoneIn) {
       return getDate(dateIn, timeZoneIn);
@@ -39,6 +43,81 @@ export default {
       } else {
         return 'bi-qr-code red-icon';
       }
+    },
+    getCardTypeClass() {
+      const daysSince = this.attention?.daysSinceAttention || 0;
+      if (daysSince <= 90) return 'attention-card-success';
+      if (daysSince <= 180) return 'attention-card-warning';
+      return 'attention-card-error';
+    },
+    getStatusIconClass() {
+      const daysSince = this.attention?.daysSinceAttention || 0;
+      if (daysSince <= 90) return 'icon-success';
+      if (daysSince <= 180) return 'icon-warning';
+      return 'icon-error';
+    },
+    getStatusBadgeClass() {
+      if (!this.attention?.status) return 'badge-secondary';
+      const status = this.attention.status;
+      if (status === ATTENTION_STATUS.TERMINATED || status === ATTENTION_STATUS.RATED) {
+        return 'badge-success';
+      }
+      if (status === ATTENTION_STATUS.PENDING || status === ATTENTION_STATUS.PROCESSING) {
+        return 'badge-warning';
+      }
+      if (
+        status === ATTENTION_STATUS.CANCELLED ||
+        status === ATTENTION_STATUS.USER_CANCELLED ||
+        status === ATTENTION_STATUS.SKIPED
+      ) {
+        return 'badge-danger';
+      }
+      return 'badge-secondary';
+    },
+    getStatusText() {
+      if (!this.attention?.status) return 'N/I';
+      const status = this.attention.status;
+      const statusMap = {
+        [ATTENTION_STATUS.PENDING]: this.$t('dashboard.attentionStatus.pending') || 'Pendiente',
+        [ATTENTION_STATUS.PROCESSING]:
+          this.$t('dashboard.attentionStatus.processing') || 'En Proceso',
+        [ATTENTION_STATUS.TERMINATED]:
+          this.$t('dashboard.attentionStatus.terminated') || 'Terminado',
+        [ATTENTION_STATUS.CANCELLED]: this.$t('dashboard.attentionStatus.cancelled') || 'Cancelado',
+        [ATTENTION_STATUS.USER_CANCELLED]:
+          this.$t('dashboard.attentionStatus.userCancelled') || 'Cancelado por Usuario',
+        [ATTENTION_STATUS.RATED]: this.$t('dashboard.attentionStatus.rated') || 'Calificado',
+        [ATTENTION_STATUS.SKIPED]: this.$t('dashboard.attentionStatus.skiped') || 'Omitido',
+        [ATTENTION_STATUS.REACTIVATED]:
+          this.$t('dashboard.attentionStatus.reactivated') || 'Reactivado',
+      };
+      return statusMap[status] || status;
+    },
+    getStatusIcon() {
+      if (!this.attention?.status) return 'bi-question-circle';
+      const status = this.attention.status;
+      if (status === ATTENTION_STATUS.TERMINATED || status === ATTENTION_STATUS.RATED) {
+        return 'bi-check-circle-fill';
+      }
+      if (status === ATTENTION_STATUS.PENDING || status === ATTENTION_STATUS.PROCESSING) {
+        return 'bi-clock-fill';
+      }
+      if (
+        status === ATTENTION_STATUS.CANCELLED ||
+        status === ATTENTION_STATUS.USER_CANCELLED ||
+        status === ATTENTION_STATUS.SKIPED
+      ) {
+        return 'bi-x-circle-fill';
+      }
+      return 'bi-info-circle-fill';
+    },
+  },
+  computed: {
+    attentionFullName() {
+      if (!this.attention) return 'N/I';
+      const name = this.attention.userName?.trim() || '';
+      const lastName = this.attention.userLastName?.trim() || '';
+      return `${name} ${lastName}`.trim().toUpperCase() || 'N/I';
     },
   },
   watch: {
@@ -61,228 +140,122 @@ export default {
 </script>
 
 <template>
-  <div v-if="show">
-    <div class="row metric-card">
-      <div v-if="attention.servicesDetails" class="idNumber-title lefted">
-        <span
-          v-for="serv in attention.servicesDetails"
-          :key="serv.id"
-          class="badge service-badge bg-primary p-1"
-        >
-          {{ serv.name }}
-        </span>
-        <span v-if="attention.packageId" class="badge bg-secondary service-badge">
-          <i class="bi bi-box-fill"></i> <span> {{ attention.packageProcedureNumber }} </span>
-        </span>
-      </div>
-      <div class="col-6 card-client-title lefted fw-bold" v-if="attention && attention.userName">
-        {{ attention.userName?.trim().toUpperCase() || '' }}
-        {{ attention.userLastName?.trim().toUpperCase() || '' }}
-        <span v-if="attention.termsConditionsAcceptedCode">
-          <i class="bi bi-person-fill-check mx-1"></i>
-        </span>
-        <i v-if="attention.surveyId" class="bi bi-star-fill mx-1 yellow-icon"> </i>
-        <i
-          v-if="attention.paid !== undefined && attention.paid === true"
-          class="bi bi-coin mx-1 blue-icon"
-        >
-        </i>
-        <i v-if="attention.productCounter > 0" class="bi bi-eyedropper"> </i>
-      </div>
-      <div class="col-2 centered fw-bold">
-        <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)} mx-1`"></i>
-        {{ attention.daysSinceAttention || 0 }}
-      </div>
-      <div class="col-4 centered date-title">
-        {{ getDate(attention.createdDate) }}
-      </div>
-    </div>
-    <div class="details-arrow">
-      <div class="centered">
-        <span href="#" @click.prevent="showDetails()">
-          <span class="details-title">{{ $t('dashboard.details') }}</span>
-          <i class="dark" :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
-        </span>
-      </div>
-      <div :class="{ show: extendedEntity }" class="detailed-data transition-slow">
-        <div class="row m-0">
-          <div class="d-block col-12 col-md-6">
-            <div class="col-12 centered fw-bold">
-              <i class="bi bi-person-circle mx-1"></i> {{ attention.userName || 'N/I' }}
-              {{ attention.userLastName || '' }}
-              <a class="btn copy-icon" @click="copyAttention()">
+  <div v-if="show && attention">
+    <!-- Modernized Attention Row Card - Matching Booking Style -->
+    <div
+      class="attention-row-card"
+      :class="getCardTypeClass()"
+      :style="packageColor ? `border-left-color: ${packageColor.border} !important;` : ''"
+      @click.prevent="showDetails()"
+    >
+      <div class="attention-row-content">
+        <!-- Status Icon -->
+        <Popper :class="'dark'" arrow disable-click-away hover>
+          <template #content>
+            <div>
+              {{
+                $t('dashboard.clientCard.tooltip.status') ||
+                'Estado do atendimento baseado em dias desde última atenção'
+              }}
+            </div>
+          </template>
+          <div class="attention-icon-mini" :class="getStatusIconClass()" @click.stop>
+            <i class="bi bi-qr-code"></i>
+          </div>
+        </Popper>
+
+        <!-- Service Badges -->
+        <div v-if="attention.servicesDetails || attention.packageId" class="service-badges-inline">
+          <span
+            v-for="serv in attention.servicesDetails"
+            :key="serv.id"
+            class="badge-mini service-tag-mini"
+          >
+            {{ serv.name }}
+          </span>
+          <span v-if="attention.packageId" class="badge-mini service-tag-mini bg-secondary">
+            <i class="bi bi-box-fill"></i> {{ attention.packageProcedureNumber }}
+          </span>
+        </div>
+        <!-- Status Badge -->
+        <div v-if="attention && attention.status !== undefined" class="status-badge-wrapper">
+          <Popper
+            :key="`status-badge-${attention.attentionId || attention.id || Math.random()}`"
+            :class="'dark'"
+            arrow
+            disable-click-away
+            hover
+          >
+            <template #content>
+              <div>
+                {{
+                  $t('dashboard.clientCard.tooltip.attentionStatus') || 'Estado del atendimento'
+                }}:
+                {{ getStatusText() }}
+              </div>
+            </template>
+            <span class="badge-mini status-badge" :class="getStatusBadgeClass()" @click.stop>
+              <i :class="`bi ${getStatusIcon()}`"></i> {{ getStatusText() }}
+            </span>
+          </Popper>
+        </div>
+
+        <!-- Client Info - Horizontal -->
+        <div class="attention-info-inline">
+          <div class="attention-name-inline">
+            <span class="attention-name-text">{{ attentionFullName }}</span>
+            <Popper :class="'dark'" arrow disable-click-away hover>
+              <template #content>
+                <div>
+                  {{ $t('dashboard.clientCard.tooltip.copy') || 'Copiar dados do atendimento' }}
+                </div>
+              </template>
+              <button class="btn-copy-mini" @click.stop="copyAttention()">
                 <i class="bi bi-file-earmark-spreadsheet"></i>
-              </a>
-            </div>
-            <Spinner :show="loading"></Spinner>
+              </button>
+            </Popper>
           </div>
-          <div class="d-block d-md-none col-12 col-md-6">
-            <div class="centered">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'https://wa.me/' + attention.userPhone"
-                target="_blank"
-              >
-                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ attention.userPhone || 'N/I' }}
-              </a>
-            </div>
-            <div class="centered">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'mailto:' + attention.userEmail"
-                target="_blank"
-              >
-                <i class="bi bi-envelope mx-1"></i> {{ attention.userEmail || 'N/I' }}
-              </a>
-            </div>
-            <div class="centered">
-              <i class="bi bi-person-vcard mx-1"></i> {{ attention.userIdNumber || 'N/I' }}
-            </div>
-          </div>
-          <div class="d-none d-md-block col-12 col-md-6">
-            <div class="lefted">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'https://wa.me/' + attention.userPhone"
-                target="_blank"
-              >
-                <i class="bi bi-whatsapp mx-1 whatsapp-icon"></i> {{ attention.userPhone || 'N/I' }}
-              </a>
-            </div>
-            <div class="lefted">
-              <a
-                class="btn-block whatsapp-link"
-                :href="'mailto:' + attention.userEmail"
-                target="_blank"
-              >
-                <i class="bi bi-envelope mx-1"></i> {{ attention.userEmail || 'N/I' }}
-              </a>
-            </div>
-            <div class="lefted">
-              <i class="bi bi-person-vcard mx-1"></i> {{ attention.userIdNumber || 'N/I' }}
-            </div>
+          <div class="attention-meta-inline">
+            <Popper
+              v-if="attention.termsConditionsAcceptedCode"
+              :class="'dark'"
+              arrow
+              disable-click-away
+              hover
+            >
+              <template #content>
+                <div>Termos e condições aceitos</div>
+              </template>
+              <i class="bi bi-person-fill-check icon-mini-separated" @click.stop></i>
+            </Popper>
+            <i
+              v-if="attention.surveyId"
+              class="bi bi-star-fill icon-mini-separated yellow-icon"
+              @click.stop
+            ></i>
+            <i
+              v-if="attention.paid !== undefined && attention.paid === true"
+              class="bi bi-coin icon-mini-separated blue-icon"
+              @click.stop
+            ></i>
+            <i
+              v-if="attention.productCounter > 0"
+              class="bi bi-eyedropper icon-mini-separated"
+              @click.stop
+            ></i>
+            <span class="attention-days-inline" v-if="attention.daysSinceAttention !== undefined">
+              <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)}`"></i>
+              {{ attention.daysSinceAttention || 0 }}
+            </span>
           </div>
         </div>
-        <div class="row m-1 centered">
-          <div class="col">
-            <div class="" v-if="attention.paid !== undefined && attention.paid === true">
-              <div class="mb-2">
-                <i class="bi bi-check-circle-fill mx-1"> </i>
-                <span class="mb-1">{{ $t('collaboratorBookingsView.paymentData') }}</span>
-              </div>
-              <div v-if="attention.paid">
-                <span v-if="attention.paymentType" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title">
-                    {{ $t('paymentData.paymentType') }}
-                  </span>
-                  {{ $t(`paymentTypes.${attention.paymentType}`) }}</span
-                >
-                <span v-if="attention.paymentMethod" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title">
-                    {{ $t('paymentData.paymentMethod') }}
-                  </span>
-                  {{ $t(`paymentClientMethods.${attention.paymentMethod}`) }}</span
-                >
-                <span
-                  v-if="attention.paymentAmount"
-                  class="badge mx-1 detail-data-badge bg-warning"
-                >
-                  <span class="fw-bold detail-data-badge-title">
-                    {{ $t('paymentData.paymentAmount') }}
-                  </span>
-                  <i class="bi bi-coin mx-1"> </i> {{ attention.paymentAmount }}</span
-                >
-                <span v-if="attention.paymentCommission" class="badge mx-1 detail-data-badge">
-                  <span class="fw-bold detail-data-badge-title">
-                    {{ $t('paymentData.paymentCommission') }}
-                  </span>
-                  <i class="bi bi-coin mx-1"> </i> {{ attention.paymentCommission }}</span
-                >
-                <span
-                  v-if="attention.packageId && attention.packageName"
-                  class="badge mx-1 detail-data-badge"
-                >
-                  <span class="fw-bold detail-data-badge-title">
-                    {{ $t('paymentData.package') }}
-                  </span>
-                  {{ attention.packageName }}
-                  <span class="badge mx-1 bg-secondary"
-                    >{{ attention.packageProcedureNumber }} /
-                    {{ attention.packageProceduresTotalNumber }}</span
-                  >
-                  <i class="bi bi-check-circle-fill green-icon" v-if="attention.packagePaid"> </i>
-                </span>
-              </div>
-              <hr />
-            </div>
-            <div v-if="attention.rating || attention.nps">
-              <div class="mb-2">
-                <i class="bi bi-star-fill mx-1"> </i>
-                <span class="mb-1">{{ $t('dashboard.surveyData') }}</span>
-              </div>
-              <span class="badge mx-1 detail-data-badge">
-                CSAT <i class="bi bi-star-fill yellow-icon"></i> {{ attention.rating || 'N/I' }}
-              </span>
-              <span class="badge mx-1 detail-data-badge">
-                NPS <i class="bi bi-emoji-smile-fill blue-icon"></i> {{ attention.nps || 'N/I' }}
-              </span>
-            </div>
-            <div class="mt-2">
-              <div class="mb-2">
-                <i class="bi bi-qr-code mx-1"> </i>
-                <span class="mb-1">{{ $t('dashboard.attData') }}</span>
-              </div>
-              <span v-if="attention.queueName" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title">
-                  {{ $t('dashboard.queueData') }}
-                </span>
-                {{ attention.queueName }}</span
-              >
-              <span v-if="attention.collaboratorName" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title">
-                  {{ $t('dashboard.userData') }}
-                </span>
-                <i class="bi bi-person-fill"> </i> {{ attention.collaboratorName }}</span
-              >
-              <span
-                v-if="attention.commerceName && attention.commerceTag"
-                class="badge mx-1 detail-data-badge"
-              >
-                <span class="fw-bold detail-data-badge-title">
-                  {{ $t('dashboard.commerceData') }}
-                </span>
-                {{ attention.commerceName }} - {{ attention.commerceTag }}</span
-              >
-              <span v-if="attention.servicesDetails" class="badge mx-1 detail-data-badge">
-                <span class="fw-bold detail-data-badge-title">
-                  {{ $t('paymentData.service') }}
-                </span>
-                <span
-                  v-for="serv in attention.servicesDetails"
-                  :key="serv.id"
-                  class="badge bg-primary mx-1"
-                >
-                  {{ serv.name }}
-                </span>
-              </span>
-              <span
-                v-if="attention.termsConditionsToAcceptedAt"
-                class="badge mx-1 detail-data-badge"
-              >
-                <span class="fw-bold detail-data-badge-title">
-                  {{ $t('paymentData.termsAccepted') }}
-                </span>
-                <span> {{ getDate(attention.termsConditionsToAcceptedAt) }} </span>
-              </span>
-              <br /><br />
-              <span class="metric-card-details mx-1"
-                ><strong>Id:</strong> {{ attention.attentionId }}</span
-              >
-              <span class="metric-card-details"
-                ><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span
-              >
-            </div>
-          </div>
+
+        <!-- Collapse Icon -->
+        <div class="collapse-icon-wrapper">
+          <i
+            class="bi collapse-icon"
+            :class="extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'"
+          ></i>
         </div>
       </div>
     </div>
@@ -290,43 +263,280 @@ export default {
 </template>
 
 <style scoped>
-.metric-card {
-  background-color: var(--color-background);
-  padding: 0.1rem;
-  margin: 0.5rem;
-  margin-bottom: 0;
-  border-radius: 0.5rem;
-  border: 1px solid var(--gris-default);
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  border-bottom: 0;
-  line-height: 1.6rem;
+/* Modernized Attention Row Card - Matching Booking Style */
+.attention-row-card {
+  background-color: #ffffff;
+  padding: 0.15rem 0.35rem;
+  margin: 0.25rem 0;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
-.show {
-  padding: 10px;
-  max-height: 400px !important;
-  overflow-y: auto;
+
+.attention-row-card:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  border-color: rgba(0, 194, 203, 0.2);
 }
-.details-title {
-  text-decoration: underline;
-  font-size: 0.7rem;
-  color: var(--color-text);
+
+.attention-card-success {
+  border-left: 3px solid #10b981;
 }
-.metric-card-title {
-  margin: 0.2rem;
-  font-size: 0.8rem;
-  font-weight: 500;
+
+.attention-card-warning {
+  border-left: 3px solid #f59e0b;
 }
-.metric-card-detail-title {
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 0.7rem;
+
+.attention-card-error {
+  border-left: 3px solid #ef4444;
 }
-.checked-icon {
+
+/* Package attention border override */
+.attention-row-card[style*='border-left-color'] {
+  border-left-width: 4px !important;
+}
+
+.attention-card-info {
+  border-left: 3px solid var(--azul-turno);
+}
+
+.attention-row-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.attention-icon-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+}
+
+.attention-icon-mini.icon-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.attention-icon-mini.icon-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.attention-icon-mini.icon-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.attention-icon-mini.icon-info {
+  background: rgba(0, 194, 203, 0.1);
   color: var(--azul-turno);
 }
+
+.service-badges-inline {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.badge-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 0.35rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.badge-mini.bg-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+}
+
+.service-tag-mini {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
+}
+
+.status-badge-wrapper {
+  display: flex;
+  align-items: center;
+  margin-left: 0.25rem;
+  flex-shrink: 0;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 0.35rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge.badge-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+}
+
+.status-badge.badge-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+}
+
+.status-badge.badge-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+}
+
+.status-badge.badge-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: #ffffff;
+}
+
+.attention-info-inline {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.attention-name-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.attention-name-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.btn-copy-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6c757d;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+}
+
+.btn-copy-mini:hover {
+  background: rgba(0, 194, 203, 0.08);
+  border-color: var(--azul-turno);
+  color: var(--azul-turno);
+}
+
+.attention-meta-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.attention-days-inline {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--azul-turno);
+  padding: 0.15rem 0.4rem;
+  background: rgba(0, 194, 203, 0.08);
+  border-radius: 0.3rem;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.icon-mini-separated {
+  font-size: 0.75rem;
+  color: #6c757d;
+  opacity: 0.8;
+}
+
+.icon-mini-separated.blue-icon {
+  color: var(--azul-turno);
+}
+
+.collapse-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.collapse-icon {
+  font-size: 0.75rem;
+  color: #6c757d;
+  transition: transform 0.2s ease;
+}
+
+.attention-details-expanded {
+  background-color: transparent;
+  border-radius: 0;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.show {
+  padding: 0;
+  max-height: none !important;
+  overflow-y: visible;
+}
+
+.detailed-data {
+  padding: 0.75rem 0;
+  margin-bottom: 0.75rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(169, 169, 169, 0.15);
+  border-radius: 8px;
+  padding: 0.875rem;
+}
+
 .metric-card-details {
   font-size: 0.7rem;
   font-weight: 400;
+}
+
+.yellow-icon {
+  color: var(--amarillo-star);
+}
+
+.blue-icon {
+  color: var(--azul-turno);
+}
+
+.green-icon {
+  color: var(--verde-tu);
+}
+
+.red-icon {
+  color: var(--rojo-warning);
 }
 </style>

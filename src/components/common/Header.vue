@@ -75,6 +75,7 @@ export default {
       messages: [],
       manageSubMenuOption: false,
       manageControlSubMenuOption: false,
+      medicalManagementSubMenuOption: false,
     });
 
     // Computed properties to determine if selectors should be shown (based on store state)
@@ -619,10 +620,12 @@ export default {
           'booking-manage',
           'control-admin',
           'manage-admin',
+          'medical-management',
           'configuration',
           'documents',
           'your-plan',
           'business-resume',
+          'go-minisite',
         ];
       } else if (userType === USER_TYPES.COLLABORATOR) {
         return ['queue-manage', 'booking-manage', 'tracing', 'product-stock', 'dashboard'];
@@ -652,7 +655,6 @@ export default {
           'outcome-types-admin',
           'company-admin',
           'forms-admin',
-          'patient-history-item-admin',
           'permissions-admin',
         ];
       }
@@ -666,6 +668,26 @@ export default {
       return [];
     };
 
+    const getMedicalManagementSubMenuOptions = () => {
+      if (state.currentUserType === USER_TYPES.BUSINESS) {
+        return [
+          'patient-history-item-admin',
+          'medications-admin',
+          'medical-exams-admin',
+          'medical-templates-admin',
+          'pdf-templates-admin',
+          'audit-log',
+        ];
+      }
+      return [];
+    };
+
+    const getBusinessLink = () => {
+      const businessKeyName = state.currentBusiness?.keyName;
+      if (!businessKeyName) return '#';
+      return `${import.meta.env.VITE_URL}/interno/negocio/${businessKeyName}`;
+    };
+
     // Navigate to menu option - matching exact logic from BusinessMenu.goToOption
     const navigateToMenuOption = async (option, closeMenu = true) => {
       try {
@@ -677,12 +699,29 @@ export default {
           if (option === 'manage-admin') {
             state.manageSubMenuOption = !state.manageSubMenuOption;
             state.manageControlSubMenuOption = false;
+            state.medicalManagementSubMenuOption = false;
             // Don't close menu when toggling submenu
             return;
           } else if (option === 'control-admin') {
             state.manageControlSubMenuOption = !state.manageControlSubMenuOption;
             state.manageSubMenuOption = false;
+            state.medicalManagementSubMenuOption = false;
             // Don't close menu when toggling submenu
+            return;
+          } else if (option === 'medical-management') {
+            state.medicalManagementSubMenuOption = !state.medicalManagementSubMenuOption;
+            state.manageSubMenuOption = false;
+            state.manageControlSubMenuOption = false;
+            // Don't close menu when toggling submenu
+            return;
+          } else if (option === 'go-minisite') {
+            // Special handling for go-minisite - it's a link, not a route
+            window.open(getBusinessLink(), '_blank');
+            // Close menus if requested
+            if (closeMenu) {
+              closeMobileMenu();
+              closeDesktopMenu();
+            }
             return;
           } else {
             router.push({ path: `/interno/negocio/${option}` });
@@ -745,6 +784,8 @@ export default {
       getMenuTranslationKey,
       getManageSubMenuOptions,
       getControlSubMenuOptions,
+      getMedicalManagementSubMenuOptions,
+      getBusinessLink,
       handleCommerceChanged,
       handleModuleChanged,
       desktopCommerceSelectorRef,
@@ -786,6 +827,7 @@ export default {
               v-if="
                 state.currentUser &&
                 state.currentUser.name !== 'invitado' &&
+                state.currentUserType !== USER_TYPES.INVITED &&
                 (state.currentUserType === USER_TYPES.COLLABORATOR ||
                   state.currentUserType === USER_TYPES.BUSINESS ||
                   state.currentUserType === USER_TYPES.MASTER) &&
@@ -841,15 +883,28 @@ export default {
             </div>
           </div>
           <div
-            v-else-if="!isPublicCommerceQueueRoute()"
+            v-else-if="
+              !isPublicCommerceQueueRoute() &&
+              state.currentUserType !== USER_TYPES.INVITED &&
+              state.currentUser?.name !== 'invitado'
+            "
             class="navbar-user-section d-none d-lg-flex"
           >
-            <Spinner :show="!loading" :ligth="true"></Spinner>
+            <Spinner :show="loading" :ligth="true"></Spinner>
           </div>
 
           <!-- Mobile Menu Button -->
           <button
-            v-if="!loading && !isPublicCommerceQueueRoute()"
+            v-if="
+              !loading &&
+              !isPublicCommerceQueueRoute() &&
+              state.currentUser &&
+              state.currentUser.name !== 'invitado' &&
+              state.currentUserType !== USER_TYPES.INVITED &&
+              (state.currentUserType === USER_TYPES.COLLABORATOR ||
+                state.currentUserType === USER_TYPES.BUSINESS ||
+                state.currentUserType === USER_TYPES.MASTER)
+            "
             class="mobile-menu-toggle d-lg-none"
             @click="toggleMobileMenu"
             :aria-expanded="mobileMenuOpen"
@@ -861,8 +916,15 @@ export default {
               <span></span>
             </span>
           </button>
-          <div v-else-if="!isPublicCommerceQueueRoute()" class="d-lg-none">
-            <Spinner :show="!loading" :ligth="true"></Spinner>
+          <div
+            v-else-if="
+              !isPublicCommerceQueueRoute() &&
+              state.currentUserType !== USER_TYPES.INVITED &&
+              state.currentUser?.name !== 'invitado'
+            "
+            class="d-lg-none"
+          >
+            <Spinner :show="loading" :ligth="true"></Spinner>
           </div>
           <!-- Language Selector for Public Routes (Mobile) -->
           <div v-if="isPublicCommerceQueueRoute()" class="d-lg-none">
@@ -975,6 +1037,7 @@ export default {
             v-if="
               state.currentUser &&
               state.currentUser.name !== 'invitado' &&
+              state.currentUserType !== USER_TYPES.INVITED &&
               (state.currentUserType === USER_TYPES.COLLABORATOR ||
                 state.currentUserType === USER_TYPES.BUSINESS ||
                 state.currentUserType === USER_TYPES.MASTER)
@@ -1004,6 +1067,7 @@ export default {
             v-if="
               state.currentUser &&
               state.currentUser.name !== 'invitado' &&
+              state.currentUserType !== USER_TYPES.INVITED &&
               (state.currentUserType === USER_TYPES.COLLABORATOR ||
                 state.currentUserType === USER_TYPES.BUSINESS ||
                 state.currentUserType === USER_TYPES.MASTER)
@@ -1020,7 +1084,19 @@ export default {
                 class="d-grid btn-group btn-group-justified desktop-button-wrapper"
               >
                 <div class="centered">
+                  <a
+                    v-if="option === 'go-minisite'"
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
+                    :href="getBusinessLink()"
+                    target="_blank"
+                    @click="closeDesktopMenu"
+                  >
+                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                    <i class="bi bi-box-arrow-up-right"></i>
+                  </a>
                   <button
+                    v-else
                     type="button"
                     class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style desktop-menu-btn"
                     @click="navigateToMenuOption(option, true)"
@@ -1036,6 +1112,14 @@ export default {
                       v-if="option === 'control-admin'"
                       :class="`bi ${
                         state.manageControlSubMenuOption === true
+                          ? 'bi-chevron-up'
+                          : 'bi-chevron-down'
+                      }`"
+                    ></i>
+                    <i
+                      v-if="option === 'medical-management'"
+                      :class="`bi ${
+                        state.medicalManagementSubMenuOption === true
                           ? 'bi-chevron-up'
                           : 'bi-chevron-down'
                       }`"
@@ -1087,6 +1171,32 @@ export default {
                       </button>
                     </div>
                   </div>
+                  <!-- Medical Management Submenu -->
+                  <div
+                    v-if="
+                      option === 'medical-management' &&
+                      state.medicalManagementSubMenuOption === true
+                    "
+                    class="desktop-submenu-container"
+                  >
+                    <div
+                      v-for="subOption in getMedicalManagementSubMenuOptions()"
+                      :key="subOption"
+                      class="desktop-submenu-item"
+                    >
+                      <button
+                        type="button"
+                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
+                        @click="
+                          navigateToMenuOption(subOption);
+                          closeDesktopMenu();
+                        "
+                      >
+                        {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
+                        <i class="bi bi-chevron-right"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1097,6 +1207,7 @@ export default {
             v-if="
               state.currentUser &&
               state.currentUser.name !== 'invitado' &&
+              state.currentUserType !== USER_TYPES.INVITED &&
               (state.currentUserType === USER_TYPES.COLLABORATOR ||
                 state.currentUserType === USER_TYPES.BUSINESS ||
                 state.currentUserType === USER_TYPES.MASTER)
@@ -1114,6 +1225,7 @@ export default {
             v-if="
               state.currentUser &&
               state.currentUser.name !== 'invitado' &&
+              state.currentUserType !== USER_TYPES.INVITED &&
               (state.currentUserType === USER_TYPES.COLLABORATOR ||
                 state.currentUserType === USER_TYPES.BUSINESS ||
                 state.currentUserType === USER_TYPES.MASTER)
@@ -1236,6 +1348,7 @@ export default {
             v-if="
               state.currentUser &&
               state.currentUser.name !== 'invitado' &&
+              state.currentUserType !== USER_TYPES.INVITED &&
               (state.currentUserType === USER_TYPES.COLLABORATOR ||
                 state.currentUserType === USER_TYPES.BUSINESS ||
                 state.currentUserType === USER_TYPES.MASTER)
@@ -1265,6 +1378,7 @@ export default {
             v-if="
               state.currentUser &&
               state.currentUser.name !== 'invitado' &&
+              state.currentUserType !== USER_TYPES.INVITED &&
               (state.currentUserType === USER_TYPES.COLLABORATOR ||
                 state.currentUserType === USER_TYPES.BUSINESS ||
                 state.currentUserType === USER_TYPES.MASTER)
@@ -1280,7 +1394,19 @@ export default {
                 :key="option"
                 class="d-grid btn-group btn-group-justified mobile-button-wrapper"
               >
-                <div>
+                <div v-if="option === 'go-minisite'" class="centered">
+                  <a
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
+                    :href="getBusinessLink()"
+                    target="_blank"
+                    @click="closeMobileMenu"
+                  >
+                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                    <i class="bi bi-box-arrow-up-right"></i>
+                  </a>
+                </div>
+                <div v-else>
                   <button
                     type="button"
                     class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-1 btn-style mobile-menu-btn"
@@ -1297,6 +1423,14 @@ export default {
                       v-if="option === 'control-admin'"
                       :class="`bi ${
                         state.manageControlSubMenuOption === true
+                          ? 'bi-chevron-up'
+                          : 'bi-chevron-down'
+                      }`"
+                    ></i>
+                    <i
+                      v-if="option === 'medical-management'"
+                      :class="`bi ${
+                        state.medicalManagementSubMenuOption === true
                           ? 'bi-chevron-up'
                           : 'bi-chevron-down'
                       }`"
@@ -1342,6 +1476,29 @@ export default {
                       </button>
                     </div>
                   </div>
+                  <!-- Medical Management Submenu -->
+                  <div
+                    v-if="
+                      option === 'medical-management' &&
+                      state.medicalManagementSubMenuOption === true
+                    "
+                    class="mobile-submenu-container"
+                  >
+                    <div
+                      v-for="subOption in getMedicalManagementSubMenuOptions()"
+                      :key="subOption"
+                      class="mobile-submenu-item"
+                    >
+                      <button
+                        type="button"
+                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-0 mb-1 btn-style mobile-menu-btn mobile-submenu-btn"
+                        @click="navigateToMenuOption(subOption)"
+                      >
+                        {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
+                        <i class="bi bi-chevron-right"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1352,6 +1509,7 @@ export default {
             v-if="
               state.currentUser &&
               state.currentUser.name !== 'invitado' &&
+              state.currentUserType !== USER_TYPES.INVITED &&
               (state.currentUserType === USER_TYPES.COLLABORATOR ||
                 state.currentUserType === USER_TYPES.BUSINESS ||
                 state.currentUserType === USER_TYPES.MASTER)
@@ -1369,6 +1527,7 @@ export default {
             v-if="
               state.currentUser &&
               state.currentUser.name !== 'invitado' &&
+              state.currentUserType !== USER_TYPES.INVITED &&
               (state.currentUserType === USER_TYPES.COLLABORATOR ||
                 state.currentUserType === USER_TYPES.BUSINESS ||
                 state.currentUserType === USER_TYPES.MASTER)

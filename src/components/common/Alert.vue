@@ -8,6 +8,7 @@ export default {
     show: { type: Boolean, default: false },
     content: { type: String, default: 'por favor reintenta.' },
     stack: { type: [String, Number] },
+    errorMessage: { type: String, default: '' },
   },
   data() {
     return {
@@ -72,7 +73,9 @@ export default {
     role="alert"
   >
     <div v-if="!reportedError">
-      <strong>{{ messageTitle }} </strong> {{ messageDetail }}
+      <strong>{{ messageTitle }} </strong>
+      <span v-if="errorMessage">{{ errorMessage }}</span>
+      <span v-else>{{ messageDetail }}</span>
       <a v-if="!reportedError" class="alert-link" @click="reportError()">
         {{ $t('alert.action') }}</a
       >

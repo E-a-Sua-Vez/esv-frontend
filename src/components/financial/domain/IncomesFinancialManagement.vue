@@ -74,6 +74,10 @@ export default {
       fiscalNote: undefined,
       automatic: undefined,
       incomeTypes: [],
+      minAmount: undefined,
+      maxAmount: undefined,
+      incomeTypeFilter: undefined,
+      paymentMethodFilter: undefined,
     };
   },
   async beforeMount() {
@@ -96,6 +100,10 @@ export default {
       this.incomeStatus = undefined;
       this.fiscalNote = undefined;
       this.automatic = undefined;
+      this.minAmount = undefined;
+      this.maxAmount = undefined;
+      this.incomeTypeFilter = undefined;
+      this.paymentMethodFilter = undefined;
       await this.refresh();
     },
     async checkAsc(event) {
@@ -126,7 +134,7 @@ export default {
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
-        this.financialIncomes = await getIncomesDetails(
+        let incomes = await getIncomesDetails(
           this.business.id,
           this.commerce.id,
           this.startDate,
@@ -140,6 +148,31 @@ export default {
           this.fiscalNote,
           this.automatic
         );
+
+        // Apply client-side filters
+        if (incomes && incomes.length > 0) {
+          // Filter by amount range
+          if (this.minAmount !== undefined && this.minAmount !== null && this.minAmount !== '') {
+            incomes = incomes.filter(
+              income => parseFloat(income.amount || 0) >= parseFloat(this.minAmount)
+            );
+          }
+          if (this.maxAmount !== undefined && this.maxAmount !== null && this.maxAmount !== '') {
+            incomes = incomes.filter(
+              income => parseFloat(income.amount || 0) <= parseFloat(this.maxAmount)
+            );
+          }
+          // Filter by income type
+          if (this.incomeTypeFilter !== undefined && this.incomeTypeFilter !== null) {
+            incomes = incomes.filter(income => income.type === this.incomeTypeFilter);
+          }
+          // Filter by payment method
+          if (this.paymentMethodFilter !== undefined && this.paymentMethodFilter !== null) {
+            incomes = incomes.filter(income => income.paymentMethod === this.paymentMethodFilter);
+          }
+        }
+
+        this.financialIncomes = incomes;
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
@@ -607,6 +640,82 @@ export default {
                             asc ? $t('dashboard.asc') : $t('dashboard.desc')
                           }}</label>
                         </div>
+                      </div>
+                    </div>
+                    <!-- Additional Filters -->
+                    <div class="row mt-2">
+                      <div class="col-12">
+                        <label class="form-label metric-card-subtitle fw-bold">
+                          {{ $t('businessFinancial.filters.amountRange') }}
+                        </label>
+                      </div>
+                      <div class="col-5">
+                        <input
+                          type="number"
+                          class="form-control metric-controls"
+                          v-model="minAmount"
+                          :placeholder="$t('businessFinancial.filters.minAmount')"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                      <div class="col-5">
+                        <input
+                          type="number"
+                          class="form-control metric-controls"
+                          v-model="maxAmount"
+                          :placeholder="$t('businessFinancial.filters.maxAmount')"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                      <div class="col-2">
+                        <button
+                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                          @click="refresh()"
+                        >
+                          <span><i class="bi bi-search"></i></span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="row mt-2">
+                      <div class="col-6">
+                        <label class="form-label metric-card-subtitle fw-bold">
+                          {{ $t('businessFinancial.filters.incomeType') }}
+                        </label>
+                        <select
+                          class="form-control metric-controls"
+                          v-model="incomeTypeFilter"
+                          @change="refresh()"
+                        >
+                          <option :value="undefined">
+                            {{ $t('businessFinancial.filters.all') }}
+                          </option>
+                          <option v-for="type in incomeTypes" :key="type.value" :value="type.value">
+                            {{ $t(`incomeTypes.${type.value}`) }}
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label metric-card-subtitle fw-bold">
+                          {{ $t('businessFinancial.filters.paymentMethod') }}
+                        </label>
+                        <select
+                          class="form-control metric-controls"
+                          v-model="paymentMethodFilter"
+                          @change="refresh()"
+                        >
+                          <option :value="undefined">
+                            {{ $t('businessFinancial.filters.all') }}
+                          </option>
+                          <option value="CASH">{{ $t('paymentClientMethods.CASH') }}</option>
+                          <option value="CARD">{{ $t('paymentClientMethods.CARD') }}</option>
+                          <option value="TRANSFER">
+                            {{ $t('paymentClientMethods.TRANSFER') }}
+                          </option>
+                          <option value="CHECK">{{ $t('paymentClientMethods.CHECK') }}</option>
+                          <option value="OTHER">{{ $t('paymentClientMethods.OTHER') }}</option>
+                        </select>
                       </div>
                     </div>
                   </div>

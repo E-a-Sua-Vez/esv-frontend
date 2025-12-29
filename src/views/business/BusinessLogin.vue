@@ -1,5 +1,5 @@
 <script>
-import { onBeforeMount } from 'vue';
+import { onBeforeMount, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores/index';
 import Message from '../../components/common/Message.vue';
@@ -9,16 +9,46 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 export default {
   name: 'BusinessLogin',
   components: { Login, CommerceLogo, Message },
-  async setup() {
+  setup() {
+    // Get router and store - they should be available in setup
     const router = useRouter();
-    const store = globalStore();
+    let store = null;
+
+    // Try to get store - will retry in onBeforeMount if needed
+    try {
+      store = globalStore();
+    } catch (error) {
+      // Store will be retried in onBeforeMount
+      // This can happen if component mounts before Pinia is fully initialized
+    }
 
     onBeforeMount(async () => {
-      await store.resetSession();
+      // Wait for next tick to ensure Pinia is fully initialized
+      await nextTick();
+
+      try {
+        // Retry getting store if it wasn't available before
+        if (!store) {
+          store = globalStore();
+        }
+
+        if (store) {
+          await store.resetSession();
+        }
+      } catch (error) {
+        // Silently fail - this is not critical for component functionality
+        // The component can still work without resetting the session
+      }
     });
 
     const goSite = () => {
-      router.push('/');
+      router.push('/').catch(err => {
+        // Ignore navigation errors (e.g., navigating to same route)
+        if (err.name !== 'NavigationDuplicated') {
+          // Only log if it's a real error
+          console.debug('[BusinessLogin] Navigation error:', err);
+        }
+      });
     };
 
     const bussinesUrl = '/interno/negocio/menu';

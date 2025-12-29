@@ -6,11 +6,17 @@ export default {
     contentColumnSize: { type: String, default: 'col-lg-9' },
     showFilters: { type: Boolean, default: true },
     filtersSticky: { type: Boolean, default: true },
+    initialCollapsed: { type: Boolean, default: false },
   },
   data() {
     return {
-      filtersCollapsed: false,
+      filtersCollapsed: this.initialCollapsed,
     };
+  },
+  watch: {
+    initialCollapsed(newVal) {
+      this.filtersCollapsed = newVal;
+    },
   },
   methods: {
     onFiltersToggle(collapsed) {

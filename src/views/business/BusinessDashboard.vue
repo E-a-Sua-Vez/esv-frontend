@@ -15,6 +15,7 @@ import Alert from '../../components/common/Alert.vue';
 import DashboardIndicators from '../../components/dashboard/DashboardIndicators.vue';
 import DashboardGraphs from '../../components/dashboard/DashboardGraphs.vue';
 import DashboardSurveys from '../../components/dashboard/DashboardSurveys.vue';
+import DashboardPackageMetrics from '../../components/dashboard/domain/DashboardPackageMetrics.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import { DateModel } from '../../shared/utils/date.model';
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
@@ -36,6 +37,7 @@ export default {
     DashboardIndicators,
     DashboardGraphs,
     DashboardSurveys,
+    DashboardPackageMetrics,
     ComponentMenu,
     DesktopContentLayout,
     DesktopFiltersPanel,
@@ -105,6 +107,7 @@ export default {
       showIndicators: true,
       showGraphs: false,
       showSurveyResults: false,
+      showPackageMetrics: false,
       calculatedMetrics: {
         'attention.created': attentionCreated,
         'survey.created': surveyCreated,
@@ -412,6 +415,7 @@ export default {
       state.showIndicators = true;
       state.showGraphs = false;
       state.showSurveyResults = false;
+      state.showPackageMetrics = false;
     };
 
     const showGraphs = () => {
@@ -424,6 +428,14 @@ export default {
       state.showIndicators = false;
       state.showGraphs = false;
       state.showSurveyResults = true;
+      state.showPackageMetrics = false;
+    };
+
+    const showPackageMetrics = () => {
+      state.showIndicators = false;
+      state.showGraphs = false;
+      state.showSurveyResults = false;
+      state.showPackageMetrics = true;
     };
 
     const surveyLabel = label => {
@@ -914,6 +926,7 @@ export default {
       showIndicators,
       showSurvey,
       showGraphs,
+      showPackageMetrics,
       getCurrentMonth,
       getLastMonth,
       getLastThreeMonths,
@@ -1034,6 +1047,9 @@ export default {
                 <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
                 <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
                 <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
+                <span v-else-if="state.showPackageMetrics">{{
+                  $t('package.metrics.title') || 'Métricas de Paquetes'
+                }}</span>
               </div>
               <div id="sub-title" class="metric-subtitle">
                 ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
@@ -1067,7 +1083,7 @@ export default {
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showSurveyResults ? 'btn-selected' : ''"
                     @click="showSurvey()"
-                    :disabled="!state.toggles['dashboard.surveys.view']"
+                    :disabled="false"
                   >
                     {{ $t('dashboard.surveys') }} <br />
                     <i class="bi bi-patch-question-fill"></i>
@@ -1269,6 +1285,9 @@ export default {
                     <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
                     <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
                     <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
+                    <span v-else-if="state.showPackageMetrics">{{
+                      $t('package.metrics.title') || 'Métricas de Paquetes'
+                    }}</span>
                   </div>
                   <div id="sub-title" class="metric-subtitle">
                     ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
@@ -1302,7 +1321,7 @@ export default {
                         class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                         :class="state.showSurveyResults ? 'btn-selected' : ''"
                         @click="showSurvey()"
-                        :disabled="!state.toggles['dashboard.surveys.view']"
+                        :disabled="false"
                       >
                         {{ $t('dashboard.surveys') }} <br />
                         <i class="bi bi-patch-question-fill"></i>
@@ -1354,6 +1373,11 @@ export default {
                       filters-location="slot"
                     >
                     </DashboardSurveys>
+                    <DashboardPackageMetrics
+                      :show="state.showPackageMetrics"
+                      :commerce-id="commerce?.id"
+                    >
+                    </DashboardPackageMetrics>
                   </div>
                 </div>
               </template>

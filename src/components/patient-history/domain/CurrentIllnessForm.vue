@@ -247,13 +247,12 @@ export default {
             <button
               v-if="isSpeechSupported && toggles['patient.history.edit']"
               type="button"
-              class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
+              class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
               :class="{ 'btn-danger': isListeningSpeech }"
               @click="toggleSpeechRecognition"
               :title="isListeningSpeech ? 'Parar gravação' : 'Iniciar gravação de voz'"
             >
               <i :class="isListeningSpeech ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
-              <span class="ms-1 d-inline">{{ isListeningSpeech ? 'Gravando...' : 'Voz' }}</span>
             </button>
             <button
               v-if="toggles['patient.history.edit']"
@@ -744,31 +743,6 @@ export default {
     align-items: flex-start;
     gap: 0.75rem;
   }
-}
-
-/* Speech Recognition Styles */
-.speech-recognition-btn {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.85rem;
-  border-radius: 0.5rem;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  vertical-align: middle;
-}
-
-.speech-recognition-btn span {
-  display: inline !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-.speech-recognition-btn:hover {
-  transform: scale(1.05);
-}
-
-.speech-recognition-btn.btn-danger {
-  animation: pulse-recording 1.5s ease-in-out infinite;
 }
 
 @keyframes pulse-recording {

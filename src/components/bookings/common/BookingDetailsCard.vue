@@ -36,7 +36,7 @@ export default {
     selectedQueue: { type: Object, default: undefined },
     selectedDate: { type: String, default: undefined },
   },
-  emits: ['getAvailableDatesByCalendarMonth', 'open-drawer'],
+  emits: ['getAvailableDatesByCalendarMonth', 'open-drawer', 'booking-updated'],
   data() {
     return {
       loading: false,
@@ -59,7 +59,7 @@ export default {
       checked: false,
       queue: {},
       queuesToTransfer: [],
-      queueToTransfer: {},
+      queueToTransfer: null,
       dateMask: { modelValue: 'YYYY-MM-DD' },
       locale: 'es',
       internalSelectedDate: new Date().setDate(new Date().getDate() + 1),
@@ -94,11 +94,27 @@ export default {
       };
     },
     async showEditDetails() {
-      this.extendedEditEntity = !this.extendedEditEntity;
-      this.extendedPaymentEntity = false;
-      this.extendedTransferEntity = false;
-      if (this.extendedEditEntity === true) {
-        await this.toEdit();
+      try {
+        const wasOpen = this.extendedEditEntity;
+        this.extendedEditEntity = !this.extendedEditEntity;
+        this.extendedPaymentEntity = false;
+        this.extendedTransferEntity = false;
+
+        if (this.extendedEditEntity === true) {
+          // Load queue and other data first, then show the picker
+          await this.toEdit();
+          // Show picker after queue is loaded
+          this.showBookingDataPicker = true;
+        } else {
+          // Reset when closing
+          this.showBookingDataPicker = false;
+        }
+      } catch (error) {
+        console.error('Error in showEditDetails:', error);
+        // If opening failed, still try to show picker if we have booking data
+        if (this.extendedEditEntity && this.booking?.queueId) {
+          this.showBookingDataPicker = true;
+        }
       }
     },
     async showTransferDetails() {
@@ -186,83 +202,143 @@ export default {
       }
     },
     async toTransfer() {
-      this.loading = true;
-      if (this.booking && this.booking.queueId) {
-        this.queue = await getQueueById(this.booking.queueId);
-      }
-      const queuesToTransfer = this.queues; //this.queues.filter(queue => queue.type === 'COLLABORATOR');
-      if (queuesToTransfer && queuesToTransfer.length > 0) {
-        const date = this.booking.date;
-        const bookings = await getPendingCommerceBookingsByDate(this.commerce.id, date);
-        if (bookings && bookings.length > 0) {
-          const groupedBookings = bookings.reduce((acc, book) => {
-            const type = book.queueId;
-            if (!acc[type]) {
-              acc[type] = [];
-            }
-            acc[type].push(book);
-            return acc;
-          }, {});
-          let limit = 1; //queuesToTransfer.length;
-          if (
-            this.queue.serviceInfo !== undefined &&
-            this.queue.serviceInfo.blockLimit !== undefined &&
-            this.queue.serviceInfo.blockLimit > 0
-          ) {
-            limit = this.queue.serviceInfo.blockLimit;
+      try {
+        this.loading = true;
+        // Reset queuesToTransfer
+        this.queuesToTransfer = [];
+        this.queueToTransfer = null;
+
+        if (this.booking && this.booking.queueId) {
+          try {
+            this.queue = await getQueueById(this.booking.queueId);
+          } catch (error) {
+            console.error('Error loading queue:', error);
+            this.queue = {};
           }
-          queuesToTransfer.forEach(queue => {
-            const bookingsByQueue = groupedBookings[queue.id];
-            if (bookingsByQueue && bookingsByQueue.length > 0) {
-              const bookingsReserved = bookingsByQueue.map(booking => {
-                if (
-                  booking.block &&
-                  booking.block.blockNumbers &&
-                  booking.block.blockNumbers.length > 0
-                ) {
-                  return [...booking.block.blockNumbers];
-                } else {
-                  return booking.block.number;
+        }
+
+        const queuesToTransfer = this.queues; //this.queues.filter(queue => queue.type === 'COLLABORATOR');
+        if (!queuesToTransfer || queuesToTransfer.length === 0) {
+          this.loading = false;
+          return;
+        }
+
+        if (!this.commerce || !this.commerce.id) {
+          console.error('Commerce or commerce.id is not available');
+          // If commerce is not available, just add all queues
+          this.queuesToTransfer = [...queuesToTransfer];
+          this.loading = false;
+          return;
+        }
+
+        if (!this.booking || !this.booking.date) {
+          console.warn('Booking or booking.date is not available');
+          // If no date, add all queues
+          this.queuesToTransfer = [...queuesToTransfer];
+          this.loading = false;
+          return;
+        }
+
+        try {
+          const date = this.booking.date;
+          const bookings = await getPendingCommerceBookingsByDate(this.commerce.id, date);
+          if (bookings && bookings.length > 0) {
+            const groupedBookings = bookings.reduce((acc, book) => {
+              const type = book.queueId;
+              if (!acc[type]) {
+                acc[type] = [];
+              }
+              acc[type].push(book);
+              return acc;
+            }, {});
+            let limit = 1; //queuesToTransfer.length;
+            if (
+              this.queue.serviceInfo !== undefined &&
+              this.queue.serviceInfo.blockLimit !== undefined &&
+              this.queue.serviceInfo.blockLimit > 0
+            ) {
+              limit = this.queue.serviceInfo.blockLimit;
+            }
+            queuesToTransfer.forEach(queue => {
+              const bookingsByQueue = groupedBookings[queue.id];
+              if (bookingsByQueue && bookingsByQueue.length > 0) {
+                const bookingsReserved = bookingsByQueue
+                  .map(booking => {
+                    if (booking.block) {
+                      if (booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
+                        return [...booking.block.blockNumbers];
+                      } else if (booking.block.number !== undefined) {
+                        return booking.block.number;
+                      }
+                    }
+                    return null;
+                  })
+                  .filter(Boolean);
+                const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
+                const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+                const blockedBlocks = [];
+                uniqueBlocksReserved.forEach(block => {
+                  const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+                  if (times >= limit - 1) {
+                    blockedBlocks.push(block);
+                  }
+                });
+                let blocksToCheck = [];
+                if (this.booking.block) {
+                  blocksToCheck =
+                    this.booking.block.blockNumbers ||
+                    (this.booking.block.number !== undefined ? [this.booking.block.number] : []);
                 }
-              });
-              const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
-              const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
-              const blockedBlocks = [];
-              uniqueBlocksReserved.forEach(block => {
-                const times = totalBlocksReserved.filter(reserved => reserved === block).length;
-                if (times >= limit - 1) {
-                  blockedBlocks.push(block);
+                const availableBlocks = blocksToCheck
+                  .flat()
+                  .filter(block => blockedBlocks.includes(block));
+                if (availableBlocks.length === 0) {
+                  this.queuesToTransfer.push(queue);
                 }
-              });
-              const blocksToCheck = this.booking.block.blockNumbers || [this.booking.block.number];
-              const availableBlocks = blocksToCheck
-                .flat()
-                .filter(block => blockedBlocks.includes(block));
-              if (availableBlocks.length === 0) {
+              } else {
                 this.queuesToTransfer.push(queue);
               }
-            } else {
-              this.queuesToTransfer.push(queue);
-            }
-          });
+            });
+          } else {
+            // If no bookings, add all queues
+            this.queuesToTransfer = [...queuesToTransfer];
+          }
+        } catch (error) {
+          console.error('Error loading pending bookings:', error);
+          // On error, add all queues as fallback
+          this.queuesToTransfer = [...queuesToTransfer];
         }
+      } catch (error) {
+        console.error('Error in toTransfer:', error);
+        this.alertError = error.message || 'Error al cargar las filas para transferir';
+      } finally {
+        this.loading = false;
       }
-      this.loading = false;
     },
     async transfer() {
       try {
         this.loading = true;
-        if (this.booking && this.booking.id) {
-          const body = {
-            queueId: this.queueToTransfer,
-          };
-          await transferBooking(this.booking.id, body);
+        if (!this.booking || !this.booking.id) {
+          throw new Error('Reserva no disponible');
         }
-        this.loading = false;
+        if (!this.queueToTransfer) {
+          throw new Error('Por favor seleccione una fila para transferir');
+        }
+        const body = {
+          queueId: this.queueToTransfer,
+        };
+        const updatedBooking = await transferBooking(this.booking.id, body);
+
+        // Emit event to parent to refresh booking data
+        this.$emit('booking-updated', updatedBooking || this.booking);
         this.goToTransfer = false;
+        this.queueToTransfer = null;
+        this.queuesToTransfer = [];
       } catch (error) {
+        console.error('Error transferring booking:', error);
+        this.alertError = error.message || 'Error al transferir la reserva';
+      } finally {
         this.loading = false;
-        this.alertError = error.message;
       }
     },
     goTransfer() {
@@ -272,14 +348,47 @@ export default {
       this.goToTransfer = false;
     },
     async toEdit() {
-      if (this.booking && this.booking.queueId) {
-        this.queue = await getQueueById(this.booking.queueId);
-      }
-      if (this.booking.block) {
-        this.showBookingDataPicker = true;
-        if (this.booking.block.blockNumbers && this.booking.block.blockNumbers.length > 0) {
-          this.amountofBlocksNeeded = this.booking.block.blockNumbers.length;
+      try {
+        // Get queue information first - this is critical for the date picker
+        if (this.booking && this.booking.queueId) {
+          try {
+            this.queue = await getQueueById(this.booking.queueId);
+            if (!this.queue || !this.queue.id) {
+              console.warn('BookingDetailsCard: Queue loaded but missing id. Queue:', this.queue);
+            }
+          } catch (error) {
+            console.error('Error loading queue:', error);
+            // Set a minimal queue object with just the id so the picker can work
+            if (this.booking.queueId) {
+              this.queue = { id: this.booking.queueId };
+            }
+          }
+        } else {
+          console.warn('BookingDetailsCard: No queueId in booking. Cannot load queue.');
         }
+
+        // Set amount of blocks needed based on booking block data
+        if (this.booking?.block) {
+          if (
+            this.booking.block.blockNumbers &&
+            Array.isArray(this.booking.block.blockNumbers) &&
+            this.booking.block.blockNumbers.length > 0
+          ) {
+            this.amountofBlocksNeeded = this.booking.block.blockNumbers.length;
+          } else if (this.booking.block.number) {
+            this.amountofBlocksNeeded = 1;
+          }
+        } else {
+          // Default to 1 block if no block data
+          this.amountofBlocksNeeded = 1;
+        }
+      } catch (error) {
+        console.error('Error in toEdit:', error);
+        // Set minimal queue if we have queueId
+        if (this.booking?.queueId) {
+          this.queue = { id: this.booking.queueId };
+        }
+        this.amountofBlocksNeeded = 1;
       }
     },
     async edit() {
@@ -290,7 +399,10 @@ export default {
             date: this.dateToEdit,
             block: this.blockToEdit,
           };
-          await editBooking(this.booking.id, body);
+          const updatedBooking = await editBooking(this.booking.id, body);
+
+          // Emit event to parent to refresh booking data
+          this.$emit('booking-updated', updatedBooking || this.booking);
         }
         this.loading = false;
         this.goToEdit = false;
@@ -450,7 +562,13 @@ export default {
 
 <template>
   <div v-if="show && booking">
-    <div class="booking-row-card" :class="getCardTypeClass()" @click.prevent="showDetails()">
+    <!-- Card view - hidden when details are already opened (modal mode) -->
+    <div
+      v-if="!detailsOpened"
+      class="booking-row-card"
+      :class="getCardTypeClass()"
+      @click.prevent="showDetails()"
+    >
       <div class="booking-row-content">
         <!-- Status Icon -->
         <Popper :class="'dark'" arrow disable-click-away hover>
@@ -530,29 +648,44 @@ export default {
         </div>
       </div>
     </div>
-    <div v-if="extendedEntity" class="booking-details-expanded">
+    <!-- Details section - always shown when extendedEntity is true or detailsOpened is true -->
+    <div v-if="extendedEntity || detailsOpened" class="booking-details-expanded">
       <div :class="{ show: extendedEntity }" class="detailed-data transition-slow">
-        <!-- Client Info - Modernized -->
-        <div class="booking-client-info">
-          <div class="booking-client-header">
-            <div class="booking-client-name-section">
-              <div class="booking-client-avatar">
+        <!-- Client Info - Matching Attention Style -->
+        <div class="attention-client-info">
+          <div class="attention-client-header">
+            <div class="attention-client-name-section">
+              <div class="attention-client-avatar">
                 <i class="bi bi-person-circle"></i>
               </div>
-              <div class="booking-client-details">
-                <span class="booking-client-name"
+              <div class="attention-client-details">
+                <span class="attention-client-name"
                   >{{ booking.user.name || 'N/I' }} {{ booking.user.lastName || '' }}</span
                 >
                 <button class="btn-copy-mini" @click="copyBooking()" title="Copiar dados">
                   <i class="bi bi-file-earmark-spreadsheet"></i>
                 </button>
+                <button
+                  v-if="booking && booking.status !== 'USER_CANCELED' && !booking.cancelled"
+                  class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3 card-action"
+                  @click="goCancel()"
+                  :disabled="
+                    booking.status === 'USER_CANCELED' ||
+                    booking.cancelled ||
+                    !toggles ||
+                    !toggles['collaborator.bookings.cancel']
+                  "
+                  title="Cancelar reserva"
+                >
+                  <i class="bi bi-person-x-fill"></i>
+                  {{ $t('collaboratorBookingsView.cancel') }}
+                </button>
               </div>
             </div>
-            <Spinner :show="loading"></Spinner>
           </div>
-          <div class="booking-client-contact">
+          <div class="attention-client-contact">
             <a
-              class="booking-contact-item whatsapp-item"
+              class="attention-contact-item whatsapp-item"
               :href="'https://wa.me/' + booking.user.phone"
               target="_blank"
             >
@@ -562,7 +695,7 @@ export default {
               <span class="contact-text">{{ booking.user.phone || 'N/I' }}</span>
             </a>
             <a
-              class="booking-contact-item email-item"
+              class="attention-contact-item email-item"
               :href="'mailto:' + booking.user.email"
               target="_blank"
             >
@@ -571,7 +704,7 @@ export default {
               </div>
               <span class="contact-text">{{ booking.user.email || 'N/I' }}</span>
             </a>
-            <div class="booking-contact-item id-item">
+            <div class="attention-contact-item id-item">
               <div class="contact-icon-wrapper id-bg">
                 <i class="bi bi-person-vcard"></i>
               </div>
@@ -581,7 +714,7 @@ export default {
             </div>
           </div>
         </div>
-        <!-- Booking Context Info - Reservation Details (Compact Horizontal) -->
+        <!-- Booking Context Info - Matching Attention Style -->
         <div
           v-if="
             selectedQueue ||
@@ -589,38 +722,38 @@ export default {
             (booking.services && booking.services.length > 0) ||
             booking.date
           "
-          class="booking-context-info-compact"
+          class="attention-context-info-compact"
         >
-          <div v-if="selectedQueue" class="booking-context-item-inline">
+          <div v-if="selectedQueue" class="attention-context-item-inline">
             <i class="bi bi-person-lines-fill"></i>
-            <span class="booking-context-label-inline">Fila</span>
-            <span class="booking-context-value-inline">{{ selectedQueue.name || 'N/I' }}</span>
+            <span class="attention-context-label-inline">Fila</span>
+            <span class="attention-context-value-inline">{{ selectedQueue.name || 'N/I' }}</span>
           </div>
-          <div v-if="booking.block" class="booking-context-item-inline">
+          <div v-if="booking.block" class="attention-context-item-inline">
             <i class="bi bi-clock-fill"></i>
-            <span class="booking-context-label-inline">Horário</span>
-            <span class="booking-context-value-inline">
+            <span class="attention-context-label-inline">Horário</span>
+            <span class="attention-context-value-inline">
               {{ booking.block.hourFrom || 'N/I' }}
               <span v-if="booking.block.hourTo"> - {{ booking.block.hourTo }}</span>
             </span>
           </div>
-          <div v-if="booking.date" class="booking-context-item-inline">
+          <div v-if="booking.date" class="attention-context-item-inline">
             <i class="bi bi-calendar-event"></i>
-            <span class="booking-context-label-inline">Data</span>
-            <span class="booking-context-value-inline">{{ getDate(booking.date) }}</span>
+            <span class="attention-context-label-inline">Data</span>
+            <span class="attention-context-value-inline">{{ getDate(booking.date) }}</span>
           </div>
           <div
             v-if="booking.services && booking.services.length > 0"
-            class="booking-context-item-inline"
+            class="attention-context-item-inline"
           >
             <i class="bi bi-scissors"></i>
-            <span class="booking-context-label-inline">Serviço(s)</span>
-            <span class="booking-context-value-inline">
+            <span class="attention-context-label-inline">Serviço(s)</span>
+            <span class="attention-context-value-inline">
               {{ booking.services.map(s => s.name).join(', ') }}
             </span>
           </div>
           <!-- Telemedicine Info -->
-          <div v-if="booking.type === 'TELEMEDICINE'" class="booking-context-item-inline">
+          <div v-if="booking.type === 'TELEMEDICINE'" class="attention-context-item-inline">
             <i class="bi bi-camera-video"></i>
             <span class="booking-context-label-inline">Telemedicina</span>
             <span class="booking-context-value-inline">
@@ -649,7 +782,7 @@ export default {
               booking.telemedicineConfig &&
               booking.telemedicineConfig.scheduledAt
             "
-            class="booking-context-item-inline"
+            class="attention-context-item-inline"
           >
             <i class="bi bi-calendar-event"></i>
             <span class="booking-context-label-inline">Sesión Programada</span>
@@ -750,10 +883,10 @@ export default {
           </div>
         </div>
 
-        <div class="booking-divider"></div>
+        <div class="attention-divider"></div>
         <!-- CONFIRMATION DETAILS -->
         <div
-          class="booking-confirmation-badges"
+          class="attention-confirmation-badges"
           v-if="booking.confirmed === true && booking.confirmationData"
         >
           <div class="booking-confirmation-header">
@@ -809,10 +942,10 @@ export default {
         ></div>
 
         <!-- Action Buttons -->
-        <div class="booking-actions-tabs">
+        <div class="attention-actions-tabs">
           <button
             v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')"
-            class="booking-action-tab"
+            class="attention-action-tab"
             :class="{ 'booking-action-tab-active': extendedPaymentEntity }"
             @click.prevent="showPaymentDetails()"
           >
@@ -822,7 +955,7 @@ export default {
           </button>
           <button
             v-if="getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT')"
-            class="booking-action-tab"
+            class="attention-action-tab"
             :class="{ 'booking-action-tab-active': extendedTransferEntity }"
             @click.prevent="showTransferDetails()"
           >
@@ -832,7 +965,7 @@ export default {
           </button>
           <button
             v-if="getActiveFeature(commerce, 'booking-edit', 'PRODUCT')"
-            class="booking-action-tab"
+            class="attention-action-tab"
             :class="{ 'booking-action-tab-active': extendedEditEntity }"
             @click.prevent="showEditDetails()"
           >
@@ -845,9 +978,9 @@ export default {
         <Transition name="slide-fade">
           <div
             v-if="extendedPaymentEntity && getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')"
-            class="booking-action-section"
+            class="attention-action-section"
           >
-            <div class="booking-action-content">
+            <div class="attention-action-content">
               <div v-if="!booking.confirmed" class="booking-action-form">
                 <div class="booking-action-header">
                   <i class="bi bi-cash-coin"></i>
@@ -857,6 +990,11 @@ export default {
                   :id="booking.id"
                   :commerce="commerce"
                   :client-id="booking.clientId"
+                  :service-id="
+                    booking.servicesId && booking.servicesId.length > 0
+                      ? booking.servicesId[0]
+                      : undefined
+                  "
                   :confirm-payment="
                     getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')
                   "
@@ -903,9 +1041,9 @@ export default {
               extendedTransferEntity &&
               getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT')
             "
-            class="booking-action-section"
+            class="attention-action-section"
           >
-            <div class="booking-action-content">
+            <div class="attention-action-content">
               <div v-if="booking.transfered" class="booking-transfer-history">
                 <div class="booking-action-header">
                   <i class="bi bi-arrow-left-right"></i>
@@ -958,7 +1096,9 @@ export default {
                   <button
                     class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
                     @click="goTransfer()"
-                    :disabled="!queueToTransfer || !toggles['collaborator.bookings.transfer']"
+                    :disabled="
+                      !queueToTransfer || loading || !toggles['collaborator.bookings.transfer']
+                    "
                   >
                     <i class="bi bi-person-check-fill"></i>
                     {{ $t('collaboratorBookingsView.transfer') }}
@@ -966,8 +1106,8 @@ export default {
                 </div>
                 <AreYouSure
                   :show="goToTransfer"
-                  :yes-disabled="toggles['collaborator.bookings.transfer']"
-                  :no-disabled="toggles['collaborator.bookings.transfer']"
+                  :yes-disabled="!toggles['collaborator.bookings.transfer']"
+                  :no-disabled="!toggles['collaborator.bookings.transfer']"
                   @actionYes="transfer()"
                   @actionNo="cancelTransfer()"
                 >
@@ -986,9 +1126,9 @@ export default {
         <Transition name="slide-fade">
           <div
             v-if="extendedEditEntity && getActiveFeature(commerce, 'booking-edit', 'PRODUCT')"
-            class="booking-action-section"
+            class="attention-action-section"
           >
-            <div class="booking-action-content">
+            <div class="attention-action-content">
               <div v-if="booking.edited" class="booking-edit-history">
                 <div class="booking-action-header">
                   <i class="bi bi-pencil-fill"></i>
@@ -1021,7 +1161,7 @@ export default {
                 <div class="booking-edit-picker">
                   <div class="booking-edit-picker-wrapper">
                     <BookingDatePicker
-                      :show="showBookingDataPicker"
+                      :show="extendedEditEntity && showBookingDataPicker"
                       :booking="booking"
                       :queue="queue"
                       :commerce="commerce"
@@ -1045,8 +1185,8 @@ export default {
                 </div>
                 <AreYouSure
                   :show="goToEdit"
-                  :yes-disabled="toggles['collaborator.bookings.edit']"
-                  :no-disabled="toggles['collaborator.bookings.edit']"
+                  :yes-disabled="!toggles['collaborator.bookings.edit']"
+                  :no-disabled="!toggles['collaborator.bookings.edit']"
                   @actionYes="edit()"
                   @actionNo="cancelEdit()"
                 >
@@ -1055,51 +1195,44 @@ export default {
             </div>
           </div>
         </Transition>
-        <div class="booking-actions-footer" v-if="!loading">
-          <button
-            class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3 card-action"
-            @click="goCancel()"
-            :disabled="
-              booking.status === 'USER_CANCELED' ||
-              booking.cancelled ||
-              !toggles['collaborator.bookings.cancel']
-            "
-          >
-            <i class="bi bi-person-x-fill"> </i> {{ $t('collaboratorBookingsView.cancel') }}
-          </button>
-          <button
-            v-if="
-              getActiveFeature(commerce, 'booking-confirm', 'PRODUCT') &&
-              !getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')
-            "
-            class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
-            @click="goConfirm1()"
-            :disabled="
-              booking.status === 'CONFIRMED' ||
-              booking.confirmed ||
-              !toggles['collaborator.bookings.confirm']
-            "
-          >
-            <i class="bi bi-person-check-fill"> </i> {{ $t('collaboratorBookingsView.confirm') }}
-          </button>
-          <AreYouSure
-            :show="goToCancel"
-            :yes-disabled="toggles['collaborator.bookings.cancel']"
-            :no-disabled="toggles['collaborator.bookings.cancel']"
-            @actionYes="cancel()"
-            @actionNo="cancelCancel()"
-          >
-          </AreYouSure>
-          <AreYouSure
-            :show="goToConfirm1"
-            :yes-disabled="toggles['collaborator.bookings.confirm']"
-            :no-disabled="toggles['collaborator.bookings.confirm']"
-            @actionYes="confirm()"
-            @actionNo="confirmCancel1()"
-          >
-          </AreYouSure>
+        <div class="attention-actions-footer" v-if="!loading">
+          <div class="attention-actions-buttons">
+            <button
+              v-if="
+                getActiveFeature(commerce, 'booking-confirm', 'PRODUCT') &&
+                !getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')
+              "
+              class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
+              @click="goConfirm1()"
+              :disabled="
+                booking.status === 'CONFIRMED' ||
+                booking.confirmed ||
+                !toggles['collaborator.bookings.confirm']
+              "
+            >
+              <i class="bi bi-person-check-fill"> </i> {{ $t('collaboratorBookingsView.confirm') }}
+            </button>
+          </div>
+          <div class="attention-actions-confirmations">
+            <AreYouSure
+              :show="goToCancel"
+              :yes-disabled="toggles['collaborator.bookings.cancel']"
+              :no-disabled="toggles['collaborator.bookings.cancel']"
+              @actionYes="cancel()"
+              @actionNo="cancelCancel()"
+            >
+            </AreYouSure>
+            <AreYouSure
+              :show="goToConfirm1"
+              :yes-disabled="toggles['collaborator.bookings.confirm']"
+              :no-disabled="toggles['collaborator.bookings.confirm']"
+              @actionYes="confirm()"
+              @actionNo="confirmCancel1()"
+            >
+            </AreYouSure>
+          </div>
         </div>
-        <div class="booking-metadata-footer">
+        <div class="attention-metadata-footer">
           <span class="metric-card-details"><strong>Id:</strong> {{ booking.id }}</span>
           <span class="metric-card-details"
             ><strong>Date:</strong> {{ getDate(booking.createdAt) }}</span
@@ -1353,7 +1486,7 @@ export default {
 }
 
 /* Client Info Section - Standardized */
-.booking-client-info {
+.attention-client-info {
   margin-bottom: 0.5rem;
   padding: 0.625rem 0.75rem;
   background: rgba(255, 255, 255, 0.95);
@@ -1362,7 +1495,7 @@ export default {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.booking-client-header {
+.attention-client-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1371,14 +1504,14 @@ export default {
   border-bottom: 1px solid rgba(169, 169, 169, 0.2);
 }
 
-.booking-client-name-section {
+.attention-client-name-section {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex: 1;
 }
 
-.booking-client-avatar {
+.attention-client-avatar {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1394,7 +1527,7 @@ export default {
   color: #00c2cb;
 }
 
-.booking-client-details {
+.attention-client-details {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -1402,7 +1535,7 @@ export default {
   min-width: 0;
 }
 
-.booking-client-name {
+.attention-client-name {
   font-size: 0.875rem;
   font-weight: 700;
   color: #000000;
@@ -1412,14 +1545,14 @@ export default {
   min-width: 0;
 }
 
-.booking-client-contact {
+.attention-client-contact {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-top: 0.25rem;
 }
 
-.booking-contact-item {
+.attention-contact-item {
   display: flex;
   align-items: center;
   gap: 0.375rem;
@@ -1491,14 +1624,14 @@ export default {
   background: rgba(0, 194, 203, 0.2);
 }
 
-.booking-divider {
+.attention-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(169, 169, 169, 0.2), transparent);
   margin: 0.5rem 0;
 }
 
 /* Confirmation Badges */
-.booking-confirmation-badges {
+.attention-confirmation-badges {
   margin-bottom: 0.5rem;
   padding: 0.625rem 0.75rem;
   background: rgba(255, 255, 255, 0.95);
@@ -1507,7 +1640,7 @@ export default {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.booking-confirmation-header {
+.attention-confirmation-header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1525,7 +1658,7 @@ export default {
   font-size: 1rem;
 }
 
-.booking-confirmation-tags {
+.attention-confirmation-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -1554,7 +1687,7 @@ export default {
 }
 
 /* Action Tabs - Compact and Modern */
-.booking-actions-tabs {
+.attention-actions-tabs {
   display: flex;
   gap: 0.375rem;
   margin-bottom: 0.5rem;
@@ -1565,7 +1698,7 @@ export default {
   flex-wrap: wrap;
 }
 
-.booking-action-tab {
+.attention-action-tab {
   flex: 1;
   min-width: 90px;
   display: flex;
@@ -1971,22 +2104,33 @@ export default {
 }
 
 /* Actions Footer */
-.booking-actions-footer {
+.attention-actions-footer {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
   margin-top: 0.75rem;
   padding-top: 0.75rem;
   border-top: 1px solid rgba(169, 169, 169, 0.2);
+}
+
+.attention-actions-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
   flex-wrap: wrap;
 }
 
-.booking-actions-footer .card-action {
-  flex: 1;
+.booking-actions-buttons .card-action {
+  flex: 0 0 auto;
   min-width: 120px;
 }
 
+.attention-actions-confirmations {
+  width: 100%;
+}
+
 /* Metadata Footer */
-.booking-metadata-footer {
+.attention-metadata-footer {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -2009,7 +2153,7 @@ export default {
 }
 
 /* Booking Context Info - Reservation Details (Compact Horizontal) */
-.booking-context-info-compact {
+.attention-context-info-compact {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
   padding: 0.5rem 0.75rem;
@@ -2023,7 +2167,7 @@ export default {
   flex-wrap: wrap;
 }
 
-.booking-context-item-inline {
+.attention-context-item-inline {
   display: flex;
   align-items: center;
   gap: 0.375rem;
@@ -2036,7 +2180,7 @@ export default {
   flex-shrink: 0;
 }
 
-.booking-context-label-inline {
+.attention-context-label-inline {
   font-size: 0.625rem;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.5);
@@ -2045,7 +2189,7 @@ export default {
   white-space: nowrap;
 }
 
-.booking-context-value-inline {
+.attention-context-value-inline {
   font-size: 0.75rem;
   font-weight: 700;
   color: #000000;
@@ -2055,7 +2199,7 @@ export default {
 }
 
 /* Action Section Container - Completely Hidden Until Activated */
-.booking-action-section {
+.attention-action-section {
   margin-bottom: 0.5rem;
   min-height: 180px;
   display: flex;
@@ -2066,7 +2210,7 @@ export default {
   margin-bottom: 0;
 }
 
-.booking-action-content {
+.attention-action-content {
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(169, 169, 169, 0.2);
   border-radius: 8px;
@@ -2214,14 +2358,24 @@ export default {
   justify-content: center;
   align-items: center;
   width: 100%;
-  max-width: 100%;
 }
 
 .booking-edit-picker-wrapper > div {
   width: 100%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+
+.booking-edit-picker-wrapper .booking-calendar-wrapper {
+  max-width: 500px;
+  width: 100%;
+}
+
+.booking-edit-picker-wrapper .booking-block-selector {
+  width: 100%;
+  max-width: 100%;
 }
 
 .booking-edit-picker-wrapper .centered {

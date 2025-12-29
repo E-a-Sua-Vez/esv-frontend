@@ -54,7 +54,9 @@
     "error": "Error",
     "retry": "Reintentar",
     "pending": "Pendiente",
-    "viewDetails": "Ver Detalles"
+    "viewDetails": "Ver Detalles",
+    "remove": "Eliminar",
+    "save": "Guardar"
   },
   "yes": "Sí",
   "YES": "Sí",
@@ -65,7 +67,12 @@
   "serviceStatus": "Estado del Servicio",
   "searcher": "🔎 Buscador",
   "add": "Agregar",
+  "save": "Guardar",
   "continue": "Continuar",
+  "update": "Actualizar",
+  "cancel": "Cancelar",
+  "active": "Activo",
+  "inactive": "Inactivo",
   "myUser": {
     "title": "Mi Usuario",
     "actions": "Acciones",
@@ -154,7 +161,8 @@
       "ALL_IN_ONE": "Todo en Uno",
       "ONLY_SURVEYS": "Sólo Encuestas Inteligentes",
       "QUEUES_BOOKING": "Sólo Filas y Reservas"
-    }
+    },
+    "attentionProducts": "Productos de Atención"
   },
   "surveys": {
     "types": {
@@ -242,6 +250,54 @@
     "null": "N/I",
     "OTHER": "Otro"
   },
+  "audit-log": {
+    "title": "Registro de Auditoría",
+    "refresh": "Actualizar",
+    "export": "Exportar",
+    "capacitiesList": {
+      "admin": {
+        "view": "Ver Sección - Registro de Auditoría",
+        "read": "Leer datos - Sección Registro de Auditoría",
+        "export": "Exportar datos - Sección Registro de Auditoría",
+        "limit": "Límite de datos - Sección Registro de Auditoría"
+      }
+    },
+    "filters": {
+      "action": "Acción",
+      "entityType": "Tipo de Entidad",
+      "search": "Buscar",
+      "searchPlaceholder": "Buscar por usuario, email, entidad, IP..."
+    },
+    "summary": {
+      "total": "Total de Registros",
+      "byAction": "Por Acción",
+      "byEntityType": "Por Tipo de Entidad",
+      "uniqueUsers": "Usuarios Únicos"
+    },
+    "logs": "Registros",
+    "noLogs": "No se encontraron registros de auditoría",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "noCommerce": {
+        "title": "Seleccione un Comercio",
+        "content": "Debe seleccionar un comercio para ver los registros de auditoría"
+      }
+    },
+    "table": {
+      "timestamp": "Fecha/Hora",
+      "user": "Usuario",
+      "action": "Acción",
+      "entityType": "Tipo",
+      "entityId": "ID Entidad",
+      "result": "Resultado",
+      "ipAddress": "Dirección IP",
+      "details": "Detalles",
+      "viewDetails": "Ver Detalles"
+    }
+  },
   "product": {
     "types": {
       "SERVICE": "Servicio"
@@ -260,6 +316,20 @@
     "GRAMS": "(g)",
     "LITERS": "(L)",
     "UNITS": "(U)"
+  },
+  "examOrder": {
+    "create": "Crear Orden de Examen"
+  },
+  "prescription": {
+    "create": "Crear Receta"
+  },
+  "exams": {
+    "types": {
+      "laboratory": "Laboratorio",
+      "imaging": "Imagenología",
+      "procedure": "Procedimiento",
+      "other": "Otro"
+    }
   },
   "outcomes": {
     "types": {
@@ -571,6 +641,14 @@
     "stock-product-recharge": {
       "title": "Recarga Stock",
       "description": "Mensaje Admin para Recarga de Producto en Nivel Bajo."
+    },
+    "attention-stages-enabled": {
+      "title": "Etapas de Atención Habilitadas",
+      "description": "Activa el sistema de etapas para las atenciones (Check-In, Pre-Consulta, Consulta, Post-Consulta, Check-Out)"
+    },
+    "attention-checkout-enabled": {
+      "title": "Check-Out Habilitado",
+      "description": "Activa la etapa de Check-Out en el flujo de atención"
     }
   },
   "document": {
@@ -737,6 +815,8 @@
     "date": "Fecha",
     "time": "Hora",
     "queue": "Fila",
+    "telemedicineValue": "Telemedicina",
+    "creating": "Creando...",
     "selectService": "Selecciona el servicio:",
     "searchCollaboratorQueue": "🔎 Busca por nombre o servicio",
     "searchServiceQueue": "🔎 Busca por servicio",
@@ -744,6 +824,7 @@
     "oldClient": "Ya Soy Cliente",
     "selectTheService": "Selecciona el servicio",
     "procedures": "Sesiones:",
+    "packagesAvailable": "Paquetes disponibles",
     "healthAgreementText": "Convenio de Salud",
     "waitlist": {
       "title": "¡Únete a la lista de espera!",
@@ -766,6 +847,8 @@
       "title": "¡Listo!",
       "content": "Estás en la lista de espera. Te avisaremos si una hora está disponible."
     },
+    "noAvailableHours": "No hay horarios disponibles para esta fecha.",
+    "tryAnotherDate": "Intenta con otra fecha.",
     "validate": {
       "name": "Debes ingresar tu nombre",
       "lastName": "Debes ingresar tu apellido",
@@ -775,6 +858,7 @@
       "phoneCode": "Debes seleccionar el pais",
       "accept": "Debes aceptar las condiciones de uso",
       "birthday": "Debes ingresar tu fecha de nacimiento",
+      "birthdayError": "Por favor, ingresa una fecha válida en formato dd/mm/aaaa",
       "addressText": "Debes ingresar tu dirección (texto)",
       "addressCode": "Debes ingresar tu dirección (código postal)",
       "addressComplement": "Debes ingresar tu dirección (complemento)",
@@ -782,8 +866,22 @@
       "code1": "Debes ingresar tu código 1",
       "code2": "Debes ingresar tu código 2",
       "code3": "Debes ingresar tu código 3",
-      "healthAgreementId": "Debes seleccionar tu convenio de salud"
+      "healthAgreementId": "Debes seleccionar tu convenio de salud",
+      "queueRequired": "Por favor selecciona una fila válida antes de crear la reserva",
+      "queueRequiredAttention": "Por favor selecciona una fila válida antes de crear la atención"
     }
+  },
+  "nextAvailableSlot": {
+    "title": "Próxima cita disponible",
+    "bookNow": "Reservar ahora",
+    "seeMoreTimes": "Ver más horarios",
+    "loading": "Cargando...",
+    "searching": "Buscando próxima disponibilidad...",
+    "searchingError": "Error al buscar próxima disponibilidad",
+    "noAvailability": "Sin disponibilidad próxima",
+    "noAvailabilityDetails": "No hay horarios disponibles en los próximos {days} días",
+    "inDays": "en {days} días",
+    "orSelectMoreOptions": "O selecciona más opciones:"
   },
   "attentionNumber": {
     "waitingTime": "Tiempo de espera:",
@@ -1082,6 +1180,7 @@
     "hello-user": "¡Hola",
     "yourNumber": "Estás procesando la atención número:",
     "numberCancelled": "El número fue Cancelado:",
+    "readyQuestion": "¿El Cliente ya fue atendido?",
     "toGoal": {
       "1": "Hay",
       "2": "personas esperando atención."
@@ -1119,14 +1218,23 @@
         "content": "La atención fue saltada."
       },
       "4": {
-        "title": "¡No tan rápido!",
-        "content": "Aún no puedes atender este turno. Vuelve a la fila para atender los turnos en orden de llegada."
+        "title": "Información",
+        "content": "Esta atención aún no es la próxima en la fila. Puedes gestionarla de todos modos, pero el orden recomendado es atender por orden de llegada."
       },
       "5": {
         "title": "¡Cancelado!",
         "content": "La atención fue cancelada. Vuelve a la fila para atender el próximo número."
+      },
+      "6": {
+        "title": "Atención Finalizada",
+        "content": "Esta atención ya fue finalizada."
+      },
+      "7": {
+        "title": "Error al Finalizar Checkout",
+        "content": "Ocurrió un error al finalizar el checkout de la atención."
       }
     },
+    "finishCheckout": "¿Todo listo en esta atención?",
     "capacitiesList": {
       "collaborator": {
         "attention": {
@@ -1167,6 +1275,10 @@
   "collaboratorQueuesView": {
     "welcome": "Atención de Filas del Día",
     "commerce": "Comercio:",
+    "checkIn": "Check-In",
+    "inAttention": "En Atendimiento",
+    "checkOut": "Check-Out",
+    "terminated": "Terminadas",
     "choose": "Elige la fila que atenderás:",
     "module": "Tu módulo de atención es:",
     "attentions": "En fila",
@@ -1490,7 +1602,7 @@
     "actions": {
       "1": {
         "title": {
-          "1": "¿Atendiste al cliente?"
+          "1": "¿Todo listo para la atención?"
         },
         "action": "Atender"
       },
@@ -1511,8 +1623,10 @@
       "1": {
         "title": "¡Buen trabajo!",
         "content": "No hay más atenciones pendientes."
-      }
+      },
+      "noNextAttention": "No hay más próximas atenciones pendientes"
     },
+    "clientManagement": "Gestión del Cliente:",
     "capacitiesList": {
       "collaborator": {
         "attention": {
@@ -1548,6 +1662,25 @@
           "product-stock": "Control de Stock"
         }
       }
+    },
+    "stats": {
+      "waitTime": "Tiempo de Espera",
+      "waitTimeIndicators": "Tiempo de Espera - Indicadores de Color",
+      "createdAt": "Creado en",
+      "inQueue": "En la Fila",
+      "estimatedTime": "Tiempo Estimado",
+      "liveUpdate": "Actualización en tiempo real",
+      "colorIndicators": {
+        "green": "Verde:",
+        "greenDesc": "Menos de 10 minutos - Excelente",
+        "yellow": "Amarillo:",
+        "yellowDesc": "Menos de 1 hora - Bueno",
+        "orange": "Naranja:",
+        "orangeDesc": "Menos de 3 horas - Atención",
+        "red": "Rojo:",
+        "redDesc": "Más de 3 horas - Urgente"
+      },
+      "loadingPatientHistory": "Cargando historial del paciente..."
     }
   },
   "masterLogin": {
@@ -1693,6 +1826,7 @@
   },
   "dashboard": {
     "title": "Performance Hub",
+    "loading": "Cargando...",
     "clients": "Clientes",
     "attentions": "Atenciones",
     "commerce": "Comercio:",
@@ -1703,12 +1837,16 @@
     "graph": "Tendencias",
     "surveys": "Encuestas",
     "bookings": "Reservas",
+    "packages": "Paquetes",
     "waitlist": "Lista Espera",
     "bookingsConfirm": "Conf. Reserva",
     "satisfaction": "Satisfacción",
     "surveys-management": "Encuestas",
     "surveys-consolidated": "Encuestas (Consolidado)",
     "details": "Detalles",
+    "attentionDetails": "Detalles del Atendimiento",
+    "bookingDetails": "Detalles de la Reserva",
+    "time": "Hora",
     "seconds": "En Minutos",
     "intelligentEstimationTooltip": "Este tiempo fue calculado usando aprendizaje inteligente (mediana) basado en datos históricos de servicios completados. La mediana es más robusta que el promedio, no siendo afectada por valores extremos.",
     "queueDetails": {
@@ -1752,8 +1890,49 @@
     "lastMonth": "Mes Pasado",
     "lastThreeMonths": "3 Meses",
     "showAll": "Mostrar todo",
+    "prontuario": "Prontuario",
+    "medicalHistory": "Historial Médico",
+    "openProntuario": "Abrir Prontuario",
+    "clientProntuario": "Prontuario del Cliente",
+    "noProntuario": "Sin Prontuario",
+    "loadingProntuario": "Cargando Prontuario...",
+    "preprontuario": "Preprontuario",
+    "preprontuarioDetails": {
+      "status": "Estado del Preprontuario",
+      "completed": "Completado",
+      "pending": "Pendiente"
+    },
+    "preprontuarioHistory": {
+      "title": "Preprontuarios",
+      "subtitle": "Visualice todos los preprontuarios completados por el cliente",
+      "noForms": "No se encontraron preprontuarios",
+      "noFormsDescription": "El cliente aún no ha completado ningún preprontuario.",
+      "questionsAndAnswers": "Preguntas y Respuestas",
+      "answer": "Respuesta",
+      "loadToProntuario": "Cargar al Prontuario",
+      "loadToPersonalData": "Cargar Datos Personales",
+      "loadToAnamnese": "Cargar Anamnesis",
+      "loaded": "Cargado al Prontuario",
+      "alreadyLoaded": "Este preprontuario ya ha sido cargado al prontuario.",
+      "loadedOn": "Cargado el",
+      "loadedSuccess": "¡Datos cargados con éxito!",
+      "cannotLoad": "Este formulario no puede ser cargado",
+      "noPersonalData": "Este formulario no contiene datos personales",
+      "noAnamneseData": "Este formulario no contiene datos de anamnesis",
+      "loadError": "Error al cargar datos"
+    },
+    "agreement": "Convenio",
+    "completed": "Completado",
+    "pending": "Pendiente",
+    "sendReminder": "Enviar Recordatorio",
+    "sending": "Enviando...",
+    "messageSent": "¡Mensaje enviado!",
+    "messageAlreadySent": "Mensaje ya enviado",
+    "refreshStatus": "Actualizar estado",
+    "close": "Cerrar",
     "attentionsOf": "Atenciones de ",
     "contactsOf": "Contactos de ",
+    "packagesOf": "Paquetes de ",
     "addContact": "Nuevo Contacto",
     "surveyOf": "Respuestas de",
     "aditionalFilters": "Consultar Datos",
@@ -1779,8 +1958,19 @@
     "month": "Mes",
     "year": "Año",
     "all": "Todos",
+    "status": "Estado",
     "type": "Tipo:",
     "result": "Resultado:",
+    "attentionStatus": {
+      "pending": "Pendiente",
+      "processing": "En Proceso",
+      "terminated": "Terminado",
+      "cancelled": "Cancelado",
+      "userCancelled": "Cancelado por Usuario",
+      "rated": "Calificado",
+      "skiped": "Omitido",
+      "reactivated": "Reactivado"
+    },
     "add": "Agregar",
     "answers": "Respuestas",
     "contact": "Contactar",
@@ -1806,6 +1996,11 @@
     "userData": "Usuario:",
     "queueData": "Fila/Servicio:",
     "contactInfo": "Información de Contacto",
+    "client": "Cliente",
+    "name": "Nombre",
+    "phone": "Teléfono",
+    "email": "Email",
+    "idNumber": "ID",
     "date": "Fecha",
     "contactMethod": "Medio de Contacto",
     "outcomes": "Egresos",
@@ -1823,10 +2018,51 @@
       "examOrders": "Órdenes de Examen",
       "booking": "Reserva",
       "attention": "Atención",
+      "stage": {
+        "PENDING": "Pendiente",
+        "CHECK_IN": "Recepción",
+        "PRE_CONSULTATION": "Pre-Consulta",
+        "CONSULTATION": "Consulta",
+        "POST_CONSULTATION": "Post-Consulta",
+        "CHECKOUT": "Checkout",
+        "TERMINATED": "Finalizada",
+        "CANCELLED": "Cancelada"
+      },
+      "filterByStage": "Filtrar por Etapa",
+      "allStages": "Todas las etapas",
+      "advanceStage": "Avanzar Etapa",
+      "advanceStage.selectNext": "Selecciona la siguiente etapa",
+      "advanceStage.select": "Selecciona...",
+      "advanceStage.selectStage": "Por favor selecciona una etapa",
+      "advanceStage.notes": "Notas (opcional)",
+      "advanceStage.notesPlaceholder": "Agregar notas sobre esta transición...",
+      "advanceStage.confirm": "Avanzar",
+      "advanceStage.noNextStages": {
+        "title": "No hay siguientes etapas",
+        "content": "Esta atención ya está en la etapa final o no hay etapas siguientes disponibles."
+      },
+      "advanceStage.invalidTransition": "La etapa seleccionada ya no es válida. Por favor, recarga la página.",
+      "advanceStage.error": {
+        "validation": "Transición de etapa inválida. Por favor, verifica y vuelve a intentar.",
+        "notFound": "Atención no encontrada. Por favor, recarga la página.",
+        "forbidden": "No tienes permisos para avanzar etapas.",
+        "conflict": "La atención fue modificada por otro usuario. Por favor, recarga la página.",
+        "generic": "Error al avanzar etapa. Por favor, intenta nuevamente."
+      },
+      "currentStage": "Etapa Actual",
+      "stageHistory": "Historial de Etapas",
+      "current": "Actual",
       "consultation": "Consulta",
       "control": "Control",
-      "prescription": "Receta",
-      "examOrder": "Orden de Examen",
+      "prescription": {
+        "create": "Crear Receta"
+      },
+      "examOrder": {
+        "create": "Crear Orden de Examen"
+      },
+      "reference": {
+        "create": "Crear Referencia"
+      },
       "fromBooking": "Desde Reserva",
       "fromControl": "Desde Control",
       "comeback": "Retorno",
@@ -1847,6 +2083,36 @@
     "patientHistoryOf": "Historial Médico de",
     "pendingControls": "Controles",
     "pendingBookings": "Reservas",
+    "photoCapture": {
+      "title": "Foto del Paciente",
+      "takePhoto": "Tomar Foto",
+      "takePhotoDesc": "Usar cámara para tomar una foto nueva",
+      "uploadFile": "Subir Archivo",
+      "uploadFileDesc": "Seleccionar foto desde el dispositivo",
+      "selectPhoto": "Seleccionar Foto",
+      "fileFormats": "JPG, PNG o WebP (máx. 5MB)",
+      "capture": "Capturar",
+      "capturing": "Capturando...",
+      "cancel": "Cancelar",
+      "back": "Volver",
+      "savePhoto": "Guardar Foto",
+      "retake": "Tomar Otra",
+      "preview": "Vista previa de la foto",
+      "tryBackCamera": "Probar Cámara Trasera",
+      "errors": {
+        "captureFailed": "Error al capturar la foto. Intente nuevamente.",
+        "fileFormatNotSupported": "Formato de archivo no soportado. Use JPG, PNG o WebP.",
+        "fileTooLarge": "El archivo es muy grande. Máximo 5MB permitido.",
+        "saveFailed": "Error al guardar la foto. Intente nuevamente.",
+        "noCameraAccess": "No se pudo acceder a ninguna cámara. Use la opción de subir archivo.",
+        "cameraDenied": "Acceso a la cámara denegado. Por favor, permita el acceso a la cámara en su navegador.",
+        "cameraNotFound": "No se encontró cámara disponible en este dispositivo.",
+        "cameraNotReadable": "Error al acceder a la cámara. Puede estar en uso por otra aplicación.",
+        "cameraOverconstrained": "La cámara no cumple con los requisitos solicitados.",
+        "cameraNotSupported": "Su navegador no soporta acceso a la cámara. Use un navegador moderno.",
+        "cameraUnknown": "Error al acceder a la cámara: {error}"
+      }
+    },
     "bookingsOf": "Reservas de",
     "edit": "Editar",
     "dataOf": "Datos de",
@@ -1944,6 +2210,7 @@
     "clientCard": {
       "tooltip": {
         "status": "Estado del cliente basado en días desde última atención",
+        "attentionStatus": "Estado del atendimento",
         "copy": "Copiar datos del cliente",
         "attentions": "Número total de atenciones",
         "survey": "Cliente ha completado encuesta de satisfacción",
@@ -1952,6 +2219,7 @@
         "daysSinceContact": "Días transcurridos desde el último contacto. Verde: ≤90 días, Amarillo: 91-180 días, Rojo: >180 días",
         "viewAttentions": "Ver historial de atenciones del cliente",
         "viewBookings": "Ver reservas y citas del cliente",
+        "viewPackages": "Ver paquetes y sesiones del cliente",
         "viewHistory": "Ver historial médico y controles del paciente",
         "editClient": "Editar información del cliente",
         "viewContacts": "Ver historial de contactos realizados",
@@ -1991,7 +2259,9 @@
         "surveyInactive": "Encuesta inactiva",
         "itemActive": "Item activo",
         "itemInactive": "Item inactivo",
-        "itemTag": "Tag del item"
+        "itemTag": "Tag del item",
+        "preprontuarioCompleted": "Preprontuario completado",
+        "preprontuarioPending": "Preprontuario pendiente"
       },
       "label": {
         "whatsapp": "WhatsApp",
@@ -2238,6 +2508,10 @@
       "bookings-management": {
         "title": "Reporte de Reservas (Detalles)",
         "description": "Descarga archivo report con el resultado de las reservas realizadas en el rango de fechas seleccionado"
+      },
+      "packages-management": {
+        "title": "Exportar Paquetes",
+        "description": "Exportar lista de paquetes"
       }
     },
     "capacitiesList": {
@@ -2366,15 +2640,33 @@
           "view": "Editar Clientes"
         },
         "reports": {
-          "surveys": "Reporte de Encuestas (Resumen)",
-          "indicators": "Reporte de Indicadores",
-          "graphs": "Reporte de Tendencias",
-          "surveys-management": "Reporte de Encuestas (Detalles)",
-          "surveys-consolidated": "Reporte de Encuestas (Consolidado)",
-          "attentions-management": "Reporte de Atenciones (Detalles)",
-          "clients-management": "Reporte de Clientes (Detalles)",
-          "client-contacts-management": "Reporte de Contactos (Detalles)",
-          "bookings-management": "Reporte de Reservas (Detalles)"
+          "surveys": {
+            "view": "Reporte de Encuestas (Resumen)"
+          },
+          "indicators": {
+            "view": "Reporte de Indicadores"
+          },
+          "graphs": {
+            "view": "Reporte de Tendencias"
+          },
+          "surveys-management": {
+            "view": "Reporte de Encuestas (Detalles)"
+          },
+          "surveys-consolidated": {
+            "view": "Reporte de Encuestas (Consolidado)"
+          },
+          "attentions-management": {
+            "view": "Reporte de Atenciones (Detalles)"
+          },
+          "clients-management": {
+            "view": "Reporte de Clientes (Detalles)"
+          },
+          "client-contacts-management": {
+            "view": "Reporte de Contactos (Detalles)"
+          },
+          "bookings-management": {
+            "view": "Reporte de Reservas (Detalles)"
+          }
         }
       }
     },
@@ -2490,6 +2782,12 @@
     "seeMenu": "Menú",
     "booking-manage": "Reservas Visión 360°",
     "patient-history-item-admin": "Items Historia Médica",
+    "medical-management": "Gestión Médica",
+    "medications-admin": "Medicamentos",
+    "medical-exams-admin": "Exámenes Médicos",
+    "medical-templates-admin": "Plantillas Médicas",
+    "pdf-templates-admin": "Plantillas PDF",
+    "audit-log": "Registro de Auditoría",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -2510,6 +2808,7 @@
           "queues-admin": "Administrar Filas",
           "collaborators-admin": "Administrar Colaboradores",
           "permissions-admin": "Administrar Permisos",
+          "administrators-admin": "Administrar Administradores",
           "configuration": "Configuraciones",
           "documents": "Documentos",
           "surveys-admin": "Administrar Encuestas",
@@ -2524,7 +2823,13 @@
           "outcome-types-admin": "Administrar Tipos de Egreso",
           "booking-manage": "Reservas Visión 360°",
           "company-admin": "Compañías",
-          "patient-history-item-admin": "Items Historia Médica"
+          "patient-history-item-admin": "Items Historia Médica",
+          "medical-management": "Gestión Médica",
+          "medications-admin": "Gestionar Medicamentos",
+          "medical-exams-admin": "Gestionar Exámenes Médicos",
+          "medical-templates-admin": "Gestionar Plantillas Médicas",
+          "pdf-templates-admin": "Gestionar Plantillas PDF",
+          "audit-log": "Auditoría y Cumplimiento"
         }
       }
     }
@@ -2751,6 +3056,10 @@
     "blockTime": "Bloque (Min):",
     "procedures": "Procedimientos:",
     "proceduresHelp": "Cantidad de Procedimientos necesarios para completar el Servicio",
+    "proceduresList": "Lista de Procedimientos:",
+    "proceduresListHelp": "Lista separada por comas de cantidades disponibles (ej: 3,10,20). Si está definida, se mostrará esta lista en lugar del campo procedimientos.",
+    "daysBetweenProcedures": "Días entre Procedimientos:",
+    "daysBetweenProceduresHelp": "Días mínimos que deben transcurrir entre sesiones del mismo servicio para el mismo cliente",
     "tagHelp": "Tipo de servicio",
     "onlineHelp": "Servicio puede ser mostrado para ser seleccionado por el usuario.",
     "blockTimeHelp": "Duración del bloque de atención al usuario para este servicio en minutos.",
@@ -3003,6 +3312,7 @@
     "return": "Volver",
     "products": "Productos",
     "attentions": "Atenciones",
+    "dashboard": "Dashboard",
     "consuptionsOf": "Consumos de",
     "replacementsOf": "Reposiciones de",
     "replacementLevel": "Nivel Recarga:",
@@ -3095,6 +3405,51 @@
       "replacement": "Este producto no tiene disponibilidad, consulte al administrador"
     }
   },
+  "inventoryDashboard": {
+    "title": "Dashboard de Inventario",
+    "dateFilters": "Filtros de Fechas",
+    "critical": "Críticos",
+    "criticalDesc": "Requieren acción inmediata",
+    "attention": "En Atención",
+    "attentionDesc": "Monitorear de cerca",
+    "optimal": "Óptimos",
+    "optimalDesc": "Stock en nivel adecuado",
+    "total": "Total",
+    "totalDesc": "Productos en inventario",
+    "totalValue": "Valor Total",
+    "totalValueDesc": "Valor del inventario",
+    "periodMetrics": "Métricas del Período",
+    "consumption": "Consumo",
+    "dailyAverage": "Promedio Diario",
+    "transactions": "Transacciones",
+    "vsPreviousPeriod": "vs período anterior",
+    "replacement": "Recargas",
+    "netBalance": "Balance Neto",
+    "ratio": "Ratio Recarga/Consumo",
+    "periodDays": "Días del Período",
+    "activeAlerts": "Alertas Activas",
+    "daysUntilStockout": "Días hasta agotarse",
+    "daysUntilExpiration": "Días hasta expiración",
+    "recharge": "Recargar",
+    "alertCritical": "Productos Críticos",
+    "productsNeedAction": "productos requieren acción inmediata",
+    "alertExpiring": "Productos Próximos a Expirar",
+    "productsExpiring": "productos expiran en los próximos 30 días",
+    "alertAttention": "Productos en Atención",
+    "productsMonitor": "productos requieren monitoreo",
+    "allGood": "Todo en Orden",
+    "noAlerts": "No hay alertas activas en este momento",
+    "criticalProducts": "Productos Críticos",
+    "stockoutIn": "Se agotará en",
+    "expiringSoon": "Próximos a Expirar",
+    "expires": "Expira",
+    "trends": "Tendencias",
+    "comparativeChart": "Comparativo Consumo vs Recarga",
+    "consumptionEvolution": "Evolución de Consumo",
+    "replacementEvolution": "Evolución de Recargas",
+    "noData": "Sin datos",
+    "noDataDesc": "No hay datos de inventario disponibles"
+  },
   "businessFinancial": {
     "title": "Gestión Financiera",
     "commerce": "Selecciona el comercio:",
@@ -3130,6 +3485,82 @@
     "incomeStatus": "Estado",
     "fiscalNote": "Nota Fiscal",
     "automatic": "Automático",
+    "kpis": {
+      "totalIncomes": "Ingresos Totales",
+      "totalOutcomes": "Egresos Totales",
+      "netProfit": "Ganancia Neta",
+      "profitMargin": "Margen de Ganancia",
+      "averageDailyIncome": "Promedio Diario de Ingresos",
+      "daysUntilMonthEnd": "Días hasta Fin de Mes",
+      "vsPreviousMonth": "vs mes anterior",
+      "vsPreviousPeriod": "vs período anterior"
+    },
+    "distribution": {
+      "title": "Distribución de Ingresos por Tipo"
+    },
+    "trends": {
+      "title": "Análisis de Tendencias (12 Meses)",
+      "yearOverYear": "Comparación Año a Año",
+      "averageIncomes": "Promedio de Ingresos",
+      "averageOutcomes": "Promedio de Egresos",
+      "averageProfit": "Promedio de Ganancia",
+      "averageMargin": "Promedio de Margen"
+    },
+    "categories": {
+      "title": "Análisis de Egresos por Categoría",
+      "distribution": "Distribución de Gastos",
+      "topCategories": "Top 5 Categorías de Gastos",
+      "comparison": "Comparación por Categoría",
+      "category": "Categoría",
+      "currentPeriod": "Período Actual",
+      "previousPeriod": "Período Anterior",
+      "change": "Cambio",
+      "transactions": "transacciones",
+      "uncategorized": "Sin categoría"
+    },
+    "filters": {
+      "amountRange": "Rango de Montos",
+      "minAmount": "Monto Mínimo",
+      "maxAmount": "Monto Máximo",
+      "incomeType": "Tipo de Ingreso",
+      "paymentMethod": "Método de Pago",
+      "all": "Todos"
+    },
+    "projectedCashFlow": "Flujo de Caja Proyectado",
+    "projectedCashFlowDescription": "Proyección basada en el promedio diario del período actual",
+    "projectedCashFlowDays": "Días restantes del mes: {days}",
+    "monthlyGoal": "Objetivo Mensual",
+    "alerts": {
+      "title": "Alertas Financieras",
+      "allGood": "Todo en orden",
+      "expensesExceedIncome": "Los gastos superan los ingresos",
+      "lowMargin": "Margen bajo ({threshold}%)",
+      "pendingIncomes": "{count} ingresos pendientes por {amount} (más de {days} días)",
+      "pendingOutcomes": "{count} egresos pendientes por {amount} (más de {days} días)",
+      "unusualExpenses": "Gastos inusuales: aumento del {percentage}% vs período anterior",
+      "negativeProjectedCashFlow": "Flujo de caja proyectado negativo: {amount}",
+      "behindMonthlyGoal": "Por debajo del objetivo mensual: {progress}% de progreso"
+    },
+    "alerts": {
+      "title": "Alertas Financieras",
+      "expensesExceedIncome": "Los gastos superan los ingresos este mes",
+      "pendingPayments": "Hay {count} pagos pendientes por más de {days} días",
+      "lowMargin": "El margen de ganancia está por debajo del {threshold}%",
+      "unusualExpense": "Gasto inusual detectado",
+      "allGood": "Todo en orden",
+      "health": {
+        "excellent": "Excelente",
+        "good": "Bueno",
+        "warning": "Atención",
+        "critical": "Crítico"
+      }
+    },
+    "comparison": {
+      "noData": "Sin datos para comparar",
+      "increase": "Aumento",
+      "decrease": "Disminución",
+      "noChange": "Sin cambios"
+    },
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -3156,7 +3587,80 @@
       "outcomes": {
         "title": "Informe Egresos",
         "description": "Descarga archivo report de Egresos"
-      }
+      },
+      "cashFlow": {
+        "title": "Reporte de Flujo de Caja Mensual",
+        "description": "Descarga reporte de flujo de caja mensual en CSV",
+        "month": "Mes",
+        "incomes": "Ingresos",
+        "commissions": "Comisiones",
+        "netIncomes": "Ingresos Netos",
+        "outcomes": "Egresos",
+        "cashFlow": "Flujo de Caja",
+        "margin": "Margen",
+        "incomeCount": "Cantidad Ingresos",
+        "outcomeCount": "Cantidad Egresos",
+        "summary": "RESUMEN",
+        "projections": "PROYECCIONES",
+        "nextMonth": "Próximo Mes",
+        "nextQuarter": "Próximo Trimestre",
+        "projectedIncome": "Ingresos Proyectados",
+        "projectedOutcome": "Egresos Proyectados",
+        "projectedCashFlow": "Flujo de Caja Proyectado"
+      },
+      "serviceProfitability": {
+        "title": "Reporte de Rentabilidad por Servicio",
+        "description": "Descarga reporte de rentabilidad por servicio en CSV",
+        "serviceId": "ID Servicio",
+        "serviceName": "Nombre Servicio",
+        "transactionCount": "Cantidad Transacciones",
+        "attentionCount": "Cantidad Atenciones",
+        "uniqueClients": "Clientes Únicos",
+        "totalIncomes": "Ingresos Totales",
+        "totalCommissions": "Comisiones Totales",
+        "netIncomes": "Ingresos Netos",
+        "totalOutcomes": "Egresos Totales",
+        "profit": "Ganancia",
+        "margin": "Margen",
+        "profitability": "Rentabilidad",
+        "averageIncome": "Ingreso Promedio"
+      },
+      "mostProfitableClients": {
+        "title": "Reporte de Clientes Más Rentables",
+        "description": "Descarga reporte de clientes más rentables en CSV",
+        "clientName": "Nombre Cliente",
+        "clientIdNumber": "Documento",
+        "clientEmail": "Email",
+        "clientPhone": "Teléfono",
+        "transactionCount": "Cantidad Transacciones",
+        "attentionCount": "Cantidad Atenciones",
+        "bookingCount": "Cantidad Reservas",
+        "totalIncomes": "Ingresos Totales",
+        "totalCommissions": "Comisiones Totales",
+        "netIncomes": "Ingresos Netos",
+        "averageTicket": "Ticket Promedio",
+        "lifetimeValue": "Valor de Vida (LTV)",
+        "firstPurchase": "Primera Compra",
+        "lastPurchase": "Última Compra",
+        "activeMonths": "Meses Activos",
+        "frequency": "Frecuencia"
+      },
+      "expensesByProvider": {
+        "title": "Reporte de Gastos por Proveedor",
+        "description": "Descarga reporte de gastos agrupados por proveedor en CSV",
+        "providerName": "Nombre Proveedor",
+        "transactionCount": "Cantidad Transacciones",
+        "totalAmount": "Monto Total",
+        "averageAmount": "Monto Promedio",
+        "previousAmount": "Monto Período Anterior",
+        "change": "Cambio %",
+        "firstExpense": "Primer Gasto",
+        "lastExpense": "Último Gasto",
+        "activeMonths": "Meses Activos",
+        "categories": "Categorías"
+      },
+      "title": "Reportes Financieros",
+      "download": "Descargar"
     },
     "capacitiesList": {
       "financial": {
@@ -3185,6 +3689,142 @@
       "title": "Debes ingresar el concepto",
       "date": "Debes ingresar la fecha",
       "amount": "Debes ingresar la cantidad"
+    }
+  },
+  "businessMedicationsAdmin": {
+    "title": "Medicamentos",
+    "name": "Nombre:",
+    "commercialName": "Nombre Comercial:",
+    "atcCode": "Código ATC:",
+    "activePrinciple": "Principio Activo:",
+    "presentation": "Presentación:",
+    "dosageForm": "Forma de Dosificación:",
+    "route": "Vía:",
+    "standardDosage": "Dosis Estándar:",
+    "contraindications": "Contraindicaciones:",
+    "interactions": "Interacciones:",
+    "update": "Actualizar",
+    "add": "Agregar",
+    "delete": "Eliminar",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "2": {
+        "title": "¡Oh no!",
+        "content": "En este momento no hay medicamentos."
+      },
+      "4": {
+        "title": "¡Ups!",
+        "content": "No hay medicamentos. Ve a la administración de comercios y verifica la información."
+      }
+    },
+    "capacitiesList": {
+      "medications": {
+        "admin": {
+          "view": "Acceder a esta sección",
+          "read": "Ver los Medicamentos",
+          "edit": "Editar los Medicamentos",
+          "update": "Actualizar los Medicamentos",
+          "add": "Agregar Medicamentos",
+          "delete": "Eliminar Medicamentos",
+          "limit": "Cantidad límite de Medicamentos"
+        }
+      }
+    },
+    "validate": {
+      "name": "Debes ingresar el nombre",
+      "activePrinciple": "Debes ingresar el principio activo"
+    }
+  },
+  "businessMedicalExamsAdmin": {
+    "title": "Exámenes Médicos",
+    "name": "Nombre:",
+    "code": "Código LOINC:",
+    "type": "Tipo:",
+    "category": "Categoría:",
+    "description": "Descripción:",
+    "preparation": "Preparación:",
+    "estimatedDuration": "Duración Estimada (min):",
+    "cost": "Costo:",
+    "update": "Actualizar",
+    "add": "Agregar",
+    "delete": "Eliminar",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "2": {
+        "title": "¡Oh no!",
+        "content": "En este momento no hay exámenes médicos."
+      },
+      "4": {
+        "title": "Seleccione un Comercio",
+        "content": "Debe seleccionar un comercio para gestionar exámenes médicos"
+      }
+    },
+    "capacitiesList": {
+      "medical-exams": {
+        "admin": {
+          "view": "Acceder a esta sección",
+          "read": "Ver los Exámenes",
+          "edit": "Editar los Exámenes",
+          "update": "Actualizar los Exámenes",
+          "add": "Agregar Exámenes",
+          "delete": "Eliminar Exámenes",
+          "limit": "Cantidad límite de Exámenes Médicos"
+        }
+      }
+    },
+    "validate": {
+      "name": "Debes ingresar el nombre",
+      "type": "Debes seleccionar el tipo"
+    }
+  },
+  "businessMedicalTemplatesAdmin": {
+    "title": "Plantillas Médicas",
+    "name": "Nombre:",
+    "description": "Descripción:",
+    "type": "Tipo:",
+    "category": "Categoría:",
+    "content": "Contenido:",
+    "scope": "Alcance:",
+    "update": "Actualizar",
+    "add": "Agregar",
+    "delete": "Eliminar",
+    "contentHelp": "Usa {'{{'}variableName{'}}'} para variables. Variables del sistema (reemplazadas automáticamente): {'{{'}date{'}}'}, {'{{'}time{'}}'}, {'{{'}datetime{'}}'}. Las variables personalizadas deben proporcionarse al procesar la plantilla.",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "2": {
+        "title": "¡Oh no!",
+        "content": "En este momento no hay plantillas médicas."
+      },
+      "4": {
+        "title": "¡Ups!",
+        "content": "No hay plantillas médicas. Ve a la administración de comercios y verifica la información."
+      }
+    },
+    "capacitiesList": {
+      "medical-templates": {
+        "admin": {
+          "view": "Acceder a esta sección",
+          "read": "Ver las Plantillas",
+          "edit": "Editar las Plantillas",
+          "update": "Actualizar las Plantillas",
+          "add": "Agregar Plantillas",
+          "delete": "Eliminar Plantillas",
+          "limit": "Cantidad límite de Plantillas Médicas"
+        }
+      }
+    },
+    "validate": {
+      "name": "Debes ingresar el nombre",
+      "content": "Debes ingresar el contenido"
     }
   },
   "businessModulesAdmin": {
@@ -3500,8 +4140,113 @@
     "attention": "Atención",
     "consultation": "Consulta",
     "control": "Control",
-    "prescription": "Receta",
-    "examOrder": "Orden de Examen",
+    "prescription": {
+      "create": "Crear Receta",
+      "subtitle": "Prescriba medicamentos para el paciente",
+      "diagnosis": "Diagnóstico",
+      "validUntil": "Válida hasta",
+      "priority": "Prioridad",
+      "refillsAllowed": "Refills permitidos",
+      "addMedications": "Agregar Medicamentos",
+      "searchMedication": "Buscar medicamento...",
+      "dosage": "Dosis",
+      "frequency": "Frecuencia",
+      "duration": "Duración",
+      "quantity": "Cantidad",
+      "specialInstructions": "Instrucciones especiales",
+      "generalInstructions": "Instrucciones Generales",
+      "internalNotes": "Notas internas",
+      "prescribedMedications": "Medicamentos Prescritos",
+      "addMedication": "Agregar Medicamento",
+      "createPrescription": "Crear Receta",
+      "clear": "Limpiar",
+      "generalInformation": "Información General",
+      "selectFrequency": "Seleccionar frecuencia",
+      "onceDay": "1 vez al día",
+      "twiceDay": "2 veces al día",
+      "threeTimesDay": "3 veces al día",
+      "fourTimesDay": "4 veces al día",
+      "every4h": "Cada 4 horas",
+      "every6h": "Cada 6 horas",
+      "every8h": "Cada 8 horas",
+      "every12h": "Cada 12 horas",
+      "asNeeded": "Según necesidad",
+      "priorityLow": "Baja",
+      "priorityNormal": "Normal",
+      "priorityHigh": "Alta",
+      "priorityUrgent": "Urgente",
+      "templates": "Plantillas",
+      "mostUsedTemplates": "Plantillas Más Usadas",
+      "interactionWarnings": "Advertencias de Interacciones"
+    },
+    "examOrder": {
+      "create": "Crear Orden de Examen",
+      "subtitle": "Solicite exámenes diagnósticos para el paciente",
+      "clinicalIndication": "Indicación Clínica",
+      "diagnosis": "Diagnóstico",
+      "urgency": "Urgencia",
+      "scheduledDate": "Fecha Programada",
+      "requiresFasting": "Requiere ayuno",
+      "addExams": "Agregar Exámenes",
+      "searchExam": "Buscar examen por nombre o código...",
+      "allTypes": "Todos los tipos",
+      "type": "Tipo",
+      "estimatedDuration": "Duración Estimada",
+      "specialInstructions": "Instrucciones Especiales",
+      "patientPreparation": "Preparación del Paciente",
+      "addExam": "Agregar Examen",
+      "requestedExams": "Exámenes Solicitados",
+      "additionalInformation": "Información Adicional",
+      "internalNotes": "Notas Internas",
+      "createOrder": "Crear Orden de Examen",
+      "clear": "Limpiar",
+      "generalInformation": "Información General",
+      "urgencyRoutine": "Rutina",
+      "urgencyUrgent": "Urgente",
+      "urgencyStat": "STAT (Inmediato)",
+      "urgencyAsap": "Lo antes posible",
+      "templates": "Plantillas",
+      "orderTemplates": "Plantillas de Órdenes"
+    },
+    "reference": {
+      "create": "Crear Referencia",
+      "subtitle": "Refiera al paciente a otro especialista o institución",
+      "destinationSpecialty": "Especialidad de Destino",
+      "specialistDoctor": "Médico Especialista",
+      "destinationInstitution": "Institución de Destino",
+      "urgency": "Urgencia",
+      "preferredDate": "Fecha Preferida",
+      "requiresFollowUp": "Requiere seguimiento",
+      "reasonForReferral": "Motivo de la Referencia",
+      "clinicalSummary": "Resumen Clínico",
+      "principalDiagnosis": "Diagnóstico Principal",
+      "expectedResult": "Resultado Esperado",
+      "relevantHistory": "Antecedentes Relevantes",
+      "currentMedications": "Medicamentos Actuales",
+      "allergies": "Alergias",
+      "recentVitalSigns": "Signos Vitales Recientes",
+      "specialInstructions": "Instrucciones Especiales",
+      "internalNotes": "Notas Internas",
+      "createReference": "Crear Referencia",
+      "clear": "Limpiar",
+      "referenceInformation": "Información de la Referencia",
+      "clinicalInformation": "Información Clínica",
+      "patientHistory": "Historia del Paciente",
+      "additionalInformation": "Información Adicional",
+      "preview": "Vista Previa",
+      "medicalReference": "Referencia Médica",
+      "specialty": "Especialidad",
+      "doctor": "Médico",
+      "institution": "Institución",
+      "reason": "Motivo",
+      "urgencyRoutine": "Rutina",
+      "urgencyUrgent": "Urgente",
+      "urgencyStat": "STAT (Inmediato)",
+      "urgencyAsap": "Lo antes posible",
+      "selectSpecialty": "Seleccione especialidad",
+      "templates": "Plantillas",
+      "referenceTemplates": "Plantillas de Referencias"
+    },
     "fromBooking": "Desde Reserva",
     "fromControl": "Desde Control",
     "comeback": "Retorno",
@@ -3565,6 +4310,141 @@
     "physicalExam": "Examen Físico",
     "diagnostic": "Diagnóstico",
     "medicalOrder": "Orden Médica",
+    "medicalOrderSubtitle": "Registre las órdenes médicas del paciente",
+    "prescription": {
+      "create": "Crear Receta",
+      "subtitle": "Prescriba medicamentos para el paciente",
+      "diagnosis": "Diagnóstico",
+      "validUntil": "Válida hasta",
+      "priority": "Prioridad",
+      "refillsAllowed": "Refills permitidos",
+      "addMedications": "Agregar Medicamentos",
+      "searchMedication": "Buscar medicamento...",
+      "dosage": "Dosis",
+      "frequency": "Frecuencia",
+      "duration": "Duración",
+      "quantity": "Cantidad",
+      "specialInstructions": "Instrucciones especiales",
+      "generalInstructions": "Instrucciones Generales",
+      "internalNotes": "Notas internas",
+      "prescribedMedications": "Medicamentos Prescritos",
+      "addMedication": "Agregar Medicamento",
+      "createPrescription": "Crear Receta",
+      "clear": "Limpiar",
+      "generalInformation": "Información General",
+      "selectFrequency": "Seleccionar frecuencia",
+      "onceDay": "1 vez al día",
+      "twiceDay": "2 veces al día",
+      "threeTimesDay": "3 veces al día",
+      "fourTimesDay": "4 veces al día",
+      "every4h": "Cada 4 horas",
+      "every6h": "Cada 6 horas",
+      "every8h": "Cada 8 horas",
+      "every12h": "Cada 12 horas",
+      "asNeeded": "Según necesidad",
+      "priorityLow": "Baja",
+      "priorityNormal": "Normal",
+      "priorityHigh": "Alta",
+      "priorityUrgent": "Urgente",
+      "templates": "Plantillas",
+      "mostUsedTemplates": "Plantillas Más Usadas",
+      "interactionWarnings": "Advertencias de Interacciones"
+    },
+    "examOrder": {
+      "create": "Crear Orden de Examen",
+      "subtitle": "Solicite exámenes diagnósticos para el paciente",
+      "clinicalIndication": "Indicación Clínica",
+      "diagnosis": "Diagnóstico",
+      "urgency": "Urgencia",
+      "scheduledDate": "Fecha Programada",
+      "requiresFasting": "Requiere ayuno",
+      "addExams": "Agregar Exámenes",
+      "searchExam": "Buscar examen por nombre o código...",
+      "allTypes": "Todos los tipos",
+      "type": "Tipo",
+      "estimatedDuration": "Duración Estimada",
+      "specialInstructions": "Instrucciones Especiales",
+      "patientPreparation": "Preparación del Paciente",
+      "addExam": "Agregar Examen",
+      "requestedExams": "Exámenes Solicitados",
+      "additionalInformation": "Información Adicional",
+      "internalNotes": "Notas Internas",
+      "createOrder": "Crear Orden de Examen",
+      "clear": "Limpiar",
+      "generalInformation": "Información General",
+      "urgencyRoutine": "Rutina",
+      "urgencyUrgent": "Urgente",
+      "urgencyStat": "STAT (Inmediato)",
+      "urgencyAsap": "Lo antes posible",
+      "templates": "Plantillas",
+      "orderTemplates": "Plantillas de Órdenes"
+    },
+    "reference": {
+      "create": "Crear Referencia",
+      "subtitle": "Refiera al paciente a otro especialista o institución",
+      "destinationSpecialty": "Especialidad de Destino",
+      "specialistDoctor": "Médico Especialista",
+      "destinationInstitution": "Instituición de Destino",
+      "urgency": "Urgencia",
+      "preferredDate": "Fecha Preferida",
+      "requiresFollowUp": "Requiere seguimiento",
+      "reasonForReferral": "Motivo de la Referencia",
+      "clinicalSummary": "Resumen Clínico",
+      "principalDiagnosis": "Diagnóstico Principal",
+      "expectedResult": "Resultado Esperado",
+      "relevantHistory": "Antecedentes Relevantes",
+      "currentMedications": "Medicamentos Actuales",
+      "allergies": "Alergias",
+      "recentVitalSigns": "Signos Vitales Recientes",
+      "specialInstructions": "Instrucciones Especiales",
+      "internalNotes": "Notas Internas",
+      "createReference": "Crear Referencia",
+      "clear": "Limpiar",
+      "referenceInformation": "Información de la Referencia",
+      "clinicalInformation": "Información Clínica",
+      "patientHistory": "Historia del Paciente",
+      "additionalInformation": "Información Adicional",
+      "preview": "Vista Previa",
+      "medicalReference": "Referencia Médica",
+      "specialty": "Especialidad",
+      "doctor": "Médico",
+      "institution": "Institución",
+      "reason": "Motivo",
+      "urgencyRoutine": "Rutina",
+      "urgencyUrgent": "Urgente",
+      "urgencyStat": "STAT (Inmediato)",
+      "urgencyAsap": "Lo antes posible",
+      "selectSpecialty": "Seleccionar especialidad",
+      "templates": "Plantillas",
+      "referenceTemplates": "Reference Templates"
+    },
+    "orderType": {
+      "prescription": "Receta",
+      "exam": "Exámenes",
+      "reference": "Referencia",
+      "text": "Texto Libre"
+    },
+    "historyTab": {
+      "prescription": "Recetas",
+      "exam": "Exámenes",
+      "reference": "Referencias",
+      "text": "Texto Libre"
+    },
+    "startRecording": "Iniciar grabación de voz",
+    "stopRecording": "Detener grabación",
+    "clearField": "Limpiar campo",
+    "recordingMessage": "Grabando... Hable ahora",
+    "prescriptionRefilledSuccess": "Receta reforzada exitosamente",
+    "prescriptionRefilledError": "Error al reforzar la receta",
+    "dispensationRecordedSuccess": "Dispensación registrada exitosamente",
+    "dispensationRecordedError": "Error al registrar la dispensación",
+    "examOrderCompletedSuccess": "Orden de examen marcada como completada",
+    "examOrderCompletedError": "Error al completar la orden de examen",
+    "referenceAcceptedSuccess": "Referencia aceptada exitosamente",
+    "referenceAcceptedError": "Error al aceptar la referencia",
+    "referenceAttendedSuccess": "Referencia marcada como atendida",
+    "referenceAttendedError": "Error al marcar la referencia como atendida",
+    "returnReportPrompt": "Ingrese el informe de retorno (opcional):",
     "documents": "Documentos",
     "control": "Controles",
     "resume": "Resumen",
@@ -3790,6 +4670,32 @@
     "keyNameHelp": "Identificador usado para la URL del ministe.",
     "tagHelp": "Identificador corto del negocio utilizado en el producto digital.",
     "listResult": "Registros:",
+    "searchOrSelectBusiness": "Buscar o seleccionar negocio",
+    "commerce": "Comercio:",
+    "viewAsBusiness": "Ver como Usuario del Negocio",
+    "manageBusiness": "Gestionar Negocio",
+    "selectAction": "Seleccionar una acción para este negocio:",
+    "accessAsBusiness": "Acceder como Usuario del Negocio",
+    "noCommerces": "Este negocio no tiene comercios disponibles",
+    "selectCommerce": "Seleccionar comercio",
+    "logoUpload": {
+      "title": "Gestionar Logo del Negocio",
+      "selectLogo": "Seleccionar Logo",
+      "selectNewLogo": "Seleccionar Nuevo Logo",
+      "fileFormats": "JPG, PNG o WebP (máx. 5MB)",
+      "recommendedSize": "Tamaño recomendado: 250x230px o proporción similar",
+      "preview": "Vista previa del logo",
+      "currentLogo": "Logo Actual",
+      "replaceLogo": "Reemplazar Logo",
+      "replaceHint": "Haga clic en el botón a continuación para reemplazar el logo actual",
+      "saveLogo": "Guardar Logo",
+      "retake": "Seleccionar Otro",
+      "errors": {
+        "fileFormatNotSupported": "Formato de archivo no soportado. Use JPG, PNG o WebP.",
+        "fileTooLarge": "El archivo es muy grande. Máximo 5MB permitido.",
+        "saveFailed": "Error al guardar el logo. Intente nuevamente."
+      }
+    },
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -3955,6 +4861,9 @@
     "plans": "Planes",
     "users": "Usuarios",
     "email": "Email:",
+    "allModules": "Todos los Módulos",
+    "allCategories": "Todas las Categorías",
+    "clearFilters": "Limpiar Filtros",
     "message": {
       "1": {
         "title": "¡Ups!",
@@ -4138,6 +5047,7 @@
     "return": "Volver",
     "validated": "Validar",
     "desactivate": "Desactivar",
+    "active": "Activo",
     "paymentMethod": "Medio de Pago:",
     "amount": "Monto:",
     "number": "Id. TRX:",
@@ -4386,8 +5296,13 @@
     "reject": "Rechazar",
     "filterByStatus": "Filtrar por Estado",
     "filterByTime": "Filtrar por Tiempo desde Creación",
+    "filterByTemperature": "Filtrar por Prioridad",
     "clearStatusFilter": "Limpiar Filtro de Estado",
     "clearTimeFilter": "Limpiar Filtro de Tiempo",
+    "temperature": "Prioridad",
+    "temperatureQuente": "Caliente (Rojo)",
+    "temperatureMorno": "Tibio (Verde)",
+    "temperatureFrio": "Frío (Azul)",
     "timeIndicator": {
       "green": "Menos de 1 mes",
       "yellow": "1-3 meses",
@@ -4516,6 +5431,52 @@
         "validate": "Validar activación de Planes - Sección Activación de Planes"
       }
     },
+    "audit-log": {
+      "admin": {
+        "view": "Ver Sección - Registro de Auditoría",
+        "read": "Leer datos - Sección Registro de Auditoría",
+        "export": "Exportar datos - Sección Registro de Auditoría",
+        "limit": "Límite de datos - Sección Registro de Auditoría"
+      },
+      "title": "Registro de Auditoría",
+      "refresh": "Actualizar",
+      "export": "Exportar",
+      "filters": {
+        "action": "Acción",
+        "entityType": "Tipo de Entidad",
+        "search": "Buscar",
+        "searchPlaceholder": "Buscar por usuario, email, entidad, IP..."
+      },
+      "summary": {
+        "total": "Total de Registros",
+        "byAction": "Por Acción",
+        "byEntityType": "Por Tipo de Entidad",
+        "uniqueUsers": "Usuarios Únicos"
+      },
+      "logs": "Registros",
+      "noLogs": "No se encontraron registros de auditoría",
+      "message": {
+        "1": {
+          "title": "¡Ups!",
+          "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+        },
+        "noCommerce": {
+          "title": "Seleccione un Comercio",
+          "content": "Debe seleccionar un comercio para ver los registros de auditoría"
+        }
+      },
+      "table": {
+        "timestamp": "Fecha/Hora",
+        "user": "Usuario",
+        "action": "Acción",
+        "entityType": "Tipo",
+        "entityId": "ID Entidad",
+        "result": "Resultado",
+        "ipAddress": "Dirección IP",
+        "details": "Detalles",
+        "viewDetails": "Ver Detalles"
+      }
+    },
     "client": {
       "notify": {
         "whatsapp": "Campo de número Whatsapp para notificaciones",
@@ -4547,13 +5508,32 @@
         "queues-admin": "Habilitar Administrar Filas - Menú Principal Negocio",
         "collaborators-admin": "Habilitar Administrar Colaboradores - Menú Principal Negocio",
         "permissions-admin": "Habilitar Administrar Permisos - Menú Principal Negocio",
+        "administrators-admin": "Habilitar Administrar Administradores - Menú Principal Negocio",
         "configuration": "Habilitar Administrar Configuraciones - Menú Principal Negocio",
         "your-plan": "Habilitar Tu Plan - Menú Principal Negocio",
         "surveys-admin": "Habilitar Administrar Encuestas - Menú Principal Negocio",
         "forms-admin": "Habilitar Administrar Formularios - Menú Principal Negocio",
         "manage-admin": "Habilitar Registrar Artefactos - Menú Principal Negocio",
         "control-admin": "Habilitar Gestión Transaccional - Menú Principal Negocio",
-        "outcome-types-admin": "Habilitar Gestión Tipos de Egreso - Menú Principal Negocio"
+        "outcome-types-admin": "Habilitar Gestión Tipos de Egreso - Menú Principal Negocio",
+        "booking-manage": "Habilitar Reservas Visión 360° - Menú Principal Negocio",
+        "company-admin": "Habilitar Administrar Empresas - Menú Principal Negocio",
+        "marketing": "Habilitar Marketing - Menú Principal Negocio",
+        "patient-history-item-admin": "Habilitar Administrar Elementos de Historial Médico - Menú Principal Negocio",
+        "patients": "Habilitar Gestión de Pacientes - Menú Principal Negocio",
+        "product-admin": "Habilitar Administrar Productos - Menú Principal Negocio",
+        "product-stock": "Habilitar Control de Stock - Menú Principal Negocio",
+        "service-admin": "Habilitar Administrar Servicios - Menú Principal Negocio",
+        "financial": "Habilitar Financiero - Menú Principal Negocio",
+        "medical-management": "Habilitar Gestión Médica - Menú Principal Negocio",
+        "medications-admin": "Habilitar Gestionar Medicamentos - Menú Principal Negocio",
+        "medical-exams-admin": "Habilitar Gestionar Exámenes Médicos - Menú Principal Negocio",
+        "medical-templates-admin": "Habilitar Gestionar Plantillas Médicas - Menú Principal Negocio",
+        "pdf-templates-admin": "Habilitar Gestionar Plantillas PDF - Menú Principal Negocio",
+        "audit-log": "Habilitar Auditoría y Cumplimiento - Menú Principal Negocio"
+      },
+      "bookings": {
+        "manage": "Reservas Visión 360°"
       }
     },
     "collaborators": {
@@ -4602,7 +5582,8 @@
         "edit": "Editar datos - Sección Administrar Encuestas",
         "update": "Actualizar datos - Sección Administrar Encuestas",
         "add": "Agregar datos Sección - Administrar Encuestas",
-        "limit": "Límite de datos Sección - Administrar Encuestas"
+        "limit": "Límite de datos Sección - Administrar Encuestas",
+        "unavailable": "Eliminar Encuestas - Sección Administrar Encuestas"
       }
     },
     "configuration": {
@@ -4624,6 +5605,13 @@
         "read": "Leer datos - Sección Administrar Documentos",
         "edit": "Editar datos - Sección Administrar Documentos",
         "add": "Agregar datos - Sección Administrar Documentos"
+      }
+    },
+    "document-commerce": {
+      "admin": {
+        "view": "Ver Sección - Administrar Documentos Comercio",
+        "edit": "Editar Documentos Comercio",
+        "add": "Agregar Documentos Comercio"
       }
     },
     "dashboard": {
@@ -4681,6 +5669,27 @@
       "attention-hour-distribution": {
         "view": "Ver Distribución de horas de atenciones - Sección Performance Hub"
       },
+      "booking-day-distribution": {
+        "view": "Ver Distribución de días de reservas - Sección Performance Hub"
+      },
+      "booking-flow": {
+        "view": "Ver Flujo de Reservas - Sección Performance Hub"
+      },
+      "booking-hour-distribution": {
+        "view": "Ver Distribución de horas de reservas - Sección Performance Hub"
+      },
+      "booking-number-evolution": {
+        "view": "Ver Evolución de número de reservas - Sección Performance Hub"
+      },
+      "booking-number": {
+        "view": "Ver Número de Reservas - Sección Performance Hub"
+      },
+      "graphs-attentions": {
+        "view": "Ver Gráficos de Atenciones - Sección Performance Hub"
+      },
+      "graphs-bookings": {
+        "view": "Ver Gráficos de Reservas - Sección Performance Hub"
+      },
       "surveys-consolidated-nps-evolution": {
         "view": "Ver Evolución de NPS - Sección Performance Hub"
       },
@@ -4735,6 +5744,28 @@
         "download": "Descargar Estado del Sistema"
       }
     },
+    "financial": {
+      "incomes": {
+        "add": "Agregar Ingreso - Sección Financiera",
+        "confirm": "Confirmar Ingreso - Sección Financiera",
+        "view": "Ver Ingresos - Sección Financiera"
+      },
+      "outcomes": {
+        "add": "Agregar Egreso - Sección Financiera",
+        "view": "Ver Egresos - Sección Financiera"
+      },
+      "reports": {
+        "incomes": "Ver Reporte de Ingresos - Sección Financiera",
+        "outcomes": "Ver Reporte de Egresos - Sección Financiera",
+        "resume": "Ver Resumen Financiero - Sección Financiera"
+      },
+      "resume": {
+        "view": "Ver Resumen Financiero - Sección Financiera"
+      },
+      "resume": {
+        "view": "Ver Resumen Financiero - Sección Financiera"
+      }
+    },
     "modules": {
       "admin": {
         "view": "Ver Sección -- Administrar Módulos",
@@ -4742,7 +5773,8 @@
         "edit": "Editar datos - Sección Administrar Módulos",
         "update": "Actualizar datos - Sección Administrar Módulos",
         "add": "Agregar datos - Sección Administrar Módulos",
-        "limit": "Límite de datos - Sección Administrar Módulos"
+        "limit": "Límite de datos - Sección Administrar Módulos",
+        "unavailable": "Eliminar Módulos - Sección Administrar Módulos"
       }
     },
     "queues": {
@@ -4753,7 +5785,8 @@
         "update": "Actualizar datos - Sección Administrar Filas",
         "add": "Agregar datos - Sección Administrar Filas",
         "limit": "Límite de datos - Sección Administrar Filas",
-        "queue-limit": "Límite de atenciones diarias de las Filas"
+        "queue-limit": "Límite de atenciones diarias de las Filas",
+        "unavailable": "Eliminar Filas - Sección Administrar Filas"
       }
     },
     "reports": {
@@ -4764,11 +5797,14 @@
         "surveys": "Descargar Reporte de Encuestas",
         "bookings": "Descargar Reporte de Reservas",
         "waitlist": "Descargar Reporte de Lista de Espera",
+        "waitlists": "Descargar Reporte de Lista de Espera",
         "client-contacts": "Descargar Reporte de Contacto de Clientes",
         "clients": "Descargar Reporte de Clientes",
         "booking-payments": "Informe de Pagos de Reservas",
         "attention-payments": "Informe de Pagos de Atenciones",
-        "attention-products": "Informe de Uso de Stock Atenciones"
+        "attention-products": "Informe de Uso de Stock Atenciones",
+        "incomes": "Descargar Reporte de Ingresos",
+        "outcomes": "Descargar Reporte de Egresos"
       }
     },
     "collaborator": {
@@ -4817,6 +5853,9 @@
       "notification": {
         "add": "Agregar notificación - Atención de Usuario"
       },
+      "attentions": {
+        "cancel": "Cancelar Atención - Atenciones"
+      },
       "bookings": {
         "cancel": "Cancelar Reserva - Reservas",
         "manage": "Manejar Reservas - Reservas",
@@ -4847,7 +5886,14 @@
     "permissions": {
       "admin": {
         "plans": "Ver los permisos de los Planes",
-        "roles": "Ver los permisos de los Roles"
+        "roles": "Ver los permisos de los Roles",
+        "users": "Ver los permisos de los Usuarios",
+        "collaborators": "Ver los permisos de los Colaboradores"
+      },
+      "collaborators": {
+        "view": "Ver permisos - Sección Permisos Colaboradores",
+        "add": "Agregar permisos - Sección Permisos Colaboradores",
+        "update": "Actualizar permisos - Sección Permisos Colaboradores"
       }
     },
     "services": {
@@ -4857,7 +5903,8 @@
         "edit": "Editar datos - Sección Administrar Servicios",
         "update": "Actualizar datos - Sección Administrar Servicios",
         "add": "Agregar datos - Sección Administrar Servicios",
-        "limit": "Límite de datos - Sección Administrar Servicios"
+        "limit": "Límite de datos - Sección Administrar Servicios",
+        "unavailable": "Eliminar Servicios - Sección Administrar Servicios"
       }
     },
     "products": {
@@ -4867,7 +5914,8 @@
         "edit": "Editar datos - Sección Administrar Productos",
         "update": "Actualizar datos - Sección Administrar Productos",
         "add": "Agregar datos - Sección Administrar Productos",
-        "limit": "Límite de datos - Sección Administrar Productos"
+        "limit": "Límite de datos - Sección Administrar Productos",
+        "unavailable": "Eliminar Productos - Sección Administrar Productos"
       }
     },
     "products-stock": {
@@ -4909,8 +5957,400 @@
         "edit": "Editar datos - Sección Documentos Clientes",
         "update": "Actualizar datos - Sección Documentos Clientes",
         "add": "Agregar datos - Sección Documentos Clientes",
+        " add": "Agregar datos - Sección Documentos Clientes",
         "limit": "Límite de datos - Sección Documentos Clientes"
       }
+    },
+    "leadPipeline": {
+      "admin": {
+        "view": "Ver Sección - Pipeline de Ventas",
+        "read": "Leer datos - Sección Pipeline de Ventas",
+        "edit": "Editar datos - Sección Pipeline de Ventas",
+        "update": "Actualizar datos - Sección Pipeline de Ventas",
+        "add": "Agregar datos - Sección Pipeline de Ventas",
+        "limit": "Límite de datos - Sección Pipeline de Ventas"
+      }
+    },
+    "medical-exams": {
+      "admin": {
+        "view": "Ver Sección - Administrar Exámenes Médicos",
+        "read": "Leer datos - Sección Administrar Exámenes Médicos",
+        "edit": "Editar datos - Sección Administrar Exámenes Médicos",
+        "update": "Actualizar datos - Sección Administrar Exámenes Médicos",
+        "add": "Agregar datos - Sección Administrar Exámenes Médicos",
+        "delete": "Eliminar datos - Sección Administrar Exámenes Médicos",
+        "limit": "Límite de datos - Sección Administrar Exámenes Médicos"
+      }
+    },
+    "medical-templates": {
+      "admin": {
+        "view": "Ver Sección - Administrar Plantillas Médicas",
+        "read": "Leer datos - Sección Administrar Plantillas Médicas",
+        "edit": "Editar datos - Sección Administrar Plantillas Médicas",
+        "update": "Actualizar datos - Sección Administrar Plantillas Médicas",
+        "add": "Agregar datos - Sección Administrar Plantillas Médicas",
+        "delete": "Eliminar datos - Sección Administrar Plantillas Médicas",
+        "limit": "Límite de datos - Sección Administrar Plantillas Médicas"
+      }
+    },
+    "medications": {
+      "admin": {
+        "view": "Ver Sección - Administrar Medicamentos",
+        "read": "Leer datos - Sección Administrar Medicamentos",
+        "edit": "Editar datos - Sección Administrar Medicamentos",
+        "update": "Actualizar datos - Sección Administrar Medicamentos",
+        "add": "Agregar datos - Sección Administrar Medicamentos",
+        "delete": "Eliminar datos - Sección Administrar Medicamentos",
+        "limit": "Límite de datos - Sección Administrar Medicamentos"
+      }
+    },
+    "pdf-templates": {
+      "admin": {
+        "view": "Ver Sección - Administrar Plantillas PDF",
+        "read": "Leer datos - Sección Administrar Plantillas PDF",
+        "edit": "Editar datos - Sección Administrar Plantillas PDF",
+        "update": "Actualizar datos - Sección Administrar Plantillas PDF",
+        "add": "Agregar datos - Sección Administrar Plantillas PDF",
+        "delete": "Eliminar datos - Sección Administrar Plantillas PDF",
+        "limit": "Límite de datos - Sección Administrar Plantillas PDF"
+      },
+      "capacitiesList": {
+        "admin": {
+          "view": "Ver Sección - Administrar Plantillas PDF",
+          "read": "Leer datos - Sección Administrar Plantillas PDF",
+          "edit": "Editar datos - Sección Administrar Plantillas PDF",
+          "update": "Actualizar datos - Sección Administrar Plantillas PDF",
+          "add": "Agregar datos - Sección Administrar Plantillas PDF",
+          "delete": "Eliminar datos - Sección Administrar Plantillas PDF",
+          "limit": "Límite de datos - Sección Administrar Plantillas PDF"
+        }
+      }
+    },
+    "forms": {
+      "admin": {
+        "view": "Ver Sección - Administrar Formularios",
+        "read": "Leer datos - Sección Administrar Formularios",
+        "edit": "Editar datos - Sección Administrar Formularios",
+        "update": "Actualizar datos - Sección Administrar Formularios",
+        "add": "Agregar datos - Sección Administrar Formularios",
+        "limit": "Límite de datos - Sección Administrar Formularios",
+        "unavailable": "Eliminar Formularios - Sección Administrar Formularios"
+      }
+    },
+    "outcome-types": {
+      "admin": {
+        "view": "Ver Sección - Administrar Tipos de Egreso",
+        "read": "Leer datos - Sección Administrar Tipos de Egreso",
+        "edit": "Editar datos - Sección Administrar Tipos de Egreso",
+        "update": "Actualizar datos - Sección Administrar Tipos de Egreso",
+        "add": "Agregar datos - Sección Administrar Tipos de Egreso",
+        "limit": "Límite de datos - Sección Administrar Tipos de Egreso",
+        "unavailable": "Eliminar Tipos de Egreso - Sección Administrar Tipos de Egreso"
+      }
+    },
+    "patient-history-item": {
+      "admin": {
+        "view": "Ver Sección - Administrar Elementos de Historial Médico",
+        "read": "Leer datos - Sección Administrar Elementos de Historial Médico",
+        "edit": "Editar datos - Sección Administrar Elementos de Historial Médico",
+        "update": "Actualizar datos - Sección Administrar Elementos de Historial Médico",
+        "add": "Agregar datos - Sección Administrar Elementos de Historial Médico",
+        "limit": "Límite de datos - Sección Administrar Elementos de Historial Médico",
+        "unavailable": "Eliminar Elementos de Historial Médico - Sección Administrar Elementos de Historial Médico"
+      }
     }
+  },
+  "attentionCreation": {
+    "createBooking": "Crear una Reserva",
+    "preselectedQueue": "Fila Preseleccionada",
+    "canChangeBelow": "Puede cambiar la selección a continuación si es necesario",
+    "telemedicineConsultation": "Consulta por Telemedicina",
+    "scheduledDateTime": "Fecha y Hora Programada",
+    "usingSelectedBlockDateTime": "Usando la fecha y hora del bloque seleccionado",
+    "selectBlockDateTimeFirst": "Por favor, seleccione primero la fecha y hora del bloque",
+    "video": "Video",
+    "completeRequiredFields": "Por favor, complete todos los campos requeridos",
+    "selectQueueService": "Por favor, seleccione una fila/servicio",
+    "errorCreatingBooking": "Error al crear la reserva",
+    "errorCreatingAttention": "Error al crear la atención",
+    "completeFollowingRequiredFields": "Por favor, complete los siguientes campos requeridos",
+    "unknownError": "Error desconocido",
+    "creatingAttention": "Creando atención...",
+    "confirmCreation": "Confirmar creación de atención",
+    "preselectedTime": "Horario Preseleccionado",
+    "preselected": "Preseleccionado",
+    "available": "Disponible",
+    "reserved": "Reservado",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "selectedDate": "Fecha seleccionada",
+    "loadingAvailableHours": "Cargando horarios disponibles...",
+    "telemedicineNote": "Consulta por Telemedicina",
+    "telemedicineScheduleNote": "La fecha y hora serán definidas por el bloque seleccionado abajo",
+    "selectProcedureAmount": "Selecciona la cantidad de sesiones",
+    "sessions": "sesiones",
+    "selectedAmount": "Cantidad seleccionada"
+  },
+  "package": {
+    "package": "Paquete",
+    "status": "Estado del paquete",
+    "sessionsLeft": "restantes",
+    "pause": "Pausar",
+    "reanudar": "Reanudar",
+    "bookSession": "Reservar Sesión",
+    "cancel": "Cancelar",
+    "active": "Activos",
+    "sessionsRemaining": "sesiones restantes",
+    "lowSessions": "Sesiones Bajas",
+    "needAttention": "Requieren atención",
+    "expiringSoon": "Por Vencer",
+    "within7Days": "En los próximos 7 días",
+    "completed": "Completados",
+    "finished": "Finalizados",
+    "all": "Todos",
+    "expired": "Vencidos",
+    "cancelled": "Cancelados",
+    "quickFilters": "Filtros Rápidos",
+    "activePackages": "Paquetes Activos",
+    "completedPackages": "Paquetes Completados",
+    "expiredPackages": "Paquetes Vencidos",
+    "cancelledPackages": "Paquetes Cancelados",
+    "noPackages": "No hay paquetes",
+    "noPackagesMessage": "No se encontraron paquetes con los filtros seleccionados",
+    "copy": "Copiar",
+    "details": "Detalles",
+    "services": "Servicios",
+    "type": "Tipo",
+    "actions": "Acciones",
+    "created": "Creado",
+    "attentionsAndBookings": "Atenciones y Reservas",
+    "pendingAttentions": "Atenciones Pendientes/Terminadas",
+    "pendingBookings": "Reservas Pendientes",
+    "noAttentionsOrBookings": "No hay atenciones o reservas para este paquete",
+    "createReservation": "Crear Reserva/Atención",
+    "maxSessionsReached": "Se alcanzó el máximo de sesiones del paquete",
+    "overview": "Resumen del Paquete",
+    "sessions": "Sesiones",
+    "recommendedDates": "Fechas Recomendadas",
+    "confirmPause": "¿Pausar este paquete?",
+    "confirmCancel": "¿Cancelar este paquete? Esta acción no se puede deshacer.",
+    "errorPause": "Error al pausar el paquete",
+    "errorResume": "Error al reanudar el paquete",
+    "errorCancel": "Error al cancelar el paquete",
+    "status": {
+      "ACTIVE": "Activo",
+      "CONFIRMED": "Confirmado",
+      "REQUESTED": "Solicitado",
+      "PAUSED": "Pausado",
+      "COMPLETED": "Completado",
+      "EXPIRED": "Vencido",
+      "CANCELLED": "Cancelado",
+      "SUSPENDED": "Suspendido"
+    },
+    "metrics": {
+      "title": "Métricas de Paquetes",
+      "completionRate": "Tasa de Completitud",
+      "noShowRate": "Tasa de No-Show",
+      "abandonmentRate": "Tasa de Abandono",
+      "attendanceRate": "Tasa de Asistencia",
+      "mostRequested": "Paquetes Más Solicitados",
+      "totalCreated": "Creados",
+      "active": "Activos",
+      "completed": "Completados",
+      "status": {
+        "completed": "Completitud",
+        "noshow": "No-Show",
+        "abandoned": "Abandono"
+      },
+      "description": {
+        "completion": "Sesiones completadas vs. total",
+        "noshow": "Reservas canceladas sin atención",
+        "abandonment": "Paquetes cancelados con sesiones usadas"
+      },
+      "tooltip": {
+        "completionRate": "La tasa de completitud mide el porcentaje de sesiones consumidas respecto al total de sesiones vendidas. Un valor alto indica que los clientes están completando sus paquetes.",
+        "attendanceRate": "La tasa de asistencia mide el porcentaje de reservas que fueron atendidas (inverso de la tasa de no-show). Un valor alto indica buena asistencia de clientes."
+      }
+    }
+  },
+  "attentionStepBar": {
+    "steps": {
+      "checkin": "Check-In",
+      "processing": "En Atención",
+      "checkout": "Check-Out",
+      "terminated": "Terminado"
+    }
+  },
+  "attentionStats": {
+    "waitTime": "Tiempo de Espera",
+    "waitTimeIndicators": "Tiempo de Espera - Indicadores de Color",
+    "green": "Verde:",
+    "yellow": "Amarillo:",
+    "orange": "Naranja:",
+    "red": "Rojo:",
+    "greenDesc": "Menos de 10 minutos - Excelente",
+    "yellowDesc": "Menos de 1 hora - Bueno",
+    "orangeDesc": "Menos de 3 horas - Atención",
+    "redDesc": "Más de 3 horas - Urgente",
+    "realTimeUpdate": "Actualización en tiempo real",
+    "createdAt": "Creado en",
+    "inQueue": "En Fila",
+    "estimatedTime": "Tiempo Estimado",
+    "processingTime": "Tiempo de Atención",
+    "totalDuration": "Tiempo Total de Atención",
+    "expectedDuration": "Duración esperada:",
+    "remainingTime": "Tiempo restante:",
+    "underTime": "Tiempo por debajo de lo esperado",
+    "exceededTime": "Tiempo excedido:",
+    "estimatedNotAvailable": "Duración estimada no disponible",
+    "attentionDetails": "Información de la Atención",
+    "processedAt": "Atendida en",
+    "services": "Servicio(s)",
+    "collaborator": "Colaborador",
+    "bookingDate": "Reserva en",
+    "packageSession": "Sesión del Paquete",
+    "attentionType": {
+      "label": "Tipo de Atención",
+      "telemedicine": "Telemedicina",
+      "presential": "Presencial"
+    },
+    "surveyResults": "Resultados de la Encuesta de Satisfacción",
+    "csat": {
+      "excellent": "Excelente",
+      "good": "Bueno",
+      "poor": "Puede mejorar"
+    },
+    "nps": {
+      "excellent": "Excelente",
+      "good": "Bueno",
+      "poor": "Puede mejorar"
+    },
+    "timeline": "Línea de Tiempo de la Atención",
+    "notApplicable": "No aplica",
+    "pending": "Pendiente",
+    "timelineSteps": {
+      "booking": "Reserva Creada",
+      "checkin": "Check-In",
+      "processing": "En Atención",
+      "checkout": "Check-Out",
+      "terminated": "Terminado",
+      "survey": "Encuesta de Satisfacción",
+      "cancelled": "Cancelado",
+      "cancelledByUser": "Cancelado por el Usuario",
+      "skipped": "Saltado",
+      "surveySentPending": "Enviada, pendiente de respuesta",
+      "surveyNotSent": "No enviada",
+      "terminatedBySystem": "Sistema"
+    }
+  },
+  "pdfTemplates": {
+    "title": "Plantillas PDF",
+    "searchPlaceholder": "Buscar plantillas...",
+    "addTemplate": "Agregar Plantilla",
+    "name": "Nombre",
+    "description": "Descripción",
+    "documentType": "Tipo de Documento",
+    "scope": "Alcance",
+    "pageSize": "Tamaño de Página",
+    "isDefault": "Plantilla por Defecto",
+    "setAsDefault": "Establecer como Defecto",
+    "preview": "Preview PDF",
+    "update": "Actualizar",
+    "delete": "Eliminar",
+    "message": {
+      "1": {
+        "title": "¡Ups!",
+        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+      },
+      "2": {
+        "title": "¡Oh no!",
+        "content": "En este momento no hay plantillas PDF."
+      },
+      "4": {
+        "title": "Seleccione un Comercio",
+        "content": "Debe seleccionar un comercio para gestionar plantillas PDF"
+      }
+    },
+    "canvasEditor": {
+      "header": "Editor de Encabezado",
+      "footer": "Editor de Pie de Página",
+      "content": "Editor de Contenido"
+    }
+  },
+  "templates": {
+    "types": {
+      "general": "General"
+    }
+  },
+  "pdf-templates": {
+    "capacitiesList": {
+      "admin": {
+        "view": "Ver Sección - Administrar Plantillas PDF",
+        "read": "Leer datos - Sección Administrar Plantillas PDF",
+        "edit": "Editar datos - Sección Administrar Plantillas PDF",
+        "update": "Actualizar datos - Sección Administrar Plantillas PDF",
+        "add": "Agregar datos - Sección Administrar Plantillas PDF",
+        "delete": "Eliminar datos - Sección Administrar Plantillas PDF",
+        "limit": "Límite de datos - Sección Administrar Plantillas PDF"
+      }
+    }
+  },
+  "lgpd": {
+    "title": "LGPD - Consentimientos y Portabilidad",
+    "consent": {
+      "title": "Gestión de Consentimientos LGPD",
+      "noConsents": "Sin consentimientos registrados",
+      "newConsent": "Nuevo Consentimiento",
+      "consentType": "Tipo de Consentimiento",
+      "selectType": "Seleccionar tipo",
+      "purpose": "Finalidad",
+      "purposePlaceholder": "Describe la finalidad del tratamiento de datos",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Descripción detallada (opcional)",
+      "expiresAt": "Fecha de Expiración",
+      "expiresAtHelp": "Dejar en blanco para consentimiento indefinido",
+      "consentMethod": "Método de Consentimiento",
+      "create": "Crear Consentimiento",
+      "creating": "Creando...",
+      "deny": "Denegar Consentimiento",
+      "revoke": "Revocar",
+      "confirmRevoke": "¿Estás seguro de que deseas revocar este consentimiento?",
+      "grantedAt": "Otorgado el",
+      "types": {
+        "DATA_PROCESSING": "Tratamiento de Datos",
+        "DATA_SHARING": "Compartir Datos",
+        "MARKETING": "Marketing y Comunicaciones",
+        "RESEARCH": "Investigación Científica",
+        "THIRD_PARTY": "Compartir con Terceros",
+        "DATA_EXPORT": "Exportación de Datos",
+        "TELEMEDICINE": "Telemedicina",
+        "BIOMETRIC": "Datos Biométricos"
+      },
+      "status": {
+        "GRANTED": "Otorgado",
+        "DENIED": "Denegado",
+        "REVOKED": "Revocado",
+        "EXPIRED": "Expirado",
+        "PENDING": "Pendiente"
+      },
+      "errorCreating": "Error al crear el consentimiento",
+      "errorDenying": "Error al denegar el consentimiento",
+      "errorRevoking": "Error al revocar el consentimiento"
+    },
+    "portability": {
+      "title": "Portabilidad de Datos (LGPD)",
+      "description": "Puedes solicitar una copia de todos tus datos personales en un formato estructurado y de uso común.",
+      "download": "Descargar Mis Datos",
+      "generating": "Generando archivo de portabilidad...",
+      "noConsent": "Necesitas otorgar consentimiento para exportar datos antes de poder descargar tu información.",
+      "lastExport": "Última Exportación",
+      "fileName": "Nombre del Archivo",
+      "generatedAt": "Generado el",
+      "expiresAt": "Expira el",
+      "error": "Error al generar el archivo de portabilidad"
+    }
+  },
+  "errors": {
+    "undefined": "Error indefinido"
   }
 }

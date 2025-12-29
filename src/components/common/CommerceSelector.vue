@@ -30,9 +30,9 @@ export default {
       }
 
       // Show for master users when a business is selected and there are multiple commerces (same standard as business)
+      // Do NOT show commerce selector for master users - master works screen-by-screen
       if (userType === USER_TYPES.MASTER) {
-        const business = store.getCurrentBusiness;
-        return business && business.id && commerces.value.length > 1;
+        return false;
       }
 
       // Show for collaborator users when there are multiple commerces
@@ -105,6 +105,14 @@ export default {
         }
 
         // Load stored commerce or use first available
+        if (currentUserType.value === USER_TYPES.MASTER) {
+          // For master users do NOT auto-select any commerce and clear global store
+          selectedCommerce.value = null;
+          await store.setCurrentCommerce(null);
+          loading.value = false;
+          return;
+        }
+
         if (storedCommerce.value && storedCommerce.value.id) {
           // Verify the stored commerce is still in the available list
           const found = commerces.value.find(c => c.id === storedCommerce.value.id);
@@ -120,7 +128,6 @@ export default {
           selectedCommerce.value =
             commerces.value && commerces.value.length > 0 ? commerces.value[0] : null;
         }
-
         // Save to store if we have a commerce (auto-select first if only one)
         if (commerces.value && commerces.value.length > 0) {
           if (

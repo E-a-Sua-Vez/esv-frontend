@@ -29,18 +29,18 @@ export default {
       <div class="text-label">
         {{ $t('sureAction') }}
       </div>
-      <div class="centered">
+      <div class="confirmation-buttons">
         <button
-          class="col btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-1 px-2 mx-1"
+          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-1 px-3 mx-1"
           @click="actionYes()"
-          :disabled="!yesDisabled"
+          :disabled="yesDisabled"
         >
           {{ $t('yes') }} <i class="bi bi-check2-circle"></i>
         </button>
         <button
-          class="col btn btn-sm btn-size fw-bold btn-danger rounded-pill mt-1 px-2 mx-1"
+          class="btn btn-sm btn-size fw-bold btn-danger rounded-pill mt-1 px-3 mx-1"
           @click="actionNo()"
-          :disabled="!noDisabled"
+          :disabled="noDisabled"
         >
           {{ $t('no') }} <i class="bi bi-x-lg"></i>
         </button>
@@ -55,5 +55,40 @@ export default {
   border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
   line-height: 1rem;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.text-label {
+  text-align: center;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.75rem;
+}
+
+.confirmation-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.confirmation-buttons .btn {
+  flex: 0 0 auto;
+  min-width: 80px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .confirmation-buttons {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .confirmation-buttons .btn {
+    width: 100%;
+  }
 }
 </style>

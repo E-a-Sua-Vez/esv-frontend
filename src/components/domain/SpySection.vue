@@ -429,7 +429,8 @@ export default {
             </div>
             <div class="summary-value-section">
               <div class="summary-main-value" :class="getNPSClass(summaryMetrics.nps.value)">
-                {{ summaryMetrics.nps.value > 0 ? '+' : '' }}{{ summaryMetrics.nps.value }}
+                {{ summaryMetrics.nps.value > 0 ? '+' : ''
+                }}{{ Math.round(summaryMetrics.nps.value) }}
               </div>
               <div class="summary-nps-label">
                 {{ getNPSLabel(summaryMetrics.nps.value) }}

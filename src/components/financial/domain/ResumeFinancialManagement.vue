@@ -8,16 +8,32 @@ import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import { lazyLoadHtml2Pdf } from '../../../shared/utils/lazyLoad';
 import { globalStore } from '../../../stores';
 import { getDate } from '../../../shared/utils/date';
+import {
+  downloadFormattedCSV,
+  formatCurrencyForCSV,
+  formatPercentageForCSV,
+} from '../../../shared/utils/excelExport';
 import SimpleCard from '../../dashboard/common/SimpleCard.vue';
-import { LineChart, useBarChart } from 'vue-chart-3';
+import { LineChart, DoughnutChart } from 'vue-chart-3';
 import { Chart, registerables } from 'chart.js';
 import PDFHeader from '../../reports/PDFHeader.vue';
 import PDFFooter from '../../reports/PDFFooter.vue';
 import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
-import { getFinancialMetrics } from '../../../application/services/query-stack';
+import {
+  getFinancialMetrics,
+  getFinancialComparison,
+  getFinancialTrends,
+  getOutcomesCategoryAnalysis,
+  getCashFlowMonthlyReport,
+  getServiceProfitabilityReport,
+  getMostProfitableClientsReport,
+  getExpensesByProviderReport,
+} from '../../../application/services/query-stack';
 import CollectionDetails from '../../dashboard/domain/CollectionDetails.vue';
 import IncomesCollectionDetails from '../../dashboard/domain/IncomesCollectionDetails.vue';
 import OutcomesCollectionDetails from '../../dashboard/domain/OutcomesCollectionDetails.vue';
+import FinancialKPICard from '../common/FinancialKPICard.vue';
+import FinancialAlerts from '../common/FinancialAlerts.vue';
 import { DateModel } from '../../../shared/utils/date.model';
 
 Chart.register(...registerables);
@@ -33,12 +49,15 @@ export default {
     Warning,
     SimpleCard,
     LineChart,
+    DoughnutChart,
     PDFHeader,
     PDFFooter,
     SimpleDownloadButton,
     CollectionDetails,
     IncomesCollectionDetails,
     OutcomesCollectionDetails,
+    FinancialKPICard,
+    FinancialAlerts,
   },
   props: {
     showResumeFinancialManagement: { type: Boolean, default: false },
@@ -64,6 +83,7 @@ export default {
         },
         resume: {},
         evolution: {},
+        incomeDistribution: {},
       },
       newFinancialResume: {},
       showFilterOptions: false,
@@ -74,6 +94,13 @@ export default {
       endDate: undefined,
       calculatedMetrics: {},
       detailsOpened: false,
+      comparison: null,
+      trends: null,
+      outcomesCategoryAnalysis: null,
+      alerts: [],
+      healthStatus: 'good',
+      reportsCollapsed: true, // Reports section collapsed by default
+      lastRefreshParams: null, // Cache for last refresh parameters to avoid duplicate calls
     };
   },
   async beforeMount() {
@@ -105,83 +132,782 @@ export default {
     },
     async refresh() {
       try {
+        // Avoid duplicate calls with same parameters
+        const refreshKey = `${this.commerce.id}-${this.startDate}-${this.endDate}`;
+        if (this.loading && this.lastRefreshParams === refreshKey) {
+          return; // Already loading with same params
+        }
+
         this.loading = true;
+        this.lastRefreshParams = refreshKey;
         const commerceIds = [this.commerce.id];
-        const { calculatedMetrics } = await getFinancialMetrics(
-          commerceIds,
-          this.startDate,
-          this.endDate
-        );
+
+        // Get current metrics, comparison, trends, and category analysis in parallel
+        // Using catch to prevent one failure from blocking others
+        const [metricsResult, comparisonResult, trendsResult, categoryAnalysisResult] =
+          await Promise.all([
+            getFinancialMetrics(commerceIds, this.startDate, this.endDate),
+            getFinancialComparison(commerceIds, this.startDate, this.endDate).catch(() => null),
+            getFinancialTrends(commerceIds, this.endDate).catch(() => null),
+            getOutcomesCategoryAnalysis(commerceIds, this.startDate, this.endDate).catch(
+              () => null,
+            ),
+          ]);
+
+        const { calculatedMetrics } = metricsResult;
+        if (
+          !calculatedMetrics ||
+          !calculatedMetrics['incomes.created'] ||
+          !calculatedMetrics['outcomes.created']
+        ) {
+          this.loading = false;
+          return;
+        }
+
         this.calculatedMetrics = calculatedMetrics;
+        this.comparison = comparisonResult;
+        this.trends = trendsResult;
+        this.outcomesCategoryAnalysis = categoryAnalysisResult;
+
         const incomes = calculatedMetrics['incomes.created'];
         const outcomes = calculatedMetrics['outcomes.created'];
         this.financialResume.incomes = incomes;
         this.financialResume.outcomes = outcomes;
-        const { barChartProps: financialEvolution } = useBarChart({
-          chartData: {
-            labels: Array.from(
-              new Set([...incomes['evolution']['labels'], ...outcomes['evolution']['labels']])
+
+        // Validate and prepare evolution data for chart
+        const incomesEvolution = incomes.evolution || { labels: [], datasets: [] };
+        const outcomesEvolution = outcomes.evolution || { labels: [], datasets: [] };
+
+        // Combine and sort all unique labels
+        const allLabels = Array.from(
+          new Set([...(incomesEvolution.labels || []), ...(outcomesEvolution.labels || [])])
+        ).sort();
+
+        // Helper function to map evolution data to chart format
+        const mapEvolutionData = (allLabels, sourceLabels, sourceDatasets, field) => {
+          if (
+            !sourceLabels ||
+            !sourceDatasets ||
+            !Array.isArray(sourceLabels) ||
+            !Array.isArray(sourceDatasets)
+          ) {
+            return allLabels.map(() => 0);
+          }
+          const dataMap = {};
+          sourceLabels.forEach((label, index) => {
+            if (sourceDatasets[index]) {
+              dataMap[label] = +(sourceDatasets[index][field] || 0);
+            }
+          });
+          return allLabels.map(label => dataMap[label] || 0);
+        };
+
+        // Use LineChart for better trend visualization
+        const chartData = {
+          labels: allLabels,
+          datasets: [
+            {
+              label: this.$t('dashboard.incomes'),
+              borderColor: '#004aad',
+              backgroundColor: 'rgba(0, 74, 173, 0.1)',
+              data: mapEvolutionData(
+                allLabels,
+                incomesEvolution.labels,
+                incomesEvolution.datasets,
+                'paymentAmountSum',
+              ),
+              fill: true,
+              tension: 0.4,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+            },
+            {
+              label: this.$t('businessFinancial.commission'),
+              borderColor: '#f9c322',
+              backgroundColor: 'rgba(249, 195, 34, 0.1)',
+              borderDash: [5, 5],
+              data: mapEvolutionData(
+                allLabels,
+                incomesEvolution.labels,
+                incomesEvolution.datasets,
+                'paymentCommissionSum',
+              ),
+              fill: false,
+              tension: 0.4,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+            },
+            {
+              label: this.$t('dashboard.outcomes'),
+              borderColor: '#a52a2a',
+              backgroundColor: 'rgba(165, 42, 42, 0.1)',
+              data: mapEvolutionData(
+                allLabels,
+                outcomesEvolution.labels,
+                outcomesEvolution.datasets,
+                'paymentAmountSum',
+              ),
+              fill: true,
+              tension: 0.4,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+            },
+          ],
+        };
+        const chartOptions = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        };
+        this.financialResume.evolution = {
+          chartData,
+          options: chartOptions,
+        };
+
+        // Calculate income distribution by type for donut chart
+        const incomeTypeDistribution = incomes.paymentTypeDistribution || {};
+        if (Object.keys(incomeTypeDistribution).length > 0) {
+          const donutChartData = {
+            labels: Object.keys(incomeTypeDistribution).map(
+              key => this.$t(`incomeTypes.${key}`) || key
             ),
             datasets: [
               {
-                label: 'Incomes',
-                boxWidth: 10,
-                borderColor: '#004aad',
-                backgroundColor: 'rgba(127, 134, 255, 0.7)',
-                borderDash: [2, 2],
-                data: incomes['evolution']['datasets'].map(data => data['paymentAmountSum']) || [],
-                fill: false,
-                tension: 0.1,
-                radius: 0,
-                type: 'bar',
-              },
-              {
-                label: 'Commissions',
-                boxWidth: 10,
-                borderColor: '#a52a2a',
-                backgroundColor: 'rgba(255, 99, 71, 0.3)',
-                borderDash: [2, 2],
-                data:
-                  incomes['evolution']['datasets'].map(data => data['paymentCommissionSum']) || [],
-                fill: false,
-                tension: 0.1,
-                radius: 0,
-                type: 'bar',
-              },
-              {
-                label: 'Outcomes',
-                boxWidth: 10,
-                borderColor: '#a52a2a',
-                backgroundColor: 'rgba(255, 99, 71, 0.8)',
-                borderDash: [2, 2],
-                data: outcomes['evolution']['datasets'].map(data => data['paymentAmountSum']) || [],
-                fill: false,
-                tension: 0.1,
-                radius: 0,
-                type: 'bar',
+                data: Object.values(incomeTypeDistribution).map(item => item.totalAmount || 0),
+                backgroundColor: [
+                  '#004aad',
+                  '#00c2cb',
+                  '#f9c322',
+                  '#a52a2a',
+                  '#7c91d9',
+                  '#2f407a',
+                  '#b1bde6',
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff',
               },
             ],
-            options: {
-              fill: false,
-              radius: 0,
+          };
+          const donutChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'bottom',
+              },
+              tooltip: {
+                callbacks: {
+                  label: context => {
+                    const label = context.label || '';
+                    const value = context.parsed || 0;
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
+                    return `${label}: ${value.toLocaleString('de-DE', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })} (${percentage}%)`;
+                  },
+                },
+              },
             },
-          },
-        });
-        this.financialResume.evolution = financialEvolution;
-        const diff =
-          (+incomes.paymentData.paymentAmountSum || 0) -
-            ((+incomes.paymentData.paymentCommissionSum || 0) +
-              (+outcomes.paymentData.paymentAmountSum || 0)) || 0;
-        this.financialResume.resume.diff = diff || 0;
-        const avg = this.getPercentage(diff || 0, +incomes.paymentData.paymentAmountSum || 1);
+          };
+          this.financialResume.incomeDistribution = {
+            chartData: donutChartData,
+            options: donutChartOptions,
+          };
+        } else {
+          this.financialResume.incomeDistribution = null;
+        }
+
+        // Calculate financial metrics with proper validation
+        const totalIncomes = +(incomes.paymentData?.paymentAmountSum || 0);
+        const totalCommissions = +(incomes.paymentData?.paymentCommissionSum || 0);
+        const totalOutcomes = +(outcomes.paymentData?.paymentAmountSum || 0);
+        const netIncomes = totalIncomes - totalCommissions;
+        const diff = netIncomes - totalOutcomes; // Net profit
+
+        this.financialResume.resume.diff = diff;
+        // Calculate margin: (profit / net incomes) * 100
+        const avg = netIncomes > 0 ? this.getPercentage(diff, netIncomes) : 0;
         this.financialResume.resume.avg = avg;
+
+        // Calculate additional metrics
+        const daysInPeriod = this.calculateDaysInPeriod(this.startDate, this.endDate);
+        // Use net incomes (after commissions) for average daily income
+        this.financialResume.resume.averageDailyIncome =
+          daysInPeriod > 0 ? netIncomes / daysInPeriod : 0;
+        this.financialResume.resume.daysUntilMonthEnd = this.calculateDaysUntilMonthEnd();
+
+        // Calculate alerts
+        this.calculateAlerts(incomes, outcomes, diff, avg);
+
         this.loading = false;
       } catch (error) {
         this.loading = false;
       }
     },
+    calculateAlerts(incomes, outcomes, profit, margin) {
+      const alerts = [];
+      const totalIncomes = +incomes.paymentData.paymentAmountSum || 0;
+      const totalOutcomes = +outcomes.paymentData.paymentAmountSum || 0;
+      const totalCommissions = +incomes.paymentData.paymentCommissionSum || 0;
+      const netIncomes = totalIncomes - totalCommissions;
+      const pendingIncomes = +incomes.paymentDistribution?.PENDING?.totalAmount || 0;
+      const pendingOutcomes = +outcomes.paymentDistribution?.PENDING?.totalAmount || 0;
+      const pendingIncomesCount = +incomes.paymentDistribution?.PENDING?.count || 0;
+      const pendingOutcomesCount = +outcomes.paymentDistribution?.PENDING?.count || 0;
+
+      // Alert: Expenses exceed income
+      if (totalOutcomes > netIncomes) {
+        alerts.push({
+          type: 'error',
+          icon: 'bi-exclamation-triangle-fill',
+          message: this.$t('businessFinancial.alerts.expensesExceedIncome'),
+        });
+      }
+
+      // Alert: Low margin (below 20%)
+      if (margin < 20 && totalIncomes > 0) {
+        const threshold = 20;
+        alerts.push({
+          type: 'warning',
+          icon: 'bi-exclamation-circle-fill',
+          message: this.$t('businessFinancial.alerts.lowMargin').replace('{threshold}', threshold),
+          params: { threshold },
+        });
+      }
+
+      // Alert: Pending payments > 7 days
+      const pendingDaysThreshold = 7;
+      if (pendingIncomesCount > 0) {
+        alerts.push({
+          type: 'info',
+          icon: 'bi-clock-fill',
+          message: this.$t('businessFinancial.alerts.pendingIncomes', {
+            count: pendingIncomesCount,
+            amount: pendingIncomes.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+            days: pendingDaysThreshold,
+          }),
+          params: {
+            count: pendingIncomesCount,
+            amount: pendingIncomes,
+            days: pendingDaysThreshold,
+          },
+        });
+      }
+
+      if (pendingOutcomesCount > 0) {
+        alerts.push({
+          type: 'warning',
+          icon: 'bi-clock-fill',
+          message: this.$t('businessFinancial.alerts.pendingOutcomes', {
+            count: pendingOutcomesCount,
+            amount: pendingOutcomes.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+            days: pendingDaysThreshold,
+          }),
+          params: {
+            count: pendingOutcomesCount,
+            amount: pendingOutcomes,
+            days: pendingDaysThreshold,
+          },
+        });
+      }
+
+      // Alert: Unusual expenses (compared to previous period)
+      if (this.comparison && this.comparison.comparison) {
+        const outcomesChange = this.comparison.comparison.outcomes || 0;
+        if (outcomesChange > 30) {
+          // Expenses increased more than 30%
+          alerts.push({
+            type: 'warning',
+            icon: 'bi-graph-up-arrow',
+            message: this.$t('businessFinancial.alerts.unusualExpenses', {
+              percentage: Math.abs(outcomesChange).toFixed(2),
+            }),
+            params: { percentage: Math.abs(outcomesChange) },
+          });
+        }
+      }
+
+      // Calculate projected cash flow (use net incomes after commissions)
+      const daysInPeriod = this.calculateDaysInPeriod(this.startDate, this.endDate);
+      const daysUntilMonthEnd = this.calculateDaysUntilMonthEnd();
+      const averageDailyIncome = daysInPeriod > 0 ? netIncomes / daysInPeriod : 0; // Use net incomes
+      const averageDailyOutcome = daysInPeriod > 0 ? totalOutcomes / daysInPeriod : 0;
+      const projectedIncome = averageDailyIncome * daysUntilMonthEnd;
+      const projectedOutcome = averageDailyOutcome * daysUntilMonthEnd;
+      const projectedCashFlow = projectedIncome - projectedOutcome;
+
+      // Store projected cash flow for display
+      this.financialResume.resume.projectedCashFlow = projectedCashFlow;
+      this.financialResume.resume.projectedIncome = projectedIncome;
+      this.financialResume.resume.projectedOutcome = projectedOutcome;
+
+      // Alert: Negative projected cash flow
+      if (projectedCashFlow < 0 && daysUntilMonthEnd > 0) {
+        alerts.push({
+          type: 'warning',
+          icon: 'bi-cash-stack',
+          message: this.$t('businessFinancial.alerts.negativeProjectedCashFlow', {
+            amount: Math.abs(projectedCashFlow).toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          }),
+          params: { amount: Math.abs(projectedCashFlow) },
+        });
+      }
+
+      // Calculate monthly goal progress (if we have a goal, use 80% of previous month as baseline)
+      let monthlyGoal = 0;
+      if (this.comparison && this.comparison.previous) {
+        const previousIncomes =
+          +this.comparison.previous['incomes.created']?.paymentData?.paymentAmountSum || 0;
+        monthlyGoal = previousIncomes * 1.1; // 10% growth goal
+      }
+      const goalProgress = monthlyGoal > 0 ? (totalIncomes / monthlyGoal) * 100 : 0;
+      this.financialResume.resume.monthlyGoal = monthlyGoal;
+      this.financialResume.resume.goalProgress = goalProgress;
+
+      // Alert: Behind monthly goal
+      if (monthlyGoal > 0 && goalProgress < 70 && daysUntilMonthEnd < 7) {
+        alerts.push({
+          type: 'warning',
+          icon: 'bi-target',
+          message: this.$t('businessFinancial.alerts.behindMonthlyGoal', {
+            progress: goalProgress.toFixed(1),
+          }),
+          params: { progress: goalProgress },
+        });
+      }
+
+      // Determine health status
+      if (alerts.length === 0 && margin >= 30) {
+        this.healthStatus = 'excellent';
+      } else if (alerts.length === 0) {
+        this.healthStatus = 'good';
+      } else if (alerts.some(a => a.type === 'error')) {
+        this.healthStatus = 'critical';
+      } else if (alerts.some(a => a.type === 'warning')) {
+        this.healthStatus = 'warning';
+      } else {
+        this.healthStatus = 'good';
+      }
+
+      this.alerts = alerts;
+    },
     showFilters() {
       this.showFilterOptions = !this.showFilterOptions;
+    },
+    async downloadCashFlowReport() {
+      try {
+        this.loading = true;
+        const commerceIds = [this.commerce.id];
+        if (this.commerces && this.commerces.length > 0) {
+          commerceIds = this.commerces.map(commerce => commerce.id);
+        }
+
+        const reportData = await getCashFlowMonthlyReport(
+          this.commerce.id,
+          commerceIds,
+          this.startDate,
+          this.endDate
+        );
+
+        // Format data for CSV/Excel export
+        const exportData = [];
+
+        // Add summary row
+        exportData.push({
+          [this.$t('businessFinancial.reports.cashFlow.month')]: this.$t(
+            'businessFinancial.reports.cashFlow.summary',
+          ),
+          [this.$t('businessFinancial.reports.cashFlow.incomes')]:
+            reportData.summary.totalIncomes.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.cashFlow.commissions')]:
+            reportData.summary.totalCommissions.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.cashFlow.netIncomes')]:
+            reportData.summary.totalNetIncomes.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.cashFlow.outcomes')]:
+            reportData.summary.totalOutcomes.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.cashFlow.cashFlow')]:
+            reportData.summary.totalCashFlow.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t(
+            'businessFinancial.reports.cashFlow.margin',
+          )]: `${reportData.summary.averageMargin.toFixed(2)}%`,
+        });
+
+        // Add monthly data
+        reportData.monthlyData.forEach(month => {
+          exportData.push({
+            [this.$t('businessFinancial.reports.cashFlow.month')]: month.monthLabel,
+            [this.$t('businessFinancial.reports.cashFlow.incomes')]: month.incomes.toLocaleString(
+              'de-DE',
+              {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              },
+            ),
+            [this.$t('businessFinancial.reports.cashFlow.commissions')]:
+              month.commissions.toLocaleString('de-DE', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }),
+            [this.$t('businessFinancial.reports.cashFlow.netIncomes')]:
+              month.netIncomes.toLocaleString('de-DE', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }),
+            [this.$t('businessFinancial.reports.cashFlow.outcomes')]: month.outcomes.toLocaleString(
+              'de-DE',
+              {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              },
+            ),
+            [this.$t('businessFinancial.reports.cashFlow.cashFlow')]: month.cashFlow.toLocaleString(
+              'de-DE',
+              {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              },
+            ),
+            [this.$t('businessFinancial.reports.cashFlow.margin')]: `${month.margin.toFixed(2)}%`,
+            [this.$t('businessFinancial.reports.cashFlow.incomeCount')]: month.incomeCount,
+            [this.$t('businessFinancial.reports.cashFlow.outcomeCount')]: month.outcomeCount,
+          });
+        });
+
+        // Add projections section
+        exportData.push({});
+        exportData.push({
+          [this.$t('businessFinancial.reports.cashFlow.month')]: this.$t(
+            'businessFinancial.reports.cashFlow.projections',
+          ),
+        });
+        exportData.push({
+          [this.$t('businessFinancial.reports.cashFlow.month')]: this.$t(
+            'businessFinancial.reports.cashFlow.nextMonth',
+          ),
+          [this.$t('businessFinancial.reports.cashFlow.projectedIncome')]:
+            reportData.projections.nextMonth.projectedIncome.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.cashFlow.projectedOutcome')]:
+            reportData.projections.nextMonth.projectedOutcome.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.cashFlow.projectedCashFlow')]:
+            reportData.projections.nextMonth.projectedCashFlow.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+        });
+        exportData.push({
+          [this.$t('businessFinancial.reports.cashFlow.month')]: this.$t(
+            'businessFinancial.reports.cashFlow.nextQuarter',
+          ),
+          [this.$t('businessFinancial.reports.cashFlow.projectedIncome')]:
+            reportData.projections.nextQuarter.projectedIncome.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.cashFlow.projectedOutcome')]:
+            reportData.projections.nextQuarter.projectedOutcome.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.cashFlow.projectedCashFlow')]:
+            reportData.projections.nextQuarter.projectedCashFlow.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+        });
+
+        // Download as formatted CSV
+        downloadFormattedCSV(
+          exportData,
+          `cash-flow-monthly-${this.commerce.tag}-${this.startDate}-${this.endDate}`,
+          {
+            reportType: this.$t('businessFinancial.reports.cashFlow.title'),
+            period: `${this.startDate} - ${this.endDate}`,
+            commerce: this.commerce.name || this.commerce.tag,
+            sheetName: 'Cash Flow Monthly',
+          },
+        );
+
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+        console.error('Error downloading cash flow report:', error);
+      }
+    },
+    async downloadServiceProfitabilityReport() {
+      try {
+        this.loading = true;
+        let commerceIds = [this.commerce.id];
+        if (this.commerces && this.commerces.length > 0) {
+          commerceIds = this.commerces.map(commerce => commerce.id);
+        }
+
+        const reportData = await getServiceProfitabilityReport(
+          this.commerce.id,
+          commerceIds,
+          this.startDate,
+          this.endDate
+        );
+
+        // Format data for CSV/Excel export
+        const exportData = reportData.map(service => ({
+          [this.$t('businessFinancial.reports.serviceProfitability.serviceId')]: service.serviceId,
+          [this.$t('businessFinancial.reports.serviceProfitability.serviceName')]:
+            service.serviceName || service.serviceId,
+          [this.$t('businessFinancial.reports.serviceProfitability.transactionCount')]:
+            service.transactionCount,
+          [this.$t('businessFinancial.reports.serviceProfitability.attentionCount')]:
+            service.attentionCount,
+          [this.$t('businessFinancial.reports.serviceProfitability.uniqueClients')]:
+            service.uniqueClients,
+          [this.$t('businessFinancial.reports.serviceProfitability.totalIncomes')]:
+            service.totalIncomes.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.serviceProfitability.totalCommissions')]:
+            service.totalCommissions.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.serviceProfitability.netIncomes')]:
+            service.netIncomes.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.serviceProfitability.totalOutcomes')]:
+            service.totalOutcomes.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.serviceProfitability.profit')]:
+            service.profit.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t(
+            'businessFinancial.reports.serviceProfitability.margin',
+          )]: `${service.margin.toFixed(2)}%`,
+          [this.$t(
+            'businessFinancial.reports.serviceProfitability.profitability',
+          )]: `${service.profitability.toFixed(2)}%`,
+          [this.$t('businessFinancial.reports.serviceProfitability.averageIncome')]:
+            service.averageIncome.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+        }));
+
+        // Download as formatted CSV
+        downloadFormattedCSV(
+          exportData,
+          `service-profitability-${this.commerce.tag}-${this.startDate}-${this.endDate}`,
+          {
+            reportType: this.$t('businessFinancial.reports.serviceProfitability.title'),
+            period: `${this.startDate} - ${this.endDate}`,
+            commerce: this.commerce.name || this.commerce.tag,
+            sheetName: 'Service Profitability',
+          },
+        );
+
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+        console.error('Error downloading service profitability report:', error);
+      }
+    },
+    async downloadMostProfitableClientsReport() {
+      try {
+        this.loading = true;
+        let commerceIds = [this.commerce.id];
+        if (this.commerces && this.commerces.length > 0) {
+          commerceIds = this.commerces.map(commerce => commerce.id);
+        }
+
+        const reportData = await getMostProfitableClientsReport(
+          this.commerce.id,
+          commerceIds,
+          this.startDate,
+          this.endDate
+        );
+
+        // Format data for CSV/Excel export
+        const exportData = reportData.map(client => ({
+          [this.$t('businessFinancial.reports.mostProfitableClients.clientName')]:
+            client.clientFullName,
+          [this.$t('businessFinancial.reports.mostProfitableClients.clientIdNumber')]:
+            client.clientIdNumber,
+          [this.$t('businessFinancial.reports.mostProfitableClients.clientEmail')]:
+            client.clientEmail,
+          [this.$t('businessFinancial.reports.mostProfitableClients.clientPhone')]:
+            client.clientPhone,
+          [this.$t('businessFinancial.reports.mostProfitableClients.transactionCount')]:
+            client.transactionCount,
+          [this.$t('businessFinancial.reports.mostProfitableClients.attentionCount')]:
+            client.attentionCount,
+          [this.$t('businessFinancial.reports.mostProfitableClients.bookingCount')]:
+            client.bookingCount,
+          [this.$t('businessFinancial.reports.mostProfitableClients.totalIncomes')]:
+            client.totalIncomes.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.mostProfitableClients.totalCommissions')]:
+            client.totalCommissions.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.mostProfitableClients.netIncomes')]:
+            client.netIncomes.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.mostProfitableClients.averageTicket')]:
+            client.averageTicket.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.mostProfitableClients.lifetimeValue')]:
+            client.lifetimeValue.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.mostProfitableClients.firstPurchase')]:
+            client.firstPurchase ? new Date(client.firstPurchase).toLocaleDateString() : '',
+          [this.$t('businessFinancial.reports.mostProfitableClients.lastPurchase')]:
+            client.lastPurchase ? new Date(client.lastPurchase).toLocaleDateString() : '',
+          [this.$t('businessFinancial.reports.mostProfitableClients.activeMonths')]:
+            client.activeMonths,
+          [this.$t(
+            'businessFinancial.reports.mostProfitableClients.frequency',
+          )]: `${client.frequency.toFixed(1)} días`,
+        }));
+
+        // Download as formatted CSV
+        downloadFormattedCSV(
+          exportData,
+          `most-profitable-clients-${this.commerce.tag}-${this.startDate}-${this.endDate}`,
+          {
+            reportType: this.$t('businessFinancial.reports.mostProfitableClients.title'),
+            period: `${this.startDate} - ${this.endDate}`,
+            commerce: this.commerce.name || this.commerce.tag,
+            sheetName: 'Most Profitable Clients',
+          },
+        );
+
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+        console.error('Error downloading most profitable clients report:', error);
+      }
+    },
+    async downloadExpensesByProviderReport() {
+      try {
+        this.loading = true;
+        let commerceIds = [this.commerce.id];
+        if (this.commerces && this.commerces.length > 0) {
+          commerceIds = this.commerces.map(commerce => commerce.id);
+        }
+
+        const reportData = await getExpensesByProviderReport(
+          this.commerce.id,
+          commerceIds,
+          this.startDate,
+          this.endDate
+        );
+
+        // Format data for CSV/Excel export
+        const exportData = reportData.map(provider => ({
+          [this.$t('businessFinancial.reports.expensesByProvider.providerName')]:
+            provider.providerName,
+          [this.$t('businessFinancial.reports.expensesByProvider.transactionCount')]:
+            provider.transactionCount,
+          [this.$t('businessFinancial.reports.expensesByProvider.totalAmount')]:
+            provider.totalAmount.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.expensesByProvider.averageAmount')]:
+            provider.averageAmount.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.expensesByProvider.previousAmount')]:
+            provider.previousAmount.toLocaleString('de-DE', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          [this.$t('businessFinancial.reports.expensesByProvider.change')]: `${
+            provider.change >= 0 ? '+' : ''
+          }${provider.change.toFixed(2)}%`,
+          [this.$t('businessFinancial.reports.expensesByProvider.firstExpense')]:
+            provider.firstExpense ? new Date(provider.firstExpense).toLocaleDateString() : '',
+          [this.$t('businessFinancial.reports.expensesByProvider.lastExpense')]:
+            provider.lastExpense ? new Date(provider.lastExpense).toLocaleDateString() : '',
+          [this.$t('businessFinancial.reports.expensesByProvider.activeMonths')]:
+            provider.activeMonths,
+          [this.$t('businessFinancial.reports.expensesByProvider.categories')]: provider.categories,
+        }));
+
+        // Download as formatted CSV
+        downloadFormattedCSV(
+          exportData,
+          `expenses-by-provider-${this.commerce.tag}-${this.startDate}-${this.endDate}`,
+          {
+            reportType: this.$t('businessFinancial.reports.expensesByProvider.title'),
+            period: `${this.startDate} - ${this.endDate}`,
+            commerce: this.commerce.name || this.commerce.tag,
+            sheetName: 'Expenses by Provider',
+          },
+        );
+
+        this.loading = false;
+      } catch (error) {
+        this.loading = false;
+        console.error('Error downloading expenses by provider report:', error);
+      }
     },
     exportToPDF() {
       this.loading = true;
@@ -267,6 +993,203 @@ export default {
       const percentage = (value * 100) / total;
       return parseFloat(percentage.toFixed(2), 2) || 0;
     },
+    calculateDaysInPeriod(startDate, endDate) {
+      if (!startDate || !endDate) return 0;
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays + 1; // +1 to include both start and end dates
+    },
+    calculateDaysUntilMonthEnd() {
+      const today = new Date();
+      const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      const diffTime = lastDayOfMonth - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 ? diffDays : 0;
+    },
+    getTrendsChartData() {
+      if (!this.trends || !this.trends.monthlyData || this.trends.monthlyData.length === 0) {
+        return { labels: [], datasets: [] };
+      }
+
+      const labels = this.trends.monthlyData.map(m => m.monthLabel);
+      const incomesData = this.trends.monthlyData.map(m => m.incomes);
+      const outcomesData = this.trends.monthlyData.map(m => m.outcomes);
+      const profitData = this.trends.monthlyData.map(m => m.profit);
+      const averageIncomesLine = this.trends.monthlyData.map(() => this.trends.averageIncomes);
+      const averageOutcomesLine = this.trends.monthlyData.map(() => this.trends.averageOutcomes);
+
+      return {
+        labels,
+        datasets: [
+          {
+            label: this.$t('dashboard.incomes'),
+            borderColor: '#004aad',
+            backgroundColor: 'rgba(0, 74, 173, 0.1)',
+            data: incomesData,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+          },
+          {
+            label: this.$t('dashboard.outcomes'),
+            borderColor: '#a52a2a',
+            backgroundColor: 'rgba(165, 42, 42, 0.1)',
+            data: outcomesData,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+          },
+          {
+            label: this.$t('businessFinancial.kpis.netProfit'),
+            borderColor: '#00c2cb',
+            backgroundColor: 'rgba(0, 194, 203, 0.1)',
+            data: profitData,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+          },
+          {
+            label: this.$t('businessFinancial.trends.averageIncomes'),
+            borderColor: '#004aad',
+            backgroundColor: 'transparent',
+            data: averageIncomesLine,
+            borderDash: [5, 5],
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+          },
+          {
+            label: this.$t('businessFinancial.trends.averageOutcomes'),
+            borderColor: '#a52a2a',
+            backgroundColor: 'transparent',
+            data: averageOutcomesLine,
+            borderDash: [5, 5],
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+          },
+        ],
+      };
+    },
+    getTrendsChartOptions() {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            callbacks: {
+              label: context => {
+                const label = context.dataset.label || '';
+                const value = context.parsed.y || 0;
+                return `${label}: ${value.toLocaleString('de-DE', {
+                  style: 'currency',
+                  currency: 'USD',
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}`;
+              },
+            },
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback(value) {
+                return value.toLocaleString('de-DE', {
+                  style: 'currency',
+                  currency: 'USD',
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                });
+              },
+            },
+          },
+        },
+        interaction: {
+          mode: 'nearest',
+          axis: 'x',
+          intersect: false,
+        },
+      };
+    },
+    getCategoryChartData() {
+      if (
+        !this.outcomesCategoryAnalysis ||
+        !this.outcomesCategoryAnalysis.current ||
+        Object.keys(this.outcomesCategoryAnalysis.current).length === 0
+      ) {
+        return null;
+      }
+
+      const categories = Object.keys(this.outcomesCategoryAnalysis.current);
+      const labels = categories.map(
+        cat => cat || this.$t('businessFinancial.categories.uncategorized'),
+      );
+      const data = categories.map(
+        cat => +this.outcomesCategoryAnalysis.current[cat]?.totalAmount || 0
+      );
+
+      return {
+        labels,
+        datasets: [
+          {
+            data,
+            backgroundColor: [
+              '#a52a2a',
+              '#dc3545',
+              '#fd7e14',
+              '#ffc107',
+              '#20c997',
+              '#0dcaf0',
+              '#6f42c1',
+              '#e91e63',
+            ],
+            borderWidth: 2,
+            borderColor: '#ffffff',
+          },
+        ],
+      };
+    },
+    getCategoryChartOptions() {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+          },
+          tooltip: {
+            callbacks: {
+              label: context => {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
+                return `${label}: ${value.toLocaleString('de-DE', {
+                  style: 'currency',
+                  currency: 'USD',
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })} (${percentage}%)`;
+              },
+            },
+          },
+        },
+      };
+    },
   },
   watch: {
     store: {
@@ -280,6 +1203,215 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+/* Report Cards - matching modern-metric-card style - compact */
+.report-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.report-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00c2cb 0%, #00c4cc 50%, #00c2cb 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.report-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-color: rgba(169, 169, 169, 0.3);
+}
+
+.report-card:hover::before {
+  opacity: 0.6;
+}
+
+.report-card .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Ensure all cards have same height and alignment */
+.col-md-6.d-flex,
+.col-12.d-flex,
+.col-12.col-md-6.col-lg-4.d-flex {
+  min-height: 100%;
+}
+
+.col-md-6.d-flex .w-100.h-100,
+.col-12.d-flex .w-100.h-100,
+.col-12.col-md-6.col-lg-4.d-flex .w-100.h-100 {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure consistent card widths */
+.row > [class*='col-'] {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+  user-select: none;
+}
+
+.cursor-pointer:hover {
+  opacity: 0.8;
+}
+
+/* Projected Cash Flow Card Styling - matching modern-metric-card style */
+.projected-cash-flow-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.projected-cash-flow-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00c2cb 0%, #00c4cc 50%, #00c2cb 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.projected-cash-flow-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-color: rgba(169, 169, 169, 0.3);
+}
+
+.projected-cash-flow-card:hover::before {
+  opacity: 0.6;
+}
+
+.projected-cash-flow-card .badge {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.projected-cash-flow-card i {
+  font-size: 1.25rem;
+}
+
+/* Monthly Goal Card Styling - matching modern-metric-card style */
+.monthly-goal-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-left: 3px solid #004aad;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.monthly-goal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00c2cb 0%, #00c4cc 50%, #00c2cb 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.monthly-goal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-color: rgba(169, 169, 169, 0.3);
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.05) 0%, rgba(0, 74, 173, 0.02) 100%);
+}
+
+.monthly-goal-card:hover::before {
+  opacity: 0.6;
+}
+
+.monthly-goal-card .badge {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.monthly-goal-card i {
+  font-size: 1.25rem;
+}
+
+/* Modern Card - unified style for all cards without borders */
+.modern-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.modern-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00c2cb 0%, #00c4cc 50%, #00c2cb 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.modern-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-color: rgba(169, 169, 169, 0.3);
+}
+
+.modern-card:hover::before {
+  opacity: 0.6;
+}
+
+/* Mini Metric Cards - for YoY and Average metrics */
+.modern-metric-mini-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.modern-metric-mini-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: rgba(169, 169, 169, 0.3);
+}
+</style>
 
 <template>
   <div>
@@ -311,15 +1443,190 @@ export default {
             <div>
               <div>
                 <div>
+                  <!-- Reports Download Section - Collapsable -->
                   <div id="admin-sub-menu" class="row mt-3 mx-0">
-                    <div class="col lefted">
-                      <SimpleDownloadButton
-                        :download="toggles['financial.reports.resume']"
-                        :show-tooltip="true"
-                        :description="$t('businessFinancial.reports.resume.description')"
-                        @download="exportToPDF"
-                        :can-download="toggles['financial.reports.resume'] === true"
-                      ></SimpleDownloadButton>
+                    <div class="col-12">
+                      <div class="modern-card p-2">
+                        <div
+                          class="d-flex justify-content-between align-items-center mb-2 cursor-pointer"
+                          @click="reportsCollapsed = !reportsCollapsed"
+                          style="cursor: pointer"
+                        >
+                          <h6 class="fw-bold mb-0" style="font-size: 0.95rem">
+                            <i class="bi bi-file-earmark-arrow-down me-2"></i>
+                            {{ $t('businessFinancial.reports.title') }}
+                          </h6>
+                          <i
+                            :class="`bi ${reportsCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'}`"
+                            class="fs-6"
+                          ></i>
+                        </div>
+                        <div v-show="!reportsCollapsed" class="row">
+                          <!-- Resume Report -->
+                          <div class="col-12 col-md-6 col-lg-4 mb-2 d-flex">
+                            <div
+                              class="report-card p-2 w-100 h-100 d-flex flex-column"
+                              :class="{
+                                'opacity-50': !toggles['financial.reports.resume'],
+                              }"
+                            >
+                              <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-file-earmark-pdf-fill text-primary fs-5 me-2"></i>
+                                <span class="fw-bold" style="font-size: 0.875rem">{{
+                                  $t('businessFinancial.reports.resume.title')
+                                }}</span>
+                              </div>
+                              <p
+                                class="text-muted small mb-2 flex-grow-1"
+                                style="font-size: 0.75rem; line-height: 1.3"
+                              >
+                                {{ $t('businessFinancial.reports.resume.description') }}
+                              </p>
+                              <button
+                                class="btn btn-sm btn-primary w-100"
+                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem"
+                                @click="exportToPDF"
+                                :disabled="!toggles['financial.reports.resume']"
+                              >
+                                <i class="bi bi-download me-1"></i>
+                                {{ $t('businessFinancial.reports.download') }}
+                              </button>
+                            </div>
+                          </div>
+
+                          <!-- Cash Flow Report -->
+                          <div class="col-12 col-md-6 col-lg-4 mb-2 d-flex">
+                            <div
+                              class="report-card p-2 w-100 h-100 d-flex flex-column"
+                              :class="{
+                                'opacity-50': !toggles['financial.reports.cashFlow'],
+                              }"
+                            >
+                              <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-graph-up-arrow text-success fs-5 me-2"></i>
+                                <span class="fw-bold" style="font-size: 0.875rem">{{
+                                  $t('businessFinancial.reports.cashFlow.title')
+                                }}</span>
+                              </div>
+                              <p
+                                class="text-muted small mb-2 flex-grow-1"
+                                style="font-size: 0.75rem; line-height: 1.3"
+                              >
+                                {{ $t('businessFinancial.reports.cashFlow.description') }}
+                              </p>
+                              <button
+                                class="btn btn-sm btn-success w-100"
+                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem"
+                                @click="downloadCashFlowReport"
+                                :disabled="!toggles['financial.reports.cashFlow']"
+                              >
+                                <i class="bi bi-download me-1"></i>
+                                {{ $t('businessFinancial.reports.download') }}
+                              </button>
+                            </div>
+                          </div>
+
+                          <!-- Service Profitability Report -->
+                          <div class="col-12 col-md-6 col-lg-4 mb-2 d-flex">
+                            <div
+                              class="report-card p-2 w-100 h-100 d-flex flex-column"
+                              :class="{
+                                'opacity-50': !toggles['financial.reports.serviceProfitability'],
+                              }"
+                            >
+                              <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-bar-chart-fill text-info fs-5 me-2"></i>
+                                <span class="fw-bold" style="font-size: 0.875rem">{{
+                                  $t('businessFinancial.reports.serviceProfitability.title')
+                                }}</span>
+                              </div>
+                              <p
+                                class="text-muted small mb-2 flex-grow-1"
+                                style="font-size: 0.75rem; line-height: 1.3"
+                              >
+                                {{
+                                  $t('businessFinancial.reports.serviceProfitability.description')
+                                }}
+                              </p>
+                              <button
+                                class="btn btn-sm btn-info w-100"
+                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem"
+                                @click="downloadServiceProfitabilityReport"
+                                :disabled="!toggles['financial.reports.serviceProfitability']"
+                              >
+                                <i class="bi bi-download me-1"></i>
+                                {{ $t('businessFinancial.reports.download') }}
+                              </button>
+                            </div>
+                          </div>
+
+                          <!-- Most Profitable Clients Report -->
+                          <div class="col-12 col-md-6 col-lg-4 mb-2 d-flex">
+                            <div
+                              class="report-card p-2 w-100 h-100 d-flex flex-column"
+                              :class="{
+                                'opacity-50': !toggles['financial.reports.mostProfitableClients'],
+                              }"
+                            >
+                              <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-people-fill text-warning fs-5 me-2"></i>
+                                <span class="fw-bold" style="font-size: 0.875rem">{{
+                                  $t('businessFinancial.reports.mostProfitableClients.title')
+                                }}</span>
+                              </div>
+                              <p
+                                class="text-muted small mb-2 flex-grow-1"
+                                style="font-size: 0.75rem; line-height: 1.3"
+                              >
+                                {{
+                                  $t('businessFinancial.reports.mostProfitableClients.description')
+                                }}
+                              </p>
+                              <button
+                                class="btn btn-sm btn-warning w-100"
+                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem"
+                                @click="downloadMostProfitableClientsReport"
+                                :disabled="!toggles['financial.reports.mostProfitableClients']"
+                              >
+                                <i class="bi bi-download me-1"></i>
+                                {{ $t('businessFinancial.reports.download') }}
+                              </button>
+                            </div>
+                          </div>
+
+                          <!-- Expenses by Provider Report -->
+                          <div class="col-12 col-md-6 col-lg-4 mb-2 d-flex">
+                            <div
+                              class="report-card p-2 w-100 h-100 d-flex flex-column"
+                              :class="{
+                                'opacity-50': !toggles['financial.reports.expensesByProvider'],
+                              }"
+                            >
+                              <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-building text-danger fs-5 me-2"></i>
+                                <span class="fw-bold" style="font-size: 0.875rem">{{
+                                  $t('businessFinancial.reports.expensesByProvider.title')
+                                }}</span>
+                              </div>
+                              <p
+                                class="text-muted small mb-2 flex-grow-1"
+                                style="font-size: 0.75rem; line-height: 1.3"
+                              >
+                                {{ $t('businessFinancial.reports.expensesByProvider.description') }}
+                              </p>
+                              <button
+                                class="btn btn-sm btn-danger w-100"
+                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem"
+                                @click="downloadExpensesByProviderReport"
+                                :disabled="!toggles['financial.reports.expensesByProvider']"
+                              >
+                                <i class="bi bi-download me-1"></i>
+                                {{ $t('businessFinancial.reports.download') }}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <!-- Filters Section - Can be shown in component or exposed via slot -->
@@ -421,6 +1728,219 @@ export default {
                 >
                 </PDFHeader>
                 <div>
+                  <!-- KPIs Section - 2 per row with same height -->
+                  <div
+                    v-if="calculatedMetrics && Object.keys(calculatedMetrics).length > 0"
+                    class="row mb-3"
+                  >
+                    <div class="col-12 col-md-6 mb-3 d-flex">
+                      <FinancialKPICard
+                        :show="true"
+                        :title="$t('businessFinancial.kpis.totalIncomes')"
+                        :value="
+                          calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 0
+                        "
+                        :change="comparison?.comparison?.incomes"
+                        :change-label="$t('businessFinancial.kpis.vsPreviousMonth')"
+                        icon="bi-arrow-down-circle-fill"
+                        icon-style-class="green-icon"
+                        :format-currency="true"
+                        class="w-100 h-100"
+                      />
+                    </div>
+                    <div class="col-12 col-md-6 mb-3 d-flex">
+                      <FinancialKPICard
+                        :show="true"
+                        :title="$t('businessFinancial.kpis.totalOutcomes')"
+                        :value="
+                          calculatedMetrics['outcomes.created']?.paymentData?.paymentAmountSum || 0
+                        "
+                        :change="comparison?.comparison?.outcomes"
+                        :change-label="$t('businessFinancial.kpis.vsPreviousMonth')"
+                        icon="bi-arrow-up-circle-fill"
+                        icon-style-class="red-icon"
+                        :format-currency="true"
+                        class="w-100 h-100"
+                      />
+                    </div>
+                    <div class="col-12 col-md-6 mb-3 d-flex">
+                      <FinancialKPICard
+                        :show="true"
+                        :title="$t('businessFinancial.kpis.netProfit')"
+                        :value="financialResume.resume.diff || 0"
+                        :change="comparison?.comparison?.profit"
+                        :change-label="$t('businessFinancial.kpis.vsPreviousMonth')"
+                        icon="bi-graph-up-arrow"
+                        icon-style-class="green-icon"
+                        :format-currency="true"
+                        class="w-100 h-100"
+                      />
+                    </div>
+                    <div class="col-12 col-md-6 mb-3 d-flex">
+                      <FinancialKPICard
+                        :show="true"
+                        :title="$t('businessFinancial.kpis.profitMargin')"
+                        :value="financialResume.resume.avg || 0"
+                        :change="comparison?.comparison?.margin"
+                        :change-label="$t('businessFinancial.kpis.vsPreviousMonth')"
+                        icon="bi-percent"
+                        icon-style-class="blue-icon"
+                        :format-currency="false"
+                        :format-percentage="true"
+                        class="w-100 h-100"
+                      />
+                    </div>
+                    <div class="col-12 col-md-6 mb-3 d-flex">
+                      <FinancialKPICard
+                        :show="true"
+                        :title="$t('businessFinancial.kpis.averageDailyIncome')"
+                        :value="financialResume.resume.averageDailyIncome || 0"
+                        icon="bi-calendar-day"
+                        icon-style-class="blue-icon"
+                        :format-currency="true"
+                        class="w-100 h-100"
+                      />
+                    </div>
+                    <div class="col-12 col-md-6 mb-3 d-flex">
+                      <FinancialKPICard
+                        :show="true"
+                        :title="$t('businessFinancial.kpis.daysUntilMonthEnd')"
+                        :value="financialResume.resume.daysUntilMonthEnd || 0"
+                        icon="bi-calendar-check"
+                        icon-style-class="yellow-icon"
+                        :format-currency="false"
+                        class="w-100 h-100"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Alerts Section -->
+                  <div class="row mb-3">
+                    <div class="col-12">
+                      <FinancialAlerts
+                        :show="true"
+                        :alerts="alerts"
+                        :health-status="healthStatus"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Projected Cash Flow and Goal Progress -->
+                  <div
+                    v-if="financialResume.resume.projectedCashFlow !== undefined"
+                    class="row mb-3"
+                  >
+                    <div class="col-12 mb-3 d-flex">
+                      <div class="card p-3 w-100 h-100 projected-cash-flow-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <div class="d-flex align-items-center">
+                            <i
+                              class="bi bi-cash-stack me-2"
+                              :class="
+                                financialResume.resume.projectedCashFlow >= 0
+                                  ? 'text-success'
+                                  : 'text-danger'
+                              "
+                            ></i>
+                            <span class="fw-bold">{{
+                              $t('businessFinancial.projectedCashFlow')
+                            }}</span>
+                          </div>
+                          <span
+                            class="badge rounded-pill px-3 py-2"
+                            :class="
+                              (financialResume.resume.projectedCashFlow || 0) >= 0
+                                ? 'bg-success'
+                                : 'bg-danger'
+                            "
+                          >
+                            {{
+                              (financialResume.resume.projectedCashFlow || 0).toLocaleString(
+                                'de-DE',
+                                {
+                                  style: 'currency',
+                                  currency: 'USD',
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                }
+                              )
+                            }}
+                          </span>
+                        </div>
+                        <div class="small text-muted mt-2">
+                          {{ $t('businessFinancial.projectedCashFlowDescription') }}
+                          <span
+                            v-if="financialResume.resume.daysUntilMonthEnd > 0"
+                            class="d-block mt-1"
+                          >
+                            {{
+                              $t('businessFinancial.projectedCashFlowDays', {
+                                days: financialResume.resume.daysUntilMonthEnd,
+                              })
+                            }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      v-if="financialResume.resume.monthlyGoal > 0"
+                      class="col-12 col-md-6 mb-3 d-flex"
+                    >
+                      <div class="card p-3 w-100 h-100 monthly-goal-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <div class="d-flex align-items-center">
+                            <i class="bi bi-bullseye me-2 text-primary"></i>
+                            <span class="fw-bold">{{ $t('businessFinancial.monthlyGoal') }}</span>
+                          </div>
+                          <span class="badge bg-primary rounded-pill px-3 py-2">
+                            {{ (financialResume.resume.goalProgress || 0).toFixed(1) }}%
+                          </span>
+                        </div>
+                        <div class="progress mt-2" style="height: 20px; border-radius: 10px">
+                          <div
+                            class="progress-bar"
+                            :class="
+                              (financialResume.resume.goalProgress || 0) >= 100
+                                ? 'bg-success'
+                                : (financialResume.resume.goalProgress || 0) >= 70
+                                ? 'bg-warning'
+                                : 'bg-danger'
+                            "
+                            :style="`width: ${Math.min(
+                              financialResume.resume.goalProgress || 0,
+                              100
+                            )}%`"
+                            style="border-radius: 10px"
+                          >
+                            {{ (financialResume.resume.goalProgress || 0).toFixed(1) }}%
+                          </div>
+                        </div>
+                        <div class="small text-muted mt-2">
+                          {{
+                            (
+                              calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum ||
+                              0
+                            ).toLocaleString('de-DE', {
+                              style: 'currency',
+                              currency: 'USD',
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          }}
+                          /
+                          {{
+                            financialResume.resume.monthlyGoal.toLocaleString('de-DE', {
+                              style: 'currency',
+                              currency: 'USD',
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })
+                          }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div class="row">
                     <div v-if="calculatedMetrics && Object.keys(calculatedMetrics).length > 0">
                       <div class="metric-card" v-if="calculatedMetrics['incomes.created']">
@@ -485,21 +2005,427 @@ export default {
                       </SimpleCard>
                     </div>
                   </div>
-                  <div
-                    class="row mx-2 mt-3"
-                    v-if="
-                      calculatedMetrics['incomes.created']?.evolution?.datasets &&
-                      calculatedMetrics['outcomes.created']?.evolution?.datasets
-                    "
-                  >
-                    <div class="card col centered p-4">
-                      <div class="fw-bold mb-2">
-                        <span>{{ $t('businessFinancial.evolution') }} </span>
+                  <!-- Charts Section -->
+                  <div class="row mx-2 mt-3">
+                    <!-- Evolution Chart -->
+                    <div
+                      class="col-12 col-lg-8 mb-3"
+                      v-if="
+                        calculatedMetrics['incomes.created']?.evolution?.datasets &&
+                        calculatedMetrics['outcomes.created']?.evolution?.datasets
+                      "
+                    >
+                      <div class="modern-card centered p-4">
+                        <div class="fw-bold mb-2">
+                          <span>{{ $t('businessFinancial.evolution') }} </span>
+                        </div>
+                        <LineChart
+                          v-if="financialResume.evolution && financialResume.evolution.chartData"
+                          class="centered"
+                          :chart-data="financialResume.evolution.chartData"
+                          :options="financialResume.evolution.options"
+                        />
                       </div>
-                      <LineChart class="centered" v-bind="financialResume.evolution" />
+                    </div>
+
+                    <!-- Income Distribution Donut Chart -->
+                    <div
+                      class="col-12 col-lg-4 mb-3"
+                      v-if="
+                        financialResume.incomeDistribution &&
+                        financialResume.incomeDistribution.chartData &&
+                        financialResume.incomeDistribution.chartData.labels &&
+                        financialResume.incomeDistribution.chartData.labels.length > 0
+                      "
+                    >
+                      <div class="modern-card centered p-4">
+                        <div class="fw-bold mb-2">
+                          <span>{{ $t('businessFinancial.distribution.title') }} </span>
+                        </div>
+                        <DoughnutChart
+                          class="centered"
+                          :chart-data="financialResume.incomeDistribution.chartData"
+                          :options="financialResume.incomeDistribution.options"
+                        />
+                        <div class="mt-3">
+                          <div
+                            v-for="(label, index) in financialResume.incomeDistribution.chartData
+                              .labels"
+                            :key="index"
+                            class="d-flex justify-content-between align-items-center mb-2"
+                          >
+                            <div class="d-flex align-items-center">
+                              <div
+                                class="distribution-color-indicator me-2"
+                                :style="{
+                                  backgroundColor:
+                                    financialResume.incomeDistribution.chartData.datasets[0]
+                                      .backgroundColor[index],
+                                }"
+                              ></div>
+                              <span class="small">{{ label }}</span>
+                            </div>
+                            <span class="small fw-bold">
+                              {{
+                                financialResume.incomeDistribution.chartData.datasets[0].data[
+                                  index
+                                ].toLocaleString('de-DE', {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })
+                              }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div v-else></div>
+
+                  <!-- Trends Section -->
+                  <div
+                    v-if="trends && trends.monthlyData && trends.monthlyData.length > 0"
+                    class="row mb-3"
+                  >
+                    <div class="col-12">
+                      <div class="modern-card p-4">
+                        <div class="fw-bold mb-3">
+                          <span>{{ $t('businessFinancial.trends.title') }}</span>
+                        </div>
+
+                        <!-- Year over Year Comparison -->
+                        <div v-if="trends.yearOverYear" class="row mb-3">
+                          <div class="col-12">
+                            <h6 class="fw-bold">
+                              {{ $t('businessFinancial.trends.yearOverYear') }}
+                            </h6>
+                            <div class="row">
+                              <div class="col-6 col-md-3 mb-2">
+                                <div class="text-center p-2 modern-metric-mini-card">
+                                  <div class="small text-muted">
+                                    {{ $t('businessFinancial.kpis.totalIncomes') }}
+                                  </div>
+                                  <div
+                                    class="fw-bold"
+                                    :class="
+                                      trends.yearOverYear.incomes >= 0
+                                        ? 'text-success'
+                                        : 'text-danger'
+                                    "
+                                  >
+                                    <i
+                                      :class="`bi ${
+                                        trends.yearOverYear.incomes >= 0
+                                          ? 'bi-arrow-up'
+                                          : 'bi-arrow-down'
+                                      }`"
+                                    ></i>
+                                    {{ Math.abs(trends.yearOverYear.incomes).toFixed(2) }}%
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="col-6 col-md-3 mb-2">
+                                <div class="text-center p-2 modern-metric-mini-card">
+                                  <div class="small text-muted">
+                                    {{ $t('businessFinancial.kpis.totalOutcomes') }}
+                                  </div>
+                                  <div
+                                    class="fw-bold"
+                                    :class="
+                                      trends.yearOverYear.outcomes >= 0
+                                        ? 'text-danger'
+                                        : 'text-success'
+                                    "
+                                  >
+                                    <i
+                                      :class="`bi ${
+                                        trends.yearOverYear.outcomes >= 0
+                                          ? 'bi-arrow-up'
+                                          : 'bi-arrow-down'
+                                      }`"
+                                    ></i>
+                                    {{ Math.abs(trends.yearOverYear.outcomes).toFixed(2) }}%
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="col-6 col-md-3 mb-2">
+                                <div class="text-center p-2 modern-metric-mini-card">
+                                  <div class="small text-muted">
+                                    {{ $t('businessFinancial.kpis.netProfit') }}
+                                  </div>
+                                  <div
+                                    class="fw-bold"
+                                    :class="
+                                      trends.yearOverYear.profit >= 0
+                                        ? 'text-success'
+                                        : 'text-danger'
+                                    "
+                                  >
+                                    <i
+                                      :class="`bi ${
+                                        trends.yearOverYear.profit >= 0
+                                          ? 'bi-arrow-up'
+                                          : 'bi-arrow-down'
+                                      }`"
+                                    ></i>
+                                    {{ Math.abs(trends.yearOverYear.profit).toFixed(2) }}%
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="col-6 col-md-3 mb-2">
+                                <div class="text-center p-2 modern-metric-mini-card">
+                                  <div class="small text-muted">
+                                    {{ $t('businessFinancial.kpis.profitMargin') }}
+                                  </div>
+                                  <div
+                                    class="fw-bold"
+                                    :class="
+                                      trends.yearOverYear.margin >= 0
+                                        ? 'text-success'
+                                        : 'text-danger'
+                                    "
+                                  >
+                                    <i
+                                      :class="`bi ${
+                                        trends.yearOverYear.margin >= 0
+                                          ? 'bi-arrow-up'
+                                          : 'bi-arrow-down'
+                                      }`"
+                                    ></i>
+                                    {{ Math.abs(trends.yearOverYear.margin).toFixed(2) }}%
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Trends Chart -->
+                        <div class="mb-3" style="height: 300px">
+                          <LineChart
+                            :chart-data="getTrendsChartData()"
+                            :options="getTrendsChartOptions()"
+                          />
+                        </div>
+
+                        <!-- Average Metrics -->
+                        <div class="row">
+                          <div class="col-6 col-md-3 mb-2">
+                            <div class="text-center p-2 modern-metric-mini-card">
+                              <div class="small text-muted">
+                                {{ $t('businessFinancial.trends.averageIncomes') }}
+                              </div>
+                              <div class="fw-bold">
+                                {{
+                                  trends.averageIncomes.toLocaleString('de-DE', {
+                                    style: 'currency',
+                                    currency: 'USD',
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })
+                                }}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-6 col-md-3 mb-2">
+                            <div class="text-center p-2 modern-metric-mini-card">
+                              <div class="small text-muted">
+                                {{ $t('businessFinancial.trends.averageOutcomes') }}
+                              </div>
+                              <div class="fw-bold">
+                                {{
+                                  trends.averageOutcomes.toLocaleString('de-DE', {
+                                    style: 'currency',
+                                    currency: 'USD',
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })
+                                }}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-6 col-md-3 mb-2">
+                            <div class="text-center p-2 modern-metric-mini-card">
+                              <div class="small text-muted">
+                                {{ $t('businessFinancial.trends.averageProfit') }}
+                              </div>
+                              <div class="fw-bold">
+                                {{
+                                  trends.averageProfit.toLocaleString('de-DE', {
+                                    style: 'currency',
+                                    currency: 'USD',
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })
+                                }}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-6 col-md-3 mb-2">
+                            <div class="text-center p-2 modern-metric-mini-card">
+                              <div class="small text-muted">
+                                {{ $t('businessFinancial.trends.averageMargin') }}
+                              </div>
+                              <div class="fw-bold">{{ trends.averageMargin.toFixed(2) }}%</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Outcomes Category Analysis Section -->
+                  <div
+                    v-if="
+                      outcomesCategoryAnalysis &&
+                      outcomesCategoryAnalysis.topCategories &&
+                      outcomesCategoryAnalysis.topCategories.length > 0
+                    "
+                    class="row mb-3"
+                  >
+                    <div class="col-12">
+                      <div class="modern-card p-4">
+                        <div class="fw-bold mb-3">
+                          <span>{{ $t('businessFinancial.categories.title') }}</span>
+                        </div>
+
+                        <div class="row">
+                          <!-- Category Distribution Chart -->
+                          <div class="col-12 col-lg-6 mb-3">
+                            <h6 class="fw-bold mb-3">
+                              {{ $t('businessFinancial.categories.distribution') }}
+                            </h6>
+                            <div v-if="getCategoryChartData()" style="height: 300px">
+                              <DoughnutChart
+                                :chart-data="getCategoryChartData()"
+                                :options="getCategoryChartOptions()"
+                              />
+                            </div>
+                          </div>
+
+                          <!-- Top 5 Categories -->
+                          <div class="col-12 col-lg-6 mb-3">
+                            <h6 class="fw-bold mb-3">
+                              {{ $t('businessFinancial.categories.topCategories') }}
+                            </h6>
+                            <div class="list-group">
+                              <div
+                                v-for="category in outcomesCategoryAnalysis.topCategories"
+                                :key="category.name"
+                                class="list-group-item d-flex justify-content-between align-items-center"
+                              >
+                                <div class="d-flex align-items-center">
+                                  <span class="badge bg-primary rounded-pill me-2">{{
+                                    category.rank
+                                  }}</span>
+                                  <div>
+                                    <div class="fw-bold">{{ category.name }}</div>
+                                    <div class="small text-muted">
+                                      {{ category.count }}
+                                      {{ $t('businessFinancial.categories.transactions') }}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="text-end">
+                                  <div class="fw-bold">
+                                    {{
+                                      category.amount.toLocaleString('de-DE', {
+                                        style: 'currency',
+                                        currency: 'USD',
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })
+                                    }}
+                                  </div>
+                                  <div
+                                    class="small"
+                                    :class="category.change >= 0 ? 'text-danger' : 'text-success'"
+                                  >
+                                    <i
+                                      :class="`bi ${
+                                        category.change >= 0 ? 'bi-arrow-up' : 'bi-arrow-down'
+                                      }`"
+                                    ></i>
+                                    {{ Math.abs(category.change).toFixed(2) }}%
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Category Comparison Table -->
+                        <div v-if="outcomesCategoryAnalysis.comparison" class="mt-4">
+                          <h6 class="fw-bold mb-3">
+                            {{ $t('businessFinancial.categories.comparison') }}
+                          </h6>
+                          <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                              <thead>
+                                <tr>
+                                  <th>{{ $t('businessFinancial.categories.category') }}</th>
+                                  <th class="text-end">
+                                    {{ $t('businessFinancial.categories.currentPeriod') }}
+                                  </th>
+                                  <th class="text-end">
+                                    {{ $t('businessFinancial.categories.previousPeriod') }}
+                                  </th>
+                                  <th class="text-end">
+                                    {{ $t('businessFinancial.categories.change') }}
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr
+                                  v-for="(
+                                    comparison, categoryName
+                                  ) in outcomesCategoryAnalysis.comparison"
+                                  :key="categoryName"
+                                >
+                                  <td>
+                                    {{
+                                      categoryName ||
+                                      $t('businessFinancial.categories.uncategorized')
+                                    }}
+                                  </td>
+                                  <td class="text-end">
+                                    {{
+                                      comparison.currentAmount.toLocaleString('de-DE', {
+                                        style: 'currency',
+                                        currency: 'USD',
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })
+                                    }}
+                                  </td>
+                                  <td class="text-end">
+                                    {{
+                                      comparison.previousAmount.toLocaleString('de-DE', {
+                                        style: 'currency',
+                                        currency: 'USD',
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })
+                                    }}
+                                  </td>
+                                  <td
+                                    class="text-end fw-bold"
+                                    :class="comparison.change >= 0 ? 'text-danger' : 'text-success'"
+                                  >
+                                    <i
+                                      :class="`bi ${
+                                        comparison.change >= 0 ? 'bi-arrow-up' : 'bi-arrow-down'
+                                      }`"
+                                    ></i>
+                                    {{ Math.abs(comparison.change).toFixed(2) }}%
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <PDFFooter :show="toggles['financial.reports.resume']"></PDFFooter>
               </div>
@@ -586,5 +2512,22 @@ export default {
 }
 .form-control {
   font-size: 0.9rem;
+}
+
+/* Distribution Chart Styles */
+.distribution-color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive chart adjustments */
+@media (max-width: 992px) {
+  .row.mx-2.mt-3 > div {
+    margin-bottom: 1rem;
+  }
 }
 </style>

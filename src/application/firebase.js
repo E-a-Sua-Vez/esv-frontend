@@ -58,13 +58,32 @@ export function updatedAttentions(attentionId) {
   const attentions = ref([]);
   const attentionQuery = query(attentionCollection, where('id', '==', attentionId));
   const unsubscribe = onSnapshot(attentionQuery, snapshot => {
-    attentions.value = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt.toDate().toString(),
-    }));
+    attentions.value = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Ensure currentStage is handled safely (may be undefined for old attentions)
+        currentStage: data.currentStage || undefined,
+        // Ensure stageHistory is handled safely
+        stageHistory: data.stageHistory || undefined,
+        createdAt: data.createdAt ? data.createdAt.toDate().toString() : undefined,
+        processedAt: data.processedAt
+          ? data.processedAt.toDate
+            ? data.processedAt.toDate()
+            : new Date(data.processedAt)
+          : undefined,
+        endAt: data.endAt
+          ? data.endAt.toDate
+            ? data.endAt.toDate()
+            : new Date(data.endAt)
+          : undefined,
+      };
+    });
   });
   safeOnUnmounted(unsubscribe);
+  // Add unsubscribe for manual cleanup
+  attentions.value._unsubscribe = unsubscribe;
   return attentions;
 }
 
@@ -80,20 +99,149 @@ export function updatedQueues(queueId) {
 
 export function updatedAvailableAttentions(queueId) {
   const attentions = ref([]);
+  // Filter to only get attentions from today (starting from midnight today)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dateToRequest = Timestamp.fromDate(today);
+
   const attentionQuery = query(
     attentionCollection,
     where('queueId', '==', queueId),
     where('status', 'in', [ATTENTION_STATUS.PENDING]),
+    where('createdAt', '>=', dateToRequest),
+    orderBy('createdAt', 'asc'),
     orderBy('number', 'asc')
   );
   const unsubscribe = onSnapshot(attentionQuery, snapshot => {
-    attentions.value = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt.toDate().toString(),
-    }));
+    attentions.value = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Ensure currentStage is handled safely (may be undefined for old attentions)
+        currentStage: data.currentStage || undefined,
+        // Ensure stageHistory is handled safely
+        stageHistory: data.stageHistory || undefined,
+        createdAt: data.createdAt ? data.createdAt.toDate().toString() : undefined,
+      };
+    });
   });
   safeOnUnmounted(unsubscribe);
+  // Add unsubscribe for manual cleanup
+  attentions.value._unsubscribe = unsubscribe;
+  return attentions;
+}
+
+export function updatedProcessingAttentions(queueId) {
+  const attentions = ref([]);
+  // Filter to only get attentions from today (starting from midnight today)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dateToRequest = Timestamp.fromDate(today);
+
+  console.log('🔍 [updatedProcessingAttentions] Initializing listener for queueId:', queueId);
+  console.log('🔍 [updatedProcessingAttentions] Date filter:', dateToRequest.toDate());
+
+  // Query with single orderBy to avoid composite index requirements
+  // We'll sort by number in JavaScript after fetching
+  const attentionQuery = query(
+    attentionCollection,
+    where('queueId', '==', queueId),
+    where('status', 'in', [ATTENTION_STATUS.PROCESSING]),
+    where('createdAt', '>=', dateToRequest),
+    orderBy('createdAt', 'asc')
+  );
+
+  const unsubscribe = onSnapshot(
+    attentionQuery,
+    snapshot => {
+      console.log(
+        '🔍 [updatedProcessingAttentions] Snapshot received, docs count:',
+        snapshot.docs.length,
+      );
+      const mappedDocs = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          // Ensure currentStage is handled safely (may be undefined for old attentions)
+          currentStage: data.currentStage || undefined,
+          // Ensure stageHistory is handled safely
+          stageHistory: data.stageHistory || undefined,
+          createdAt: data.createdAt ? data.createdAt.toDate().toString() : undefined,
+        };
+      });
+      // Sort by number in JavaScript (secondary sort)
+      mappedDocs.sort((a, b) => {
+        const numA = a.number || 0;
+        const numB = b.number || 0;
+        return numA - numB;
+      });
+      console.log('🔍 [updatedProcessingAttentions] Mapped attentions:', mappedDocs.length);
+      if (mappedDocs.length > 0) {
+        mappedDocs.forEach((att, idx) => {
+          console.log(`🔍 [updatedProcessingAttentions] Attention ${idx}:`, {
+            id: att.id,
+            number: att.number,
+            status: att.status,
+            currentStage: att.currentStage,
+            queueId: att.queueId,
+            createdAt: att.createdAt,
+          });
+        });
+      }
+      attentions.value = mappedDocs;
+    },
+    error => {
+      console.error('🔍 [updatedProcessingAttentions] Firebase query error:', error);
+      console.error('🔍 [updatedProcessingAttentions] Error code:', error.code);
+      console.error('🔍 [updatedProcessingAttentions] Error message:', error.message);
+      // Set empty array on error to prevent stale data
+      attentions.value = [];
+    }
+  );
+  safeOnUnmounted(unsubscribe);
+  // Add unsubscribe for manual cleanup
+  attentions.value._unsubscribe = unsubscribe;
+  return attentions;
+}
+
+export function updatedTerminatedAttentions(queueId) {
+  const attentions = ref([]);
+  // Filter to only get attentions from today (starting from midnight today)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dateToRequest = Timestamp.fromDate(today);
+
+  const attentionQuery = query(
+    attentionCollection,
+    where('queueId', '==', queueId),
+    where('status', 'in', [
+      ATTENTION_STATUS.TERMINATED,
+      ATTENTION_STATUS.RATED,
+      'SKIPED', // Note: SKIPED might not be in ATTENTION_STATUS enum
+    ]),
+    where('createdAt', '>=', dateToRequest),
+    orderBy('createdAt', 'desc'),
+    orderBy('number', 'desc')
+  );
+  const unsubscribe = onSnapshot(attentionQuery, snapshot => {
+    attentions.value = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Ensure currentStage is handled safely (may be undefined for old attentions)
+        currentStage: data.currentStage || undefined,
+        // Ensure stageHistory is handled safely
+        stageHistory: data.stageHistory || undefined,
+        createdAt: data.createdAt ? data.createdAt.toDate().toString() : undefined,
+      };
+    });
+  });
+  safeOnUnmounted(unsubscribe);
+  // Add unsubscribe for manual cleanup
+  attentions.value._unsubscribe = unsubscribe;
   return attentions;
 }
 
@@ -116,11 +264,18 @@ export function updatedAttentionsByDateAndCommerceAndQueue(queueId) {
     orderBy('number', 'asc')
   );
   const unsubscribe = onSnapshot(attentionQuery, snapshot => {
-    attentions.value = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt.toDate().toString(),
-    }));
+    attentions.value = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Ensure currentStage is handled safely (may be undefined for old attentions)
+        currentStage: data.currentStage || undefined,
+        // Ensure stageHistory is handled safely
+        stageHistory: data.stageHistory || undefined,
+        createdAt: data.createdAt ? data.createdAt.toDate().toString() : undefined,
+      };
+    });
   });
   safeOnUnmounted(unsubscribe);
   return attentions;
@@ -142,11 +297,18 @@ export function updatedAvailableAttentionsByCommerce(commerceId) {
     orderBy('number', 'asc')
   );
   const unsubscribe = onSnapshot(attentionQuery, snapshot => {
-    attentions.value = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt.toDate().toString(),
-    }));
+    attentions.value = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Ensure currentStage is handled safely (may be undefined for old attentions)
+        currentStage: data.currentStage || undefined,
+        // Ensure stageHistory is handled safely
+        stageHistory: data.stageHistory || undefined,
+        createdAt: data.createdAt ? data.createdAt.toDate().toString() : undefined,
+      };
+    });
   });
   // Register cleanup on unmount, but also return unsubscribe for manual cleanup
   safeOnUnmounted(unsubscribe);
@@ -171,11 +333,54 @@ export function updatedProcessingAttentionsByCommerce(commerceId) {
     orderBy('number', 'asc')
   );
   const unsubscribe = onSnapshot(attentionQuery, snapshot => {
-    attentions.value = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt.toDate().toString(),
-    }));
+    attentions.value = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Ensure currentStage is handled safely (may be undefined for old attentions)
+        currentStage: data.currentStage || undefined,
+        // Ensure stageHistory is handled safely
+        stageHistory: data.stageHistory || undefined,
+        createdAt: data.createdAt ? data.createdAt.toDate().toString() : undefined,
+      };
+    });
+  });
+  // Register cleanup on unmount, but also return unsubscribe for manual cleanup
+  safeOnUnmounted(unsubscribe);
+  // Return both the ref and the unsubscribe function
+  attentions.value._unsubscribe = unsubscribe;
+  return attentions;
+}
+
+export function updatedTerminatedAttentionsByCommerce(commerceId) {
+  const attentions = ref([]);
+  // Filter to only get attentions from today (starting from midnight today)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dateToRequest = Timestamp.fromDate(today);
+
+  const attentionQuery = query(
+    attentionCollection,
+    where('commerceId', '==', commerceId),
+    where('status', 'in', ['TERMINATED', 'RATED', 'SKIPED']),
+    where('createdAt', '>=', dateToRequest),
+    orderBy('createdAt', 'asc'),
+    orderBy('number', 'asc')
+  );
+  const unsubscribe = onSnapshot(attentionQuery, snapshot => {
+    attentions.value = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Ensure currentStage is handled safely (may be undefined for old attentions)
+        currentStage: data.currentStage || undefined,
+        // Ensure stageHistory is handled safely
+        stageHistory: data.stageHistory || undefined,
+        createdAt: data.createdAt ? data.createdAt.toDate().toString() : undefined,
+      };
+    });
   });
   // Register cleanup on unmount, but also return unsubscribe for manual cleanup
   safeOnUnmounted(unsubscribe);
@@ -198,11 +403,18 @@ export function updatedAvailableAttentionsByCommerceAndQueue(queueId) {
     orderBy('number', 'asc')
   );
   const unsubscribe = onSnapshot(attentionQuery, snapshot => {
-    attentions.value = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt.toDate().toString(),
-    }));
+    attentions.value = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Ensure currentStage is handled safely (may be undefined for old attentions)
+        currentStage: data.currentStage || undefined,
+        // Ensure stageHistory is handled safely
+        stageHistory: data.stageHistory || undefined,
+        createdAt: data.createdAt ? data.createdAt.toDate().toString() : undefined,
+      };
+    });
   });
   safeOnUnmounted(unsubscribe);
   return attentions;

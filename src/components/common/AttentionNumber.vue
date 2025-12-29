@@ -10,6 +10,7 @@ export default {
     attention: { type: Object, default: null },
     showData: { type: Boolean, default: true },
     toList: { type: Boolean, default: false },
+    enableCollapse: { type: Boolean, default: false }, // Enable collapse functionality
   },
   data() {
     return {
@@ -449,18 +450,47 @@ export default {
     getServiceNames() {
       if (!this.attention) return '';
 
+      // Helper function to safely extract service name from any format
+      const extractServiceName = service => {
+        if (!service) return null;
+
+        // If it's already a string, return it
+        if (typeof service === 'string') return service;
+
+        // If it's not an object, skip it
+        if (typeof service !== 'object') return null;
+
+        // Try common property names in order of preference
+        if (service.name) return service.name;
+        if (service.tag) return service.tag;
+        if (service.serviceInfo && service.serviceInfo.name) return service.serviceInfo.name;
+        if (service.serviceInfo && service.serviceInfo.tag) return service.serviceInfo.tag;
+        if (service.id) return String(service.id);
+        if (service.serviceId) return String(service.serviceId);
+
+        // If it's an object with nested serviceInfo, try to extract from there
+        if (service.serviceInfo && typeof service.serviceInfo === 'object') {
+          if (service.serviceInfo.name) return service.serviceInfo.name;
+          if (service.serviceInfo.tag) return service.serviceInfo.tag;
+        }
+
+        // Last resort: if it has a toString method that's not the default, try it
+        if (service.toString && service.toString !== Object.prototype.toString) {
+          const str = service.toString();
+          if (str && str !== '[object Object]') return str;
+        }
+
+        // If we can't extract a name, return null (will be filtered out)
+        return null;
+      };
+
       // Try servicesDetails first (has full service objects with names)
       if (this.attention.servicesDetails) {
         if (
           Array.isArray(this.attention.servicesDetails) &&
           this.attention.servicesDetails.length > 0
         ) {
-          const names = this.attention.servicesDetails
-            .map(service => {
-              if (typeof service === 'string') return service;
-              return service.name || service.tag || service.id || service;
-            })
-            .filter(Boolean);
+          const names = this.attention.servicesDetails.map(extractServiceName).filter(Boolean);
           if (names.length > 0) {
             return names.join(', ');
           }
@@ -472,12 +502,7 @@ export default {
         ) {
           const servicesArray = Object.values(this.attention.servicesDetails);
           if (servicesArray.length > 0) {
-            const names = servicesArray
-              .map(service => {
-                if (typeof service === 'string') return service;
-                return service.name || service.tag || service.id || service;
-              })
-              .filter(Boolean);
+            const names = servicesArray.map(extractServiceName).filter(Boolean);
             if (names.length > 0) {
               return names.join(', ');
             }
@@ -491,12 +516,7 @@ export default {
         Array.isArray(this.attention.services) &&
         this.attention.services.length > 0
       ) {
-        const names = this.attention.services
-          .map(service => {
-            if (typeof service === 'string') return service;
-            return service.name || service.tag || service.id || service;
-          })
-          .filter(Boolean);
+        const names = this.attention.services.map(extractServiceName).filter(Boolean);
         if (names.length > 0) {
           return names.join(', ');
         }
@@ -505,12 +525,7 @@ export default {
       // Try booking services if attention doesn't have services
       if (this.bookingServices) {
         if (Array.isArray(this.bookingServices) && this.bookingServices.length > 0) {
-          const names = this.bookingServices
-            .map(service => {
-              if (typeof service === 'string') return service;
-              return service.name || service.tag || service.id || service;
-            })
-            .filter(Boolean);
+          const names = this.bookingServices.map(extractServiceName).filter(Boolean);
           if (names.length > 0) {
             return names.join(', ');
           }
@@ -519,12 +534,7 @@ export default {
         if (typeof this.bookingServices === 'object' && !Array.isArray(this.bookingServices)) {
           const servicesArray = Object.values(this.bookingServices);
           if (servicesArray.length > 0) {
-            const names = servicesArray
-              .map(service => {
-                if (typeof service === 'string') return service;
-                return service.name || service.tag || service.id || service;
-              })
-              .filter(Boolean);
+            const names = servicesArray.map(extractServiceName).filter(Boolean);
             if (names.length > 0) {
               return names.join(', ');
             }
@@ -556,6 +566,14 @@ export default {
       // Try serviceId (singular - single service)
       if (this.attention.serviceId) {
         return '1 serviço';
+      }
+
+      // Fallback: Try to get queue name if available
+      if (this.attention.queue && this.attention.queue.name) {
+        return this.attention.queue.name;
+      }
+      if (this.attention.queueName) {
+        return this.attention.queueName;
       }
 
       return '';
@@ -631,7 +649,7 @@ export default {
         }
       }
 
-      return parts.length > 0 ? parts.join(' • ') : '';
+      return parts.length > 0 ? parts.join(' โ�ข ') : '';
     },
   },
 };
@@ -652,7 +670,7 @@ export default {
             {{ number }}
           </div>
           <div
-            v-if="showData && hasData()"
+            v-if="(showData && hasData() && toList) || (enableCollapse && showData && hasData())"
             class="attention-card-toggle"
             :class="colorDetailToShow()"
             data-bs-toggle="collapse"

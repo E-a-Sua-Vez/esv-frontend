@@ -2,16 +2,24 @@
 import { contactClient } from '../../../application/services/client';
 import { globalStore } from '../../../stores';
 import {
-  getAttentionsDetails,
   getClientContactsDetailsByClientId,
   getPatientHistoryDetails,
   getBookingsDetails,
 } from '../../../application/services/query-stack';
+import { getPackagesByClient } from '../../../application/services/package';
 import { getPatientHistoryItemByCommerce } from '../../../application/services/patient-history-item';
 import { getFormsByClient } from '../../../application/services/form';
+import { getFormPersonalizedByCommerceId } from '../../../application/services/form-personalized';
 import { getDate } from '../../../shared/utils/date';
 import { formatIdNumber } from '../../../shared/utils/idNumber';
 import { getPermissions } from '../../../application/services/permissions';
+import {
+  sendPreprontuarioWhatsapp,
+  sendAgreementWhatsapp,
+  checkPreprontuarioStatus,
+  checkAgreementStatus,
+} from '../../../application/services/whatsapp-notification';
+import { getActiveFeature } from '../../../shared/features';
 import Popper from 'vue3-popper';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
@@ -20,7 +28,13 @@ import ClientAttentionsManagement from '../domain/ClientAttentionsManagement.vue
 import ClientContactsManagement from '../domain/ClientContactsManagement.vue';
 import PatientHistoryManagement from '../../patient-history/domain/PatientHistoryManagement.vue';
 import ClientBookingsManagement from '../domain/ClientBookingsManagement.vue';
+import ClientPackagesManagement from '../domain/ClientPackagesManagement.vue';
 import ClientDataManagement from '../domain/ClientDataManagement.vue';
+import AttentionCreationModal from '../../attentions/domain/AttentionCreationModal.vue';
+import LgpdConsentManager from '../../lgpd/LgpdConsentManager.vue';
+import LgpdDataPortability from '../../lgpd/LgpdDataPortability.vue';
+import { getGroupedQueueByCommerceId } from '../../../application/services/queue';
+import { searchClientByIdNumber, getClientById } from '../../../application/services/client';
 
 export default {
   name: 'ClientDetailsCard',
@@ -32,11 +46,16 @@ export default {
     ClientContactsManagement,
     PatientHistoryManagement,
     ClientBookingsManagement,
+    ClientPackagesManagement,
     ClientDataManagement,
+    AttentionCreationModal,
+    LgpdConsentManager,
+    LgpdDataPortability,
   },
   props: {
     show: { type: Boolean, default: true },
     client: { type: Object, default: undefined },
+    detailsOpened: { type: Boolean, default: true },
     commerce: { type: Object, default: undefined },
     toggles: { type: Object, default: undefined },
     startDate: { type: String, default: undefined },
@@ -45,12 +64,14 @@ export default {
     commerces: { type: Array, default: undefined },
     services: { type: Array, default: undefined },
     management: { type: Boolean, default: true },
+    attention: { type: Object, default: undefined }, // Optional: current attention context
+    queue: { type: Object, default: undefined }, // Optional: current queue context
   },
   data() {
     const store = globalStore();
     return {
       loading: false,
-      extendedEntity: false,
+      extendedEntity: true,
       checked: false,
       asc: false,
       store,
@@ -60,54 +81,91 @@ export default {
       limit: 10,
       attentions: [],
       bookings: [],
+      packages: [],
       clientContacts: [],
       patientHistoryItems: [],
       patientForms: [],
       patientHistory: {},
       togglesClient: {},
+      togglesDashboard: {},
       showClientData: false,
+      preprontuarioStatus: null,
+      agreementStatus: null,
+      loadingPreprontuario: false,
+      loadingAgreement: false,
       contactResultTypes: [
         { id: 'INTERESTED', name: 'INTERESTED' },
         { id: 'CONTACT_LATER', name: 'CONTACT_LATER' },
         { id: 'REJECTED', name: 'REJECTED' },
       ],
+      // Flags para rastrear qué datos ya se han cargado (lazy loading)
+      loadedQueues: null, // Cache para queues cargadas dinámicamente
+      attentionsLoaded: false,
+      bookingsLoaded: false,
+      packagesLoaded: false,
+      clientContactsLoaded: false,
+      patientHistoryLoaded: false,
+      showAttentionCreationModal: false,
+      formsPersonalized: [], // Store forms to check for preprontuario
+      preprontuarioActiveForContext: false, // Whether preprontuario is active for this context
+      preselectedQueueForModal: null, // Queue preselected from package
+      preselectedServiceIdForModal: null, // Service ID preselected from package
+      preselectedPackageIdForModal: null, // Package ID preselected from package
     };
   },
   methods: {
-    async getAttentions() {
+    // Removed getAttentions() method - ClientAttentionsManagement component handles its own data fetching
+    // This was querying query-stack unnecessarily when the modal opened
+    async getPackages(force = false) {
+      console.log('[ClientDetailsCard] getPackages called', {
+        force,
+        packagesLoaded: this.packagesLoaded,
+        packagesLength: this.packages?.length || 0,
+      });
+      // Solo cargar si no se han cargado antes, a menos que se fuerce
+      if (!force && this.packagesLoaded && this.packages.length > 0) {
+        console.log('[ClientDetailsCard] Skipping getPackages - already loaded');
+        return;
+      }
       try {
         this.loading = true;
-        this.attentions = [];
-        let commerceIds = [this.commerce.id];
-        if (this.commerces && this.commerces.length > 0) {
-          commerceIds = this.commerces.map(commerce => commerce.id);
+        // Don't clear packages array immediately to avoid triggering child watcher
+        // Only clear if we're about to successfully load new data
+        if (!this.commerce?.id || !this.client?.id) {
+          console.error('[ClientDetailsCard] Missing commerce or client', {
+            commerceId: this.commerce?.id,
+            clientId: this.client?.id,
+          });
+          this.loading = false;
+          return;
         }
-        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
-          this.searchText = this.client.userIdNumber || this.client.userEmail;
-        }
-        this.attentions = await getAttentionsDetails(
-          this.commerce.id,
-          this.startDate,
-          this.endDate,
-          commerceIds,
-          this.page,
-          this.limit,
-          this.daysSinceType,
-          undefined,
-          undefined,
-          undefined,
-          this.searchText,
-          this.queueId,
-          this.survey,
-          false,
-          undefined
-        );
+        console.log('[ClientDetailsCard] Fetching packages from API', {
+          commerceId: this.commerce.id,
+          clientId: this.client.id,
+        });
+        const packagesData = await getPackagesByClient(this.commerce.id, this.client.id);
+        console.log('[ClientDetailsCard] Packages data received', packagesData);
+        // Flatten all packages for the component - update in one go to avoid triggering watcher with empty array
+        const flattenedPackages = [
+          ...(packagesData?.active || []),
+          ...(packagesData?.completed || []),
+          ...(packagesData?.expired || []),
+          ...(packagesData?.cancelled || []),
+        ];
+        this.packages = flattenedPackages;
+        console.log('[ClientDetailsCard] Packages processed', { total: this.packages.length });
+        this.packagesLoaded = true;
         this.loading = false;
       } catch (error) {
+        console.error('[ClientDetailsCard] Error loading packages:', error);
         this.loading = false;
       }
     },
     async getBookings() {
+      // Solo cargar si no se han cargado antes
+      if (this.bookingsLoaded && this.bookings.length > 0) {
+        return;
+      }
       try {
         this.loading = true;
         this.bookings = [];
@@ -115,8 +173,13 @@ export default {
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
-        if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
-          this.searchText = this.client.userIdNumber || this.client.userEmail;
+        // Use clientId to filter bookings directly, or fallback to searchText
+        let clientId = undefined;
+        let searchText = undefined;
+        if (this.client?.id) {
+          clientId = this.client.id; // Use client.id to filter by bookings.clientId
+        } else if (this.client && (this.client.userIdNumber || this.client.userEmail)) {
+          searchText = this.client.userIdNumber || this.client.userEmail;
         }
         this.bookings = await getBookingsDetails(
           this.commerce.id,
@@ -125,19 +188,91 @@ export default {
           commerceIds,
           this.page,
           this.limit,
-          this.searchText,
+          searchText,
           this.queueId,
-          false
+          false,
+          undefined, // serviceId
+          undefined, // status
+          clientId // clientId - filters by bookings.clientId directly
         );
+        this.bookingsLoaded = true;
         this.loading = false;
       } catch (error) {
         this.loading = false;
       }
     },
-    getClientData() {
-      this.showClientData = true;
+    async getClientData() {
+      // Load client data if missing before opening modal
+      await this.loadClientIfDataMissing();
+      // Update preprontuario status when opening edit modal
+      if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+        await this.checkPreprontuarioCompletion();
+      }
+      // ✅ Ensure showClientData is reset and set to true to trigger modal content
+      this.showClientData = false;
+      this.$nextTick(() => {
+        this.showClientData = true;
+      });
+    },
+    async loadClientIfDataMissing() {
+      // Check if client data is missing (userPhone, userEmail, userIdNumber are not available)
+      if (!this.client || !this.client.id) {
+        return;
+      }
+
+      const hasPhone = this.client.userPhone && this.client.userPhone !== 'N/I';
+      const hasEmail = this.client.userEmail && this.client.userEmail !== 'N/I';
+      const hasIdNumber = this.client.userIdNumber && this.client.userIdNumber !== 'N/I';
+
+      // If all data is missing, load client from API
+      if (!hasPhone && !hasEmail && !hasIdNumber) {
+        try {
+          console.log(
+            '[ClientDetailsCard] Loading client data from API, clientId:',
+            this.client.id,
+          );
+          const loadedClient = await getClientById(this.client.id);
+
+          if (loadedClient && loadedClient.id) {
+            // Merge loaded data into existing client object to preserve reactivity
+            Object.assign(this.client, {
+              userPhone: loadedClient.userPhone || loadedClient.phone || this.client.userPhone,
+              userEmail: loadedClient.userEmail || loadedClient.email || this.client.userEmail,
+              userIdNumber:
+                loadedClient.userIdNumber || loadedClient.idNumber || this.client.userIdNumber,
+              userName:
+                loadedClient.userName ||
+                loadedClient.name ||
+                this.client.userName ||
+                this.client.name,
+              userLastName:
+                loadedClient.userLastName ||
+                loadedClient.lastName ||
+                this.client.userLastName ||
+                this.client.lastName,
+              // Preserve any other fields that might exist
+              ...Object.keys(loadedClient).reduce((acc, key) => {
+                if (!this.client[key] && loadedClient[key]) {
+                  acc[key] = loadedClient[key];
+                }
+                return acc;
+              }, {}),
+            });
+            console.log('[ClientDetailsCard] Client data loaded successfully');
+            // Force Vue to re-render
+            this.$forceUpdate();
+          }
+        } catch (error) {
+          console.error('[ClientDetailsCard] Error loading client data:', error);
+          // Non-critical error, continue without updating
+        }
+      }
     },
     async getClientContacts() {
+      // Solo cargar si no se han cargado antes
+      if (this.clientContactsLoaded && this.clientContacts.length > 0) {
+        return;
+      }
       try {
         this.loading = true;
         this.clientContacts = [];
@@ -161,28 +296,38 @@ export default {
           false,
           this.contactResultType
         );
+        this.clientContactsLoaded = true;
         this.loading = false;
       } catch (error) {
         this.loading = false;
       }
     },
     async getPatientHistory() {
+      // Always load fresh data when modal opens
       try {
         this.loading = true;
         const result = await getPatientHistoryDetails(this.client.id);
         if (result && result.length > 0) {
           this.patientHistory = result[0];
+        } else {
+          this.patientHistory = {};
         }
         const items = await getPatientHistoryItemByCommerce(this.commerce.id);
         if (items && items.length > 0) {
           this.patientHistoryItems = items;
+        } else {
+          this.patientHistoryItems = [];
         }
         const forms = await getFormsByClient(this.commerce.id, this.client.id);
         if (forms && forms.length > 0) {
           this.patientForms = forms;
+        } else {
+          this.patientForms = [];
         }
+        this.patientHistoryLoaded = true;
         this.loading = false;
       } catch (error) {
+        console.error('[ClientDetailsCard] Error loading patient history:', error);
         this.loading = false;
       }
     },
@@ -211,22 +356,119 @@ export default {
       }
     },
     goToCreateBooking() {
-      const commerceKeyName = this.commerce.keyName;
-      let url = `/interno/negocio/commerce/${commerceKeyName}/filas`;
-      if (this.userType === 'collaborator') {
-        url = `/interno/commerce/${commerceKeyName}/filas`;
+      // DEPRECATED: This method is kept for backwards compatibility but is no longer used
+      // The modal is opened via data-bs-toggle on the button
+    },
+    async openAttentionCreationModal() {
+      if (!this.commerce) {
+        console.warn('Cannot open attention creation modal: commerce is not available');
+        return;
       }
-      let resolvedRoute;
-      const query = {};
-      if (this.client && this.client.id) {
-        query['client'] = this.client.id;
+
+      // Update preprontuario status when opening attention creation modal
+      if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+        await this.checkPreprontuarioCompletion();
       }
-      if (Object.keys(query).length === 0) {
-        resolvedRoute = this.$router.resolve({ path: url });
-      } else {
-        resolvedRoute = this.$router.resolve({ path: url, query });
+
+      // If no queues available, try to load them BEFORE opening the modal
+      if (!this.queuesArray || this.queuesArray.length === 0) {
+        console.log('No queues available, loading queues from service...');
+        try {
+          if (this.commerce?.id) {
+            const groupedQueues = await getGroupedQueueByCommerceId(this.commerce.id);
+            // Convert grouped queues object to flat array
+            this.loadedQueues = Object.values(groupedQueues).flat();
+            console.log('Loaded queues:', this.loadedQueues.length);
+
+            // Force Vue to update by waiting for next tick
+            await this.$nextTick();
+
+            // Verify queues are now available
+            const finalQueuesArray = this.queuesArray;
+            console.log('Queues array after load:', finalQueuesArray.length);
+
+            if (!finalQueuesArray || finalQueuesArray.length === 0) {
+              console.error('Failed to load queues, modal may not work correctly');
+            }
+          }
+        } catch (error) {
+          console.error('Error loading queues:', error);
+        }
       }
-      window.open(resolvedRoute.href, '_blank');
+
+      console.log('Opening attention creation modal', {
+        commerce: this.commerce?.id,
+        client: this.client?.id,
+        queues: this.queuesArray?.length,
+        queuesProp: this.queues,
+        commerceQueues: this.commerce?.queues,
+        loadedQueues: this.loadedQueues?.length,
+        queuesArray: this.queuesArray,
+      });
+
+      this.showAttentionCreationModal = true;
+    },
+    closeAttentionCreationModal() {
+      this.showAttentionCreationModal = false;
+      // Clear preselected data when closing
+      this.preselectedQueueForModal = null;
+      this.preselectedServiceIdForModal = null;
+      this.preselectedPackageIdForModal = null;
+    },
+    handleAttentionCreated(attention) {
+      // Handle when attention is successfully created
+      console.log('Attention created:', attention);
+      // Refresh ClientAttentionsManagement component to show new attention (force refresh)
+      if (this.$refs.attentionsManagementRef && this.$refs.attentionsManagementRef.refresh) {
+        this.$refs.attentionsManagementRef.refresh(true); // Force refresh after creating attention
+      }
+      // Refresh packages to update sessions count
+      if (
+        this.$refs.packagesManagementRef &&
+        this.$refs.packagesManagementRef.handleAttentionCreated
+      ) {
+        this.$refs.packagesManagementRef.handleAttentionCreated(attention);
+      }
+    },
+    handleOpenAttentionModalFromPackage(data) {
+      // Open attention creation modal with package pre-selected data
+      console.log('[ClientDetailsCard] Opening attention modal from package:', data);
+
+      // Find the client object
+      const clientForModal = this.client;
+
+      // Prepare client data for modal
+      this.attentionCreationClientData = {
+        queryStackClientId: clientForModal?.id,
+        firebaseClientId: undefined,
+        sendingClientId: false,
+        hasIdNumber: !!clientForModal?.userIdNumber,
+        hasEmail: !!clientForModal?.userEmail,
+        hasPhone: !!clientForModal?.userPhone,
+        userIdNumber: clientForModal?.userIdNumber,
+        name: clientForModal?.name,
+        lastName: clientForModal?.lastName,
+        email: clientForModal?.userEmail,
+        phone: clientForModal?.userPhone,
+      };
+
+      // Store preselected data
+      this.preselectedQueueForModal = data.queue || null;
+      this.preselectedServiceIdForModal = data.serviceId || null;
+      this.preselectedPackageIdForModal = data.packageId || null;
+
+      console.log('[ClientDetailsCard] Preselected data stored:', {
+        queue: this.preselectedQueueForModal?.id,
+        serviceId: this.preselectedServiceIdForModal,
+        packageId: this.preselectedPackageIdForModal,
+      });
+
+      // Open the modal
+      this.showAttentionCreationModal = true;
+    },
+    handleAttentionCreationError(errors) {
+      console.error('Error creating attention:', errors);
+      // Handle errors as needed
     },
     handleExportCSV() {
       if (this.$refs.attentionsManagementRef && this.$refs.attentionsManagementRef.exportToCSV) {
@@ -236,6 +478,11 @@ export default {
     handleExportBookingsCSV() {
       if (this.$refs.bookingsManagementRef && this.$refs.bookingsManagementRef.exportToCSV) {
         this.$refs.bookingsManagementRef.exportToCSV();
+      }
+    },
+    handleExportPackagesCSV() {
+      if (this.$refs.packagesManagementRef && this.$refs.packagesManagementRef.exportToCSV) {
+        this.$refs.packagesManagementRef.exportToCSV();
       }
     },
     handleExportContactsCSV() {
@@ -276,6 +523,32 @@ export default {
         return 'bi-patch-check-fill red-icon';
       }
     },
+    clasifyTemperature(temperature) {
+      if (!temperature) {
+        return 'bi-thermometer-half blue-icon';
+      } else if (temperature === 'QUENTE') {
+        return 'bi-thermometer-high red-icon';
+      } else if (temperature === 'MORNO') {
+        return 'bi-thermometer-half green-icon';
+      } else if (temperature === 'FRIO') {
+        return 'bi-thermometer-low blue-icon';
+      } else {
+        return 'bi-thermometer-half blue-icon';
+      }
+    },
+    getTemperatureLabel(temperature) {
+      if (!temperature) {
+        return this.$t('dashboard.temperature') || 'Prioridade';
+      } else if (temperature === 'QUENTE') {
+        return this.$t('dashboard.temperatureQuente') || 'Quente (Vermelho)';
+      } else if (temperature === 'MORNO') {
+        return this.$t('dashboard.temperatureMorno') || 'Morno (Verde)';
+      } else if (temperature === 'FRIO') {
+        return this.$t('dashboard.temperatureFrio') || 'Frio (Azul)';
+      } else {
+        return this.$t('dashboard.temperature') || 'Prioridade';
+      }
+    },
     getCardTypeClass() {
       const daysSince = this.client?.daysSinceAttention || 0;
       if (daysSince <= 90) return 'client-card-success';
@@ -289,8 +562,15 @@ export default {
       return 'icon-error';
     },
     async getUserType() {
-      this.userType = await this.store.getCurrentUserType;
-      this.togglesClient = await getPermissions('client', 'admin');
+      // Parallelize independent permission calls
+      const [userType, togglesClient, togglesDashboard] = await Promise.all([
+        this.store.getCurrentUserType,
+        getPermissions('client', 'admin'),
+        getPermissions('dashboard'),
+      ]);
+      this.userType = userType;
+      this.togglesClient = togglesClient;
+      this.togglesDashboard = togglesDashboard;
     },
     async getUser() {
       this.user = await this.store.getCurrentUser;
@@ -309,35 +589,684 @@ export default {
       modalCloseButton.click();
       this.showClientData = false;
     },
+    handleClientUpdated(updatedData) {
+      console.log('[ClientDetailsCard] Client updated event received', updatedData);
+      // Update client object with new data
+      if (this.client && updatedData) {
+        Object.assign(this.client, updatedData);
+        // Force Vue to re-render
+        this.$forceUpdate();
+      }
+    },
+    async checkPreprontuarioCompletion() {
+      try {
+        this.loadingPreprontuario = true;
+        console.log('🔍 Checking preprontuario status for:', {
+          clientId: this.client.id,
+          commerceId: this.commerce.id,
+        });
+        this.preprontuarioStatus = await checkPreprontuarioStatus(this.client.id, this.commerce.id);
+        console.log('🔍 Preprontuario status result:', this.preprontuarioStatus);
+        this.loadingPreprontuario = false;
+      } catch (error) {
+        this.loadingPreprontuario = false;
+        console.error('Error checking preprontuario status:', error);
+        // Set status to pending if there's an error, so the button can still be shown
+        this.preprontuarioStatus = { completed: false };
+      }
+    },
+    async checkAgreementCompletion() {
+      try {
+        this.loadingAgreement = true;
+        this.agreementStatus = await checkAgreementStatus(this.client.id, this.commerce.id);
+        this.loadingAgreement = false;
+      } catch (error) {
+        this.loadingAgreement = false;
+        console.error('Error checking agreement status:', error);
+      }
+    },
+    async sendPreprontuarioReminder() {
+      try {
+        this.loadingPreprontuario = true;
+        // Build attention link if we have attention context
+        let attentionLink = '';
+        let attentionId = undefined;
+        let queueId = undefined;
+
+        if (this.attention && this.attention.id) {
+          attentionId = this.attention.id;
+          queueId = this.attention.queueId || this.queue?.id;
+
+          // Generate the attention form link - check for both PRE_ATTENTION and FIRST_ATTENTION
+          const formId = this.formsPersonalized.find(
+            form =>
+              (form.type === 'PRE_ATTENTION' || form.type === 'FIRST_ATTENTION') &&
+              (form.queueId === this.queue?.id || form.queueId === this.attention.queueId) &&
+              form.active === true
+          )?.id;
+
+          if (formId && this.client.id) {
+            const baseUrl = window.location.origin;
+            attentionLink = `${baseUrl}/form/${this.client.id}/${formId}/${this.attention.id}`;
+          }
+        } else if (this.queue?.id) {
+          queueId = this.queue.id;
+        }
+
+        await sendPreprontuarioWhatsapp(
+          this.client.id,
+          this.commerce.id,
+          this.client.userEmail,
+          this.client.userPhone,
+          attentionLink || undefined, // Pass the link if available
+          attentionId, // Pass attention ID for event tracking
+          queueId // Pass queue ID for event tracking
+        );
+        this.loadingPreprontuario = false;
+        // Show success message
+        alert(
+          this.$t('whatsapp.preprontuario.sent') || 'Mensaje de preprontuario enviado exitosamente',
+        );
+        // Refresh status after sending
+        if (this.preprontuarioActiveForContext) {
+          await this.checkPreprontuarioCompletion();
+        }
+      } catch (error) {
+        this.loadingPreprontuario = false;
+        console.error('Error sending preprontuario reminder:', error);
+        alert(this.$t('whatsapp.error') || 'Error al enviar mensaje');
+      }
+    },
+    async sendAgreementReminder() {
+      try {
+        this.loadingAgreement = true;
+        await sendAgreementWhatsapp(
+          this.client.id,
+          this.commerce.id,
+          this.client.userEmail,
+          this.client.userPhone
+        );
+        this.loadingAgreement = false;
+        // Show success message
+        alert(this.$t('whatsapp.agreement.sent') || 'Mensaje de convenio enviado exitosamente');
+      } catch (error) {
+        this.loadingAgreement = false;
+        console.error('Error sending agreement reminder:', error);
+        alert(this.$t('whatsapp.error') || 'Error al enviar mensaje');
+      }
+    },
+    isPreprontuarioActive() {
+      return getActiveFeature(this.commerce, 'attention-pre-form', 'PRODUCT');
+    },
+    // Check if preprontuario is active for the current context (commerce, attention, and queue)
+    async checkPreprontuarioActiveForContext() {
+      // If we have attention and queue context (in prontuario view), check if they have preprontuario forms
+      if (this.attention && this.queue) {
+        try {
+          // Load forms if not already loaded
+          if (!this.formsPersonalized || this.formsPersonalized.length === 0) {
+            this.formsPersonalized = await getFormPersonalizedByCommerceId(this.commerce.id);
+            console.log('🔍 Preprontuario: Loaded forms:', this.formsPersonalized.length);
+          }
+
+          // Log all PRE_ATTENTION and FIRST_ATTENTION forms to debug
+          const relevantForms = this.formsPersonalized.filter(
+            f => f.type === 'PRE_ATTENTION' || f.type === 'FIRST_ATTENTION'
+          );
+          console.log(
+            '🔍 Preprontuario: All relevant forms:',
+            relevantForms.map(f => ({
+              id: f.id,
+              type: f.type,
+              queueId: f.queueId,
+              active: f.active,
+              available: f.available,
+              commerceId: f.commerceId,
+            })),
+          );
+
+          // Check if there's a PRE_ATTENTION or FIRST_ATTENTION form for the queue
+          // Also check if form has no queueId (commerce-level form) or matches the queue
+          const queueHasPreprontuario = this.formsPersonalized.some(
+            form =>
+              (form.type === 'PRE_ATTENTION' || form.type === 'FIRST_ATTENTION') &&
+              (form.queueId === this.queue.id || !form.queueId || form.queueId === null) &&
+              form.active === true &&
+              form.available === true
+          );
+
+          const formsForQueue = this.formsPersonalized.filter(
+            f =>
+              (f.type === 'PRE_ATTENTION' || f.type === 'FIRST_ATTENTION') &&
+              (f.queueId === this.queue.id || !f.queueId || f.queueId === null)
+          );
+
+          console.log('🔍 Preprontuario: Queue check:', {
+            queueId: this.queue.id,
+            hasForm: queueHasPreprontuario,
+            formsForQueue: formsForQueue.map(f => ({
+              id: f.id,
+              type: f.type,
+              queueId: f.queueId,
+              active: f.active,
+              available: f.available,
+            })),
+          });
+
+          // Check if attention's queue has preprontuario (PRE_ATTENTION or FIRST_ATTENTION)
+          // If attention.queueId is different from queue.id, check both
+          // Also check if form has no queueId (commerce-level form)
+          let attentionQueueHasPreprontuario = true;
+          if (this.attention.queueId && this.attention.queueId !== this.queue.id) {
+            attentionQueueHasPreprontuario = this.formsPersonalized.some(
+              form =>
+                (form.type === 'PRE_ATTENTION' || form.type === 'FIRST_ATTENTION') &&
+                (form.queueId === this.attention.queueId ||
+                  !form.queueId ||
+                  form.queueId === null) &&
+                form.active === true &&
+                form.available === true
+            );
+            console.log('🔍 Preprontuario: Attention queue check:', {
+              attentionQueueId: this.attention.queueId,
+              hasForm: attentionQueueHasPreprontuario,
+            });
+          } else {
+            // Same queue, use the same check
+            attentionQueueHasPreprontuario = queueHasPreprontuario;
+          }
+
+          // Check if commerce has preprontuario active (feature flag) OR has any PRE_ATTENTION/FIRST_ATTENTION forms
+          const commerceActive = this.isPreprontuarioActive();
+          const commerceHasForms = this.formsPersonalized.some(
+            form =>
+              (form.type === 'PRE_ATTENTION' || form.type === 'FIRST_ATTENTION') &&
+              form.active === true &&
+              form.available === true
+          );
+
+          // All three must be active: (commerce feature OR commerce has forms), queue form, and attention's queue form
+          this.preprontuarioActiveForContext =
+            (commerceActive || commerceHasForms) &&
+            queueHasPreprontuario &&
+            attentionQueueHasPreprontuario;
+          console.log('🔍 Preprontuario: Final context check:', {
+            commerceActive,
+            commerceHasForms,
+            queueHasPreprontuario,
+            attentionQueueHasPreprontuario,
+            final: this.preprontuarioActiveForContext,
+          });
+          return this.preprontuarioActiveForContext;
+        } catch (error) {
+          console.error('Error checking preprontuario for context:', error);
+          // If error, check if commerce has the feature active
+          const commerceActive = this.isPreprontuarioActive();
+          this.preprontuarioActiveForContext = commerceActive;
+          return this.preprontuarioActiveForContext;
+        }
+      }
+
+      // If no specific context (attention/queue), just check commerce level
+      // But don't show indicator if we don't have full context
+      this.preprontuarioActiveForContext = false;
+      return false;
+    },
+    isAgreementRequired() {
+      return getActiveFeature(this.commerce, 'attention-agreement-required', 'PRODUCT');
+    },
+    // Métodos para abrir modales (solo abren, no cargan datos)
+    async openAttentionsModal() {
+      // El modal se abre automáticamente con data-bs-toggle
+      // Los datos se cargarán cuando el modal se muestre (event listener)
+      // Update preprontuario status when opening modal
+      if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+        await this.checkPreprontuarioCompletion();
+      }
+    },
+    async openBookingsModal() {
+      // El modal se abre automáticamente con data-bs-toggle
+      // Los datos se cargarán cuando el modal se muestre (event listener)
+      // Update preprontuario status when opening modal
+      if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+        await this.checkPreprontuarioCompletion();
+      }
+    },
+    async openPackagesModal() {
+      // El modal se abre automáticamente con data-bs-toggle
+      // Los datos se cargarán cuando el modal se muestre (event listener)
+      // Update preprontuario status when opening modal
+      if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+        await this.checkPreprontuarioCompletion();
+      }
+    },
+    async openPatientHistoryModal() {
+      // El modal se abre automáticamente con data-bs-toggle
+      // Los datos se cargarán cuando el modal se muestre (event listener)
+      // Update preprontuario status when opening modal
+      if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+        await this.checkPreprontuarioCompletion();
+      }
+    },
+    async openContactsModal() {
+      // El modal se abre automáticamente con data-bs-toggle
+      // Los datos se cargarán cuando el modal se muestre (event listener)
+      // Update preprontuario status when opening modal
+      if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+        await this.checkPreprontuarioCompletion();
+      }
+    },
+    async openLgpdModal() {
+      // El modal se abre automáticamente con data-bs-toggle
+      // Los datos se cargarán cuando el modal se muestre (event listener)
+    },
+    handleConsentUpdated() {
+      // Handle consent update event
+      console.log('[ClientDetailsCard] Consent updated');
+    },
+    // Configurar event listeners para los modales
+    setupModalEventListeners() {
+      const clientId = this.client?.id;
+      if (!clientId) return;
+
+      // Modal de Atenciones
+      const attentionsModal = document.getElementById(`attentionsModal-${clientId}`);
+      if (attentionsModal && !attentionsModal.dataset.listenerAdded) {
+        // Mark as listener added to prevent duplicate listeners
+        attentionsModal.dataset.listenerAdded = 'true';
+        attentionsModal.addEventListener('shown.bs.modal', async () => {
+          // Update preprontuario status when modal is shown
+          if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+            await this.checkPreprontuarioCompletion();
+          }
+          // Load attentions when modal is opened (lazy loading - only if not already loaded)
+          if (this.$refs.attentionsManagementRef && this.$refs.attentionsManagementRef.refresh) {
+            const attentionsComponent = this.$refs.attentionsManagementRef;
+            // Only refresh if attentions haven't been loaded yet
+            if (
+              !attentionsComponent.attentionsLoaded ||
+              !attentionsComponent.attentions ||
+              attentionsComponent.attentions.length === 0
+            ) {
+              await attentionsComponent.refresh();
+            }
+          }
+        });
+      }
+
+      // Modal de Bookings
+      const bookingsModal = document.getElementById(`bookingsModal-${clientId}`);
+      if (bookingsModal && !bookingsModal.dataset.listenerAdded) {
+        // Mark as listener added to prevent duplicate listeners
+        bookingsModal.dataset.listenerAdded = 'true';
+        bookingsModal.addEventListener('shown.bs.modal', async () => {
+          // Update preprontuario status when modal is shown
+          if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+            await this.checkPreprontuarioCompletion();
+          }
+          // Load bookings when modal is opened (lazy loading - only if not already loaded)
+          if (this.$refs.bookingsManagementRef && this.$refs.bookingsManagementRef.refresh) {
+            const bookingsComponent = this.$refs.bookingsManagementRef;
+            // Only refresh if bookings haven't been loaded yet
+            if (
+              !bookingsComponent.bookingsLoaded ||
+              !bookingsComponent.bookings ||
+              bookingsComponent.bookings.length === 0
+            ) {
+              await bookingsComponent.refresh();
+            }
+          }
+        });
+      }
+
+      // Modal de Packages
+      const packagesModal = document.getElementById(`packagesModal-${clientId}`);
+      console.log('[ClientDetailsCard] Setting up packages modal listener', {
+        clientId,
+        packagesModal: !!packagesModal,
+      });
+      if (packagesModal) {
+        // Remover listener anterior si existe para evitar duplicados
+        const existingHandler = packagesModal._clientDetailsPackagesHandler;
+        if (existingHandler) {
+          packagesModal.removeEventListener('shown.bs.modal', existingHandler);
+        }
+
+        const handler = async () => {
+          console.log('[ClientDetailsCard] Packages modal shown event triggered', {
+            packagesLoaded: this.packagesLoaded,
+            packagesLength: this.packages?.length || 0,
+          });
+          // Update preprontuario status when modal is shown
+          if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+            await this.checkPreprontuarioCompletion();
+          }
+
+          // Always reload packages when modal opens
+          console.log('[ClientDetailsCard] Reloading packages for packages modal');
+          await this.getPackages(true); // Force reload
+
+          // Also refresh the ClientPackagesManagement component
+          if (this.$refs.packagesManagementRef && this.$refs.packagesManagementRef.refresh) {
+            console.log('[ClientDetailsCard] Refreshing ClientPackagesManagement component');
+            await this.$refs.packagesManagementRef.refresh();
+          }
+
+          // Load attentions to fulfill the card
+          if (this.$refs.attentionsManagementRef && this.$refs.attentionsManagementRef.refresh) {
+            console.log('[ClientDetailsCard] Loading attentions for packages modal');
+            await this.$refs.attentionsManagementRef.refresh(true);
+
+            // Update daysSinceAttention based on the most recent attention
+            // Wait a bit for the watcher to update attentions from newAttentions
+            await this.$nextTick();
+            if (
+              this.$refs.attentionsManagementRef.attentions &&
+              this.$refs.attentionsManagementRef.attentions.length > 0
+            ) {
+              const mostRecentAttention = this.$refs.attentionsManagementRef.attentions[0];
+              if (mostRecentAttention && mostRecentAttention.daysSinceAttention !== undefined) {
+                // Use the daysSinceAttention from the most recent attention
+                if (this.client) {
+                  this.client.daysSinceAttention = mostRecentAttention.daysSinceAttention;
+                  console.log(
+                    '[ClientDetailsCard] Updated daysSinceAttention from attention',
+                    mostRecentAttention.daysSinceAttention,
+                  );
+                }
+              } else if (mostRecentAttention && mostRecentAttention.attentionCreatedDate) {
+                // Fallback: calculate from date if daysSinceAttention is not available
+                const attentionDate = new Date(mostRecentAttention.attentionCreatedDate);
+                const now = new Date();
+                const daysSince = Math.floor((now - attentionDate) / (1000 * 60 * 60 * 24));
+                if (this.client) {
+                  this.client.daysSinceAttention = daysSince;
+                  console.log(
+                    '[ClientDetailsCard] Calculated daysSinceAttention from date',
+                    daysSince,
+                  );
+                }
+              }
+            }
+          }
+        };
+
+        // Guardar referencia al handler
+        packagesModal._clientDetailsPackagesHandler = handler;
+        packagesModal.addEventListener('shown.bs.modal', handler);
+      } else {
+        console.warn('[ClientDetailsCard] Packages modal not found', { clientId });
+      }
+
+      // Modal de Patient History
+      const patientHistoryModal = document.getElementById(`patientHistoryModal-${clientId}`);
+      if (patientHistoryModal) {
+        patientHistoryModal.addEventListener('shown.bs.modal', async () => {
+          // Update preprontuario status when modal is shown
+          if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+            await this.checkPreprontuarioCompletion();
+          }
+          // Always load patient history when modal opens
+          this.getPatientHistory();
+        });
+      }
+
+      // Modal de Edit Client Data
+      const editModal = document.getElementById(`editModal-${clientId}`);
+      if (editModal) {
+        editModal.addEventListener('shown.bs.modal', async () => {
+          // Update preprontuario status when modal is shown
+          if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+            await this.checkPreprontuarioCompletion();
+          }
+          this.getClientData();
+        });
+      }
+
+      // Modal de Contacts
+      const contactsModal = document.getElementById(`contactModal-${clientId}`);
+      if (contactsModal) {
+        contactsModal.addEventListener('shown.bs.modal', async () => {
+          // Update preprontuario status when modal is shown
+          if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+            await this.checkPreprontuarioCompletion();
+          }
+          if (!this.clientContactsLoaded) {
+            this.getClientContacts();
+          }
+        });
+      }
+    },
   },
   computed: {
     visible() {
       const { showClientData } = this;
       return showClientData;
     },
+    // ✅ Combine dashboard toggles with prop toggles for child components
+    combinedToggles() {
+      // Merge dashboard toggles first, then prop toggles (prop toggles take precedence if there's overlap)
+      const dashboard = this.togglesDashboard || {};
+      const prop = this.toggles || {};
+      return {
+        ...dashboard,
+        ...prop,
+      };
+    },
     clientFullName() {
-      if (!this.client) return '';
-      const name = this.client.userName?.trim() || '';
-      const lastName = this.client.userLastName?.trim() || '';
-      return `${name} ${lastName}`.trim().toUpperCase() || 'N/I';
+      if (!this.client) return 'N/I';
+      // Try multiple field names to handle different data sources (query-stack, Firebase, etc.)
+      const name = (this.client.userName || this.client.name || '').trim();
+      const lastName = (this.client.userLastName || this.client.lastName || '').trim();
+      const fullName = `${name} ${lastName}`.trim().toUpperCase();
+      return fullName || 'N/I';
+    },
+    // Computed property to format client data for AttentionCreationModal
+    attentionCreationClientData() {
+      if (!this.client) return null;
+
+      // ✅ CRITICAL: Use Firebase client ID if available (searched via searchClientByIdNumber)
+      // This ensures we use the correct ID that matches between Firebase and query-stack
+      // If _firebaseClientId is not available, don't send clientId and let backend search by idNumber/email
+      const firebaseClientId = this.client._firebaseClientId;
+      const clientData = {
+        ...(firebaseClientId && { clientId: firebaseClientId }), // Only include clientId if we have the correct Firebase ID
+        userIdNumber: this.client.userIdNumber || this.client.idNumber,
+        name: this.client.userName || this.client.name,
+        lastName: this.client.userLastName || this.client.lastName,
+        email: this.client.userEmail || this.client.email,
+        phone: this.client.userPhone || this.client.phone,
+        ...(this.client.personalInfo || {}),
+      };
+
+      console.log('🔍 ClientDetailsCard - attentionCreationClientData:', {
+        queryStackClientId: this.client.id,
+        firebaseClientId,
+        sendingClientId: !!firebaseClientId,
+        hasIdNumber: !!clientData.userIdNumber,
+        hasEmail: !!clientData.email,
+        strategy: firebaseClientId
+          ? 'Using Firebase client ID'
+          : 'Backend will find/create by idNumber/email',
+      });
+
+      return clientData;
+    },
+    // Computed property to get queues array from queues object
+    queuesArray() {
+      // Priority 1: If loadedQueues is available (dynamically loaded), use it first
+      if (this.loadedQueues && Array.isArray(this.loadedQueues) && this.loadedQueues.length > 0) {
+        return this.loadedQueues;
+      }
+
+      // Priority 2: Check commerce.queues
+      if (this.commerce?.queues) {
+        if (Array.isArray(this.commerce.queues) && this.commerce.queues.length > 0) {
+          return this.commerce.queues;
+        }
+        if (typeof this.commerce.queues === 'object' && this.commerce.queues !== null) {
+          const queues = Object.values(this.commerce.queues).flat();
+          if (queues.length > 0) return queues;
+        }
+      }
+
+      // Priority 3: Check queues prop (only if it has items)
+      if (this.queues) {
+        if (Array.isArray(this.queues) && this.queues.length > 0) {
+          return this.queues;
+        }
+        // If queues is an object, convert to array
+        if (typeof this.queues === 'object' && this.queues !== null) {
+          const queues = Object.values(this.queues).flat();
+          if (queues.length > 0) return queues;
+        }
+      }
+
+      // Fallback: return loadedQueues even if empty (for reactivity)
+      if (this.loadedQueues && Array.isArray(this.loadedQueues)) {
+        return this.loadedQueues;
+      }
+
+      return [];
+    },
+    // Computed property to group queues for the modal
+    groupedQueuesForModal() {
+      const queues = this.queuesArray;
+      if (!queues || queues.length === 0) return {};
+
+      const grouped = {};
+      queues.forEach(queue => {
+        const type = queue.type || 'STANDARD';
+        if (!grouped[type]) {
+          grouped[type] = [];
+        }
+        grouped[type].push(queue);
+      });
+
+      return grouped;
     },
   },
   watch: {
+    detailsOpened: {
+      immediate: true,
+      deep: true,
+      async handler() {
+        this.extendedEntity = this.detailsOpened;
+      },
+    },
     extendedEntity: {
       immediate: true,
       deep: true,
       async handler() {
         this.extendedEntity = this.extendedEntity;
+        if (this.extendedEntity) {
+          // Load client data if missing when card is expanded (lazy loading)
+          if (this.client && this.client.id) {
+            await this.loadClientIfDataMissing();
+          }
+          // Load user type and permissions when expanded (needed for modals)
+          if (!this.userType) {
+            await this.getUserType();
+          }
+          if (!this.user) {
+            await this.getUser();
+          }
+          // Check if preprontuario is active for context (only when expanded)
+          await this.checkPreprontuarioActiveForContext();
+          // Load status when expanded - if we have attention/queue context, always check status
+          if (this.attention && this.queue && this.isPreprontuarioActive()) {
+            await this.checkPreprontuarioCompletion();
+          } else if (this.preprontuarioActiveForContext) {
+            await this.checkPreprontuarioCompletion();
+          }
+          if (this.isAgreementRequired()) {
+            await this.checkAgreementCompletion();
+          }
+        }
       },
     },
-    store: {
+    // Removed store watcher - getUserType and getUser will be called lazily when needed
+    // (when card is expanded or when modals are opened)
+    client: {
       immediate: true,
-      deep: true,
-      async handler() {
-        await this.getUserType();
-        await this.getUser();
+      deep: true, // Watch for deep changes in client object
+      async handler(newClient, oldClient) {
+        console.log('[ClientDetailsCard] Client watcher triggered', {
+          newClientId: newClient?.id,
+          oldClientId: oldClient?.id,
+          newClientName: newClient?.userName || newClient?.name,
+          oldClientName: oldClient?.userName || oldClient?.name,
+        });
+        // Reset flags when client changes to allow reloading data for new client
+        if (oldClient && newClient && oldClient.id !== newClient.id) {
+          this.attentionsLoaded = false;
+          this.bookingsLoaded = false;
+          this.packagesLoaded = false;
+          this.clientContactsLoaded = false;
+          this.patientHistoryLoaded = false;
+          this.attentions = [];
+          this.bookings = [];
+          this.packages = [];
+          this.clientContacts = [];
+          this.patientHistory = {};
+        }
+        // Force reactivity update when client data changes (e.g., after editing)
+        if (newClient && oldClient && newClient.id === oldClient.id) {
+          // Client data was updated, force Vue to re-render
+          this.$forceUpdate();
+        }
+        // Load client data if missing (userPhone, userEmail, userIdNumber)
+        if (newClient && newClient.id) {
+          await this.loadClientIfDataMissing();
+        }
+        // Reconfigurar event listeners cuando el cliente cambia
+        this.$nextTick(() => {
+          this.setupModalEventListeners();
+        });
       },
     },
+    attention: {
+      immediate: true,
+      async handler() {
+        // When attention context changes, check preprontuario status
+        if (this.attention && this.queue && this.commerce && this.client) {
+          console.log('🔍 Attention watcher triggered:', {
+            attentionId: this.attention?.id,
+            queueId: this.queue?.id,
+          });
+          await this.checkPreprontuarioActiveForContext();
+          // Always check status if we're in prontuario view and context is active
+          if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+            await this.checkPreprontuarioCompletion();
+          }
+        }
+      },
+    },
+    queue: {
+      immediate: true,
+      async handler() {
+        // When queue context changes, check preprontuario status
+        if (this.attention && this.queue && this.commerce && this.client) {
+          console.log('🔍 Queue watcher triggered:', {
+            attentionId: this.attention?.id,
+            queueId: this.queue?.id,
+          });
+          await this.checkPreprontuarioActiveForContext();
+          // Always check status if we're in prontuario view and context is active
+          if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
+            await this.checkPreprontuarioCompletion();
+          }
+        }
+      },
+    },
+  },
+  async mounted() {
+    // Configurar event listeners cuando el componente se monta (esto es necesario siempre)
+    this.$nextTick(() => {
+      this.setupModalEventListeners();
+    });
+    // Don't load client data or check preprontuario on mount - wait until card is expanded or modal is opened
+    // This reduces unnecessary API calls when the card is closed
   },
 };
 </script>
@@ -371,7 +1300,9 @@ export default {
             </Popper>
           </div>
           <div class="client-meta-inline">
-            <span class="client-id-inline">{{ formatIdNumber(client.userIdNumber) || 'N/I' }}</span>
+            <span class="client-id-inline">{{
+              formatIdNumber(client.userIdNumber || client.idNumber) || 'N/I'
+            }}</span>
             <Popper :class="'dark'" arrow disable-click-away hover>
               <template #content>
                 <div>{{ $t('dashboard.clientCard.tooltip.attentions') }}</div>
@@ -440,6 +1371,65 @@ export default {
               <span>{{ client.daysSinceContactedClient || 0 }}</span>
             </div>
           </Popper>
+          <!-- Temperature Indicator -->
+          <Popper v-if="client.temperature" :class="'dark'" arrow disable-click-away hover>
+            <template #content>
+              <div>{{ getTemperatureLabel(client.temperature) }}</div>
+            </template>
+            <div class="status-badge-inline" @click.stop>
+              <i :class="`bi ${clasifyTemperature(client.temperature)}`"></i>
+            </div>
+          </Popper>
+          <!-- Preprontuario Status Indicator -->
+          <!-- Show if: we have attention/queue context (prontuario view) AND (commerce has feature OR queue has form) -->
+          <Popper
+            v-if="attention && queue && (isPreprontuarioActive() || preprontuarioActiveForContext)"
+            :class="'dark'"
+            arrow
+            disable-click-away
+            hover
+          >
+            <template #content>
+              <div>
+                <span v-if="loadingPreprontuario">{{
+                  $t('dashboard.loading') || 'Cargando...'
+                }}</span>
+                <span v-else-if="preprontuarioStatus?.completed">
+                  {{
+                    $t('dashboard.clientCard.tooltip.preprontuarioCompleted') ||
+                    'Preprontuario completado'
+                  }}
+                </span>
+                <span v-else>
+                  {{
+                    $t('dashboard.clientCard.tooltip.preprontuarioPending') ||
+                    'Preprontuario pendiente'
+                  }}
+                </span>
+              </div>
+            </template>
+            <div class="status-badge-inline">
+              <i
+                v-if="preprontuarioStatus?.completed"
+                class="bi bi-clipboard2-check-fill green-icon"
+              ></i>
+              <i
+                v-else-if="preprontuarioStatus !== null"
+                class="bi bi-clipboard2-x-fill red-icon"
+              ></i>
+              <i v-else class="bi bi-clipboard2-pulse-fill gray-icon"></i>
+              <span v-if="preprontuarioStatus?.completed">✓</span>
+              <span
+                v-else-if="preprontuarioStatus !== null && !loadingPreprontuario"
+                class="preprontuario-pending-indicator"
+              >
+                <i class="bi bi-x-circle" style="font-size: 0.625rem; margin-left: 0.125rem"></i>
+              </span>
+              <span v-else-if="loadingPreprontuario" class="preprontuario-loading-indicator"
+                >...</span
+              >
+            </div>
+          </Popper>
         </div>
 
         <!-- Collapse Icon -->
@@ -465,7 +1455,7 @@ export default {
                   <div>{{ $t('dashboard.clientCard.tooltip.viewAttentions') }}</div>
                 </template>
                 <button
-                  @click.stop="getAttentions()"
+                  @click.stop="openAttentionsModal()"
                   class="action-btn"
                   data-bs-toggle="modal"
                   :data-bs-target="`#attentionsModal-${this.client.id}`"
@@ -479,7 +1469,7 @@ export default {
                   <div>{{ $t('dashboard.clientCard.tooltip.viewBookings') }}</div>
                 </template>
                 <button
-                  @click.stop="getBookings()"
+                  @click.stop="openBookingsModal()"
                   class="action-btn"
                   data-bs-toggle="modal"
                   :data-bs-target="`#bookingsModal-${this.client.id}`"
@@ -494,10 +1484,32 @@ export default {
               </Popper>
               <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
+                  <div>{{ $t('dashboard.clientCard.tooltip.viewPackages') || 'Ver Paquetes' }}</div>
+                </template>
+                <button
+                  @click.stop="openPackagesModal()"
+                  class="action-btn"
+                  data-bs-toggle="modal"
+                  :data-bs-target="`#packagesModal-${this.client.id}`"
+                >
+                  <i class="bi bi-box-seam-fill"></i>
+                  <span>{{ $t('dashboard.packages') || 'Paquetes' }}</span>
+                  <i
+                    v-if="
+                      packages.filter(
+                        p => (p.proceduresLeft || 0) > 0 && (p.proceduresLeft || 0) <= 3
+                      ).length > 0
+                    "
+                    class="bi bi-circle-fill notification-dot yellow"
+                  ></i>
+                </button>
+              </Popper>
+              <Popper :class="'dark'" arrow disable-click-away hover>
+                <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.viewHistory') }}</div>
                 </template>
                 <button
-                  @click.stop="getPatientHistory()"
+                  @click.stop="openPatientHistoryModal()"
                   class="action-btn"
                   data-bs-toggle="modal"
                   :data-bs-target="`#patientHistoryModal-${this.client.id}`"
@@ -529,7 +1541,7 @@ export default {
                   <div>{{ $t('dashboard.clientCard.tooltip.viewContacts') }}</div>
                 </template>
                 <button
-                  @click.stop="getClientContacts()"
+                  @click.stop="openContactsModal()"
                   class="action-btn"
                   data-bs-toggle="modal"
                   :data-bs-target="`#contactModal-${this.client.id}`"
@@ -540,13 +1552,82 @@ export default {
               </Popper>
               <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
+                  <div>{{ $t('lgpd.title') || 'LGPD - Consentimentos e Portabilidade' }}</div>
+                </template>
+                <button
+                  @click.stop="openLgpdModal()"
+                  class="action-btn"
+                  data-bs-toggle="modal"
+                  :data-bs-target="`#lgpdModal-${this.client.id}`"
+                >
+                  <i class="bi bi-shield-check"></i>
+                  <span>{{ $t('lgpd.title') || 'LGPD' }}</span>
+                </button>
+              </Popper>
+              <Popper :class="'dark'" arrow disable-click-away hover>
+                <template #content>
                   <div>{{ $t('dashboard.clientCard.tooltip.schedule') }}</div>
                 </template>
-                <button class="action-btn" @click.stop="goToCreateBooking()">
+                <button class="action-btn" @click.stop="openAttentionCreationModal()">
                   <i class="bi bi-calendar-check-fill"></i>
                   <span>{{ $t('dashboard.schedule') }}</span>
                 </button>
               </Popper>
+            </div>
+          </div>
+
+          <!-- Preprontuario Status Section - Removed status card, only showing indicator in inline section -->
+
+          <!-- Agreement Status Section -->
+          <div v-if="isAgreementRequired()" class="info-section compact-section">
+            <div class="info-section-header-compact">
+              <i class="bi bi-file-earmark-text-fill"></i>
+              <span class="info-section-title-compact">{{
+                $t('dashboard.agreement') || 'Convenio'
+              }}</span>
+            </div>
+            <div class="status-card-container">
+              <div
+                class="status-card"
+                :class="agreementStatus?.completed ? 'status-completed' : 'status-pending'"
+              >
+                <div class="status-card-content">
+                  <div class="status-info">
+                    <i
+                      class="bi"
+                      :class="
+                        agreementStatus?.completed
+                          ? 'bi-check-circle-fill'
+                          : 'bi-exclamation-circle-fill'
+                      "
+                    ></i>
+                    <div class="status-text">
+                      <span class="status-label">{{
+                        $t('dashboard.agreement.status') || 'Estado del Convenio'
+                      }}</span>
+                      <span class="status-value">
+                        {{
+                          agreementStatus?.completed
+                            ? $t('dashboard.agreement.completed') || 'Completado'
+                            : $t('dashboard.agreement.pending') || 'Pendiente'
+                        }}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    v-if="!agreementStatus?.completed"
+                    @click="sendAgreementReminder()"
+                    :disabled="loadingAgreement"
+                    class="whatsapp-btn"
+                  >
+                    <i class="bi bi-whatsapp"></i>
+                    <span v-if="!loadingAgreement">{{
+                      $t('dashboard.sendReminder') || 'Enviar Recordatorio'
+                    }}</span>
+                    <span v-else>{{ $t('dashboard.sending') || 'Enviando...' }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -861,7 +1942,7 @@ export default {
               <ClientAttentionsManagement
                 ref="attentionsManagementRef"
                 :show-client-attentions-management="true"
-                :toggles="toggles"
+                :toggles="combinedToggles"
                 :attentions-in="attentions"
                 :client="client"
                 :commerce="commerce"
@@ -940,7 +2021,7 @@ export default {
               <ClientBookingsManagement
                 ref="bookingsManagementRef"
                 :show-client-bookings-management="true"
-                :toggles="toggles"
+                :toggles="combinedToggles"
                 :bookings-in="bookings"
                 :client="client"
                 :commerce="commerce"
@@ -961,6 +2042,90 @@ export default {
                     :icon="'bi-file-earmark-spreadsheet'"
                     @download="handleExportBookingsCSV"
                     :can-download="toggles['dashboard.reports.bookings-management'] === true"
+                  ></SimpleDownloadCard>
+                </div>
+                <button
+                  class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <i class="bi bi-check-lg"></i>
+                  {{ $t('notificationConditions.action') || $t('close') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+    <!-- Modal Packages - Use Teleport to render outside component to avoid overflow/position issues -->
+    <Teleport to="body">
+      <div
+        class="modal fade"
+        :id="`packagesModal-${this.client.id}`"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-10"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl modern-modal-wrapper">
+          <div class="modal-content modern-modal-container">
+            <div class="modal-header border-0 active-name modern-modal-header">
+              <div class="modern-modal-header-inner">
+                <div class="modern-modal-icon-wrapper">
+                  <i class="bi bi-box-seam-fill"></i>
+                </div>
+                <div class="modern-modal-title-wrapper">
+                  <h5 class="modal-title fw-bold modern-modal-title">
+                    {{ $t('dashboard.packagesOf') || 'Paquetes de' }}
+                  </h5>
+                  <p class="modern-modal-client-name">
+                    {{ client.userName || client.userIdNumber || client.userEmail }}
+                  </p>
+                </div>
+              </div>
+              <button
+                class="btn-close modern-modal-close-btn"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <Spinner :show="loading"></Spinner>
+            <div class="modal-body modern-modal-body-content">
+              <ClientPackagesManagement
+                ref="packagesManagementRef"
+                :show-client-packages-management="true"
+                :toggles="combinedToggles"
+                :packages-in="packages"
+                :client="client"
+                :commerce="commerce"
+                :commerces="commerces"
+                :queues="queuesArray"
+                @open-attention-modal="handleOpenAttentionModalFromPackage"
+              >
+              </ClientPackagesManagement>
+            </div>
+            <div class="modal-footer border-0 modern-modal-footer">
+              <div class="d-flex align-items-center justify-content-between w-100 gap-3">
+                <div class="flex-grow-1">
+                  <SimpleDownloadCard
+                    :download="toggles['dashboard.reports.packages-management']"
+                    :title="
+                      $t('dashboard.reports.packages-management.title') || 'Exportar Paquetes'
+                    "
+                    :show-tooltip="true"
+                    :description="
+                      $t('dashboard.reports.packages-management.description') ||
+                      'Exportar lista de paquetes'
+                    "
+                    :icon="'bi-file-earmark-spreadsheet'"
+                    @download="handleExportPackagesCSV"
+                    :can-download="toggles['dashboard.reports.packages-management'] === true"
                   ></SimpleDownloadCard>
                 </div>
                 <button
@@ -1024,6 +2189,7 @@ export default {
                 :commerce="commerce"
                 :commerces="commerces"
                 :close-modal="closeDataModal"
+                @client-updated="handleClientUpdated"
               >
               </ClientDataManagement>
             </div>
@@ -1082,7 +2248,7 @@ export default {
               <ClientContactsManagement
                 ref="contactsManagementRef"
                 :show-client-attentions-management="true"
-                :toggles="toggles"
+                :toggles="combinedToggles"
                 :client-contacts-in="clientContacts"
                 :client="client"
                 :commerce="commerce"
@@ -1136,7 +2302,7 @@ export default {
             <div class="modal-header border-0 active-name modern-modal-header">
               <div class="modern-modal-header-inner">
                 <div class="modern-modal-icon-wrapper">
-                  <i class="bi bi-file-earmark-medical-fill"></i>
+                  <i class="bi bi-file-medical-fill"></i>
                 </div>
                 <div class="modern-modal-title-wrapper">
                   <h5 class="modal-title fw-bold modern-modal-title">
@@ -1171,21 +2337,124 @@ export default {
               >
               </PatientHistoryManagement>
             </div>
-            <div class="modal-footer border-0 modern-modal-footer">
-              <button
-                class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
-                type="button"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <i class="bi bi-check-lg"></i>
-                {{ $t('notificationConditions.action') || $t('close') }}
-              </button>
-            </div>
           </div>
         </div>
       </div>
+
+      <!-- LGPD Modal -->
+      <Teleport to="body">
+        <div
+          :id="`lgpdModal-${client.id}`"
+          class="modal fade modern-modal"
+          tabindex="-1"
+          :aria-labelledby="`lgpdModalLabel-${client.id}`"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-xl modal-dialog-scrollable modern-modal-dialog">
+            <div class="modal-content modern-modal-content">
+              <div class="modal-header border-0 active-name modern-modal-header">
+                <div class="modern-modal-header-inner">
+                  <div class="modern-modal-icon-wrapper">
+                    <i class="bi bi-shield-check"></i>
+                  </div>
+                  <div class="modern-modal-title-wrapper">
+                    <h5 class="modal-title fw-bold modern-modal-title" :id="`lgpdModalLabel-${client.id}`">
+                      {{ $t('lgpd.title') }}
+                    </h5>
+                    <p class="modern-modal-client-name">{{ client.name }}</p>
+                  </div>
+                </div>
+                <button
+                  :id="`close-modal-lgpd-${client.id}`"
+                  class="btn-close modern-modal-close-btn"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </div>
+              <Spinner :show="loading"></Spinner>
+              <div class="modal-body modern-modal-body-content">
+                <ul class="nav nav-tabs mb-3" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button
+                      class="nav-link active"
+                      :id="`consent-tab-${client.id}`"
+                      data-bs-toggle="tab"
+                      :data-bs-target="`#consent-pane-${client.id}`"
+                      type="button"
+                      role="tab"
+                    >
+                      <i class="bi bi-shield-check me-2"></i>
+                      {{ $t('lgpd.consent.title') }}
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button
+                      class="nav-link"
+                      :id="`portability-tab-${client.id}`"
+                      data-bs-toggle="tab"
+                      :data-bs-target="`#portability-pane-${client.id}`"
+                      type="button"
+                      role="tab"
+                    >
+                      <i class="bi bi-download me-2"></i>
+                      {{ $t('lgpd.portability.title') }}
+                    </button>
+                  </li>
+                </ul>
+                <div class="tab-content">
+                  <div
+                    class="tab-pane fade show active"
+                    :id="`consent-pane-${client.id}`"
+                    role="tabpanel"
+                  >
+                    <LgpdConsentManager
+                      :commerce-id="commerce.id"
+                      :client-id="client.id"
+                      @consent-updated="handleConsentUpdated"
+                    />
+                  </div>
+                  <div class="tab-pane fade" :id="`portability-pane-${client.id}`" role="tabpanel">
+                    <LgpdDataPortability :commerce-id="commerce.id" :client-id="client.id" />
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer border-0 modern-modal-footer">
+                <button
+                  class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <i class="bi bi-check-lg"></i> {{ $t('close') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Teleport>
     </Teleport>
+    <!-- Attention Creation Modal -->
+    <AttentionCreationModal
+      v-if="commerce && client"
+      :show="showAttentionCreationModal && !!commerce && !!client"
+      :commerce="commerce"
+      :queues="queuesArray"
+      :grouped-queues="groupedQueuesForModal"
+      :collaborators="[]"
+      :preselected-client="client"
+      :preselected-queue="preselectedQueueForModal"
+      :preselected-service-id="preselectedServiceIdForModal"
+      :preselected-package-id="preselectedPackageIdForModal"
+      :client-data="attentionCreationClientData"
+      :toggles="toggles || {}"
+      creation-type="booking"
+      @close="closeAttentionCreationModal"
+      @attention-created="handleAttentionCreated"
+      @error="handleAttentionCreationError"
+    />
   </div>
 </template>
 
@@ -1194,7 +2463,7 @@ export default {
 .client-row-card {
   background: rgba(255, 255, 255, 0.95);
   padding: 0.5rem 0.625rem;
-  margin: 0.25rem 0.375rem;
+  margin: 0;
   margin-bottom: 0;
   border-radius: 8px;
   border-bottom-left-radius: 0;
@@ -1435,6 +2704,18 @@ export default {
   line-height: 1;
 }
 
+.preprontuario-pending-indicator {
+  display: inline-flex;
+  align-items: center;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.preprontuario-loading-indicator {
+  display: inline-block;
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 0.625rem;
+}
+
 /* Responsive adjustments for ultra compact */
 @media (max-width: 768px) {
   .client-row-content {
@@ -1462,7 +2743,7 @@ export default {
 
 /* Details Expandable Section */
 .details-expandable-section {
-  margin: 0.25rem 0.375rem;
+  margin: 0;
   margin-top: 0;
   border-radius: 0 0 8px 8px;
   overflow: visible;
@@ -1977,6 +3258,119 @@ export default {
   opacity: 1;
 }
 
+/* Status Cards */
+.status-card-container {
+  margin-top: 0.5rem;
+}
+
+.status-card {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 0.75rem;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.status-card.status-completed {
+  border-color: rgba(0, 194, 203, 0.3);
+  background: rgba(0, 194, 203, 0.05);
+}
+
+.status-card.status-pending {
+  border-color: rgba(249, 195, 34, 0.3);
+  background: rgba(249, 195, 34, 0.05);
+}
+
+.status-card-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.status-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.status-info i {
+  font-size: 1.125rem;
+}
+
+.status-completed .status-info i {
+  color: #00c2cb;
+}
+
+.status-pending .status-info i {
+  color: #f9c322;
+}
+
+.status-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.status-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.status-value {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.whatsapp-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.75rem;
+  background: linear-gradient(135deg, #25d366 0%, #20c65a 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.whatsapp-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #20c65a 0%, #1db954 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+}
+
+.whatsapp-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.whatsapp-btn i {
+  font-size: 0.875rem;
+}
+
+.prontuario-btn {
+  background: linear-gradient(135deg, rgba(165, 42, 42, 0.1) 0%, rgba(220, 53, 69, 0.05) 100%);
+  color: #a52a2a;
+  border: 1.5px solid rgba(165, 42, 42, 0.2);
+}
+
+.prontuario-btn:hover {
+  background: linear-gradient(135deg, rgba(165, 42, 42, 0.2) 0%, rgba(220, 53, 69, 0.1) 100%);
+  border-color: rgba(165, 42, 42, 0.4);
+  color: #a52a2a;
+}
+
 /* Responsive - Ultra Compact */
 @media (max-width: 768px) {
   .client-row-card {
@@ -2226,6 +3620,67 @@ export default {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* LGPD Modal - Modern Tabs Styling */
+:deep(.modern-modal-body-content .nav-tabs) {
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+  padding-left: 0;
+}
+
+:deep(.modern-modal-body-content .nav-tabs .nav-item) {
+  margin-bottom: -2px;
+}
+
+:deep(.modern-modal-body-content .nav-tabs .nav-link) {
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.75rem 1.25rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border-radius: 0;
+}
+
+:deep(.modern-modal-body-content .nav-tabs .nav-link:hover) {
+  color: var(--azul-turno);
+  border-bottom-color: rgba(37, 99, 235, 0.3);
+  background: rgba(37, 99, 235, 0.05);
+}
+
+:deep(.modern-modal-body-content .nav-tabs .nav-link.active) {
+  color: var(--azul-turno);
+  border-bottom-color: var(--azul-turno);
+  background: transparent;
+}
+
+:deep(.modern-modal-body-content .nav-tabs .nav-link i) {
+  font-size: 1rem;
+}
+
+:deep(.modern-modal-body-content .tab-content) {
+  padding: 0;
+}
+
+:deep(.modern-modal-body-content .tab-pane) {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   :deep(.modern-modal-wrapper) {
@@ -2262,6 +3717,11 @@ export default {
 
   :deep(.modern-modal-footer) {
     padding: 0.625rem 0.875rem;
+  }
+
+  :deep(.modern-modal-body-content .nav-tabs .nav-link) {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
   }
 }
 </style>

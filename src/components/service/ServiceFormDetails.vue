@@ -137,6 +137,55 @@ export default {
         </div>
         <div class="form-group-modern">
           <label class="form-label-modern">
+            {{ $t('businessServicesAdmin.proceduresList') || 'Lista de Procedimientos' }}
+            <Popper :class="'dark p-1'" arrow disable-click-away>
+              <template #content>
+                <div>
+                  {{
+                    $t('businessServicesAdmin.proceduresListHelp') ||
+                    'Lista separada por comas de cantidades disponibles (ej: 3,10,20)'
+                  }}
+                </div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
+          </label>
+          <input
+            :id="`${prefix}service-procedures-list-form`"
+            :disabled="isAdd ? false : !toggles['services.admin.edit']"
+            type="text"
+            class="form-control-modern"
+            v-model="serviceInfo.proceduresList"
+            placeholder="3,10,20"
+          />
+        </div>
+        <div class="form-group-modern">
+          <label class="form-label-modern">
+            {{ $t('businessServicesAdmin.daysBetweenProcedures') || 'Días entre Procedimientos' }}
+            <Popper :class="'dark p-1'" arrow disable-click-away>
+              <template #content>
+                <div>
+                  {{
+                    $t('businessServicesAdmin.daysBetweenProceduresHelp') ||
+                    'Días mínimos entre sesiones del mismo servicio'
+                  }}
+                </div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
+          </label>
+          <input
+            :id="`${prefix}service-days-between-procedures-form`"
+            :disabled="isAdd ? false : !toggles['services.admin.edit']"
+            min="0"
+            type="number"
+            class="form-control-modern"
+            v-model="serviceInfo.daysBetweenProcedures"
+            placeholder="0"
+          />
+        </div>
+        <div class="form-group-modern">
+          <label class="form-label-modern">
             {{ $t('businessServicesAdmin.price') }}
           </label>
           <input

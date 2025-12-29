@@ -60,7 +60,7 @@
             type="button"
             class="btn-remove-file"
             @click.stop="removeFile"
-            :title="$t('remove') || 'Remover'"
+            :title="$t('common.remove') || 'Remover'"
           >
             <i class="bi bi-x-lg"></i>
           </button>

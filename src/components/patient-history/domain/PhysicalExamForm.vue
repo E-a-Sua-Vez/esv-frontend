@@ -425,13 +425,12 @@ export default {
             <button
               v-if="isSpeechSupported && toggles['patient.history.edit']"
               type="button"
-              class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
+              class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
               :class="{ 'btn-danger': isListeningSpeech }"
               @click="toggleSpeechRecognition"
               :title="isListeningSpeech ? 'Parar gravação' : 'Iniciar gravação de voz'"
             >
               <i :class="isListeningSpeech ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
-              <span class="ms-1 d-inline">{{ isListeningSpeech ? 'Gravando...' : 'Voz' }}</span>
             </button>
             <button
               v-if="toggles['patient.history.edit']"
@@ -692,8 +691,8 @@ export default {
 .exam-items-container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .exam-item-card {
@@ -713,9 +712,9 @@ export default {
 .exam-item-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
@@ -750,7 +749,7 @@ export default {
 }
 
 .exam-item-label {
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-text);
   cursor: pointer;
@@ -758,7 +757,7 @@ export default {
 }
 
 .exam-item-label-static {
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-text);
 }
@@ -1015,41 +1014,6 @@ export default {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
-  }
-}
-
-/* Speech Recognition Styles */
-.speech-recognition-btn {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.85rem;
-  border-radius: 0.5rem;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  vertical-align: middle;
-}
-
-.speech-recognition-btn span {
-  display: inline !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-.speech-recognition-btn:hover {
-  transform: scale(1.05);
-}
-
-.speech-recognition-btn.btn-danger {
-  animation: pulse-recording 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-recording {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
   }
 }
 

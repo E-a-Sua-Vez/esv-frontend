@@ -182,20 +182,16 @@ export default {
       :loading="loading"
     ></slot>
 
-    <div
-      id="surveys-result"
-      class="row"
-      v-if="showSurveyResults === true && toggles['dashboard.surveys.view']"
-    >
+    <div id="surveys-result" class="row" v-if="showSurveyResults === true">
       <div>
         <SimpleDownloadCard
-          :download="toggles['dashboard.reports.surveys'] && surveys.length > 0"
+          :download="surveys.length > 0"
           :title="$t('dashboard.reports.surveys.title')"
           :show-tooltip="true"
           :description="$t('dashboard.reports.surveys.description')"
           :icon="'bi-file-earmark-pdf'"
           @download="exportToPDF"
-          :can-download="toggles['dashboard.reports.surveys'] === true"
+          :can-download="true"
         ></SimpleDownloadCard>
         <Spinner :show="loading"></Spinner>
         <!-- Filters Section - Can be shown in component or exposed via slot -->
@@ -236,18 +232,23 @@ export default {
         </div>
         <div id="survey-component">
           <PDFHeader
-            :show="toggles['dashboard.reports.surveys']"
+            :show="true"
             :title="$t('dashboard.reports.surveys.title')"
             :start-date="startDate"
             :end-date="endDate"
             :commerce="commerce"
           >
           </PDFHeader>
-          <div v-if="surveys && surveys.length > 0">
+          <div
+            v-if="
+              (surveys && surveys.length > 0) ||
+              (metrics && metrics['survey.created'] && metrics['survey.created'].count_rating > 0)
+            "
+          >
             <div id="csat-view" class="row">
               <div class="col">
                 <DetailsCard
-                  :show="toggles['dashboard.attention-rating-avg.view']"
+                  :show="true"
                   :data="metrics['survey.created'].prom_rating || 0"
                   :subdata="metrics['survey.created'].count_rating || 0"
                   :title="$t('dashboard.items.attentions.3')"
@@ -259,7 +260,7 @@ export default {
                 >
                   <template v-slot:details>
                     <AttentionRatingDetails
-                      :show="toggles['dashboard.attention-rating-avg.view']"
+                      :show="true"
                       :count="metrics['survey.created'].count_rating || 0"
                       :min="metrics['survey.created']['min'].rating || 0"
                       :max="metrics['survey.created']['max'].rating || 0"
@@ -275,7 +276,7 @@ export default {
             <div id="nps-view" class="row">
               <div class="col">
                 <DetailsCard
-                  :show="toggles['dashboard.attention-nps-avg.view']"
+                  :show="true"
                   :data="metrics['survey.created'].nps"
                   :subdata="metrics['survey.created'].count_nps"
                   :title="$t('dashboard.items.attentions.24')"
@@ -287,7 +288,7 @@ export default {
                 >
                   <template v-slot:details>
                     <AttentionNPSDetails
-                      :show="toggles['dashboard.attention-nps-avg.view']"
+                      :show="true"
                       :min="metrics['survey.created']['min'].nps"
                       :max="metrics['survey.created']['max'].nps"
                       :score="metrics['survey.created']['npsScore']"
@@ -359,17 +360,11 @@ export default {
               :content="$t('dashboard.message.2.content')"
             />
           </div>
-          <PDFFooter :show="toggles['dashboard.reports.surveys']"></PDFFooter>
+          <PDFFooter :show="true"></PDFFooter>
         </div>
       </div>
     </div>
-    <div v-if="showSurveyResults === true && !toggles['dashboard.surveys.view']">
-      <Message
-        :icon="'bi-graph-up-arrow'"
-        :title="$t('dashboard.message.1.title')"
-        :content="$t('dashboard.message.1.content')"
-      />
-    </div>
+    <!-- Permission check removed - surveys should be accessible -->
   </div>
 </template>
 

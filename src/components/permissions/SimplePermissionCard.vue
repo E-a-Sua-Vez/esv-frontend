@@ -26,6 +26,15 @@ export default {
         return module;
       }
     },
+    getCategory(name) {
+      if (name) {
+        const parts = name.split('.');
+        if (parts.length >= 2) {
+          return parts[1];
+        }
+      }
+      return null;
+    },
   },
 };
 </script>
@@ -34,8 +43,11 @@ export default {
   <div v-if="show">
     <div class="permission-card">
       <div class="permission-card-header">
-        <div class="permission-badge">
+        <div class="permission-badges">
           <span class="badge-modern">{{ getModule(permission.name) }}</span>
+          <span v-if="getCategory(permission.name)" class="badge-modern badge-category">{{
+            getCategory(permission.name)
+          }}</span>
         </div>
         <div class="permission-title-wrapper">
           <div class="permission-title">
@@ -96,8 +108,11 @@ export default {
   margin-bottom: 0.5rem;
 }
 
-.permission-badge {
+.permission-badges {
   flex-shrink: 0;
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
 }
 
 .badge-modern {
@@ -112,6 +127,12 @@ export default {
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.025em;
+}
+
+.badge-category {
+  color: #00c2cb;
+  background-color: rgba(0, 194, 203, 0.1);
+  border-color: rgba(0, 194, 203, 0.2);
 }
 
 .permission-title-wrapper {

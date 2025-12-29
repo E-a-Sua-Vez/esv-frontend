@@ -26,7 +26,7 @@ export default {
         const dateToAttention = new Date(
           new Date(this.planActivation.endDate).setDate(
             new Date(this.planActivation.endDate).getDate() - 5
-          )
+          ),
         );
         if (new Date() > dateToAttention) {
           return 'activation-attention';

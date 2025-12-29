@@ -5,6 +5,7 @@ import {
   getPendingBookingsBetweenDates,
   getPendingCommerceBookingsBetweenDates,
   getPendingBookingsByClient,
+  getPendingCommerceBookingsByDate,
 } from '../../../application/services/booking';
 import { dateYYYYMMDD, getDate } from '../../../shared/utils/date';
 import { bookingCollection, waitlistCollection } from '../../../application/firebase';
@@ -15,6 +16,7 @@ import {
   getQueueBlockDetailsBySpecificDayByCommerceId,
 } from '../../../application/services/block';
 import { getClientsDetails } from '../../../application/services/query-stack';
+import { globalStore } from '../../../stores';
 import { DateModel } from '../../../shared/utils/date.model';
 import Popper from 'vue3-popper';
 import DashboardAttentionsManagement from '../../attentions/DashboardAttentionsManagement.vue';
@@ -28,7 +30,8 @@ import AttentionNumber from '../../common/AttentionNumber.vue';
 import Warning from '../../common/Warning.vue';
 import ClientDetailsCard from '../../clients/common/ClientDetailsCard.vue';
 import AttentionDetailsCard from '../../attentions/common/AttentionDetailsCard.vue';
-import AttentionCreationModal from '../../attentions/domain/AttentionCreationDrawer.vue';
+import AttentionCreationModal from '../../attentions/domain/AttentionCreationModal.vue';
+import AttentionDetailsModal from '../../attentions/common/AttentionDetailsModal.vue';
 
 export default {
   name: 'BookingCalendar',
@@ -46,6 +49,7 @@ export default {
     ClientDetailsCard,
     AttentionDetailsCard,
     AttentionCreationModal,
+    AttentionDetailsModal,
   },
   props: {
     show: { type: Boolean, default: false },
@@ -55,6 +59,7 @@ export default {
   },
   async setup(props) {
     const router = useRouter();
+    const store = globalStore();
 
     const loading = ref(false);
     const loadingSearch = ref(false);
@@ -102,6 +107,7 @@ export default {
       showAllQueues: false,
       showAttentionDrawer: false,
       selectedBlockForDrawer: null,
+      selectedClientForDrawer: null,
       extendedBookingsEntity: false,
       clientBookings: [],
       showBookings360: true,
@@ -120,6 +126,8 @@ export default {
       tempSelectedDate: undefined,
       calendarWidth: 58.33, // Default col-7 (7/12 = 58.33%)
       isResizing: false,
+      showAttentionModal: false,
+      selectedAttention: undefined,
     });
 
     const { show, commerce, queues, toggles } = toRefs(props);
@@ -155,6 +163,11 @@ export default {
 
     const getBookings = () => {
       loading.value = true;
+      // Cleanup previous listener before creating new one
+      if (unsubscribeBookings) {
+        unsubscribeBookings();
+        unsubscribeBookings = () => {};
+      }
       if (state.selectedQueue && state.selectedQueue.id) {
         const { unsubscribe } = updatedBookings(
           state.selectedQueue.id,
@@ -200,7 +213,7 @@ export default {
           if (booking.block && booking.block.blocks && booking.block.blocks.length > 0) {
             const hourMap = booking.block.blocks.map(block => block.hourFrom);
             result = [...result, ...hourMap];
-          } else {
+          } else if (booking.block && booking.block.hourFrom) {
             result.push(booking.block.hourFrom);
           }
         });
@@ -317,16 +330,37 @@ export default {
     };
 
     const goToCreateBooking = () => {
+      // If we have client data, use the modal instead of redirecting
+      if (state.client && state.client.id) {
+        console.log('📅 Creating booking for existing client using modal:', state.client);
+
+        // Use the modal with client data
+        const options = {};
+
+        // Include selected queue if available
+        if (state.selectedQueue && state.selectedQueue.id) {
+          options.queue = state.selectedQueue;
+        }
+
+        // Include selected date if available
+        if (state.selectedDate) {
+          options.date = state.selectedDate;
+        }
+
+        openAttentionDrawerWithClient(state.client, options);
+        return;
+      }
+
+      // Fallback to original behavior when no client data
       const commerceKeyName = commerce.value.keyName;
       const url = `/interno/commerce/${commerceKeyName}/filas`;
       let resolvedRoute;
       const query = {};
-      if (state.client && state.client.id) {
-        query['client'] = state.client.id;
-      }
+
       if (state.selectedQueue && state.selectedQueue.id) {
         query['queue'] = state.selectedQueue.id;
       }
+
       if (Object.keys(query).length === 0) {
         resolvedRoute = router.resolve({ path: url });
       } else {
@@ -569,6 +603,8 @@ export default {
       const nextMonth = +month;
       const dateFrom = new Date(+year, thisMonth, 1);
       const dateTo = new Date(+year, nextMonth, 0);
+      // Get attention days from queue
+      const attentionDays = queue.serviceInfo?.attentionDays || [];
       if (monthBookings && monthBookings.length >= 0 && date) {
         const bookingsGroupedByDate = monthBookings.reduce((acc, booking) => {
           const date = booking.date;
@@ -582,7 +618,21 @@ export default {
         for (let i = 1; i <= dateTo.getDate(); i++) {
           const key = new Date(dateFrom.setDate(i)).toISOString().slice(0, 10);
           if (new Date(key) > new Date()) {
-            availableDates.push(key);
+            // Filter by attention days if configured
+            if (attentionDays.length > 0) {
+              const [year, month, day] = key.split('-');
+              let dayNumber = new Date(+year, +month - 1, +day).getDay();
+              if (dayNumber === 0) {
+                dayNumber = 7;
+              }
+              // Only add date if it's an attention day
+              if (attentionDays.includes(dayNumber)) {
+                availableDates.push(key);
+              }
+            } else {
+              // If no attention days configured, allow all days
+              availableDates.push(key);
+            }
           }
         }
         const forDeletion = [];
@@ -596,9 +646,31 @@ export default {
               dayNumber = 7;
             }
             const blocks = state.blocksByDay[dayNumber] || [];
-            if (bookings.length >= blocks.length) {
+            // Check block limit, not just total blocks
+            const blockLimit = queue.serviceInfo?.blockLimit || 1;
+            // Count bookings per block to check blockLimit
+            const blockBookingsCount = {};
+            bookings.forEach(booking => {
+              if (booking.block) {
+                const blockNum =
+                  booking.block.number ||
+                  (booking.block.blockNumbers && booking.block.blockNumbers[0]);
+                if (blockNum) {
+                  blockBookingsCount[blockNum] = (blockBookingsCount[blockNum] || 0) + 1;
+                }
+              }
+            });
+            // Check if any block has reached its limit
+            const hasBlockAtLimit = Object.values(blockBookingsCount).some(
+              count => count >= blockLimit,
+            );
+            // Check if all blocks are at limit
+            const allBlocksAtLimit =
+              blocks.length > 0 &&
+              blocks.every(block => (blockBookingsCount[block.number] || 0) >= blockLimit);
+            if (allBlocksAtLimit || bookings.length >= blocks.length) {
               forDeletion.push(date);
-            } else if (bookings.length >= 1) {
+            } else if (hasBlockAtLimit || bookings.length >= 1) {
               forReserves.push(date);
             }
           });
@@ -673,7 +745,7 @@ export default {
             const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
             uniqueBlocksReserved.forEach(block => {
               const times = totalBlocksReserved.filter(reserved => reserved === block).length;
-              if (times >= limit && !forDeletion.includes(date)) {
+              if (times > limit && !forDeletion.includes(date)) {
                 if (
                   uniqueBlocksReserved.length === blocks.length &&
                   blocksNumbers.every(block => totalBlocksReserved.includes(block))
@@ -733,11 +805,27 @@ export default {
           acc[date].push(booking);
           return acc;
         }, {});
+        // Get attention days from queue
+        const attentionDays = queue.serviceInfo?.attentionDays || [];
         const dates = Object.keys(bookingsGroupedByDate);
         for (let i = 1; i <= dateTo.getDate(); i++) {
           const key = new Date(dateFrom.setDate(i)).toISOString().slice(0, 10);
           if (new Date(key) > new Date()) {
-            availableDates.push(key);
+            // Filter by attention days if configured
+            if (attentionDays.length > 0) {
+              const [year, month, day] = key.split('-');
+              let dayNumber = new Date(+year, +month - 1, +day).getDay();
+              if (dayNumber === 0) {
+                dayNumber = 7;
+              }
+              // Only add date if it's an attention day
+              if (attentionDays.includes(dayNumber)) {
+                availableDates.push(key);
+              }
+            } else {
+              // If no attention days configured, allow all days
+              availableDates.push(key);
+            }
           }
         }
         const forDeletion = [];
@@ -751,9 +839,31 @@ export default {
               dayNumber = 7;
             }
             const blocks = state.blocksByDay[dayNumber] || [];
-            if (bookings.length >= blocks.length) {
+            // Check block limit, not just total blocks
+            const blockLimit = queue.serviceInfo?.blockLimit || 1;
+            // Count bookings per block to check blockLimit
+            const blockBookingsCount = {};
+            bookings.forEach(booking => {
+              if (booking.block) {
+                const blockNum =
+                  booking.block.number ||
+                  (booking.block.blockNumbers && booking.block.blockNumbers[0]);
+                if (blockNum) {
+                  blockBookingsCount[blockNum] = (blockBookingsCount[blockNum] || 0) + 1;
+                }
+              }
+            });
+            // Check if any block has reached its limit
+            const hasBlockAtLimit = Object.values(blockBookingsCount).some(
+              count => count >= blockLimit,
+            );
+            // Check if all blocks are at limit
+            const allBlocksAtLimit =
+              blocks.length > 0 &&
+              blocks.every(block => (blockBookingsCount[block.number] || 0) >= blockLimit);
+            if (allBlocksAtLimit || bookings.length >= blocks.length) {
               forDeletion.push(date);
-            } else if (bookings.length >= 1) {
+            } else if (hasBlockAtLimit || bookings.length >= 1) {
               forReserves.push(date);
             }
           });
@@ -831,7 +941,7 @@ export default {
             const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
             uniqueBlocksReserved.forEach(block => {
               const times = totalBlocksReserved.filter(reserved => reserved === block).length;
-              if (times >= limit && !forDeletion.includes(date)) {
+              if (times > limit && !forDeletion.includes(date)) {
                 if (
                   uniqueBlocksReserved.length === blocks.length &&
                   blocksNumbers.every(block => totalBlocksReserved.includes(block))
@@ -954,13 +1064,17 @@ export default {
       getDisabledDates(state.selectedQueue);
       const blocks = getBlocksByDay(state.selectedQueue) || [];
       const blocksReserved = [];
-      const bookingsReserved = state.bookings.map(booking => {
-        if (booking.block && booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
-          return [...booking.block.blockNumbers];
-        } else {
-          return booking.block.number;
-        }
-      });
+      const bookingsReserved = state.bookings
+        .filter(booking => booking && booking.block)
+        .map(booking => {
+          if (booking.block.blockNumbers && booking.block.blockNumbers.length > 0) {
+            return [...booking.block.blockNumbers];
+          } else if (booking.block.number !== undefined) {
+            return booking.block.number;
+          }
+          return null;
+        })
+        .filter(Boolean);
       const uniqueBlocksReserved = [...new Set(bookingsReserved.flat(Infinity))];
       uniqueBlocksReserved.map(number => {
         const block = blocks.filter(block => block.number === number);
@@ -979,37 +1093,100 @@ export default {
       try {
         loadingSearch.value = true;
         state.errorsSearch = [];
-        const commerceIds = [commerce.value.id];
         if (!state.searchText || state.searchText.length < 3) {
           state.errorsSearch.push('dashboard.validate.search');
           state.searchTextError = true;
         } else {
+          console.log('🔍 Searching client with getClientsDetails:', {
+            businessId: commerce.value.businessId,
+            commerceId: commerce.value.id,
+            searchText: state.searchText,
+            searchTextLength: state.searchText.length,
+          });
+
+          console.log('🔍 Complete commerce object:', {
+            commerce: commerce.value,
+            commerceKeys: Object.keys(commerce.value || {}),
+            businessId: commerce.value?.businessId,
+            id: commerce.value?.id,
+          });
+
+          // Get businessId from commerce or store as fallback
+          const businessId = commerce.value?.businessId || store.getCurrentBusiness?.id;
+
+          console.log('🔍 BusinessId resolution:', {
+            fromCommerce: commerce.value?.businessId,
+            fromStore: store.getCurrentBusiness?.id,
+            finalBusinessId: businessId,
+          });
+
+          // Validate required parameters
+          if (!businessId) {
+            console.error('❌ Missing businessId from both commerce and store');
+            state.errorsSearch.push('dashboard.validate.clientNotFound');
+            state.searchTextError = true;
+            loadingSearch.value = false;
+            return;
+          }
+          if (!commerce.value.id) {
+            console.error('❌ Missing commerceId');
+            state.errorsSearch.push('dashboard.validate.clientNotFound');
+            state.searchTextError = true;
+            loadingSearch.value = false;
+            return;
+          }
+
+          // Try with minimal required parameters first
           const result = await getClientsDetails(
-            commerce.value.businessId,
-            commerce.value.id,
-            undefined,
-            undefined,
-            commerceIds,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            state.searchText,
-            undefined,
-            undefined,
-            undefined,
-            undefined
+            businessId, // businessId
+            commerce.value.id, // commerceId
+            null, // from
+            null, // to
+            [commerce.value.id], // commerceIds - restore as array
+            1, // page
+            10, // limit
+            null, // daysSinceType
+            null, // daysSinceContacted
+            null, // contactable
+            null, // contacted
+            state.searchText, // searchText
+            null, // queueId
+            null, // survey
+            true, // asc
+            null // contactResultType
           );
+
+          console.log('🔍 getClientsDetails response:', {
+            result,
+            isArray: Array.isArray(result),
+            length: result?.length || 0,
+            firstItem: result?.[0],
+          });
+
+          console.log('🔍 Client search result:', result);
+          console.log('🔍 Result type:', typeof result);
+          console.log('🔍 Result is array:', Array.isArray(result));
+          console.log('🔍 Result length:', result?.length);
+
           if (result && result.length > 0) {
             state.client = result[0];
+            console.log('✅ Client found and assigned:', {
+              id: result[0].id,
+              name: result[0].name,
+              email: result[0].email,
+              allKeys: Object.keys(result[0]),
+            });
           } else {
             state.client = undefined;
+            console.log('❌ Client not found or empty result');
+            state.errorsSearch.push('dashboard.validate.clientNotFound');
+            state.searchTextError = true;
           }
           if (!state.client || !state.client.id) {
+            console.log('❌ Client validation failed - resetting to undefined');
             state.client = undefined;
           } else {
+            console.log('✅ Client validation passed - keeping client data');
             // Client found - scroll to client details after rendering
             nextTick(() => {
               setTimeout(() => {
@@ -1035,6 +1212,16 @@ export default {
         }
         loadingSearch.value = false;
       } catch (error) {
+        console.error('❌ Error searching client:', error);
+        console.error('❌ Error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          url: error.config?.url,
+        });
+        state.errorsSearch.push('dashboard.validate.clientNotFound');
+        state.searchTextError = true;
+        state.client = undefined;
         loadingSearch.value = false;
       }
     };
@@ -1268,37 +1455,39 @@ export default {
             const dropdownWidth = dropdownRect.width || 320;
             const dropdownHeight = dropdownRect.height || 350;
 
-            // Calculate position - center below badge initially
+            // Calculate position - start below badge
             let top = badgeRect.bottom + 4;
-            let left = badgeRect.left + badgeRect.width / 2;
+            let left = badgeRect.left;
 
             // Check if dropdown would go off bottom of screen
             if (top + dropdownHeight > viewportHeight - 10) {
               top = Math.max(10, badgeRect.top - dropdownHeight - 4);
             }
 
-            // Ensure dropdown doesn't go off right side
-            const rightEdge = left + dropdownWidth / 2;
-            if (rightEdge > viewportWidth - 10) {
-              left = viewportWidth - dropdownWidth / 2 - 10;
+            // Calculate how much space we need and have
+            const spaceNeeded = dropdownWidth;
+            const spaceAvailableFromBadge = viewportWidth - badgeRect.left;
+            const spaceAvailableFromRight = viewportWidth - badgeRect.right;
+
+            // If there's not enough space from the badge left edge, move it further left
+            if (spaceAvailableFromBadge < spaceNeeded + 20) {
+              // Position dropdown so it ends near the right edge of viewport
+              left = Math.max(20, viewportWidth - dropdownWidth - 20);
             }
 
-            // Position more to the left to ensure full visibility
-            // Calculate optimal position - prefer left side if badge is on the right
+            // If the badge is in the right half of the screen, prefer left positioning
             const badgeCenter = badgeRect.left + badgeRect.width / 2;
-            const spaceOnLeft = badgeCenter;
-            const spaceOnRight = viewportWidth - badgeCenter;
-
-            // If there's more space on the left, position it more to the left
-            if (spaceOnLeft > spaceOnRight) {
-              // Position it more to the left of the badge
-              left = Math.max(dropdownWidth / 2 + 20, badgeRect.left - 50);
+            if (badgeCenter > viewportWidth * 0.6) {
+              // Position dropdown to the left of the badge
+              left = Math.max(20, badgeRect.right - dropdownWidth);
             }
 
-            // Ensure dropdown doesn't go off left side
-            const leftEdge = left - dropdownWidth / 2;
-            if (leftEdge < 20) {
-              left = dropdownWidth / 2 + 20; // Ensure full visibility with padding
+            // Final safety check - ensure dropdown doesn't go off screen
+            if (left + dropdownWidth > viewportWidth - 20) {
+              left = viewportWidth - dropdownWidth - 20;
+            }
+            if (left < 20) {
+              left = 20;
             }
 
             // Double-check both edges are within bounds
@@ -1432,14 +1621,25 @@ export default {
     };
 
     const showMyBookings = async () => {
+      // Validate that client exists before proceeding
+      if (!state.client || !state.client.id) {
+        console.warn('No client selected for showMyBookings');
+        return;
+      }
+
       loadingSearch.value = true;
       state.extendedBookingsEntity = !state.extendedBookingsEntity;
       if (state.extendedBookingsEntity === true) {
-        state.clientBookings = await getPendingBookingsByClient(
-          commerce.value.id,
-          state.client.id,
-          state.searchText
-        );
+        try {
+          state.clientBookings = await getPendingBookingsByClient(
+            commerce.value.id,
+            state.client.id,
+            state.searchText
+          );
+        } catch (error) {
+          console.error('Error loading client bookings:', error);
+          state.clientBookings = [];
+        }
       }
       loadingSearch.value = false;
     };
@@ -1510,11 +1710,74 @@ export default {
       state.selectedBooking = null;
     };
 
-    const openAttentionDrawer = block => {
-      console.log('openAttentionDrawer called with block:', block);
-      console.log('selectedQueue:', state.selectedQueue);
-      console.log('selectedDate:', state.selectedDate);
+    const handleBookingUpdated = async updatedBooking => {
+      console.log(
+        '📅 BookingCalendar - Booking updated, refreshing calendar view:',
+        updatedBooking,
+      );
 
+      // Update the selected booking with the new data
+      if (updatedBooking && updatedBooking.id === state.selectedBooking?.id) {
+        state.selectedBooking = { ...updatedBooking };
+
+        // Update the selected queue if it changed (for transfer operations)
+        if (updatedBooking.queueId && updatedBooking.queueId !== state.selectedQueue?.id) {
+          const newQueue = queues.value.find(q => q.id === updatedBooking.queueId);
+          if (newQueue) {
+            state.selectedQueue = newQueue;
+            console.log('📅 BookingCalendar - Queue changed to:', newQueue.name);
+          }
+        }
+
+        // Update selected date if it changed (for edit operations)
+        if (updatedBooking.date && updatedBooking.date !== state.selectedDate) {
+          state.selectedDate = updatedBooking.date;
+          console.log('📅 BookingCalendar - Date changed to:', updatedBooking.date);
+        }
+      }
+
+      // Comprehensive refresh of all calendar data
+      try {
+        // 1. Refresh bookings for the current view
+        await refreshBookings();
+
+        // 2. If date changed, also refresh bookings for the new date
+        if (updatedBooking && updatedBooking.date && updatedBooking.date !== state.selectedDate) {
+          const formattedNewDate = updatedBooking.date.split('T')[0]; // Ensure YYYY-MM-DD format
+          console.log('📅 BookingCalendar - Refreshing bookings for new date:', formattedNewDate);
+
+          // Get bookings for the new date
+          const newDateBookings = await getPendingCommerceBookingsByDate(
+            commerce.value.id,
+            formattedNewDate,
+          );
+
+          // Update bookings state to include new date bookings
+          if (newDateBookings && newDateBookings.length > 0) {
+            // Merge with existing bookings, removing duplicates
+            const existingIds = state.bookings.map(b => b.id);
+            const newBookings = newDateBookings.filter(b => !existingIds.includes(b.id));
+            state.bookings = [...state.bookings, ...newBookings];
+          }
+        }
+
+        // 3. Refresh calendar attributes to show updated availability
+        await getAvailableDatesByCalendarMonth({
+          month: new Date().getMonth(),
+          year: new Date().getFullYear(),
+        });
+
+        console.log('📅 BookingCalendar - Calendar refresh completed');
+      } catch (error) {
+        console.error('📅 BookingCalendar - Error refreshing calendar:', error);
+      }
+    };
+
+    // Modal properties
+    const modalId = ref('bookingDetailsModal');
+    const closeModal = closeBookingDrawer;
+
+    const openAttentionDrawer = block => {
       if (!state.selectedQueue || !state.selectedQueue.id) {
         alertError.value = 'Please select a queue first';
         console.warn('Cannot open drawer: queue not selected');
@@ -1528,26 +1791,115 @@ export default {
 
       // Check if hour is already booked
       if (block && block.hourFrom && state.bookingsActiveBlocks.includes(block.hourFrom)) {
-        console.log('Hour is already booked, cannot create attention');
         return;
       }
-
-      console.log('Opening attention drawer');
       state.selectedBlockForDrawer = block;
+      state.showAttentionDrawer = true;
+    };
+
+    // New method to open attention drawer with client data (for "Criar uma Reserva" button)
+    const openAttentionDrawerWithClient = (clientData, options = {}) => {
+      console.log('📅 Opening attention drawer with client data:', clientData);
+
+      const { queue = null, date = null, block = null } = options;
+
+      // Set client data
+      state.selectedClientForDrawer = clientData;
+
+      // Set queue, date, and block if provided, otherwise clear them for selection
+      state.selectedQueue = queue || {};
+      state.selectedDate = date || undefined;
+      state.selectedBlockForDrawer = block || null;
+
+      // Open the drawer
       state.showAttentionDrawer = true;
     };
 
     const closeAttentionDrawer = () => {
       state.showAttentionDrawer = false;
       state.selectedBlockForDrawer = null;
+      // Reset client data to prevent stale data in next use
+      state.selectedClientForDrawer = null;
+      // Also reset queue, date, and block to ensure clean state
+      if (!state.selectedQueue || !state.selectedQueue.id) {
+        state.selectedQueue = {};
+      }
+      if (!state.selectedDate) {
+        state.selectedDate = undefined;
+      }
+    };
+
+    const openAttentionModal = attention => {
+      state.selectedAttention = attention;
+      state.showAttentionModal = true;
+    };
+
+    const closeAttentionModal = () => {
+      state.showAttentionModal = false;
+      state.selectedAttention = undefined;
+    };
+
+    const handleAttentionUpdated = async () => {
+      console.log('📅 BookingCalendar - Attention updated, refreshing data');
+      if (state.selectedQueue && state.selectedQueue.id) {
+        const today = getDate(new Date());
+        const selectedDate = getDate(state.selectedDate);
+
+        // If we're viewing today's date, refresh attentions
+        if (selectedDate === today) {
+          console.log('📅 Refreshing attentions for today');
+          await updatedAttentions(state.selectedQueue.id);
+        } else {
+          // If we're viewing a future date, refresh bookings
+          console.log('📅 Refreshing bookings for future date:', selectedDate);
+          await getBookings();
+        }
+
+        // Also refresh blocks to show updated availability
+        getBlocks();
+      }
+      closeAttentionModal();
     };
 
     const handleAttentionCreated = async attention => {
-      // Refresh bookings/attentions after creation
+      console.log('📅 BookingCalendar - Attention/Booking created, refreshing data:', attention);
+
+      // Close the drawer first
       closeAttentionDrawer();
-      // Trigger refresh - this will depend on your refresh logic
+
+      // Refresh the appropriate data based on what was created and current view
       if (state.selectedQueue && state.selectedQueue.id) {
-        await getBookings();
+        const today = getDate(new Date());
+        const selectedDate = getDate(state.selectedDate);
+
+        // If we're viewing today's date, refresh attentions
+        if (selectedDate === today) {
+          console.log('📅 Refreshing attentions for today');
+          await updatedAttentions(state.selectedQueue.id);
+        } else {
+          // If we're viewing a future date, refresh bookings
+          console.log('📅 Refreshing bookings for future date:', selectedDate);
+          await getBookings();
+        }
+
+        // Also refresh blocks to show updated availability
+        getBlocks();
+
+        // Ensure we're showing the bookings360 view
+        showBookings360();
+
+        // Refresh calendar attributes to show updated availability
+        if (state.selectedQueue.id) {
+          const currentDate = new Date(state.selectedDate || new Date());
+          const year = currentDate.getFullYear();
+          const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // getMonth() returns 0-11
+
+          // Create pages array in the format expected by getAvailableDatesByCalendarMonth
+          const pages = [{ id: `${year}-${month}-01` }];
+          await getAvailableDatesByCalendarMonth(pages);
+        }
+
+        console.log('📅 BookingCalendar - Data refresh completed');
       }
     };
 
@@ -1738,13 +2090,20 @@ export default {
       getBookingsActiveBlocks,
       openBookingDrawer,
       closeBookingDrawer,
+      handleBookingUpdated,
+      modalId,
+      closeModal,
       openAttentionDrawer,
+      openAttentionDrawerWithClient,
       closeAttentionDrawer,
       handleAttentionCreated,
+      handleAttentionUpdated,
       getDate,
       selectDate,
       openDateSelector,
       startResize,
+      openAttentionModal,
+      closeAttentionModal,
     };
   },
 };
@@ -2150,6 +2509,7 @@ export default {
                           attention.status === 'USER_CANCELLED' ||
                           attention.status === 'RATED'
                         "
+                        @open-modal="openAttentionModal"
                         @updatedAttentions="updatedAttentions"
                       >
                       </AttentionDetailsCard>
@@ -2312,6 +2672,7 @@ export default {
                   v-model="state.searchText"
                   v-bind:class="{ 'is-invalid': state.searchTextError }"
                   :placeholder="$t('dashboard.search2')"
+                  @keyup.enter="searchClient()"
                 />
                 <button class="client-search-btn" @click="searchClient()" title="Pesquisar">
                   <i class="bi bi-search"></i>
@@ -2331,6 +2692,12 @@ export default {
                 </Warning>
               </div>
               <div v-if="state.client && state.client.id" class="client-details-wrapper">
+                <!-- Debug info -->
+                <div class="mb-2">
+                  <small class="text-muted">
+                    🔍 Client ID: {{ state.client.id }}, Name: {{ state.client.name }}
+                  </small>
+                </div>
                 <ClientDetailsCard
                   :show="true"
                   :client="state.client"
@@ -2360,14 +2727,20 @@ export default {
               >
                 <i class="bi bi-file-earmark-spreadsheet"></i>
               </button>
-              <button class="client-action-btn" @click="goToCreateBooking()">
+              <button
+                class="client-action-btn"
+                @click="goToCreateBooking()"
+                :disabled="!state.client || !state.client.id"
+                :title="!state.client || !state.client.id ? 'Busque um cliente primeiro' : ''"
+              >
                 <i class="bi bi-box-arrow-up-right"></i>
                 {{ $t('collaboratorBookingsView.create') }}
               </button>
               <button
                 class="client-action-btn"
                 @click="showMyBookings()"
-                :disabled="!state.searchText"
+                :disabled="!state.client || !state.client.id"
+                :title="!state.client || !state.client.id ? 'Busque um cliente primeiro' : ''"
               >
                 <i class="bi bi-calendar-check-fill"></i>
                 {{ $t('collaboratorBookingsView.myBookings') }}
@@ -2435,36 +2808,54 @@ export default {
       </div>
     </div>
 
-    <!-- Booking Details Drawer - Outside modal for proper z-index -->
+    <!-- Booking Details Modal -->
     <Teleport to="body">
-      <div v-if="state.drawerOpen" class="booking-drawer-overlay" @click="closeBookingDrawer">
-        <div class="booking-drawer" @click.stop>
-          <div class="booking-drawer-header">
-            <h5 class="booking-drawer-title">
-              <i class="bi bi-calendar-check-fill"></i>
-              Detalhes da Reserva
-            </h5>
-            <button class="booking-drawer-close" @click="closeBookingDrawer">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-          <div class="booking-drawer-body">
-            <BookingDetailsCard
-              v-if="state.selectedBooking"
-              :booking="state.selectedBooking"
-              :show="true"
-              :details-opened="true"
-              :toggles="toggles"
-              :commerce="commerce"
-              :queues="queues"
-              :disabled-dates="disabledDates"
-              :calendar-attributes="calendarAttributes"
-              :grouped-queues="state.groupedQueues"
-              :selected-queue="state.selectedQueue"
-              :selected-date="state.selectedDate"
-              @getAvailableDatesByCalendarMonth="getAvailableDatesByCalendarMonth"
-            >
-            </BookingDetailsCard>
+      <div
+        v-if="state.drawerOpen"
+        ref="modalRef"
+        class="modal fade show"
+        :id="modalId"
+        tabindex="-1"
+        aria-labelledby="bookingDetailsModalLabel"
+        aria-hidden="false"
+        data-bs-backdrop="true"
+        data-bs-keyboard="true"
+        style="display: block"
+        @click="closeModal"
+      >
+        <div class="modal-dialog modal-dialog-scrollable modal-lg" @click.stop>
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="bookingDetailsModalLabel">
+                <i class="bi bi-calendar-check-fill"></i>
+                Detalhes da Reserva
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                @click="closeModal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <BookingDetailsCard
+                v-if="state.selectedBooking"
+                :booking="state.selectedBooking"
+                :show="true"
+                :details-opened="true"
+                :toggles="toggles"
+                :commerce="commerce"
+                :queues="queues"
+                :disabled-dates="disabledDates"
+                :calendar-attributes="calendarAttributes"
+                :grouped-queues="state.groupedQueues"
+                :selected-queue="state.selectedQueue"
+                :selected-date="state.selectedDate"
+                @getAvailableDatesByCalendarMonth="getAvailableDatesByCalendarMonth"
+                @booking-updated="handleBookingUpdated"
+              >
+              </BookingDetailsCard>
+            </div>
           </div>
         </div>
       </div>
@@ -2480,9 +2871,22 @@ export default {
       :preselected-queue="state.selectedQueue"
       :preselected-date="state.selectedDate"
       :preselected-block="state.selectedBlockForDrawer"
+      :client-data="state.selectedClientForDrawer"
       :toggles="toggles"
+      :creation-type="'booking'"
       @close="closeAttentionDrawer"
       @attention-created="handleAttentionCreated"
+    />
+
+    <!-- Attention Details Modal -->
+    <AttentionDetailsModal
+      :show="state.showAttentionModal"
+      :attention="state.selectedAttention"
+      :commerce="commerce"
+      :queues="queues"
+      :toggles="toggles"
+      @close="closeAttentionModal"
+      @attention-updated="handleAttentionUpdated"
     />
   </div>
 </template>
@@ -2505,11 +2909,7 @@ export default {
   transform: translateY(-1px);
   border-color: rgba(0, 194, 203, 0.2);
 }
-.show {
-  padding: 10px;
-  max-height: 400px !important;
-  overflow-y: auto;
-}
+/* Remove conflicting .show styles that interfere with modal scrolling */
 .details-title {
   text-decoration: underline;
   font-size: 0.7rem;
@@ -3521,6 +3921,31 @@ export default {
 
 .client-details-wrapper {
   margin: 0.75rem 0;
+  max-height: 400px; /* Set a maximum height */
+  overflow-y: auto; /* Enable vertical scrolling */
+  overflow-x: hidden; /* Hide horizontal scrollbar */
+  padding-right: 0.5rem; /* Add some padding for the scrollbar */
+  border-radius: 0.375rem; /* Add rounded corners */
+  border: 1px solid #e5e7eb; /* Add subtle border */
+}
+
+/* Custom scrollbar styling for client details */
+.client-details-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.client-details-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.client-details-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.client-details-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .client-empty-state {
@@ -3572,135 +3997,69 @@ export default {
   font-size: 0.875rem;
 }
 
-/* Booking Drawer - Standardized with Client Details Style */
-.booking-drawer-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.45);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  animation: fadeIn 0.2s ease;
+/* Booking Modal - Scrollable modal with proper height */
+/* Target the booking modal specifically */
+.modal-dialog.modal-lg {
+  max-width: 1200px !important;
+  width: 95vw !important;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.modal-content {
+  border-radius: 0.5rem !important;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
 }
 
-.booking-drawer {
-  width: 100%;
-  max-width: 650px;
-  height: 100%;
-  background: #f8f9fa;
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
-  display: flex;
-  flex-direction: column;
-  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+/* Modal header with blue background and white text */
+.modal-header {
+  background: linear-gradient(
+    135deg,
+    var(--azul-turno, #004aad) 0%,
+    var(--verde-tu, #00c2cb) 100%
+  ) !important;
+  color: white !important;
+  border-bottom: none !important;
+  padding: 1rem 1.25rem !important;
+  border-radius: 0.5rem 0.5rem 0 0 !important;
 }
 
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+.modal-title {
+  color: white !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
 }
 
-.booking-drawer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.875rem 1.25rem;
-  border-bottom: 1px solid rgba(169, 169, 169, 0.2);
-  background: rgba(255, 255, 255, 0.98);
-  flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+.modal-title i {
+  color: white !important;
+  font-size: 1.125rem !important;
 }
 
-.booking-drawer-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #000000;
-  letter-spacing: -0.01em;
+.btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%) !important;
+  opacity: 0.9 !important;
 }
 
-.booking-drawer-title i {
-  color: #00c2cb;
-  font-size: 1.125rem;
+.btn-close:hover {
+  opacity: 1 !important;
 }
 
-.booking-drawer-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  background: transparent;
-  border: 1px solid rgba(169, 169, 169, 0.2);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: rgba(0, 0, 0, 0.5);
+.modal-body {
+  background: #f8f9fa !important;
+  padding: 1.25rem !important;
 }
 
-.booking-drawer-close:hover {
-  background: rgba(169, 169, 169, 0.1);
-  border-color: rgba(169, 169, 169, 0.3);
-  color: rgba(0, 0, 0, 0.7);
-}
-
-.booking-drawer-close i {
-  font-size: 1rem;
-}
-
-.booking-drawer-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1.25rem;
-  background: #f8f9fa;
-}
-
-.booking-drawer-body::-webkit-scrollbar {
-  width: 8px;
-}
-
-.booking-drawer-body::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.booking-drawer-body::-webkit-scrollbar-thumb {
-  background: rgba(169, 169, 169, 0.3);
-  border-radius: 4px;
-}
-
-.booking-drawer-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(169, 169, 169, 0.5);
-}
-
-/* Responsive adjustments */
+/* Responsive adjustments for modal */
 @media (max-width: 768px) {
-  .booking-drawer {
-    max-width: 100%;
+  .modal-dialog.modal-lg {
+    max-width: 95vw !important;
+    width: 95vw !important;
+    margin: 1rem auto !important;
   }
 
-  .booking-drawer-body {
-    padding: 0.75rem;
+  .modal-body {
+    padding: 0.75rem !important;
   }
 }
 </style>

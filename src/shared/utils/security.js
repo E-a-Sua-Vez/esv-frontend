@@ -167,6 +167,37 @@ export function containsDangerousContent(value) {
 }
 
 /**
+ * Escape special characters for voice transcriptions
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped text
+ */
+export function escapeVoiceTranscription(text) {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+
+  return text
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/&/g, '&amp;');
+}
+
+/**
+ * Clean zero-width characters
+ * @param {string} text - Text to clean
+ * @returns {string} Cleaned text
+ */
+export function cleanZeroWidthChars(text) {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+
+  return text.replace(/[\u200B-\u200D\uFEFF]/g, '');
+}
+
+/**
  * Log security event (for monitoring)
  * @param {string} event - Event type
  * @param {object} details - Event details

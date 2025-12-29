@@ -39,12 +39,14 @@ export default {
       commerces: [],
       manageSubMenuOption: false,
       manageControlSubMenuOption: false,
+      medicalManagementSubMenuOption: false,
       menuOptions: [
         'dashboard',
         'reports',
         'booking-manage',
         'control-admin',
         'manage-admin',
+        'medical-management',
         'configuration',
         'documents',
         'your-plan',
@@ -69,8 +71,15 @@ export default {
         'outcome-types-admin',
         'company-admin',
         'forms-admin',
-        'patient-history-item-admin',
         'permissions-admin',
+      ],
+      medicalManagementSubMenuOptions: [
+        'patient-history-item-admin',
+        'medications-admin',
+        'medical-exams-admin',
+        'medical-templates-admin',
+        'pdf-templates-admin',
+        'audit-log',
       ],
       currentPlanActivation: {},
       toggles: {},
@@ -103,10 +112,17 @@ export default {
           if (option === 'manage-admin') {
             state.manageSubMenuOption = !state.manageSubMenuOption;
             state.manageControlSubMenuOption = false;
+            state.medicalManagementSubMenuOption = false;
             loading.value = false;
           } else if (option === 'control-admin') {
             state.manageControlSubMenuOption = !state.manageControlSubMenuOption;
             state.manageSubMenuOption = false;
+            state.medicalManagementSubMenuOption = false;
+            loading.value = false;
+          } else if (option === 'medical-management') {
+            state.medicalManagementSubMenuOption = !state.medicalManagementSubMenuOption;
+            state.manageSubMenuOption = false;
+            state.manageControlSubMenuOption = false;
             loading.value = false;
           } else {
             try {
@@ -230,6 +246,14 @@ export default {
                               : 'bi-chevron-down'
                           }`"
                         ></i>
+                        <i
+                          v-if="option === 'medical-management'"
+                          :class="`bi ${
+                            state.medicalManagementSubMenuOption === true
+                              ? 'bi-chevron-up'
+                              : 'bi-chevron-down'
+                          }`"
+                        ></i>
                       </button>
                       <div
                         v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
@@ -258,6 +282,28 @@ export default {
                       >
                         <div
                           v-for="opt in state.manageControlSubMenuOptions"
+                          :key="opt"
+                          class="mobile-submenu-item"
+                        >
+                          <button
+                            type="button"
+                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style mobile-menu-btn mobile-submenu-btn"
+                            @click="goToOption(opt)"
+                            :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                          >
+                            {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <div
+                        v-if="
+                          option === 'medical-management' &&
+                          state.medicalManagementSubMenuOption === true
+                        "
+                        class="mobile-submenu-container"
+                      >
+                        <div
+                          v-for="opt in state.medicalManagementSubMenuOptions"
                           :key="opt"
                           class="mobile-submenu-item"
                         >
@@ -357,6 +403,14 @@ export default {
                           : 'bi-chevron-down'
                       }`"
                     ></i>
+                    <i
+                      v-if="option === 'medical-management'"
+                      :class="`bi ${
+                        state.medicalManagementSubMenuOption === true
+                          ? 'bi-chevron-up'
+                          : 'bi-chevron-down'
+                      }`"
+                    ></i>
                   </button>
                   <Transition name="fade">
                     <div
@@ -386,6 +440,30 @@ export default {
                     >
                       <div
                         v-for="opt in state.manageControlSubMenuOptions"
+                        :key="opt"
+                        class="submenu-item"
+                      >
+                        <button
+                          type="button"
+                          class="btn btn-lg btn-block btn-size fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
+                          @click="goToOption(opt)"
+                          :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                        >
+                          {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </Transition>
+                  <Transition name="fade">
+                    <div
+                      v-if="
+                        option === 'medical-management' &&
+                        state.medicalManagementSubMenuOption === true
+                      "
+                      class="submenu-container"
+                    >
+                      <div
+                        v-for="opt in state.medicalManagementSubMenuOptions"
                         :key="opt"
                         class="submenu-item"
                       >

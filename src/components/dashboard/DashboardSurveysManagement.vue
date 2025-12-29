@@ -71,10 +71,27 @@ export default {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
         this.page = page ? page : this.page;
+
+        // CRITICAL: Normalize all filter values to ensure consistency between mobile and desktop
+        // Helper to normalize string values (empty string -> undefined, trim whitespace)
+        const normalizeString = value => {
+          if (value === null || value === undefined) return undefined;
+          const str = String(value).trim();
+          return str === '' ? undefined : str;
+        };
+
+        // Normalize all string parameters
+        const startDateParam = normalizeString(this.startDate);
+        const endDateParam = normalizeString(this.endDate);
+        const searchTextParam = normalizeString(this.searchText);
+        const queueIdParam = normalizeString(this.queueId);
+        const serviceIdParam = normalizeString(this.serviceId);
+        const keyWordParam = normalizeString(this.keyWord);
+
         this.surveys = await getSurveysDetails(
           this.commerce.id,
-          this.startDate,
-          this.endDate,
+          startDateParam,
+          endDateParam,
           commerceIds,
           this.page,
           this.limit,
@@ -82,10 +99,10 @@ export default {
           this.npsType,
           this.contactable,
           this.contacted,
-          this.keyWord,
-          this.searchText,
-          this.queueId,
-          this.serviceId
+          keyWordParam,
+          searchTextParam,
+          queueIdParam,
+          serviceIdParam
         );
         if (this.surveys && this.surveys.length > 0) {
           const { counter } = this.surveys[0];

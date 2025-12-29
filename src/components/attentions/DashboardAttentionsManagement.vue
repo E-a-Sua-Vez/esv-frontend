@@ -4,11 +4,13 @@ import Popper from 'vue3-popper';
 import Message from '../common/Message.vue';
 import SimpleDownloadCard from '../reports/SimpleDownloadCard.vue';
 import AttentionManagementDetailsCard from './common/AttentionManagementDetailsCard.vue';
+import AttentionDetailsModal from './common/AttentionDetailsModal.vue';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import { getAttentionsDetails } from '../../application/services/query-stack';
 import { DoughnutChart, BarChart } from 'vue-chart-3';
 import SimpleDownloadButton from '../reports/SimpleDownloadButton.vue';
 import { DateModel } from '../../shared/utils/date.model';
+import { ATTENTION_STATUS } from '../../shared/constants';
 
 export default {
   name: 'DashboardAttentionsManagement',
@@ -19,6 +21,7 @@ export default {
     SimpleDownloadCard,
     Spinner,
     AttentionManagementDetailsCard,
+    AttentionDetailsModal,
     Popper,
     SimpleDownloadButton,
   },
@@ -49,12 +52,15 @@ export default {
       searchText: undefined,
       queueId: undefined,
       serviceId: undefined,
+      status: undefined,
       page: 1,
       limits: [10, 20, 50, 100],
       limit: 10,
       startDate: undefined,
       endDate: undefined,
       _skipWatch: false, // Flag to skip watch during manual sync
+      showAttentionModal: false,
+      selectedAttention: undefined,
     };
   },
   methods: {
@@ -66,10 +72,26 @@ export default {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
         this.page = page ? page : this.page;
+
+        // CRITICAL: Normalize all filter values to ensure consistency between mobile and desktop
+        // Helper to normalize string values (empty string -> undefined, trim whitespace)
+        const normalizeString = value => {
+          if (value === null || value === undefined) return undefined;
+          const str = String(value).trim();
+          return str === '' ? undefined : str;
+        };
+
+        // Normalize all string parameters
+        const startDateParam = normalizeString(this.startDate);
+        const endDateParam = normalizeString(this.endDate);
+        const searchTextParam = normalizeString(this.searchText);
+        const queueIdParam = normalizeString(this.queueId);
+        const serviceIdParam = normalizeString(this.serviceId);
+
         this.attentions = await getAttentionsDetails(
           this.commerce.id,
-          this.startDate,
-          this.endDate,
+          startDateParam,
+          endDateParam,
           commerceIds,
           this.page,
           this.limit,
@@ -77,12 +99,17 @@ export default {
           this.daysSinceContacted,
           this.contactable,
           this.contacted,
-          this.searchText,
-          this.queueId,
+          searchTextParam,
+          queueIdParam,
           this.survey,
           this.asc,
           this.contactResultType,
-          this.serviceId
+          serviceIdParam,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          this.status
         );
         if (this.attentions && this.attentions.length > 0) {
           const { counter } = this.attentions[0];
@@ -103,6 +130,18 @@ export default {
       this.page = pageIn;
       this.refresh();
     },
+    openAttentionModal(attention) {
+      this.selectedAttention = attention;
+      this.showAttentionModal = true;
+    },
+    closeAttentionModal() {
+      this.showAttentionModal = false;
+      this.selectedAttention = undefined;
+    },
+    async handleAttentionUpdated() {
+      await this.refresh();
+      this.closeAttentionModal();
+    },
     async clear() {
       this.daysSinceType = undefined;
       this.daysSinceContacted = undefined;
@@ -115,6 +154,7 @@ export default {
       this.searchText = undefined;
       this.queueId = undefined;
       this.serviceId = undefined;
+      this.status = undefined;
       this.startDate = undefined;
       this.endDate = undefined;
       await this.refresh();
@@ -171,6 +211,9 @@ export default {
     setContactResultType(value) {
       this.contactResultType = value;
     },
+    setStatus(value) {
+      this.status = value;
+    },
     async exportToCSV() {
       try {
         this.loading = true;
@@ -195,7 +238,12 @@ export default {
           this.survey,
           this.asc,
           this.contactResultType,
-          this.serviceId
+          this.serviceId,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          this.status
         );
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
@@ -266,6 +314,7 @@ export default {
         queueId,
         limit,
         serviceId,
+        status,
       } = this;
       return {
         page,
@@ -279,6 +328,7 @@ export default {
         queueId,
         limit,
         serviceId,
+        status,
       };
     },
     visible() {
@@ -309,7 +359,8 @@ export default {
             oldData.asc !== newData.asc ||
             oldData.limit !== newData.limit ||
             oldData.queueId !== newData.queueId ||
-            oldData.serviceId !== newData.serviceId)
+            oldData.serviceId !== newData.serviceId ||
+            oldData.status !== newData.status)
         ) {
           this.page = 1;
           this.refresh();
@@ -368,6 +419,8 @@ export default {
       :set-end-date="setEndDate"
       :set-days-since-type="setDaysSinceType"
       :set-contact-result-type="setContactResultType"
+      :status="status"
+      :set-status="setStatus"
     ></slot>
     <div
       id="attentions-management"
@@ -490,6 +543,7 @@ export default {
                           class="form-control"
                           v-model="searchText"
                           :placeholder="$t('dashboard.search')"
+                          @keyup.enter="refresh(1)"
                         />
                       </div>
                       <div class="col-2">
@@ -631,6 +685,38 @@ export default {
                     >
                       <i class="bi bi-info-circle-fill h7 m-2"></i>
                     </Popper>
+                  </div>
+                  <div class="col-12 col-md my-1 filter-card">
+                    <label class="metric-card-subtitle mx-2" for="select-status">
+                      {{ $t('dashboard.status') || 'Estado' }}:
+                    </label>
+                    <select
+                      class="btn btn-sm btn-light fw-bold text-dark select"
+                      v-model="status"
+                      id="select-status"
+                    >
+                      <option :value="undefined">{{ $t('dashboard.all') || 'Todos' }}</option>
+                      <option :value="ATTENTION_STATUS.PENDING">
+                        {{ $t('dashboard.attentionStatus.pending') || 'Pendiente' }}
+                      </option>
+                      <option :value="ATTENTION_STATUS.PROCESSING">
+                        {{ $t('dashboard.attentionStatus.processing') || 'En Proceso' }}
+                      </option>
+                      <option :value="ATTENTION_STATUS.TERMINATED">
+                        {{ $t('dashboard.attentionStatus.terminated') || 'Terminado' }}
+                      </option>
+                      <option :value="ATTENTION_STATUS.CANCELLED">
+                        {{ $t('dashboard.attentionStatus.cancelled') || 'Cancelado' }}
+                      </option>
+                      <option :value="ATTENTION_STATUS.USER_CANCELLED">
+                        {{
+                          $t('dashboard.attentionStatus.userCancelled') || 'Cancelado por Usuario'
+                        }}
+                      </option>
+                      <option :value="ATTENTION_STATUS.RATED">
+                        {{ $t('dashboard.attentionStatus.rated') || 'Calificado' }}
+                      </option>
+                    </select>
                   </div>
                   <div class="row">
                     <div class="col-12 col-md-6">
@@ -782,6 +868,7 @@ export default {
                     :show="true"
                     :attention="attention"
                     :commerce="commerce"
+                    @open-modal="openAttentionModal"
                   >
                   </AttentionManagementDetailsCard>
                 </div>
@@ -869,6 +956,16 @@ export default {
         :content="$t('dashboard.message.1.content')"
       />
     </div>
+    <!-- Attention Details Modal -->
+    <AttentionDetailsModal
+      :show="showAttentionModal"
+      :attention="selectedAttention"
+      :commerce="commerce"
+      :queues="queues"
+      :toggles="toggles"
+      @close="closeAttentionModal"
+      @attention-updated="handleAttentionUpdated"
+    />
   </div>
 </template>
 

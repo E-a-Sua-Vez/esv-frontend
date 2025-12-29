@@ -1,4 +1,5 @@
 const MasterMenu = () => import('@/views/master/MasterMenu.vue');
+const MasterBusinessMenu = () => import('@/views/master/MasterBusinessMenu.vue');
 const BusinessDashboard = () => import('@/views/business/BusinessDashboard.vue');
 const BusinessSectionAtWorkView = () => import('@/views/business/BusinessSectionAtWorkView.vue');
 const BusinessQueuesAdmin = () => import('@/views/business/BusinessQueuesAdmin.vue');
@@ -35,6 +36,11 @@ const PrivateMasterRoutes = [
     path: '/interno/master/menu',
     name: 'master-menu',
     component: MasterMenu,
+  },
+  {
+    path: '/interno/master/business-menu',
+    name: 'master-business-menu',
+    component: MasterBusinessMenu,
   },
   {
     path: '/interno/master/business-master-admin',

@@ -1,5 +1,5 @@
 <script>
-import { toRefs, reactive, computed, watch, onBeforeMount } from 'vue';
+import { toRefs, reactive, computed, watch, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import Message from '../../components/common/Message.vue';
 
 export default {
@@ -11,6 +11,7 @@ export default {
     receiveFilteredItems: { type: Function, default: () => {} },
   },
   async setup(props) {
+    const isMounted = ref(true);
     const state = reactive({
       filtered: [],
       types: [],
@@ -28,6 +29,7 @@ export default {
     const { receiveFilteredItems } = props;
 
     onBeforeMount(async () => {
+      isMounted.value = true;
       state.filtered = businessItems.value;
       if (businessItems.value && businessItems.value.length > 0) {
         const types = businessItems.value
@@ -38,6 +40,16 @@ export default {
         }
       }
       refresh(state.filtered);
+    });
+
+    onBeforeUnmount(() => {
+      isMounted.value = false;
+      // Clean up all watchers
+      watchers.forEach(watcher => {
+        if (watcher) {
+          watcher();
+        }
+      });
     });
 
     const clearSearch = () => {
@@ -53,20 +65,42 @@ export default {
     };
 
     const refresh = items => {
-      if (items && items.length > 0) {
-        const counter = items.length;
-        state.counter = counter;
-        const total = counter / state.limit;
-        const totalB = Math.trunc(total);
-        state.totalPages = totalB <= 0 ? 1 : counter % state.limit === 0 ? totalB : totalB + 1;
-        const filtered = items.slice((state.page - 1) * state.limit, state.page * state.limit);
-        state.filtered = filtered;
-      } else {
-        state.counter = 0;
-        state.totalPages = 0;
-        state.limit = 10;
+      if (!isMounted.value) return;
+      try {
+        // Ensure items is always an array
+        const itemsArray = Array.isArray(items) ? items : [];
+
+        if (itemsArray && itemsArray.length > 0) {
+          const counter = itemsArray.length;
+          state.counter = counter;
+          const total = counter / state.limit;
+          const totalB = Math.trunc(total);
+          state.totalPages = totalB <= 0 ? 1 : counter % state.limit === 0 ? totalB : totalB + 1;
+          const filtered = itemsArray.slice((state.page - 1) * state.limit, state.page * state.limit);
+          if (isMounted.value) {
+            state.filtered = filtered;
+          }
+        } else {
+          if (isMounted.value) {
+            state.counter = 0;
+            state.totalPages = 0;
+            state.limit = 10;
+            state.filtered = [];
+          }
+        }
+        if (isMounted.value && receiveFilteredItems && typeof receiveFilteredItems === 'function') {
+          // Always pass an array, never a string or other type
+          const filteredToPass = Array.isArray(state.filtered) ? state.filtered : [];
+          receiveFilteredItems(filteredToPass);
+        }
+      } catch (error) {
+        // Silently ignore errors during unmount
+        console.debug('Error in refresh:', error);
+        // Ensure we always pass an array even on error
+        if (isMounted.value && receiveFilteredItems && typeof receiveFilteredItems === 'function') {
+          receiveFilteredItems([]);
+        }
       }
-      receiveFilteredItems(state.filtered);
     };
 
     const changeSearchText = computed(() => {
@@ -98,7 +132,8 @@ export default {
       };
     });
 
-    watch(changeSearchText, async newData => {
+    const searchTextWatcher = watch(changeSearchText, async newData => {
+      if (!isMounted.value) return;
       if (newData.searchText && newData.searchText.length > 3) {
         const searchText = newData.searchText.toUpperCase();
         const items = businessItems.value;
@@ -112,7 +147,8 @@ export default {
       refresh(state.filtered);
     });
 
-    watch(changeType, async newData => {
+    const typeWatcher = watch(changeType, async newData => {
+      if (!isMounted.value) return;
       if (newData.selectedType) {
         const items = businessItems.value;
         const type = newData.selectedType.toUpperCase();
@@ -126,7 +162,8 @@ export default {
       refresh(state.filtered);
     });
 
-    watch(changePage, async newData => {
+    const pageWatcher = watch(changePage, async newData => {
+      if (!isMounted.value) return;
       if (newData.page) {
         const items = businessItems.value;
         if (state.selectedType) {
@@ -142,7 +179,8 @@ export default {
       }
     });
 
-    watch(changeLimit, async newData => {
+    const limitWatcher = watch(changeLimit, async newData => {
+      if (!isMounted.value) return;
       if (newData.limit) {
         state.page = 1;
         const items = businessItems.value;
@@ -160,9 +198,10 @@ export default {
     });
 
     // Watch for businessItems changes (when commerce changes) and reset everything
-    watch(
+    const businessItemsWatcher = watch(
       businessItems,
       (newItems, oldItems) => {
+        if (!isMounted.value) return;
         // Reset search and filters
         state.searchText = '';
         state.selectedType = undefined;
@@ -188,6 +227,8 @@ export default {
       },
       { deep: true }
     );
+
+    const watchers = [searchTextWatcher, typeWatcher, pageWatcher, limitWatcher, businessItemsWatcher];
 
     return {
       state,
@@ -220,21 +261,23 @@ export default {
         </div>
       </div>
       <div v-if="state.types">
-        <div class="col-12 col-md my-1 filter-card" v-if="state.types && state.types.length > 0">
-          <label class="metric-card-subtitle mx-2" for="select-queue">
-            {{ $t('dashboard.typeFilter') }}
-          </label>
-          <select
-            class="btn btn-md btn-light fw-bold text-dark select"
-            v-model="state.selectedType"
-          >
-            <option v-for="typ in state.types" :key="typ" :value="typ" id="select-queue">
-              {{ $t(`${type}.types.${typ}`) }}
-            </option>
-            <option :key="'ALL'" :value="undefined" id="select-type-all">
-              {{ $t('dashboard.all') }}
-            </option>
-          </select>
+        <div class="row justify-content-center my-1" v-if="state.types && state.types.length > 0">
+          <div class="col-12 col-md filter-card d-flex align-items-center justify-content-center flex-wrap gap-2">
+            <label class="metric-card-subtitle mx-2 mb-0" for="select-queue">
+              {{ $t('dashboard.typeFilter') }}
+            </label>
+            <select
+              class="btn btn-md btn-light fw-bold text-dark select"
+              v-model="state.selectedType"
+            >
+              <option v-for="typ in state.types" :key="typ" :value="typ" id="select-queue">
+                {{ $t(`${type}.types.${typ}`) }}
+              </option>
+              <option :key="'ALL'" :value="undefined" id="select-type-all">
+                {{ $t('dashboard.all') }}
+              </option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="mt-3 d-flex justify-content-center align-items-center flex-wrap gap-2">

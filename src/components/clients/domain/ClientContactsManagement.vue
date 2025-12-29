@@ -6,12 +6,14 @@ import Popper from 'vue3-popper';
 import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import ClientContactDetailsCard from '../common/ClientContactDetailsCard.vue';
+import AttentionCreationModal from '../../attentions/domain/AttentionCreationModal.vue';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { globalStore } from '../../../stores';
 import { getClientContactsDetailsByClientId } from '../../../application/services/query-stack';
-import { contactClient } from '../../../application/services/client';
+import { contactClient, searchClientByIdNumber } from '../../../application/services/client';
 import { getContactResultTypes, getContactTypes } from '../../../shared/utils/data';
 import { DateModel } from '../../../shared/utils/date.model';
+import { getGroupedQueueByCommerceId } from '../../../application/services/queue';
 
 export default {
   name: 'ClientContactsManagement',
@@ -23,6 +25,7 @@ export default {
     ClientContactDetailsCard,
     Alert,
     Warning,
+    AttentionCreationModal,
   },
   props: {
     showClientAttentionsManagement: { type: Boolean, default: false },
@@ -65,6 +68,8 @@ export default {
       limit: 10,
       startDate: undefined,
       endDate: undefined,
+      showAttentionCreationModal: false,
+      loadedQueues: null,
     };
   },
   beforeMount() {
@@ -128,6 +133,10 @@ export default {
     },
     showAdd() {
       this.showAddOption = !this.showAddOption;
+      // ✅ Initialize commerceId with current commerce when showing add form
+      if (this.showAddOption && !this.newContact.commerceId && this.commerce?.id) {
+        this.newContact.commerceId = this.commerce.id;
+      }
     },
     updatePaginationData() {
       if (this.clientContacts && this.clientContacts.length > 0) {
@@ -167,6 +176,10 @@ export default {
       return false;
     },
     async add(newContact) {
+      // ✅ Ensure commerceId is set if not provided
+      if (!newContact.commerceId && this.commerce?.id) {
+        newContact.commerceId = this.commerce.id;
+      }
       try {
         this.loading = true;
         if (this.validateAdd(newContact)) {
@@ -189,22 +202,99 @@ export default {
       }
     },
     goToCreateBooking() {
-      const commerceKeyName = this.commerce.keyName;
-      let url = `/interno/negocio/commerce/${commerceKeyName}/filas`;
-      if (this.userType === 'collaborator') {
-        url = `/interno/commerce/${commerceKeyName}/filas`;
+      // DEPRECATED: This method is kept for backwards compatibility but is no longer used
+      // The modal is opened via openAttentionCreationModal
+    },
+    async openAttentionCreationModal() {
+      if (!this.commerce) {
+        console.warn('Cannot open attention creation modal: commerce is not available');
+        return;
       }
-      let resolvedRoute;
-      const query = {};
-      if (this.client && this.client.id) {
-        query['client'] = this.client.id;
+
+      // ✅ CRITICAL: Search for client in Firebase using idNumber to get the correct Firebase ID
+      // This ensures we have the correct client ID that matches between Firebase and query-stack
+      if (this.client?.userIdNumber || this.client?.idNumber) {
+        try {
+          const idNumber = this.client.userIdNumber || this.client.idNumber;
+          console.log('🔍 Searching client in Firebase by idNumber:', {
+            idNumber,
+            commerceId: this.commerce.id,
+          });
+          const firebaseClient = await searchClientByIdNumber(this.commerce.id, idNumber);
+          if (firebaseClient && firebaseClient.id) {
+            // Update client with the correct Firebase ID
+            console.log(
+              '✅ Found client in Firebase with ID:',
+              firebaseClient.id,
+              '(query-stack ID was:',
+              this.client.id,
+              ')',
+            );
+            // Store the Firebase ID for use in attentionCreationClientData
+            this.client._firebaseClientId = firebaseClient.id;
+          } else {
+            console.warn(
+              '⚠️ Client not found in Firebase by idNumber, will let backend handle client lookup',
+            );
+            this.client._firebaseClientId = undefined;
+          }
+        } catch (error) {
+          console.error('❌ Error searching client in Firebase:', error);
+          // Continue anyway, backend will handle client lookup
+          this.client._firebaseClientId = undefined;
+        }
       }
-      if (Object.keys(query).length === 0) {
-        resolvedRoute = this.$router.resolve({ path: url });
-      } else {
-        resolvedRoute = this.$router.resolve({ path: url, query });
+
+      // If no queues available, try to load them BEFORE opening the modal
+      if (!this.queuesArray || this.queuesArray.length === 0) {
+        console.log('No queues available, loading queues from service...');
+        try {
+          if (this.commerce?.id) {
+            const groupedQueues = await getGroupedQueueByCommerceId(this.commerce.id);
+            // Convert grouped queues object to flat array
+            this.loadedQueues = Object.values(groupedQueues).flat();
+            console.log('Loaded queues:', this.loadedQueues.length);
+
+            // Force Vue to update by waiting for next tick
+            await this.$nextTick();
+
+            // Verify queues are now available
+            const finalQueuesArray = this.queuesArray;
+            console.log('Queues array after load:', finalQueuesArray?.length);
+
+            if (!finalQueuesArray || finalQueuesArray.length === 0) {
+              console.error('Failed to load queues, modal may not work correctly');
+            }
+          }
+        } catch (error) {
+          console.error('Error loading queues:', error);
+        }
       }
-      window.open(resolvedRoute.href, '_blank');
+
+      console.log('Opening attention creation modal', {
+        commerce: this.commerce?.id,
+        client: this.client?.id,
+        firebaseClientId: this.client?._firebaseClientId,
+        queues: this.queuesArray?.length,
+        queuesProp: this.queues,
+        loadedQueues: this.loadedQueues?.length,
+        queuesArray: this.queuesArray,
+      });
+
+      this.showAttentionCreationModal = true;
+    },
+    closeAttentionCreationModal() {
+      this.showAttentionCreationModal = false;
+    },
+    handleAttentionCreated(attention) {
+      // Handle when attention is successfully created
+      console.log('Attention created:', attention);
+      // Optionally emit event to parent to refresh data
+      this.$emit('attention-created', attention);
+    },
+    handleAttentionCreationError(errors) {
+      console.error('Error creating attention:', errors);
+      // Handle errors as needed
     },
     async exportToCSV() {
       try {
@@ -291,6 +381,91 @@ export default {
         limit,
       };
     },
+    availableCommerces() {
+      // If commerces prop is provided and has items, use it
+      if (this.commerces && Array.isArray(this.commerces) && this.commerces.length > 0) {
+        return this.commerces;
+      }
+      // Otherwise, fall back to single commerce if available
+      if (this.commerce && this.commerce.id) {
+        return [this.commerce];
+      }
+      // Return empty array if nothing is available
+      return [];
+    },
+    // Computed property to format client data for AttentionCreationModal
+    attentionCreationClientData() {
+      if (!this.client) return null;
+
+      // ✅ CRITICAL: Use Firebase client ID if available (searched via searchClientByIdNumber)
+      // This ensures we use the correct ID that matches between Firebase and query-stack
+      // If _firebaseClientId is not available, don't send clientId and let backend search by idNumber/email
+      const firebaseClientId = this.client._firebaseClientId;
+      const clientData = {
+        ...(firebaseClientId && { clientId: firebaseClientId }), // Only include clientId if we have the correct Firebase ID
+        userIdNumber: this.client.userIdNumber || this.client.idNumber,
+        name: this.client.userName || this.client.name,
+        lastName: this.client.userLastName || this.client.lastName,
+        email: this.client.userEmail || this.client.email,
+        phone: this.client.userPhone || this.client.phone,
+        ...(this.client.personalInfo || {}),
+      };
+
+      console.log('🔍 ClientContactsManagement - attentionCreationClientData:', {
+        queryStackClientId: this.client.id,
+        firebaseClientId,
+        sendingClientId: !!firebaseClientId,
+        hasIdNumber: !!clientData.userIdNumber,
+        hasEmail: !!clientData.email,
+        strategy: firebaseClientId
+          ? 'Using Firebase client ID'
+          : 'Backend will find/create by idNumber/email',
+      });
+
+      return clientData;
+    },
+    // Computed property to get queues array from queues prop
+    queuesArray() {
+      // Priority 1: If loadedQueues is available (dynamically loaded), use it first
+      if (this.loadedQueues && Array.isArray(this.loadedQueues) && this.loadedQueues.length > 0) {
+        return this.loadedQueues;
+      }
+
+      // Priority 2: Check queues prop (only if it has items)
+      if (this.queues) {
+        if (Array.isArray(this.queues) && this.queues.length > 0) {
+          return this.queues;
+        }
+        // If queues is an object, convert to array
+        if (typeof this.queues === 'object' && this.queues !== null) {
+          const queues = Object.values(this.queues).flat();
+          if (queues.length > 0) return queues;
+        }
+      }
+
+      // Fallback: return loadedQueues even if empty (for reactivity)
+      if (this.loadedQueues && Array.isArray(this.loadedQueues)) {
+        return this.loadedQueues;
+      }
+
+      return [];
+    },
+    // Computed property to group queues for the modal
+    groupedQueuesForModal() {
+      const queues = this.queuesArray;
+      if (!queues || queues.length === 0) return {};
+
+      const grouped = {};
+      queues.forEach(queue => {
+        const type = queue.type || 'STANDARD';
+        if (!grouped[type]) {
+          grouped[type] = [];
+        }
+        grouped[type].push(queue);
+      });
+
+      return grouped;
+    },
   },
   watch: {
     changeData: {
@@ -370,34 +545,38 @@ export default {
                     </span>
                   </span>
                 </div>
-                <div v-if="showAddOption">
-                  <div class="row mt-1">
-                    <div class="col-4 text-label">
-                      {{ $t('dashboard.commerce') }}
+                <div v-if="showAddOption" class="mt-3">
+                  <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4 d-flex align-items-center">
+                      <label class="text-label mb-0">
+                        {{ $t('dashboard.commerce') }}
+                      </label>
                     </div>
-                    <div class="col-8">
+                    <div class="col-12 col-md-8">
                       <select
-                        class="btn btn-sm btn-light fw-bold text-dark select"
+                        class="btn btn-sm btn-light fw-bold text-dark select w-100"
                         v-model="newContact.commerceId"
                       >
                         <option
-                          v-for="com in commerces"
+                          v-for="com in availableCommerces"
                           :key="com.id"
                           :value="com.id"
                           id="select-commerce"
                         >
-                          {{ com.tag }}
+                          {{ com.tag || com.name }}
                         </option>
                       </select>
                     </div>
                   </div>
-                  <div class="row mt-1">
-                    <div class="col-4 text-label">
-                      {{ $t('dashboard.type') }}
+                  <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4 d-flex align-items-center">
+                      <label class="text-label mb-0">
+                        {{ $t('dashboard.type') }}
+                      </label>
                     </div>
-                    <div class="col-8">
+                    <div class="col-12 col-md-8">
                       <select
-                        class="btn btn-sm btn-light fw-bold text-dark select"
+                        class="btn btn-sm btn-light fw-bold text-dark select w-100"
                         v-model="newContact.type"
                       >
                         <option
@@ -411,13 +590,15 @@ export default {
                       </select>
                     </div>
                   </div>
-                  <div class="row m-1">
-                    <div class="col-4 text-label">
-                      {{ $t('dashboard.result') }}
+                  <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-4 d-flex align-items-center">
+                      <label class="text-label mb-0">
+                        {{ $t('dashboard.result') }}
+                      </label>
                     </div>
-                    <div class="col-8">
+                    <div class="col-12 col-md-8">
                       <select
-                        class="btn btn-sm btn-light fw-bold text-dark select"
+                        class="btn btn-sm btn-light fw-bold text-dark select w-100"
                         v-model="newContact.result"
                       >
                         <option
@@ -431,29 +612,33 @@ export default {
                       </select>
                     </div>
                   </div>
-                  <div class="row mt-1">
-                    <textarea
-                      class="form-control mt-2"
-                      id="commennt"
-                      rows="3"
-                      v-model="newContact.comment"
-                      :placeholder="$t('dashboard.comment')"
-                    >
-                    </textarea>
+                  <div class="row g-2 mb-2">
+                    <div class="col-12">
+                      <label class="text-label d-block mb-1">
+                        {{ $t('dashboard.comment') || 'Comentario' }}
+                      </label>
+                      <textarea
+                        class="form-control"
+                        id="commennt"
+                        rows="3"
+                        v-model="newContact.comment"
+                        :placeholder="$t('dashboard.comment')"
+                      ></textarea>
+                    </div>
                   </div>
-                  <div class="row m-1">
-                    <div class="col-8 text-label">
+                  <div class="row g-2 mt-3">
+                    <div class="col-12 col-md-8">
                       <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100 px-4"
                         @click="add(newContact)"
                       >
                         {{ $t('dashboard.add') }} <i class="bi bi-save"></i>
                       </button>
                     </div>
-                    <div class="col-4 text-label">
+                    <div class="col-12 col-md-4">
                       <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="goToCreateBooking(client)"
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100 px-4"
+                        @click="openAttentionCreationModal()"
                       >
                         <i class="bi bi-calendar-check-fill"></i>
                       </button>
@@ -470,15 +655,6 @@ export default {
                   </div>
                 </div>
               </div>
-              <SimpleDownloadCard
-                :download="toggles['dashboard.reports.client-contacts-management']"
-                :title="$t('dashboard.reports.client-contacts-management.title')"
-                :show-tooltip="true"
-                :description="$t('dashboard.reports.client-contacts-management.description')"
-                :icon="'bi-file-earmark-spreadsheet'"
-                @download="exportToCSV"
-                :can-download="toggles['dashboard.reports.client-contacts-management'] === true"
-              ></SimpleDownloadCard>
               <div class="my-2 row metric-card">
                 <div class="col-12">
                   <span class="metric-card-subtitle">
@@ -682,7 +858,7 @@ export default {
                   </div>
                 </div>
               </div>
-              <div class="my-3">
+              <div class="my-3 text-center">
                 <span class="badge bg-secondary px-3 py-2 m-1"
                   >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
                 </span>
@@ -786,6 +962,22 @@ export default {
         :content="$t('dashboard.message.1.content')"
       />
     </div>
+    <!-- Attention Creation Modal -->
+    <AttentionCreationModal
+      v-if="commerce && client"
+      :show="showAttentionCreationModal && !!commerce && !!client"
+      :commerce="commerce"
+      :queues="queuesArray"
+      :grouped-queues="groupedQueuesForModal"
+      :collaborators="[]"
+      :preselected-client="client"
+      :client-data="attentionCreationClientData"
+      :toggles="toggles || {}"
+      creation-type="booking"
+      @close="closeAttentionCreationModal"
+      @attention-created="handleAttentionCreated"
+      @error="handleAttentionCreationError"
+    />
   </div>
 </template>
 

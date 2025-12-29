@@ -35,11 +35,13 @@ export default {
   width: 250px;
   background-color: var(--azul-qr);
   border-radius: 50%;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-top: 1rem;
   margin-bottom: 1rem;
 }
 .qr-style {
-  transform: translate(0px, 60px);
+  display: block;
 }
 </style>

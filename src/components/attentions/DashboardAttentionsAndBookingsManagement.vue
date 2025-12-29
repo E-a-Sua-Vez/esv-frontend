@@ -60,6 +60,9 @@ export default {
       this.showAttentionsResults = true;
       this.showBookingsResults = false;
 
+      // Emit event to notify parent to sync filter instance
+      this.$emit('tab-changed', { type: 'attentions' });
+
       // Set default date range: one month ago to today
       const today = new Date().toISOString().slice(0, 10);
       const oneMonthAgo = new DateModel(today).substractMonths(1).toString();
@@ -90,6 +93,9 @@ export default {
       // SIMPLE: Just set the states - no complex logic
       this.showAttentionsResults = false;
       this.showBookingsResults = true;
+
+      // Emit event to notify parent to sync filter instance
+      this.$emit('tab-changed', { type: 'bookings' });
 
       // Set default date range: one month ago to today
       const today = new Date().toISOString().slice(0, 10);
@@ -402,7 +408,6 @@ export default {
       v-if="showAttentionManagement === true && toggles['dashboard.attentions-management.view']"
     >
       <div>
-        <hr />
         <div class="row col m-1 mb-2">
           <div class="col-6 centered">
             <button

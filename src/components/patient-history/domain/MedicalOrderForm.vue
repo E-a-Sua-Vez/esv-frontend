@@ -1,5 +1,6 @@
 <script>
 import { ref, reactive, onBeforeMount, toRefs, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { VueRecaptcha } from 'vue-recaptcha';
 import Warning from '../../common/Warning.vue';
 import Spinner from '../../common/Spinner.vue';
@@ -54,14 +55,23 @@ export default {
     toggles: { type: Object, default: {} },
     errorsAdd: { type: Array, default: [] },
     receiveData: { type: Function, default: () => {} },
+    onSave: { type: Function, default: null },
   },
-  emits: ['create-prescription', 'create-exam-order', 'create-reference'],
-  async setup(props) {
+  emits: [
+    'create-prescription',
+    'create-exam-order',
+    'create-reference',
+    'prescription-created',
+    'exam-order-created',
+    'reference-created',
+  ],
+  async setup(props, { emit }) {
+    const { t } = useI18n();
     const loading = ref(false);
 
     const { commerce, cacheData, patientHistoryData, toggles, errorsAdd } = toRefs(props);
 
-    const { receiveData } = props;
+    const { receiveData, onSave } = props;
 
     const state = reactive({
       newMedicalOrder: {},
@@ -189,10 +199,10 @@ export default {
         // Reload prescriptions
         await loadPrescriptions();
         // Show success message (you can add a toast notification here)
-        alert('Receta reforzada exitosamente');
+        alert(t('patientHistoryView.prescriptionRefilledSuccess'));
       } catch (error) {
         console.error('Error refilling prescription:', error);
-        alert('Error al reforzar la receta');
+        alert(t('patientHistoryView.prescriptionRefilledError'));
       } finally {
         loading.value = false;
       }
@@ -209,10 +219,10 @@ export default {
         await recordDispensation(prescriptionId, dispensationData);
         // Reload prescriptions
         await loadPrescriptions();
-        alert('Dispensación registrada exitosamente');
+        alert(t('patientHistoryView.dispensationRecordedSuccess'));
       } catch (error) {
         console.error('Error recording dispensation:', error);
-        alert('Error al registrar la dispensación');
+        alert(t('patientHistoryView.dispensationRecordedError'));
       } finally {
         loading.value = false;
       }
@@ -225,10 +235,10 @@ export default {
         await updateExamOrderStatus(examOrderId, 'COMPLETED', new Date().toISOString());
         // Reload exam orders
         await loadExamOrders();
-        alert('Orden de examen marcada como completada');
+        alert(t('patientHistoryView.examOrderCompletedSuccess'));
       } catch (error) {
         console.error('Error completing exam order:', error);
-        alert('Error al completar la orden de examen');
+        alert(t('patientHistoryView.examOrderCompletedError'));
       } finally {
         loading.value = false;
       }
@@ -241,10 +251,10 @@ export default {
         await acceptReference(referenceId, {});
         // Reload references
         await loadReferences();
-        alert('Referencia aceptada exitosamente');
+        alert(t('patientHistoryView.referenceAcceptedSuccess'));
       } catch (error) {
         console.error('Error accepting reference:', error);
-        alert('Error al aceptar la referencia');
+        alert(t('patientHistoryView.referenceAcceptedError'));
       } finally {
         loading.value = false;
       }
@@ -254,17 +264,162 @@ export default {
       if (!referenceId) return;
       try {
         loading.value = true;
-        const returnReport = prompt('Ingrese el informe de retorno (opcional):') || '';
+        const returnReport = prompt(t('patientHistoryView.returnReportPrompt')) || '';
         await markReferenceAsAttended(referenceId, returnReport);
         // Reload references
         await loadReferences();
-        alert('Referencia marcada como atendida');
+        alert(t('patientHistoryView.referenceAttendedSuccess'));
       } catch (error) {
         console.error('Error marking reference as attended:', error);
-        alert('Error al marcar la referencia como atendida');
+        alert(t('patientHistoryView.referenceAttendedError'));
       } finally {
         loading.value = false;
       }
+    };
+
+    // New creation handlers - Add to medicalOrder in patient history
+    const handlePrescriptionCreated = async prescription => {
+      await loadPrescriptions();
+
+      // Add prescription reference to medicalOrder
+      if (prescription && prescription.id && attention.value?.id) {
+        const medicalOrderEntry = {
+          type: 'prescription',
+          prescriptionId: prescription.id,
+          attentionId: attention.value.id,
+          createdAt: new Date(),
+          createdBy: 'current-user', // TODO: Get from store
+          metadata: {
+            prescription: {
+              id: prescription.id,
+              date: prescription.date,
+              validUntil: prescription.validUntil,
+              status: prescription.status,
+              medicationsCount: prescription.medications?.length || 0,
+            },
+          },
+        };
+
+        // Add to newMedicalOrder or create array
+        if (!state.newMedicalOrder) {
+          state.newMedicalOrder = {};
+        }
+        if (!Array.isArray(patientHistoryData.value?.medicalOrder)) {
+          // Initialize as array if needed
+        }
+
+        // Send data to parent to save in patient history
+        const data = {
+          type: 'prescription',
+          prescription: medicalOrderEntry,
+          examOrder: null,
+          reference: null,
+          text: null,
+        };
+        receiveData(data);
+
+        // Trigger save if onSave is available
+        if (onSave && typeof onSave === 'function') {
+          try {
+            await onSave();
+          } catch (error) {
+            console.error('Error saving prescription to patient history:', error);
+          }
+        }
+      }
+
+      // Emit to parent component
+      emit('prescription-created', prescription);
+    };
+
+    const handleExamOrderCreated = async examOrder => {
+      await loadExamOrders();
+
+      // Add exam order reference to medicalOrder
+      if (examOrder && examOrder.id && attention.value?.id) {
+        const medicalOrderEntry = {
+          type: 'exam',
+          examOrderId: examOrder.id,
+          attentionId: attention.value.id,
+          createdAt: new Date(),
+          createdBy: 'current-user', // TODO: Get from store
+          metadata: {
+            examOrder: {
+              id: examOrder.id,
+              type: examOrder.type,
+              status: examOrder.status,
+              examsCount: examOrder.exams?.length || 0,
+            },
+          },
+        };
+
+        // Send data to parent to save in patient history
+        const data = {
+          type: 'exam',
+          prescription: null,
+          examOrder: medicalOrderEntry,
+          reference: null,
+          text: null,
+        };
+        receiveData(data);
+
+        // Trigger save if onSave is available
+        if (onSave && typeof onSave === 'function') {
+          try {
+            await onSave();
+          } catch (error) {
+            console.error('Error saving exam order to patient history:', error);
+          }
+        }
+      }
+
+      // Emit to parent component
+      emit('exam-order-created', examOrder);
+    };
+
+    const handleReferenceCreated = async reference => {
+      await loadReferences();
+
+      // Add reference to medicalOrder
+      if (reference && reference.id && attention.value?.id) {
+        const medicalOrderEntry = {
+          type: 'reference',
+          referenceId: reference.id,
+          attentionId: attention.value.id,
+          createdAt: new Date(),
+          createdBy: 'current-user', // TODO: Get from store
+          metadata: {
+            reference: {
+              id: reference.id,
+              referredToSpecialty: reference.referredToSpecialty,
+              urgency: reference.urgency,
+              status: reference.status,
+            },
+          },
+        };
+
+        // Send data to parent to save in patient history
+        const data = {
+          type: 'reference',
+          prescription: null,
+          examOrder: null,
+          reference: medicalOrderEntry,
+          text: null,
+        };
+        receiveData(data);
+
+        // Trigger save if onSave is available
+        if (onSave && typeof onSave === 'function') {
+          try {
+            await onSave();
+          } catch (error) {
+            console.error('Error saving reference to patient history:', error);
+          }
+        }
+      }
+
+      // Emit to parent component
+      emit('reference-created', reference);
     };
 
     onBeforeMount(async () => {
@@ -306,6 +461,22 @@ export default {
         text: state.newMedicalOrder.medicalOrder,
       };
       receiveData(data);
+    };
+
+    const handleSaveTextOrder = async () => {
+      if (!state.newMedicalOrder.medicalOrder || state.newMedicalOrder.medicalOrder.trim() === '') {
+        return;
+      }
+      // First send data to parent to update newMedicalOrder
+      sendData();
+      // Then trigger save if onSave is available
+      if (onSave && typeof onSave === 'function') {
+        try {
+          await onSave();
+        } catch (error) {
+          console.error('Error saving text order:', error);
+        }
+      }
     };
 
     const receivePrescriptionData = data => {
@@ -384,6 +555,7 @@ export default {
       speechError,
       toggleSpeechRecognition,
       clearField,
+      handleSaveTextOrder,
       receivePrescriptionData,
       receiveExamOrderData,
       receiveReferenceData,
@@ -395,6 +567,9 @@ export default {
       handleExamOrderComplete,
       handleReferenceAccept,
       handleReferenceAttend,
+      handlePrescriptionCreated,
+      handleExamOrderCreated,
+      handleReferenceCreated,
     };
   },
 };
@@ -407,7 +582,7 @@ export default {
       </div>
       <div class="form-header-content">
         <h3 class="form-header-title">{{ $t('patientHistoryView.medicalOrder') }}</h3>
-        <p class="form-header-subtitle">Registre as ordens médicas do paciente</p>
+        <p class="form-header-subtitle">{{ $t('patientHistoryView.medicalOrderSubtitle') }}</p>
       </div>
     </div>
     <div class="form-layout-modern">
@@ -423,7 +598,7 @@ export default {
               @click="state.orderType = 'prescription'"
             >
               <i class="bi bi-prescription me-2"></i>
-              Receta
+              {{ $t('patientHistoryView.orderType.prescription') }}
             </button>
             <button
               type="button"
@@ -432,7 +607,7 @@ export default {
               @click="state.orderType = 'exam'"
             >
               <i class="bi bi-clipboard-data me-2"></i>
-              Exámenes
+              {{ $t('patientHistoryView.orderType.exam') }}
             </button>
             <button
               type="button"
@@ -441,7 +616,7 @@ export default {
               @click="state.orderType = 'reference'"
             >
               <i class="bi bi-arrow-left-right me-2"></i>
-              Referencia
+              {{ $t('patientHistoryView.orderType.reference') }}
             </button>
             <button
               type="button"
@@ -450,7 +625,7 @@ export default {
               @click="state.orderType = 'text'"
             >
               <i class="bi bi-file-text me-2"></i>
-              Texto Libre
+              {{ $t('patientHistoryView.orderType.text') }}
             </button>
           </div>
         </div>
@@ -464,6 +639,7 @@ export default {
           :toggles="toggles"
           :errors-add="errorsAdd"
           :receive-data="receivePrescriptionData"
+          @prescription-created="handlePrescriptionCreated"
         />
 
         <!-- Exam Order Form -->
@@ -475,6 +651,7 @@ export default {
           :toggles="toggles"
           :errors-add="errorsAdd"
           :receive-data="receiveExamOrderData"
+          @exam-order-created="handleExamOrderCreated"
         />
 
         <!-- Reference Form -->
@@ -486,62 +663,97 @@ export default {
           :toggles="toggles"
           :errors-add="errorsAdd"
           :receive-data="receiveReferenceData"
+          @reference-created="handleReferenceCreated"
         />
 
         <!-- Text Order (Legacy) -->
-        <div v-if="state.orderType === 'text'" class="form-field-modern">
-          <label class="form-label-modern" for="medical-order-textarea">
-            <i class="bi bi-file-medical me-2"></i>
-            {{ $t('patientHistoryView.medicalOrder') }}
-            <button
-              v-if="isSpeechSupported && toggles['patient.history.edit']"
-              type="button"
-              class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
-              :class="{ 'btn-danger': isListeningSpeech }"
-              @click="toggleSpeechRecognition"
-              :title="isListeningSpeech ? 'Parar gravação' : 'Iniciar gravação de voz'"
-            >
-              <i :class="isListeningSpeech ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
-              <span class="ms-1 d-inline">{{ isListeningSpeech ? 'Gravando...' : 'Voz' }}</span>
-            </button>
-            <button
-              v-if="toggles['patient.history.edit']"
-              type="button"
-              class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
-              @click="clearField"
-              title="Limpar campo"
-            >
-              <i class="bi bi-eraser"></i>
-            </button>
-          </label>
-          <div class="position-relative">
-            <textarea
-              :disabled="!toggles['patient.history.edit']"
-              class="form-control-modern"
-              id="medical-order-textarea"
-              rows="8"
-              :max="500"
-              @keyup="sendData"
-              @input="sendData"
-              v-bind:class="{
-                'form-control-invalid':
-                  state.medicalOrderError || (errorsAdd && errorsAdd.length > 0),
-              }"
-              v-model="state.newMedicalOrder.medicalOrder"
-            ></textarea>
-            <div v-if="isListeningSpeech" class="speech-recording-indicator">
-              <span class="recording-dot"></span>
-              <span class="ms-2">Gravando... Fale agora</span>
-            </div>
-            <div v-if="speechError" class="speech-error-message text-danger small mt-1">
-              <i class="bi bi-exclamation-triangle me-1"></i>
-              {{ speechError }}
+        <div v-if="state.orderType === 'text'" class="prescription-form-modern">
+          <div class="form-section-modern">
+            <div class="form-field-modern">
+              <label class="form-label-modern" for="medical-order-textarea">
+                <i class="bi bi-file-text me-1"></i>
+                {{ $t('patientHistoryView.medicalOrder') }}
+                <button
+                  v-if="isSpeechSupported && toggles['patient.history.edit']"
+                  type="button"
+                  class="btn btn-sm ms-1 btn-outline-secondary"
+                  :class="{ 'btn-danger': isListeningSpeech }"
+                  @click="toggleSpeechRecognition"
+                  :title="
+                    isListeningSpeech
+                      ? $t('patientHistoryView.stopRecording')
+                      : $t('patientHistoryView.startRecording')
+                  "
+                >
+                  <i :class="isListeningSpeech ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
+                </button>
+                <button
+                  v-if="toggles['patient.history.edit']"
+                  type="button"
+                  class="btn btn-sm ms-1 btn-outline-secondary"
+                  @click="clearField"
+                  :title="$t('patientHistoryView.clearField')"
+                >
+                  <i class="bi bi-eraser"></i>
+                </button>
+              </label>
+              <div class="position-relative">
+                <textarea
+                  :disabled="!toggles['patient.history.edit']"
+                  class="form-control-modern"
+                  id="medical-order-textarea"
+                  rows="8"
+                  :max="500"
+                  @keyup="sendData"
+                  @input="sendData"
+                  v-bind:class="{
+                    'form-control-invalid':
+                      state.medicalOrderError || (errorsAdd && errorsAdd.length > 0),
+                  }"
+                  v-model="state.newMedicalOrder.medicalOrder"
+                ></textarea>
+                <div v-if="isListeningSpeech" class="speech-recording-indicator">
+                  <span class="recording-dot"></span>
+                  <span class="ms-2">{{ $t('patientHistoryView.recordingMessage') }}</span>
+                </div>
+                <div v-if="speechError" class="speech-error-message text-danger small mt-1">
+                  <i class="bi bi-exclamation-triangle me-1"></i>
+                  {{ speechError }}
+                </div>
+              </div>
+              <div class="form-field-hint" v-if="state.newMedicalOrder.medicalOrder">
+                <span class="character-count"
+                  >{{ (state.newMedicalOrder.medicalOrder || '').length }}/500</span
+                >
+              </div>
             </div>
           </div>
-          <div class="form-field-hint" v-if="state.newMedicalOrder.medicalOrder">
-            <span class="character-count"
-              >{{ (state.newMedicalOrder.medicalOrder || '').length }}/500</span
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn-action btn-action-primary"
+              @click="handleSaveTextOrder"
+              :disabled="
+                !toggles['patient.history.edit'] ||
+                !state.newMedicalOrder.medicalOrder ||
+                !state.newMedicalOrder.medicalOrder.trim()
+              "
             >
+              <i class="bi bi-check-circle me-2"></i>
+              {{ $t('patientHistoryView.save') }}
+            </button>
+
+            <button
+              type="button"
+              class="btn-action btn-action-secondary"
+              @click="clearField"
+              :disabled="!toggles['patient.history.edit']"
+            >
+              <i class="bi bi-arrow-clockwise me-2"></i>
+              {{ $t('patientHistoryView.prescription.clear') }}
+            </button>
           </div>
         </div>
 
@@ -609,10 +821,13 @@ export default {
                 class="history-tab"
                 :class="{ active: state.orderType === 'prescription' }"
                 @click="state.orderType = 'prescription'"
+                :title="
+                  $t('patientHistoryView.historyTab.prescription') +
+                  (state.prescriptions.length > 0 ? ` (${state.prescriptions.length})` : '')
+                "
               >
-                <i class="bi bi-prescription me-1"></i>
-                Recetas
-                <span v-if="state.prescriptions.length > 0" class="badge bg-primary ms-2">
+                <i class="bi bi-prescription"></i>
+                <span v-if="state.prescriptions.length > 0" class="history-tab-badge">
                   {{ state.prescriptions.length }}
                 </span>
               </button>
@@ -620,10 +835,13 @@ export default {
                 class="history-tab"
                 :class="{ active: state.orderType === 'exam' }"
                 @click="state.orderType = 'exam'"
+                :title="
+                  $t('patientHistoryView.historyTab.exam') +
+                  (state.examOrders.length > 0 ? ` (${state.examOrders.length})` : '')
+                "
               >
-                <i class="bi bi-clipboard-data me-1"></i>
-                Exámenes
-                <span v-if="state.examOrders.length > 0" class="badge bg-primary ms-2">
+                <i class="bi bi-clipboard-data"></i>
+                <span v-if="state.examOrders.length > 0" class="history-tab-badge">
                   {{ state.examOrders.length }}
                 </span>
               </button>
@@ -631,10 +849,13 @@ export default {
                 class="history-tab"
                 :class="{ active: state.orderType === 'reference' }"
                 @click="state.orderType = 'reference'"
+                :title="
+                  $t('patientHistoryView.historyTab.reference') +
+                  (state.references.length > 0 ? ` (${state.references.length})` : '')
+                "
               >
-                <i class="bi bi-arrow-left-right me-1"></i>
-                Referencias
-                <span v-if="state.references.length > 0" class="badge bg-primary ms-2">
+                <i class="bi bi-arrow-left-right"></i>
+                <span v-if="state.references.length > 0" class="history-tab-badge">
                   {{ state.references.length }}
                 </span>
               </button>
@@ -642,9 +863,9 @@ export default {
                 class="history-tab"
                 :class="{ active: state.orderType === 'text' }"
                 @click="state.orderType = 'text'"
+                :title="$t('patientHistoryView.historyTab.text')"
               >
-                <i class="bi bi-file-text me-1"></i>
-                Texto Libre
+                <i class="bi bi-file-text"></i>
               </button>
             </div>
 
@@ -1038,41 +1259,6 @@ export default {
   }
 }
 
-/* Speech Recognition Styles */
-.speech-recognition-btn {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.85rem;
-  border-radius: 0.5rem;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  vertical-align: middle;
-}
-
-.speech-recognition-btn span {
-  display: inline !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-.speech-recognition-btn:hover {
-  transform: scale(1.05);
-}
-
-.speech-recognition-btn.btn-danger {
-  animation: pulse-recording 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-recording {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
-  }
-}
-
 .position-relative {
   position: relative;
 }
@@ -1129,13 +1315,13 @@ export default {
   display: inline-flex;
   align-items: center;
   flex: 1;
-  min-width: 140px;
-  padding: 0.75rem 1.5rem;
+  min-width: 80px;
+  padding: 0.3rem;
   background: white;
   color: var(--color-text);
   border: none;
   border-radius: 0.75rem;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1168,17 +1354,19 @@ export default {
 /* History Tabs */
 .history-tabs {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
   border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .history-tab {
-  flex: 1;
-  min-width: 120px;
-  padding: 0.5rem 1rem;
+  flex: 0 0 auto;
+  min-width: 36px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: 2px solid rgba(0, 0, 0, 0.1);
   border-radius: 0.5rem;
   background: white;
@@ -1189,6 +1377,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .history-tab:hover {
@@ -1203,8 +1392,234 @@ export default {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.history-tab .badge {
+.history-tab i {
+  font-size: 1.1rem;
+}
+
+.history-tab-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #dc3545;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.history-tab.active .history-tab-badge {
+  border-color: white;
+}
+
+/* Text Order Form Styles - Normalized with other forms */
+.prescription-form-modern {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Header */
+.form-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Header styles are in prontuario-common.css - no need to override */
+
+.form-section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.4rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.form-control:disabled {
+  background: rgba(0, 0, 0, 0.05);
+  cursor: not-allowed;
+}
+
+.form-control-invalid {
+  border-color: #dc3545;
+}
+
+.form-field-hint {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.character-count {
+  font-size: 0.75rem;
+  color: var(--color-text);
+  opacity: 0.6;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: 0.3rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  height: 32px;
+}
+
+.btn-action i {
+  font-size: 0.85rem;
+}
+
+.btn-action-primary {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-action-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-action-secondary {
+  background: white;
+  color: var(--color-text);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.btn-action-secondary:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--azul-turno);
+}
+
+.btn-action-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Modern Form Styles */
+.form-section-modern {
+  margin-bottom: 1.2rem;
+  background: white;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.form-field-modern {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.6rem;
+}
+
+.form-label-modern {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
   font-size: 0.7rem;
-  padding: 0.2rem 0.4rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.3rem;
+}
+
+.form-control-modern {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.4rem;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+  background: white;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.form-control-modern:focus {
+  outline: none;
+  border-color: var(--azul-turno);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.form-control-modern:disabled {
+  background: rgba(0, 0, 0, 0.03);
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-action {
+    width: 100%;
+    justify-content: center;
+  }
 }
 </style>

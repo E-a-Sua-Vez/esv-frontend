@@ -12,7 +12,6 @@ export default {
   components: { Warning, Spinner, VueRecaptcha, Toggle },
   props: {
     commerce: { type: Object, default: {} },
-    cacheData: { type: Object, default: undefined },
     clientData: { type: Object, default: {} },
     patientForms: { type: Array, default: [] },
     patientHistoryData: { type: Object, default: {} },
@@ -23,15 +22,8 @@ export default {
   async setup(props) {
     const loading = ref(false);
 
-    const {
-      commerce,
-      cacheData,
-      clientData,
-      patientForms,
-      patientHistoryData,
-      toggles,
-      errorsAdd,
-    } = toRefs(props);
+    const { commerce, clientData, patientForms, patientHistoryData, toggles, errorsAdd } =
+      toRefs(props);
 
     const { receiveData } = props;
 
@@ -60,6 +52,28 @@ export default {
       fontError: false,
     });
 
+    const findPhoneCode = codeIn => {
+      const search = state.phoneCodes.find(code => code.id === codeIn);
+      if (search) {
+        return search.code;
+      }
+      return '';
+    };
+
+    const calculateAge = birthday => {
+      const hoy = new Date();
+      const fechaNacimiento = new Date(birthday);
+      let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+      const diferenciaMeses = hoy.getMonth() - fechaNacimiento.getMonth();
+      if (
+        diferenciaMeses < 0 ||
+        (diferenciaMeses === 0 && hoy.getDate() < fechaNacimiento.getDate())
+      ) {
+        edad--;
+      }
+      return edad;
+    };
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
@@ -67,9 +81,17 @@ export default {
         state.civilStatuses = getCivilStatuses();
         state.sexs = getSexs();
         if (patientHistoryData.value && patientHistoryData.value.id) {
-          state.newPersonalData = patientHistoryData.value.personalData;
+          // Use deep copy to ensure Vue reactivity works correctly
+          if (patientHistoryData.value.personalData) {
+            state.newPersonalData = { ...patientHistoryData.value.personalData };
+          }
         } else {
-          if (commerce.value && commerce.value.id && commerce.value.localeInfo.country) {
+          if (
+            commerce.value &&
+            commerce.value.id &&
+            commerce.value.localeInfo &&
+            commerce.value.localeInfo.country
+          ) {
             state.newPersonalData.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
           }
           state.newPersonalData.birthday = new Date(
@@ -83,7 +105,7 @@ export default {
               .slice(0, 10)
           );
           state.newPersonalData.font = true;
-          if (clientData.value && clientData.value.id) {
+          if (clientData.value && clientData.value && clientData.value.id) {
             const phoneIn = clientData.value.userPhone || clientData.value.phone || undefined;
             state.newPersonalData.phoneCode = phoneIn ? phoneIn.slice(0, 2) : '';
             state.newPersonalData.phone = phoneIn ? phoneIn.slice(2, 20) : '';
@@ -119,53 +141,10 @@ export default {
             state.newPersonalData.email = email ? email : '';
             sendData();
           }
-          if (patientForms.value && patientForms.value.length > 0) {
-            const patientFormFirstAttentions = patientForms.value.filter(
-              form => form.type === 'FIRST_ATTENTION'
-            );
-            state.patientFormFirstAttention =
-              patientFormFirstAttentions && patientFormFirstAttentions.length > 0
-                ? patientFormFirstAttentions[0]
-                : undefined;
-            if (state.patientFormFirstAttention && state.patientFormFirstAttention.id) {
-              if (
-                state.patientFormFirstAttention.answers &&
-                state.patientFormFirstAttention.answers.length > 0
-              ) {
-                const occupationAnswer = state.patientFormFirstAttention.answers.filter(
-                  answer => answer.type === 'PATIENT_OCCUPATION'
-                );
-                const occupation = occupationAnswer[0].answer || undefined;
-                state.newPersonalData.occupation =
-                  state.newPersonalData.occupation || occupation ? occupation : '';
-                const sexAnswer = state.patientFormFirstAttention.answers.filter(
-                  answer => answer.type === 'PATIENT_SEX'
-                );
-                const sex = sexAnswer[0].answer[0] || undefined;
-                state.newPersonalData.sex = state.newPersonalData.sex || sex ? sex : '';
-                const civilStatusAnswer = state.patientFormFirstAttention.answers.filter(
-                  answer => answer.type === 'PATIENT_CIVIL_STATUS'
-                );
-                const civilStatus = civilStatusAnswer[0].answer[0] || undefined;
-                state.newPersonalData.civilStatus =
-                  state.newPersonalData.civilStatus || civilStatus ? civilStatus : '';
-                sendData();
-              }
-            }
-          }
+          // REMOVED: Automatic loading from preprontuario forms
+          // This is now handled manually via PreprontuarioHistoryView component
         }
-        // Only use cacheData if no saved data exists in patientHistoryData
-        // (If patientHistoryData.personalData exists, it was already loaded above on line 70)
-        if (
-          !(
-            patientHistoryData.value &&
-            patientHistoryData.value.id &&
-            patientHistoryData.value.personalData
-          ) &&
-          cacheData.value
-        ) {
-          state.newPersonalData = cacheData.value;
-        }
+        // REMOVED: cacheData usage - data should only come from service response
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -174,28 +153,6 @@ export default {
 
     const sendData = () => {
       receiveData(state.newPersonalData);
-    };
-
-    const findPhoneCode = codeIn => {
-      const search = state.phoneCodes.find(code => code.id === codeIn);
-      if (search) {
-        return search.code;
-      }
-      return '';
-    };
-
-    const calculateAge = birthday => {
-      const hoy = new Date();
-      const fechaNacimiento = new Date(birthday);
-      let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
-      const diferenciaMeses = hoy.getMonth() - fechaNacimiento.getMonth();
-      if (
-        diferenciaMeses < 0 ||
-        (diferenciaMeses === 0 && hoy.getDate() < fechaNacimiento.getDate())
-      ) {
-        edad--;
-      }
-      return edad;
     };
 
     const getAddress = async () => {
@@ -246,7 +203,10 @@ export default {
     watch(clientData, async () => {
       loading.value = true;
       if (patientHistoryData.value && patientHistoryData.value.id) {
-        state.newPersonalData = patientHistoryData.value.personalData;
+        // Use deep copy to ensure Vue reactivity works correctly
+        if (patientHistoryData.value.personalData) {
+          state.newPersonalData = { ...patientHistoryData.value.personalData };
+        }
       } else {
         if (clientData.value && clientData.value.id) {
           const phoneIn = clientData.value.userPhone || clientData.value.phone || undefined;
@@ -295,7 +255,10 @@ export default {
     watch(patientHistoryData, async () => {
       loading.value = true;
       if (patientHistoryData.value && patientHistoryData.value.id) {
-        state.newPersonalData = patientHistoryData.value.personalData;
+        // Use deep copy to ensure Vue reactivity works correctly
+        if (patientHistoryData.value.personalData) {
+          state.newPersonalData = { ...patientHistoryData.value.personalData };
+        }
       } else {
         if (commerce.value && commerce.value.localeInfo.country) {
           state.newPersonalData.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
@@ -317,7 +280,10 @@ export default {
     watch(patientForms, async () => {
       loading.value = true;
       if (patientHistoryData.value && patientHistoryData.value.id) {
-        state.newPersonalData = patientHistoryData.value.personalData;
+        // Use deep copy to ensure Vue reactivity works correctly
+        if (patientHistoryData.value.personalData) {
+          state.newPersonalData = { ...patientHistoryData.value.personalData };
+        }
       } else {
         if (patientForms.value && patientForms.value.length > 0) {
           const patientFormFirstAttentions = patientForms.value.filter(
@@ -427,6 +393,8 @@ export default {
                 v-model.trim="state.newPersonalData.lastName"
               />
             </div>
+          </div>
+          <div class="form-row-modern">
             <div class="form-field-modern form-field-inline">
               <label class="form-label-modern" for="patient-idNumber">
                 <i class="bi bi-card-text me-1"></i>
@@ -654,57 +622,53 @@ export default {
         </div>
         <div class="form-group-content">
           <div class="form-row-modern">
-            <div class="form-field-modern form-field-phone">
+            <div class="form-field-modern form-field-inline form-field-phone">
               <label class="form-label-modern" for="patient-phone">
                 <i class="bi bi-phone me-1"></i>
                 {{ $t('patientHistoryView.phone') }}
               </label>
-              <div class="phone-input-group">
-                <select
-                  class="form-control-modern form-select-modern phone-code-select"
-                  @change="sendData"
-                  v-model.trim="state.newPersonalData.phoneCode"
-                >
-                  <option v-for="code in state.phoneCodes" :key="code.id" :value="code.code">
-                    {{ code.label }}
-                  </option>
-                </select>
-                <input
-                  :disabled="!toggles['patient.history.edit']"
-                  id="patient-phone"
-                  type="text"
-                  class="form-control-modern phone-number-input"
-                  @keypress="onlyNumber"
-                  @keyup="sendData"
-                  v-bind:class="{
-                    'form-control-invalid': errorsAdd.includes(
-                      'patientHistoryView.validate.personalData.phone'
-                    ),
-                  }"
-                  v-model.trim="state.newPersonalData.phone"
-                />
-              </div>
+              <select
+                class="form-control-modern form-select-modern phone-code-select"
+                @change="sendData"
+                v-model.trim="state.newPersonalData.phoneCode"
+              >
+                <option v-for="code in state.phoneCodes" :key="code.id" :value="code.code">
+                  {{ code.label }}
+                </option>
+              </select>
+              <input
+                :disabled="!toggles['patient.history.edit']"
+                id="patient-phone"
+                type="text"
+                class="form-control-modern phone-number-input"
+                @keypress="onlyNumber"
+                @keyup="sendData"
+                v-bind:class="{
+                  'form-control-invalid': errorsAdd.includes(
+                    'patientHistoryView.validate.personalData.phone'
+                  ),
+                }"
+                v-model.trim="state.newPersonalData.phone"
+              />
             </div>
-            <div class="form-row-modern">
-              <div class="form-field-modern form-field-inline form-field-full-width">
-                <label class="form-label-modern" for="patient-email">
-                  <i class="bi bi-envelope me-1"></i>
-                  {{ $t('patientHistoryView.email') || 'Email' }}
-                </label>
-                <input
-                  :disabled="!toggles['patient.history.edit']"
-                  id="patient-email"
-                  type="email"
-                  class="form-control-modern"
-                  @keyup="sendData"
-                  v-bind:class="{
-                    'form-control-invalid': errorsAdd.includes(
-                      'patientHistoryView.validate.personalData.email'
-                    ),
-                  }"
-                  v-model.trim="state.newPersonalData.email"
-                />
-              </div>
+            <div class="form-field-modern form-field-inline form-field-full-width">
+              <label class="form-label-modern" for="patient-email">
+                <i class="bi bi-envelope me-1"></i>
+                {{ $t('patientHistoryView.email') || 'Email' }}
+              </label>
+              <input
+                :disabled="!toggles['patient.history.edit']"
+                id="patient-email"
+                type="email"
+                class="form-control-modern"
+                @keyup="sendData"
+                v-bind:class="{
+                  'form-control-invalid': errorsAdd.includes(
+                    'patientHistoryView.validate.personalData.email'
+                  ),
+                }"
+                v-model.trim="state.newPersonalData.email"
+              />
             </div>
           </div>
         </div>
@@ -719,10 +683,6 @@ export default {
         <div class="form-group-content">
           <div class="form-row-modern">
             <div class="form-field-modern form-field-toggle">
-              <label class="form-label-modern" for="patient-font">
-                <i class="bi bi-person-check me-1"></i>
-                {{ $t('patientHistoryView.font') }}
-              </label>
               <div class="toggle-wrapper">
                 <Toggle
                   v-model="state.newPersonalData.font"
@@ -768,7 +728,7 @@ export default {
 .form-content-modern {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 /* Form Group Card */
@@ -777,7 +737,7 @@ export default {
   border-radius: 0.75rem;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  padding: 1rem;
+  padding: 0.5rem;
   transition: all 0.3s ease;
 }
 
@@ -789,8 +749,8 @@ export default {
 .form-group-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
@@ -801,7 +761,7 @@ export default {
 }
 
 .form-group-title {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--color-text);
   margin: 0;
@@ -810,7 +770,7 @@ export default {
 .form-group-content {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 /* Form Rows and Fields */
@@ -837,7 +797,7 @@ export default {
   margin-bottom: 0;
   min-width: 120px;
   flex-shrink: 0;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .form-field-modern.form-field-inline .form-control-modern {
@@ -852,7 +812,7 @@ export default {
   display: flex;
   align-items: center;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-text);
   margin-bottom: 0.35rem;
 }
@@ -910,12 +870,12 @@ export default {
   align-items: stretch;
 }
 
-.phone-code-select {
+.form-field-inline .phone-code-select {
   flex: 0 0 120px;
   min-width: 120px;
 }
 
-.phone-number-input {
+.form-field-inline .phone-number-input {
   flex: 1;
 }
 

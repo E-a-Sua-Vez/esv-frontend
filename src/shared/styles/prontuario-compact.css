@@ -1,0 +1,585 @@
+/**
+ * Prontuario Compact Styles - Optimized for Medical Professionals
+ * Maximizes screen real estate while maintaining usability and visual appeal
+ * Based on modern EHR (Electronic Health Record) best practices
+ */
+
+/* ===== VARIABLES ===== */
+:root {
+  /* Colors - Medical Grade */
+  --medical-primary: #2563eb;
+  --medical-secondary: #1e40af;
+  --medical-success: #059669;
+  --medical-warning: #d97706;
+  --medical-danger: #dc2626;
+  --medical-info: #0891b2;
+
+  /* Text Colors */
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
+
+  /* Background Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --bg-accent: #eff6ff;
+
+  /* Border Colors */
+  --border-light: #e5e7eb;
+  --border-medium: #d1d5db;
+  --border-dark: #9ca3af;
+
+  /* Shadows - Subtle for medical context */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+  /* Spacing - Compact Scale */
+  --space-xs: 0.25rem;   /* 4px */
+  --space-sm: 0.375rem;  /* 6px */
+  --space-md: 0.5rem;    /* 8px */
+  --space-lg: 0.75rem;   /* 12px */
+  --space-xl: 1rem;      /* 16px */
+  --space-2xl: 1.25rem;  /* 20px */
+  --space-3xl: 1.5rem;   /* 24px */
+
+  /* Typography - Optimized for readability */
+  --font-xs: 0.75rem;    /* 12px */
+  --font-sm: 0.8125rem;  /* 13px */
+  --font-md: 0.875rem;   /* 14px */
+  --font-lg: 0.9375rem;  /* 15px */
+  --font-xl: 1rem;       /* 16px */
+  --font-2xl: 1.125rem;  /* 18px */
+  --font-3xl: 1.25rem;   /* 20px */
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  /* Component Heights - Compact */
+  --input-height: 2rem;      /* 32px */
+  --button-height: 2rem;     /* 32px */
+  --button-sm-height: 1.75rem; /* 28px */
+  --select-height: 2rem;     /* 32px */
+}
+
+/* ===== BASE STYLES ===== */
+.prontuario-compact {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: var(--font-md);
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+/* ===== FORM COMPONENTS ===== */
+
+/* Form Container */
+.form-compact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+  background: var(--bg-primary);
+}
+
+/* Form Header - Minimal and Clean */
+.form-header-compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: var(--space-lg);
+}
+
+.form-header-icon-compact {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-md);
+  background: var(--medical-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: var(--font-lg);
+  flex-shrink: 0;
+}
+
+.form-header-content-compact {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-title-compact {
+  font-size: var(--font-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.form-subtitle-compact {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  margin: 0;
+  margin-top: var(--space-xs);
+}
+
+/* Form Sections */
+.form-section-compact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.section-header-compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.section-icon-compact {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--medical-primary);
+  font-size: var(--font-md);
+}
+
+.section-title-compact {
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Form Groups - Compact Cards */
+.form-group-compact {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+}
+
+.form-group-header-compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.form-group-title-compact {
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.form-group-icon-compact {
+  font-size: var(--font-md);
+  color: var(--medical-primary);
+}
+
+/* Form Rows - Responsive Grid */
+.form-row-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.form-row-compact-2 {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.form-row-compact-3 {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.form-row-compact-4 {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+/* Form Fields */
+.form-field-compact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.form-field-compact-inline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.form-field-compact-full {
+  grid-column: 1 / -1;
+}
+
+/* Labels */
+.form-label-compact {
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.form-label-compact-required::after {
+  content: ' *';
+  color: var(--medical-danger);
+}
+
+.form-label-compact-inline {
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+/* Input Controls */
+.form-control-compact {
+  width: 100%;
+  height: var(--input-height);
+  padding: 0 var(--space-md);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-md);
+  background: var(--bg-primary);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control-compact:focus {
+  outline: none;
+  border-color: var(--medical-primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.form-control-compact:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.form-control-compact::placeholder {
+  color: var(--text-light);
+  font-size: var(--font-sm);
+}
+
+/* Textarea */
+.form-textarea-compact {
+  min-height: 4rem;
+  padding: var(--space-md);
+  resize: vertical;
+  line-height: 1.4;
+}
+
+/* Select */
+.form-select-compact {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right var(--space-md) center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+}
+
+/* Checkbox and Radio */
+.form-check-compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0;
+}
+
+.form-check-input-compact {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  cursor: pointer;
+}
+
+.form-check-label-compact {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* ===== BUTTONS ===== */
+.btn-compact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  height: var(--button-height);
+  padding: 0 var(--space-lg);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
+}
+
+.btn-compact-sm {
+  height: var(--button-sm-height);
+  padding: 0 var(--space-md);
+  font-size: var(--font-xs);
+}
+
+.btn-compact-primary {
+  background: var(--medical-primary);
+  color: white;
+}
+
+.btn-compact-primary:hover:not(:disabled) {
+  background: var(--medical-secondary);
+}
+
+.btn-compact-secondary {
+  background: var(--bg-secondary);
+  border-color: var(--border-medium);
+  color: var(--text-secondary);
+}
+
+.btn-compact-secondary:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+}
+
+.btn-compact-outline {
+  background: transparent;
+  border-color: var(--medical-primary);
+  color: var(--medical-primary);
+}
+
+.btn-compact-outline:hover:not(:disabled) {
+  background: var(--medical-primary);
+  color: white;
+}
+
+.btn-compact-success {
+  background: var(--medical-success);
+  color: white;
+}
+
+.btn-compact-warning {
+  background: var(--medical-warning);
+  color: white;
+}
+
+.btn-compact-danger {
+  background: var(--medical-danger);
+  color: white;
+}
+
+.btn-compact:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== CARDS ===== */
+.card-compact {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+}
+
+.card-header-compact {
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.card-body-compact {
+  padding: var(--space-lg);
+}
+
+.card-footer-compact {
+  padding: var(--space-lg);
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+/* ===== TABLES ===== */
+.table-compact {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-sm);
+  background: var(--bg-primary);
+}
+
+.table-compact th {
+  padding: var(--space-md) var(--space-sm);
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
+  font-size: var(--font-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.table-compact td {
+  padding: var(--space-sm);
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+
+.table-compact tbody tr:hover {
+  background: var(--bg-accent);
+}
+
+/* ===== BADGES ===== */
+.badge-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.badge-compact-primary {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--medical-primary);
+}
+
+.badge-compact-success {
+  background: rgba(5, 150, 105, 0.1);
+  color: var(--medical-success);
+}
+
+.badge-compact-warning {
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--medical-warning);
+}
+
+.badge-compact-danger {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--medical-danger);
+}
+
+/* ===== UTILITIES ===== */
+.text-compact-xs { font-size: var(--font-xs); }
+.text-compact-sm { font-size: var(--font-sm); }
+.text-compact-md { font-size: var(--font-md); }
+.text-compact-lg { font-size: var(--font-lg); }
+.text-compact-xl { font-size: var(--font-xl); }
+
+.text-compact-primary { color: var(--text-primary); }
+.text-compact-secondary { color: var(--text-secondary); }
+.text-compact-muted { color: var(--text-muted); }
+.text-compact-light { color: var(--text-light); }
+
+.bg-compact-primary { background: var(--bg-primary); }
+.bg-compact-secondary { background: var(--bg-secondary); }
+.bg-compact-tertiary { background: var(--bg-tertiary); }
+
+.border-compact-light { border-color: var(--border-light); }
+.border-compact-medium { border-color: var(--border-medium); }
+
+.shadow-compact-xs { box-shadow: var(--shadow-xs); }
+.shadow-compact-sm { box-shadow: var(--shadow-sm); }
+.shadow-compact-md { box-shadow: var(--shadow-md); }
+
+.gap-compact-xs { gap: var(--space-xs); }
+.gap-compact-sm { gap: var(--space-sm); }
+.gap-compact-md { gap: var(--space-md); }
+.gap-compact-lg { gap: var(--space-lg); }
+
+.p-compact-xs { padding: var(--space-xs); }
+.p-compact-sm { padding: var(--space-sm); }
+.p-compact-md { padding: var(--space-md); }
+.p-compact-lg { padding: var(--space-lg); }
+
+.m-compact-xs { margin: var(--space-xs); }
+.m-compact-sm { margin: var(--space-sm); }
+.m-compact-md { margin: var(--space-md); }
+.m-compact-lg { margin: var(--space-lg); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .form-row-compact,
+  .form-row-compact-2,
+  .form-row-compact-3,
+  .form-row-compact-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .form-field-compact-inline {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-xs);
+  }
+
+  .form-label-compact-inline {
+    min-width: auto;
+  }
+
+  .card-header-compact,
+  .card-body-compact,
+  .card-footer-compact {
+    padding: var(--space-md);
+  }
+
+  .table-compact th,
+  .table-compact td {
+    padding: var(--space-xs);
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus styles for accessibility */
+.form-control-compact:focus,
+.btn-compact:focus,
+.form-check-input-compact:focus {
+  outline: 2px solid var(--medical-primary);
+  outline-offset: 2px;
+}
+
+
+
+
+
+
+
+
+
+
+
+

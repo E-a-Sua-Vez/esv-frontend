@@ -19,6 +19,7 @@ export default {
     collaborators: { type: Array, default: [] },
     receiveQueue: { type: Function, default: () => {} },
     receiveServices: { type: Function, default: () => {} },
+    preselectedServiceId: { type: String, default: null }, // Service ID to filter collaborators
   },
   async setup(props) {
     const loading = ref(false);
@@ -52,16 +53,35 @@ export default {
               const queueAux = [];
               queues.forEach(queue => {
                 if (queue.type === 'COLLABORATOR') {
-                  const collaboratorsAux = collaborators.value.filter(
-                    collaborator => collaborator.id === queue.collaboratorId
-                  );
+                  const collaboratorsAux = collaborators.value.filter(collaborator => {
+                    // If preselectedServiceId is provided, filter collaborators that have this service
+                    if (props.preselectedServiceId) {
+                      const hasService =
+                        collaborator.services &&
+                        collaborator.services.some(
+                          service => service.id === props.preselectedServiceId
+                        );
+                      return collaborator.id === queue.collaboratorId && hasService;
+                    }
+                    return collaborator.id === queue.collaboratorId;
+                  });
                   if (collaboratorsAux && collaboratorsAux.length > 0) {
                     queue.collaborator = collaboratorsAux[0];
-                    queue.services = collaboratorsAux[0].services || [];
-                    queue.servicesName =
-                      collaboratorsAux[0].services && collaboratorsAux[0].services.length > 0
-                        ? collaboratorsAux[0].services.map(serv => serv.name)
-                        : [];
+                    // If preselectedServiceId is provided, filter services to show only that service
+                    if (props.preselectedServiceId && collaboratorsAux[0].services) {
+                      const filteredServices = collaboratorsAux[0].services.filter(
+                        service => service.id === props.preselectedServiceId
+                      );
+                      queue.services = filteredServices;
+                      queue.servicesName =
+                        filteredServices.length > 0 ? filteredServices.map(serv => serv.name) : [];
+                    } else {
+                      queue.services = collaboratorsAux[0].services || [];
+                      queue.servicesName =
+                        collaboratorsAux[0].services && collaboratorsAux[0].services.length > 0
+                          ? collaboratorsAux[0].services.map(serv => serv.name)
+                          : [];
+                    }
                   }
                   queueAux.push(queue);
                 }
@@ -71,23 +91,49 @@ export default {
             } else {
               queues.value.forEach(queue => {
                 if (queue.type === 'COLLABORATOR') {
-                  const collaboratorsAux = collaborators.value.filter(
-                    collaborator => collaborator.id === queue.collaboratorId
-                  );
+                  const collaboratorsAux = collaborators.value.filter(collaborator => {
+                    // If preselectedServiceId is provided, filter collaborators that have this service
+                    if (props.preselectedServiceId) {
+                      const hasService =
+                        collaborator.services &&
+                        collaborator.services.some(
+                          service => service.id === props.preselectedServiceId
+                        );
+                      return collaborator.id === queue.collaboratorId && hasService;
+                    }
+                    return collaborator.id === queue.collaboratorId;
+                  });
                   if (collaboratorsAux && collaboratorsAux.length > 0) {
                     queue.collaborator = collaboratorsAux[0];
-                    queue.services = collaboratorsAux[0].services || [];
-                    queue.servicesName =
-                      collaboratorsAux[0].services && collaboratorsAux[0].services.length > 0
-                        ? collaboratorsAux[0].services.map(serv => serv.name)
-                        : [];
+                    // If preselectedServiceId is provided, filter services to show only that service
+                    if (props.preselectedServiceId && collaboratorsAux[0].services) {
+                      const filteredServices = collaboratorsAux[0].services.filter(
+                        service => service.id === props.preselectedServiceId
+                      );
+                      queue.services = filteredServices;
+                      queue.servicesName =
+                        filteredServices.length > 0 ? filteredServices.map(serv => serv.name) : [];
+                    } else {
+                      queue.services = collaboratorsAux[0].services || [];
+                      queue.servicesName =
+                        collaboratorsAux[0].services && collaboratorsAux[0].services.length > 0
+                          ? collaboratorsAux[0].services.map(serv => serv.name)
+                          : [];
+                    }
                   }
-                  queue.services = services;
                 }
               });
             }
             state.filteredCollaboratorQueues = groupedQueues.value['COLLABORATOR'];
             refresh(state.filteredCollaboratorQueues);
+
+            if (props.preselectedServiceId) {
+              console.log(
+                '[QueueForm] Filtered collaborators by preselectedServiceId:',
+                props.preselectedServiceId,
+                state.filteredCollaboratorQueues.length,
+              );
+            }
           }
         }
         loading.value = false;
@@ -104,18 +150,49 @@ export default {
     const getQueue = async queueIn => {
       state.queue = queueIn;
       if (['SERVICE'].includes(queueIn.type)) {
-        receiveServices(state.queue.services);
+        // If preselectedServiceId is provided, filter services to show only that service
+        let servicesToSend = state.queue.services;
+        if (props.preselectedServiceId && servicesToSend) {
+          servicesToSend = servicesToSend.filter(
+            service => service.id === props.preselectedServiceId
+          );
+        }
+        receiveServices(servicesToSend);
       }
       if (['MULTI_SERVICE'].includes(queueIn.type)) {
         state.queue.services = await getServicesById(queueIn.servicesId);
-        receiveServices(state.queue.services);
+        // If preselectedServiceId is provided, filter services to show only that service
+        let servicesToSend = state.queue.services;
+        if (props.preselectedServiceId && servicesToSend) {
+          servicesToSend = servicesToSend.filter(
+            service => service.id === props.preselectedServiceId
+          );
+        }
+        receiveServices(servicesToSend);
       }
       if (queueIn.type === 'SELECT_SERVICE') {
         const services = await getServiceByCommerce(commerce.value.id);
         if (services && services.length > 0) {
-          state.queue.services = services.filter(serv => serv.type === 'SELECTABLE');
+          let filteredServices = services.filter(serv => serv.type === 'SELECTABLE');
+          // If preselectedServiceId is provided, filter services to show only that service
+          if (props.preselectedServiceId) {
+            filteredServices = filteredServices.filter(
+              service => service.id === props.preselectedServiceId
+            );
+          }
+          state.queue.services = filteredServices;
         }
         receiveServices(state.queue.services);
+      }
+      // For COLLABORATOR queues, filter services if preselectedServiceId is provided
+      if (queueIn.type === 'COLLABORATOR' && props.preselectedServiceId && queueIn.services) {
+        const filteredServices = queueIn.services.filter(
+          service => service.id === props.preselectedServiceId
+        );
+        state.queue.services = filteredServices;
+        receiveServices(filteredServices);
+      } else if (queueIn.type === 'COLLABORATOR') {
+        receiveServices(queueIn.services || []);
       }
       receiveQueue(state.queue);
     };
@@ -252,7 +329,7 @@ export default {
 <template>
   <div>
     <div id="queues" v-if="isActiveCommerce() && !loading" class="mb-2">
-      <div v-if="isActiveCommerce()" class="choose-attention py-2 pt-3">
+      <div v-if="isActiveCommerce()" class="choose-attention py-2 pt-3 centered">
         <i class="bi bi-2-circle-fill h5 m-1"></i>
         <span v-if="queues && queues.length > 0" class="fw-bold h6">{{
           $t('commerceQueuesView.choose')
