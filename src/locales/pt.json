@@ -161,8 +161,7 @@
       "ALL_IN_ONE": "Tudo em Um",
       "ONLY_SURVEYS": "Só Pesquisas Inteligentes",
       "QUEUES_BOOKING": "Só Filas e Reservas"
-    },
-    "attentionProducts": "Produtos de Atendimento"
+    }
   },
   "surveys": {
     "types": {
@@ -296,13 +295,6 @@
       "ipAddress": "Endereço IP",
       "details": "Detalhes",
       "viewDetails": "Ver Detalhes"
-    }
-  },
-  "products": {
-    "types": {
-      "ALL_IN_ONE": "Tudo em Um",
-      "ONLY_SURVEYS": "Só Pesquisas Inteligentes",
-      "QUEUES_BOOKING": "Só Filas e Reservas"
     }
   },
   "product": {
@@ -733,7 +725,7 @@
     "action": "Relatar bug"
   },
   "footer": {
-    "copyright": "Copyright \u00A9 2024, É a sua Vez. Todos os dereitos reservados.",
+    "copyright": "Copyright © 2025, É a sua Vez. Todos os direitos reservados.",
     "contactUs": "Contate-nos",
     "mailbox": "Ações",
     "blog": "Blog",
@@ -744,8 +736,7 @@
     "contact": "Contato",
     "schedule": "Agendar Reunião",
     "resources": "Recursos",
-    "poweredBy": "Desenvolvido por",
-    "copyright": "Copyright © 2025, É a sua Vez. Todos os direitos reservados."
+    "poweredBy": "Desenvolvido por"
   },
   "contactResultTypes": {
     "INTERESTED": "Teve Interesse",
@@ -1164,11 +1155,11 @@
         "2": "O número do celular deve ter só números",
         "example": "Selecione pais e digite seu número",
         "examples": {
-          "58": "Digite só seu número, Ex: 🇻🇪 4141112233",
-          "56": "Digite só seu número, Ex: 🇨🇱 911112222",
-          "55": "Digite só seu número, Ex: 🇧🇷 11922223333",
-          "52": "Digite só seu número, Ex: 🇲🇽 70011112222",
           "1": "Digite só seu número, Ex: 🇺🇸 4081234444",
+          "52": "Digite só seu número, Ex: 🇲🇽 70011112222",
+          "55": "Digite só seu número, Ex: 🇧🇷 11922223333",
+          "56": "Digite só seu número, Ex: 🇨🇱 911112222",
+          "58": "Digite só seu número, Ex: 🇻🇪 4141112233",
           "xx": "Digite o código do pais + número (Só números)"
         }
       },
@@ -1940,7 +1931,7 @@
     },
     "agreement": "Convênio",
     "completed": "Concluído",
-    "pending": "Pendente",
+    "pending": "Pendentes",
     "sendReminder": "Enviar Lembrete",
     "sending": "Enviando...",
     "messageSent": "Mensagem enviada!",
@@ -2129,7 +2120,6 @@
       }
     },
     "bookingsOf": "Reservas de",
-    "stock": "Estoque",
     "edit": "Editar",
     "dataOf": "Dados de",
     "addClient": "Adicionar Cliente",
@@ -2159,7 +2149,6 @@
     "days": "dias",
     "avgDuration": "Média",
     "projection": "Projeção mensal",
-    "pending": "Pendentes",
     "ratings": "avaliações",
     "stars": "Estrelas",
     "responses": "respostas",
@@ -3406,17 +3395,6 @@
     "monthlyGoal": "Meta Mensal",
     "alerts": {
       "title": "Alertas Financeiros",
-      "allGood": "Tudo em ordem",
-      "expensesExceedIncome": "Despesas excedem receitas",
-      "lowMargin": "Margem baixa ({threshold}%)",
-      "pendingIncomes": "{count} receitas pendentes por {amount} (mais de {days} dias)",
-      "pendingOutcomes": "{count} despesas pendentes por {amount} (mais de {days} dias)",
-      "unusualExpenses": "Despesas incomuns: aumento de {percentage}% vs período anterior",
-      "negativeProjectedCashFlow": "Fluxo de caixa projetado negativo: {amount}",
-      "behindMonthlyGoal": "Abaixo da meta mensal: {progress}% de progresso"
-    },
-    "alerts": {
-      "title": "Alertas Financeiros",
       "expensesExceedIncome": "As despesas superam as receitas este mês",
       "pendingPayments": "Há {count} pagamentos pendentes por mais de {days} dias",
       "lowMargin": "A margem de lucro está abaixo de {threshold}%",
@@ -4169,6 +4147,8 @@
       "frequency": "Frequência",
       "duration": "Duração",
       "quantity": "Quantidade",
+      "route": "Via de Administração",
+      "refills": "Refills por Medicamento",
       "specialInstructions": "Instruções especiais",
       "generalInstructions": "Instruções Gerais",
       "internalNotes": "Notas internas",
@@ -4176,6 +4156,13 @@
       "addMedication": "Adicionar Medicamento",
       "createPrescription": "Criar Receta",
       "clear": "Limpar",
+      "requireMedication": "Para criar a receita, deve adicionar pelo menos um medicamento.",
+      "statusLabel": "Estado:",
+      "permissionsLabel": "Permissões",
+      "medicationsLabel": "Medicamentos",
+      "loadingLabel": "Carregando",
+      "yesLabel": "Sim",
+      "noLabel": "Não",
       "generalInformation": "Informação Geral",
       "selectFrequency": "Selecionar frequência",
       "onceDay": "1 vez ao dia",
@@ -4762,12 +4749,12 @@
     "connect": "Conectar",
     "request": "Solicitar Conexão",
     "instructions": {
-      "title": "Instruções:",
       "1": "1. Entre no aplicativo WhatsApp da sua empresa",
       "2": "2. Entre em Configurações -> Dispositivos Conectados -> Conectar Dispositivos",
       "3": "3. Digitalize o QR Code com seu celular",
       "4": "4. Aguarde a conclusão da sincronização e o status da conexão seja 'Ativo'",
-      "5": "5. Clique em ‘Confirmar Conexão’ para finalizar e pronto!"
+      "5": "5. Clique em ‘Confirmar Conexão’ para finalizar e pronto!",
+      "title": "Instruções:"
     },
     "message": {
       "1": {
@@ -6114,7 +6101,16 @@
   },
   "package": {
     "package": "Pacote",
-    "status": "Estado do pacote",
+    "status": {
+      "ACTIVE": "Ativo",
+      "CONFIRMED": "Confirmado",
+      "REQUESTED": "Solicitado",
+      "PAUSED": "Pausado",
+      "COMPLETED": "Completado",
+      "EXPIRED": "Vencido",
+      "CANCELLED": "Cancelado",
+      "SUSPENDED": "Suspenso"
+    },
     "sessionsLeft": "restantes",
     "pause": "Pausar",
     "reanudar": "Retomar",
@@ -6158,16 +6154,6 @@
     "errorPause": "Erro ao pausar o pacote",
     "errorResume": "Erro ao retomar o pacote",
     "errorCancel": "Erro ao cancelar o pacote",
-    "status": {
-      "ACTIVE": "Ativo",
-      "CONFIRMED": "Confirmado",
-      "REQUESTED": "Solicitado",
-      "PAUSED": "Pausado",
-      "COMPLETED": "Completado",
-      "EXPIRED": "Vencido",
-      "CANCELLED": "Cancelado",
-      "SUSPENDED": "Suspenso"
-    },
     "metrics": {
       "title": "Métricas de Pacotes",
       "completionRate": "Taxa de Completude",
@@ -6191,6 +6177,261 @@
       "tooltip": {
         "completionRate": "A taxa de completude mede a porcentagem de sessões consumidas em relação ao total de sessões vendidas. Um valor alto indica que os clientes estão completando seus pacotes.",
         "attendanceRate": "A taxa de comparecimento mede a porcentagem de reservas que foram atendidas (inverso da taxa de no-show). Um valor alto indica bom comparecimento dos clientes."
+      }
+    }
+  },
+  "pdfTemplates": {
+    "title": "Templates PDF",
+    "searchPlaceholder": "Buscar templates...",
+    "addTemplate": "Adicionar Template",
+    "name": "Nome",
+    "description": "Descrição",
+    "documentType": "Tipo de Documento",
+    "scope": "Escopo",
+    "pageSize": "Tamanho da Página",
+    "isDefault": "Template Padrão",
+    "setAsDefault": "Definir como Padrão",
+    "preview": "Visualizar PDF",
+    "update": "Atualizar",
+    "delete": "Excluir",
+    "selector": {
+      "title": "Selecionar Template PDF",
+      "useDefault": "Usar template padrão",
+      "selectTemplate": "Selecionar template para este documento",
+      "noTemplates": "Não há templates disponíveis para este tipo de documento",
+      "loading": "Carregando templates..."
+    },
+    "predefinedSelector": {
+      "title": "Templates Predefinidos",
+      "description": "Escolha um design inicial conforme às normas do CFM ou comece do zero. Você poderá editar qualquer elemento depois.",
+      "blank": "Em Branco",
+      "startFromScratch": "Comece do zero",
+      "apply": "Aplicar Template"
+    },
+    "message": {
+      "1": {
+        "title": "Ops!",
+        "content": "Neste momento não há opções para gerenciar. Verifique se seu plano está ativo ou entre em contato."
+      },
+      "2": {
+        "title": "Oh não!",
+        "content": "Neste momento não há templates PDF."
+      },
+      "4": {
+        "title": "Selecione um Comércio",
+        "content": "Você deve selecionar um comércio para gerenciar templates PDF"
+      }
+    },
+    "canvasEditor": {
+      "header": "Editor de Cabeçalho",
+      "footer": "Editor de Rodapé",
+      "content": "Editor de Conteúdo",
+      "toolbar": {
+        "templates": "Templates",
+        "selectTemplate": "Selecionar Template Predefinido",
+        "insert": "Inserir",
+        "addText": "Adicionar Texto",
+        "addImage": "Adicionar Imagem",
+        "addLogo": "Adicionar Logo",
+        "addSignature": "Adicionar Assinatura",
+        "addQrCode": "Adicionar QR Code",
+        "addLine": "Adicionar Linha",
+        "canvas": "Canvas",
+        "fitToCanvas": "Ajustar ao Canvas",
+        "alignment": "Alinhamento",
+        "centerH": "Centralizar horizontalmente",
+        "centerV": "Centralizar verticalmente",
+        "centerHV": "Centralizar ambos",
+        "alignTop": "Alinhar topo",
+        "alignBottom": "Alinhar fundo",
+        "format": "Formato",
+        "bold": "Negrito",
+        "italic": "Itálico",
+        "underline": "Sublinhado",
+        "alignLeft": "Alinhar esquerda",
+        "alignCenter": "Alinhar centro",
+        "alignRight": "Alinhar direita",
+        "justify": "Justificar",
+        "fontSize": "Tamanho da fonte",
+        "textColor": "Cor do texto",
+        "fontFamily": "Família da fonte",
+        "lineHeight": "Altura da linha (multiplicador)",
+        "view": "Ver",
+        "hideGrid": "Ocultar grade",
+        "showGrid": "Mostrar grade",
+        "hideRulers": "Ocultar réguas",
+        "showRulers": "Mostrar réguas",
+        "history": "Histórico",
+        "undo": "Desfazer",
+        "redo": "Refazer",
+        "clear": "Limpar",
+        "actions": "Ações",
+        "saving": "Salvando...",
+        "save": "Salvar"
+      },
+      "pageInfo": {
+        "size": "Tamanho",
+        "orientation": "Orientação"
+      },
+      "properties": {
+        "title": "Propriedades",
+        "element": "Elemento",
+        "type": "Tipo",
+        "positionX": "Posição X",
+        "positionY": "Posição Y",
+        "width": "Largura",
+        "height": "Altura",
+        "text": "Texto",
+        "content": "Conteúdo",
+        "fontSize": "Tamanho da Fonte",
+        "color": "Cor",
+        "alignment": "Alinhamento",
+        "left": "Esquerda",
+        "center": "Centro",
+        "right": "Direita",
+        "justify": "Justificar",
+        "styles": "Estilos",
+        "bold": "Negrito",
+        "italic": "Itálico",
+        "underline": "Sublinhado",
+        "listType": "Tipo de Lista",
+        "noList": "Sem lista",
+        "bullets": "• Marcadores",
+        "dots": "∘ Pontos",
+        "numbered": "Numerada",
+        "line": "Linha",
+        "lineStyle": "Estilo",
+        "solidLine": "Linha contínua",
+        "dashedLine": "Linha tracejada",
+        "doubleLine": "Linha dupla",
+        "thickness": "Espessura"
+      },
+      "variables": {
+        "title": "Variáveis Disponíveis",
+        "searchPlaceholder": "Buscar variável...",
+        "insertTip": "Arraste ou clique para inserir variáveis que serão substituídas automaticamente ao gerar o PDF.",
+        "helpTip": "As variáveis são substituídas pelos dados reais do paciente e documento ao gerar o PDF.",
+        "insertVariable": "Inserir variável",
+        "tip": "Dica:",
+        "categories": {
+          "general": "Geral",
+          "commerce": "Clínica/Comércio",
+          "doctor": "Médico",
+          "patient": "Paciente",
+          "prescription": "Receita Médica",
+          "examOrder": "Ordem de Exames",
+          "reference": "Referência Médica"
+        },
+        "items": {
+          "currentDate": {
+            "label": "Data Atual",
+            "description": "Data de geração do PDF"
+          },
+          "documentId": {
+            "label": "ID do Documento",
+            "description": "Identificador único do documento"
+          },
+          "verificationUrl": {
+            "label": "URL de Verificação",
+            "description": "Link para verificar autenticidade do documento"
+          },
+          "commerceName": {
+            "label": "Nome da Clínica",
+            "description": "Razão social ou nome comercial"
+          },
+          "commerceAddress": {
+            "label": "Endereço",
+            "description": "Endereço completo com cidade/estado"
+          },
+          "commercePhone": {
+            "label": "Telefone",
+            "description": "Telefone de contato"
+          },
+          "commerceEmail": {
+            "label": "Email",
+            "description": "Email institucional"
+          },
+          "commerceCnpj": {
+            "label": "CNPJ",
+            "description": "CNPJ registrado"
+          },
+          "doctorName": {
+            "label": "Nome do Médico",
+            "description": "Nome completo com título"
+          },
+          "doctorLicense": {
+            "label": "CRM",
+            "description": "Registro profissional CRM"
+          },
+          "doctorSpecialty": {
+            "label": "Especialidade",
+            "description": "Especialidade médica"
+          },
+          "patientName": {
+            "label": "Nome do Paciente",
+            "description": "Nome completo"
+          },
+          "patientIdNumber": {
+            "label": "CPF",
+            "description": "Documento de identidade"
+          },
+          "patientAge": {
+            "label": "Idade",
+            "description": "Idade do paciente"
+          },
+          "patientGender": {
+            "label": "Gênero",
+            "description": "Gênero do paciente"
+          },
+          "patientPhone": {
+            "label": "Telefone",
+            "description": "Telefone de contato"
+          },
+          "patientInsurance": {
+            "label": "Convênio",
+            "description": "Plano de saúde"
+          },
+          "diagnosis": {
+            "label": "Diagnóstico",
+            "description": "Diagnóstico CID-10"
+          },
+          "prescriptionDate": {
+            "label": "Data de Prescrição",
+            "description": "Data de emissão da receita"
+          },
+          "medications": {
+            "label": "Medicamentos",
+            "description": "Lista de medicamentos prescritos (auto-formatado)"
+          },
+          "examsList": {
+            "label": "Lista de Exames",
+            "description": "Exames solicitados (auto-formatado)"
+          },
+          "clinicalJustification": {
+            "label": "Justificativa Clínica",
+            "description": "Razão médica dos exames"
+          },
+          "preparationInstructions": {
+            "label": "Instruções de Preparo",
+            "description": "Como se preparar para os exames"
+          },
+          "referenceReason": {
+            "label": "Motivo de Referência",
+            "description": "Razão do encaminhamento ao especialista"
+          },
+          "clinicalSummary": {
+            "label": "Resumo Clínico",
+            "description": "História clínica resumida"
+          },
+          "specialty": {
+            "label": "Especialidade Destino",
+            "description": "Especialidade para qual está sendo referenciado"
+          },
+          "specialistName": {
+            "label": "Nome do Especialista",
+            "description": "Médico especialista destinatário"
+          }
+        }
       }
     }
   },
@@ -6262,40 +6503,6 @@
       "surveySentPending": "Enviada, pendiente de respuesta",
       "surveyNotSent": "No enviada",
       "terminatedBySystem": "Sistema"
-    }
-  },
-  "pdfTemplates": {
-    "title": "Modelos PDF",
-    "searchPlaceholder": "Buscar modelos...",
-    "addTemplate": "Adicionar Modelo",
-    "name": "Nome",
-    "description": "Descrição",
-    "documentType": "Tipo de Documento",
-    "scope": "Escopo",
-    "pageSize": "Tamanho da Página",
-    "isDefault": "Modelo Padrão",
-    "setAsDefault": "Definir como Padrão",
-    "preview": "Preview PDF",
-    "update": "Atualizar",
-    "delete": "Excluir",
-    "message": {
-      "1": {
-        "title": "Oh não!",
-        "content": "Neste momento não há opções para administrar. Verifique se o seu plano está ativo ou entre em contato conosco."
-      },
-      "2": {
-        "title": "Oh não!",
-        "content": "Neste momento não há modelos PDF."
-      },
-      "4": {
-        "title": "Selecione um Comércio",
-        "content": "Você deve selecionar um comércio para gerenciar modelos PDF"
-      }
-    },
-    "canvasEditor": {
-      "header": "Editor de Cabeçalho",
-      "footer": "Editor de Rodapé",
-      "content": "Editor de Conteúdo"
     }
   },
   "templates": {

@@ -13,6 +13,7 @@ export default {
   props: {
     commerce: { type: Object, default: {} },
     clientData: { type: Object, default: {} },
+    cacheData: { type: Object, default: {} },
     patientForms: { type: Array, default: [] },
     patientHistoryData: { type: Object, default: {} },
     toggles: { type: Object, default: {} },
@@ -22,7 +23,7 @@ export default {
   async setup(props) {
     const loading = ref(false);
 
-    const { commerce, clientData, patientForms, patientHistoryData, toggles, errorsAdd } =
+    const { commerce, clientData, cacheData, patientForms, patientHistoryData, toggles, errorsAdd } =
       toRefs(props);
 
     const { receiveData } = props;
@@ -144,7 +145,14 @@ export default {
           // REMOVED: Automatic loading from preprontuario forms
           // This is now handled manually via PreprontuarioHistoryView component
         }
-        // REMOVED: cacheData usage - data should only come from service response
+
+        // Apply cache data from preprontuario if available
+        if (cacheData.value && Object.keys(cacheData.value).length > 0) {
+          console.log('💾 Loading personal data from preprontuario cache:', cacheData.value);
+          state.newPersonalData = { ...state.newPersonalData, ...cacheData.value };
+          sendData();
+        }
+
         loading.value = false;
       } catch (error) {
         loading.value = false;

@@ -36,6 +36,7 @@ export const cancelPrescription = async (id, reason) =>
 export const searchMedications = async searchDto => {
   const params = new URLSearchParams();
   if (searchDto.searchTerm) params.append('searchTerm', searchDto.searchTerm);
+  if (searchDto.commerceId) params.append('commerceId', searchDto.commerceId);
   if (searchDto.atcCode) params.append('atcCode', searchDto.atcCode);
   if (searchDto.activePrinciple) params.append('activePrinciple', searchDto.activePrinciple);
   if (searchDto.page) params.append('page', searchDto.page);

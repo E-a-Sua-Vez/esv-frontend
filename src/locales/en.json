@@ -677,7 +677,7 @@
     "action": "Report error"
   },
   "footer": {
-    "copyright": "Copyright \u00A9 2024, It's your Turn. All rigths reserved.",
+    "copyright": "Copyright © 2024, It's your Turn. All rigths reserved.",
     "contactUs": "Contact us",
     "mailbox": "Actions",
     "blog": "Blog",
@@ -1090,11 +1090,11 @@
         "2": "Cellphone must have just numbers",
         "example": "Select country and type your number",
         "examples": {
-          "58": "Type just the number, Ex: 🇻🇪 4141112233",
-          "56": "Type just the number, Ex: 🇨🇱 911112222",
-          "55": "Type just the number, Ex: 🇧🇷 11922223333",
           "1": "Type just the number, Ex: 🇺🇸 4081234444",
           "52": "Type just the number, Ex: 🇲🇽 70011112222",
+          "55": "Type just the number, Ex: 🇧🇷 11922223333",
+          "56": "Type just the number, Ex: 🇨🇱 911112222",
+          "58": "Type just the number, Ex: 🇻🇪 4141112233",
           "xx": "Type Country Code + Number (Just Numbers)"
         }
       },
@@ -1755,7 +1755,6 @@
     "satisfaction": "Satisfaction",
     "surveys-management": "Surveys (Details)",
     "surveys-consolidated": "Surveys (Consolidated)",
-    "details": "Details",
     "attentionDetails": "Attention Details",
     "bookingDetails": "Booking Details",
     "time": "Time",
@@ -2054,7 +2053,6 @@
     "days": "days",
     "avgDuration": "Average",
     "projection": "Monthly projection",
-    "pending": "Pending",
     "ratings": "ratings",
     "stars": "Stars",
     "responses": "responses",
@@ -3275,17 +3273,6 @@
     "projectedCashFlowDescription": "Projection based on daily average of current period",
     "projectedCashFlowDays": "Days remaining in the month: {days}",
     "monthlyGoal": "Monthly Goal",
-    "alerts": {
-      "title": "Financial Alerts",
-      "allGood": "All good",
-      "expensesExceedIncome": "Expenses exceed income",
-      "lowMargin": "Low margin ({threshold}%)",
-      "pendingIncomes": "{count} pending incomes for {amount} (more than {days} days)",
-      "pendingOutcomes": "{count} pending outcomes for {amount} (more than {days} days)",
-      "unusualExpenses": "Unusual expenses: {percentage}% increase vs previous period",
-      "negativeProjectedCashFlow": "Negative projected cash flow: {amount}",
-      "behindMonthlyGoal": "Behind monthly goal: {progress}% progress"
-    },
     "alerts": {
       "title": "Financial Alerts",
       "expensesExceedIncome": "Expenses exceed income this month",
@@ -4703,12 +4690,12 @@
     "connect": "Connect",
     "request": "Request Connection",
     "instructions": {
-      "title": "Instructions:",
       "1": "1. Access to the Whatsapp of your Company",
       "2": "2. Go to Configurations -> Devices Connected -> Connect Devices",
       "3": "3. Scan the QR Code with your cellphone",
       "4": "4. Wait until the sincronization ends and for the status to be 'Active'",
-      "5": "5. Click on 'Confirm Connection' to finalize and That's it!"
+      "5": "5. Click on 'Confirm Connection' to finalize and That's it!",
+      "title": "Instructions:"
     },
     "message": {
       "1": {
@@ -5988,7 +5975,16 @@
   },
   "package": {
     "package": "Package",
-    "status": "Package status",
+    "status": {
+      "ACTIVE": "Active",
+      "CONFIRMED": "Confirmed",
+      "REQUESTED": "Requested",
+      "PAUSED": "Paused",
+      "COMPLETED": "Completed",
+      "EXPIRED": "Expired",
+      "CANCELLED": "Cancelled",
+      "SUSPENDED": "Suspended"
+    },
     "sessionsLeft": "remaining",
     "pause": "Pause",
     "reanudar": "Resume",
@@ -6039,16 +6035,6 @@
     "errorPause": "Error pausing the package",
     "errorResume": "Error resuming the package",
     "errorCancel": "Error cancelling the package",
-    "status": {
-      "ACTIVE": "Active",
-      "CONFIRMED": "Confirmed",
-      "REQUESTED": "Requested",
-      "PAUSED": "Paused",
-      "COMPLETED": "Completed",
-      "EXPIRED": "Expired",
-      "CANCELLED": "Cancelled",
-      "SUSPENDED": "Suspended"
-    },
     "metrics": {
       "title": "Package Metrics",
       "completionRate": "Completion Rate",
@@ -6159,6 +6145,20 @@
     "preview": "Preview PDF",
     "update": "Update",
     "delete": "Delete",
+    "selector": {
+      "title": "Select PDF Template",
+      "useDefault": "Use default template",
+      "selectTemplate": "Select template for this document",
+      "noTemplates": "No templates available for this document type",
+      "loading": "Loading templates..."
+    },
+    "predefinedSelector": {
+      "title": "Predefined Templates",
+      "description": "Choose an initial design compliant with CFM standards or start from scratch. You can edit any element afterwards.",
+      "blank": "Blank",
+      "startFromScratch": "Start from scratch",
+      "apply": "Apply Template"
+    },
     "message": {
       "1": {
         "title": "Ups!",
@@ -6176,7 +6176,214 @@
     "canvasEditor": {
       "header": "Header Editor",
       "footer": "Footer Editor",
-      "content": "Content Editor"
+      "content": "Content Editor",
+      "toolbar": {
+        "templates": "Templates",
+        "selectTemplate": "Select Predefined Template",
+        "insert": "Insert",
+        "addText": "Add Text",
+        "addImage": "Add Image",
+        "addLogo": "Add Logo",
+        "addSignature": "Add Signature",
+        "addQrCode": "Add QR Code",
+        "addLine": "Add Line",
+        "canvas": "Canvas",
+        "fitToCanvas": "Fit to Canvas",
+        "alignment": "Alignment",
+        "centerH": "Center horizontally",
+        "centerV": "Center vertically",
+        "centerHV": "Center both",
+        "alignTop": "Align top",
+        "alignBottom": "Align bottom",
+        "format": "Format",
+        "bold": "Bold",
+        "italic": "Italic",
+        "underline": "Underline",
+        "alignLeft": "Align left",
+        "alignCenter": "Align center",
+        "alignRight": "Align right",
+        "justify": "Justify",
+        "fontSize": "Font size",
+        "textColor": "Text color",
+        "fontFamily": "Font family",
+        "lineHeight": "Line height (multiplier)",
+        "view": "View",
+        "hideGrid": "Hide grid",
+        "showGrid": "Show grid",
+        "hideRulers": "Hide rulers",
+        "showRulers": "Show rulers",
+        "history": "History",
+        "undo": "Undo",
+        "redo": "Redo",
+        "clear": "Clear",
+        "actions": "Actions",
+        "saving": "Saving...",
+        "save": "Save"
+      },
+      "pageInfo": {
+        "size": "Size",
+        "orientation": "Orientation"
+      },
+      "properties": {
+        "title": "Properties",
+        "element": "Element",
+        "type": "Type",
+        "positionX": "Position X",
+        "positionY": "Position Y",
+        "width": "Width",
+        "height": "Height",
+        "text": "Text",
+        "content": "Content",
+        "fontSize": "Font Size",
+        "color": "Color",
+        "alignment": "Alignment",
+        "left": "Left",
+        "center": "Center",
+        "right": "Right",
+        "justify": "Justify",
+        "styles": "Styles",
+        "bold": "Bold",
+        "italic": "Italic",
+        "underline": "Underline",
+        "listType": "List Type",
+        "noList": "No list",
+        "bullets": "• Bullets",
+        "dots": "∘ Dots",
+        "numbered": "Numbered",
+        "line": "Line",
+        "lineStyle": "Style",
+        "solidLine": "Solid line",
+        "dashedLine": "Dashed line",
+        "doubleLine": "Double line",
+        "thickness": "Thickness"
+      },
+      "variables": {
+        "title": "Available Variables",
+        "searchPlaceholder": "Search variable...",
+        "insertTip": "Drag or click to insert variables that will be automatically replaced when generating the PDF.",
+        "helpTip": "Variables are replaced with actual patient and document data when generating the PDF.",
+        "insertVariable": "Insert variable",
+        "tip": "Tip:",
+        "categories": {
+          "general": "General",
+          "commerce": "Clinic/Commerce",
+          "doctor": "Doctor",
+          "patient": "Patient",
+          "prescription": "Prescription",
+          "examOrder": "Exam Order",
+          "reference": "Medical Reference"
+        },
+        "items": {
+          "currentDate": {
+            "label": "Current Date",
+            "description": "PDF generation date"
+          },
+          "documentId": {
+            "label": "Document ID",
+            "description": "Unique document identifier"
+          },
+          "verificationUrl": {
+            "label": "Verification URL",
+            "description": "Link to verify document authenticity"
+          },
+          "commerceName": {
+            "label": "Clinic Name",
+            "description": "Business name or trade name"
+          },
+          "commerceAddress": {
+            "label": "Address",
+            "description": "Full address with city/state"
+          },
+          "commercePhone": {
+            "label": "Phone",
+            "description": "Contact phone"
+          },
+          "commerceEmail": {
+            "label": "Email",
+            "description": "Institutional email"
+          },
+          "commerceCnpj": {
+            "label": "CNPJ",
+            "description": "Registered CNPJ"
+          },
+          "doctorName": {
+            "label": "Doctor's Name",
+            "description": "Full name with title"
+          },
+          "doctorLicense": {
+            "label": "CRM",
+            "description": "Professional registration CRM"
+          },
+          "doctorSpecialty": {
+            "label": "Specialty",
+            "description": "Medical specialty"
+          },
+          "patientName": {
+            "label": "Patient's Name",
+            "description": "Full name"
+          },
+          "patientIdNumber": {
+            "label": "CPF",
+            "description": "Identity document"
+          },
+          "patientAge": {
+            "label": "Age",
+            "description": "Patient's age"
+          },
+          "patientGender": {
+            "label": "Gender",
+            "description": "Patient's gender"
+          },
+          "patientPhone": {
+            "label": "Phone",
+            "description": "Contact phone"
+          },
+          "patientInsurance": {
+            "label": "Insurance",
+            "description": "Health plan"
+          },
+          "diagnosis": {
+            "label": "Diagnosis",
+            "description": "ICD-10 diagnosis"
+          },
+          "prescriptionDate": {
+            "label": "Prescription Date",
+            "description": "Prescription issue date"
+          },
+          "medications": {
+            "label": "Medications",
+            "description": "List of prescribed medications (auto-formatted)"
+          },
+          "examsList": {
+            "label": "Exams List",
+            "description": "Requested exams (auto-formatted)"
+          },
+          "clinicalJustification": {
+            "label": "Clinical Justification",
+            "description": "Medical reason for exams"
+          },
+          "preparationInstructions": {
+            "label": "Preparation Instructions",
+            "description": "How to prepare for exams"
+          },
+          "referenceReason": {
+            "label": "Reference Reason",
+            "description": "Reason for referral to specialist"
+          },
+          "clinicalSummary": {
+            "label": "Clinical Summary",
+            "description": "Summarized clinical history"
+          },
+          "specialty": {
+            "label": "Target Specialty",
+            "description": "Specialty being referred to"
+          },
+          "specialistName": {
+            "label": "Specialist's Name",
+            "description": "Recipient specialist doctor"
+          }
+        }
+      }
     }
   },
   "digitalSignature": {

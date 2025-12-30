@@ -106,7 +106,10 @@ export default {
 
     // Load form to personal data
     const loadToPersonalData = async form => {
+      console.log('🚀 Starting loadToPersonalData with form:', form);
+
       if (!canLoadFormToProntuario(form)) {
+        console.log('❌ Form cannot be loaded to prontuario');
         alertError.value =
           t('dashboard.preprontuarioHistory.cannotLoad') ||
           'Este formulário não pode ser carregado';
@@ -119,7 +122,10 @@ export default {
         state.loadingForm = form.id;
 
         const personalData = extractPersonalDataFromForm(form);
+        console.log('📥 Extracted personal data:', personalData);
+
         if (!personalData || Object.keys(personalData).length === 0) {
+          console.log('❌ No personal data found in form');
           alertError.value =
             t('dashboard.preprontuarioHistory.noPersonalData') ||
             'Este formulário não contém dados pessoais';
@@ -128,6 +134,7 @@ export default {
 
         // Call parent callback if provided
         if (props.onLoadToPersonalData) {
+          console.log('📤 Calling parent callback with personal data');
           await props.onLoadToPersonalData(personalData);
         }
 
@@ -155,7 +162,10 @@ export default {
 
     // Load form to anamnese
     const loadToAnamnese = async form => {
+      console.log('🚀 Starting loadToAnamnese with form:', form);
+
       if (!canLoadFormToProntuario(form)) {
+        console.log('❌ Form cannot be loaded to prontuario');
         alertError.value =
           t('dashboard.preprontuarioHistory.cannotLoad') ||
           'Este formulário não pode ser carregado';
@@ -168,7 +178,10 @@ export default {
         state.loadingForm = form.id;
 
         const anamneseData = extractAnamneseDataFromForm(form);
+        console.log('📥 Extracted anamnese data:', anamneseData);
+
         if (!anamneseData || Object.keys(anamneseData).length === 0) {
+          console.log('❌ No anamnese data found in form');
           alertError.value =
             t('dashboard.preprontuarioHistory.noAnamneseData') ||
             'Este formulário não contém dados de anamnese';
@@ -177,6 +190,7 @@ export default {
 
         // Call parent callback if provided
         if (props.onLoadToAnamnese) {
+          console.log('📤 Calling parent callback with anamnese data');
           await props.onLoadToAnamnese(anamneseData);
         }
 
@@ -532,7 +546,7 @@ export default {
             </h5>
             <div v-show="isLoadActionsExpanded(form.id)" class="load-buttons">
               <button
-                class="btn btn-sm btn-primary load-btn"
+                class="btn-action btn-action-primary"
                 :disabled="loading || state.loadingForm === form.id"
                 @click="loadToPersonalData(form)"
               >
@@ -544,7 +558,7 @@ export default {
                 <Spinner v-if="loading && state.loadingForm === form.id" class="ms-1" size="sm" />
               </button>
               <button
-                class="btn btn-sm btn-primary load-btn"
+                class="btn-action btn-action-primary"
                 :disabled="loading || state.loadingForm === form.id"
                 @click="loadToAnamnese(form)"
               >
@@ -957,13 +971,42 @@ export default {
   flex-wrap: wrap;
 }
 
-.load-btn {
+.btn-action {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  height: 32px;
   gap: 0.4rem;
+  min-width: fit-content;
 }
 
-.load-btn i {
+.btn-action-primary {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.btn-action-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-action-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-action i {
   font-size: 0.85rem;
 }
 
@@ -1016,7 +1059,7 @@ export default {
     flex-direction: column;
   }
 
-  .load-btn {
+  .btn-action {
     width: 100%;
     justify-content: center;
   }

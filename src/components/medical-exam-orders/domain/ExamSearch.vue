@@ -71,6 +71,7 @@ export default {
     disabled: { type: Boolean, default: false },
     examType: { type: String, default: '' },
     selectedExam: { type: Object, default: null },
+    commerceId: { type: String, default: '' },
   },
   emits: ['select'],
   setup(props, { emit }) {
@@ -90,6 +91,7 @@ export default {
           q: searchTerm.value,
           type: props.examType,
           limit: 20,
+          commerceId: props.commerceId,
         });
         searchResults.value = results.exams || [];
       } catch (error) {

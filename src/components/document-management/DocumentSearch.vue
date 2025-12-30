@@ -414,16 +414,16 @@ export default {
 <style scoped>
 .document-search-container {
   background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 0.75rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  margin-bottom: 0.5rem;
   overflow: hidden;
 }
 
 .search-bar {
   display: flex;
-  gap: 0.5rem;
-  padding: 0.75rem;
+  gap: 0.375rem;
+  padding: 0.5rem;
   border-bottom: 1px solid #e9ecef;
 }
 
@@ -443,10 +443,10 @@ export default {
 
 .search-input {
   width: 100%;
-  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+  padding: 0.375rem 0.5rem 0.375rem 2rem;
   border: 1px solid #e9ecef;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
   transition: all 0.2s ease;
 }
 
@@ -479,16 +479,16 @@ export default {
 .filter-toggle-btn {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.5rem 0.75rem;
+  gap: 0.25rem;
+  padding: 0.375rem 0.5rem;
   background: #f8f9fa;
   border: 1px solid #e9ecef;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
   color: #495057;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 .filter-toggle-btn:hover {
@@ -529,19 +529,19 @@ export default {
 }
 
 .filters-content {
-  padding: 0.75rem;
+  padding: 0.5rem;
   background: #f8f9fa;
   border-top: 1px solid #e9ecef;
 }
 
 .filters-content.compact-filters {
-  padding: 0.5rem 0.75rem;
+  padding: 0.375rem 0.5rem;
 }
 
 .filter-row {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .filter-row:last-child {
@@ -549,7 +549,7 @@ export default {
 }
 
 .filter-group {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .filter-group.compact {
@@ -620,27 +620,27 @@ export default {
 
 .tags-input-container {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .tag-input {
   flex: 1;
-  padding: 0.5rem 0.75rem;
+  padding: 0.375rem 0.5rem;
   border: 1px solid #dee2e6;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
 }
 
 .add-tag-btn {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--azul-turno);
   color: white;
   border: none;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
   cursor: pointer;
   transition: background 0.2s ease;
 }
@@ -652,8 +652,8 @@ export default {
 .selected-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+  gap: 0.375rem;
+  margin-top: 0.375rem;
 }
 
 .selected-tag {
@@ -684,18 +684,18 @@ export default {
 .quick-filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .quick-filter-btn {
-  padding: 0.5rem 1rem;
+  padding: 0.375rem 0.75rem;
   background: white;
   border: 1px solid #dee2e6;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
   color: #495057;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 .quick-filter-btn:hover {
@@ -711,9 +711,9 @@ export default {
 
 .filter-actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
   border-top: 1px solid #dee2e6;
 }
 
@@ -721,15 +721,15 @@ export default {
 .save-preset-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
   border: 1px solid #dee2e6;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
   background: white;
   color: #495057;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 .clear-filters-btn:hover {
@@ -746,8 +746,8 @@ export default {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
+  gap: 0.375rem;
+  padding: 0.5rem;
   background: #fff3cd;
   border-top: 1px solid #ffeaa7;
 }

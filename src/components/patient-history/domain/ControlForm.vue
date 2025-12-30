@@ -344,15 +344,12 @@ export default {
                   <button
                     v-if="isSpeechSupported && toggles['patient.history.edit']"
                     type="button"
-                    class="btn btn-sm ms-2 speech-recognition-btn btn-outline-primary"
-                    :class="{ 'btn-danger': isListeningSpeech }"
+                    class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
+                    :class="{ 'recording': isListeningSpeech }"
                     @click="toggleSpeechRecognition"
                     :title="isListeningSpeech ? 'Parar gravação' : 'Iniciar gravação de voz'"
                   >
                     <i :class="isListeningSpeech ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
-                    <span class="ms-1 d-inline">{{
-                      isListeningSpeech ? 'Gravando...' : 'Voz'
-                    }}</span>
                   </button>
                 </label>
                 <textarea
@@ -552,9 +549,6 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  width: 36px;
-  height: 56px;
   background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
   color: white;
   border: none;
@@ -625,22 +619,23 @@ export default {
 
 /* Add Button */
 .form-actions-modern {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .btn-add-control {
   display: inline-flex;
   align-items: center;
-  padding: 0.5rem;
+  padding: 0.375rem 0.75rem;
   background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
   color: white;
   border: none;
-  border-radius: 0.75rem;
-  font-size: 0.7rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  height: 32px;
 }
 
 .btn-add-control:hover:not(:disabled) {
@@ -656,12 +651,12 @@ export default {
 /* Add Control Form */
 .add-control-form {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  border-radius: 0.875rem;
+  border-radius: 0.625rem;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
-  animation: slideDown 0.3s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 0.875rem;
+  margin-bottom: 1rem;
+  animation: slideDown 0.2s ease;
 }
 
 @keyframes slideDown {
@@ -679,13 +674,13 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .add-control-title {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--color-text);
   margin: 0;
@@ -713,13 +708,13 @@ export default {
 .form-group-content {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.625rem;
 }
 
 .form-row-modern {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
+  gap: 0.625rem;
 }
 
 .form-field-modern {
@@ -730,21 +725,22 @@ export default {
 .form-label-modern {
   display: flex;
   align-items: center;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
 }
 
 .form-control-modern {
   width: 100%;
-  padding: 0.65rem 0.875rem;
+  padding: 0.5rem 0.75rem;
   border: 2px solid rgba(0, 0, 0, 0.1);
-  border-radius: 0.625rem;
-  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
   background: white;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   font-family: inherit;
+  height: 36px;
 }
 
 .form-control-modern:focus {
@@ -793,8 +789,8 @@ export default {
 /* Form Actions */
 .form-actions-inline {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+  gap: 0.5rem;
+  margin-top: 0.625rem;
 }
 
 .btn-save-control {
@@ -802,15 +798,16 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.65rem 1.25rem;
+  padding: 0.5rem 1rem;
   background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
   color: white;
   border: none;
-  border-radius: 0.625rem;
-  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  height: 34px;
 }
 
 .btn-save-control:hover:not(:disabled) {
@@ -828,15 +825,16 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.65rem 1.25rem;
+  padding: 0.5rem 1rem;
   background: rgba(0, 0, 0, 0.05);
   color: var(--color-text);
   border: none;
-  border-radius: 0.625rem;
-  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  height: 34px;
 }
 
 .btn-cancel-control:hover {
@@ -1012,6 +1010,78 @@ export default {
 
   .form-row-modern {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Voice Recognition Button with btn-action styles */
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  height: 32px;
+  min-width: fit-content;
+}
+
+.btn-action-secondary {
+  background: rgba(255, 255, 255, 0.9);
+  color: #6c757d;
+  border-color: #e9ecef;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-action-secondary:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #dde2e6;
+  color: #495057;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action-secondary.recording {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: #dc2626;
+  color: white;
+  animation: pulse-recording 2s ease-in-out infinite;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.btn-action-secondary.recording:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border-color: #b91c1c;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5);
+}
+
+.btn-action-secondary.recording i {
+  animation: mic-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-recording {
+  0%, 100% {
+    transform: translateY(-1px) scale(1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5);
+  }
+}
+
+@keyframes mic-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.9;
   }
 }
 </style>

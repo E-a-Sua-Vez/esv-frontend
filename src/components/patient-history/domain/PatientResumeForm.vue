@@ -67,6 +67,10 @@ export default {
     };
 
     onMounted(() => {
+      console.log('📋 PatientResumeForm mounted with props:');
+      console.log('📋 patientHistoryData:', patientHistoryData.value);
+      console.log('📋 commerce:', commerce.value);
+      console.log('📋 toggles:', toggles.value);
       loadAdditionalData();
     });
 
@@ -368,7 +372,7 @@ export default {
         // Consultation Reason Section
         if (patientHistoryData.value?.consultationReason?.length > 0) {
           addSectionHeader('MOTIVO DA CONSULTA');
-          patientHistoryData.value.consultationReason.forEach((item, index) => {
+          patientHistoryData.value.consultationReason.filter(item => item != null).forEach((item, index) => {
             checkPageBreak(15);
             doc.setFontSize(8);
             doc.setFont(undefined, 'bold');
@@ -391,6 +395,7 @@ export default {
         if (patientHistoryData.value?.currentIllness?.length > 0) {
           addSectionHeader('DOENÇA ATUAL');
           patientHistoryData.value.currentIllness.forEach(item => {
+            if (!item) return; // Skip null items
             checkPageBreak(15);
             doc.setFontSize(8);
             doc.setFont(undefined, 'bold');
@@ -519,6 +524,7 @@ export default {
         if (patientHistoryData.value?.functionalExam?.length > 0) {
           addSectionHeader('EXAME FUNCIONAL');
           patientHistoryData.value.functionalExam.forEach(item => {
+            if (!item) return; // Skip null items
             checkPageBreak(15);
             doc.setFontSize(8);
             doc.setFont(undefined, 'bold');
@@ -540,6 +546,7 @@ export default {
         if (patientHistoryData.value?.physicalExam?.length > 0) {
           addSectionHeader('EXAME FÍSICO');
           patientHistoryData.value.physicalExam.forEach(item => {
+            if (!item) return; // Skip null items
             checkPageBreak(20);
             doc.setFontSize(8);
             doc.setFont(undefined, 'bold');
@@ -603,6 +610,7 @@ export default {
         if (patientHistoryData.value?.diagnostic?.length > 0) {
           addSectionHeader('DIAGNÓSTICO');
           patientHistoryData.value.diagnostic.forEach(item => {
+            if (!item) return; // Skip null items
             checkPageBreak(15);
             doc.setFontSize(8);
             doc.setFont(undefined, 'bold');
@@ -625,6 +633,7 @@ export default {
         if (patientHistoryData.value?.medicalOrder?.length > 0) {
           addSectionHeader('ORDEM MÉDICA (TEXTO LIVRE)');
           patientHistoryData.value.medicalOrder.forEach(item => {
+            if (!item) return; // Skip null items
             checkPageBreak(15);
             doc.setFontSize(8);
             doc.setFont(undefined, 'bold');
@@ -647,6 +656,7 @@ export default {
         if (prescriptions.value && prescriptions.value.length > 0) {
           addSectionHeader('RECETAS MÉDICAS');
           prescriptions.value.forEach(prescription => {
+            if (!prescription) return; // Skip null items
             checkPageBreak(20);
             doc.setFontSize(8);
             doc.setFont(undefined, 'bold');
@@ -687,6 +697,7 @@ export default {
         if (examOrders.value && examOrders.value.length > 0) {
           addSectionHeader('ÓRDENES DE EXÁMENES MÉDICOS');
           examOrders.value.forEach(order => {
+            if (!order) return; // Skip null items
             checkPageBreak(20);
             doc.setFontSize(8);
             doc.setFont(undefined, 'bold');
@@ -729,6 +740,7 @@ export default {
         if (references.value && references.value.length > 0) {
           addSectionHeader('REFERENCIAS MÉDICAS');
           references.value.forEach(reference => {
+            if (!reference) return; // Skip null items
             checkPageBreak(20);
             doc.setFontSize(8);
             doc.setFont(undefined, 'bold');
@@ -796,7 +808,26 @@ export default {
   <div class="patient-resume-modern">
     <div id="form" class="resume-form-container">
       <Spinner :show="loading"></Spinner>
-      <div v-if="patientHistoryData && patientHistoryData.id">
+
+      <!-- Debug info when no data -->
+      <div v-if="!patientHistoryData || (!patientHistoryData.id && !patientHistoryData.clientId)" class="resume-no-data">
+        <div class="no-data-card">
+          <i class="bi bi-info-circle text-info me-2"></i>
+          <span>{{ $t('patientHistoryView.noDataAvailable') || 'Nenhum dado de prontuário disponível para mostrar o resumo.' }}</span>
+          <div class="debug-info mt-3" v-if="patientHistoryData">
+            <small class="text-muted">
+              Debug: patientHistoryData existe mas não tem ID nem clientId ({{ Object.keys(patientHistoryData).length }} propriedades)
+            </small>
+          </div>
+          <div class="debug-info mt-2" v-else>
+            <small class="text-muted">
+              Debug: patientHistoryData é null/undefined
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="patientHistoryData && (patientHistoryData.id || patientHistoryData.clientId)">
         <div class="resume-header-modern">
           <div class="resume-header-content">
             <div class="resume-header-main">
@@ -1394,10 +1425,19 @@ export default {
         </div>
       </div>
       <div v-else>
-        <Message
-          :title="$t('patientHistoryView.message.1.title')"
-          :content="$t('patientHistoryView.message.1.content')"
-        />
+        <div class="resume-empty-state">
+          <div class="empty-state-icon">
+            <i class="bi bi-file-text"></i>
+          </div>
+          <h3 class="empty-state-title">{{ $t('patientHistoryView.newPatient') || 'Novo Paciente' }}</h3>
+          <p class="empty-state-message">
+            {{ $t('patientHistoryView.noHistoryMessage') || 'Este paciente não possui histórico médico registrado ainda. O resumo será preenchido conforme as consultas forem sendo realizadas.' }}
+          </p>
+          <div class="empty-state-suggestion">
+            <i class="bi bi-lightbulb me-2"></i>
+            <span>{{ $t('patientHistoryView.startConsultation') || 'Inicie preenchendo os dados pessoais e motivo da consulta.' }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1414,6 +1454,75 @@ export default {
   position: relative;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.resume-no-data {
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.no-data-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.debug-info {
+  opacity: 0.7;
+  font-family: monospace;
+}
+
+.resume-empty-state {
+  padding: 3rem 2rem;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin: 1rem 0;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+  opacity: 0.7;
+}
+
+.empty-state-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 1rem;
+}
+
+.empty-state-message {
+  font-size: 1rem;
+  color: #6c757d;
+  margin-bottom: 2rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+.empty-state-suggestion {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  border: 1px solid rgba(13, 110, 253, 0.2);
 }
 
 .resume-header-modern {

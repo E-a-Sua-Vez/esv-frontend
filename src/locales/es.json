@@ -727,7 +727,7 @@
     "action": "Reportar error"
   },
   "footer": {
-    "copyright": "Copyright \u00A9 2025, Es Tu Turno. Todos los derechos reservados.",
+    "copyright": "Copyright © 2025, Es Tu Turno. Todos los derechos reservados.",
     "contactUs": "Contáctanos",
     "mailbox": "Acciones",
     "faq": "Preguntas frecuentes",
@@ -1154,11 +1154,11 @@
         "2": "Teléfono debe tener sólo números",
         "example": "Selecciona País e Ingresa el Número",
         "examples": {
-          "58": "Ingresa Sólo Número, Ej: 🇻🇪 4141112233",
-          "56": "Ingresa Sólo Número, Ej: 🇨🇱 911112222",
-          "55": "Ingresa Sólo Número, Ej: 🇧🇷 11922223333",
           "1": "Ingresa Sólo Número, Ej: 🇺🇸 4081234444",
           "52": "Ingresa Sólo Número, Ej: 🇲🇽 70011112222",
+          "55": "Ingresa Sólo Número, Ej: 🇧🇷 11922223333",
+          "56": "Ingresa Sólo Número, Ej: 🇨🇱 911112222",
+          "58": "Ingresa Sólo Número, Ej: 🇻🇪 4141112233",
           "xx": "Ingresa Cód. País + Número (Sólo números)"
         }
       },
@@ -1923,7 +1923,7 @@
     },
     "agreement": "Convenio",
     "completed": "Completado",
-    "pending": "Pendiente",
+    "pending": "Pendientes",
     "sendReminder": "Enviar Recordatorio",
     "sending": "Enviando...",
     "messageSent": "¡Mensaje enviado!",
@@ -2143,7 +2143,6 @@
     "days": "días",
     "avgDuration": "Promedio",
     "projection": "Proyección mensual",
-    "pending": "Pendientes",
     "ratings": "evaluaciones",
     "stars": "Estrellas",
     "responses": "respuestas",
@@ -3532,17 +3531,6 @@
     "monthlyGoal": "Objetivo Mensual",
     "alerts": {
       "title": "Alertas Financieras",
-      "allGood": "Todo en orden",
-      "expensesExceedIncome": "Los gastos superan los ingresos",
-      "lowMargin": "Margen bajo ({threshold}%)",
-      "pendingIncomes": "{count} ingresos pendientes por {amount} (más de {days} días)",
-      "pendingOutcomes": "{count} egresos pendientes por {amount} (más de {days} días)",
-      "unusualExpenses": "Gastos inusuales: aumento del {percentage}% vs período anterior",
-      "negativeProjectedCashFlow": "Flujo de caja proyectado negativo: {amount}",
-      "behindMonthlyGoal": "Por debajo del objetivo mensual: {progress}% de progreso"
-    },
-    "alerts": {
-      "title": "Alertas Financieras",
       "expensesExceedIncome": "Los gastos superan los ingresos este mes",
       "pendingPayments": "Hay {count} pagos pendientes por más de {days} días",
       "lowMargin": "El margen de ganancia está por debajo del {threshold}%",
@@ -4324,6 +4312,8 @@
       "frequency": "Frecuencia",
       "duration": "Duración",
       "quantity": "Cantidad",
+      "route": "Vía de Administración",
+      "refills": "Refills por Medicamento",
       "specialInstructions": "Instrucciones especiales",
       "generalInstructions": "Instrucciones Generales",
       "internalNotes": "Notas internas",
@@ -4331,6 +4321,13 @@
       "addMedication": "Agregar Medicamento",
       "createPrescription": "Crear Receta",
       "clear": "Limpiar",
+      "requireMedication": "Para crear la receta, debe agregar al menos un medicamento.",
+      "statusLabel": "Estado:",
+      "permissionsLabel": "Permisos",
+      "medicationsLabel": "Medicamentos",
+      "loadingLabel": "Cargando",
+      "yesLabel": "Sí",
+      "noLabel": "No",
       "generalInformation": "Información General",
       "selectFrequency": "Seleccionar frecuencia",
       "onceDay": "1 vez al día",
@@ -4751,12 +4748,12 @@
     "connect": "Conectar",
     "request": "Solicitar Conexión",
     "instructions": {
-      "title": "Instrucciones:",
       "1": "1. Entre en la App de Whatsapp de su Empresa",
       "2": "2. Entre en Configuraciones -> Dispositivos Conectados -> Conectar Dispositivos",
       "3": "3. Escanee el Código QR con su Celular",
       "4": "4. Espere a que la sincronización termine y el estado de conexión sea 'Activo'",
-      "5": "5. Haga click en 'Confirmar Conexión' para finalizar y ¡Listo!"
+      "5": "5. Haga click en 'Confirmar Conexión' para finalizar y ¡Listo!",
+      "title": "Instrucciones:"
     },
     "message": {
       "1": {
@@ -5761,9 +5758,6 @@
       },
       "resume": {
         "view": "Ver Resumen Financiero - Sección Financiera"
-      },
-      "resume": {
-        "view": "Ver Resumen Financiero - Sección Financiera"
       }
     },
     "modules": {
@@ -6093,7 +6087,16 @@
   },
   "package": {
     "package": "Paquete",
-    "status": "Estado del paquete",
+    "status": {
+      "ACTIVE": "Activo",
+      "CONFIRMED": "Confirmado",
+      "REQUESTED": "Solicitado",
+      "PAUSED": "Pausado",
+      "COMPLETED": "Completado",
+      "EXPIRED": "Vencido",
+      "CANCELLED": "Cancelado",
+      "SUSPENDED": "Suspendido"
+    },
     "sessionsLeft": "restantes",
     "pause": "Pausar",
     "reanudar": "Reanudar",
@@ -6137,16 +6140,6 @@
     "errorPause": "Error al pausar el paquete",
     "errorResume": "Error al reanudar el paquete",
     "errorCancel": "Error al cancelar el paquete",
-    "status": {
-      "ACTIVE": "Activo",
-      "CONFIRMED": "Confirmado",
-      "REQUESTED": "Solicitado",
-      "PAUSED": "Pausado",
-      "COMPLETED": "Completado",
-      "EXPIRED": "Vencido",
-      "CANCELLED": "Cancelado",
-      "SUSPENDED": "Suspendido"
-    },
     "metrics": {
       "title": "Métricas de Paquetes",
       "completionRate": "Tasa de Completitud",
@@ -6174,11 +6167,33 @@
     }
   },
   "attentionStepBar": {
-    "steps": {
+    "surveyResults": "Resultados de la Encuesta de Satisfacción",
+    "csat": {
+      "excellent": "Excelente",
+      "good": "Bueno",
+      "poor": "Puede mejorar"
+    },
+    "nps": {
+      "excellent": "Excelente",
+      "good": "Bueno",
+      "poor": "Puede mejorar"
+    },
+    "timeline": "Línea de Tiempo de la Atención",
+    "notApplicable": "No aplica",
+    "pending": "Pendiente",
+    "timelineSteps": {
+      "booking": "Reserva Creada",
       "checkin": "Check-In",
       "processing": "En Atención",
       "checkout": "Check-Out",
-      "terminated": "Terminado"
+      "terminated": "Terminado",
+      "survey": "Encuesta de Satisfacción",
+      "cancelled": "Cancelado",
+      "cancelledByUser": "Cancelado por el Usuario",
+      "skipped": "Saltado",
+      "surveySentPending": "Enviada, pendiente de respuesta",
+      "surveyNotSent": "No enviada",
+      "terminatedBySystem": "Sistema"
     }
   },
   "attentionStats": {
@@ -6213,68 +6228,261 @@
       "label": "Tipo de Atención",
       "telemedicine": "Telemedicina",
       "presential": "Presencial"
-    },
-    "surveyResults": "Resultados de la Encuesta de Satisfacción",
-    "csat": {
-      "excellent": "Excelente",
-      "good": "Bueno",
-      "poor": "Puede mejorar"
-    },
-    "nps": {
-      "excellent": "Excelente",
-      "good": "Bueno",
-      "poor": "Puede mejorar"
-    },
-    "timeline": "Línea de Tiempo de la Atención",
-    "notApplicable": "No aplica",
-    "pending": "Pendiente",
-    "timelineSteps": {
-      "booking": "Reserva Creada",
-      "checkin": "Check-In",
-      "processing": "En Atención",
-      "checkout": "Check-Out",
-      "terminated": "Terminado",
-      "survey": "Encuesta de Satisfacción",
-      "cancelled": "Cancelado",
-      "cancelledByUser": "Cancelado por el Usuario",
-      "skipped": "Saltado",
-      "surveySentPending": "Enviada, pendiente de respuesta",
-      "surveyNotSent": "No enviada",
-      "terminatedBySystem": "Sistema"
     }
   },
   "pdfTemplates": {
-    "title": "Plantillas PDF",
-    "searchPlaceholder": "Buscar plantillas...",
-    "addTemplate": "Agregar Plantilla",
+    "title": "Templates PDF",
+    "searchPlaceholder": "Buscar templates...",
+    "addTemplate": "Agregar Template",
     "name": "Nombre",
     "description": "Descripción",
     "documentType": "Tipo de Documento",
     "scope": "Alcance",
     "pageSize": "Tamaño de Página",
-    "isDefault": "Plantilla por Defecto",
+    "isDefault": "Template por Defecto",
     "setAsDefault": "Establecer como Defecto",
-    "preview": "Preview PDF",
+    "preview": "Vista Previa PDF",
     "update": "Actualizar",
     "delete": "Eliminar",
+    "selector": {
+      "title": "Seleccionar Template PDF",
+      "useDefault": "Usar template por defecto",
+      "selectTemplate": "Seleccionar template para este documento",
+      "noTemplates": "No hay templates disponibles para este tipo de documento",
+      "loading": "Cargando templates..."
+    },
+    "predefinedSelector": {
+      "title": "Templates Predefinidos",
+      "description": "Elija un diseño inicial conforme a normas del CFM o comience desde cero. Podrá editar cualquier elemento después.",
+      "blank": "En Blanco",
+      "startFromScratch": "Comience desde cero",
+      "apply": "Aplicar Template"
+    },
     "message": {
       "1": {
         "title": "¡Ups!",
-        "content": "En este momento no hay opciones para administrar. Verifica que tu plan este activo o comunícate con nosotros."
+        "content": "En este momento no hay opciones para gestionar. Verifique que su plan esté activo o contáctenos."
       },
       "2": {
         "title": "¡Oh no!",
-        "content": "En este momento no hay plantillas PDF."
+        "content": "En este momento no hay templates PDF."
       },
       "4": {
         "title": "Seleccione un Comercio",
-        "content": "Debe seleccionar un comercio para gestionar plantillas PDF"
+        "content": "Debe seleccionar un comercio para gestionar templates PDF"
       }
     },
     "canvasEditor": {
       "header": "Editor de Encabezado",
       "footer": "Editor de Pie de Página",
-      "content": "Editor de Contenido"
+      "content": "Editor de Contenido",
+      "toolbar": {
+        "templates": "Templates",
+        "selectTemplate": "Seleccionar Template Predefinido",
+        "insert": "Insertar",
+        "addText": "Adicionar Texto",
+        "addImage": "Adicionar Imagen",
+        "addLogo": "Adicionar Logo",
+        "addSignature": "Adicionar Firma",
+        "addQrCode": "Adicionar QR Code",
+        "addLine": "Adicionar Línea",
+        "canvas": "Canvas",
+        "fitToCanvas": "Ajustar al Canvas",
+        "alignment": "Alineación",
+        "centerH": "Centrar horizontalmente",
+        "centerV": "Centrar verticalmente",
+        "centerHV": "Centrar ambos",
+        "alignTop": "Alinear arriba",
+        "alignBottom": "Alinear abajo",
+        "format": "Formato",
+        "bold": "Negrita",
+        "italic": "Cursiva",
+        "underline": "Subrayado",
+        "alignLeft": "Alinear izquierda",
+        "alignCenter": "Alinear centro",
+        "alignRight": "Alinear derecha",
+        "justify": "Justificar",
+        "fontSize": "Tamaño de fuente",
+        "textColor": "Color de texto",
+        "fontFamily": "Familia de fuente",
+        "lineHeight": "Interlineado (multiplicador)",
+        "view": "Ver",
+        "hideGrid": "Ocultar cuadrícula",
+        "showGrid": "Mostrar cuadrícula",
+        "hideRulers": "Ocultar reglas",
+        "showRulers": "Mostrar reglas",
+        "history": "Historial",
+        "undo": "Deshacer",
+        "redo": "Rehacer",
+        "clear": "Limpiar",
+        "actions": "Acciones",
+        "saving": "Guardando...",
+        "save": "Guardar"
+      },
+      "pageInfo": {
+        "size": "Tamaño",
+        "orientation": "Orientación"
+      },
+      "properties": {
+        "title": "Propiedades",
+        "element": "Elemento",
+        "type": "Tipo",
+        "positionX": "Posición X",
+        "positionY": "Posición Y",
+        "width": "Anchura",
+        "height": "Altura",
+        "text": "Texto",
+        "content": "Contenido",
+        "fontSize": "Tamaño de Fuente",
+        "color": "Color",
+        "alignment": "Alineación",
+        "left": "Izquierda",
+        "center": "Centro",
+        "right": "Derecha",
+        "justify": "Justificar",
+        "styles": "Estilos",
+        "bold": "Negrita",
+        "italic": "Cursiva",
+        "underline": "Subrayado",
+        "listType": "Tipo de Lista",
+        "noList": "Sin lista",
+        "bullets": "• Viñetas",
+        "dots": "∘ Puntos",
+        "numbered": "Numerada",
+        "line": "Línea",
+        "lineStyle": "Estilo",
+        "solidLine": "Línea continua",
+        "dashedLine": "Línea punteada",
+        "doubleLine": "Línea doble",
+        "thickness": "Grosor"
+      },
+      "variables": {
+        "title": "Variables Disponibles",
+        "searchPlaceholder": "Buscar variable...",
+        "insertTip": "Arrastre o haga clic para insertar variables que se reemplazarán automáticamente al generar el PDF.",
+        "helpTip": "Las variables se reemplazan con los datos reales del paciente y documento al generar el PDF.",
+        "insertVariable": "Insertar variable",
+        "tip": "Tip:",
+        "categories": {
+          "general": "General",
+          "commerce": "Clínica/Comercio",
+          "doctor": "Médico",
+          "patient": "Paciente",
+          "prescription": "Receta Médica",
+          "examOrder": "Orden de Exámenes",
+          "reference": "Referencia Médica"
+        },
+        "items": {
+          "currentDate": {
+            "label": "Fecha Actual",
+            "description": "Fecha de generación del PDF"
+          },
+          "documentId": {
+            "label": "ID del Documento",
+            "description": "Identificador único del documento"
+          },
+          "verificationUrl": {
+            "label": "URL de Verificación",
+            "description": "Enlace para verificar autenticidad del documento"
+          },
+          "commerceName": {
+            "label": "Nombre de la Clínica",
+            "description": "Razón social o nombre comercial"
+          },
+          "commerceAddress": {
+            "label": "Dirección",
+            "description": "Dirección completa con ciudad/estado"
+          },
+          "commercePhone": {
+            "label": "Teléfono",
+            "description": "Teléfono de contacto"
+          },
+          "commerceEmail": {
+            "label": "Email",
+            "description": "Email institucional"
+          },
+          "commerceCnpj": {
+            "label": "CNPJ",
+            "description": "CNPJ registrado"
+          },
+          "doctorName": {
+            "label": "Nombre del Médico",
+            "description": "Nombre completo con título"
+          },
+          "doctorLicense": {
+            "label": "CRM",
+            "description": "Registro profesional CRM"
+          },
+          "doctorSpecialty": {
+            "label": "Especialidad",
+            "description": "Especialidad médica"
+          },
+          "patientName": {
+            "label": "Nombre del Paciente",
+            "description": "Nombre completo"
+          },
+          "patientIdNumber": {
+            "label": "CPF",
+            "description": "Documento de identidad"
+          },
+          "patientAge": {
+            "label": "Edad",
+            "description": "Edad del paciente"
+          },
+          "patientGender": {
+            "label": "Género",
+            "description": "Género del paciente"
+          },
+          "patientPhone": {
+            "label": "Teléfono",
+            "description": "Teléfono de contacto"
+          },
+          "patientInsurance": {
+            "label": "Convenio",
+            "description": "Plan de salud"
+          },
+          "diagnosis": {
+            "label": "Diagnóstico",
+            "description": "Diagnóstico CID-10"
+          },
+          "prescriptionDate": {
+            "label": "Fecha de Prescripción",
+            "description": "Fecha de emisión de la receta"
+          },
+          "medications": {
+            "label": "Medicamentos",
+            "description": "Lista de medicamentos prescritos (auto-formateado)"
+          },
+          "examsList": {
+            "label": "Lista de Exámenes",
+            "description": "Exámenes solicitados (auto-formateado)"
+          },
+          "clinicalJustification": {
+            "label": "Justificación Clínica",
+            "description": "Razón médica de los exámenes"
+          },
+          "preparationInstructions": {
+            "label": "Instrucciones de Preparación",
+            "description": "Cómo prepararse para los exámenes"
+          },
+          "referenceReason": {
+            "label": "Motivo de Referencia",
+            "description": "Razón del envío al especialista"
+          },
+          "clinicalSummary": {
+            "label": "Resumen Clínico",
+            "description": "Historia clínica resumida"
+          },
+          "specialty": {
+            "label": "Especialidad Destino",
+            "description": "Especialidad a la que se refiere"
+          },
+          "specialistName": {
+            "label": "Nombre del Especialista",
+            "description": "Médico especialista destinatario"
+          }
+        }
+      }
     }
   },
   "templates": {

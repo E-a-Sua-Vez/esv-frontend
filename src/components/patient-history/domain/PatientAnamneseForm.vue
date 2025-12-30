@@ -37,6 +37,11 @@ export default {
     const { t } = useI18n();
     const loading = ref(false);
     const store = globalStore();
+    const currentUser = ref(null);
+
+    onBeforeMount(async () => {
+      currentUser.value = await store.getCurrentUser;
+    });
 
     const {
       commerce,
@@ -63,6 +68,7 @@ export default {
       showHistory: false,
     });
 
+    // Load current user from store
     onBeforeMount(async () => {
       try {
         loading.value = true;
@@ -87,8 +93,10 @@ export default {
         }
         // Only use cacheData if no saved data exists in patientHistoryData
         if ((!state.newPatientAnamnese || !state.newPatientAnamnese.id) && cacheData.value) {
+          console.log('💾 Loading anamnese data from preprontuario cache:', cacheData.value);
           state.newPatientAnamnese = cacheData.value;
           state.habitsAux = state.newPatientAnamnese?.habitsDetails || {};
+          console.log('💾 Anamnese data loaded. habitsAux:', state.habitsAux);
         }
 
         // Ensure habitsAux is always an object
@@ -129,26 +137,12 @@ export default {
 
       console.log('🎤 handleSpeechFinalResult called:', { finalText, field });
 
-      // Format timestamp
-      const now = new Date();
-      const timestamp = `[${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-        2,
-        '0',
-      )}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(
-        2,
-        '0',
-      )}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(
-        2,
-        '0',
-      )}]`;
-      const timestampedText = `${timestamp} ${finalText}`;
-
       if (field === 'general') {
         const currentText = state.newPatientAnamnese.habits || '';
         const newText =
           currentText && currentText.trim() !== ''
-            ? `${currentText}\n\n${timestampedText}`
-            : timestampedText;
+            ? `${currentText}\n\n${finalText}`
+            : finalText;
         state.newPatientAnamnese.habits = newText;
         console.log('✅ Updated general field:', newText);
       } else {
@@ -165,8 +159,8 @@ export default {
         const currentText = state.habitsAux[itemId][fieldName] || '';
         const newText =
           currentText && currentText.trim() !== ''
-            ? `${currentText}\n\n${timestampedText}`
-            : timestampedText;
+            ? `${currentText}\n\n${finalText}`
+            : finalText;
 
         // Force reactivity by creating a new object reference for the item
         state.habitsAux[itemId] = {
@@ -575,6 +569,22 @@ export default {
       sendResult,
       sendCheckOption,
       sendCheckOtherOption,
+      currentUser,
+      // Template methods
+      handleTemplateSelected: (template) => {
+        if (template && template.content) {
+          console.log('🎯 Template selected for anamnesis:', template);
+          // Append template content to habits field
+          const currentText = state.newPatientAnamnese.habits || '';
+          const templateText = template.content;
+          const newText = currentText && currentText.trim() !== ''
+            ? `${currentText}\n\n${templateText}`
+            : templateText;
+          state.newPatientAnamnese.habits = newText;
+          // Trigger data send
+          sendData();
+        }
+      },
     };
   },
 };
@@ -1143,10 +1153,10 @@ export default {
       </div>
 
       <!-- Template Picker -->
-      <div class="form-field-modern" v-if="store.commerce && store.user">
+      <div class="form-field-modern" v-if="commerce && commerce.id && currentUser && currentUser.id">
         <TemplatePicker
-          :commerce-id="store.commerce.id"
-          :doctor-id="store.user.id"
+          :commerce-id="commerce.id"
+          :doctor-id="currentUser.id"
           template-type="anamnesis"
           :toggles="toggles"
           @template-selected="handleTemplateSelected"

@@ -104,25 +104,12 @@ export default {
     };
 
     const handleSpeechFinalResult = finalText => {
-      // Append transcribed text with timestamp as new paragraph
+      // Append transcribed text as new paragraph
       const currentText = state.newConsultationReason.reason || '';
-      const now = new Date();
-      const timestamp = `[${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-        2,
-        '0'
-      )}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(
-        2,
-        '0'
-      )}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(
-        2,
-        '0'
-      )}]`;
-      const timestampedText = `${timestamp} ${finalText}`;
-
       const newText =
         currentText && currentText.trim() !== ''
-          ? `${currentText}\n\n${timestampedText}`
-          : timestampedText;
+          ? `${currentText}\n\n${finalText}`
+          : finalText;
 
       state.newConsultationReason.reason = newText;
       sendData();
@@ -201,9 +188,16 @@ export default {
     });
 
     const store = globalStore();
+    const currentUser = ref(null);
+
+    onBeforeMount(async () => {
+      currentUser.value = await store.getCurrentUser;
+    });
 
     const handleTemplateSelected = content => {
+      console.log('🟢 ConsultationReasonForm: Recibido template-selected con:', content);
       state.newConsultationReason.reason = content;
+      console.log('🟢 ConsultationReasonForm: state.newConsultationReason.reason actualizado a:', state.newConsultationReason.reason);
       sendData();
     };
 
@@ -221,6 +215,8 @@ export default {
       toggleSpeechRecognition,
       handleTemplateSelected,
       store,
+      currentUser,
+      clearField,
     };
   },
 };
@@ -240,11 +236,11 @@ export default {
       <!-- Form Input Section -->
       <div class="form-input-section">
         <!-- Template Picker -->
-        <div class="form-field-modern" v-if="store.commerce && store.user">
+        <div class="form-field-modern" v-if="commerce && commerce.id && currentUser && currentUser.id">
           <TemplatePicker
-            :commerce-id="store.commerce.id"
-            :doctor-id="store.user.id"
-            template-type="consultation_reason"
+            :commerce-id="commerce.id"
+            :doctor-id="currentUser.id"
+            template-type="general"
             :toggles="toggles"
             @template-selected="handleTemplateSelected"
           />
@@ -455,9 +451,6 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  width: 36px;
-  height: 56px;
   background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
   color: white;
   border: none;

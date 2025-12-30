@@ -5,6 +5,7 @@ import Spinner from '../../common/Spinner.vue';
 import Warning from '../../common/Warning.vue';
 import Message from '../../common/Message.vue';
 import DigitalSignatureICP from '../../common/DigitalSignatureICP.vue';
+import PdfTemplateSelector from '../../pdf-templates/PdfTemplateSelector.vue';
 import {
   searchMedications,
   getMedicationById,
@@ -19,6 +20,7 @@ import {
   processTemplate,
   getMostUsedTemplates,
 } from '../../../application/services/medical-template';
+import { getAttentionDetails } from '../../../application/services/attention';
 import { useSpeechRecognition } from '../../../components/patient-history/composables/useSpeechRecognition';
 
 export default {
@@ -28,6 +30,7 @@ export default {
     Warning,
     Message,
     DigitalSignatureICP,
+    PdfTemplateSelector,
   },
   props: {
     commerce: { type: Object, default: () => ({}) },
@@ -49,9 +52,11 @@ export default {
         clientId: '',
         attentionId: '',
         doctorId: '',
+        doctorName: '',
         medications: [],
         instructions: '',
         diagnosis: '',
+        date: new Date().toISOString(),
         validUntil: '',
         refillsAllowed: 0,
         priority: 'NORMAL',
@@ -63,8 +68,10 @@ export default {
         dosage: '',
         frequency: '',
         duration: '',
+        route: 'Oral',
         instructions: '',
         quantity: 1,
+        refillsAllowed: 0,
       },
       medicationSearch: {
         searchTerm: '',
@@ -77,6 +84,10 @@ export default {
         mostUsed: [],
         selected: null,
         loading: false,
+      },
+      pdfTemplate: {
+        selected: null,
+        showSelector: false,
       },
       interactions: {
         warnings: [],
@@ -101,11 +112,46 @@ export default {
 
     // Initialize prescription data
     onMounted(async () => {
+      console.log('📋 Initializing prescription - attention prop:', attention.value);
+
+      // Load full attention details if only ID is provided
+      let attentionDetails = attention.value;
+      if (typeof attention.value === 'string' || (attention.value?.id && !attention.value?.collaborator)) {
+        const attentionId = typeof attention.value === 'string' ? attention.value : attention.value.id;
+        console.log('🔄 Loading attention details for ID:', attentionId);
+        try {
+          attentionDetails = await getAttentionDetails(attentionId);
+          console.log('✅ Attention details loaded:', attentionDetails);
+        } catch (error) {
+          console.error('❌ Error loading attention details:', error);
+        }
+      }
+
       if (commerce.value?.id) state.prescription.commerceId = commerce.value.id;
       if (client.value?.id) state.prescription.clientId = client.value.id;
-      if (attention.value?.id) state.prescription.attentionId = attention.value.id;
-      if (attention.value?.collaboratorId)
-        state.prescription.doctorId = attention.value.collaboratorId;
+
+      if (attentionDetails?.id) {
+        state.prescription.attentionId = attentionDetails.id;
+        console.log('✅ Attention ID set:', state.prescription.attentionId);
+      } else {
+        console.warn('⚠️ No attention ID found');
+      }
+
+      if (attentionDetails?.collaboratorId) {
+        state.prescription.doctorId = attentionDetails.collaboratorId;
+        // Get doctor name from collaborator object or fallback to collaboratorId
+        state.prescription.doctorName =
+          attentionDetails?.collaborator?.name ||
+          attentionDetails?.collaborator?.alias ||
+          '';
+        console.log('👨‍⚕️ Doctor info set:', {
+          doctorId: state.prescription.doctorId,
+          doctorName: state.prescription.doctorName,
+          collaborator: attentionDetails.collaborator
+        });
+      } else {
+        console.warn('⚠️ No collaborator info found in attention');
+      }
 
       // Set default valid until date (30 days from now)
       const validUntil = new Date();
@@ -150,9 +196,10 @@ export default {
         state.medicationSearch.loading = true;
         const results = await searchMedications({
           searchTerm: state.medicationSearch.searchTerm,
+          commerceId: commerce.value?.id,
           limit: 10,
         });
-        state.medicationSearch.results = results?.data || [];
+        state.medicationSearch.results = results?.medications || [];
         state.medicationSearch.showResults = true;
       } catch (error) {
         console.error('Error searching medications:', error);
@@ -199,6 +246,8 @@ export default {
         // Add medication to list
         const medication = { ...state.currentMedication };
         state.prescription.medications.push(medication);
+        console.log('Medication added. Total medications:', state.prescription.medications.length);
+        console.log('Medications:', state.prescription.medications);
 
         // Check for interactions
         await checkInteractions();
@@ -280,19 +329,37 @@ export default {
     const createPrescriptionHandler = async () => {
       state.errors = [];
 
-      // Validate prescription
+      // Validate required fields
+      if (!state.prescription.attentionId) {
+        state.errors.push('ID de atención no disponible');
+      }
+      if (!state.prescription.doctorId) {
+        state.errors.push('ID de doctor no disponible');
+      }
+      if (!state.prescription.doctorName) {
+        state.errors.push('Nombre de doctor no disponible');
+      }
       if (state.prescription.medications.length === 0) {
         state.errors.push('Agregue al menos un medicamento');
-        return;
       }
       if (!state.prescription.diagnosis) {
         state.errors.push('Ingrese el diagnóstico');
+      }
+
+      if (state.errors.length > 0) {
+        console.error('❌ Validation errors:', state.errors);
         return;
       }
 
       try {
         loading.value = true;
-        const prescription = await createPrescription(state.prescription);
+        const prescriptionData = {
+          ...state.prescription,
+          date: new Date().toISOString(),
+          pdfTemplateId: state.pdfTemplate.selected
+        };
+        console.log('📤 Creating prescription with data:', prescriptionData);
+        const prescription = await createPrescription(prescriptionData);
         state.createdPrescription = prescription;
         state.showPdfActions = true;
         // Check if prescription is already signed
@@ -481,7 +548,23 @@ export default {
 
     // Send data to parent
     const sendData = () => {
-      receiveData.value(state.prescription);
+      try {
+        // Ensure prescription has a unique identifier
+        if (!state.prescription.prescriptionId && !state.prescription.id) {
+          // Generate a temporary ID if none exists
+          state.prescription.prescriptionId = `temp_presc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+        
+        console.log('💊 Sending prescription data:', state.prescription);
+        
+        if (typeof receiveData.value === 'function') {
+          receiveData.value(state.prescription);
+        } else {
+          console.warn('⚠️ receiveData is not a function in PrescriptionForm');
+        }
+      } catch (error) {
+        console.error('❌ Error sending prescription data:', error);
+      }
     };
 
     // Speech recognition
@@ -861,6 +944,28 @@ export default {
           <div class="col-md-3">
             <div class="form-field-modern">
               <label class="form-label-modern">
+                <i class="bi bi-arrow-down-circle me-1"></i>
+                {{ t('patientHistoryView.prescription.route') }}
+              </label>
+              <select v-model="state.currentMedication.route" class="form-control-modern">
+                <option value="Oral">Oral</option>
+                <option value="Intravenosa">Intravenosa</option>
+                <option value="Intramuscular">Intramuscular</option>
+                <option value="Subcutánea">Subcutánea</option>
+                <option value="Tópica">Tópica</option>
+                <option value="Inhalatoria">Inhalatoria</option>
+                <option value="Oftálmica">Oftálmica</option>
+                <option value="Ótica">Ótica</option>
+                <option value="Nasal">Nasal</option>
+                <option value="Rectal">Rectal</option>
+                <option value="Vaginal">Vaginal</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="form-field-modern">
+              <label class="form-label-modern">
                 <i class="bi bi-box me-1"></i>
                 {{ t('patientHistoryView.prescription.quantity') }}
               </label>
@@ -869,6 +974,23 @@ export default {
                 type="number"
                 min="1"
                 class="form-control-modern"
+              />
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="form-field-modern">
+              <label class="form-label-modern">
+                <i class="bi bi-arrow-repeat me-1"></i>
+                {{ t('patientHistoryView.prescription.refills') }}
+              </label>
+              <input
+                v-model.number="state.currentMedication.refillsAllowed"
+                type="number"
+                min="0"
+                max="12"
+                class="form-control-modern"
+                placeholder="0"
               />
             </div>
           </div>
@@ -1078,6 +1200,36 @@ export default {
         </div>
       </div>
 
+      <!-- PDF Template Selector -->
+      <div class="form-section-modern" v-if="!state.showPdfActions">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="metric-card-subtitle mb-0">
+            <i class="bi bi-file-earmark-pdf me-2"></i>
+            {{ t('pdfTemplates.selector.title') }}
+          </h5>
+          <button
+            type="button"
+            class="btn btn-sm btn-link"
+            @click="state.pdfTemplate.showSelector = !state.pdfTemplate.showSelector"
+          >
+            <i :class="state.pdfTemplate.showSelector ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+          </button>
+        </div>
+
+        <div v-show="state.pdfTemplate.showSelector">
+          <p class="text-muted small mb-3">
+            {{ t('pdfTemplates.selector.selectTemplate') }}
+          </p>
+
+          <PdfTemplateSelector
+            v-model="state.pdfTemplate.selected"
+            document-type="prescription"
+            :commerce-id="state.prescription.commerceId"
+            :show-preview-button="false"
+          />
+        </div>
+      </div>
+
       <!-- PDF Actions (shown after prescription creation) -->
       <div
         v-if="state.showPdfActions && state.createdPrescription"
@@ -1249,6 +1401,9 @@ export default {
         >
           <i class="bi bi-check-circle me-2"></i>
           {{ t('patientHistoryView.prescription.createPrescription') }}
+          <span v-if="state.prescription.medications.length > 0" class="badge bg-light text-dark ms-2">
+            {{ state.prescription.medications.length }}
+          </span>
         </button>
 
         <button

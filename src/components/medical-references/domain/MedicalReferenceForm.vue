@@ -14,6 +14,7 @@ import {
 } from '../../../application/services/medical-reference';
 import { searchTemplates as searchMedicalTemplates } from '../../../application/services/medical-template';
 import { useSpeechRecognition } from '../../../components/patient-history/composables/useSpeechRecognition';
+import PdfTemplateSelector from '../../pdf-templates/PdfTemplateSelector.vue';
 
 export default {
   name: 'MedicalReferenceForm',
@@ -22,6 +23,7 @@ export default {
     Warning,
     Message,
     DigitalSignatureICP,
+    PdfTemplateSelector,
   },
   props: {
     commerce: { type: Object, default: () => ({}) },
@@ -94,6 +96,10 @@ export default {
         { value: 'STAT', label: 'STAT (Inmediato)' },
         { value: 'ASAP', label: 'Lo antes posible' },
       ],
+      pdfTemplate: {
+        selected: null,
+        showSelector: false,
+      },
       errors: [],
       showTemplates: false,
       createdReference: null,
@@ -202,7 +208,11 @@ export default {
 
       try {
         loading.value = true;
-        const reference = await createReference(state.reference);
+        const referenceData = {
+          ...state.reference,
+          pdfTemplateId: state.pdfTemplate.selected
+        };
+        const reference = await createReference(referenceData);
         state.createdReference = reference;
         state.showPdfActions = true;
         // Check if reference is already signed
@@ -340,7 +350,23 @@ export default {
 
     // Send data to parent
     const sendData = () => {
-      receiveData.value(state.reference);
+      try {
+        // Ensure reference has a unique identifier
+        if (!state.reference.referenceId && !state.reference.id) {
+          // Generate a temporary ID if none exists
+          state.reference.referenceId = `temp_ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+        
+        console.log('📋 Sending reference data:', state.reference);
+        
+        if (typeof receiveData.value === 'function') {
+          receiveData.value(state.reference);
+        } else {
+          console.warn('⚠️ receiveData is not a function in MedicalReferenceForm');
+        }
+      } catch (error) {
+        console.error('❌ Error sending reference data:', error);
+      }
     };
 
     // Get urgency badge class
@@ -1080,6 +1106,36 @@ export default {
               {{ new Date(state.reference.preferredDate).toLocaleDateString() }}
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- PDF Template Selector -->
+      <div class="form-section-modern" v-if="!state.showPdfActions">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="metric-card-subtitle mb-0">
+            <i class="bi bi-file-earmark-pdf me-2"></i>
+            {{ t('pdfTemplates.selector.title') }}
+          </h5>
+          <button
+            type="button"
+            class="btn btn-sm btn-link"
+            @click="state.pdfTemplate.showSelector = !state.pdfTemplate.showSelector"
+          >
+            <i :class="state.pdfTemplate.showSelector ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+          </button>
+        </div>
+
+        <div v-show="state.pdfTemplate.showSelector">
+          <p class="text-muted small mb-3">
+            {{ t('pdfTemplates.selector.selectTemplate') }}
+          </p>
+
+          <PdfTemplateSelector
+            v-model="state.pdfTemplate.selected"
+            document-type="reference"
+            :commerce-id="state.reference.commerceId"
+            :show-preview-button="false"
+          />
         </div>
       </div>
 

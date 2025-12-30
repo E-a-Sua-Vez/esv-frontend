@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, toRefs, watch } from 'vue';
+import { ref, reactive, onBeforeMount, toRefs, watch, computed } from 'vue';
 import { VueRecaptcha } from 'vue-recaptcha';
 import Warning from '../../common/Warning.vue';
 import Spinner from '../../common/Spinner.vue';
@@ -64,6 +64,10 @@ export default {
       cie10Searching: false,
       cie10Selected: null,
       showCIE10Search: false,
+      showCIE10Catalog: false,
+      cie10CatalogSearch: '',
+      cie10AllCodes: [],
+      cie10CatalogLoading: false,
     });
 
     onBeforeMount(async () => {
@@ -201,6 +205,41 @@ export default {
       }, 200);
     };
 
+    const openCIE10Catalog = async () => {
+      state.showCIE10Catalog = true;
+      if (state.cie10AllCodes.length === 0) {
+        try {
+          state.cie10CatalogLoading = true;
+          const codes = await searchCIE10Codes('', 1000);
+          state.cie10AllCodes = Array.isArray(codes) ? codes : [];
+        } catch (error) {
+          console.error('Error loading CIE-10 catalog:', error);
+        } finally {
+          state.cie10CatalogLoading = false;
+        }
+      }
+    };
+
+    const closeCIE10Catalog = () => {
+      state.showCIE10Catalog = false;
+      state.cie10CatalogSearch = '';
+    };
+
+    const selectFromCatalog = (code) => {
+      selectCIE10Code(code);
+      closeCIE10Catalog();
+    };
+
+    const filteredCatalogCodes = computed(() => {
+      if (!state.cie10CatalogSearch) return state.cie10AllCodes;
+      const search = state.cie10CatalogSearch.toLowerCase();
+      return state.cie10AllCodes.filter(
+        code =>
+          code.code.toLowerCase().includes(search) ||
+          code.description.toLowerCase().includes(search)
+      );
+    });
+
     // Speech recognition
     const {
       isListening: isListeningSpeech,
@@ -215,25 +254,12 @@ export default {
     };
 
     const handleSpeechFinalResult = finalText => {
-      // Append transcribed text with timestamp as new paragraph
+      // Append transcribed text as new paragraph
       const currentText = state.newDiagnostic.diagnostic || '';
-      const now = new Date();
-      const timestamp = `[${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-        2,
-        '0'
-      )}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(
-        2,
-        '0'
-      )}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(
-        2,
-        '0'
-      )}]`;
-      const timestampedText = `${timestamp} ${finalText}`;
-
       const newText =
         currentText && currentText.trim() !== ''
-          ? `${currentText}\n\n${timestampedText}`
-          : timestampedText;
+          ? `${currentText}\n\n${finalText}`
+          : finalText;
 
       state.newDiagnostic.diagnostic = newText;
       sendData();
@@ -321,9 +347,16 @@ export default {
     });
 
     const store = globalStore();
+    const currentUser = ref(null);
+
+    onBeforeMount(async () => {
+      currentUser.value = await store.getCurrentUser;
+    });
 
     const handleTemplateSelected = content => {
+      console.log('🟣 DiagnosticForm: Recibido template-selected con:', content);
       state.newDiagnostic.diagnostic = content;
+      console.log('🟣 DiagnosticForm: state.newDiagnostic.diagnostic actualizado a:', state.newDiagnostic.diagnostic);
       sendData();
     };
 
@@ -348,6 +381,11 @@ export default {
       // Templates
       handleTemplateSelected,
       store,
+      currentUser,
+      openCIE10Catalog,
+      closeCIE10Catalog,
+      selectFromCatalog,
+      filteredCatalogCodes,
     };
   },
 };
@@ -384,6 +422,7 @@ export default {
                 @focus="state.showCIE10Search = true"
                 @blur="handleCIE10Blur"
                 placeholder="Buscar código CIE-10 (ej: E11, I10)..."
+                style="max-width: 250px"
                 :class="{
                   'form-control-invalid':
                     state.cie10Error || (state.diagnosticError && !state.newDiagnostic.cie10Code),
@@ -396,12 +435,21 @@ export default {
                 v-model="state.newDiagnostic.cie10Code"
                 @blur="validateCIE10"
                 placeholder="Código"
-                style="max-width: 120px"
+                style="max-width: 100px"
                 :class="{
                   'form-control-invalid':
                     state.cie10Error || (state.diagnosticError && !state.newDiagnostic.cie10Code),
                 }"
               />
+              <button
+                type="button"
+                class="btn-action btn-action-secondary btn-catalog-cie10"
+                @click="openCIE10Catalog"
+                :disabled="!toggles['patient.history.edit']"
+                title="Ver catálogo completo CIE-10"
+              >
+                <i class="bi bi-book"></i>
+              </button>
             </div>
             <!-- CIE-10 Search Results Dropdown -->
             <div
@@ -481,10 +529,10 @@ export default {
         </div>
 
         <!-- Template Picker -->
-        <div class="form-field-modern" v-if="store.commerce && store.user">
+        <div class="form-field-modern" v-if="commerce && commerce.id && currentUser && currentUser.id">
           <TemplatePicker
-            :commerce-id="store.commerce.id"
-            :doctor-id="store.user.id"
+            :commerce-id="commerce.id"
+            :doctor-id="currentUser.id"
             template-type="diagnostic"
             :toggles="toggles"
             @template-selected="handleTemplateSelected"
@@ -632,6 +680,71 @@ export default {
         </template>
       </div>
     </div>
+
+    <!-- CIE-10 Catalog Modal -->
+    <div v-if="state.showCIE10Catalog" class="modal-overlay" @click="closeCIE10Catalog">
+      <div class="modal-content-cie10" @click.stop>
+        <div class="modal-header border-0 active-name modern-modal-header">
+          <div class="modern-modal-header-inner">
+            <div class="modern-modal-icon-wrapper">
+              <i class="bi bi-book"></i>
+            </div>
+            <div class="modern-modal-title-wrapper">
+              <h5 class="modal-title fw-bold modern-modal-title">Catálogo CIE-10</h5>
+              <p class="modern-modal-client-name">Códigos de Diagnóstico</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close modern-modal-close-btn" @click="closeCIE10Catalog">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="modal-body-cie10">
+          <!-- Search input dentro del modal -->
+          <div class="catalog-search mb-3">
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="bi bi-search"></i>
+              </span>
+              <input
+                type="text"
+                class="form-control"
+                v-model="state.cie10CatalogSearch"
+                placeholder="Buscar por código o descripción..."
+              />
+            </div>
+          </div>
+
+          <!-- Loading state -->
+          <div v-if="state.cie10CatalogLoading" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+
+          <!-- Codes list -->
+          <div v-else class="codes-list">
+            <div
+              v-for="code in filteredCatalogCodes"
+              :key="code.code"
+              class="code-item"
+              @click="selectFromCatalog(code)"
+            >
+              <div class="code-badge-catalog">{{ code.code }}</div>
+              <div class="code-description-catalog">{{ code.description }}</div>
+              <div class="code-action">
+                <i class="bi bi-check-circle"></i>
+              </div>
+            </div>
+
+            <div v-if="filteredCatalogCodes.length === 0" class="text-center py-4 text-muted">
+              <i class="bi bi-inbox me-2"></i>
+              No se encontraron códigos
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -691,9 +804,6 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  width: 36px;
-  height: 56px;
   background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
   color: white;
   border: none;
@@ -1114,5 +1224,254 @@ export default {
   background: rgba(40, 167, 69, 0.1);
   border-radius: 0.5rem;
   border-left: 3px solid #28a745;
+}
+
+/* CIE-10 Catalog Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.modal-content-cie10 {
+  background: white;
+  border-radius: 0.625rem;
+  width: 100%;
+  max-width: 700px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modern Modal Header Styles */
+.modern-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  border-radius: 0.625rem 0.625rem 0 0;
+}
+
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.modern-modal-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-modal-icon-wrapper i {
+  font-size: 1.5rem;
+  color: white;
+}
+
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.modern-modal-client-name {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.modern-modal-close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  padding: 0;
+  transition: background 0.2s ease;
+}
+
+.modern-modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.modern-modal-close-btn i {
+  font-size: 0.9rem;
+}
+
+.modal-body-cie10 {
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.catalog-search {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  padding-bottom: 0.625rem;
+}
+
+.codes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.code-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.code-item:hover {
+  border-color: var(--azul-turno);
+  background: rgba(0, 123, 255, 0.05);
+  transform: translateX(4px);
+}
+
+.code-badge-catalog {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  min-width: 70px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.code-description-catalog {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+.code-action {
+  color: var(--verde-tu);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.code-item:hover .code-action {
+  opacity: 1;
+}
+
+/* Button Actions - Homologated Styles */
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: 0.3rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  height: 32px;
+}
+
+.btn-action i {
+  font-size: 0.85rem;
+}
+
+.btn-action-primary {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-action-secondary {
+  background: white;
+  color: var(--azul-turno);
+  border: 2px solid var(--azul-turno);
+}
+
+.btn-action-secondary:hover:not(:disabled) {
+  background: var(--azul-turno);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* CIE-10 Catalog Button - Match input height and square shape */
+.btn-catalog-cie10 {
+  height: auto;
+  min-width: 40px;
+  padding: 0.75rem 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--azul-turno);
+}
+
+.btn-catalog-cie10 i {
+  font-size: 1.1rem;
+  margin: 0;
+  line-height: 1;
 }
 </style>

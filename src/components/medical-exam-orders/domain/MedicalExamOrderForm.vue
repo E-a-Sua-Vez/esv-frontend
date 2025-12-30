@@ -17,6 +17,7 @@ import {
 } from '../../../application/services/medical-exam-order';
 import { searchTemplates as searchMedicalTemplates } from '../../../application/services/medical-template';
 import { useSpeechRecognition } from '../../../components/patient-history/composables/useSpeechRecognition';
+import PdfTemplateSelector from '../../pdf-templates/PdfTemplateSelector.vue';
 
 export default {
   name: 'MedicalExamOrderForm',
@@ -25,6 +26,7 @@ export default {
     Warning,
     Message,
     DigitalSignatureICP,
+    PdfTemplateSelector,
   },
   props: {
     commerce: { type: Object, default: () => ({}) },
@@ -82,6 +84,10 @@ export default {
         selected: null,
         loading: false,
       },
+      pdfTemplate: {
+        selected: null,
+        showSelector: false,
+      },
       errors: [],
       showTemplates: false,
       showExamForm: false,
@@ -98,14 +104,10 @@ export default {
       showDigitalSignature: false,
       signatureInfo: null,
       examTypes: [
-        { value: 'LABORATORY', label: 'Laboratorio' },
-        { value: 'IMAGING', label: 'Imagenología' },
-        { value: 'CARDIOLOGY', label: 'Cardiología' },
-        { value: 'ENDOSCOPY', label: 'Endoscopía' },
-        { value: 'PATHOLOGY', label: 'Patología' },
-        { value: 'MICROBIOLOGY', label: 'Microbiología' },
-        { value: 'GENETICS', label: 'Genética' },
-        { value: 'OTHER', label: 'Otros' },
+        { value: 'laboratory', label: 'Laboratorio' },
+        { value: 'imaging', label: 'Imagenología' },
+        { value: 'procedure', label: 'Procedimiento' },
+        { value: 'other', label: 'Otros' },
       ],
       urgencyLevels: [],
     });
@@ -158,8 +160,9 @@ export default {
           q: state.examSearch.searchTerm,
           type: state.examSearch.filters.type,
           limit: 15,
+          commerceId: commerce.value?.id,
         });
-        state.examSearch.results = results?.data || [];
+        state.examSearch.results = results?.exams || [];
         state.examSearch.showResults = true;
       } catch (error) {
         console.error('Error searching exams:', error);
@@ -177,7 +180,7 @@ export default {
       state.currentExam.type = exam.type;
       state.currentExam.category = exam.category;
       state.currentExam.instructions = exam.instructions || '';
-      state.currentExam.preparationInstructions = exam.preparationInstructions || '';
+      state.currentExam.preparationInstructions = exam.preparation || '';
       state.currentExam.estimatedDuration = exam.estimatedDuration || '';
       state.currentExam.cost = exam.cost || 0;
 
@@ -279,7 +282,11 @@ export default {
 
       try {
         loading.value = true;
-        const examOrder = await createExamOrder(state.examOrder);
+        const examOrderData = {
+          ...state.examOrder,
+          pdfTemplateId: state.pdfTemplate.selected
+        };
+        const examOrder = await createExamOrder(examOrderData);
         state.createdExamOrder = examOrder;
         state.showPdfActions = true;
         // Check if exam order is already signed
@@ -339,7 +346,23 @@ export default {
 
     // Send data to parent
     const sendData = () => {
-      receiveData.value(state.examOrder);
+      try {
+        // Ensure examOrder has a unique identifier
+        if (!state.examOrder.examOrderId && !state.examOrder.id) {
+          // Generate a temporary ID if none exists
+          state.examOrder.examOrderId = `temp_exam_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+        
+        console.log('🔬 Sending exam order data:', state.examOrder);
+        
+        if (typeof receiveData.value === 'function') {
+          receiveData.value(state.examOrder);
+        } else {
+          console.warn('⚠️ receiveData is not a function in MedicalExamOrderForm');
+        }
+      } catch (error) {
+        console.error('❌ Error sending exam order data:', error);
+      }
     };
 
     // PDF Actions
@@ -856,22 +879,15 @@ export default {
               @click="selectExam(exam)"
             >
               <div class="exam-info">
-                <div class="exam-header">
-                  <strong>{{ exam.name }}</strong>
-                  <span class="exam-code">{{ exam.code }}</span>
-                </div>
-                <div class="exam-details">
-                  <span class="exam-type">{{ exam.type }}</span>
-                  <span v-if="exam.category" class="exam-category">{{ exam.category }}</span>
-                </div>
-              </div>
-              <div class="exam-meta">
-                <span v-if="exam.estimatedDuration" class="exam-duration">
-                  <i class="bi bi-clock me-1"></i>
-                  {{ exam.estimatedDuration }}
+                <strong>{{ exam.name }}</strong>
+                <span class="exam-details">
+                  {{ exam.type === 'laboratory' ? 'Laboratorio' : exam.type === 'imaging' ? 'Imagenología' : exam.type === 'procedure' ? 'Procedimiento' : 'Otro' }}
+                  <span v-if="exam.code"> · {{ exam.code }}</span>
                 </span>
-                <span v-if="exam.cost" class="exam-cost"> ${{ exam.cost.toLocaleString() }} </span>
               </div>
+              <span v-if="exam.preparation" class="exam-preparation-indicator">
+                <i class="bi bi-info-circle"></i>
+              </span>
             </div>
             <div v-if="state.examSearch.results.length === 0" class="no-results">
               No se encontraron exámenes
@@ -1126,6 +1142,36 @@ export default {
               ></textarea>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- PDF Template Selector -->
+      <div class="form-section-modern" v-if="!state.showPdfActions">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="metric-card-subtitle mb-0">
+            <i class="bi bi-file-earmark-pdf me-2"></i>
+            {{ t('pdfTemplates.selector.title') }}
+          </h5>
+          <button
+            type="button"
+            class="btn btn-sm btn-link"
+            @click="state.pdfTemplate.showSelector = !state.pdfTemplate.showSelector"
+          >
+            <i :class="state.pdfTemplate.showSelector ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+          </button>
+        </div>
+
+        <div v-show="state.pdfTemplate.showSelector">
+          <p class="text-muted small mb-3">
+            {{ t('pdfTemplates.selector.selectTemplate') }}
+          </p>
+
+          <PdfTemplateSelector
+            v-model="state.pdfTemplate.selected"
+            document-type="exam_order"
+            :commerce-id="state.examOrder.commerceId"
+            :show-preview-button="false"
+          />
         </div>
       </div>
 
@@ -1634,53 +1680,26 @@ export default {
 
 .exam-info {
   flex: 1;
-}
-
-.exam-header {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.25rem;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-.exam-code {
-  font-size: 0.8rem;
-  color: var(--azul-turno);
-  font-weight: 600;
-  background: rgba(0, 123, 255, 0.1);
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
+.exam-info strong {
+  font-size: 0.95rem;
+  color: var(--color-text);
 }
 
 .exam-details {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.exam-type,
-.exam-category {
   font-size: 0.8rem;
   color: var(--color-text);
   opacity: 0.7;
 }
 
-.exam-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
-}
-
-.exam-duration,
-.exam-cost {
-  font-size: 0.8rem;
-  color: var(--color-text);
-  opacity: 0.8;
-}
-
-.exam-cost {
+.exam-preparation-indicator {
   color: var(--azul-turno);
-  font-weight: 600;
+  font-size: 1rem;
+  opacity: 0.7;
 }
 
 .no-results {

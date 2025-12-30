@@ -74,7 +74,12 @@ export default {
     const { receiveData, onSave } = props;
 
     const state = reactive({
-      newMedicalOrder: {},
+      newMedicalOrder: {
+        medicalOrder: '',
+        createdAt: new Date(),
+        createdBy: '',
+        attentionId: '',
+      },
       oldMedicalOrder: [],
       captcha: false,
       medicalOrderError: false,
@@ -109,25 +114,12 @@ export default {
     };
 
     const handleSpeechFinalResult = finalText => {
-      // Append transcribed text with timestamp as new paragraph
+      // Append transcribed text as new paragraph
       const currentText = state.newMedicalOrder.medicalOrder || '';
-      const now = new Date();
-      const timestamp = `[${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-        2,
-        '0'
-      )}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(
-        2,
-        '0'
-      )}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(
-        2,
-        '0'
-      )}]`;
-      const timestampedText = `${timestamp} ${finalText}`;
-
       const newText =
         currentText && currentText.trim() !== ''
-          ? `${currentText}\n\n${timestampedText}`
-          : timestampedText;
+          ? `${currentText}\n\n${finalText}`
+          : finalText;
 
       state.newMedicalOrder.medicalOrder = newText;
       sendData();
@@ -453,45 +445,77 @@ export default {
     });
 
     const sendData = () => {
-      const data = {
-        type: state.orderType,
-        prescription: state.prescriptionData,
-        examOrder: state.examOrderData,
-        reference: state.referenceData,
-        text: state.newMedicalOrder.medicalOrder,
-      };
-      receiveData(data);
+      try {
+        const data = {
+          type: state.orderType,
+          prescription: state.prescriptionData || null,
+          examOrder: state.examOrderData || null,
+          reference: state.referenceData || null,
+          text: state.newMedicalOrder?.medicalOrder || '',
+        };
+        
+        console.log('📤 Sending medical order data:', data);
+        
+        if (typeof receiveData === 'function') {
+          receiveData(data);
+        } else {
+          console.warn('⚠️ receiveData is not a function');
+        }
+      } catch (error) {
+        console.error('❌ Error in sendData:', error);
+      }
     };
 
     const handleSaveTextOrder = async () => {
-      if (!state.newMedicalOrder.medicalOrder || state.newMedicalOrder.medicalOrder.trim() === '') {
-        return;
-      }
-      // First send data to parent to update newMedicalOrder
-      sendData();
-      // Then trigger save if onSave is available
-      if (onSave && typeof onSave === 'function') {
-        try {
-          await onSave();
-        } catch (error) {
-          console.error('Error saving text order:', error);
+      try {
+        if (!state.newMedicalOrder?.medicalOrder || state.newMedicalOrder.medicalOrder.trim() === '') {
+          console.warn('⚠️ No medical order text to save');
+          return;
         }
+        
+        // First send data to parent to update newMedicalOrder
+        console.log('💾 Saving text order:', state.newMedicalOrder.medicalOrder);
+        sendData();
+        
+        // Then trigger save if onSave is available
+        if (onSave && typeof onSave === 'function') {
+          await onSave();
+        } else {
+          console.warn('⚠️ onSave is not available or not a function');
+        }
+      } catch (error) {
+        console.error('❌ Error saving text order:', error);
       }
     };
 
     const receivePrescriptionData = data => {
-      state.prescriptionData = data;
-      sendData();
+      try {
+        console.log('💊 Receiving prescription data:', data);
+        state.prescriptionData = data || null;
+        sendData();
+      } catch (error) {
+        console.error('❌ Error receiving prescription data:', error);
+      }
     };
 
     const receiveExamOrderData = data => {
-      state.examOrderData = data;
-      sendData();
+      try {
+        console.log('🔬 Receiving exam order data:', data);
+        state.examOrderData = data || null;
+        sendData();
+      } catch (error) {
+        console.error('❌ Error receiving exam order data:', error);
+      }
     };
 
     const receiveReferenceData = data => {
-      state.referenceData = data;
-      sendData();
+      try {
+        console.log('📋 Receiving reference data:', data);
+        state.referenceData = data || null;
+        sendData();
+      } catch (error) {
+        console.error('❌ Error receiving reference data:', error);
+      }
     };
 
     const checkAsc = event => {
@@ -517,29 +541,42 @@ export default {
     };
 
     watch(patientHistoryData, async () => {
-      loading.value = true;
-      if (patientHistoryData.value && patientHistoryData.value.id) {
-        if (
-          patientHistoryData.value.medicalOrder &&
-          patientHistoryData.value.medicalOrder.length > 0 &&
-          patientHistoryData.value.medicalOrder[0]
-        ) {
-          state.oldMedicalOrder = patientHistoryData.value.medicalOrder;
+      try {
+        loading.value = true;
+        
+        if (!patientHistoryData.value?.id) {
+          loading.value = false;
+          return;
+        }
+        
+        // Safe check for medical order data
+        const medicalOrder = patientHistoryData.value.medicalOrder;
+        if (medicalOrder && Array.isArray(medicalOrder) && medicalOrder.length > 0 && medicalOrder[0]) {
+          state.oldMedicalOrder = [...medicalOrder]; // Create a copy to avoid reactivity issues
+          
           // Cargar el registro más reciente del día de hoy, o el más reciente en general
-          const sortedOrders = [...state.oldMedicalOrder].sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-          // Buscar registro del día de hoy
-          const todayOrder = sortedOrders.find(
-            order => dateYYYYMMDD(order.createdAt) === dateYYYYMMDD(new Date())
-          );
-          // Si existe registro de hoy, usarlo, sino usar el más reciente
-          if (todayOrder || sortedOrders[0]) {
-            state.newMedicalOrder = todayOrder || sortedOrders[0];
+          const sortedOrders = [...state.oldMedicalOrder]
+            .filter(order => order && order.createdAt) // Filter out null/invalid orders
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            
+          if (sortedOrders.length > 0) {
+            // Buscar registro del día de hoy
+            const todayOrder = sortedOrders.find(
+              order => order.createdAt && dateYYYYMMDD(order.createdAt) === dateYYYYMMDD(new Date())
+            );
+            // Si existe registro de hoy, usarlo, sino usar el más reciente
+            const selectedOrder = todayOrder || sortedOrders[0];
+            if (selectedOrder) {
+              state.newMedicalOrder = { ...selectedOrder }; // Create a copy
+            }
           }
         }
+        
+        loading.value = false;
+      } catch (error) {
+        console.error('❌ Error in patientHistoryData watcher:', error);
+        loading.value = false;
       }
-      loading.value = false;
     });
 
     return {
@@ -1006,9 +1043,6 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  width: 36px;
-  height: 56px;
   background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
   color: white;
   border: none;

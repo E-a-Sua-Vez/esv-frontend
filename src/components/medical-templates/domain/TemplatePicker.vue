@@ -3,21 +3,12 @@
     <div class="template-picker-header">
       <button
         type="button"
-        class="btn btn-sm btn-outline-primary"
+        class="btn-action btn-action-secondary"
         @click="showPicker = !showPicker"
         :disabled="loading"
       >
         <i class="bi bi-file-earmark-text me-1"></i>
         {{ showPicker ? 'Ocultar' : 'Templates' }}
-      </button>
-      <button
-        v-if="showPicker && toggles['patient.history.edit']"
-        type="button"
-        class="btn btn-sm btn-outline-secondary ms-2"
-        @click="showCreateModal = true"
-      >
-        <i class="bi bi-plus-circle me-1"></i>
-        Nuevo Template
       </button>
     </div>
 
@@ -42,9 +33,9 @@
         </select>
         <button
           type="button"
-          class="btn btn-sm btn-outline-primary ms-2"
+          class="btn-action ms-2"
+          :class="showFavoritesOnly ? 'btn-action-primary' : 'btn-action-secondary'"
           @click="showFavoritesOnly = !showFavoritesOnly"
-          :class="{ 'btn-primary': showFavoritesOnly }"
         >
           <i class="bi bi-star-fill me-1"></i>
           Favoritos
@@ -75,13 +66,13 @@
             <div class="template-item-actions">
               <button
                 type="button"
-                class="btn btn-sm btn-link"
+                class="btn-action btn-action-secondary"
                 @click="toggleFavorite(template.id)"
                 :title="template.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'"
               >
                 <i :class="template.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'"></i>
               </button>
-              <button type="button" class="btn btn-sm btn-primary" @click="applyTemplate(template)">
+              <button type="button" class="btn-action btn-action-primary" @click="applyTemplate(template)">
                 <i class="bi bi-check-circle me-1"></i>
                 Usar
               </button>
@@ -97,22 +88,12 @@
         </div>
       </div>
     </div>
-
-    <!-- Modal para crear template -->
-    <TemplateCreateModal
-      v-if="showCreateModal"
-      :show="showCreateModal"
-      :template-type="templateType"
-      @close="showCreateModal = false"
-      @created="handleTemplateCreated"
-    />
   </div>
 </template>
 
 <script>
 import { ref, computed, watch, onMounted } from 'vue';
 import Spinner from '../../common/Spinner.vue';
-import TemplateCreateModal from './TemplateCreateModal.vue';
 import {
   searchTemplates,
   processTemplate,
@@ -125,7 +106,6 @@ export default {
   name: 'TemplatePicker',
   components: {
     Spinner,
-    TemplateCreateModal,
   },
   props: {
     commerceId: {
@@ -153,7 +133,6 @@ export default {
     const searchTerm = ref('');
     const filterType = ref(props.templateType || '');
     const showFavoritesOnly = ref(false);
-    const showCreateModal = ref(false);
 
     const loadTemplates = async () => {
       if (!props.commerceId || !props.doctorId) return;
@@ -197,6 +176,8 @@ export default {
 
     const applyTemplate = async template => {
       try {
+        console.log('🔵 TemplatePicker: Aplicando template:', template);
+
         // Procesar template con variables del sistema
         const variables = {
           date: new Date().toLocaleDateString('pt-BR'),
@@ -204,11 +185,15 @@ export default {
           datetime: new Date().toLocaleString('pt-BR'),
         };
 
+        console.log('🔵 TemplatePicker: Procesando con variables:', variables);
         const result = await processTemplate(template.id, variables);
+        console.log('🔵 TemplatePicker: Resultado procesado:', result);
+        console.log('🔵 TemplatePicker: Emitiendo template-selected con:', result.processedContent);
+
         emit('template-selected', result.processedContent);
         showPicker.value = false;
       } catch (error) {
-        console.error('Error processing template:', error);
+        console.error('❌ Error processing template:', error);
         alert('Error al procesar el template');
       }
     };
@@ -220,11 +205,6 @@ export default {
       } catch (error) {
         console.error('Error toggling favorite:', error);
       }
-    };
-
-    const handleTemplateCreated = () => {
-      showCreateModal.value = false;
-      loadTemplates();
     };
 
     // Atajo de teclado Ctrl+T para abrir/cerrar templates
@@ -260,12 +240,10 @@ export default {
       searchTerm,
       filterType,
       showFavoritesOnly,
-      showCreateModal,
       debouncedSearch,
       getTypeLabel,
       applyTemplate,
       toggleFavorite: toggleFavoriteTemplate,
-      handleTemplateCreated,
     };
   },
 };
@@ -275,48 +253,109 @@ export default {
 @import '../../../shared/styles/prontuario-common.css';
 
 .template-picker {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .template-picker-header {
   display: flex;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.25rem;
+}
+
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: 0.3rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  height: 32px;
+}
+
+.btn-action i {
+  font-size: 0.85rem;
+}
+
+.btn-action-primary {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-action-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-action-secondary {
+  background: white;
+  color: var(--color-text);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.btn-action-secondary:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--azul-turno);
+}
+
+.btn-action-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .template-picker-content {
-  background: white;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  padding: 1rem;
-  margin-top: 0.5rem;
-  box-shadow: var(--shadow-sm);
+  background: #fafbfc;
+  border: 1px solid #d1d7dd;
+  border-radius: 4px;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .template-search-bar {
   display: flex;
-  margin-bottom: 1rem;
-  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  gap: 0.25rem;
   flex-wrap: wrap;
 }
 
 .template-search-bar .form-control {
   flex: 1;
-  min-width: 200px;
+  min-width: 150px;
+  font-size: 0.813rem;
+  padding: 0.25rem 0.5rem;
+  height: 30px;
+}
+
+.template-search-bar select.form-control {
+  max-width: 150px;
+  font-size: 0.813rem;
+}
+
+.template-search-bar .btn-action {
+  height: 30px;
 }
 
 .template-list {
-  max-height: 400px;
+  max-height: 300px;
   overflow-y: auto;
 }
 
 .template-item {
-  padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid #d1d7dd;
+  border-radius: 4px;
+  margin-bottom: 0.25rem;
   transition: all 0.2s ease;
   background: white;
 }
@@ -324,45 +363,66 @@ export default {
 .template-item:hover {
   background: rgba(68, 111, 252, 0.05);
   border-color: var(--azul-turno);
-  box-shadow: var(--shadow-sm);
 }
 
 .template-favorite {
   border-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.05);
+  background: rgba(245, 158, 11, 0.03);
 }
 
 .template-item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .template-item-title {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.template-item-title strong {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.template-item-title .badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
 }
 
 .template-item-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.25rem;
   flex-wrap: wrap;
 }
 
+.template-item-actions .btn-action {
+  height: 28px;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.7rem;
+}
+
+.template-item-actions .btn-action i {
+  font-size: 0.75rem;
+}
+
 .template-item-description {
-  color: var(--color-text-muted);
-  font-size: 0.875rem;
-  margin-bottom: 0.25rem;
+  color: #6c757d;
+  font-size: 0.75rem;
+  margin-bottom: 0.15rem;
+  line-height: 1.3;
 }
 
 .template-item-category {
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
+  color: #6c757d;
+  font-size: 0.7rem;
   display: flex;
   align-items: center;
 }

@@ -1003,29 +1003,29 @@ export default {
 /* Upload Section */
 .upload-section-modern {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  padding: 1rem;
-  margin-bottom: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  padding: 0.5rem;
+  margin-bottom: 0.375rem;
 }
 
 .upload-section-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
+  gap: 0.375rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.375rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .upload-icon {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   color: var(--azul-turno);
 }
 
 .upload-title {
-  font-size: 1.1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text);
   margin: 0;
@@ -1034,7 +1034,7 @@ export default {
 .upload-form-modern {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .form-field-modern {
@@ -1045,20 +1045,20 @@ export default {
 .form-label-modern {
   display: flex;
   align-items: center;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .form-control-modern {
   width: 100%;
-  padding: 0.65rem 0.875rem;
+  padding: 0.375rem 0.625rem;
   border: 2px solid rgba(0, 0, 0, 0.1);
-  border-radius: 0.625rem;
-  font-size: 0.9rem;
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
   background: white;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   font-family: inherit;
 }
 
@@ -1278,9 +1278,6 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  width: 36px;
-  height: 56px;
   background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
   color: white;
   border: none;
@@ -1452,17 +1449,17 @@ export default {
 /* Documents List */
 .documents-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.375rem;
 }
 
 .document-card-modern {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  margin-bottom: 0.375rem;
   transition: all 0.2s ease;
 }
 
@@ -1508,26 +1505,26 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .document-card-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .document-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .badge {
-  padding: 0.35rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.75rem;
+  padding: 0.1875rem 0.375rem;
+  border-radius: 0.625rem;
+  font-size: 0.625rem;
   font-weight: 600;
 }
 

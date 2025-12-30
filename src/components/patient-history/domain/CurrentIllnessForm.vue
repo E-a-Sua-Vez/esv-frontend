@@ -104,25 +104,12 @@ export default {
     };
 
     const handleSpeechFinalResult = finalText => {
-      // Append transcribed text with timestamp as new paragraph
+      // Append transcribed text as new paragraph
       const currentText = state.newCurrentIllness.illness || '';
-      const now = new Date();
-      const timestamp = `[${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-        2,
-        '0'
-      )}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(
-        2,
-        '0'
-      )}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(
-        2,
-        '0'
-      )}]`;
-      const timestampedText = `${timestamp} ${finalText}`;
-
       const newText =
         currentText && currentText.trim() !== ''
-          ? `${currentText}\n\n${timestampedText}`
-          : timestampedText;
+          ? `${currentText}\n\n${finalText}`
+          : finalText;
 
       state.newCurrentIllness.illness = newText;
       sendData();
@@ -201,6 +188,11 @@ export default {
     });
 
     const store = globalStore();
+    const currentUser = ref(null);
+
+    onBeforeMount(async () => {
+      currentUser.value = await store.getCurrentUser;
+    });
 
     const handleTemplateSelected = content => {
       state.newCurrentIllness.illness = content;
@@ -222,6 +214,7 @@ export default {
       clearField,
       handleTemplateSelected,
       store,
+      currentUser,
     };
   },
 };
@@ -240,6 +233,17 @@ export default {
     <div class="form-layout-modern">
       <!-- Form Input Section -->
       <div class="form-input-section">
+        <!-- Template Picker -->
+        <div class="form-field-modern" v-if="commerce && commerce.id && currentUser && currentUser.id">
+          <TemplatePicker
+            :commerce-id="commerce.id"
+            :doctor-id="currentUser.id"
+            template-type="general"
+            :toggles="toggles"
+            @template-selected="handleTemplateSelected"
+          />
+        </div>
+
         <div class="form-field-modern">
           <label class="form-label-modern" for="current-illness-textarea">
             <i class="bi bi-file-medical me-2"></i>
@@ -445,9 +449,6 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  width: 36px;
-  height: 56px;
   background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
   color: white;
   border: none;

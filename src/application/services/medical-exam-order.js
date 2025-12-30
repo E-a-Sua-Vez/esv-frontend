@@ -8,6 +8,7 @@ export const searchExams = async searchDto => {
   if (searchDto.type) params.append('type', searchDto.type);
   if (searchDto.page) params.append('page', searchDto.page);
   if (searchDto.limit) params.append('limit', searchDto.limit);
+  if (searchDto.commerceId) params.append('commerceId', searchDto.commerceId);
   return (await requestBackend.get(`/${entity}/exams/search?${params}`, await getHeaders())).data;
 };
 

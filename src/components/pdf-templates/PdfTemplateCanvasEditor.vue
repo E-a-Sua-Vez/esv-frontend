@@ -1,6 +1,27 @@
 <template>
   <div class="pdf-template-canvas-editor">
+    <!-- Selector de templates predefinidos (se muestra si no hay elementos) -->
+    <div v-if="showTemplateSelector" class="predefined-selector-overlay">
+      <PredefinedTemplateSelector
+        :section="section"
+        :documentType="template?.documentType"
+        :pageSize="template?.pageSize || 'A4'"
+        :orientation="template?.orientation || 'portrait'"
+        @apply="applyPredefinedTemplate"
+        @cancel="closeTemplateSelector"
+      />
+    </div>
+
     <div class="editor-toolbar mb-3">
+      <div class="toolbar-section">
+        <div class="toolbar-title">Templates</div>
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-sm btn-success rounded-pill px-3" @click="openTemplateSelector" title="Seleccionar Template Predefinido">
+            <i class="bi bi-layout-text-window-reverse"></i> Templates
+          </button>
+        </div>
+      </div>
+
       <div class="toolbar-section">
         <div class="toolbar-title">Insertar</div>
         <div class="btn-group" role="group">
@@ -56,6 +77,18 @@
       </div>
 
       <div class="toolbar-section">
+        <div class="toolbar-title">Agrupación</div>
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" @click="groupElements" :disabled="selectedElements.length < 2" title="Agrupar elementos seleccionados">
+            <i class="bi bi-collection"></i> Agrupar
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" @click="ungroupElements" :disabled="!canUngroup" title="Desagrupar elementos">
+            <i class="bi bi-collection"></i> Desagrupar
+          </button>
+        </div>
+      </div>
+
+      <div class="toolbar-section">
         <div class="toolbar-title">Formato</div>
         <div class="btn-group" role="group">
           <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3" @click="toggleBold" :disabled="!isTextSelected" title="Negrita">
@@ -92,6 +125,9 @@
             <option value="Courier New">Courier New</option>
             <option value="Helvetica">Helvetica</option>
             <option value="Roboto">Roboto</option>
+            <option value="Brush Script MT">Brush Script MT (Cursiva)</option>
+            <option value="Lucida Handwriting">Lucida Handwriting (Cursiva)</option>
+            <option value="Monotype Corsiva">Monotype Corsiva (Cursiva)</option>
           </select>
           <input type="number" min="1" max="2" step="0.1" class="form-control form-control-sm ms-2 w-auto" :disabled="!isTextSelected" :value="isTextSelected ? (selectedElement.lineHeight || 1.2) : 1.2" @input="setLineHeight(parseFloat($event.target.value))" title="Interlineado (multiplicador)" />
         </div>
@@ -162,7 +198,39 @@
 
       <div class="properties-panel">
         <h6 class="mb-3">Propriedades</h6>
-        <div v-if="selectedElement" class="element-properties">
+        <div v-if="selectedElements.length > 1" class="element-properties">
+          <div class="panel-group">
+            <div class="group-title"><i class="bi bi-collection"></i> Múltiples elementos</div>
+            <div class="group-body">
+              <div class="alert alert-info small mb-3">
+                <i class="bi bi-info-circle"></i> {{ selectedElements.length }} elementos seleccionados
+              </div>
+              <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="centerElementHorizontally" title="Centrar horizontalmente"><i class="bi bi-arrows-collapse-vertical"></i> H</button>
+                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="centerElementVertically" title="Centrar verticalmente"><i class="bi bi-arrows-collapse-horizontal"></i> V</button>
+                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="centerElementBoth" title="Centrar en ambos ejes"><i class="bi bi-arrows-move"></i> HV</button>
+              </div>
+              <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="alignElementTop" title="Alinear arriba"><i class="bi bi-align-top"></i> Top</button>
+                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="alignElementBottom" title="Alinear abajo"><i class="bi bi-align-bottom"></i> Bottom</button>
+              </div>
+              <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" @click="groupElements" :disabled="selectedElements.length < 2" title="Agrupar elementos"><i class="bi bi-collection"></i> Agrupar</button>
+                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" @click="ungroupElements" :disabled="!canUngroup" title="Desagrupar"><i class="bi bi-collection"></i> Desagrupar</button>
+              </div>
+              <button type="button" class="btn btn-sm btn-danger rounded-pill w-100" @click="deleteElement" title="Remover elementos"><i class="bi bi-trash"></i> Remover todos</button>
+            </div>
+          </div>
+          <div class="text-muted small mt-3">
+            <p><strong>Tips:</strong></p>
+            <ul class="mb-0 ps-3">
+              <li>Arrastre para mover todos juntos</li>
+              <li>Use "Agrupar" para mantenerlos unidos</li>
+              <li>Ctrl+Click en elemento para deseleccionar</li>
+            </ul>
+          </div>
+        </div>
+        <div v-else-if="selectedElement" class="element-properties">
           <div class="panel-group">
             <div class="group-title"><i class="bi bi-info-circle"></i> Elemento</div>
             <div class="group-body">
@@ -286,7 +354,13 @@
           </div>
 
           <div class="text-muted small mt-3">
-            <p><strong>Tip:</strong> Ctrl+Click para seleccionar múltiples elementos</p>
+            <p><strong>Tips:</strong></p>
+            <ul class="mb-0 ps-3">
+              <li>Ctrl+Click para seleccionar múltiples elementos</li>
+              <li>Click y arrastre en área vacía para selección por rectángulo</li>
+              <li>Arrastre elementos seleccionados para moverlos juntos</li>
+              <li>Use "Agrupar" para mantener elementos unidos</li>
+            </ul>
           </div>
         </div>
 
@@ -296,6 +370,16 @@
           <div class="empty-subtext">Use la barra "Insertar" para añadir elementos al canvas</div>
         </div>
       </div>
+
+      <!-- Panel de Variables -->
+      <div class="variables-panel">
+        <VariablesPicker
+          :documentType="template?.documentType || 'all'"
+          :collapsible="true"
+          :defaultCollapsed="false"
+          @insert-variable="insertVariableIntoText"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -303,9 +387,15 @@
 <script>
 import { ref, reactive, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
+import PredefinedTemplateSelector from './PredefinedTemplateSelector.vue';
+import VariablesPicker from './VariablesPicker.vue';
 
 export default {
   name: 'PdfTemplateCanvasEditor',
+  components: {
+    PredefinedTemplateSelector,
+    VariablesPicker,
+  },
   props: {
     template: {
       type: Object,
@@ -326,21 +416,34 @@ export default {
     const canvasHeight = ref(842); // Page height
     const showGrid = ref(true);
     const showRulers = ref(true);
+    const showTemplateSelector = ref(false);
     const isTextSelected = computed(() => !!selectedElement.value && selectedElement.value.type === 'text');
     const selectedElement = ref(null);
     const selectedElements = ref([]); // Para multi-select
     const elements = ref([]);
+    const groups = ref([]); // Grupos de elementos {id, elementIds: []}
     const history = ref([]);
     const historyIndex = ref(-1);
     const saving = ref(false);
     const isDragging = ref(false);
     const isResizing = ref(false);
+    const isSelecting = ref(false); // Para selección con rectángulo
+    const selectionBox = ref(null); // {startX, startY, endX, endY}
+    const clipboard = ref(null); // Para copiar/pegar elementos
+    const hasMoved = ref(false); // Para detectar si hubo movimiento durante mousedown
     const resizeHandle = ref(null); // 'se', 'sw', 'ne', 'nw', 'e', 'w', 'n', 's'
     const dragOffset = ref({ x: 0, y: 0 });
     const initialSize = ref({ width: 0, height: 0, x: 0, y: 0 });
 
     const canUndo = computed(() => historyIndex.value > 0);
     const canRedo = computed(() => historyIndex.value < history.value.length - 1);
+    const canUngroup = computed(() => {
+      if (selectedElements.value.length === 0) return false;
+      // Verificar si alguno de los elementos seleccionados pertenece a un grupo
+      return selectedElements.value.some(el =>
+        groups.value.some(group => group.elementIds.includes(el.id))
+      );
+    });
     const pageLabel = computed(() => {
       const ps = props.template?.pageSize || 'A4';
       switch (ps) {
@@ -391,7 +494,10 @@ export default {
       loadTemplate();
       autoFitElements();
       drawCanvas();
-      drawRulers();
+      // Usar nextTick para asegurar que los canvas de las reglas están montados
+      nextTick(() => {
+        drawRulers();
+      });
     };
 
     const loadTemplate = () => {
@@ -455,9 +561,28 @@ export default {
       }
 
       // Draw elements
-      elements.value.forEach((element, index) => {
-        drawElement(element, index === elements.value.indexOf(selectedElement.value));
+      elements.value.forEach((element) => {
+        const isSelected = selectedElements.value.includes(element);
+        drawElement(element, isSelected);
       });
+
+      // Draw selection box (rectángulo de selección)
+      if (isSelecting.value && selectionBox.value) {
+        const box = selectionBox.value;
+        const x = Math.min(box.startX, box.endX);
+        const y = Math.min(box.startY, box.endY);
+        const w = Math.abs(box.endX - box.startX);
+        const h = Math.abs(box.endY - box.startY);
+
+        ctx.strokeStyle = '#007bff';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(x, y, w, h);
+
+        ctx.fillStyle = 'rgba(0, 123, 255, 0.1)';
+        ctx.fillRect(x, y, w, h);
+        ctx.setLineDash([]);
+      }
     };
 
     const drawRulers = () => {
@@ -901,10 +1026,36 @@ export default {
     };
 
     const deleteElement = () => {
-      if (selectedElement.value) {
+      if (selectedElements.value.length > 0) {
+        // Eliminar todos los elementos seleccionados
+        selectedElements.value.forEach(el => {
+          const index = elements.value.indexOf(el);
+          if (index > -1) {
+            elements.value.splice(index, 1);
+          }
+        });
+
+        // Eliminar grupos que contengan alguno de los elementos eliminados
+        const deletedIds = selectedElements.value.map(el => el.id);
+        groups.value = groups.value.filter(group =>
+          !group.elementIds.some(id => deletedIds.includes(id))
+        );
+
+        selectedElement.value = null;
+        selectedElements.value = [];
+        saveHistory();
+        drawCanvas();
+      } else if (selectedElement.value) {
         const index = elements.value.indexOf(selectedElement.value);
         if (index > -1) {
           elements.value.splice(index, 1);
+
+          // Eliminar grupos que contengan este elemento
+          const deletedId = selectedElement.value.id;
+          groups.value = groups.value.filter(group =>
+            !group.elementIds.includes(deletedId)
+          );
+
           selectedElement.value = null;
           saveHistory();
           drawCanvas();
@@ -913,17 +1064,54 @@ export default {
     };
 
     const handleCanvasClick = event => {
+      // Si hubo movimiento (arrastre o selección con rectángulo), no procesar el click
+      if (hasMoved.value) {
+        hasMoved.value = false;
+        return;
+      }
+
       const rect = canvasRef.value.getBoundingClientRect();
       const scaleX = canvasWidth.value / rect.width;
       const scaleY = canvasHeight.value / rect.height;
       const x = (event.clientX - rect.left) * scaleX;
       const y = (event.clientY - rect.top) * scaleY;
 
-      // Find clicked element
-      const clickedElement = elements.value.find(
-        el =>
-          x >= el.x && x <= el.x + (el.width || 100) && y >= el.y && y <= el.y + (el.height || 50)
-      );
+      // Find clicked element (buscar de atrás hacia adelante para seleccionar el más arriba)
+      let clickedElement = null;
+      for (let i = elements.value.length - 1; i >= 0; i--) {
+        const el = elements.value[i];
+        if (x >= el.x && x <= el.x + (el.width || 100) && y >= el.y && y <= el.y + (el.height || 50)) {
+          clickedElement = el;
+          break;
+        }
+      }
+
+      // Si se hace click en un elemento que pertenece a un grupo, seleccionar todo el grupo
+      if (clickedElement) {
+        const group = groups.value.find(g => g.elementIds.includes(clickedElement.id));
+        if (group) {
+          // Seleccionar todos los elementos del grupo
+          const groupElements = elements.value.filter(el => group.elementIds.includes(el.id));
+          if (event.ctrlKey || event.metaKey) {
+            // Agregar o remover el grupo completo de la selección
+            const allInSelection = groupElements.every(el => selectedElements.value.includes(el));
+            if (allInSelection) {
+              selectedElements.value = selectedElements.value.filter(el => !group.elementIds.includes(el.id));
+            } else {
+              groupElements.forEach(el => {
+                if (!selectedElements.value.includes(el)) {
+                  selectedElements.value.push(el);
+                }
+              });
+            }
+          } else {
+            selectedElements.value = groupElements;
+          }
+          selectedElement.value = clickedElement;
+          drawCanvas();
+          return;
+        }
+      }
 
       // Multi-select con Ctrl+Click
       if (event.ctrlKey || event.metaKey) {
@@ -946,6 +1134,8 @@ export default {
     };
 
     const handleMouseDown = event => {
+      hasMoved.value = false; // Reset flag de movimiento
+
       const rect = canvasRef.value.getBoundingClientRect();
       const scaleX = canvasWidth.value / rect.width;
       const scaleY = canvasHeight.value / rect.height;
@@ -968,20 +1158,30 @@ export default {
           return;
         }
 
-        // Verificar si se está clickeando dentro del elemento para moverlo
-        if (
-          x >= selectedElement.value.x &&
-          x <= selectedElement.value.x + (selectedElement.value.width || 100) &&
-          y >= selectedElement.value.y &&
-          y <= selectedElement.value.y + (selectedElement.value.height || 50)
-        ) {
+        // Verificar si se está clickeando dentro de algún elemento seleccionado para moverlo
+        const clickedOnSelected = selectedElements.value.find(
+          el => x >= el.x && x <= el.x + (el.width || 100) && y >= el.y && y <= el.y + (el.height || 50)
+        );
+
+        if (clickedOnSelected) {
           isDragging.value = true;
           dragOffset.value = {
-            x: x - selectedElement.value.x,
-            y: y - selectedElement.value.y,
+            x: x - clickedOnSelected.x,
+            y: y - clickedOnSelected.y,
           };
+          return;
         }
       }
+
+      // En cualquier otro caso, iniciar selección con rectángulo
+      // Esto permite seleccionar múltiples elementos arrastrando desde cualquier punto
+      isSelecting.value = true;
+      selectionBox.value = {
+        startX: x,
+        startY: y,
+        endX: x,
+        endY: y
+      };
     };
 
     const handleMouseMove = event => {
@@ -991,7 +1191,19 @@ export default {
       const x = (event.clientX - rect.left) * scaleX;
       const y = (event.clientY - rect.top) * scaleY;
 
-      if (isResizing.value && selectedElement.value) {
+      if (isSelecting.value && selectionBox.value) {
+        // Actualizar el rectángulo de selección
+        const dx = Math.abs(x - selectionBox.value.startX);
+        const dy = Math.abs(y - selectionBox.value.startY);
+        // Solo marcar como movido si hubo movimiento significativo (más de 3px)
+        if (dx > 3 || dy > 3) {
+          hasMoved.value = true;
+        }
+        selectionBox.value.endX = x;
+        selectionBox.value.endY = y;
+        drawCanvas();
+      } else if (isResizing.value && selectedElement.value) {
+        hasMoved.value = true; // Marcar que hubo movimiento
         const deltaX = x - dragOffset.value.x;
         const deltaY = y - dragOffset.value.y;
 
@@ -1034,20 +1246,19 @@ export default {
         }
 
         drawCanvas();
-      } else if (isDragging.value && selectedElement.value) {
-        const deltaX = x - dragOffset.value.x - selectedElement.value.x;
-        const deltaY = y - dragOffset.value.y - selectedElement.value.y;
+      } else if (isDragging.value && selectedElements.value.length > 0) {
+        hasMoved.value = true; // Marcar que hubo movimiento
+        // Calcular delta basado en el primer elemento seleccionado
+        const firstEl = selectedElements.value[0];
+        const newX = Math.max(0, x - dragOffset.value.x);
+        const newY = Math.max(0, y - dragOffset.value.y);
+        const deltaX = newX - firstEl.x;
+        const deltaY = newY - firstEl.y;
 
-        // Mover el elemento principal
-        selectedElement.value.x = Math.max(0, x - dragOffset.value.x);
-        selectedElement.value.y = Math.max(0, y - dragOffset.value.y);
-
-        // Mover también los otros elementos seleccionados con el mismo delta
+        // Mover todos los elementos seleccionados
         selectedElements.value.forEach(el => {
-          if (el !== selectedElement.value) {
-            el.x = Math.max(0, el.x + deltaX);
-            el.y = Math.max(0, el.y + deltaY);
-          }
+          el.x = Math.max(0, el.x + deltaX);
+          el.y = Math.max(0, el.y + deltaY);
         });
 
         drawCanvas();
@@ -1055,7 +1266,30 @@ export default {
     };
 
     const handleMouseUp = () => {
-      if (isDragging.value || isResizing.value) {
+      if (isSelecting.value && selectionBox.value) {
+        // Finalizar selección con rectángulo
+        const box = selectionBox.value;
+        const minX = Math.min(box.startX, box.endX);
+        const maxX = Math.max(box.startX, box.endX);
+        const minY = Math.min(box.startY, box.endY);
+        const maxY = Math.max(box.startY, box.endY);
+
+        // Seleccionar todos los elementos que intersectan con el rectángulo
+        const selected = elements.value.filter(el => {
+          const elRight = el.x + (el.width || 100);
+          const elBottom = el.y + (el.height || 50);
+          return !(el.x > maxX || elRight < minX || el.y > maxY || elBottom < minY);
+        });
+
+        if (selected.length > 0) {
+          selectedElements.value = selected;
+          selectedElement.value = selected[0];
+        }
+
+        isSelecting.value = false;
+        selectionBox.value = null;
+        drawCanvas();
+      } else if (isDragging.value || isResizing.value) {
         isDragging.value = false;
         isResizing.value = false;
         resizeHandle.value = null;
@@ -1161,6 +1395,71 @@ export default {
       drawCanvas();
     };
 
+    const groupElements = () => {
+      if (selectedElements.value.length < 2) {
+        alert('Seleccione al menos 2 elementos para agrupar');
+        return;
+      }
+
+      // Crear un nuevo grupo con los elementos seleccionados
+      const groupId = `group-${Date.now()}`;
+      const elementIds = selectedElements.value.map(el => el.id);
+
+      groups.value.push({
+        id: groupId,
+        elementIds: elementIds
+      });
+
+      saveHistory();
+      drawCanvas();
+    };
+
+    const copyElements = () => {
+      if (selectedElements.value.length === 0) return;
+      // Copiar elementos seleccionados al clipboard
+      clipboard.value = selectedElements.value.map(el => JSON.parse(JSON.stringify(el)));
+    };
+
+    const pasteElements = () => {
+      if (!clipboard.value || clipboard.value.length === 0) return;
+
+      // Pegar elementos con un offset
+      const offset = 20;
+      const newElements = clipboard.value.map(el => {
+        const newEl = JSON.parse(JSON.stringify(el));
+        newEl.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+        newEl.x = (newEl.x || 0) + offset;
+        newEl.y = (newEl.y || 0) + offset;
+        return newEl;
+      });
+
+      elements.value.push(...newElements);
+      selectedElements.value = newElements;
+      selectedElement.value = newElements[0];
+      saveHistory();
+      drawCanvas();
+    };
+
+    const ungroupElements = () => {
+      if (selectedElements.value.length === 0) return;
+
+      // Encontrar todos los grupos que contienen alguno de los elementos seleccionados
+      const groupsToRemove = groups.value.filter(group =>
+        selectedElements.value.some(el => group.elementIds.includes(el.id))
+      );
+
+      // Remover esos grupos
+      groupsToRemove.forEach(group => {
+        const index = groups.value.indexOf(group);
+        if (index > -1) {
+          groups.value.splice(index, 1);
+        }
+      });
+
+      saveHistory();
+      drawCanvas();
+    };
+
     const saveTemplate = () => {
       const templateData = {
         ...props.template,
@@ -1174,9 +1473,100 @@ export default {
       emit('save', templateData);
     };
 
+    const openTemplateSelector = () => {
+      showTemplateSelector.value = true;
+    };
+
+    const closeTemplateSelector = () => {
+      showTemplateSelector.value = false;
+    };
+
+    const applyPredefinedTemplate = (templateElements) => {
+      if (templateElements && Array.isArray(templateElements)) {
+        elements.value = JSON.parse(JSON.stringify(templateElements));
+        saveHistory();
+        drawCanvas();
+      }
+      closeTemplateSelector();
+    };
+
+    // Insertar variable en el texto seleccionado
+    const insertVariableIntoText = (variable) => {
+      if (selectedElement.value && selectedElement.value.type === 'text') {
+        // Agregar variable al final del texto existente
+        const currentText = selectedElement.value.text || '';
+        selectedElement.value.text = currentText + (currentText ? ' ' : '') + variable.syntax;
+        updateElement();
+      } else {
+        // Crear nuevo elemento de texto con la variable
+        const element = {
+          id: Date.now().toString(),
+          type: 'text',
+          text: variable.syntax,
+          x: 50,
+          y: 50,
+          fontSize: 12,
+          fontFamily: 'Arial',
+          lineHeight: 1.2,
+          color: '#000000',
+          align: 'left',
+          width: 200,
+          height: 30,
+        };
+        elements.value.push(element);
+        selectedElement.value = element;
+        saveHistory();
+        drawCanvas();
+      }
+    };
+
     onMounted(() => {
       nextTick(() => {
         initCanvas();
+      });
+
+      // Agregar listener para atajos de teclado
+      const handleKeyDown = (event) => {
+        // Evitar que se ejecute si estamos escribiendo en un input o textarea
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+          return;
+        }
+
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const ctrlKey = isMac ? event.metaKey : event.ctrlKey;
+
+        // Delete o Backspace
+        if ((event.key === 'Delete' || event.key === 'Backspace') && selectedElement.value) {
+          event.preventDefault();
+          deleteElement();
+        }
+        // Ctrl+C: Copiar
+        else if (ctrlKey && event.key === 'c' && selectedElements.value.length > 0) {
+          event.preventDefault();
+          copyElements();
+        }
+        // Ctrl+V: Pegar
+        else if (ctrlKey && event.key === 'v') {
+          event.preventDefault();
+          pasteElements();
+        }
+        // Ctrl+Z: Deshacer
+        else if (ctrlKey && event.key === 'z' && !event.shiftKey) {
+          event.preventDefault();
+          undo();
+        }
+        // Ctrl+Shift+Z o Ctrl+Y: Rehacer
+        else if (ctrlKey && ((event.key === 'z' && event.shiftKey) || event.key === 'y')) {
+          event.preventDefault();
+          redo();
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+
+      // Limpiar el listener cuando se desmonte el componente
+      onUnmounted(() => {
+        window.removeEventListener('keydown', handleKeyDown);
       });
     });
 
@@ -1199,6 +1589,7 @@ export default {
       canvasHeight,
       showGrid,
       showRulers,
+      showTemplateSelector,
       isTextSelected,
       pageLabel,
       orientationLabel,
@@ -1208,6 +1599,11 @@ export default {
       saving,
       canUndo,
       canRedo,
+      canUngroup,
+      openTemplateSelector,
+      closeTemplateSelector,
+      applyPredefinedTemplate,
+      insertVariableIntoText,
       addTextElement,
       addImageElement,
       addLogoElement,
@@ -1221,6 +1617,10 @@ export default {
       centerElementBoth,
       alignElementTop,
       alignElementBottom,
+      groupElements,
+      ungroupElements,
+      copyElements,
+      pasteElements,
       handleCanvasClick,
       handleMouseDown,
       handleMouseMove,
@@ -1248,6 +1648,32 @@ export default {
 <style scoped>
 .pdf-template-canvas-editor {
   padding: 1rem;
+  position: relative;
+}
+
+.predefined-selector-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.predefined-selector-overlay > * {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 1200px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .editor-toolbar {
@@ -1280,6 +1706,22 @@ export default {
   align-items: flex-start;
 }
 
+.variables-panel {
+  flex: 0 0 280px;
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+}
+
+.properties-panel {
+  flex: 0 0 320px;
+  padding: 1rem;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 300px);
+}
+
 .canvas-wrapper {
   flex: 0 0 auto;
   border: 1px solid #dee2e6;
@@ -1289,14 +1731,6 @@ export default {
 }
 
 .template-canvas {
-  display: block;
-  cursor: crosshair;
-}
-
-.properties-panel {
-  width: 300px;
-  padding: 1rem;
-  background: #f8f9fa;
   border-radius: 0.5rem;
   overflow-y: auto;
 }

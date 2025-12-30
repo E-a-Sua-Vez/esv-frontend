@@ -432,6 +432,30 @@ export default {
     // Reserved variable names
     const reservedNames = ['date', 'time', 'datetime', 'patientName', 'patientAge', 'diagnosis'];
 
+    const resetForm = () => {
+      formData.value = {
+        name: '',
+        description: '',
+        type: props.templateType || 'GENERAL',
+        category: '',
+        content: '',
+        scope: 'PERSONAL',
+        tags: [],
+        variables: [],
+      };
+      tagsInput.value = '';
+      errors.value = {};
+      newVariable.value = {
+        name: '',
+        label: '',
+        type: 'text',
+        defaultValue: '',
+        optionsText: '',
+        required: false,
+      };
+      variableErrors.value = {};
+    };
+
     watch(
       () => props.templateType,
       newType => {
@@ -541,30 +565,6 @@ Diagnóstico: {'{{'}diagnosis{'}}'}`
 
       return preview.replace(/\n/g, '<br>');
     });
-
-    const resetForm = () => {
-      formData.value = {
-        name: '',
-        description: '',
-        type: props.templateType || 'GENERAL',
-        category: '',
-        content: '',
-        scope: 'PERSONAL',
-        tags: [],
-        variables: [],
-      };
-      tagsInput.value = '';
-      errors.value = {};
-      newVariable.value = {
-        name: '',
-        label: '',
-        type: 'text',
-        defaultValue: '',
-        optionsText: '',
-        required: false,
-      };
-      variableErrors.value = {};
-    };
 
     const handleClose = () => {
       resetForm();

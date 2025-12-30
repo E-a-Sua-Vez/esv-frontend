@@ -686,8 +686,55 @@ export default {
                             :disabled="!state.toggles['medical-templates.admin.update']"
                             placeholder=""
                           />
+                        </div>
+                        <div class="form-group-modern">
+                          <label class="form-label-modern">Tags:</label>
+                          <input
+                            v-model="template.tags"
+                            type="text"
+                            class="form-control-modern"
+                            :disabled="!state.toggles['medical-templates.admin.update']"
+                            placeholder="Separados por coma"
+                          />
+                        </div>
+                        <div class="form-group-modern">
+                          <label class="form-label-modern">Variables:</label>
+                          <input
+                            v-model="template.variables"
+                            type="text"
+                            class="form-control-modern"
+                            :disabled="!state.toggles['medical-templates.admin.update']"
+                            placeholder="{date}, {time}, {patientName}"
+                          />
+                        </div>
+                        <div class="form-group-modern">
+                          <label class="form-label-modern">Favorito:</label>
+                          <input
+                            v-model="template.isFavorite"
+                            type="checkbox"
+                            class="form-check-input"
+                            :disabled="!state.toggles['medical-templates.admin.update']"
+                          />
+                        </div>
+                        <div class="form-group-modern">
+                          <label class="form-label-modern">Activo:</label>
+                          <input
+                            v-model="template.active"
+                            type="checkbox"
+                            class="form-check-input"
+                            :disabled="!state.toggles['medical-templates.admin.update']"
+                          />
+                        </div>
+                        <div class="form-group-modern">
+                          <label class="form-label-modern">Disponible:</label>
+                          <input
+                            v-model="template.available"
+                            type="checkbox"
+                            class="form-check-input"
+                            :disabled="!state.toggles['medical-templates.admin.update']"
+                          />
+                        </div>
                       </div>
-                    </div>
                     <div class="col">
                       <button
                         class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
@@ -822,7 +869,49 @@ export default {
                     class="form-control-modern"
                     placeholder=""
                   />
-              </div>
+                </div>
+                <div class="form-group-modern">
+                  <label class="form-label-modern">Tags:</label>
+                  <input
+                    v-model="state.newTemplate.tags"
+                    type="text"
+                    class="form-control-modern"
+                    placeholder="Separados por coma"
+                  />
+                </div>
+                <div class="form-group-modern">
+                  <label class="form-label-modern">Variables:</label>
+                  <input
+                    v-model="state.newTemplate.variables"
+                    type="text"
+                    class="form-control-modern"
+                    placeholder="{date}, {time}, {patientName}"
+                  />
+                </div>
+                <div class="form-group-modern">
+                  <label class="form-label-modern">Favorito:</label>
+                  <input
+                    v-model="state.newTemplate.isFavorite"
+                    type="checkbox"
+                    class="form-check-input"
+                  />
+                </div>
+                <div class="form-group-modern">
+                  <label class="form-label-modern">Activo:</label>
+                  <input
+                    v-model="state.newTemplate.active"
+                    type="checkbox"
+                    class="form-check-input"
+                  />
+                </div>
+                <div class="form-group-modern">
+                  <label class="form-label-modern">Disponible:</label>
+                  <input
+                    v-model="state.newTemplate.available"
+                    type="checkbox"
+                    class="form-check-input"
+                  />
+                </div>
             </div>
             <div class="row g-1 errors" v-if="state.errorsAdd && state.errorsAdd.length > 0">
               <Warning>
