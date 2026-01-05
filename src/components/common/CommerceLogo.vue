@@ -12,6 +12,7 @@ export default {
     loading: { type: Boolean, default: false },
     businessId: { type: String, default: undefined },
     desktopSize: { type: Boolean, default: false },
+    largeSize: { type: Boolean, default: false },
   },
   setup(props) {
     const store = globalStore();
@@ -125,7 +126,12 @@ export default {
     <LogoSkeleton v-if="(loading || logoLoading) && src === undefined && !logoUrl"></LogoSkeleton>
     <img
       v-else
-      :class="['rounded', 'img-fluid', 'logo', { 'desktop-size': desktopSize, 'mx-auto': !desktopSize }]"
+      :class="[
+        'rounded',
+        'img-fluid',
+        'logo',
+        { 'desktop-size': desktopSize, 'large-size': largeSize, 'mx-auto': !desktopSize },
+      ]"
       :alt="this.$t('logoAlt')"
       :src="logoUrl || (src === undefined ? this.$t('logo') : src)"
       loading="lazy"
@@ -168,5 +174,20 @@ export default {
   width: auto !important;
   height: auto !important;
   margin-bottom: 0 !important;
+}
+
+/* Large size for public pages (attention/booking requests) */
+.logo.large-size {
+  max-width: 300px !important;
+  max-height: 280px !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+@media (min-width: 992px) {
+  .logo.large-size {
+    max-width: 250px !important;
+    max-height: 230px !important;
+  }
 }
 </style>

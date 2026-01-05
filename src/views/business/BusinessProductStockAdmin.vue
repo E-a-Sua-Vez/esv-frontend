@@ -415,7 +415,9 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="handleDashboardDateQuickSelect('lastThreeMonths', filterProps)"
+                                @click="
+                                  handleDashboardDateQuickSelect('lastThreeMonths', filterProps)
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.lastThreeMonths') }}
@@ -544,7 +546,10 @@ export default {
                                   }
                                 "
                               />
-                              <label class="btn btn-sm" :for="`product-status-good-${filterIdCounter}`">
+                              <label
+                                class="btn btn-sm"
+                                :for="`product-status-good-${filterIdCounter}`"
+                              >
                                 <i class="bi bi-battery-full green-icon h5"></i>
                               </label>
                               <input
@@ -563,7 +568,10 @@ export default {
                                   }
                                 "
                               />
-                              <label class="btn btn-sm" :for="`product-status-medium-${filterIdCounter}`">
+                              <label
+                                class="btn btn-sm"
+                                :for="`product-status-medium-${filterIdCounter}`"
+                              >
                                 <i class="bi bi-battery-half yellow-icon h5"></i>
                               </label>
                               <input
@@ -582,7 +590,10 @@ export default {
                                   }
                                 "
                               />
-                              <label class="btn btn-sm" :for="`product-status-low-${filterIdCounter}`">
+                              <label
+                                class="btn btn-sm"
+                                :for="`product-status-low-${filterIdCounter}`"
+                              >
                                 <i class="bi bi-battery red-icon h5"></i>
                               </label>
                               <i
@@ -609,7 +620,10 @@ export default {
                                   }
                                 "
                               />
-                              <label class="form-check-label" :for="`product-filter-expired-${filterIdCounter}`">
+                              <label
+                                class="form-check-label"
+                                :for="`product-filter-expired-${filterIdCounter}`"
+                              >
                                 {{ $t('businessProductStockAdmin.expired') }}
                               </label>
                             </div>
@@ -629,7 +643,10 @@ export default {
                                   }
                                 "
                               />
-                              <label class="form-check-label" :for="`product-filter-replacement-${filterIdCounter}`">
+                              <label
+                                class="form-check-label"
+                                :for="`product-filter-replacement-${filterIdCounter}`"
+                              >
                                 {{ $t('businessProductStockAdmin.replacement') }}
                               </label>
                             </div>
@@ -649,7 +666,10 @@ export default {
                                   }
                                 "
                               />
-                              <label class="form-check-label" :for="`product-filter-asc-${filterIdCounter}`">
+                              <label
+                                class="form-check-label"
+                                :for="`product-filter-asc-${filterIdCounter}`"
+                              >
                                 {{ filterProps.asc ? $t('dashboard.asc') : $t('dashboard.desc') }}
                               </label>
                             </div>
@@ -907,7 +927,10 @@ export default {
                                   }
                                 "
                               />
-                              <label class="btn btn-sm" :for="`attention-days-early-${attentionsFilterIdCounter}`">
+                              <label
+                                class="btn btn-sm"
+                                :for="`attention-days-early-${attentionsFilterIdCounter}`"
+                              >
                                 <i class="bi bi-qr-code green-icon"></i>
                               </label>
                               <input
@@ -926,7 +949,10 @@ export default {
                                   }
                                 "
                               />
-                              <label class="btn btn-sm" :for="`attention-days-medium-${attentionsFilterIdCounter}`">
+                              <label
+                                class="btn btn-sm"
+                                :for="`attention-days-medium-${attentionsFilterIdCounter}`"
+                              >
                                 <i class="bi bi-qr-code yellow-icon"></i>
                               </label>
                               <input
@@ -945,7 +971,10 @@ export default {
                                   }
                                 "
                               />
-                              <label class="btn btn-sm" :for="`attention-days-late-${attentionsFilterIdCounter}`">
+                              <label
+                                class="btn btn-sm"
+                                :for="`attention-days-late-${attentionsFilterIdCounter}`"
+                              >
                                 <i class="bi bi-qr-code red-icon"></i>
                               </label>
                               <i
@@ -976,7 +1005,10 @@ export default {
                                   }
                                 "
                               />
-                              <label class="btn btn-sm" :for="`attention-contact-interested-${attentionsFilterIdCounter}`">
+                              <label
+                                class="btn btn-sm"
+                                :for="`attention-contact-interested-${attentionsFilterIdCounter}`"
+                              >
                                 <i class="bi bi-patch-check-fill green-icon"></i>
                               </label>
                               <input
@@ -995,7 +1027,10 @@ export default {
                                   }
                                 "
                               />
-                              <label class="btn btn-sm" :for="`attention-contact-later-${attentionsFilterIdCounter}`">
+                              <label
+                                class="btn btn-sm"
+                                :for="`attention-contact-later-${attentionsFilterIdCounter}`"
+                              >
                                 <i class="bi bi-patch-check-fill yellow-icon"></i>
                               </label>
                               <input
@@ -1014,7 +1049,10 @@ export default {
                                   }
                                 "
                               />
-                              <label class="btn btn-sm" :for="`attention-contact-rejected-${attentionsFilterIdCounter}`">
+                              <label
+                                class="btn btn-sm"
+                                :for="`attention-contact-rejected-${attentionsFilterIdCounter}`"
+                              >
                                 <i class="bi bi-patch-check-fill red-icon"></i>
                               </label>
                               <i

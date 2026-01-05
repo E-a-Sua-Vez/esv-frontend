@@ -500,6 +500,7 @@ import TelemedicineChat from '../components/telemedicine/domain/TelemedicineChat
 import TelemedicineFloatingWindow from '../components/telemedicine/domain/TelemedicineFloatingWindow.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
 import { getAttentionDetails } from '../application/services/attention';
+import { validatePortalSession } from '../application/services/client-portal';
 
 export default {
   name: 'TelemedicineSessionAccess',
@@ -540,6 +541,79 @@ export default {
     };
 
     const { t } = useI18n();
+
+    /**
+     * Intenta validar usando la sesión del portal si está disponible
+     */
+    const tryPortalSessionValidation = async () => {
+      try {
+        const portalToken = localStorage.getItem('clientPortalSessionToken');
+        if (!portalToken) {
+          return false; // No hay sesión del portal
+        }
+
+        // Validar sesión de telemedicina usando token del portal
+        const response = await requestBackend.post(
+          `/telemedicine/sessions/${sessionId}/validate-portal-session`,
+          { portalToken }
+        );
+
+        if (response.data && response.data.id) {
+          session.value = response.data;
+          keyValidated.value = true;
+
+          // Load commerce and attention details
+          await loadCommerceAndAttention();
+
+          // Check if doctor is connected
+          doctorConnected.value = !!session.value.doctorConnectedAt;
+
+          // Auto-open video/chat when session is active AND doctor is connected
+          if (
+            (session.value.status === 'active' || session.value.status === 'ACTIVE') &&
+            doctorConnected.value
+          ) {
+            const sessionType = session.value.type || 'VIDEO';
+            if (
+              sessionType === 'VIDEO' ||
+              sessionType === 'video' ||
+              sessionType === 'BOTH' ||
+              sessionType === 'both'
+            ) {
+              showVideo.value = true;
+            }
+            if (
+              sessionType === 'CHAT' ||
+              sessionType === 'chat' ||
+              sessionType === 'BOTH' ||
+              sessionType === 'both'
+            ) {
+              showChat.value = true;
+            }
+          }
+
+          // Poll for session status updates
+          startStatusPolling();
+
+          return true; // Validación exitosa con sesión del portal
+        }
+
+        return false;
+      } catch (err) {
+        // Si el error es 401, 403 o 404, no hay sesión válida del portal
+        // Continuar con flujo normal de código
+        if (
+          err.response?.status === 401 ||
+          err.response?.status === 403 ||
+          err.response?.status === 404
+        ) {
+          console.log('[TelemedicineSessionAccess] Portal session not valid, using normal flow');
+        } else {
+          console.log('[TelemedicineSessionAccess] Portal session validation error:', err);
+        }
+        return false; // Error al validar, continuar con flujo normal
+      }
+    };
 
     const validateKey = async () => {
       if (!accessKey.value || accessKey.value.length < 4 || accessKey.value.length > 8) {
@@ -935,9 +1009,21 @@ export default {
 
     // Check if key is already in URL query params (for direct links)
     onMounted(async () => {
+      loading.value = true;
+
       // Try to load commerce logo before validation
       await loadCommerceFromSession();
 
+      // Primero intentar usar sesión del portal si está disponible
+      const portalValidationSuccess = await tryPortalSessionValidation();
+      if (portalValidationSuccess) {
+        loading.value = false;
+        return; // Validación exitosa con sesión del portal
+      }
+
+      loading.value = false;
+
+      // Si no hay sesión del portal o no coincide, usar flujo normal
       const keyFromUrl = route.query.key;
       if (keyFromUrl && keyFromUrl.length >= 4 && keyFromUrl.length <= 8) {
         accessKey.value = keyFromUrl.toUpperCase().replace(/[^A-Z0-9]/g, '');

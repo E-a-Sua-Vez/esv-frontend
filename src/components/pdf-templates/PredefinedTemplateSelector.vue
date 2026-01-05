@@ -23,7 +23,7 @@
             <!-- Opción en blanco -->
             <div
               class="template-card"
-              :class="{ 'selected': selectedTemplateId === 'blank' }"
+              :class="{ selected: selectedTemplateId === 'blank' }"
               @click="selectTemplate('blank')"
             >
               <div class="template-preview blank-preview">
@@ -31,7 +31,9 @@
               </div>
               <div class="template-info">
                 <div class="template-name">{{ t('pdfTemplates.predefinedSelector.blank') }}</div>
-                <div class="template-description">{{ t('pdfTemplates.predefinedSelector.startFromScratch') }}</div>
+                <div class="template-description">
+                  {{ t('pdfTemplates.predefinedSelector.startFromScratch') }}
+                </div>
               </div>
             </div>
 
@@ -40,7 +42,7 @@
               v-for="template in filteredTemplates"
               :key="template.id"
               class="template-card"
-              :class="{ 'selected': selectedTemplateId === template.id }"
+              :class="{ selected: selectedTemplateId === template.id }"
               @click="selectTemplate(template.id)"
             >
               <div class="template-preview">
@@ -112,15 +114,15 @@ export default {
     const selectedTemplateId = ref(null);
     const allTemplates = getPredefinedTemplates();
 
-    const filteredTemplates = computed(() => {
-      return allTemplates.filter(
+    const filteredTemplates = computed(() =>
+      allTemplates.filter(
         template =>
           template.section === props.section &&
-          (!template.documentType || template.documentType === props.documentType)
-      );
-    });
+          (!template.documentType || template.documentType === props.documentType),
+      ),
+    );
 
-    const selectTemplate = (templateId) => {
+    const selectTemplate = templateId => {
       selectedTemplateId.value = templateId;
     };
 
@@ -146,9 +148,15 @@ export default {
       }
     };
 
-    const adjustElementsForPageSize = (elements, fromPageSize, toPageSize, fromOrientation, toOrientation) => {
+    const adjustElementsForPageSize = (
+      elements,
+      fromPageSize,
+      toPageSize,
+      fromOrientation,
+      toOrientation,
+    ) => {
       // Obtener dimensiones base
-      const getBaseDimensions = (pageSize) => {
+      const getBaseDimensions = pageSize => {
         switch (pageSize) {
           case 'LETTER':
             return { w: 612, h: 792 };

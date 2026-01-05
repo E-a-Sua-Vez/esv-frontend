@@ -413,7 +413,11 @@ export default {
     <div class="content text-center">
       <div class="row justify-content-center">
         <div class="col-12 col-lg-8">
-          <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+          <CommerceLogo
+            :src="state.commerce.logo"
+            :loading="loading"
+            :large-size="true"
+          ></CommerceLogo>
           <QueueName :queue="state.queue"></QueueName>
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>

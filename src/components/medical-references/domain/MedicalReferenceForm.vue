@@ -15,6 +15,8 @@ import {
 import { searchTemplates as searchMedicalTemplates } from '../../../application/services/medical-template';
 import { useSpeechRecognition } from '../../../components/patient-history/composables/useSpeechRecognition';
 import PdfTemplateSelector from '../../pdf-templates/PdfTemplateSelector.vue';
+import { globalStore } from '../../../stores';
+import { getAttentionDetails } from '../../../application/services/attention';
 
 export default {
   name: 'MedicalReferenceForm',
@@ -37,6 +39,7 @@ export default {
   setup(props, { emit }) {
     const { t } = useI18n();
     const loading = ref(false);
+    const store = globalStore();
     const { commerce, client, attention, toggles, errorsAdd, receiveData } = toRefs(props);
 
     const state = reactive({
@@ -118,11 +121,62 @@ export default {
 
     // Initialize reference data
     onMounted(async () => {
+      console.log('📋 Initializing reference - attention prop:', attention.value);
+
+      // Extract attention ID first (could be string, object with id, or object with full details)
+      let attentionId = null;
+      if (typeof attention.value === 'string') {
+        attentionId = attention.value;
+      } else if (attention.value?.id) {
+        attentionId = attention.value.id;
+      }
+
+      // Set attention ID immediately if we have it
+      if (attentionId) {
+        state.reference.attentionId = attentionId;
+        console.log('✅ Attention ID set from prop:', state.reference.attentionId);
+      }
+
       if (commerce.value?.id) state.reference.commerceId = commerce.value.id;
       if (client.value?.id) state.reference.clientId = client.value.id;
-      if (attention.value?.id) state.reference.attentionId = attention.value.id;
-      if (attention.value?.collaboratorId)
-        state.reference.referringDoctorId = attention.value.collaboratorId;
+
+      // Load full attention details if we need collaborator info
+      let attentionDetails = attention.value;
+      if (attentionId && !attention.value?.collaboratorId) {
+        console.log('🔄 Loading attention details for ID:', attentionId);
+        try {
+          attentionDetails = await getAttentionDetails(attentionId);
+          console.log('✅ Attention details loaded:', attentionDetails);
+          // Ensure attentionId is set (in case getAttentionDetails succeeds but ID was missing)
+          if (attentionDetails?.id) {
+            state.reference.attentionId = attentionDetails.id;
+          }
+        } catch (error) {
+          console.error('❌ Error loading attention details:', error);
+          // Keep the ID we already set from the prop
+        }
+      } else if (!attentionId) {
+        console.warn('⚠️ No attention ID found in prop');
+      }
+
+      if (attentionDetails?.collaboratorId) {
+        state.reference.referringDoctorId = attentionDetails.collaboratorId;
+        console.log('👨‍⚕️ Doctor ID set from attention:', state.reference.referringDoctorId);
+      } else {
+        // Fallback: Get current user from store (should be the collaborator creating the reference)
+        console.warn('⚠️ No collaborator ID found in attention, using current user from store');
+        try {
+          const currentUser = await store.getCurrentUser;
+          if (currentUser && currentUser.id) {
+            state.reference.referringDoctorId = currentUser.id;
+            console.log('👨‍⚕️ Doctor ID set from current user:', state.reference.referringDoctorId);
+          } else {
+            console.error('❌ No current user found in store');
+          }
+        } catch (error) {
+          console.error('❌ Error getting current user from store:', error);
+        }
+      }
 
       // Set default preferred date (1 week from now)
       const preferredDate = new Date();
@@ -142,7 +196,7 @@ export default {
           commerce.value.id,
           state.reference.referringDoctorId,
           {
-            type: 'REFERENCE',
+            type: 'reference',
             limit: 20,
           },
         );
@@ -210,7 +264,7 @@ export default {
         loading.value = true;
         const referenceData = {
           ...state.reference,
-          pdfTemplateId: state.pdfTemplate.selected
+          pdfTemplateId: state.pdfTemplate.selected,
         };
         const reference = await createReference(referenceData);
         state.createdReference = reference;
@@ -354,11 +408,13 @@ export default {
         // Ensure reference has a unique identifier
         if (!state.reference.referenceId && !state.reference.id) {
           // Generate a temporary ID if none exists
-          state.reference.referenceId = `temp_ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          state.reference.referenceId = `temp_ref_${Date.now()}_${Math.random()
+            .toString(36)
+            .substr(2, 9)}`;
         }
-        
+
         console.log('📋 Sending reference data:', state.reference);
-        
+
         if (typeof receiveData.value === 'function') {
           receiveData.value(state.reference);
         } else {
@@ -628,7 +684,12 @@ export default {
                   v-model="state.reference.followUpRequired"
                   type="checkbox"
                   :disabled="!toggles['patient.history.edit']"
-                  style="width: 16px; height: 16px; accent-color: var(--azul-turno); cursor: pointer;"
+                  style="
+                    width: 16px;
+                    height: 16px;
+                    accent-color: var(--azul-turno);
+                    cursor: pointer;
+                  "
                 />
                 <i class="bi bi-arrow-repeat me-1"></i>
                 {{ t('patientHistoryView.reference.requiresFollowUp') }}
@@ -1121,7 +1182,9 @@ export default {
             class="btn btn-sm btn-link"
             @click="state.pdfTemplate.showSelector = !state.pdfTemplate.showSelector"
           >
-            <i :class="state.pdfTemplate.showSelector ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+            <i
+              :class="state.pdfTemplate.showSelector ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"
+            ></i>
           </button>
         </div>
 

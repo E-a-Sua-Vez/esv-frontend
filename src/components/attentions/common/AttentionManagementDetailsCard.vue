@@ -6,6 +6,7 @@ import Popper from 'vue3-popper';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
 import { ATTENTION_STATUS } from '../../../shared/constants';
+import { getConsentStatus } from '../../../application/services/consent';
 
 export default {
   name: 'AttentionManagementDetailsCard',
@@ -21,10 +22,35 @@ export default {
       loading: false,
       extendedEntity: false,
       contactResultTypes: [],
+      consentStatus: null,
+      loadingConsentStatus: false,
     };
   },
   beforeMount() {
     this.contactResultTypes = getContactResultTypes();
+    if (this.attention && this.attention.clientId && this.commerce && this.commerce.id) {
+      this.loadConsentStatus();
+    }
+  },
+  watch: {
+    attention: {
+      handler(newVal) {
+        if (newVal && newVal.clientId && this.commerce && this.commerce.id) {
+          this.loadConsentStatus();
+        }
+      },
+      immediate: true,
+      deep: true,
+    },
+    commerce: {
+      handler(newVal) {
+        if (newVal && newVal.id && this.attention && this.attention.clientId) {
+          this.loadConsentStatus();
+        }
+      },
+      immediate: true,
+      deep: true,
+    },
   },
   computed: {
     attentionFullName() {
@@ -127,6 +153,39 @@ export default {
         return 'bi-x-circle-fill';
       }
       return 'bi-info-circle-fill';
+    },
+    async loadConsentStatus() {
+      if (!this.attention || !this.attention.clientId || !this.commerce || !this.commerce.id) {
+        return;
+      }
+      try {
+        this.loadingConsentStatus = true;
+        this.consentStatus = await getConsentStatus(this.commerce.id, this.attention.clientId);
+      } catch (error) {
+        console.error('Error loading consent status:', error);
+        this.consentStatus = null;
+      } finally {
+        this.loadingConsentStatus = false;
+      }
+    },
+    hasBlockingConsents() {
+      if (!this.consentStatus || !this.consentStatus.missing) {
+        return false;
+      }
+      return this.consentStatus.missing.some(req => req.blockingForAttention && req.required);
+    },
+    getMissingConsentsCount() {
+      if (!this.consentStatus || !this.consentStatus.missing) {
+        return 0;
+      }
+      return this.consentStatus.missing.length;
+    },
+    getBlockingConsentsCount() {
+      if (!this.consentStatus || !this.consentStatus.missing) {
+        return 0;
+      }
+      return this.consentStatus.missing.filter(req => req.blockingForAttention && req.required)
+        .length;
     },
   },
   watch: {
@@ -259,6 +318,49 @@ export default {
                 </div>
               </template>
               <i class="bi bi-eyedropper icon-mini-separated" @click.stop></i>
+            </Popper>
+            <!-- LGPD Consent Indicator -->
+            <Popper
+              v-if="attention && commerce && consentStatus"
+              :class="'dark'"
+              arrow
+              disable-click-away
+              hover
+            >
+              <template #content>
+                <div>
+                  <span v-if="hasBlockingConsents()">
+                    {{
+                      $t('attention.lgpd.blockingConsents', {
+                        count: getBlockingConsentsCount(),
+                      }) || `Faltan ${getBlockingConsentsCount()} consentimiento(s) bloqueante(s)`
+                    }}
+                  </span>
+                  <span v-else-if="getMissingConsentsCount() > 0">
+                    {{
+                      $t('attention.lgpd.missingConsents', { count: getMissingConsentsCount() }) ||
+                      `Faltan ${getMissingConsentsCount()} consentimiento(s)`
+                    }}
+                  </span>
+                  <span v-else>
+                    {{
+                      $t('attention.lgpd.allConsentsGranted') ||
+                      'Todos los consentimientos otorgados'
+                    }}
+                  </span>
+                </div>
+              </template>
+              <i
+                v-if="hasBlockingConsents()"
+                class="bi bi-shield-exclamation icon-mini-separated red-icon"
+                @click.stop
+              ></i>
+              <i
+                v-else-if="getMissingConsentsCount() > 0"
+                class="bi bi-shield-check icon-mini-separated yellow-icon"
+                @click.stop
+              ></i>
+              <i v-else class="bi bi-shield-check icon-mini-separated green-icon" @click.stop></i>
             </Popper>
             <span class="attention-days-inline" v-if="attention.daysSinceAttention !== undefined">
               <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)}`"></i>

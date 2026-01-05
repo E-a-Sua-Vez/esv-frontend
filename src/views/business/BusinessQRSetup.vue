@@ -181,7 +181,11 @@ export default {
 
       <!-- Business Logo -->
       <div class="logo-container mb-2" v-if="!loading">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="state.business.logo"
+          :loading="loading"
+          :large-size="true"
+        ></CommerceLogo>
       </div>
 
       <!-- Welcome Section -->

@@ -72,7 +72,11 @@
               >
                 <i :class="template.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'"></i>
               </button>
-              <button type="button" class="btn-action btn-action-primary" @click="applyTemplate(template)">
+              <button
+                type="button"
+                class="btn-action btn-action-primary"
+                @click="applyTemplate(template)"
+              >
                 <i class="bi bi-check-circle me-1"></i>
                 Usar
               </button>

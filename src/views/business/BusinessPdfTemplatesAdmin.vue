@@ -218,7 +218,12 @@ export default {
           active: true,
           available: true,
           header: { type: 'header', enabled: false, includeLogo: true, includeCommerceInfo: true },
-          footer: { type: 'footer', enabled: false, includeDigitalSignature: true, includeDoctorInfo: true },
+          footer: {
+            type: 'footer',
+            enabled: false,
+            includeDigitalSignature: true,
+            includeDoctorInfo: true,
+          },
           content: { type: 'content', enabled: false },
           pageSize: 'A4',
           orientation: 'portrait',
@@ -278,7 +283,9 @@ export default {
       // Ensure we always receive an array, never a string or other type
       if (Array.isArray(filtered)) {
         // Filter out any non-object items (in case there are strings mixed in)
-        state.filtered = filtered.filter(item => item && typeof item === 'object' && !Array.isArray(item));
+        state.filtered = filtered.filter(
+          item => item && typeof item === 'object' && !Array.isArray(item),
+        );
       } else {
         state.filtered = [];
       }
@@ -313,7 +320,12 @@ export default {
         active: true,
         available: true,
         header: { type: 'header', enabled: false, includeLogo: true, includeCommerceInfo: true },
-        footer: { type: 'footer', enabled: false, includeDigitalSignature: true, includeDoctorInfo: true },
+        footer: {
+          type: 'footer',
+          enabled: false,
+          includeDigitalSignature: true,
+          includeDoctorInfo: true,
+        },
         content: { type: 'content', enabled: false },
         pageSize: 'A4',
         orientation: 'portrait',
@@ -369,7 +381,8 @@ export default {
         window.open(url, '_blank');
       } catch (error) {
         console.error('Error generating preview:', error);
-        const errorMessage = error.response?.data?.message || error.message || 'Erro ao gerar preview do PDF';
+        const errorMessage =
+          error.response?.data?.message || error.message || 'Erro ao gerar preview do PDF';
         alertError.value = Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage;
       } finally {
         state.previewLoading = false;
@@ -405,8 +418,10 @@ export default {
         if (typeof el.y === 'number') el.y = Math.round(el.y * sy);
         if (typeof el.width === 'number') el.width = Math.round(el.width * sx);
         if (typeof el.height === 'number') el.height = Math.round(el.height * sy);
-        if (typeof el.fontSize === 'number') el.fontSize = Math.round(el.fontSize * ((sx + sy) / 2));
-        if (typeof el.lineWidth === 'number') el.lineWidth = Math.max(1, Math.round(el.lineWidth * ((sx + sy) / 2)));
+        if (typeof el.fontSize === 'number')
+          el.fontSize = Math.round(el.fontSize * ((sx + sy) / 2));
+        if (typeof el.lineWidth === 'number')
+          el.lineWidth = Math.max(1, Math.round(el.lineWidth * ((sx + sy) / 2)));
       });
     };
 
@@ -423,9 +438,12 @@ export default {
       const sx = newW / oldW;
       const sy = newH / oldH;
       if (!isFinite(sx) || !isFinite(sy) || sx <= 0 || sy <= 0) return;
-      if (tpl.header && Array.isArray(tpl.header.elements)) scaleElementsArray(tpl.header.elements, sx, sy);
-      if (tpl.footer && Array.isArray(tpl.footer.elements)) scaleElementsArray(tpl.footer.elements, sx, sy);
-      if (tpl.content && Array.isArray(tpl.content.elements)) scaleElementsArray(tpl.content.elements, sx, sy);
+      if (tpl.header && Array.isArray(tpl.header.elements))
+        scaleElementsArray(tpl.header.elements, sx, sy);
+      if (tpl.footer && Array.isArray(tpl.footer.elements))
+        scaleElementsArray(tpl.footer.elements, sx, sy);
+      if (tpl.content && Array.isArray(tpl.content.elements))
+        scaleElementsArray(tpl.content.elements, sx, sy);
     };
 
     return {
@@ -509,7 +527,11 @@ export default {
                     :receive-filtered-items="receiveFilteredItems"
                   >
                   </SearchAdminItem>
-                  <div v-for="(template, index) in filteredTemplates" :key="index" class="result-card">
+                  <div
+                    v-for="(template, index) in filteredTemplates"
+                    :key="index"
+                    class="result-card"
+                  >
                     <div class="row align-items-center">
                       <div class="col-10">
                         <PdfTemplateSimpleName
@@ -541,7 +563,9 @@ export default {
                           />
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{ $t('pdfTemplates.description') }}</label>
+                          <label class="form-label-modern">{{
+                            $t('pdfTemplates.description')
+                          }}</label>
                           <textarea
                             v-model="template.description"
                             class="form-control-modern"
@@ -550,7 +574,9 @@ export default {
                           ></textarea>
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{ $t('pdfTemplates.documentType') }}</label>
+                          <label class="form-label-modern">{{
+                            $t('pdfTemplates.documentType')
+                          }}</label>
                           <select
                             v-model="template.documentType"
                             class="form-control-modern"
@@ -585,8 +611,8 @@ export default {
                           <label class="form-label-modern">{{ $t('pdfTemplates.pageSize') }}</label>
                           <select
                             v-model="template.pageSize"
-                              @focus="storePrevPageSize(template)"
-                              @change="handlePageSizeChange(template)"
+                            @focus="storePrevPageSize(template)"
+                            @change="handlePageSizeChange(template)"
                             class="form-control-modern"
                             :disabled="!state.toggles['pdf-templates.admin.update']"
                           >
@@ -614,7 +640,10 @@ export default {
                         </button>
                         <AreYouSure
                           :show="state.goToUnavailable"
-                          @actionYes="deleteTemplateConfirm(template); unavailableCancel()"
+                          @actionYes="
+                            deleteTemplateConfirm(template);
+                            unavailableCancel();
+                          "
                           @actionNo="unavailableCancel()"
                         >
                         </AreYouSure>
@@ -743,7 +772,11 @@ export default {
                     :receive-filtered-items="receiveFilteredItems"
                   >
                   </SearchAdminItem>
-                  <div v-for="(template, index) in filteredTemplates" :key="index" class="result-card">
+                  <div
+                    v-for="(template, index) in filteredTemplates"
+                    :key="index"
+                    class="result-card"
+                  >
                     <div class="row align-items-center">
                       <div class="col-10">
                         <PdfTemplateSimpleName
@@ -775,7 +808,9 @@ export default {
                           />
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{ $t('pdfTemplates.description') }}</label>
+                          <label class="form-label-modern">{{
+                            $t('pdfTemplates.description')
+                          }}</label>
                           <textarea
                             v-model="template.description"
                             class="form-control-modern"
@@ -784,7 +819,9 @@ export default {
                           ></textarea>
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{ $t('pdfTemplates.documentType') }}</label>
+                          <label class="form-label-modern">{{
+                            $t('pdfTemplates.documentType')
+                          }}</label>
                           <select
                             v-model="template.documentType"
                             class="form-control-modern"
@@ -819,8 +856,8 @@ export default {
                           <label class="form-label-modern">{{ $t('pdfTemplates.pageSize') }}</label>
                           <select
                             v-model="template.pageSize"
-                              @focus="storePrevPageSize(template)"
-                              @change="handlePageSizeChange(template)"
+                            @focus="storePrevPageSize(template)"
+                            @change="handlePageSizeChange(template)"
                             class="form-control-modern"
                             :disabled="!state.toggles['pdf-templates.admin.update']"
                           >
@@ -848,7 +885,10 @@ export default {
                         </button>
                         <AreYouSure
                           :show="state.goToUnavailable"
-                          @actionYes="deleteTemplateConfirm(template); unavailableCancel()"
+                          @actionYes="
+                            deleteTemplateConfirm(template);
+                            unavailableCancel();
+                          "
                           @actionNo="unavailableCancel()"
                         >
                         </AreYouSure>
@@ -943,9 +983,7 @@ export default {
             <div id="add-template-form" class="result-card mb-4" v-if="state.showAdd">
               <div class="form-fields-container">
                 <div class="form-group-modern">
-                  <label class="form-label-modern">
-                    {{ $t('pdfTemplates.name') }} *
-                  </label>
+                  <label class="form-label-modern"> {{ $t('pdfTemplates.name') }} * </label>
                   <input
                     v-model="state.newTemplate.name"
                     type="text"
@@ -984,11 +1022,7 @@ export default {
                     {{ $t('pdfTemplates.scope') }}
                   </label>
                   <select v-model="state.newTemplate.scope" class="form-control-modern">
-                    <option
-                      v-for="scope in state.scopes"
-                      :key="scope.value"
-                      :value="scope.value"
-                    >
+                    <option v-for="scope in state.scopes" :key="scope.value" :value="scope.value">
                       {{ scope.label }}
                     </option>
                   </select>
@@ -1006,24 +1040,28 @@ export default {
                   <label class="form-label-modern">
                     {{ $t('pdfTemplates.isDefault') }}
                   </label>
-                  <div class="form-check" style="flex: 1; display: flex; align-items: center; justify-content: flex-start;">
+                  <div
+                    class="form-check"
+                    style="flex: 1; display: flex; align-items: center; justify-content: flex-start"
+                  >
                     <input
                       v-model="state.newTemplate.isDefault"
                       type="checkbox"
                       class="form-check-input"
                       id="isDefault"
-                      style="margin-top: 0; margin-right: 0.5rem; flex-shrink: 0;"
+                      style="margin-top: 0; margin-right: 0.5rem; flex-shrink: 0"
                     />
-                    <label class="form-check-label" for="isDefault" style="margin-bottom: 0; cursor: pointer;">
+                    <label
+                      class="form-check-label"
+                      for="isDefault"
+                      style="margin-bottom: 0; cursor: pointer"
+                    >
                       {{ $t('pdfTemplates.isDefault') }}
                     </label>
                   </div>
                 </div>
               </div>
-              <div
-                class="row g-1 errors"
-                v-if="state.errorsAdd && state.errorsAdd.length > 0"
-              >
+              <div class="row g-1 errors" v-if="state.errorsAdd && state.errorsAdd.length > 0">
                 <Warning>
                   <template v-slot:message>
                     <li v-for="(error, index) in state.errorsAdd" :key="index">
@@ -1056,48 +1094,48 @@ export default {
       </div>
     </div>
 
-        <!-- Canvas Editor Modal -->
-        <div
-          v-if="state.showCanvasEditor && state.editingTemplate"
-          class="modal fade show d-block"
-          tabindex="-1"
-          @click.self="closeCanvasEditor"
-          style="
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1050;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-          "
-        >
-          <div class="modal-dialog modal-fullscreen">
-            <div class="modal-content">
-              <div class="modal-header border-0 centered active-name">
-                <h5 class="modal-title fw-bold">
-                  <i class="bi bi-paint-bucket"></i> Editor Gráfico - {{ state.editingTemplate.name }} ({{ state.editingSection }})
-                </h5>
-                <button
-                  id="close-modal"
-                  type="button"
-                  class="btn-close"
-                  @click="closeCanvasEditor"
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div class="modal-body">
-                <PdfTemplateCanvasEditor
-                  :template="state.editingTemplate"
-                  :section="state.editingSection"
-                  @save="saveCanvasTemplate"
-                  @cancel="closeCanvasEditor"
-                />
-              </div>
-            </div>
+    <!-- Canvas Editor Modal -->
+    <div
+      v-if="state.showCanvasEditor && state.editingTemplate"
+      class="modal fade show d-block"
+      tabindex="-1"
+      @click.self="closeCanvasEditor"
+      style="
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1050;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      "
+    >
+      <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold">
+              <i class="bi bi-paint-bucket"></i> Editor Gráfico -
+              {{ state.editingTemplate.name }} ({{ state.editingSection }})
+            </h5>
+            <button
+              id="close-modal"
+              type="button"
+              class="btn-close"
+              @click="closeCanvasEditor"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <PdfTemplateCanvasEditor
+              :template="state.editingTemplate"
+              :section="state.editingSection"
+              @save="saveCanvasTemplate"
+              @cancel="closeCanvasEditor"
+            />
           </div>
         </div>
-
+      </div>
+    </div>
 
     <!-- Canvas Editor Modal -->
     <div
@@ -1119,7 +1157,8 @@ export default {
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
             <h5 class="modal-title fw-bold">
-              <i class="bi bi-paint-bucket"></i> Editor Gráfico - {{ state.editingTemplate.name }} ({{ state.editingSection }})
+              <i class="bi bi-paint-bucket"></i> Editor Gráfico -
+              {{ state.editingTemplate.name }} ({{ state.editingSection }})
             </h5>
             <button
               id="close-modal"

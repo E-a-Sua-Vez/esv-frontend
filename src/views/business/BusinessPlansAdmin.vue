@@ -688,9 +688,7 @@ export default {
               </div>
               <!-- Pagination Mobile/Tablet -->
               <div v-if="state.filtered && state.filtered.length > 0" class="mt-3 mb-3">
-                <div
-                  class="d-flex justify-content-center align-items-center flex-wrap gap-2 mb-2"
-                >
+                <div class="d-flex justify-content-center align-items-center flex-wrap gap-2 mb-2">
                   <span class="badge bg-secondary px-2 py-2 m-1">
                     {{ $t('businessPlansAdmin.listResult') }} {{ state.counter }}
                   </span>

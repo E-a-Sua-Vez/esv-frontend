@@ -37,79 +37,89 @@
       >
         <template #content>
           <!-- Client Requirements Cards -->
-          <div
-            v-if="state.user?.id && isPreprontuarioActive()"
-            class="client-requirements-section mt-3"
-          >
+          <div v-if="state.user?.id" class="client-requirements-section mt-3">
+            <!-- Consent Status Widget -->
+            <ConsentStatusWidget
+              v-if="state.clientConsentsLoaded && state.commerce?.id && state.client?.id"
+              :commerce-id="state.commerce.id"
+              :client-id="state.client.id"
+              :consents="state.clientConsents"
+              :requirements="state.consentRequirements"
+              @refresh="loadConsentStatus"
+              @open-manager="openConsentManager"
+            />
+
             <!-- Preprontuario Status Card -->
-            <div class="requirement-card requirement-card-compact">
-              <div class="requirement-card-header">
-                <div class="requirement-icon">
-                  <i class="bi bi-clipboard2-pulse-fill"></i>
-                </div>
-                <div class="requirement-info">
-                  <div class="requirement-title">
-                    {{ $t('dashboard.preprontuario') || 'Pré-Prontuário' }}
-                    <a
-                      href="#"
-                      @click.prevent="checkPreprontuarioCompletion(true)"
-                      :class="{ loading: state.loadingPreprontuario }"
-                      class="refresh-link"
-                      :title="$t('dashboard.refreshStatus') || 'Atualizar status'"
+            <div v-if="isPreprontuarioActive()">
+              <div class="requirement-card requirement-card-compact">
+                <div class="requirement-card-header">
+                  <div class="requirement-icon">
+                    <i class="bi bi-clipboard2-pulse-fill"></i>
+                  </div>
+                  <div class="requirement-info">
+                    <div class="requirement-title">
+                      {{ $t('dashboard.preprontuario') || 'Pré-Prontuário' }}
+                      <a
+                        href="#"
+                        @click.prevent="checkPreprontuarioCompletion(true)"
+                        :class="{ loading: state.loadingPreprontuario }"
+                        class="refresh-link"
+                        :title="$t('dashboard.refreshStatus') || 'Atualizar status'"
+                      >
+                        <i
+                          class="bi bi-arrow-clockwise"
+                          :class="{ spinning: state.loadingPreprontuario }"
+                        ></i>
+                      </a>
+                    </div>
+                    <div
+                      class="requirement-status"
+                      :class="
+                        state.preprontuarioStatus?.completed ? 'status-completed' : 'status-pending'
+                      "
                     >
                       <i
-                        class="bi bi-arrow-clockwise"
-                        :class="{ spinning: state.loadingPreprontuario }"
+                        class="bi"
+                        :class="
+                          state.preprontuarioStatus?.completed
+                            ? 'bi-check-circle-fill'
+                            : 'bi-exclamation-circle-fill'
+                        "
                       ></i>
-                    </a>
-                  </div>
-                  <div
-                    class="requirement-status"
-                    :class="
-                      state.preprontuarioStatus?.completed ? 'status-completed' : 'status-pending'
-                    "
-                  >
-                    <i
-                      class="bi"
-                      :class="
-                        state.preprontuarioStatus?.completed
-                          ? 'bi-check-circle-fill'
-                          : 'bi-exclamation-circle-fill'
-                      "
-                    ></i>
-                    <span>
-                      {{
-                        state.preprontuarioStatus?.completed
-                          ? $t('dashboard.preprontuarioDetails.completed') ||
-                            $t('dashboard.completed') ||
-                            'Concluído'
-                          : $t('dashboard.preprontuarioDetails.pending') ||
-                            $t('dashboard.pending') ||
-                            'Pendente'
-                      }}
-                    </span>
+                      <span>
+                        {{
+                          state.preprontuarioStatus?.completed
+                            ? $t('dashboard.preprontuarioDetails.completed') ||
+                              $t('dashboard.completed') ||
+                              'Concluído'
+                            : $t('dashboard.preprontuarioDetails.pending') ||
+                              $t('dashboard.pending') ||
+                              'Pendente'
+                        }}
+                      </span>
+                    </div>
                   </div>
                 </div>
+                <button
+                  v-if="!state.preprontuarioStatus?.completed"
+                  @click="sendPreprontuarioReminder()"
+                  :disabled="state.loadingPreprontuario || state.preprontuarioMessageSent"
+                  class="requirement-action-btn-compact whatsapp-btn"
+                  :class="{ disabled: state.preprontuarioMessageSent }"
+                >
+                  <i
+                    class="bi"
+                    :class="state.preprontuarioMessageSent ? 'bi-check-circle-fill' : 'bi-whatsapp'"
+                  ></i>
+                  <span v-if="state.loadingPreprontuario">{{
+                    $t('dashboard.sending') || 'Enviando...'
+                  }}</span>
+                  <span v-else-if="state.preprontuarioMessageSent">{{
+                    $t('dashboard.messageAlreadySent') || 'Mensaje ya enviado'
+                  }}</span>
+                  <span v-else>{{ $t('dashboard.sendReminder') || 'Enviar Lembrete' }}</span>
+                </button>
               </div>
-              <button
-                v-if="!state.preprontuarioStatus?.completed"
-                @click="sendPreprontuarioReminder()"
-                :disabled="state.loadingPreprontuario || state.preprontuarioMessageSent"
-                class="requirement-action-btn-compact whatsapp-btn"
-                :class="{ disabled: state.preprontuarioMessageSent }"
-              >
-                <i
-                  class="bi"
-                  :class="state.preprontuarioMessageSent ? 'bi-check-circle-fill' : 'bi-whatsapp'"
-                ></i>
-                <span v-if="state.loadingPreprontuario">{{
-                  $t('dashboard.sending') || 'Enviando...'
-                }}</span>
-                <span v-else-if="state.preprontuarioMessageSent">{{
-                  $t('dashboard.messageAlreadySent') || 'Mensaje ya enviado'
-                }}</span>
-                <span v-else>{{ $t('dashboard.sendReminder') || 'Enviar Lembrete' }}</span>
-              </button>
             </div>
           </div>
 
@@ -157,6 +167,54 @@
         :icon="'bi bi-emoji-expressionless'"
       />
     </div>
+
+    <!-- Modal LGPD Consent Manager -->
+    <Teleport to="body">
+      <div
+        v-if="state.client?.id && state.commerce?.id"
+        class="modal fade"
+        :id="`lgpdConsentModal-${state.client.id}`"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="lgpdConsentModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header border-0">
+              <h5 class="modal-title fw-bold" id="lgpdConsentModalLabel">
+                <i class="bi bi-shield-check me-2"></i>
+                {{ $t('lgpd.title') || 'LGPD - Consentimentos e Portabilidade' }}
+              </h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <LgpdConsentManager
+                v-if="state.client?.id && state.commerce?.id"
+                :commerce-id="state.commerce.id"
+                :client-id="state.client.id"
+                @consent-updated="loadConsentStatus"
+              />
+            </div>
+            <div class="modal-footer border-0">
+              <button
+                type="button"
+                class="btn btn-size fw-bold btn-dark rounded-pill"
+                data-bs-dismiss="modal"
+              >
+                {{ $t('common.close') || 'Fechar' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -200,6 +258,7 @@ import {
   checkPreprontuarioStatus,
 } from '../../application/services/whatsapp-notification';
 import { getFormPersonalizedByCommerceId } from '../../application/services/form-personalized';
+import { getConsentStatus } from '../../application/services/consent';
 import AttentionBasePage from '../../components/attentions/common/AttentionBasePage.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
@@ -207,6 +266,8 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Message from '../../components/common/Message.vue';
+import ConsentStatusWidget from '../../components/lgpd/ConsentStatusWidget.vue';
+import LgpdConsentManager from '../../components/lgpd/LgpdConsentManager.vue';
 
 export default {
   name: 'CollaboratorAttentionCheckIn',
@@ -218,6 +279,8 @@ export default {
     Spinner,
     Alert,
     Message,
+    ConsentStatusWidget,
+    LgpdConsentManager,
   },
   setup() {
     const route = useRoute();
@@ -250,6 +313,9 @@ export default {
       preprontuarioActiveForContext: false,
       formsPersonalized: [],
       listUpdateKey: 0, // Key to force component re-render
+      clientConsents: [],
+      consentRequirements: [],
+      clientConsentsLoaded: false,
     });
 
     // Live update interval for stats
@@ -849,6 +915,22 @@ export default {
               },
               { immediate: true }
             );
+
+            // Load consent status when client and commerce are available
+            if (state.commerce?.id && state.client?.id) {
+              loadConsentStatus();
+            } else if (state.commerce?.id) {
+              // Watch for client to be loaded
+              watch(
+                () => state.client?.id,
+                clientId => {
+                  if (clientId) {
+                    loadConsentStatus();
+                  }
+                },
+                { immediate: true }
+              );
+            }
           }
         } else {
           loading.value = false;
@@ -1040,6 +1122,44 @@ export default {
       }
     };
 
+    // Load consent status
+    const loadConsentStatus = async () => {
+      const clientId =
+        state.client?.id ||
+        state.attention?.clientId ||
+        state.user?.clientId ||
+        state.attention?.user?.clientId;
+      if (!clientId || !state.commerce?.id) {
+        return;
+      }
+      try {
+        const status = await getConsentStatus(state.commerce.id, clientId);
+        state.clientConsents = status.consents || [];
+        state.consentRequirements = status.requirements || [];
+        state.clientConsentsLoaded = true;
+      } catch (error) {
+        console.error('Error loading consent status:', error);
+        state.clientConsentsLoaded = true; // Mark as loaded even on error to avoid infinite loading
+      }
+    };
+
+    const openConsentManager = async () => {
+      if (!state.client?.id || !state.commerce?.id) {
+        console.warn('Cannot open consent manager: missing client or commerce');
+        return;
+      }
+      // Abrir modal usando Bootstrap
+      await nextTick();
+      const modalId = `lgpdConsentModal-${state.client.id}`;
+      const modalElement = document.getElementById(modalId);
+      if (modalElement) {
+        // Bootstrap 5
+        const { Modal } = await import('bootstrap');
+        const modal = new Modal(modalElement);
+        modal.show();
+      }
+    };
+
     const sendPreprontuarioReminder = async () => {
       const clientId =
         state.client?.id ||
@@ -1109,6 +1229,8 @@ export default {
       checkPreprontuarioCompletion,
       sendPreprontuarioReminder,
       loadPreprontuarioData,
+      loadConsentStatus,
+      openConsentManager,
     };
   },
 };

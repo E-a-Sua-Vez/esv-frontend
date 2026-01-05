@@ -71,6 +71,7 @@
   "continue": "Continuar",
   "update": "Actualizar",
   "cancel": "Cancelar",
+  "delete": "Eliminar",
   "active": "Activo",
   "inactive": "Inactivo",
   "myUser": {
@@ -746,6 +747,11 @@
     "VISIT": "Visita",
     "EMAIL": "Email"
   },
+  "attention": {
+    "lgpd": {
+      "blockingConsents": "Faltan {count} consentimiento(s) bloqueante(s)"
+    }
+  },
   "contactResultTypes": {
     "INTERESTED": "Interesado",
     "CONTACT_LATER": "Contactar Después",
@@ -1311,7 +1317,18 @@
           "transfer": "Transferir Atención",
           "cancel": "Cancelar Atención",
           "patient-history": "Historial Médico",
-          "products": "Registrar Stock"
+          "products": "Registrar Stock",
+          "lgpd": {
+            "blocking": "Bloqueante",
+            "missing": "Faltantes",
+            "compliant": "Conforme",
+            "blockingConsents": "Faltan {count} consentimiento(s) bloqueante(s)",
+            "missingConsents": "Faltan {count} consentimiento(s)",
+            "allConsentsGranted": "Todos los consentimientos otorgados",
+            "cannotAttend": "No se puede atender: faltan {count} consentimiento(s) bloqueante(s): {types}",
+            "cannotAdvanceStage": "No se puede avanzar etapa: faltan {count} consentimiento(s) bloqueante(s): {types}",
+            "clickToRequest": "Haz clic para solicitar consentimientos"
+          }
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -1490,7 +1507,18 @@
           "transfer": "Transferir Atención",
           "cancel": "Cancelar Atención",
           "patient-history": "Historial Médico",
-          "products": "Registrar Stock"
+          "products": "Registrar Stock",
+          "lgpd": {
+            "blocking": "Bloqueante",
+            "missing": "Faltantes",
+            "compliant": "Conforme",
+            "blockingConsents": "Faltan {count} consentimiento(s) bloqueante(s)",
+            "missingConsents": "Faltan {count} consentimiento(s)",
+            "allConsentsGranted": "Todos los consentimientos otorgados",
+            "cannotAttend": "No se puede atender: faltan {count} consentimiento(s) bloqueante(s): {types}",
+            "cannotAdvanceStage": "No se puede avanzar etapa: faltan {count} consentimiento(s) bloqueante(s): {types}",
+            "clickToRequest": "Haz clic para solicitar consentimientos"
+          }
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -1520,6 +1548,190 @@
       "paymentType": "Debe seleccionar el tipo de pago",
       "paymentMethod": "Debe seleccionar el método de pago",
       "paymentAmount": "Debe ingresar el monto"
+    }
+  },
+  "clientPortal": {
+    "menu": {
+      "welcome": "Bienvenido, {name}",
+      "loading": "Cargando...",
+      "consents": "Mis Consentimientos",
+      "profile": "Mi Perfil",
+      "documents": "Mis Documentos",
+      "history": "Mi Historial",
+      "logout": "Cerrar Sesión",
+      "comingSoon": "Próximamente",
+      "navigationError": "Error al navegar",
+      "sessionError": "Error al validar sesión"
+    },
+    "consents": {
+      "title": "Mis Consentimientos LGPD",
+      "backToMenu": "Volver al Menú",
+      "loading": "Cargando consentimientos...",
+      "noConsents": "No hay consentimientos registrados",
+      "loadError": "Error al cargar consentimientos",
+      "sessionError": "Error al validar sesión",
+      "revokeNotImplemented": "La revocación se implementará próximamente",
+      "revokeError": "Error al revocar consentimiento",
+      "export": "Exportar Datos (Art. 9º LGPD)",
+      "summary": {
+        "all": "Todos",
+        "granted": "Concedidos",
+        "pending": "Pendientes",
+        "denied": "Negados",
+        "expired": "Expirados",
+        "revoked": "Revocados"
+      },
+      "status": {
+        "granted": "Concedido",
+        "denied": "Negado",
+        "pending": "Pendiente",
+        "expired": "Expirado",
+        "revoked": "Revocado"
+      },
+      "card": {
+        "grantedAt": "Concedido el",
+        "expiresAt": "Expira el",
+        "revokedAt": "Revocado el",
+        "revoke": "Revocar",
+        "viewHistory": "Ver Historial",
+        "viewTerms": "Ver Términos"
+      },
+      "revoke": {
+        "title": "Revocar Consentimiento",
+        "confirmMessage": "¿Está seguro de que desea revocar este consentimiento?",
+        "reason": "Motivo",
+        "optional": "Opcional",
+        "reasonPlaceholder": "Ingrese el motivo de la revocación (opcional)",
+        "cancel": "Cancelar",
+        "confirm": "Confirmar Revocación"
+      },
+      "history": {
+        "title": "Historial de Consentimiento",
+        "noHistory": "No hay historial disponible",
+        "close": "Cerrar",
+        "actions": {
+          "granted": "Concedido",
+          "denied": "Negado",
+          "revoked": "Revocado",
+          "expired": "Expirado",
+          "updated": "Actualizado"
+        }
+      },
+      "terms": {
+        "title": "Términos del Consentimiento",
+        "noTerms": "No hay términos disponibles",
+        "close": "Cerrar"
+      }
+    },
+    "telemedicine": {
+      "title": "Mis Sesiones de Telemedicina",
+      "backToMenu": "Volver al Menú",
+      "loading": "Cargando sesiones...",
+      "noSessions": "No hay sesiones de telemedicina registradas",
+      "loadError": "Error al cargar sesiones",
+      "sessionNotAvailable": "Sesión no disponible",
+      "accessSession": "Acceder a Sesión",
+      "sessionInfo": "Información de Sesión",
+      "filters": {
+        "all": "Todas",
+        "active": "Activas",
+        "scheduled": "Programadas",
+        "completed": "Completadas",
+        "cancelled": "Canceladas"
+      },
+      "status": {
+        "active": "Activa",
+        "scheduled": "Programada",
+        "completed": "Completada",
+        "cancelled": "Cancelada"
+      }
+    },
+    "profile": {
+      "title": "Mi Perfil",
+      "backToMenu": "Volver al Menú",
+      "loading": "Cargando perfil...",
+      "loadError": "Error al cargar perfil",
+      "personalInfo": "Información Personal",
+      "additionalInfo": "Información Adicional",
+      "accountInfo": "Información de Cuenta",
+      "idNumber": "Número de Identificación",
+      "email": "Correo Electrónico",
+      "phone": "Teléfono",
+      "country": "País",
+      "code1": "Código 1",
+      "code2": "Código 2",
+      "code3": "Código 3",
+      "memberSince": "Miembro desde",
+      "totalAttentions": "Total de Atenciones",
+      "frequentCustomer": "Cliente Frecuente",
+      "yes": "Sí",
+      "no": "No"
+    },
+    "documents": {
+      "title": "Mis Documentos",
+      "backToMenu": "Volver al Menú",
+      "loading": "Cargando documentos...",
+      "loadError": "Error al cargar documentos",
+      "noDocuments": "No hay documentos disponibles",
+      "download": "Descargar",
+      "unnamed": "Documento sin nombre"
+    },
+    "history": {
+      "title": "Mi Historial de Atenciones",
+      "backToMenu": "Volver al Menú",
+      "loading": "Cargando historial...",
+      "loadError": "Error al cargar historial",
+      "noAttentions": "No hay atenciones registradas",
+      "filters": {
+        "all": "Todas",
+        "completed": "Completadas",
+        "cancelled": "Canceladas",
+        "pending": "Pendientes"
+      },
+      "status": {
+        "terminated": "Completada",
+        "rated": "Calificada",
+        "cancelled": "Cancelada",
+        "pending": "Pendiente"
+      },
+      "minutes": "minutos",
+      "hours": "horas"
+    },
+    "login": {
+      "welcome": "Portal del Cliente",
+      "loading": "Cargando...",
+      "processing": "Procesando...",
+      "requestAccess": "Solicitar Acceso",
+      "requestAccessDescription": "Ingrese su información para recibir un código de acceso",
+      "commerceId": "ID del Comercio",
+      "commerceIdPlaceholder": "Ingrese el ID del comercio",
+      "idNumber": "Número de Identificación",
+      "idNumberPlaceholder": "Ej: 12345678-9",
+      "email": "Email",
+      "emailPlaceholder": "ejemplo{'@'}email.com",
+      "phone": "Teléfono",
+      "phonePlaceholder": "+56912345678",
+      "sendCode": "Enviar Código",
+      "enterCode": "Ingresar Código",
+      "enterCodeDescription": "Ingrese el código que recibió por email, WhatsApp o SMS",
+      "codeSentVia": "Código enviado por {via}",
+      "accessCode": "Código de Acceso",
+      "codeHint": "Ingrese el código de 4-8 caracteres que recibió",
+      "validateAndAccess": "Validar y Acceder",
+      "requestNewCode": "Solicitar Nuevo Código",
+      "tryAgain": "Intentar Nuevamente",
+      "accessGranted": "Acceso Concedido",
+      "redirecting": "Redirigiendo al portal...",
+      "fillRequiredFields": "Por favor complete todos los campos requeridos",
+      "errorSendingCode": "Error al enviar el código",
+      "clientNotFound": "Cliente no encontrado",
+      "invalidRequest": "Solicitud inválida",
+      "errorRequestingCode": "Error al solicitar código",
+      "invalidCodeLength": "El código debe tener entre 4 y 8 caracteres",
+      "invalidCode": "Código inválido",
+      "incorrectCode": "Código incorrecto",
+      "tooManyAttempts": "Demasiados intentos fallidos. Por favor intente más tarde",
+      "validationError": "Error al validar el código"
     }
   },
   "telemedicineSession": {
@@ -1637,7 +1849,18 @@
           "transfer": "Transferir Atención",
           "cancel": "Cancelar Atención",
           "patient-history": "Historial Médico",
-          "products": "Registrar Stock"
+          "products": "Registrar Stock",
+          "lgpd": {
+            "blocking": "Bloqueante",
+            "missing": "Faltantes",
+            "compliant": "Conforme",
+            "blockingConsents": "Faltan {count} consentimiento(s) bloqueante(s)",
+            "missingConsents": "Faltan {count} consentimiento(s)",
+            "allConsentsGranted": "Todos los consentimientos otorgados",
+            "cannotAttend": "No se puede atender: faltan {count} consentimiento(s) bloqueante(s): {types}",
+            "cannotAdvanceStage": "No se puede avanzar etapa: faltan {count} consentimiento(s) bloqueante(s): {types}",
+            "clickToRequest": "Haz clic para solicitar consentimientos"
+          }
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -1836,6 +2059,46 @@
     "indicators": "Indicadores",
     "graph": "Tendencias",
     "surveys": "Encuestas",
+    "lgpdCompliance": {
+      "title": "Compliance LGPD",
+      "complianceScore": "Puntuación de Compliance",
+      "clientsWithAllConsents": "Clientes con Todos los Consentimientos",
+      "pendingConsents": "Consentimientos Pendientes",
+      "expiredConsents": "Consentimientos Expirados",
+      "complianceOverview": "Resumen de Compliance",
+      "clientsCompliant": "Clientes Conformes",
+      "totalClients": "Total de Clientes",
+      "clientsWithPendingConsents": "Clientes con Consentimientos Pendientes",
+      "clientsWithExpiredConsents": "Clientes con Consentimientos Expirados",
+      "consentsBreakdown": "Desglose de Consentimientos",
+      "totalConsents": "Total de Consentimientos",
+      "grantedConsents": "Consentimientos Otorgados",
+      "deniedConsents": "Consentimientos Negados",
+      "revokedConsents": "Consentimientos Revocados",
+      "blockingConsents": "Consentimientos Bloqueantes",
+      "notificationMetrics": {
+        "title": "Métricas de Notificaciones",
+        "totalSent": "Total Enviado",
+        "byChannel": "Por Canal",
+        "byStatus": "Por Estado",
+        "email": "Email",
+        "whatsapp": "WhatsApp",
+        "sms": "SMS",
+        "push": "Push",
+        "inApp": "In-App",
+        "sent": "Enviado",
+        "delivered": "Entregado",
+        "pending": "Pendiente",
+        "failed": "Fallido",
+        "successRate": "Tasa de Éxito"
+      },
+      "message": {
+        "noCommerce": {
+          "title": "Sin Comercio Seleccionado",
+          "content": "Por favor selecciona un comercio para ver las métricas de compliance LGPD."
+        }
+      }
+    },
     "bookings": "Reservas",
     "packages": "Paquetes",
     "waitlist": "Lista Espera",
@@ -2211,6 +2474,7 @@
         "status": "Estado del cliente basado en días desde última atención",
         "attentionStatus": "Estado del atendimento",
         "copy": "Copiar datos del cliente",
+        "copyBusinessData": "Copiar todos los datos del negocio",
         "attentions": "Número total de atenciones",
         "survey": "Cliente ha completado encuesta de satisfacción",
         "form": "Cliente tiene formulario de primera atención",
@@ -2773,6 +3037,7 @@
     "business-resume": "Estado del Sistema",
     "surveys-admin": "Encuestas",
     "forms-admin": "Formularios",
+    "lgpd-consent-admin": "Consentimientos LGPD",
     "manage-admin": "Registro",
     "control-admin": "Gestión",
     "company-admin": "Compañías",
@@ -2828,6 +3093,7 @@
           "medical-exams-admin": "Gestionar Exámenes Médicos",
           "medical-templates-admin": "Gestionar Plantillas Médicas",
           "pdf-templates-admin": "Gestionar Plantillas PDF",
+          "lgpd-consent-admin": "Administrar Consentimientos LGPD",
           "audit-log": "Auditoría y Cumplimiento"
         }
       }
@@ -4345,7 +4611,13 @@
       "priorityUrgent": "Urgente",
       "templates": "Plantillas",
       "mostUsedTemplates": "Plantillas Más Usadas",
-      "interactionWarnings": "Advertencias de Interacciones"
+      "interactionWarnings": "Advertencias de Interacciones",
+      "createdSuccessfully": "Receta creada exitosamente",
+      "continue": "Continuar",
+      "viewPdf": "Ver PDF",
+      "downloadPdf": "Descargar PDF",
+      "printPdf": "Imprimir PDF",
+      "sendEmail": "Enviar por Email"
     },
     "examOrder": {
       "create": "Crear Orden de Examen",
@@ -4496,7 +4768,8 @@
         "phone": "Debes ingresar el Teléfono",
         "sex": "Debes seleccionar el Sexo",
         "font": "Debes ingresar el Fuente de Confiabilidad"
-      }
+      },
+      "personalDataError": "Error de validación de los datos personales"
     }
   },
   "businessReports": {
@@ -5325,6 +5598,8 @@
     "exportError": "Error al exportar leads",
     "refresh": "Actualizar",
     "refreshing": "Actualizando...",
+    "showFilters": "Mostrar Filtros",
+    "hideFilters": "Ocultar Filtros",
     "source": {
       "label": "Origen",
       "publicSite": "Sitio Público",
@@ -5510,6 +5785,7 @@
         "your-plan": "Habilitar Tu Plan - Menú Principal Negocio",
         "surveys-admin": "Habilitar Administrar Encuestas - Menú Principal Negocio",
         "forms-admin": "Habilitar Administrar Formularios - Menú Principal Negocio",
+        "lgpd-consent-admin": "Habilitar Administrar Consentimientos LGPD - Menú Principal Negocio",
         "manage-admin": "Habilitar Registrar Artefactos - Menú Principal Negocio",
         "control-admin": "Habilitar Gestión Transaccional - Menú Principal Negocio",
         "outcome-types-admin": "Habilitar Gestión Tipos de Egreso - Menú Principal Negocio",
@@ -6031,6 +6307,17 @@
         "unavailable": "Eliminar Formularios - Sección Administrar Formularios"
       }
     },
+    "lgpd": {
+      "admin": {
+        "view": "Ver Sección - Administrar Requisitos LGPD",
+        "read": "Leer datos - Sección Administrar Requisitos LGPD",
+        "edit": "Editar datos - Sección Administrar Requisitos LGPD",
+        "update": "Actualizar datos - Sección Administrar Requisitos LGPD",
+        "add": "Agregar datos - Sección Administrar Requisitos LGPD",
+        "delete": "Eliminar datos - Sección Administrar Requisitos LGPD",
+        "limit": "Límite de datos - Sección Administrar Requisitos LGPD"
+      }
+    },
     "outcome-types": {
       "admin": {
         "view": "Ver Sección - Administrar Tipos de Egreso",
@@ -6524,6 +6811,7 @@
       "revoke": "Revocar",
       "confirmRevoke": "¿Estás seguro de que deseas revocar este consentimiento?",
       "grantedAt": "Otorgado el",
+      "blocking": "Bloqueante",
       "types": {
         "DATA_PROCESSING": "Tratamiento de Datos",
         "DATA_SHARING": "Compartir Datos",
@@ -6543,7 +6831,169 @@
       },
       "errorCreating": "Error al crear el consentimiento",
       "errorDenying": "Error al denegar el consentimiento",
-      "errorRevoking": "Error al revocar el consentimiento"
+      "errorRevoking": "Error al revocar el consentimiento",
+      "form": {
+        "title": "Consentimientos LGPD",
+        "intro": "Estimado/a {clientName}, necesitamos su consentimiento para el tratamiento de sus datos personales según la Ley General de Protección de Datos (LGPD).",
+        "lgpdInfo": "De acuerdo con la LGPD, usted tiene derecho a aceptar o rechazar cada tipo de consentimiento. Su decisión será registrada y podrá ser modificada en cualquier momento.",
+        "required": "Obligatorio",
+        "readMore": "Leer más",
+        "fullTerms": "Términos Legales Completos",
+        "dataDescription": "Descripción de los Datos",
+        "legalBasis": "Base Legal",
+        "retentionPeriod": "Plazo de Retención",
+        "privacyPolicy": "Política de Privacidad",
+        "revocationInstructions": "Cómo Revocar",
+        "iAgree": "Acepto",
+        "iDoNotAgree": "No acepto",
+        "submit": "Enviar Consentimientos",
+        "submitting": "Enviando...",
+        "tokenExpired": "El enlace ha expirado. Por favor, solicite un nuevo enlace.",
+        "errorLoading": "Error al cargar el formulario",
+        "errorSubmitting": "Error al enviar los consentimientos",
+        "successTitle": "¡Consentimientos Enviados!",
+        "successMessage": "Sus respuestas han sido registradas correctamente. Gracias por su colaboración.",
+        "successSubmessage": "Sus consentimientos han sido procesados y guardados en nuestro sistema.",
+        "legalFooter": "Sus datos serán tratados de acuerdo con la LGPD (Lei 13.709/2018). Usted puede revocar su consentimiento en cualquier momento."
+      },
+      "widget": {
+        "title": "Consentimientos LGPD",
+        "summary": "{granted}/{total} completo",
+        "requestAllPending": "Solicitar Pendientes",
+        "willSendLinkViaWhatsapp": "Se enviará un link via WhatsApp",
+        "manageAll": "Gestionar Todos",
+        "noRequirements": "No hay requisitos de consentimiento configurados",
+        "blockingWarning": "Estos consentimientos son obligatorios para continuar con la atención.",
+        "requestBlockingConsents": "Solicitar Consentimientos Obligatorios"
+      },
+      "admin": {
+        "title": "Administración de Requisitos LGPD",
+        "addRequirement": "Agregar Requisito de Consentimiento",
+        "consentType": "Tipo de Consentimiento",
+        "selectType": "Seleccionar tipo",
+        "required": "Obligatorio",
+        "blockingForAttention": "Bloquea la Atención",
+        "timing": "Momento de Solicitud",
+        "methods": "Métodos de Solicitud",
+        "reminderIntervalHours": "Intervalo entre Recordatorios (horas)",
+        "maxReminders": "Máximo de Recordatorios",
+        "whatsappTemplate": "Plantilla de WhatsApp",
+        "whatsappTemplatePlaceholder": "Mensaje que se enviará por WhatsApp al cliente",
+        "formIntroText": "Texto Introductorio del Formulario",
+        "formIntroTextPlaceholder": "Texto que verá el cliente en el formulario web",
+        "fullTerms": "Términos Legales Completos",
+        "fullTermsPlaceholder": "Términos legales completos conforme LGPD",
+        "markdownEditor": {
+          "clear": "Limpiar",
+          "bold": "Negrita",
+          "italic": "Cursiva",
+          "list": "Lista",
+          "orderedList": "Lista numerada",
+          "link": "Enlace",
+          "edit": "Editar",
+          "preview": "Vista Previa",
+          "split": "Dividido"
+        },
+        "dataDescription": "Descripción de los Datos",
+        "dataDescriptionPlaceholder": "Descripción detallada de los datos que serán procesados",
+        "legalBasis": "Base Legal (LGPD Art. 7º)",
+        "legalBasisPlaceholder": "Base legal para el procesamiento de los datos",
+        "retentionPeriod": "Plazo de Retención",
+        "retentionPeriodPlaceholder": "Plazo de retención de los datos",
+        "privacyPolicyLink": "Enlace de la Política de Privacidad",
+        "privacyPolicyLinkPlaceholder": "https://ejemplo.com/politica-privacidad",
+        "revocationInstructions": "Instrucciones de Revocación",
+        "revocationInstructionsPlaceholder": "Cómo el cliente puede revocar el consentimiento",
+        "templateSelector": "Seleccionar Plantilla",
+        "templateSelectorHelp": "Seleccione una plantilla predefinida para llenar automáticamente los campos",
+        "selectTemplate": "Seleccionar plantilla...",
+        "preset": "Plantilla Preconfigurada",
+        "selectPreset": "Seleccionar preset...",
+        "timingOptions": {
+          "BOOKING": "Durante la Reserva",
+          "PRE_ATTENTION": "Antes de la Atención",
+          "CHECK_IN": "Durante el Check-In",
+          "FIRST_ATTENTION": "Primera Atención",
+          "ON_REGISTRATION": "En el Registro Inicial",
+          "ON_LOGIN": "En el Inicio de Sesión",
+          "PERIODIC_RENEWAL": "Renovación Periódica",
+          "BEFORE_SERVICE": "Antes del Servicio",
+          "AFTER_ATTENTION": "Después de la Atención"
+        },
+        "method": {
+          "EMAIL": "Email",
+          "WHATSAPP": "WhatsApp",
+          "WEB_FORM": "Formulario Web",
+          "PRESENTIAL": "Presencial",
+          "SMS": "SMS",
+          "PUSH_NOTIFICATION": "Notificación Push",
+          "IN_APP": "Dentro de la App",
+          "QR_CODE": "Código QR"
+        },
+        "consentTypes": "Tipos de Consentimiento",
+        "selectAll": "Seleccionar Todos",
+        "deselectAll": "Deseleccionar Todos",
+        "selected": "seleccionados",
+        "creating": "Creando...",
+        "addBatch": "Agregar en Lote",
+        "validate": {
+          "consentType": "El tipo de consentimiento es obligatorio",
+          "consentTypes": "Debe seleccionar al menos un tipo de consentimiento",
+          "timing": "El momento de solicitud es obligatorio",
+          "methods": "Debe seleccionar al menos un método"
+        },
+        "message": {
+          "noRequirements": {
+            "title": "Sin Requisitos Configurados",
+            "content": "No hay requisitos de consentimiento configurados para este comercio. Agrega uno para comenzar."
+          },
+          "noAccess": {
+            "title": "Sin Acceso",
+            "content": "No tienes permisos para acceder a esta sección."
+          }
+        },
+        "history": "Historial",
+        "preview": "Vista Previa",
+        "version": "Versión",
+        "noHistory": "No hay historial de versiones disponible",
+        "changedFields": "Campos Modificados",
+        "description": "Descripción",
+        "changedBy": "Modificado por",
+        "action": {
+          "CREATE": "Creación",
+          "UPDATE": "Actualización",
+          "DELETE": "Eliminación"
+        },
+        "field": {
+          "consentType": "Tipo de Consentimiento",
+          "required": "Obligatorio",
+          "blockingForAttention": "Bloquea la Atención",
+          "active": "Activo",
+          "requestStrategy.timing": "Momento de Solicitud",
+          "requestStrategy.methods": "Métodos de Solicitud",
+          "requestStrategy.reminderIntervalHours": "Intervalo entre Recordatorios",
+          "requestStrategy.maxReminders": "Máximo de Recordatorios",
+          "templates.whatsapp": "Plantilla de WhatsApp",
+          "templates.email": "Plantilla de Email",
+          "templates.formIntroText": "Texto Introductorio",
+          "templates.fullTerms": "Términos Legales Completos",
+          "templates.dataDescription": "Descripción de los Datos",
+          "templates.legalBasis": "Base Legal",
+          "templates.retentionPeriod": "Plazo de Retención",
+          "templates.privacyPolicyLink": "Enlace de Política de Privacidad",
+          "templates.revocationInstructions": "Instrucciones de Revocación"
+        },
+        "historyError": "Error al cargar el historial",
+        "previewChannel": "Canal de Vista Previa",
+        "previewWeb": "Formulario Web",
+        "previewWhatsApp": "WhatsApp",
+        "previewEmail": "Email",
+        "previewWebForm": "Vista Previa del Formulario Web",
+        "previewWhatsAppMessage": "Vista Previa del Mensaje de WhatsApp",
+        "previewEmailMessage": "Vista Previa del Mensaje de Email",
+        "accept": "Aceptar",
+        "decline": "Rechazar"
+      }
     },
     "portability": {
       "title": "Portabilidad de Datos (LGPD)",
@@ -6558,7 +7008,27 @@
       "error": "Error al generar el archivo de portabilidad"
     }
   },
+  "businessLgpdConsentAdmin": {
+    "capacitiesList": {
+      "lgpd": {
+        "admin": {
+          "view": "Acceder a esta sección",
+          "read": "Ver los Requisitos LGPD",
+          "edit": "Editar los Requisitos LGPD",
+          "update": "Actualizar los Requisitos LGPD",
+          "add": "Agregar Requisitos LGPD",
+          "delete": "Eliminar Requisitos LGPD",
+          "limit": "Cantidad límite de Requisitos LGPD"
+        }
+      }
+    }
+  },
   "errors": {
     "undefined": "Error indefinido"
+  },
+  "digitalSignature": {
+    "icp": {
+      "sign": "Firmar con ICP"
+    }
   }
 }

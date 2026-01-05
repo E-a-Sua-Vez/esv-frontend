@@ -71,6 +71,7 @@ export default {
         'outcome-types-admin',
         'company-admin',
         'forms-admin',
+        'lgpd-consent-admin',
         'permissions-admin',
       ],
       medicalManagementSubMenuOptions: [
@@ -96,6 +97,13 @@ export default {
         state.currentPlanActivation =
           (await getValidatedPlanActivationByBusinessId(state.business.id, true)) || {};
         state.toggles = await getPermissions('business', 'main-menu');
+        // Ensure lgpd-consent-admin permission exists (default to false if not found)
+        if (state.toggles['business.main-menu.lgpd-consent-admin'] === undefined) {
+          console.warn(
+            'LGPD Consent Admin permission not found in toggles. Available permissions:',
+            Object.keys(state.toggles),
+          );
+        }
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -269,6 +277,11 @@ export default {
                             class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style mobile-menu-btn mobile-submenu-btn"
                             @click="goToOption(opt)"
                             :disabled="!state.toggles[`business.main-menu.${opt}`]"
+                            :title="
+                              !state.toggles[`business.main-menu.${opt}`]
+                                ? $t('businessMenu.permissionRequired')
+                                : ''
+                            "
                           >
                             {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
                           </button>

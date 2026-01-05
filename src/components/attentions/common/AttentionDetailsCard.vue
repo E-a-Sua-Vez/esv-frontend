@@ -27,7 +27,9 @@ import {
   getTelemedicineSession,
   getTelemedicineSessionById,
 } from '../../../application/services/telemedicine';
+import { getConsentStatus } from '../../../application/services/consent';
 import { globalStore } from '../../../stores';
+import LgpdConsentManager from '../../lgpd/LgpdConsentManager.vue';
 
 export default {
   name: 'AttentionDetailsCard',
@@ -42,6 +44,7 @@ export default {
     TelemedicineVideoCall,
     TelemedicineChat,
     TelemedicineFloatingWindow,
+    LgpdConsentManager,
   },
   props: {
     show: { type: Boolean, default: true },
@@ -84,6 +87,9 @@ export default {
       clientConnected: false,
       telemedicineSession: null,
       connectionStatusInterval: null,
+      consentStatus: null,
+      loadingConsentStatus: false,
+      consentStatusInterval: null,
     };
   },
   beforeMount() {
@@ -104,6 +110,20 @@ export default {
       },
       immediate: false,
     },
+    attention: {
+      handler(newVal) {
+        if (newVal && newVal.clientId && newVal.commerceId) {
+          this.loadConsentStatus();
+          // Iniciar polling para atualização em tempo real
+          this.startConsentStatusPolling();
+        } else {
+          // Parar polling se não há atenção válida
+          this.stopConsentStatusPolling();
+        }
+      },
+      immediate: true,
+      deep: true,
+    },
     detailsOpened: {
       immediate: true,
       deep: true,
@@ -120,8 +140,9 @@ export default {
     },
   },
   beforeUnmount() {
-    // Clean up polling interval
+    // Clean up polling intervals
     this.stopConnectionStatusPolling();
+    this.stopConsentStatusPolling();
   },
   emits: ['open-modal', 'updatedAttentions'],
   methods: {
@@ -369,6 +390,24 @@ export default {
       this.goToConfirm = false;
     },
     goAdvanceStage() {
+      // Validar consentimientos bloqueantes antes de abrir modal
+      if (this.hasBlockingConsents()) {
+        const blockingCount = this.getBlockingConsentsCount();
+        const blockingTypes =
+          this.consentStatus?.missing
+            ?.filter(req => req.blockingForAttention && req.required)
+            .map(req => req.consentType)
+            .join(', ') || '';
+
+        this.alertError =
+          this.$t('attention.lgpd.cannotAdvanceStage', {
+            count: blockingCount,
+            types: blockingTypes,
+          }) ||
+          `No se puede avanzar etapa: faltan ${blockingCount} consentimiento(s) bloqueante(s): ${blockingTypes}`;
+        return;
+      }
+
       this.goToAdvanceStage = !this.goToAdvanceStage;
       if (this.goToAdvanceStage) {
         this.selectedNextStage = '';
@@ -386,6 +425,25 @@ export default {
           this.$t('attention.advanceStage.selectStage') || 'Por favor selecciona una etapa';
         return;
       }
+
+      // Validar consentimientos bloqueantes antes de avanzar
+      if (this.hasBlockingConsents()) {
+        const blockingCount = this.getBlockingConsentsCount();
+        const blockingTypes =
+          this.consentStatus?.missing
+            ?.filter(req => req.blockingForAttention && req.required)
+            .map(req => req.consentType)
+            .join(', ') || '';
+
+        this.alertError =
+          this.$t('attention.lgpd.cannotAdvanceStage', {
+            count: blockingCount,
+            types: blockingTypes,
+          }) ||
+          `No se puede avanzar etapa: faltan ${blockingCount} consentimiento(s) bloqueante(s): ${blockingTypes}`;
+        return;
+      }
+
       try {
         this.loading = true;
         this.alertError = '';
@@ -403,8 +461,19 @@ export default {
         this.loading = false;
       } catch (error) {
         this.loading = false;
-        this.alertError =
-          error.response?.data?.message || error.message || 'Error al avanzar etapa';
+        // Si el error es de consentimientos bloqueantes, mostrar mensaje específico
+        if (
+          error.response?.status === 412 ||
+          error.response?.data?.message?.includes('consentimiento')
+        ) {
+          this.alertError =
+            error.response?.data?.message ||
+            this.$t('attention.lgpd.cannotAdvanceStage') ||
+            'No se puede avanzar etapa: faltan consentimientos obligatorios';
+        } else {
+          this.alertError =
+            error.response?.data?.message || error.message || 'Error al avanzar etapa';
+        }
       }
     },
     getNextStages(currentStage) {
@@ -475,6 +544,28 @@ export default {
       try {
         this.loading = true;
         this.alertError = '';
+
+        // Validar consentimientos bloqueantes antes de atender
+        if (this.hasBlockingConsents()) {
+          const blockingCount = this.getBlockingConsentsCount();
+          const blockingTypes =
+            this.consentStatus?.missing
+              ?.filter(req => req.blockingForAttention && req.required)
+              .map(req => req.consentType)
+              .join(', ') || '';
+
+          this.alertError = this.$t('attention.lgpd.cannotAttend', {
+            count: blockingCount,
+            types: blockingTypes,
+          });
+          this.loading = false;
+          // Abrir modal de LGPD automáticamente
+          this.$nextTick(() => {
+            this.openLgpdModal();
+          });
+          return;
+        }
+
         const currentUser = await this.store.getCurrentUser;
         const currentUserType = await this.store.getCurrentUserType;
         if (currentUserType === 'collaborator' && currentUser.id) {
@@ -493,8 +584,19 @@ export default {
         this.alertError = '';
         this.loading = false;
       } catch (error) {
-        this.alertError = error.response.status || 500;
         this.loading = false;
+        // Si el error es de consentimientos bloqueantes, mostrar mensaje específico
+        if (
+          error.response?.status === 412 ||
+          error.response?.data?.message?.includes('consentimiento')
+        ) {
+          this.alertError =
+            error.response?.data?.message ||
+            this.$t('attention.lgpd.cannotAttend') ||
+            'No se puede atender: faltan consentimientos obligatorios';
+        } else {
+          this.alertError = error.response?.status || error.message || 'Error al atender';
+        }
       }
     },
     async handleTelemedicineSessionStarted(data) {
@@ -635,6 +737,75 @@ export default {
           });
       }
     },
+    async loadConsentStatus() {
+      if (!this.attention || !this.attention.clientId || !this.attention.commerceId) {
+        return;
+      }
+      try {
+        this.loadingConsentStatus = true;
+        const status = await getConsentStatus(this.attention.commerceId, this.attention.clientId);
+        // Solo actualizar si hay cambios para evitar re-renders innecesarios
+        if (JSON.stringify(this.consentStatus) !== JSON.stringify(status)) {
+          this.consentStatus = status;
+        }
+      } catch (error) {
+        console.error('Error loading consent status:', error);
+        // No resetear a null para mantener estado anterior
+      } finally {
+        this.loadingConsentStatus = false;
+      }
+    },
+    startConsentStatusPolling() {
+      // Polling cada 10 segundos para actualización em tempo real
+      if (this.consentStatusInterval) {
+        clearInterval(this.consentStatusInterval);
+      }
+      this.consentStatusInterval = setInterval(() => {
+        if (this.attention?.clientId && this.attention?.commerceId) {
+          this.loadConsentStatus();
+        }
+      }, 10000); // 10 segundos
+    },
+    stopConsentStatusPolling() {
+      if (this.consentStatusInterval) {
+        clearInterval(this.consentStatusInterval);
+        this.consentStatusInterval = null;
+      }
+    },
+    openLgpdModal() {
+      if (!this.attention?.clientId || !this.commerce?.id) {
+        return;
+      }
+      const modalId = `lgpdModal-${this.attention.clientId}`;
+      const modalElement = document.getElementById(modalId);
+      if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+      }
+    },
+    handleConsentUpdated() {
+      // Handle consent update event
+      this.loadConsentStatus();
+    },
+    hasBlockingConsents() {
+      if (!this.consentStatus || !this.consentStatus.missing) {
+        return false;
+      }
+      return this.consentStatus.missing.some(req => req.blockingForAttention && req.required);
+    },
+    getMissingConsentsCount() {
+      if (!this.consentStatus || !this.consentStatus.missing) {
+        return 0;
+      }
+      return this.consentStatus.missing.length;
+    },
+    getBlockingConsentsCount() {
+      if (!this.consentStatus || !this.consentStatus.missing) {
+        return 0;
+      }
+      return this.consentStatus.missing.filter(req => req.blockingForAttention && req.required)
+        .length;
+    },
   },
 };
 </script>
@@ -672,6 +843,37 @@ export default {
           :title="$t(`attention.stage.${attention.currentStage}`)"
         >
           {{ $t(`attention.stage.${attention.currentStage}`) }}
+        </span>
+        <!-- LGPD Consent Indicator -->
+        <span
+          v-if="hasBlockingConsents()"
+          class="badge rounded-pill bg-danger mx-1 fw-bold cursor-pointer"
+          :title="
+            $t('attention.lgpd.blockingConsents', { count: getBlockingConsentsCount() }) +
+            ' - ' +
+            $t('attention.lgpd.clickToRequest')
+          "
+          @click.stop="openLgpdModal()"
+          style="cursor: pointer"
+        >
+          <i class="bi bi-shield-exclamation"></i>
+          {{ $t('attention.lgpd.blocking') }}
+        </span>
+        <span
+          v-else-if="getMissingConsentsCount() > 0"
+          class="badge rounded-pill bg-warning mx-1 fw-bold"
+          :title="$t('attention.lgpd.missingConsents', { count: getMissingConsentsCount() })"
+        >
+          <i class="bi bi-shield-check"></i>
+          {{ $t('attention.lgpd.missing') }}
+        </span>
+        <span
+          v-else-if="consentStatus && consentStatus.summary"
+          class="badge rounded-pill bg-success mx-1 fw-bold"
+          :title="$t('attention.lgpd.allConsentsGranted')"
+        >
+          <i class="bi bi-shield-check"></i>
+          {{ $t('attention.lgpd.compliant') }}
         </span>
       </div>
       <div class="col lefted fw-bold" v-if="attention.user && attention.user.name">
@@ -766,6 +968,67 @@ export default {
         @close="closeTelemedicineChat"
       />
     </TelemedicineFloatingWindow>
+
+    <!-- LGPD Modal -->
+    <Teleport to="body" v-if="attention?.clientId && commerce?.id">
+      <div
+        :id="`lgpdModal-${attention.clientId}`"
+        class="modal fade modern-modal"
+        tabindex="-1"
+        :aria-labelledby="`lgpdModalLabel-${attention.clientId}`"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl modal-dialog-scrollable modern-modal-dialog">
+          <div class="modal-content modern-modal-content">
+            <div class="modal-header border-0 active-name modern-modal-header">
+              <div class="modern-modal-header-inner">
+                <div class="modern-modal-icon-wrapper">
+                  <i class="bi bi-shield-check"></i>
+                </div>
+                <div class="modern-modal-title-wrapper">
+                  <h5
+                    class="modal-title fw-bold modern-modal-title"
+                    :id="`lgpdModalLabel-${attention.clientId}`"
+                  >
+                    {{ $t('lgpd.title') }}
+                  </h5>
+                  <p class="modern-modal-client-name" v-if="attention.client?.name">
+                    {{ attention.client.name }}
+                  </p>
+                </div>
+              </div>
+              <button
+                :id="`close-modal-lgpd-${attention.clientId}`"
+                class="btn-close modern-modal-close-btn"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <Spinner :show="loading"></Spinner>
+            <div class="modal-body modern-modal-body-content">
+              <LgpdConsentManager
+                :commerce-id="commerce.id"
+                :client-id="attention.clientId"
+                @consent-updated="handleConsentUpdated"
+              />
+            </div>
+            <div class="modal-footer border-0 modern-modal-footer">
+              <button
+                class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                <i class="bi bi-check-lg"></i> {{ $t('close') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 

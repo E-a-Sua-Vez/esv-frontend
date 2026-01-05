@@ -2699,7 +2699,7 @@ export default {
               :commerce="state.commerce"
               :patient-history-in="state.patientHistory"
               :patient-forms="state.patientForms"
-              :attention="state.attention.id"
+              :attention="state.attention.id || id"
               :patient-history-items="state.patientHistoryItems"
               @getPatientHistory="getPatientHistory"
             >

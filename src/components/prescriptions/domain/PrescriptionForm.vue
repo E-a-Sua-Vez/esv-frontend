@@ -22,6 +22,7 @@ import {
 } from '../../../application/services/medical-template';
 import { getAttentionDetails } from '../../../application/services/attention';
 import { useSpeechRecognition } from '../../../components/patient-history/composables/useSpeechRecognition';
+import { globalStore } from '../../../stores';
 
 export default {
   name: 'PrescriptionForm',
@@ -44,6 +45,7 @@ export default {
   setup(props, { emit }) {
     const { t } = useI18n();
     const loading = ref(false);
+    const store = globalStore();
     const { commerce, client, attention, toggles, errorsAdd, receiveData } = toRefs(props);
 
     const state = reactive({
@@ -110,57 +112,6 @@ export default {
       signatureInfo: null,
     });
 
-    // Initialize prescription data
-    onMounted(async () => {
-      console.log('📋 Initializing prescription - attention prop:', attention.value);
-
-      // Load full attention details if only ID is provided
-      let attentionDetails = attention.value;
-      if (typeof attention.value === 'string' || (attention.value?.id && !attention.value?.collaborator)) {
-        const attentionId = typeof attention.value === 'string' ? attention.value : attention.value.id;
-        console.log('🔄 Loading attention details for ID:', attentionId);
-        try {
-          attentionDetails = await getAttentionDetails(attentionId);
-          console.log('✅ Attention details loaded:', attentionDetails);
-        } catch (error) {
-          console.error('❌ Error loading attention details:', error);
-        }
-      }
-
-      if (commerce.value?.id) state.prescription.commerceId = commerce.value.id;
-      if (client.value?.id) state.prescription.clientId = client.value.id;
-
-      if (attentionDetails?.id) {
-        state.prescription.attentionId = attentionDetails.id;
-        console.log('✅ Attention ID set:', state.prescription.attentionId);
-      } else {
-        console.warn('⚠️ No attention ID found');
-      }
-
-      if (attentionDetails?.collaboratorId) {
-        state.prescription.doctorId = attentionDetails.collaboratorId;
-        // Get doctor name from collaborator object or fallback to collaboratorId
-        state.prescription.doctorName =
-          attentionDetails?.collaborator?.name ||
-          attentionDetails?.collaborator?.alias ||
-          '';
-        console.log('👨‍⚕️ Doctor info set:', {
-          doctorId: state.prescription.doctorId,
-          doctorName: state.prescription.doctorName,
-          collaborator: attentionDetails.collaborator
-        });
-      } else {
-        console.warn('⚠️ No collaborator info found in attention');
-      }
-
-      // Set default valid until date (30 days from now)
-      const validUntil = new Date();
-      validUntil.setDate(validUntil.getDate() + 30);
-      state.prescription.validUntil = validUntil.toISOString().split('T')[0];
-
-      await loadTemplates();
-    });
-
     // Load prescription templates
     const loadTemplates = async () => {
       if (!commerce.value?.id || !state.prescription.doctorId) return;
@@ -170,7 +121,7 @@ export default {
         const [mostUsed, available] = await Promise.all([
           getMostUsedTemplates(commerce.value.id, state.prescription.doctorId, 5),
           searchMedicalTemplates(commerce.value.id, state.prescription.doctorId, {
-            type: 'PRESCRIPTION',
+            type: 'prescription',
             limit: 20,
           }),
         ]);
@@ -183,6 +134,106 @@ export default {
         state.templates.loading = false;
       }
     };
+
+    // Initialize prescription data from attention prop
+    const initializeFromAttention = async attentionValue => {
+      console.log('📋 Initializing prescription - attention prop:', attentionValue);
+
+      // Always set commerce and client IDs first (these are always available from props)
+      if (commerce.value?.id) state.prescription.commerceId = commerce.value.id;
+      if (client.value?.id) state.prescription.clientId = client.value.id;
+
+      // Extract attention ID if available
+      let attentionId = null;
+      if (attentionValue) {
+        if (typeof attentionValue === 'string') {
+          attentionId = attentionValue;
+        } else if (attentionValue?.id) {
+          attentionId = attentionValue.id;
+        }
+      }
+
+      // Set attention ID immediately if we have it
+      if (attentionId) {
+        state.prescription.attentionId = attentionId;
+        console.log('✅ Attention ID set from prop:', state.prescription.attentionId);
+      }
+
+      // Try to get doctor info from attention details
+      let attentionDetails = attentionValue;
+      if (
+        attentionId &&
+        attentionValue &&
+        typeof attentionValue === 'object' &&
+        (!attentionValue?.collaboratorId || !attentionValue?.collaborator)
+      ) {
+        console.log('🔄 Loading attention details for ID:', attentionId);
+        try {
+          attentionDetails = await getAttentionDetails(attentionId);
+          console.log('✅ Attention details loaded:', attentionDetails);
+          // Ensure attentionId is set (in case getAttentionDetails succeeds but ID was missing)
+          if (attentionDetails?.id) {
+            state.prescription.attentionId = attentionDetails.id;
+          }
+        } catch (error) {
+          console.error('❌ Error loading attention details:', error);
+          // Keep the ID we already set from the prop
+        }
+      }
+
+      // Set doctor info from attention if available
+      if (attentionDetails?.collaboratorId) {
+        state.prescription.doctorId = attentionDetails.collaboratorId;
+        state.prescription.doctorName =
+          attentionDetails?.collaborator?.name || attentionDetails?.collaborator?.alias || '';
+        console.log('👨‍⚕️ Doctor info set from attention:', {
+          doctorId: state.prescription.doctorId,
+          doctorName: state.prescription.doctorName,
+        });
+      } else {
+        // Fallback: Get current user from store (should be the collaborator creating the prescription)
+        console.log('🔄 No collaborator info in attention, using current user from store');
+        try {
+          const currentUser = await store.getCurrentUser;
+          if (currentUser && currentUser.id) {
+            state.prescription.doctorId = currentUser.id;
+            state.prescription.doctorName = currentUser.name || currentUser.alias || '';
+            console.log('👨‍⚕️ Doctor info set from current user:', {
+              doctorId: state.prescription.doctorId,
+              doctorName: state.prescription.doctorName,
+            });
+          } else {
+            console.error('❌ No current user found in store');
+          }
+        } catch (error) {
+          console.error('❌ Error getting current user from store:', error);
+        }
+      }
+
+      // Set default valid until date (30 days from now)
+      if (!state.prescription.validUntil) {
+        const validUntil = new Date();
+        validUntil.setDate(validUntil.getDate() + 30);
+        state.prescription.validUntil = validUntil.toISOString().split('T')[0];
+      }
+
+      await loadTemplates();
+    };
+
+    // Watch for changes in attention prop (with immediate to catch initial value)
+    watch(
+      () => attention.value,
+      async newAttention => {
+        // Always initialize (even if attention is null/undefined, we still need to set commerce, client, and doctor)
+        await initializeFromAttention(newAttention);
+      },
+      { immediate: true, deep: true }
+    );
+
+    // Also initialize on mount as fallback
+    onMounted(async () => {
+      await initializeFromAttention(attention.value);
+    });
 
     // Search medications
     const searchMedicationsHandler = async () => {
@@ -329,9 +380,31 @@ export default {
     const createPrescriptionHandler = async () => {
       state.errors = [];
 
+      // Debug: Log current state
+      console.log('🔍 Validation check - attention prop:', attention.value);
+      console.log('🔍 Validation check - prescription state:', {
+        attentionId: state.prescription.attentionId,
+        doctorId: state.prescription.doctorId,
+        doctorName: state.prescription.doctorName,
+        commerceId: state.prescription.commerceId,
+        clientId: state.prescription.clientId,
+      });
+
       // Validate required fields
       if (!state.prescription.attentionId) {
-        state.errors.push('ID de atención no disponible');
+        // Try to extract ID one more time before failing
+        let attentionId = null;
+        if (typeof attention.value === 'string') {
+          attentionId = attention.value;
+        } else if (attention.value?.id) {
+          attentionId = attention.value.id;
+        }
+        if (attentionId) {
+          state.prescription.attentionId = attentionId;
+          console.log('✅ Attention ID set during validation:', attentionId);
+        } else {
+          state.errors.push('ID de atención no disponible');
+        }
       }
       if (!state.prescription.doctorId) {
         state.errors.push('ID de doctor no disponible');
@@ -356,9 +429,11 @@ export default {
         const prescriptionData = {
           ...state.prescription,
           date: new Date().toISOString(),
-          pdfTemplateId: state.pdfTemplate.selected
+          pdfTemplateId: state.pdfTemplate.selected,
         };
         console.log('📤 Creating prescription with data:', prescriptionData);
+        console.log('💊 Medications array:', JSON.stringify(prescriptionData.medications, null, 2));
+        console.log('💊 Medications count:', prescriptionData.medications?.length || 0);
         const prescription = await createPrescription(prescriptionData);
         state.createdPrescription = prescription;
         state.showPdfActions = true;
@@ -549,14 +624,30 @@ export default {
     // Send data to parent
     const sendData = () => {
       try {
+        // Ensure attentionId is set from attention prop if not already set
+        if (!state.prescription.attentionId && attention.value) {
+          let attentionId = null;
+          if (typeof attention.value === 'string') {
+            attentionId = attention.value;
+          } else if (attention.value?.id) {
+            attentionId = attention.value.id;
+          }
+          if (attentionId) {
+            state.prescription.attentionId = attentionId;
+            console.log('✅ Attention ID set in sendData:', attentionId);
+          }
+        }
+
         // Ensure prescription has a unique identifier
         if (!state.prescription.prescriptionId && !state.prescription.id) {
           // Generate a temporary ID if none exists
-          state.prescription.prescriptionId = `temp_presc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          state.prescription.prescriptionId = `temp_presc_${Date.now()}_${Math.random()
+            .toString(36)
+            .substr(2, 9)}`;
         }
-        
+
         console.log('💊 Sending prescription data:', state.prescription);
-        
+
         if (typeof receiveData.value === 'function') {
           receiveData.value(state.prescription);
         } else {
@@ -577,43 +668,22 @@ export default {
     } = useSpeechRecognition();
 
     const handleSpeechFinalResult = (finalText, targetField) => {
-      const now = new Date();
-      const timestamp = `[${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-        2,
-        '0'
-      )}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(
-        2,
-        '0'
-      )}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(
-        2,
-        '0'
-      )}]`;
-      const timestampedText = `${timestamp} ${finalText}`;
-
       if (targetField === 'diagnosis') {
         const currentText = state.prescription.diagnosis || '';
         state.prescription.diagnosis =
-          currentText && currentText.trim() !== ''
-            ? `${currentText}\n\n${timestampedText}`
-            : timestampedText;
+          currentText && currentText.trim() !== '' ? `${currentText}\n\n${finalText}` : finalText;
       } else if (targetField === 'instructions') {
         const currentText = state.prescription.instructions || '';
         state.prescription.instructions =
-          currentText && currentText.trim() !== ''
-            ? `${currentText}\n\n${timestampedText}`
-            : timestampedText;
+          currentText && currentText.trim() !== '' ? `${currentText}\n\n${finalText}` : finalText;
       } else if (targetField === 'notes') {
         const currentText = state.prescription.notes || '';
         state.prescription.notes =
-          currentText && currentText.trim() !== ''
-            ? `${currentText}\n\n${timestampedText}`
-            : timestampedText;
+          currentText && currentText.trim() !== '' ? `${currentText}\n\n${finalText}` : finalText;
       } else if (targetField === 'medicationInstructions') {
         const currentText = state.currentMedication.instructions || '';
         state.currentMedication.instructions =
-          currentText && currentText.trim() !== ''
-            ? `${currentText}\n\n${timestampedText}`
-            : timestampedText;
+          currentText && currentText.trim() !== '' ? `${currentText}\n\n${finalText}` : finalText;
       }
       sendData();
     };
@@ -798,11 +868,15 @@ export default {
                     {{ t('patientHistoryView.prescription.priority') }}
                   </label>
                   <select v-model="state.prescription.priority" class="form-control-modern">
-                    <option value="LOW">{{ t('patientHistoryView.prescription.priorityLow') }}</option>
+                    <option value="LOW">
+                      {{ t('patientHistoryView.prescription.priorityLow') }}
+                    </option>
                     <option value="NORMAL">
                       {{ t('patientHistoryView.prescription.priorityNormal') }}
                     </option>
-                    <option value="HIGH">{{ t('patientHistoryView.prescription.priorityHigh') }}</option>
+                    <option value="HIGH">
+                      {{ t('patientHistoryView.prescription.priorityHigh') }}
+                    </option>
                     <option value="URGENT">
                       {{ t('patientHistoryView.prescription.priorityUrgent') }}
                     </option>
@@ -904,145 +978,153 @@ export default {
                   {{ t('patientHistoryView.prescription.frequency') }} *
                 </label>
                 <select v-model="state.currentMedication.frequency" class="form-control-modern">
-                    <option value="">{{ t('patientHistoryView.prescription.selectFrequency') }}</option>
-                <option value="1/day">{{ t('patientHistoryView.prescription.onceDay') }}</option>
-                <option value="2/day">{{ t('patientHistoryView.prescription.twiceDay') }}</option>
-                <option value="3/day">
-                  {{ t('patientHistoryView.prescription.threeTimesDay') }}
-                </option>
-                <option value="4/day">
-                  {{ t('patientHistoryView.prescription.fourTimesDay') }}
-                </option>
-                <option value="every_4h">{{ t('patientHistoryView.prescription.every4h') }}</option>
-                <option value="every_6h">{{ t('patientHistoryView.prescription.every6h') }}</option>
-                <option value="every_8h">{{ t('patientHistoryView.prescription.every8h') }}</option>
-                <option value="every_12h">
-                  {{ t('patientHistoryView.prescription.every12h') }}
-                </option>
-                <option value="as_needed">
-                  {{ t('patientHistoryView.prescription.asNeeded') }}
-                </option>
-              </select>
+                  <option value="">
+                    {{ t('patientHistoryView.prescription.selectFrequency') }}
+                  </option>
+                  <option value="1/day">{{ t('patientHistoryView.prescription.onceDay') }}</option>
+                  <option value="2/day">{{ t('patientHistoryView.prescription.twiceDay') }}</option>
+                  <option value="3/day">
+                    {{ t('patientHistoryView.prescription.threeTimesDay') }}
+                  </option>
+                  <option value="4/day">
+                    {{ t('patientHistoryView.prescription.fourTimesDay') }}
+                  </option>
+                  <option value="every_4h">
+                    {{ t('patientHistoryView.prescription.every4h') }}
+                  </option>
+                  <option value="every_6h">
+                    {{ t('patientHistoryView.prescription.every6h') }}
+                  </option>
+                  <option value="every_8h">
+                    {{ t('patientHistoryView.prescription.every8h') }}
+                  </option>
+                  <option value="every_12h">
+                    {{ t('patientHistoryView.prescription.every12h') }}
+                  </option>
+                  <option value="as_needed">
+                    {{ t('patientHistoryView.prescription.asNeeded') }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="form-field-modern">
+                <label class="form-label-modern">
+                  <i class="bi bi-calendar-range me-1"></i>
+                  {{ t('patientHistoryView.prescription.duration') }} *
+                </label>
+                <input
+                  v-model="state.currentMedication.duration"
+                  type="text"
+                  class="form-control-modern"
+                  placeholder="ej: 7 días"
+                />
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="form-field-modern">
+                <label class="form-label-modern">
+                  <i class="bi bi-arrow-down-circle me-1"></i>
+                  {{ t('patientHistoryView.prescription.route') }}
+                </label>
+                <select v-model="state.currentMedication.route" class="form-control-modern">
+                  <option value="Oral">Oral</option>
+                  <option value="Intravenosa">Intravenosa</option>
+                  <option value="Intramuscular">Intramuscular</option>
+                  <option value="Subcutánea">Subcutánea</option>
+                  <option value="Tópica">Tópica</option>
+                  <option value="Inhalatoria">Inhalatoria</option>
+                  <option value="Oftálmica">Oftálmica</option>
+                  <option value="Ótica">Ótica</option>
+                  <option value="Nasal">Nasal</option>
+                  <option value="Rectal">Rectal</option>
+                  <option value="Vaginal">Vaginal</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="form-field-modern">
+                <label class="form-label-modern">
+                  <i class="bi bi-box me-1"></i>
+                  {{ t('patientHistoryView.prescription.quantity') }}
+                </label>
+                <input
+                  v-model.number="state.currentMedication.quantity"
+                  type="number"
+                  min="1"
+                  class="form-control-modern"
+                />
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <div class="form-field-modern">
+                <label class="form-label-modern">
+                  <i class="bi bi-arrow-repeat me-1"></i>
+                  {{ t('patientHistoryView.prescription.refills') }}
+                </label>
+                <input
+                  v-model.number="state.currentMedication.refillsAllowed"
+                  type="number"
+                  min="0"
+                  max="12"
+                  class="form-control-modern"
+                  placeholder="0"
+                />
+              </div>
             </div>
           </div>
 
-          <div class="col-md-3">
-            <div class="form-field-modern">
-              <label class="form-label-modern">
-                <i class="bi bi-calendar-range me-1"></i>
-                {{ t('patientHistoryView.prescription.duration') }} *
-              </label>
-              <input
-                v-model="state.currentMedication.duration"
-                type="text"
-                class="form-control-modern"
-                placeholder="ej: 7 días"
-              />
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="form-field-modern">
+                <label class="form-label-modern">
+                  <i class="bi bi-file-text me-1"></i>
+                  {{ t('patientHistoryView.prescription.specialInstructions') }}
+                  <button
+                    v-if="isSpeechSupported && toggles['patient.history.edit']"
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    :class="{ 'btn-danger': isListeningSpeech }"
+                    @click="toggleSpeechRecognition('medicationInstructions')"
+                    :title="isListeningSpeech ? 'Parar gravação' : 'Iniciar gravação de voz'"
+                  >
+                    <i :class="isListeningSpeech ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
+                  </button>
+                  <button
+                    v-if="toggles['patient.history.edit']"
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    @click="clearField('medicationInstructions')"
+                    title="Limpar campo"
+                  >
+                    <i class="bi bi-eraser"></i>
+                  </button>
+                </label>
+                <textarea
+                  v-model="state.currentMedication.instructions"
+                  class="form-control-modern"
+                  rows="3"
+                  placeholder="Instrucciones adicionales para este medicamento"
+                ></textarea>
+              </div>
             </div>
           </div>
 
-          <div class="col-md-3">
-            <div class="form-field-modern">
-              <label class="form-label-modern">
-                <i class="bi bi-arrow-down-circle me-1"></i>
-                {{ t('patientHistoryView.prescription.route') }}
-              </label>
-              <select v-model="state.currentMedication.route" class="form-control-modern">
-                <option value="Oral">Oral</option>
-                <option value="Intravenosa">Intravenosa</option>
-                <option value="Intramuscular">Intramuscular</option>
-                <option value="Subcutánea">Subcutánea</option>
-                <option value="Tópica">Tópica</option>
-                <option value="Inhalatoria">Inhalatoria</option>
-                <option value="Oftálmica">Oftálmica</option>
-                <option value="Ótica">Ótica</option>
-                <option value="Nasal">Nasal</option>
-                <option value="Rectal">Rectal</option>
-                <option value="Vaginal">Vaginal</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="col-md-3">
-            <div class="form-field-modern">
-              <label class="form-label-modern">
-                <i class="bi bi-box me-1"></i>
-                {{ t('patientHistoryView.prescription.quantity') }}
-              </label>
-              <input
-                v-model.number="state.currentMedication.quantity"
-                type="number"
-                min="1"
-                class="form-control-modern"
-              />
-            </div>
-          </div>
-
-          <div class="col-md-3">
-            <div class="form-field-modern">
-              <label class="form-label-modern">
-                <i class="bi bi-arrow-repeat me-1"></i>
-                {{ t('patientHistoryView.prescription.refills') }}
-              </label>
-              <input
-                v-model.number="state.currentMedication.refillsAllowed"
-                type="number"
-                min="0"
-                max="12"
-                class="form-control-modern"
-                placeholder="0"
-              />
-            </div>
-          </div>
+          <button
+            type="button"
+            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 mt-3"
+            @click="addMedication"
+            :disabled="!state.currentMedication.medicationId"
+          >
+            <i class="bi bi-plus-circle me-2"></i>
+            {{ t('patientHistoryView.prescription.addMedication') }}
+          </button>
         </div>
-
-        <div class="row g-3">
-          <div class="col-12">
-            <div class="form-field-modern">
-              <label class="form-label-modern">
-                <i class="bi bi-file-text me-1"></i>
-                {{ t('patientHistoryView.prescription.specialInstructions') }}
-                <button
-                  v-if="isSpeechSupported && toggles['patient.history.edit']"
-                  type="button"
-                  class="btn btn-sm btn-outline-secondary"
-                  :class="{ 'btn-danger': isListeningSpeech }"
-                  @click="toggleSpeechRecognition('medicationInstructions')"
-                  :title="isListeningSpeech ? 'Parar gravação' : 'Iniciar gravação de voz'"
-                >
-                  <i :class="isListeningSpeech ? 'bi bi-mic-fill' : 'bi bi-mic'"></i>
-                </button>
-                <button
-                  v-if="toggles['patient.history.edit']"
-                  type="button"
-                  class="btn btn-sm btn-outline-secondary"
-                  @click="clearField('medicationInstructions')"
-                  title="Limpar campo"
-                >
-                  <i class="bi bi-eraser"></i>
-                </button>
-              </label>
-              <textarea
-                v-model="state.currentMedication.instructions"
-                class="form-control-modern"
-                rows="3"
-                placeholder="Instrucciones adicionales para este medicamento"
-              ></textarea>
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 mt-3"
-          @click="addMedication"
-          :disabled="!state.currentMedication.medicationId"
-        >
-          <i class="bi bi-plus-circle me-2"></i>
-          {{ t('patientHistoryView.prescription.addMedication') }}
-        </button>
       </div>
-    </div>
 
       <!-- Medications List -->
       <div v-if="state.prescription.medications.length > 0" class="form-section-modern">
@@ -1212,7 +1294,9 @@ export default {
             class="btn btn-sm btn-link"
             @click="state.pdfTemplate.showSelector = !state.pdfTemplate.showSelector"
           >
-            <i :class="state.pdfTemplate.showSelector ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+            <i
+              :class="state.pdfTemplate.showSelector ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"
+            ></i>
           </button>
         </div>
 
@@ -1401,7 +1485,10 @@ export default {
         >
           <i class="bi bi-check-circle me-2"></i>
           {{ t('patientHistoryView.prescription.createPrescription') }}
-          <span v-if="state.prescription.medications.length > 0" class="badge bg-light text-dark ms-2">
+          <span
+            v-if="state.prescription.medications.length > 0"
+            class="badge bg-light text-dark ms-2"
+          >
             {{ state.prescription.medications.length }}
           </span>
         </button>

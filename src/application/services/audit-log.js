@@ -47,5 +47,3 @@ export const generateAuditReport = async filters => {
   if (filters.endDate) params.append('endDate', filters.endDate);
   return (await requestBackend.get(`/${entity}/report?${params}`, await getHeaders())).data;
 };
-
-

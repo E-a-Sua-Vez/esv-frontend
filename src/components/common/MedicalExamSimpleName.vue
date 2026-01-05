@@ -14,7 +14,9 @@ export default {
         : 'exam-inactive';
     },
     statusIconClass() {
-      return this.exam.available === true && this.exam.active === true ? 'icon-success' : 'icon-error';
+      return this.exam.available === true && this.exam.active === true
+        ? 'icon-success'
+        : 'icon-error';
     },
     statusTooltip() {
       return this.exam.available === true && this.exam.active === true

@@ -17,6 +17,7 @@ import { getQueueById } from '../../../application/services/queue';
 import { getBookingDetails } from '../../../application/services/booking';
 import { getCollaboratorById } from '../../../application/services/collaborator';
 import { getAttentionDetails } from '../../../application/services/attention';
+import { getConsentStatus } from '../../../application/services/consent';
 import { ATTENTION_STATUS } from '../../../shared/constants';
 import Warning from '../../common/Warning.vue';
 import AreYouSure from '../../common/AreYouSure.vue';
@@ -59,11 +60,33 @@ export default {
       booking: null,
       collaboratorsMap: {},
       attentionDetails: null,
+      consentStatus: null,
+      loadingConsentStatus: false,
+      consentStatusInterval: null,
+      alertError: '',
     };
   },
   beforeMount() {
     this.paymentTypes = getPaymentTypes();
     this.paymentMethods = getPaymentMethods();
+    if (this.attention && this.attention.clientId && this.attention.commerceId) {
+      this.loadConsentStatus();
+      this.startConsentStatusPolling();
+    }
+  },
+  watch: {
+    attention: {
+      handler(newVal) {
+        if (newVal && newVal.clientId && newVal.commerceId) {
+          this.loadConsentStatus();
+          this.startConsentStatusPolling();
+        } else {
+          this.stopConsentStatusPolling();
+        }
+      },
+      immediate: true,
+      deep: true,
+    },
   },
   computed: {
     attentionFullName() {
@@ -390,6 +413,22 @@ export default {
       this.goToConfirm = false;
     },
     goAdvanceStage() {
+      // Validar consentimientos bloqueantes antes de abrir modal
+      if (this.hasBlockingConsents()) {
+        const blockingCount = this.getBlockingConsentsCount();
+        const blockingTypes =
+          this.consentStatus?.missing
+            ?.filter(req => req.blockingForAttention && req.required)
+            .map(req => req.consentType)
+            .join(', ') || '';
+
+        this.alertError = this.$t('attention.lgpd.cannotAdvanceStage', {
+          count: blockingCount,
+          types: blockingTypes,
+        });
+        return;
+      }
+
       this.goToAdvanceStage = !this.goToAdvanceStage;
       if (this.goToAdvanceStage) {
         this.selectedNextStage = '';
@@ -403,17 +442,30 @@ export default {
     },
     async confirmAdvanceStage() {
       if (!this.selectedNextStage) {
-        this.alertError =
-          this.$t('attention.advanceStage.selectStage') || 'Por favor selecciona una etapa';
+        this.alertError = this.$t('attention.advanceStage.selectStage');
         return;
       }
 
       // Validate that the transition is still valid
       const validNextStages = this.getNextStages(this.attention.currentStage);
       if (!validNextStages.includes(this.selectedNextStage)) {
-        this.alertError =
-          this.$t('attention.advanceStage.invalidTransition') ||
-          'La etapa seleccionada ya no es válida. Por favor, recarga la página.';
+        this.alertError = this.$t('attention.advanceStage.invalidTransition');
+        return;
+      }
+
+      // Validar consentimientos bloqueantes antes de avanzar
+      if (this.hasBlockingConsents()) {
+        const blockingCount = this.getBlockingConsentsCount();
+        const blockingTypes =
+          this.consentStatus?.missing
+            ?.filter(req => req.blockingForAttention && req.required)
+            .map(req => req.consentType)
+            .join(', ') || '';
+
+        this.alertError = this.$t('attention.lgpd.cannotAdvanceStage', {
+          count: blockingCount,
+          types: blockingTypes,
+        });
         return;
       }
 
@@ -453,6 +505,13 @@ export default {
           this.alertError =
             this.$t('attention.advanceStage.error.conflict') ||
             'La atención fue modificada por otro usuario. Por favor, recarga la página.';
+        } else if (
+          error.response?.status === 412 ||
+          error.response?.data?.message?.includes('consentimiento')
+        ) {
+          // Error de consentimientos bloqueantes
+          this.alertError =
+            error.response?.data?.message || this.$t('attention.lgpd.cannotAdvanceStage');
         } else {
           this.alertError =
             error.response?.data?.message ||
@@ -461,6 +520,60 @@ export default {
             'Error al avanzar etapa. Por favor, intenta nuevamente.';
         }
       }
+    },
+    async loadConsentStatus() {
+      if (!this.attention || !this.attention.clientId || !this.attention.commerceId) {
+        return;
+      }
+      try {
+        this.loadingConsentStatus = true;
+        const status = await getConsentStatus(this.attention.commerceId, this.attention.clientId);
+        // Solo actualizar si hay cambios para evitar re-renders innecesarios
+        if (JSON.stringify(this.consentStatus) !== JSON.stringify(status)) {
+          this.consentStatus = status;
+        }
+      } catch (error) {
+        console.error('Error loading consent status:', error);
+        // No resetear a null para mantener estado anterior
+      } finally {
+        this.loadingConsentStatus = false;
+      }
+    },
+    startConsentStatusPolling() {
+      // Polling cada 10 segundos para atualização em tempo real
+      if (this.consentStatusInterval) {
+        clearInterval(this.consentStatusInterval);
+      }
+      this.consentStatusInterval = setInterval(() => {
+        if (this.attention?.clientId && this.attention?.commerceId) {
+          this.loadConsentStatus();
+        }
+      }, 10000); // 10 segundos
+    },
+    stopConsentStatusPolling() {
+      if (this.consentStatusInterval) {
+        clearInterval(this.consentStatusInterval);
+        this.consentStatusInterval = null;
+      }
+    },
+    hasBlockingConsents() {
+      if (!this.consentStatus || !this.consentStatus.missing) {
+        return false;
+      }
+      return this.consentStatus.missing.some(req => req.blockingForAttention && req.required);
+    },
+    getMissingConsentsCount() {
+      if (!this.consentStatus || !this.consentStatus.missing) {
+        return 0;
+      }
+      return this.consentStatus.missing.length;
+    },
+    getBlockingConsentsCount() {
+      if (!this.consentStatus || !this.consentStatus.missing) {
+        return 0;
+      }
+      return this.consentStatus.missing.filter(req => req.blockingForAttention && req.required)
+        .length;
     },
     getNextStages(currentStage) {
       // Define transiciones válidas (puede ser más estricto en el futuro)
@@ -759,6 +872,8 @@ export default {
   },
   beforeUnmount() {
     document.body.style.overflow = '';
+    // Clean up polling interval
+    this.stopConsentStatusPolling();
   },
 };
 </script>
@@ -1053,12 +1168,27 @@ export default {
                     getNextStages(attention.currentStage).length > 0
                   "
                   class="attention-action-tab"
-                  :class="{ 'attention-action-tab-active': goToAdvanceStage }"
+                  :class="{
+                    'attention-action-tab-active': goToAdvanceStage,
+                    'attention-action-tab-disabled': hasBlockingConsents(),
+                  }"
+                  :disabled="hasBlockingConsents()"
                   @click.prevent="goAdvanceStage()"
+                  :title="
+                    hasBlockingConsents()
+                      ? $t('attention.lgpd.cannotAdvanceStage', {
+                          count: getBlockingConsentsCount(),
+                        })
+                      : ''
+                  "
                 >
                   <i class="bi bi-arrow-right-circle"></i>
                   <span>{{ $t('attention.advanceStage') || 'Avanzar Etapa' }}</span>
-                  <i :class="`bi ${goToAdvanceStage ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+                  <i v-if="hasBlockingConsents()" class="bi bi-shield-exclamation text-danger"></i>
+                  <i
+                    v-else
+                    :class="`bi ${goToAdvanceStage ? 'bi-chevron-up' : 'bi-chevron-down'}`"
+                  ></i>
                 </button>
               </div>
 
@@ -1264,12 +1394,29 @@ export default {
                       <div class="attention-action-buttons">
                         <button
                           class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
+                          :class="{ 'btn-danger': hasBlockingConsents() }"
                           @click="confirmAdvanceStage()"
-                          :disabled="!selectedNextStage || loading"
+                          :disabled="!selectedNextStage || loading || hasBlockingConsents()"
+                          :title="
+                            hasBlockingConsents()
+                              ? $t('attention.lgpd.cannotAdvanceStage', {
+                                  count: getBlockingConsentsCount(),
+                                })
+                              : ''
+                          "
                         >
                           <i class="bi bi-arrow-right-circle-fill"></i>
                           {{ $t('attention.advanceStage.confirm') || 'Avanzar' }}
                         </button>
+                        <div v-if="hasBlockingConsents()" class="alert alert-danger mt-2 mb-0">
+                          <i class="bi bi-shield-exclamation"></i>
+                          {{
+                            $t('attention.lgpd.cannotAdvanceStage', {
+                              count: getBlockingConsentsCount(),
+                            }) ||
+                            `No se puede avanzar: faltan ${getBlockingConsentsCount()} consentimiento(s) bloqueante(s)`
+                          }}
+                        </div>
                       </div>
                       <AreYouSure
                         :show="goToAdvanceStage && selectedNextStage"
@@ -1810,6 +1957,27 @@ export default {
   color: #004aad;
   border-color: rgba(0, 74, 173, 0.4);
   box-shadow: 0 2px 8px rgba(0, 74, 173, 0.2);
+}
+
+.attention-action-tab-disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+  background: linear-gradient(
+    135deg,
+    rgba(220, 53, 69, 0.1) 0%,
+    rgba(220, 53, 69, 0.05) 100%
+  ) !important;
+  border-color: rgba(220, 53, 69, 0.3) !important;
+  color: #dc3545 !important;
+}
+
+.attention-action-tab-disabled:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(220, 53, 69, 0.15) 0%,
+    rgba(220, 53, 69, 0.08) 100%
+  ) !important;
+  border-color: rgba(220, 53, 69, 0.4) !important;
 }
 
 .attention-action-tab span {

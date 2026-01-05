@@ -116,7 +116,7 @@ export default {
               loading.value = true;
               state.templates = [];
               state.filtered = [];
-            await loadTemplates(newCommerce.id, state.currentUser.id);
+              await loadTemplates(newCommerce.id, state.currentUser.id);
             } catch (error) {
               state.templates = [];
               state.filtered = [];
@@ -323,23 +323,23 @@ export default {
   <div>
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
-    <div class="content text-center">
+      <div class="content text-center">
         <CommerceLogo :src="state.business?.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessMedicalTemplatesAdmin.title`)"
-        :toggles="state.toggles"
-        component-name="businessMedicalTemplatesAdmin"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="false" :stack="alertError"></Alert>
-      </div>
-      <div id="businessMedicalTemplatesAdmin">
-        <div v-if="isActiveBusiness() && state.toggles['medical-templates.admin.view']">
-          <div v-if="!loading" id="businessMedicalTemplatesAdmin-result" class="mt-4">
-            <div>
+        <ComponentMenu
+          :title="$t(`businessMedicalTemplatesAdmin.title`)"
+          :toggles="state.toggles"
+          component-name="businessMedicalTemplatesAdmin"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div id="businessMedicalTemplatesAdmin">
+          <div v-if="isActiveBusiness() && state.toggles['medical-templates.admin.view']">
+            <div v-if="!loading" id="businessMedicalTemplatesAdmin-result" class="mt-4">
+              <div>
                 <div v-if="!commerce">
                   <Message
                     :title="$t('businessMedicalTemplatesAdmin.message.4.title')"
@@ -347,89 +347,89 @@ export default {
                   />
                 </div>
                 <div v-if="commerce && state.templates.length === 0">
-                <Message
-                  :title="$t('businessMedicalTemplatesAdmin.message.2.title')"
-                  :content="$t('businessMedicalTemplatesAdmin.message.2.content')"
-                />
-              </div>
-                <div v-if="commerce" class="row mb-2">
-                <div class="col lefted">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                    @click="showAdd()"
-                    data-bs-toggle="modal"
-                    data-bs-target="#add-template"
-                    :disabled="!state.toggles['medical-templates.admin.add']"
-                  >
-                    <i class="bi bi-plus-lg"></i> {{ $t('add') }}
-                  </button>
+                  <Message
+                    :title="$t('businessMedicalTemplatesAdmin.message.2.title')"
+                    :content="$t('businessMedicalTemplatesAdmin.message.2.content')"
+                  />
                 </div>
-              </div>
-                <div v-if="commerce">
-                <SearchAdminItem
-                  :business-items="state.templates"
-                  :type="'templates'"
-                  :receive-filtered-items="receiveFilteredItems"
-                >
-                </SearchAdminItem>
-                <div v-for="(template, index) in state.filtered" :key="index" class="result-card">
-                  <div class="row align-items-center">
-                    <div class="col-10">
-                      <MedicalTemplateSimpleName
-                        :template="template"
-                        :get-type-label="getTypeLabel"
-                        :get-scope-label="getScopeLabel"
-                      />
-                    </div>
-                    <div class="col-2 text-end">
-                      <a href="#" @click.prevent="showUpdateForm(index)">
-                        <i
-                          :class="`bi ${
-                            state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                          }`"
-                        ></i>
-                      </a>
-                    </div>
+                <div v-if="commerce" class="row mb-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd()"
+                      data-bs-toggle="modal"
+                      data-bs-target="#add-template"
+                      :disabled="!state.toggles['medical-templates.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
                   </div>
-                  <div v-if="state.extendedEntity === index" class="mt-3">
+                </div>
+                <div v-if="commerce">
+                  <SearchAdminItem
+                    :business-items="state.templates"
+                    :type="'templates'"
+                    :receive-filtered-items="receiveFilteredItems"
+                  >
+                  </SearchAdminItem>
+                  <div v-for="(template, index) in state.filtered" :key="index" class="result-card">
+                    <div class="row align-items-center">
+                      <div class="col-10">
+                        <MedicalTemplateSimpleName
+                          :template="template"
+                          :get-type-label="getTypeLabel"
+                          :get-scope-label="getScopeLabel"
+                        />
+                      </div>
+                      <div class="col-2 text-end">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                    <div v-if="state.extendedEntity === index" class="mt-3">
                       <div class="form-fields-container">
                         <div class="form-group-modern">
                           <label class="form-label-modern">{{
-                          $t('businessMedicalTemplatesAdmin.name')
-                        }}</label>
-                        <input
-                          v-model="template.name"
-                          type="text"
+                            $t('businessMedicalTemplatesAdmin.name')
+                          }}</label>
+                          <input
+                            v-model="template.name"
+                            type="text"
                             class="form-control-modern"
-                          :disabled="!state.toggles['medical-templates.admin.update']"
+                            :disabled="!state.toggles['medical-templates.admin.update']"
                             placeholder=""
-                        />
-                      </div>
+                          />
+                        </div>
                         <div class="form-group-modern">
                           <label class="form-label-modern">{{
-                          $t('businessMedicalTemplatesAdmin.type')
-                        }}</label>
-                        <select
-                          v-model="template.type"
+                            $t('businessMedicalTemplatesAdmin.type')
+                          }}</label>
+                          <select
+                            v-model="template.type"
                             class="form-control-modern"
-                          :disabled="!state.toggles['medical-templates.admin.update']"
-                        >
-                          <option
-                            v-for="type in state.templateTypes"
-                            :key="type.value"
-                            :value="type.value"
+                            :disabled="!state.toggles['medical-templates.admin.update']"
                           >
-                            {{ type.label }}
-                          </option>
-                        </select>
-                      </div>
+                            <option
+                              v-for="type in state.templateTypes"
+                              :key="type.value"
+                              :value="type.value"
+                            >
+                              {{ type.label }}
+                            </option>
+                          </select>
+                        </div>
                         <div class="form-group-modern">
                           <label class="form-label-modern">{{
-                          $t('businessMedicalTemplatesAdmin.description')
-                        }}</label>
-                        <input
-                          v-model="template.description"
-                          type="text"
+                            $t('businessMedicalTemplatesAdmin.description')
+                          }}</label>
+                          <input
+                            v-model="template.description"
+                            type="text"
                             class="form-control-modern"
                             :disabled="!state.toggles['medical-templates.admin.update']"
                             placeholder=""
@@ -484,7 +484,8 @@ export default {
                           @click="update(template)"
                           :disabled="!state.toggles['medical-templates.admin.update']"
                         >
-                          {{ $t('businessMedicalTemplatesAdmin.update') }} <i class="bi bi-save"></i>
+                          {{ $t('businessMedicalTemplatesAdmin.update') }}
+                          <i class="bi bi-save"></i>
                         </button>
                         <button
                           class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
@@ -508,7 +509,9 @@ export default {
             </div>
           </div>
           <div
-            v-if="(!isActiveBusiness() || !state.toggles['medical-templates.admin.view']) && !loading"
+            v-if="
+              (!isActiveBusiness() || !state.toggles['medical-templates.admin.view']) && !loading
+            "
           >
             <Message
               :title="$t('businessMedicalTemplatesAdmin.message.1.title')"
@@ -647,16 +650,16 @@ export default {
                         </div>
                         <div class="form-field-full-width">
                           <label class="form-label-modern">{{
-                          $t('businessMedicalTemplatesAdmin.content')
-                        }}</label>
-                        <textarea
-                          v-model="template.content"
+                            $t('businessMedicalTemplatesAdmin.content')
+                          }}</label>
+                          <textarea
+                            v-model="template.content"
                             class="form-control-modern form-control-full-width"
                             rows="8"
-                          :disabled="!state.toggles['medical-templates.admin.update']"
+                            :disabled="!state.toggles['medical-templates.admin.update']"
                             placeholder=""
-                        ></textarea>
-                      </div>
+                          ></textarea>
+                        </div>
                         <div class="form-group-modern">
                           <label class="form-label-modern">{{
                             $t('businessMedicalTemplatesAdmin.scope')
@@ -735,42 +738,45 @@ export default {
                           />
                         </div>
                       </div>
-                    <div class="col">
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="update(template)"
-                        :disabled="!state.toggles['medical-templates.admin.update']"
-                      >
-                        {{ $t('businessMedicalTemplatesAdmin.update') }} <i class="bi bi-save"></i>
-                      </button>
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                        @click="goToUnavailable()"
-                        v-if="state.toggles['medical-templates.admin.delete']"
-                      >
-                        {{ $t('businessMedicalTemplatesAdmin.delete') }}
-                        <i class="bi bi-trash-fill"></i>
-                      </button>
-                      <AreYouSure
-                        :show="state.goToUnavailable"
-                        @actionYes="unavailable(template)"
-                        @actionNo="unavailableCancel()"
-                      >
-                      </AreYouSure>
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="update(template)"
+                          :disabled="!state.toggles['medical-templates.admin.update']"
+                        >
+                          {{ $t('businessMedicalTemplatesAdmin.update') }}
+                          <i class="bi bi-save"></i>
+                        </button>
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                          @click="goToUnavailable()"
+                          v-if="state.toggles['medical-templates.admin.delete']"
+                        >
+                          {{ $t('businessMedicalTemplatesAdmin.delete') }}
+                          <i class="bi bi-trash-fill"></i>
+                        </button>
+                        <AreYouSure
+                          :show="state.goToUnavailable"
+                          @actionYes="unavailable(template)"
+                          @actionNo="unavailableCancel()"
+                        >
+                        </AreYouSure>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div
-          v-if="(!isActiveBusiness() || !state.toggles['medical-templates.admin.view']) && !loading"
-        >
-          <Message
-            :title="$t('businessMedicalTemplatesAdmin.message.1.title')"
-            :content="$t('businessMedicalTemplatesAdmin.message.1.content')"
-          />
+          <div
+            v-if="
+              (!isActiveBusiness() || !state.toggles['medical-templates.admin.view']) && !loading
+            "
+          >
+            <Message
+              :title="$t('businessMedicalTemplatesAdmin.message.1.title')"
+              :content="$t('businessMedicalTemplatesAdmin.message.1.content')"
+            />
           </div>
         </div>
       </div>
@@ -800,69 +806,77 @@ export default {
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
             <Alert :show="false" :stack="alertError"></Alert>
-            <div
-              id="add-template"
-              class="result-card mb-4"
-              v-if="state.showAdd"
-            >
+            <div id="add-template" class="result-card mb-4" v-if="state.showAdd">
               <div class="form-fields-container">
                 <div class="form-group-modern">
-                  <label class="form-label-modern">{{ $t('businessMedicalTemplatesAdmin.name') }} *</label>
-                <input
-                  v-model="state.newTemplate.name"
-                  type="text"
+                  <label class="form-label-modern"
+                    >{{ $t('businessMedicalTemplatesAdmin.name') }} *</label
+                  >
+                  <input
+                    v-model="state.newTemplate.name"
+                    type="text"
                     class="form-control-modern"
-                  :class="{ 'is-invalid': state.nameError }"
+                    :class="{ 'is-invalid': state.nameError }"
                     placeholder=""
-                />
-              </div>
+                  />
+                </div>
                 <div class="form-group-modern">
-                  <label class="form-label-modern">{{ $t('businessMedicalTemplatesAdmin.type') }} *</label>
+                  <label class="form-label-modern"
+                    >{{ $t('businessMedicalTemplatesAdmin.type') }} *</label
+                  >
                   <select v-model="state.newTemplate.type" class="form-control-modern">
-                  <option v-for="type in state.templateTypes" :key="type.value" :value="type.value">
-                    {{ type.label }}
-                  </option>
-                </select>
-              </div>
+                    <option
+                      v-for="type in state.templateTypes"
+                      :key="type.value"
+                      :value="type.value"
+                    >
+                      {{ type.label }}
+                    </option>
+                  </select>
+                </div>
                 <div class="form-group-modern">
                   <label class="form-label-modern">{{
-                  $t('businessMedicalTemplatesAdmin.description')
-                }}</label>
+                    $t('businessMedicalTemplatesAdmin.description')
+                  }}</label>
                   <input
                     v-model="state.newTemplate.description"
                     type="text"
                     class="form-control-modern"
                     placeholder=""
                   />
-              </div>
+                </div>
                 <div class="form-field-full-width">
-                  <label class="form-label-modern">{{
-                    $t('businessMedicalTemplatesAdmin.content')
-                  }} *</label>
-                <textarea
-                  v-model="state.newTemplate.content"
+                  <label class="form-label-modern"
+                    >{{ $t('businessMedicalTemplatesAdmin.content') }} *</label
+                  >
+                  <textarea
+                    v-model="state.newTemplate.content"
                     class="form-control-modern form-control-full-width"
                     rows="10"
                     placeholder=""
-                ></textarea>
+                  ></textarea>
                   <small class="form-help-text">
-                  {{ $t('businessMedicalTemplatesAdmin.contentHelp') }}
-                </small>
-              </div>
+                    {{ $t('businessMedicalTemplatesAdmin.contentHelp') }}
+                  </small>
+                </div>
                 <div class="form-group-modern">
-                  <label class="form-label-modern">{{ $t('businessMedicalTemplatesAdmin.scope') }}</label>
+                  <label class="form-label-modern">{{
+                    $t('businessMedicalTemplatesAdmin.scope')
+                  }}</label>
                   <select v-model="state.newTemplate.scope" class="form-control-modern">
-                  <option
-                    v-for="scope in state.templateScopes"
-                    :key="scope.value"
-                    :value="scope.value"
-                  >
-                    {{ scope.label }}
-                  </option>
-                </select>
-              </div>
+                    <option
+                      v-for="scope in state.templateScopes"
+                      :key="scope.value"
+                      :value="scope.value"
+                    >
+                      {{ scope.label }}
+                    </option>
+                  </select>
+                </div>
                 <div class="form-group-modern">
-                  <label class="form-label-modern">{{ $t('businessMedicalTemplatesAdmin.category') }}</label>
+                  <label class="form-label-modern">{{
+                    $t('businessMedicalTemplatesAdmin.category')
+                  }}</label>
                   <input
                     v-model="state.newTemplate.category"
                     type="text"
@@ -912,23 +926,23 @@ export default {
                     class="form-check-input"
                   />
                 </div>
-            </div>
-            <div class="row g-1 errors" v-if="state.errorsAdd && state.errorsAdd.length > 0">
-              <Warning>
-                <template v-slot:message>
-                  <li v-for="(error, index) in state.errorsAdd" :key="index">
-                    {{ $t(error) }}
-                  </li>
-                </template>
-              </Warning>
-            </div>
-            <div class="col">
-              <button
-                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                @click="add()"
-              >
-                {{ $t('businessMedicalTemplatesAdmin.add') }} <i class="bi bi-save"></i>
-              </button>
+              </div>
+              <div class="row g-1 errors" v-if="state.errorsAdd && state.errorsAdd.length > 0">
+                <Warning>
+                  <template v-slot:message>
+                    <li v-for="(error, index) in state.errorsAdd" :key="index">
+                      {{ $t(error) }}
+                    </li>
+                  </template>
+                </Warning>
+              </div>
+              <div class="col">
+                <button
+                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                  @click="add()"
+                >
+                  {{ $t('businessMedicalTemplatesAdmin.add') }} <i class="bi bi-save"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -1089,5 +1103,3 @@ export default {
   }
 }
 </style>
-
-

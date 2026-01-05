@@ -74,7 +74,7 @@ export default {
   props: {
     showPatientHistoryManagement: { type: Boolean, default: false },
     client: { type: Object, default: undefined },
-    attention: { type: String, default: undefined },
+    attention: { type: [String, Object], default: undefined },
     commerce: { type: Object, default: undefined },
     patientHistoryIn: { type: Object, default: {} },
     patientHistoryItems: { type: Array, default: [] },
@@ -242,6 +242,9 @@ export default {
       this.showDocuments = false;
       this.showEvolution = false;
       this.showAdvancedSearch = false;
+      this.showConsultationTimeline = false;
+      this.showConsultationDetail = false;
+      this.showPatientJourney = false;
       this.newPersonalData = undefined;
       this.newConsultationReason = undefined;
       this.newCurrentIllness = undefined;
@@ -424,7 +427,9 @@ export default {
     },
     onPatientDocumentUpdate(updatedDocument) {
       if (this.patientHistory && this.patientHistory.patientDocument) {
-        const index = this.patientHistory.patientDocument.findIndex(d => d.id === updatedDocument.id);
+        const index = this.patientHistory.patientDocument.findIndex(
+          d => d.id === updatedDocument.id,
+        );
         if (index !== -1) {
           this.patientHistory.patientDocument[index] = updatedDocument;
         }
@@ -560,7 +565,9 @@ export default {
     checkPreprontuarioCompleted() {
       if (!this.patientForms || this.patientForms.length === 0) return false;
       const firstAttentionForms = this.patientForms.filter(form => form.type === 'FIRST_ATTENTION');
-      return firstAttentionForms.some(form => form.status === 'COMPLETED' || (form.answers && form.answers.length > 0));
+      return firstAttentionForms.some(
+        form => form.status === 'COMPLETED' || (form.answers && form.answers.length > 0),
+      );
     },
     async loadPatientHistoryData() {
       if (!this.client?.id || !this.commerce?.id) {
@@ -650,10 +657,7 @@ export default {
           } else if (this.patientHistory.functionalExam) {
             this.newFunctionalExam = this.patientHistory.functionalExam;
           }
-          if (
-            this.patientHistory.physicalExam &&
-            Array.isArray(this.patientHistory.physicalExam)
-          ) {
+          if (this.patientHistory.physicalExam && Array.isArray(this.patientHistory.physicalExam)) {
             const sorted = [...this.patientHistory.physicalExam].sort(
               (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
             );
@@ -661,10 +665,7 @@ export default {
           } else if (this.patientHistory.physicalExam) {
             this.newPhysicalExam = this.patientHistory.physicalExam;
           }
-          if (
-            this.patientHistory.diagnostic &&
-            Array.isArray(this.patientHistory.diagnostic)
-          ) {
+          if (this.patientHistory.diagnostic && Array.isArray(this.patientHistory.diagnostic)) {
             const sorted = [...this.patientHistory.diagnostic].sort(
               (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
             );
@@ -672,10 +673,7 @@ export default {
           } else if (this.patientHistory.diagnostic) {
             this.newDiagnostic = this.patientHistory.diagnostic;
           }
-          if (
-            this.patientHistory.medicalOrder &&
-            Array.isArray(this.patientHistory.medicalOrder)
-          ) {
+          if (this.patientHistory.medicalOrder && Array.isArray(this.patientHistory.medicalOrder)) {
             const sorted = [...this.patientHistory.medicalOrder].sort(
               (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
             );
@@ -683,10 +681,7 @@ export default {
           } else if (this.patientHistory.medicalOrder) {
             this.newMedicalOrder = this.patientHistory.medicalOrder;
           }
-          if (
-            this.patientHistory.control &&
-            Array.isArray(this.patientHistory.control)
-          ) {
+          if (this.patientHistory.control && Array.isArray(this.patientHistory.control)) {
             this.newControl = this.patientHistory.control;
           } else if (this.patientHistory.control) {
             this.newControl = this.patientHistory.control;
@@ -721,7 +716,7 @@ export default {
     validate(personalData) {
       this.errorsAdd = [];
       if (!personalData) {
-        this.errorsAdd.push('patientHistoryView.validate.personalData');
+        this.errorsAdd.push('patientHistoryView.validate.personalDataError');
         return false;
       }
       if (!personalData.name || personalData.name.length === 0) {
@@ -875,14 +870,47 @@ export default {
       this.showPhotoCapture = false;
     },
     async onPhotoCaptured(photoData) {
-      // Photo captured but not uploaded yet
-      this.closePhotoCapture();
-    },
-    async onPhotoUploaded(uploadedPhoto) {
       try {
         this.photoLoading = true;
+
+        // Upload the captured photo
+        const uploadedPhoto = await uploadPatientPhoto(this.commerce.id, this.client.id, photoData);
+
+        // Update patient photo state
         this.patientPhoto = uploadedPhoto;
 
+        // Get thumbnail and full URLs
+        const [thumbnailUrl, fullUrl] = await Promise.all([
+          getPatientPhotoThumbnailUrl(this.commerce.id, this.client.id, uploadedPhoto.id),
+          getPatientPhotoUrl(this.commerce.id, this.client.id, uploadedPhoto.id),
+        ]);
+
+        if (thumbnailUrl && fullUrl) {
+          this.patientPhotoUrl = thumbnailUrl;
+          this.patientPhotoFullUrl = fullUrl;
+          this.patientPhotoLoaded = true;
+          this.$toast?.success('Foto del paciente actualizada exitosamente');
+        }
+
+        this.closePhotoCapture();
+      } catch (error) {
+        console.error('Error uploading captured photo:', error);
+        this.$toast?.error('Error al subir la foto: ' + (error.message || 'Error desconocido'));
+      } finally {
+        this.photoLoading = false;
+      }
+    },
+    async onPhotoUploaded(photoData) {
+      try {
+        this.photoLoading = true;
+
+        // Upload the uploaded photo
+        const uploadedPhoto = await uploadPatientPhoto(this.commerce.id, this.client.id, photoData);
+
+        // Update patient photo state
+        this.patientPhoto = uploadedPhoto;
+
+        // Get thumbnail and full URLs
         const [thumbnailUrl, fullUrl] = await Promise.all([
           getPatientPhotoThumbnailUrl(this.commerce.id, this.client.id, uploadedPhoto.id),
           getPatientPhotoUrl(this.commerce.id, this.client.id, uploadedPhoto.id),
@@ -895,7 +923,8 @@ export default {
           this.$toast?.success('Foto del paciente actualizada exitosamente');
         }
       } catch (error) {
-        this.$toast?.error('Error al procesar la foto: ' + error.message);
+        console.error('Error uploading photo:', error);
+        this.$toast?.error('Error al subir la foto: ' + (error.message || 'Error desconocido'));
       } finally {
         this.photoLoading = false;
       }
@@ -976,19 +1005,51 @@ export default {
   },
   computed: {
     attentionObject() {
-      return {
-        patientHistory: this.patientHistory,
-        patientId: this.client?.id,
-        activeSection: this.showPersonalData ? 'personalData' : 'other',
-      };
+      // Return attention object with at least the ID
+      // PrescriptionForm will load full details if needed
+      console.log(
+        '🔍 attentionObject - this.attention prop:',
+        this.attention,
+        'type:',
+        typeof this.attention,
+      );
+
+      // If attention is already an object, return it directly
+      if (this.attention && typeof this.attention === 'object' && this.attention.id) {
+        console.log('✅ attentionObject returning object directly:', this.attention);
+        return this.attention;
+      }
+
+      // If attention is a string (ID), convert to object
+      if (this.attention && typeof this.attention === 'string' && this.attention.trim() !== '') {
+        const result = { id: this.attention };
+        console.log('✅ attentionObject returning:', result);
+        return result;
+      }
+
+      // Return null if no attention ID (PrescriptionForm will handle it and still set doctor/commerce/client)
+      console.warn('⚠️ attentionObject returning null - this.attention is:', this.attention);
+      return null;
     },
     patientSummary() {
       const personalData = this.patientHistory?.personalData || this.newPersonalData;
-      if (!personalData) return null;
+      // Always return an object, even if personalData is missing, so the component is always visible
+      if (!personalData) {
+        return {
+          name: this.client?.name || '',
+          lastName: this.client?.lastName || '',
+          birthday: '',
+          age: '',
+          occupation: '',
+          lastConsultationDate: this.getLastConsultationDate(),
+          preprontuarioSent: this.checkPreprontuarioSent(),
+          preprontuarioCompleted: this.checkPreprontuarioCompleted(),
+        };
+      }
 
       return {
-        name: personalData.name || '',
-        lastName: personalData.lastName || '',
+        name: personalData.name || this.client?.name || '',
+        lastName: personalData.lastName || this.client?.lastName || '',
         birthday: personalData.birthday || '',
         age: this.calculateDetailedAge(personalData.birthday),
         occupation: personalData.occupation || '',

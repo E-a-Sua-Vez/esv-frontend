@@ -18,6 +18,7 @@ import { query, where, orderBy, onSnapshot as firestoreOnSnapshot } from 'fireba
 import { useI18n } from 'vue-i18n';
 import { useFirebaseListener } from '../../composables/useFirebaseListener';
 import { USER_TYPES, ENVIRONMENTS } from '../../shared/constants';
+import { getPermissions } from '../../application/services/permissions';
 import LocaleSelector from './LocaleSelector.vue';
 import CommerceSelector from './CommerceSelector.vue';
 import ModuleSelector from './ModuleSelector.vue';
@@ -76,6 +77,7 @@ export default {
       manageSubMenuOption: false,
       manageControlSubMenuOption: false,
       medicalManagementSubMenuOption: false,
+      toggles: {},
     });
 
     // Computed properties to determine if selectors should be shown (based on store state)
@@ -248,6 +250,15 @@ export default {
       const module = store.getCurrentModule;
       state.currentModule = module && module.id ? module : null;
       getMessages();
+      // Load permissions for business users
+      if (state.currentUserType === USER_TYPES.BUSINESS) {
+        try {
+          state.toggles = await getPermissions('business', 'main-menu');
+        } catch (error) {
+          console.error('Error loading permissions:', error);
+          state.toggles = {};
+        }
+      }
       // Reload available commerces and modules when user data changes
       await loadAvailableCommerces();
       await loadAvailableModules();
@@ -655,6 +666,7 @@ export default {
           'outcome-types-admin',
           'company-admin',
           'forms-admin',
+          'lgpd-consent-admin',
           'permissions-admin',
         ];
       }
@@ -1100,6 +1112,10 @@ export default {
                     type="button"
                     class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style desktop-menu-btn"
                     @click="navigateToMenuOption(option, true)"
+                    :disabled="
+                      state.currentUserType === USER_TYPES.BUSINESS &&
+                      !state.toggles[`business.main-menu.${option}`]
+                    "
                   >
                     {{ $t(`${getMenuTranslationKey()}.${option}`) }}
                     <i
@@ -1142,6 +1158,16 @@ export default {
                           navigateToMenuOption(subOption);
                           closeDesktopMenu();
                         "
+                        :disabled="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                        "
+                        :title="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                            ? $t(`${getMenuTranslationKey()}.permissionRequired`)
+                            : ''
+                        "
                       >
                         {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
                         <i class="bi bi-chevron-right"></i>
@@ -1164,6 +1190,16 @@ export default {
                         @click="
                           navigateToMenuOption(subOption);
                           closeDesktopMenu();
+                        "
+                        :disabled="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                        "
+                        :title="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                            ? $t(`${getMenuTranslationKey()}.permissionRequired`)
+                            : ''
                         "
                       >
                         {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
@@ -1190,6 +1226,16 @@ export default {
                         @click="
                           navigateToMenuOption(subOption);
                           closeDesktopMenu();
+                        "
+                        :disabled="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                        "
+                        :title="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                            ? $t(`${getMenuTranslationKey()}.permissionRequired`)
+                            : ''
                         "
                       >
                         {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
@@ -1411,6 +1457,10 @@ export default {
                     type="button"
                     class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-1 btn-style mobile-menu-btn"
                     @click="navigateToMenuOption(option)"
+                    :disabled="
+                      state.currentUserType === USER_TYPES.BUSINESS &&
+                      !state.toggles[`business.main-menu.${option}`]
+                    "
                   >
                     {{ $t(`${getMenuTranslationKey()}.${option}`) }}
                     <i
@@ -1450,6 +1500,16 @@ export default {
                         type="button"
                         class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-0 mb-1 btn-style mobile-menu-btn mobile-submenu-btn"
                         @click="navigateToMenuOption(subOption)"
+                        :disabled="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                        "
+                        :title="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                            ? $t(`${getMenuTranslationKey()}.permissionRequired`)
+                            : ''
+                        "
                       >
                         {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
                         <i class="bi bi-chevron-right"></i>
@@ -1470,6 +1530,16 @@ export default {
                         type="button"
                         class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-0 mb-1 btn-style mobile-menu-btn mobile-submenu-btn"
                         @click="navigateToMenuOption(subOption)"
+                        :disabled="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                        "
+                        :title="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                            ? $t(`${getMenuTranslationKey()}.permissionRequired`)
+                            : ''
+                        "
                       >
                         {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
                         <i class="bi bi-chevron-right"></i>
@@ -1493,6 +1563,16 @@ export default {
                         type="button"
                         class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-0 mb-1 btn-style mobile-menu-btn mobile-submenu-btn"
                         @click="navigateToMenuOption(subOption)"
+                        :disabled="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                        "
+                        :title="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                            ? $t(`${getMenuTranslationKey()}.permissionRequired`)
+                            : ''
+                        "
                       >
                         {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
                         <i class="bi bi-chevron-right"></i>

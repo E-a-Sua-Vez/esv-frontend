@@ -35,6 +35,7 @@ import LgpdConsentManager from '../../lgpd/LgpdConsentManager.vue';
 import LgpdDataPortability from '../../lgpd/LgpdDataPortability.vue';
 import { getGroupedQueueByCommerceId } from '../../../application/services/queue';
 import { searchClientByIdNumber, getClientById } from '../../../application/services/client';
+import { getConsentStatus } from '../../../application/services/consent';
 
 export default {
   name: 'ClientDetailsCard',
@@ -111,6 +112,8 @@ export default {
       preselectedQueueForModal: null, // Queue preselected from package
       preselectedServiceIdForModal: null, // Service ID preselected from package
       preselectedPackageIdForModal: null, // Package ID preselected from package
+      consentStatus: null,
+      loadingConsentStatus: false,
     };
   },
   methods: {
@@ -863,6 +866,40 @@ export default {
     handleConsentUpdated() {
       // Handle consent update event
       console.log('[ClientDetailsCard] Consent updated');
+      this.loadConsentStatus();
+    },
+    async loadConsentStatus() {
+      if (!this.client || !this.client.id || !this.commerce || !this.commerce.id) {
+        return;
+      }
+      try {
+        this.loadingConsentStatus = true;
+        this.consentStatus = await getConsentStatus(this.commerce.id, this.client.id);
+      } catch (error) {
+        console.error('Error loading consent status:', error);
+        this.consentStatus = null;
+      } finally {
+        this.loadingConsentStatus = false;
+      }
+    },
+    hasBlockingConsents() {
+      if (!this.consentStatus || !this.consentStatus.missing) {
+        return false;
+      }
+      return this.consentStatus.missing.some(req => req.blockingForAttention && req.required);
+    },
+    getMissingConsentsCount() {
+      if (!this.consentStatus || !this.consentStatus.missing) {
+        return 0;
+      }
+      return this.consentStatus.missing.length;
+    },
+    getBlockingConsentsCount() {
+      if (!this.consentStatus || !this.consentStatus.missing) {
+        return 0;
+      }
+      return this.consentStatus.missing.filter(req => req.blockingForAttention && req.required)
+        .length;
     },
     // Configurar event listeners para los modales
     setupModalEventListeners() {
@@ -1147,6 +1184,24 @@ export default {
     },
   },
   watch: {
+    client: {
+      handler(newVal) {
+        if (newVal && newVal.id && this.commerce && this.commerce.id) {
+          this.loadConsentStatus();
+        }
+      },
+      immediate: true,
+      deep: true,
+    },
+    commerce: {
+      handler(newVal) {
+        if (newVal && newVal.id && this.client && this.client.id) {
+          this.loadConsentStatus();
+        }
+      },
+      immediate: true,
+      deep: true,
+    },
     detailsOpened: {
       immediate: true,
       deep: true,
@@ -1428,6 +1483,44 @@ export default {
               <span v-else-if="loadingPreprontuario" class="preprontuario-loading-indicator"
                 >...</span
               >
+            </div>
+          </Popper>
+          <!-- LGPD Consent Status Indicator -->
+          <Popper
+            v-if="client && commerce && consentStatus"
+            :class="'dark'"
+            arrow
+            disable-click-away
+            hover
+          >
+            <template #content>
+              <div>
+                <span v-if="hasBlockingConsents()">
+                  {{
+                    $t('attention.lgpd.blockingConsents', { count: getBlockingConsentsCount() }) ||
+                    `Faltan ${getBlockingConsentsCount()} consentimiento(s) bloqueante(s)`
+                  }}
+                </span>
+                <span v-else-if="getMissingConsentsCount() > 0">
+                  {{
+                    $t('attention.lgpd.missingConsents', { count: getMissingConsentsCount() }) ||
+                    `Faltan ${getMissingConsentsCount()} consentimiento(s)`
+                  }}
+                </span>
+                <span v-else>
+                  {{
+                    $t('attention.lgpd.allConsentsGranted') || 'Todos los consentimientos otorgados'
+                  }}
+                </span>
+              </div>
+            </template>
+            <div class="status-badge-inline" @click.stop="openLgpdModal()">
+              <i v-if="hasBlockingConsents()" class="bi bi-shield-exclamation red-icon"></i>
+              <i
+                v-else-if="getMissingConsentsCount() > 0"
+                class="bi bi-shield-check yellow-icon"
+              ></i>
+              <i v-else class="bi bi-shield-check green-icon"></i>
             </div>
           </Popper>
         </div>
@@ -2329,6 +2422,7 @@ export default {
                 :show-patient-history-management="true"
                 :client="client"
                 :commerce="commerce"
+                :attention="attention"
                 :patient-history-in="patientHistory"
                 :patient-history-items="patientHistoryItems"
                 :patient-forms="patientForms"
@@ -2358,7 +2452,10 @@ export default {
                     <i class="bi bi-shield-check"></i>
                   </div>
                   <div class="modern-modal-title-wrapper">
-                    <h5 class="modal-title fw-bold modern-modal-title" :id="`lgpdModalLabel-${client.id}`">
+                    <h5
+                      class="modal-title fw-bold modern-modal-title"
+                      :id="`lgpdModalLabel-${client.id}`"
+                    >
                       {{ $t('lgpd.title') }}
                     </h5>
                     <p class="modern-modal-client-name">{{ client.name }}</p>

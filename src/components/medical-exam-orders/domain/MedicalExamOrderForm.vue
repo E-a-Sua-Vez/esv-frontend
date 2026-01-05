@@ -18,6 +18,8 @@ import {
 import { searchTemplates as searchMedicalTemplates } from '../../../application/services/medical-template';
 import { useSpeechRecognition } from '../../../components/patient-history/composables/useSpeechRecognition';
 import PdfTemplateSelector from '../../pdf-templates/PdfTemplateSelector.vue';
+import { globalStore } from '../../../stores';
+import { getAttentionDetails } from '../../../application/services/attention';
 
 export default {
   name: 'MedicalExamOrderForm',
@@ -40,6 +42,7 @@ export default {
   setup(props, { emit }) {
     const { t } = useI18n();
     const loading = ref(false);
+    const store = globalStore();
     const { commerce, client, attention, toggles, errorsAdd, receiveData } = toRefs(props);
 
     const state = reactive({
@@ -114,11 +117,62 @@ export default {
 
     // Initialize exam order data
     onMounted(async () => {
+      console.log('📋 Initializing exam order - attention prop:', attention.value);
+
+      // Extract attention ID first (could be string, object with id, or object with full details)
+      let attentionId = null;
+      if (typeof attention.value === 'string') {
+        attentionId = attention.value;
+      } else if (attention.value?.id) {
+        attentionId = attention.value.id;
+      }
+
+      // Set attention ID immediately if we have it
+      if (attentionId) {
+        state.examOrder.attentionId = attentionId;
+        console.log('✅ Attention ID set from prop:', state.examOrder.attentionId);
+      }
+
       if (commerce.value?.id) state.examOrder.commerceId = commerce.value.id;
       if (client.value?.id) state.examOrder.clientId = client.value.id;
-      if (attention.value?.id) state.examOrder.attentionId = attention.value.id;
-      if (attention.value?.collaboratorId)
-        state.examOrder.doctorId = attention.value.collaboratorId;
+
+      // Load full attention details if we need collaborator info
+      let attentionDetails = attention.value;
+      if (attentionId && !attention.value?.collaboratorId) {
+        console.log('🔄 Loading attention details for ID:', attentionId);
+        try {
+          attentionDetails = await getAttentionDetails(attentionId);
+          console.log('✅ Attention details loaded:', attentionDetails);
+          // Ensure attentionId is set (in case getAttentionDetails succeeds but ID was missing)
+          if (attentionDetails?.id) {
+            state.examOrder.attentionId = attentionDetails.id;
+          }
+        } catch (error) {
+          console.error('❌ Error loading attention details:', error);
+          // Keep the ID we already set from the prop
+        }
+      } else if (!attentionId) {
+        console.warn('⚠️ No attention ID found in prop');
+      }
+
+      if (attentionDetails?.collaboratorId) {
+        state.examOrder.doctorId = attentionDetails.collaboratorId;
+        console.log('👨‍⚕️ Doctor ID set from attention:', state.examOrder.doctorId);
+      } else {
+        // Fallback: Get current user from store (should be the collaborator creating the exam order)
+        console.warn('⚠️ No collaborator ID found in attention, using current user from store');
+        try {
+          const currentUser = await store.getCurrentUser;
+          if (currentUser && currentUser.id) {
+            state.examOrder.doctorId = currentUser.id;
+            console.log('👨‍⚕️ Doctor ID set from current user:', state.examOrder.doctorId);
+          } else {
+            console.error('❌ No current user found in store');
+          }
+        } catch (error) {
+          console.error('❌ Error getting current user from store:', error);
+        }
+      }
 
       await loadTemplates();
     });
@@ -131,7 +185,7 @@ export default {
         state.templates.loading = true;
         const [orderTemplates, examTemplates] = await Promise.all([
           searchMedicalTemplates(commerce.value.id, state.examOrder.doctorId, {
-            type: 'EXAM_ORDER',
+            type: 'exam_order',
             limit: 20,
           }),
           listExamResultTemplates(commerce.value.id),
@@ -284,7 +338,7 @@ export default {
         loading.value = true;
         const examOrderData = {
           ...state.examOrder,
-          pdfTemplateId: state.pdfTemplate.selected
+          pdfTemplateId: state.pdfTemplate.selected,
         };
         const examOrder = await createExamOrder(examOrderData);
         state.createdExamOrder = examOrder;
@@ -350,11 +404,13 @@ export default {
         // Ensure examOrder has a unique identifier
         if (!state.examOrder.examOrderId && !state.examOrder.id) {
           // Generate a temporary ID if none exists
-          state.examOrder.examOrderId = `temp_exam_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          state.examOrder.examOrderId = `temp_exam_${Date.now()}_${Math.random()
+            .toString(36)
+            .substr(2, 9)}`;
         }
-        
+
         console.log('🔬 Sending exam order data:', state.examOrder);
-        
+
         if (typeof receiveData.value === 'function') {
           receiveData.value(state.examOrder);
         } else {
@@ -797,7 +853,11 @@ export default {
                 {{ t('patientHistoryView.examOrder.urgency') }}
               </label>
               <select v-model="state.examOrder.urgency" class="form-control-modern">
-                <option v-for="urgency in urgencyLevels" :key="urgency.value" :value="urgency.value">
+                <option
+                  v-for="urgency in urgencyLevels"
+                  :key="urgency.value"
+                  :value="urgency.value"
+                >
                   {{ urgency.label }}
                 </option>
               </select>
@@ -881,7 +941,15 @@ export default {
               <div class="exam-info">
                 <strong>{{ exam.name }}</strong>
                 <span class="exam-details">
-                  {{ exam.type === 'laboratory' ? 'Laboratorio' : exam.type === 'imaging' ? 'Imagenología' : exam.type === 'procedure' ? 'Procedimiento' : 'Otro' }}
+                  {{
+                    exam.type === 'laboratory'
+                      ? 'Laboratorio'
+                      : exam.type === 'imaging'
+                      ? 'Imagenología'
+                      : exam.type === 'procedure'
+                      ? 'Procedimiento'
+                      : 'Otro'
+                  }}
                   <span v-if="exam.code"> · {{ exam.code }}</span>
                 </span>
               </div>
@@ -910,7 +978,12 @@ export default {
           <div class="form-grid">
             <div class="form-field-modern">
               <label class="form-label-modern">Tipo</label>
-              <input v-model="state.currentExam.type" type="text" class="form-control-modern" readonly />
+              <input
+                v-model="state.currentExam.type"
+                type="text"
+                class="form-control-modern"
+                readonly
+              />
             </div>
 
             <div class="form-field-modern">
@@ -1157,7 +1230,9 @@ export default {
             class="btn btn-sm btn-link"
             @click="state.pdfTemplate.showSelector = !state.pdfTemplate.showSelector"
           >
-            <i :class="state.pdfTemplate.showSelector ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+            <i
+              :class="state.pdfTemplate.showSelector ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"
+            ></i>
           </button>
         </div>
 

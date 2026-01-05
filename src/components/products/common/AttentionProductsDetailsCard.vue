@@ -176,18 +176,21 @@ export default {
         </div>
 
         <!-- Services Badges - Inline -->
-        <div v-if="attention?.servicesDetails && attention.servicesDetails.length > 0" class="services-inline">
-        <span
-            v-for="serv in attention.servicesDetails.slice(0, 2)"
-          :key="serv.id"
-            class="service-badge-mini"
+        <div
+          v-if="attention?.servicesDetails && attention.servicesDetails.length > 0"
+          class="services-inline"
         >
-          {{ serv.name }}
-        </span>
+          <span
+            v-for="serv in attention.servicesDetails.slice(0, 2)"
+            :key="serv.id"
+            class="service-badge-mini"
+          >
+            {{ serv.name }}
+          </span>
           <span v-if="attention.servicesDetails.length > 2" class="service-badge-more">
             +{{ attention.servicesDetails.length - 2 }}
-        </span>
-      </div>
+          </span>
+        </div>
 
         <!-- Collapse Icon -->
         <div class="collapse-icon-wrapper">
@@ -195,7 +198,7 @@ export default {
             class="bi collapse-icon"
             :class="extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'"
           ></i>
-      </div>
+        </div>
       </div>
     </div>
 
@@ -217,42 +220,42 @@ export default {
                   <i class="bi bi-person-fill"></i>
                   <span>{{ getFullName() }}</span>
                 </div>
-          </div>
+              </div>
               <div v-if="attention?.userPhone" class="data-item-compact">
                 <span class="data-label">{{ $t('dashboard.phone') || 'Teléfono' }}:</span>
                 <div class="data-value">
-              <a
+                  <a
                     class="contact-link"
-                :href="'https://wa.me/' + attention.userPhone"
-                target="_blank"
+                    :href="'https://wa.me/' + attention.userPhone"
+                    target="_blank"
                     @click.stop
-              >
+                  >
                     <i class="bi bi-whatsapp whatsapp-icon"></i>
                     <span>{{ attention.userPhone }}</span>
-              </a>
-            </div>
+                  </a>
+                </div>
               </div>
               <div v-if="attention?.userEmail" class="data-item-compact">
                 <span class="data-label">{{ $t('dashboard.email') || 'Email' }}:</span>
                 <div class="data-value">
-              <a
+                  <a
                     class="contact-link"
-                :href="'mailto:' + attention.userEmail"
-                target="_blank"
+                    :href="'mailto:' + attention.userEmail"
+                    target="_blank"
                     @click.stop
-              >
+                  >
                     <i class="bi bi-envelope"></i>
                     <span>{{ attention.userEmail }}</span>
-              </a>
-            </div>
+                  </a>
+                </div>
               </div>
               <div v-if="attention?.userIdNumber" class="data-item-compact">
                 <span class="data-label">{{ $t('dashboard.idNumber') || 'ID' }}:</span>
                 <div class="data-value">
                   <i class="bi bi-person-vcard"></i>
                   <span>{{ attention.userIdNumber }}</span>
-            </div>
-          </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -262,18 +265,20 @@ export default {
               <Popper :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>
-                    {{ $t('businessProductStockAdmin.attentionProducts') || 'Ver stock de atención' }}
-        </div>
+                    {{
+                      $t('businessProductStockAdmin.attentionProducts') || 'Ver stock de atención'
+                    }}
+                  </div>
                 </template>
-            <button
-              @click="getAttentionProducts()"
+                <button
+                  @click="getAttentionProducts()"
                   class="action-btn"
-              data-bs-toggle="modal"
-              :data-bs-target="`#attentionsProductsModal-${attention.attentionId}`"
-            >
-              <i class="bi bi-eyedropper"></i>
+                  data-bs-toggle="modal"
+                  :data-bs-target="`#attentionsProductsModal-${attention.attentionId}`"
+                >
+                  <i class="bi bi-eyedropper"></i>
                   <span>{{ $t('businessProductStockAdmin.stock') }}</span>
-            </button>
+                </button>
               </Popper>
             </div>
           </div>
@@ -282,7 +287,9 @@ export default {
           <div class="info-section compact-section">
             <div class="info-section-header-compact">
               <i class="bi bi-qr-code"></i>
-              <span class="info-section-title-compact">{{ $t('dashboard.attData') || 'Datos Atención' }}</span>
+              <span class="info-section-title-compact">{{
+                $t('dashboard.attData') || 'Datos Atención'
+              }}</span>
             </div>
             <div class="attention-details-grid">
               <div v-if="attention?.queueName" class="data-item-compact">
@@ -297,8 +304,8 @@ export default {
                 <div class="data-value">
                   <i class="bi bi-person-fill"></i>
                   <span>{{ attention.collaboratorName }}</span>
-        </div>
-          </div>
+                </div>
+              </div>
               <div
                 v-if="attention?.commerceName && attention.commerceTag"
                 class="data-item-compact"
@@ -315,25 +322,28 @@ export default {
                   <i class="bi bi-box-fill"></i>
                   <span>{{ attention.packageName }}</span>
                   <span class="badge bg-secondary ms-1"
-              >{{ attention.packageProcedureNumber }} /
-              {{ attention.packageProceduresTotalNumber }}</span
-            >
+                    >{{ attention.packageProcedureNumber }} /
+                    {{ attention.packageProceduresTotalNumber }}</span
+                  >
                   <i
                     v-if="attention.packagePaid"
                     class="bi bi-check-circle-fill green-icon ms-1"
                   ></i>
                 </div>
               </div>
-              <div v-if="attention?.servicesDetails && attention.servicesDetails.length > 0" class="data-item-compact">
+              <div
+                v-if="attention?.servicesDetails && attention.servicesDetails.length > 0"
+                class="data-item-compact"
+              >
                 <span class="data-label">{{ $t('paymentData.service') || 'Servicios' }}:</span>
                 <div class="data-value">
-            <span
-              v-for="serv in attention.servicesDetails"
-              :key="serv.id"
+                  <span
+                    v-for="serv in attention.servicesDetails"
+                    :key="serv.id"
                     class="badge bg-primary me-1"
-            >
-              {{ serv.name }}</span
-            >
+                  >
+                    {{ serv.name }}</span
+                  >
                 </div>
               </div>
             </div>

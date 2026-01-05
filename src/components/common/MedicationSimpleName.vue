@@ -5,7 +5,10 @@ export default {
   name: 'MedicationSimpleName',
   components: { Popper },
   props: {
-    medication: { type: Object, default: () => ({ name: '', commercialName: '', available: true }) },
+    medication: {
+      type: Object,
+      default: () => ({ name: '', commercialName: '', available: true }),
+    },
   },
   computed: {
     statusClass() {
@@ -246,5 +249,3 @@ export default {
   overflow: visible;
 }
 </style>
-
-

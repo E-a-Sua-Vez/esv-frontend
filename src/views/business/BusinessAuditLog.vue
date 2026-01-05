@@ -501,7 +501,9 @@ export default {
                       </div>
                     </div>
                     <div class="metric-value-container">
-                      <span class="metric-value">{{ Object.keys(state.report.byUser || {}).length }}</span>
+                      <span class="metric-value">{{
+                        Object.keys(state.report.byUser || {}).length
+                      }}</span>
                     </div>
                   </div>
                 </div>
@@ -521,11 +523,7 @@ export default {
                     <p class="text-muted mt-3">{{ $t('audit-log.noLogs') }}</p>
                   </div>
                   <div v-else>
-                    <div
-                      v-for="log in state.filteredLogs"
-                      :key="log.id"
-                      class="result-card mb-3"
-                    >
+                    <div v-for="log in state.filteredLogs" :key="log.id" class="result-card mb-3">
                       <div class="d-flex justify-content-between align-items-start mb-2">
                         <div>
                           <strong>{{ log.userName || log.userEmail || log.userId }}</strong>
@@ -607,8 +605,16 @@ export default {
                 >
                   <template #custom-filters>
                     <DateRangeFilters
-                      :start-date="state.filters.startDate ? new Date(state.filters.startDate).toISOString().split('T')[0] : ''"
-                      :end-date="state.filters.endDate ? new Date(state.filters.endDate).toISOString().split('T')[0] : ''"
+                      :start-date="
+                        state.filters.startDate
+                          ? new Date(state.filters.startDate).toISOString().split('T')[0]
+                          : ''
+                      "
+                      :end-date="
+                        state.filters.endDate
+                          ? new Date(state.filters.endDate).toISOString().split('T')[0]
+                          : ''
+                      "
                       :show-quick-buttons="true"
                       @quick-select="handleQuickDateSelect"
                       @update:startDate="val => (state.filters.startDate = new Date(val))"
@@ -617,20 +623,28 @@ export default {
                     />
 
                     <div class="form-group-modern mb-3">
-                      <label class="form-label-modern">{{ $t('audit-log.filters.action') || 'Acción' }}</label>
+                      <label class="form-label-modern">{{
+                        $t('audit-log.filters.action') || 'Acción'
+                      }}</label>
                       <select
                         v-model="state.selectedAction"
                         @change="applyFilters"
                         class="form-control-modern"
                       >
-                        <option v-for="action in state.actions" :key="action.value" :value="action.value">
+                        <option
+                          v-for="action in state.actions"
+                          :key="action.value"
+                          :value="action.value"
+                        >
                           {{ action.label }}
                         </option>
                       </select>
                     </div>
 
                     <div class="form-group-modern mb-3">
-                      <label class="form-label-modern">{{ $t('audit-log.filters.entityType') || 'Tipo de Entidad' }}</label>
+                      <label class="form-label-modern">{{
+                        $t('audit-log.filters.entityType') || 'Tipo de Entidad'
+                      }}</label>
                       <select
                         v-model="state.selectedEntityType"
                         @change="applyFilters"
@@ -647,13 +661,18 @@ export default {
                     </div>
 
                     <div class="form-group-modern mb-3">
-                      <label class="form-label-modern">{{ $t('audit-log.filters.search') || 'Buscar' }}</label>
+                      <label class="form-label-modern">{{
+                        $t('audit-log.filters.search') || 'Buscar'
+                      }}</label>
                       <input
                         v-model="state.searchText"
                         @input="applyFilters"
                         type="text"
                         class="form-control-modern"
-                        :placeholder="$t('audit-log.filters.searchPlaceholder') || 'Buscar por usuario, email, entidad, IP...'"
+                        :placeholder="
+                          $t('audit-log.filters.searchPlaceholder') ||
+                          'Buscar por usuario, email, entidad, IP...'
+                        "
                       />
                     </div>
 
@@ -690,7 +709,9 @@ export default {
                             <i class="bi bi-list-check"></i>
                           </div>
                           <div class="metric-title-section">
-                            <span class="metric-label">{{ $t('audit-log.summary.total') || 'Total de Registros' }}</span>
+                            <span class="metric-label">{{
+                              $t('audit-log.summary.total') || 'Total de Registros'
+                            }}</span>
                           </div>
                         </div>
                         <div class="metric-value-container">
@@ -705,11 +726,15 @@ export default {
                             <i class="bi bi-lightning-charge"></i>
                           </div>
                           <div class="metric-title-section">
-                            <span class="metric-label">{{ $t('audit-log.summary.byAction') || 'Por Acción' }}</span>
+                            <span class="metric-label">{{
+                              $t('audit-log.summary.byAction') || 'Por Acción'
+                            }}</span>
                           </div>
                         </div>
                         <div class="metric-value-container">
-                          <span class="metric-value">{{ Object.keys(state.report.byAction || {}).length }}</span>
+                          <span class="metric-value">{{
+                            Object.keys(state.report.byAction || {}).length
+                          }}</span>
                         </div>
                       </div>
                     </div>
@@ -720,11 +745,15 @@ export default {
                             <i class="bi bi-diagram-3"></i>
                           </div>
                           <div class="metric-title-section">
-                            <span class="metric-label">{{ $t('audit-log.summary.byEntityType') || 'Por Tipo de Entidad' }}</span>
+                            <span class="metric-label">{{
+                              $t('audit-log.summary.byEntityType') || 'Por Tipo de Entidad'
+                            }}</span>
                           </div>
                         </div>
                         <div class="metric-value-container">
-                          <span class="metric-value">{{ Object.keys(state.report.byEntityType || {}).length }}</span>
+                          <span class="metric-value">{{
+                            Object.keys(state.report.byEntityType || {}).length
+                          }}</span>
                         </div>
                       </div>
                     </div>
@@ -735,11 +764,15 @@ export default {
                             <i class="bi bi-people"></i>
                           </div>
                           <div class="metric-title-section">
-                            <span class="metric-label">{{ $t('audit-log.summary.uniqueUsers') || 'Usuarios Únicos' }}</span>
+                            <span class="metric-label">{{
+                              $t('audit-log.summary.uniqueUsers') || 'Usuarios Únicos'
+                            }}</span>
                           </div>
                         </div>
                         <div class="metric-value-container">
-                          <span class="metric-value">{{ Object.keys(state.report.byUser || {}).length }}</span>
+                          <span class="metric-value">{{
+                            Object.keys(state.report.byUser || {}).length
+                          }}</span>
                         </div>
                       </div>
                     </div>
@@ -750,13 +783,19 @@ export default {
                     <div class="card-header compact-card-header">
                       <h6 class="mb-0 d-flex align-items-center gap-2">
                         <i class="bi bi-list-ul"></i>
-                        <span>{{ $t('audit-log.logs') || 'Registros' }} ({{ state.filteredLogs.length }})</span>
+                        <span
+                          >{{ $t('audit-log.logs') || 'Registros' }} ({{
+                            state.filteredLogs.length
+                          }})</span
+                        >
                       </h6>
                     </div>
                     <div class="card-body compact-card-body">
                       <div v-if="state.filteredLogs.length === 0" class="text-center empty-state">
                         <i class="bi bi-inbox empty-icon"></i>
-                        <p class="text-muted mt-2 mb-0">{{ $t('audit-log.noLogs') || 'No se encontraron registros de auditoría' }}</p>
+                        <p class="text-muted mt-2 mb-0">
+                          {{ $t('audit-log.noLogs') || 'No se encontraron registros de auditoría' }}
+                        </p>
                       </div>
 
                       <div v-else class="table-responsive">
@@ -784,14 +823,18 @@ export default {
                                 </div>
                               </td>
                               <td>
-                                <span :class="getActionBadgeClass(log.action)">{{ log.action }}</span>
+                                <span :class="getActionBadgeClass(log.action)">{{
+                                  log.action
+                                }}</span>
                               </td>
                               <td>{{ log.entityType }}</td>
                               <td>
                                 <code>{{ log.entityId?.substring(0, 8) }}...</code>
                               </td>
                               <td>
-                                <span :class="getResultBadgeClass(log.result)">{{ log.result }}</span>
+                                <span :class="getResultBadgeClass(log.result)">{{
+                                  log.result
+                                }}</span>
                               </td>
                               <td>
                                 <small>{{ log.ipAddress || '-' }}</small>

@@ -349,7 +349,8 @@ export default {
         }, 3000);
       } catch (error) {
         console.error('Error syncing roles:', error);
-        alertError.value = error?.response?.data?.message || error?.message || 'Error al sincronizar permisos';
+        alertError.value =
+          error?.response?.data?.message || error?.message || 'Error al sincronizar permisos';
         state.syncMessage = '❌ Error al sincronizar permisos';
       } finally {
         state.syncing = false;
@@ -485,7 +486,7 @@ export default {
                   @click="handleSyncRoles()"
                   :disabled="state.syncing || loading || state.showSyncConfirm"
                 >
-                  <i class="bi bi-arrow-repeat" :class="{ 'spinning': state.syncing }"></i>
+                  <i class="bi bi-arrow-repeat" :class="{ spinning: state.syncing }"></i>
                 </button>
               </div>
             </div>
@@ -503,7 +504,11 @@ export default {
             </div>
             <div class="row mb-2" v-if="state.syncMessage">
               <div class="col-12">
-                <div class="alert" :class="state.syncMessage.includes('✅') ? 'alert-success' : 'alert-danger'" role="alert">
+                <div
+                  class="alert"
+                  :class="state.syncMessage.includes('✅') ? 'alert-success' : 'alert-danger'"
+                  role="alert"
+                >
                   {{ state.syncMessage }}
                 </div>
               </div>

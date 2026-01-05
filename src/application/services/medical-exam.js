@@ -20,5 +20,3 @@ export const updateMedicalExam = async (id, exam) =>
 
 export const deleteMedicalExam = async id =>
   (await requestBackend.delete(`/${entity}/exams/${id}`, await getHeaders())).data;
-
-

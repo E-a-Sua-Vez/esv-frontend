@@ -140,9 +140,7 @@ export default {
       if (field === 'general') {
         const currentText = state.newPatientAnamnese.habits || '';
         const newText =
-          currentText && currentText.trim() !== ''
-            ? `${currentText}\n\n${finalText}`
-            : finalText;
+          currentText && currentText.trim() !== '' ? `${currentText}\n\n${finalText}` : finalText;
         state.newPatientAnamnese.habits = newText;
         console.log('✅ Updated general field:', newText);
       } else {
@@ -158,9 +156,7 @@ export default {
 
         const currentText = state.habitsAux[itemId][fieldName] || '';
         const newText =
-          currentText && currentText.trim() !== ''
-            ? `${currentText}\n\n${finalText}`
-            : finalText;
+          currentText && currentText.trim() !== '' ? `${currentText}\n\n${finalText}` : finalText;
 
         // Force reactivity by creating a new object reference for the item
         state.habitsAux[itemId] = {
@@ -571,15 +567,16 @@ export default {
       sendCheckOtherOption,
       currentUser,
       // Template methods
-      handleTemplateSelected: (template) => {
+      handleTemplateSelected: template => {
         if (template && template.content) {
           console.log('🎯 Template selected for anamnesis:', template);
           // Append template content to habits field
           const currentText = state.newPatientAnamnese.habits || '';
           const templateText = template.content;
-          const newText = currentText && currentText.trim() !== ''
-            ? `${currentText}\n\n${templateText}`
-            : templateText;
+          const newText =
+            currentText && currentText.trim() !== ''
+              ? `${currentText}\n\n${templateText}`
+              : templateText;
           state.newPatientAnamnese.habits = newText;
           // Trigger data send
           sendData();
@@ -1153,7 +1150,10 @@ export default {
       </div>
 
       <!-- Template Picker -->
-      <div class="form-field-modern" v-if="commerce && commerce.id && currentUser && currentUser.id">
+      <div
+        class="form-field-modern"
+        v-if="commerce && commerce.id && currentUser && currentUser.id"
+      >
         <TemplatePicker
           :commerce-id="commerce.id"
           :doctor-id="currentUser.id"

@@ -107,9 +107,7 @@ export default {
       // Append transcribed text as new paragraph
       const currentText = state.newConsultationReason.reason || '';
       const newText =
-        currentText && currentText.trim() !== ''
-          ? `${currentText}\n\n${finalText}`
-          : finalText;
+        currentText && currentText.trim() !== '' ? `${currentText}\n\n${finalText}` : finalText;
 
       state.newConsultationReason.reason = newText;
       sendData();
@@ -197,7 +195,10 @@ export default {
     const handleTemplateSelected = content => {
       console.log('🟢 ConsultationReasonForm: Recibido template-selected con:', content);
       state.newConsultationReason.reason = content;
-      console.log('🟢 ConsultationReasonForm: state.newConsultationReason.reason actualizado a:', state.newConsultationReason.reason);
+      console.log(
+        '🟢 ConsultationReasonForm: state.newConsultationReason.reason actualizado a:',
+        state.newConsultationReason.reason,
+      );
       sendData();
     };
 
@@ -236,7 +237,10 @@ export default {
       <!-- Form Input Section -->
       <div class="form-input-section">
         <!-- Template Picker -->
-        <div class="form-field-modern" v-if="commerce && commerce.id && currentUser && currentUser.id">
+        <div
+          class="form-field-modern"
+          v-if="commerce && commerce.id && currentUser && currentUser.id"
+        >
           <TemplatePicker
             :commerce-id="commerce.id"
             :doctor-id="currentUser.id"

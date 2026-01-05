@@ -225,7 +225,7 @@ export default {
       state.cie10CatalogSearch = '';
     };
 
-    const selectFromCatalog = (code) => {
+    const selectFromCatalog = code => {
       selectCIE10Code(code);
       closeCIE10Catalog();
     };
@@ -257,9 +257,7 @@ export default {
       // Append transcribed text as new paragraph
       const currentText = state.newDiagnostic.diagnostic || '';
       const newText =
-        currentText && currentText.trim() !== ''
-          ? `${currentText}\n\n${finalText}`
-          : finalText;
+        currentText && currentText.trim() !== '' ? `${currentText}\n\n${finalText}` : finalText;
 
       state.newDiagnostic.diagnostic = newText;
       sendData();
@@ -356,7 +354,10 @@ export default {
     const handleTemplateSelected = content => {
       console.log('🟣 DiagnosticForm: Recibido template-selected con:', content);
       state.newDiagnostic.diagnostic = content;
-      console.log('🟣 DiagnosticForm: state.newDiagnostic.diagnostic actualizado a:', state.newDiagnostic.diagnostic);
+      console.log(
+        '🟣 DiagnosticForm: state.newDiagnostic.diagnostic actualizado a:',
+        state.newDiagnostic.diagnostic,
+      );
       sendData();
     };
 
@@ -529,7 +530,10 @@ export default {
         </div>
 
         <!-- Template Picker -->
-        <div class="form-field-modern" v-if="commerce && commerce.id && currentUser && currentUser.id">
+        <div
+          class="form-field-modern"
+          v-if="commerce && commerce.id && currentUser && currentUser.id"
+        >
           <TemplatePicker
             :commerce-id="commerce.id"
             :doctor-id="currentUser.id"

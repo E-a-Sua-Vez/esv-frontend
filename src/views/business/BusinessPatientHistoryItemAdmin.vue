@@ -1,34 +1,34 @@
 <script setup>
-import { ref, reactive, onBeforeMount, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { globalStore } from '../../stores'
+import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { globalStore } from '../../stores';
 
 import {
   getPatientHistoryItemByCommerce,
   updatePatientHistoryItem,
-  addPatientHistoryItem
-} from '../../application/services/patient-history-item'
+  addPatientHistoryItem,
+} from '../../application/services/patient-history-item';
 
-import { getPermissions } from '../../application/services/permissions'
-import { getPatientHistoryItemTypes } from '../../shared/utils/data'
+import { getPermissions } from '../../application/services/permissions';
+import { getPatientHistoryItemTypes } from '../../shared/utils/data';
 
-import PatientHistoryItemName from '../../components/common/PatientHistoryItemName.vue'
-import PatientHistoryItemFormEdit from '../../components/patient-history-item/PatientHistoryItemFormEdit.vue'
-import PatientHistoryItemFormAdd from '../../components/patient-history-item/PatientHistoryItemFormAdd.vue'
-import Toggle from '@vueform/toggle'
-import Message from '../../components/common/Message.vue'
-import CommerceLogo from '../../components/common/CommerceLogo.vue'
-import Spinner from '../../components/common/Spinner.vue'
-import Alert from '../../components/common/Alert.vue'
-import AreYouSure from '../../components/common/AreYouSure.vue'
-import ComponentMenu from '../../components/common/ComponentMenu.vue'
-import SearchAdminItem from '../../components/common/SearchAdminItem.vue'
+import PatientHistoryItemName from '../../components/common/PatientHistoryItemName.vue';
+import PatientHistoryItemFormEdit from '../../components/patient-history-item/PatientHistoryItemFormEdit.vue';
+import PatientHistoryItemFormAdd from '../../components/patient-history-item/PatientHistoryItemFormAdd.vue';
+import Toggle from '@vueform/toggle';
+import Message from '../../components/common/Message.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
+import Spinner from '../../components/common/Spinner.vue';
+import Alert from '../../components/common/Alert.vue';
+import AreYouSure from '../../components/common/AreYouSure.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 
-const router = useRouter()
-const store = globalStore()
+const router = useRouter();
+const store = globalStore();
 
-const loading = ref(false)
-const alertError = ref('')
+const loading = ref(false);
+const alertError = ref('');
 
 const state = reactive({
   currentUser: {},
@@ -47,62 +47,62 @@ const state = reactive({
   tagError: false,
   typeError: false,
   orderAddError: false,
-  orderUpdateError: false
-})
+  orderUpdateError: false,
+});
 
-const commerce = computed(() => store.getCurrentCommerce)
+const commerce = computed(() => store.getCurrentCommerce);
 
-const isActiveBusiness = computed(() => state.business?.active === true)
+const isActiveBusiness = computed(() => state.business?.active === true);
 
 /* ---------------- LOADERS ---------------- */
 
 async function loadItems(commerceId) {
   if (!commerceId) {
-    state.items = []
-    state.filtered = []
-    return
+    state.items = [];
+    state.filtered = [];
+    return;
   }
 
   try {
-    const data = await getPatientHistoryItemByCommerce(commerceId)
-    state.items = data || []
-    state.filtered = [...state.items]
+    const data = await getPatientHistoryItemByCommerce(commerceId);
+    state.items = data || [];
+    state.filtered = [...state.items];
   } catch {
-    state.items = []
-    state.filtered = []
+    state.items = [];
+    state.filtered = [];
   }
 }
 
 watch(commerce, async (newVal, oldVal) => {
   if (newVal?.id && newVal.id !== oldVal?.id) {
-    loading.value = true
-    await loadItems(newVal.id)
-    loading.value = false
+    loading.value = true;
+    await loadItems(newVal.id);
+    loading.value = false;
   }
-})
+});
 
 onBeforeMount(async () => {
-  loading.value = true
+  loading.value = true;
 
-  state.types = getPatientHistoryItemTypes()
-  state.currentUser = await store.getCurrentUser
-  state.business = await store.getActualBusiness()
-  state.toggles = await getPermissions('patient-history-item', 'admin')
+  state.types = getPatientHistoryItemTypes();
+  state.currentUser = await store.getCurrentUser;
+  state.business = await store.getActualBusiness();
+  state.toggles = await getPermissions('patient-history-item', 'admin');
 
   if (!commerce.value?.id) {
-    const list = await store.getAvailableCommerces(state.business.commerces)
-    if (list?.length) await store.setCurrentCommerce(list[0])
+    const list = await store.getAvailableCommerces(state.business.commerces);
+    if (list?.length) await store.setCurrentCommerce(list[0]);
   }
 
-  if (commerce.value?.id) await loadItems(commerce.value.id)
+  if (commerce.value?.id) await loadItems(commerce.value.id);
 
-  loading.value = false
-})
+  loading.value = false;
+});
 
 /* ---------------- ACTIONS ---------------- */
 
 function showAdd() {
-  state.showAdd = true
+  state.showAdd = true;
   state.newPatientHistoryItem = {
     order: state.items.length + 1,
     active: true,
@@ -119,42 +119,42 @@ function showAdd() {
       select1: false,
       yesNo: false,
       document: false,
-      options: ''
-    }
-  }
+      options: '',
+    },
+  };
 }
 
 async function addItem() {
-  if (!commerce.value?.id) return
+  if (!commerce.value?.id) return;
 
-  loading.value = true
-  state.newPatientHistoryItem.commerceId = commerce.value.id
-  await addPatientHistoryItem(state.newPatientHistoryItem)
-  await loadItems(commerce.value.id)
-  state.showAdd = false
-  loading.value = false
+  loading.value = true;
+  state.newPatientHistoryItem.commerceId = commerce.value.id;
+  await addPatientHistoryItem(state.newPatientHistoryItem);
+  await loadItems(commerce.value.id);
+  state.showAdd = false;
+  loading.value = false;
 }
 
 async function updateItem(item) {
-  if (!commerce.value?.id) return
+  if (!commerce.value?.id) return;
 
-  loading.value = true
-  await updatePatientHistoryItem(item.id, item)
-  await loadItems(commerce.value.id)
-  state.extendedEntity = null
-  loading.value = false
+  loading.value = true;
+  await updatePatientHistoryItem(item.id, item);
+  await loadItems(commerce.value.id);
+  state.extendedEntity = null;
+  loading.value = false;
 }
 
 function toggleExpand(index) {
-  state.extendedEntity = state.extendedEntity === index ? null : index
+  state.extendedEntity = state.extendedEntity === index ? null : index;
 }
 
 function receiveFilteredItems(items) {
-  state.filtered = items
+  state.filtered = items;
 }
 
 function goBack() {
-  router.back()
+  router.back();
 }
 </script>
 
@@ -215,7 +215,11 @@ function goBack() {
                       </div>
                       <div class="col-2 text-end">
                         <a href="#" @click.prevent="toggleExpand(index)">
-                          <i :class="state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'" />
+                          <i
+                            :class="
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            "
+                          />
                         </a>
                       </div>
                     </div>
@@ -233,7 +237,8 @@ function goBack() {
                           @click="updateItem(item)"
                           :disabled="!state.toggles['patient-history-item.admin.update']"
                         >
-                          {{ $t('businessPatientHistoryItemAdmin.update') }} <i class="bi bi-save"></i>
+                          {{ $t('businessPatientHistoryItemAdmin.update') }}
+                          <i class="bi bi-save"></i>
                         </button>
                       </div>
                     </div>
@@ -243,7 +248,9 @@ function goBack() {
             </div>
           </div>
           <div
-            v-if="(!isActiveBusiness || !state.toggles['patient-history-item.admin.view']) && !loading"
+            v-if="
+              (!isActiveBusiness || !state.toggles['patient-history-item.admin.view']) && !loading
+            "
           >
             <Message
               :title="$t('businessPatientHistoryItemAdmin.message.1.title')"
@@ -254,108 +261,115 @@ function goBack() {
       </div>
     </div>
 
-      <!-- Desktop Layout -->
-      <div class="d-none d-lg-block">
-        <div class="container-fluid">
-          <div id="page-header" class="text-center mb-3">
-            <Spinner :show="loading"></Spinner>
-            <Alert :show="false" :stack="alertError"></Alert>
-          </div>
-          <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-            <div class="col-auto desktop-logo-wrapper">
-              <div class="desktop-commerce-logo">
-                <CommerceLogo
-                  :src="commerce?.logo || state.business?.logo"
-                  :loading="loading"
-                  :desktop-size="false"
-                />
-              </div>
-            </div>
-            <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-              <ComponentMenu
-                :title="$t('businessPatientHistoryItemAdmin.title')"
-                :toggles="state.toggles"
-                component-name="businessPatientHistoryItemAdmin"
-                @goBack="goBack"
-              >
-              </ComponentMenu>
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="container-fluid">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <CommerceLogo
+                :src="commerce?.logo || state.business?.logo"
+                :loading="loading"
+                :desktop-size="false"
+              />
             </div>
           </div>
-          <div id="businessPatientHistoryItemAdmin">
-            <div v-if="isActiveBusiness && state.toggles['patient-history-item.admin.view']">
-              <div v-if="!loading" id="businessPatientHistoryItemAdmin-result" class="mt-4">
-                <div>
-                  <div v-if="state.items.length === 0">
-                    <Message
-                      :title="$t('businessPatientHistoryItemAdmin.message.2.title')"
-                      :content="$t('businessPatientHistoryItemAdmin.message.2.content')"
-                    />
-                  </div>
-                  <div v-if="commerce && commerce.id" class="row mb-2">
-                    <div class="col lefted">
-                      <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                        @click="showAdd"
-                        data-bs-toggle="modal"
-                        data-bs-target="#add-item"
-                        :disabled="!state.toggles['patient-history-item.admin.add']"
-                      >
-                        <i class="bi bi-plus-lg"></i> {{ $t('add') }}
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <SearchAdminItem
-                      :business-items="state.items"
-                      type="items"
-                      :receive-filtered-items="receiveFilteredItems"
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t('businessPatientHistoryItemAdmin.title')"
+              :toggles="state.toggles"
+              component-name="businessPatientHistoryItemAdmin"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="businessPatientHistoryItemAdmin">
+          <div v-if="isActiveBusiness && state.toggles['patient-history-item.admin.view']">
+            <div v-if="!loading" id="businessPatientHistoryItemAdmin-result" class="mt-4">
+              <div>
+                <div v-if="state.items.length === 0">
+                  <Message
+                    :title="$t('businessPatientHistoryItemAdmin.message.2.title')"
+                    :content="$t('businessPatientHistoryItemAdmin.message.2.content')"
+                  />
+                </div>
+                <div v-if="commerce && commerce.id" class="row mb-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd"
+                      data-bs-toggle="modal"
+                      data-bs-target="#add-item"
+                      :disabled="!state.toggles['patient-history-item.admin.add']"
                     >
-                    </SearchAdminItem>
-                    <div v-for="(item, index) in state.filtered" :key="item.id" class="result-card">
-                      <div class="row align-items-center">
-                        <div class="col-10">
-                          <PatientHistoryItemName :item="item" />
-                        </div>
-                        <div class="col-2 text-end">
-                          <a href="#" @click.prevent="toggleExpand(index)">
-                            <i :class="state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'" />
-                          </a>
-                        </div>
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <SearchAdminItem
+                    :business-items="state.items"
+                    type="items"
+                    :receive-filtered-items="receiveFilteredItems"
+                  >
+                  </SearchAdminItem>
+                  <div v-for="(item, index) in state.filtered" :key="item.id" class="result-card">
+                    <div class="row align-items-center">
+                      <div class="col-10">
+                        <PatientHistoryItemName :item="item" />
                       </div>
+                      <div class="col-2 text-end">
+                        <a href="#" @click.prevent="toggleExpand(index)">
+                          <i
+                            :class="
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            "
+                          />
+                        </a>
+                      </div>
+                    </div>
 
-                      <div v-if="state.extendedEntity === index" class="detailed-data show">
-                        <PatientHistoryItemFormEdit
-                          :item="item"
-                          :types="state.types"
-                          :toggles="state.toggles"
-                        />
+                    <div v-if="state.extendedEntity === index" class="detailed-data show">
+                      <PatientHistoryItemFormEdit
+                        :item="item"
+                        :types="state.types"
+                        :toggles="state.toggles"
+                      />
 
-                        <div class="col text-center">
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                            @click="updateItem(item)"
-                            :disabled="!state.toggles['patient-history-item.admin.update']"
-                          >
-                            {{ $t('businessPatientHistoryItemAdmin.update') }} <i class="bi bi-save"></i>
-                          </button>
-                        </div>
+                      <div class="col text-center">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="updateItem(item)"
+                          :disabled="!state.toggles['patient-history-item.admin.update']"
+                        >
+                          {{ $t('businessPatientHistoryItemAdmin.update') }}
+                          <i class="bi bi-save"></i>
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div
-              v-if="(!isActiveBusiness || !state.toggles['patient-history-item.admin.view']) && !loading"
-            >
-              <Message
-                :title="$t('businessPatientHistoryItemAdmin.message.1.title')"
-                :content="$t('businessPatientHistoryItemAdmin.message.1.content')"
-              />
-            </div>
+          </div>
+          <div
+            v-if="
+              (!isActiveBusiness || !state.toggles['patient-history-item.admin.view']) && !loading
+            "
+          >
+            <Message
+              :title="$t('businessPatientHistoryItemAdmin.message.1.title')"
+              :content="$t('businessPatientHistoryItemAdmin.message.1.content')"
+            />
           </div>
         </div>
       </div>
+    </div>
 
     <!-- MODAL ADD -->
     <div
@@ -384,7 +398,9 @@ function goBack() {
             <div
               id="add-item-form"
               class="result-card mb-4"
-              v-if="state.items.length < (state.toggles['patient-history-item.admin.limit'] || 9999)"
+              v-if="
+                state.items.length < (state.toggles['patient-history-item.admin.limit'] || 9999)
+              "
             >
               <PatientHistoryItemFormAdd
                 v-model="state.newPatientHistoryItem"

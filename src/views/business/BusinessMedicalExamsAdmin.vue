@@ -321,106 +321,112 @@ export default {
                 </div>
                 <div v-if="commerce">
                   <SearchAdminItem
-                  :business-items="state.exams"
-                  :type="'exams'"
-                  :receive-filtered-items="receiveFilteredItems"
-                >
-                </SearchAdminItem>
-                <div v-for="(exam, index) in state.filtered" :key="index" class="result-card">
-                  <div class="row">
-                    <div class="col-10">
-                      <MedicalExamSimpleName :exam="exam"></MedicalExamSimpleName>
-                    </div>
-                    <div class="col-2">
-                      <a href="#" @click.prevent="showUpdateForm(index)">
-                        <i
-                          :class="`bi ${
-                            state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                          }`"
-                        ></i>
-                      </a>
-                    </div>
-                  </div>
-                  <div v-if="state.extendedEntity === index" class="mt-3">
-                    <div class="form-fields-container">
-                      <div class="form-group-modern">
-                        <label class="form-label-modern">{{ $t('businessMedicalExamsAdmin.name') }}</label>
-                        <input
-                          v-model="exam.name"
-                          type="text"
-                          class="form-control-modern"
-                          :disabled="!state.toggles['medical-exams.admin.update']"
-                          placeholder=""
-                        />
+                    :business-items="state.exams"
+                    :type="'exams'"
+                    :receive-filtered-items="receiveFilteredItems"
+                  >
+                  </SearchAdminItem>
+                  <div v-for="(exam, index) in state.filtered" :key="index" class="result-card">
+                    <div class="row">
+                      <div class="col-10">
+                        <MedicalExamSimpleName :exam="exam"></MedicalExamSimpleName>
                       </div>
-                      <div class="form-group-modern">
-                        <label class="form-label-modern">{{ $t('businessMedicalExamsAdmin.type') }}</label>
-                        <select
-                          v-model="exam.type"
-                          class="form-control-modern"
+                      <div class="col-2">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                    <div v-if="state.extendedEntity === index" class="mt-3">
+                      <div class="form-fields-container">
+                        <div class="form-group-modern">
+                          <label class="form-label-modern">{{
+                            $t('businessMedicalExamsAdmin.name')
+                          }}</label>
+                          <input
+                            v-model="exam.name"
+                            type="text"
+                            class="form-control-modern"
+                            :disabled="!state.toggles['medical-exams.admin.update']"
+                            placeholder=""
+                          />
+                        </div>
+                        <div class="form-group-modern">
+                          <label class="form-label-modern">{{
+                            $t('businessMedicalExamsAdmin.type')
+                          }}</label>
+                          <select
+                            v-model="exam.type"
+                            class="form-control-modern"
+                            :disabled="!state.toggles['medical-exams.admin.update']"
+                          >
+                            <option value="laboratory">Laboratorio</option>
+                            <option value="imaging">Imagenología</option>
+                            <option value="procedure">Procedimiento</option>
+                            <option value="other">Otro</option>
+                          </select>
+                        </div>
+                        <div class="form-group-modern">
+                          <label class="form-label-modern">{{
+                            $t('businessMedicalExamsAdmin.description')
+                          }}</label>
+                          <textarea
+                            v-model="exam.description"
+                            class="form-control-modern"
+                            rows="3"
+                            :disabled="!state.toggles['medical-exams.admin.update']"
+                            placeholder=""
+                          ></textarea>
+                        </div>
+                        <div class="form-group-modern">
+                          <label class="form-label-modern">{{
+                            $t('businessMedicalExamsAdmin.preparation')
+                          }}</label>
+                          <textarea
+                            v-model="exam.preparation"
+                            class="form-control-modern"
+                            rows="3"
+                            :disabled="!state.toggles['medical-exams.admin.update']"
+                            placeholder=""
+                          ></textarea>
+                        </div>
+                      </div>
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="update(exam)"
                           :disabled="!state.toggles['medical-exams.admin.update']"
                         >
-                          <option value="laboratory">Laboratorio</option>
-                          <option value="imaging">Imagenología</option>
-                          <option value="procedure">Procedimiento</option>
-                          <option value="other">Otro</option>
-                        </select>
+                          {{ $t('businessMedicalExamsAdmin.update') }} <i class="bi bi-save"></i>
+                        </button>
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                          @click="goToUnavailable()"
+                          v-if="state.toggles['medical-exams.admin.delete']"
+                        >
+                          {{ $t('businessMedicalExamsAdmin.delete') }}
+                          <i class="bi bi-trash-fill"></i>
+                        </button>
+                        <AreYouSure
+                          :show="state.goToUnavailable"
+                          @actionYes="unavailable(exam)"
+                          @actionNo="unavailableCancel()"
+                        >
+                        </AreYouSure>
                       </div>
-                      <div class="form-group-modern">
-                        <label class="form-label-modern">{{
-                          $t('businessMedicalExamsAdmin.description')
-                        }}</label>
-                        <textarea
-                          v-model="exam.description"
-                          class="form-control-modern"
-                          rows="3"
-                          :disabled="!state.toggles['medical-exams.admin.update']"
-                          placeholder=""
-                        ></textarea>
-                      </div>
-                      <div class="form-group-modern">
-                        <label class="form-label-modern">{{
-                          $t('businessMedicalExamsAdmin.preparation')
-                        }}</label>
-                        <textarea
-                          v-model="exam.preparation"
-                          class="form-control-modern"
-                          rows="3"
-                          :disabled="!state.toggles['medical-exams.admin.update']"
-                          placeholder=""
-                        ></textarea>
-                      </div>
-                    </div>
-                    <div class="col">
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="update(exam)"
-                        :disabled="!state.toggles['medical-exams.admin.update']"
-                      >
-                        {{ $t('businessMedicalExamsAdmin.update') }} <i class="bi bi-save"></i>
-                      </button>
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                        @click="goToUnavailable()"
-                        v-if="state.toggles['medical-exams.admin.delete']"
-                      >
-                        {{ $t('businessMedicalExamsAdmin.delete') }}
-                        <i class="bi bi-trash-fill"></i>
-                      </button>
-                      <AreYouSure
-                        :show="state.goToUnavailable"
-                        @actionYes="unavailable(exam)"
-                        @actionNo="unavailableCancel()"
-                      >
-                      </AreYouSure>
                     </div>
                   </div>
-                </div>
                 </div>
               </div>
             </div>
           </div>
-          <div v-if="(!isActiveBusiness() || !state.toggles['medical-exams.admin.view']) && !loading">
+          <div
+            v-if="(!isActiveBusiness() || !state.toggles['medical-exams.admin.view']) && !loading"
+          >
             <Message
               :title="$t('businessMedicalExamsAdmin.message.1.title')"
               :content="$t('businessMedicalExamsAdmin.message.1.content')"
@@ -511,7 +517,9 @@ export default {
                     <div v-if="state.extendedEntity === index" class="mt-3">
                       <div class="form-fields-container">
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{ $t('businessMedicalExamsAdmin.name') }}</label>
+                          <label class="form-label-modern">{{
+                            $t('businessMedicalExamsAdmin.name')
+                          }}</label>
                           <input
                             v-model="exam.name"
                             type="text"
@@ -521,7 +529,9 @@ export default {
                           />
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{ $t('businessMedicalExamsAdmin.type') }}</label>
+                          <label class="form-label-modern">{{
+                            $t('businessMedicalExamsAdmin.type')
+                          }}</label>
                           <select
                             v-model="exam.type"
                             class="form-control-modern"
@@ -608,7 +618,7 @@ export default {
     >
       <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header border-0 centered active-name">
+          <div class="modal-header border-0 centered active-name">
             <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
             <button
               id="close-modal"
@@ -621,14 +631,12 @@ export default {
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
             <Alert :show="false" :stack="alertError"></Alert>
-            <div
-              id="add-exam"
-              class="result-card mb-4"
-              v-if="state.showAdd"
-            >
+            <div id="add-exam" class="result-card mb-4" v-if="state.showAdd">
               <div class="form-fields-container">
                 <div class="form-group-modern">
-                  <label class="form-label-modern">{{ $t('businessMedicalExamsAdmin.name') }} *</label>
+                  <label class="form-label-modern"
+                    >{{ $t('businessMedicalExamsAdmin.name') }} *</label
+                  >
                   <input
                     v-model="state.newExam.name"
                     type="text"
@@ -638,7 +646,9 @@ export default {
                   />
                 </div>
                 <div class="form-group-modern">
-                  <label class="form-label-modern">{{ $t('businessMedicalExamsAdmin.type') }} *</label>
+                  <label class="form-label-modern"
+                    >{{ $t('businessMedicalExamsAdmin.type') }} *</label
+                  >
                   <select v-model="state.newExam.type" class="form-control-modern">
                     <option value="laboratory">Laboratorio</option>
                     <option value="imaging">Imagenología</option>
@@ -647,7 +657,9 @@ export default {
                   </select>
                 </div>
                 <div class="form-group-modern">
-                  <label class="form-label-modern">{{ $t('businessMedicalExamsAdmin.description') }}</label>
+                  <label class="form-label-modern">{{
+                    $t('businessMedicalExamsAdmin.description')
+                  }}</label>
                   <textarea
                     v-model="state.newExam.description"
                     class="form-control-modern"
@@ -656,7 +668,9 @@ export default {
                   ></textarea>
                 </div>
                 <div class="form-group-modern">
-                  <label class="form-label-modern">{{ $t('businessMedicalExamsAdmin.preparation') }}</label>
+                  <label class="form-label-modern">{{
+                    $t('businessMedicalExamsAdmin.preparation')
+                  }}</label>
                   <textarea
                     v-model="state.newExam.preparation"
                     class="form-control-modern"
@@ -814,5 +828,3 @@ export default {
   }
 }
 </style>
-
-

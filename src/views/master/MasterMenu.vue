@@ -137,7 +137,7 @@ export default {
 <template>
   <div>
     <div class="content text-center">
-      <CommerceLogo></CommerceLogo>
+      <CommerceLogo :large-size="true"></CommerceLogo>
       <WelcomeMenu :name="state.currentUser.name" :toggles="undefined" :component-name="undefined">
       </WelcomeMenu>
       <div id="page-header" class="text-center">

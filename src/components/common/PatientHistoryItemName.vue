@@ -12,7 +12,12 @@ export default {
     // Capture errors from child components (like Popper) during unmount
     onErrorCaptured((err, instance, info) => {
       // Silently ignore errors during unmount from vue3-popper
-      if (info && info.includes('beforeUnmount') && err.message && err.message.includes('disconnect')) {
+      if (
+        info &&
+        info.includes('beforeUnmount') &&
+        err.message &&
+        err.message.includes('disconnect')
+      ) {
         return false; // Prevent error from propagating
       }
       return true; // Let other errors propagate normally

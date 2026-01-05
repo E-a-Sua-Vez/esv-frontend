@@ -71,6 +71,7 @@
   "save": "Salvar",
   "update": "Atualizar",
   "cancel": "Cancelar",
+  "delete": "Excluir",
   "active": "Ativo",
   "inactive": "Inativo",
   "myUser": {
@@ -744,6 +745,11 @@
     "REJECTED": "Não contate mais",
     "WAITING_FOR_RESPONSE": "Aguardando Resposta"
   },
+  "attention": {
+    "lgpd": {
+      "blockingConsents": "Faltam {count} consentimento(s) bloqueante(s)"
+    }
+  },
   "contactTypes": {
     "CALL": "Chamada",
     "MESSAGE": "Mensagem",
@@ -1250,7 +1256,18 @@
           "transfer": "Transfer Atendimento",
           "cancel": "Cancelar Atendimento",
           "patient-history": "Prontuário",
-          "products": "Estoque"
+          "products": "Estoque",
+          "lgpd": {
+            "blocking": "Bloqueante",
+            "missing": "Faltantes",
+            "compliant": "Conforme",
+            "blockingConsents": "Faltam {count} consentimento(s) bloqueante(s)",
+            "missingConsents": "Faltam {count} consentimento(s)",
+            "allConsentsGranted": "Todos os consentimentos concedidos",
+            "cannotAttend": "Não é possível atender: faltam {count} consentimento(s) bloqueante(s): {types}",
+            "cannotAdvanceStage": "Não é possível avançar etapa: faltam {count} consentimento(s) bloqueante(s): {types}",
+            "clickToRequest": "Clique para solicitar consentimentos"
+          }
         },
         "module": {
           "update": "Atualizar o módulo de atendimento"
@@ -1274,6 +1291,190 @@
           "product-stock": "Controle de Estoque"
         }
       }
+    }
+  },
+  "clientPortal": {
+    "menu": {
+      "welcome": "Bem-vindo, {name}",
+      "loading": "Carregando...",
+      "consents": "Meus Consentimentos",
+      "profile": "Meu Perfil",
+      "documents": "Meus Documentos",
+      "history": "Meu Histórico",
+      "logout": "Sair",
+      "comingSoon": "Em breve",
+      "navigationError": "Erro ao navegar",
+      "sessionError": "Erro ao validar sessão"
+    },
+    "consents": {
+      "title": "Meus Consentimentos LGPD",
+      "backToMenu": "Voltar ao Menu",
+      "loading": "Carregando consentimentos...",
+      "noConsents": "Não há consentimentos registrados",
+      "loadError": "Erro ao carregar consentimentos",
+      "sessionError": "Erro ao validar sessão",
+      "revokeNotImplemented": "A revogação será implementada em breve",
+      "revokeError": "Erro ao revogar consentimento",
+      "export": "Exportar Dados (Art. 9º LGPD)",
+      "summary": {
+        "all": "Todos",
+        "granted": "Concedidos",
+        "pending": "Pendentes",
+        "denied": "Negados",
+        "expired": "Expirados",
+        "revoked": "Revogados"
+      },
+      "status": {
+        "granted": "Concedido",
+        "denied": "Negado",
+        "pending": "Pendente",
+        "expired": "Expirado",
+        "revoked": "Revogado"
+      },
+      "card": {
+        "grantedAt": "Concedido em",
+        "expiresAt": "Expira em",
+        "revokedAt": "Revogado em",
+        "revoke": "Revogar",
+        "viewHistory": "Ver Histórico",
+        "viewTerms": "Ver Termos"
+      },
+      "revoke": {
+        "title": "Revogar Consentimento",
+        "confirmMessage": "Tem certeza de que deseja revogar este consentimento?",
+        "reason": "Motivo",
+        "optional": "Opcional",
+        "reasonPlaceholder": "Digite o motivo da revogação (opcional)",
+        "cancel": "Cancelar",
+        "confirm": "Confirmar Revogação"
+      },
+      "history": {
+        "title": "Histórico de Consentimento",
+        "noHistory": "Não há histórico disponível",
+        "close": "Fechar",
+        "actions": {
+          "granted": "Concedido",
+          "denied": "Negado",
+          "revoked": "Revogado",
+          "expired": "Expirado",
+          "updated": "Atualizado"
+        }
+      },
+      "terms": {
+        "title": "Termos do Consentimento",
+        "noTerms": "Não há termos disponíveis",
+        "close": "Fechar"
+      }
+    },
+    "telemedicine": {
+      "title": "Minhas Sessões de Telemedicina",
+      "backToMenu": "Voltar ao Menu",
+      "loading": "Carregando sessões...",
+      "noSessions": "Não há sessões de telemedicina registradas",
+      "loadError": "Erro ao carregar sessões",
+      "sessionNotAvailable": "Sessão não disponível",
+      "accessSession": "Acessar Sessão",
+      "sessionInfo": "Informações da Sessão",
+      "filters": {
+        "all": "Todas",
+        "active": "Ativas",
+        "scheduled": "Agendadas",
+        "completed": "Completadas",
+        "cancelled": "Canceladas"
+      },
+      "status": {
+        "active": "Ativa",
+        "scheduled": "Agendada",
+        "completed": "Completada",
+        "cancelled": "Cancelada"
+      }
+    },
+    "profile": {
+      "title": "Meu Perfil",
+      "backToMenu": "Voltar ao Menu",
+      "loading": "Carregando perfil...",
+      "loadError": "Erro ao carregar perfil",
+      "personalInfo": "Informações Pessoais",
+      "additionalInfo": "Informações Adicionais",
+      "accountInfo": "Informações da Conta",
+      "idNumber": "Número de Identificação",
+      "email": "E-mail",
+      "phone": "Telefone",
+      "country": "País",
+      "code1": "Código 1",
+      "code2": "Código 2",
+      "code3": "Código 3",
+      "memberSince": "Membro desde",
+      "totalAttentions": "Total de Atendimentos",
+      "frequentCustomer": "Cliente Frequente",
+      "yes": "Sim",
+      "no": "Não"
+    },
+    "documents": {
+      "title": "Meus Documentos",
+      "backToMenu": "Voltar ao Menu",
+      "loading": "Carregando documentos...",
+      "loadError": "Erro ao carregar documentos",
+      "noDocuments": "Não há documentos disponíveis",
+      "download": "Baixar",
+      "unnamed": "Documento sem nome"
+    },
+    "history": {
+      "title": "Meu Histórico de Atendimentos",
+      "backToMenu": "Voltar ao Menu",
+      "loading": "Carregando histórico...",
+      "loadError": "Erro ao carregar histórico",
+      "noAttentions": "Não há atendimentos registrados",
+      "filters": {
+        "all": "Todos",
+        "completed": "Completados",
+        "cancelled": "Cancelados",
+        "pending": "Pendentes"
+      },
+      "status": {
+        "terminated": "Completado",
+        "rated": "Avaliado",
+        "cancelled": "Cancelado",
+        "pending": "Pendente"
+      },
+      "minutes": "minutos",
+      "hours": "horas"
+    },
+    "login": {
+      "welcome": "Portal do Cliente",
+      "loading": "Carregando...",
+      "processing": "Processando...",
+      "requestAccess": "Solicitar Acesso",
+      "requestAccessDescription": "Digite suas informações para receber um código de acesso",
+      "commerceId": "ID do Comércio",
+      "commerceIdPlaceholder": "Digite o ID do comércio",
+      "idNumber": "Número de Identificação",
+      "idNumberPlaceholder": "Ex: 12345678-9",
+      "email": "Email",
+      "emailPlaceholder": "exemplo{'@'}email.com",
+      "phone": "Telefone",
+      "phonePlaceholder": "+5511999999999",
+      "sendCode": "Enviar Código",
+      "enterCode": "Digitar Código",
+      "enterCodeDescription": "Digite o código que recebeu por email, WhatsApp ou SMS",
+      "codeSentVia": "Código enviado por {via}",
+      "accessCode": "Código de Acesso",
+      "codeHint": "Digite o código de 4-8 caracteres que recebeu",
+      "validateAndAccess": "Validar e Acessar",
+      "requestNewCode": "Solicitar Novo Código",
+      "tryAgain": "Tentar Novamente",
+      "accessGranted": "Acesso Concedido",
+      "redirecting": "Redirecionando para o portal...",
+      "fillRequiredFields": "Por favor preencha todos os campos obrigatórios",
+      "errorSendingCode": "Erro ao enviar código",
+      "clientNotFound": "Cliente não encontrado",
+      "invalidRequest": "Solicitação inválida",
+      "errorRequestingCode": "Erro ao solicitar código",
+      "invalidCodeLength": "O código deve ter entre 4 e 8 caracteres",
+      "invalidCode": "Código inválido",
+      "incorrectCode": "Código incorreto",
+      "tooManyAttempts": "Muitas tentativas falhadas. Por favor tente mais tarde",
+      "validationError": "Erro ao validar código"
     }
   },
   "telemedicineSession": {
@@ -1411,7 +1612,18 @@
           "transfer": "Transfer Atendimento",
           "cancel": "Cancelar Atendimento",
           "patient-history": "Prontuario",
-          "products": "Estoque"
+          "products": "Estoque",
+          "lgpd": {
+            "blocking": "Bloqueante",
+            "missing": "Faltantes",
+            "compliant": "Conforme",
+            "blockingConsents": "Faltam {count} consentimento(s) bloqueante(s)",
+            "missingConsents": "Faltam {count} consentimento(s)",
+            "allConsentsGranted": "Todos os consentimentos concedidos",
+            "cannotAttend": "Não é possível atender: faltam {count} consentimento(s) bloqueante(s): {types}",
+            "cannotAdvanceStage": "Não é possível avançar etapa: faltam {count} consentimento(s) bloqueante(s): {types}",
+            "clickToRequest": "Clique para solicitar consentimentos"
+          }
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -1565,7 +1777,18 @@
           "transfer": "Transfer Atendimento",
           "cancel": "Cancelar Atendimento",
           "patient-history": "Prontuario",
-          "products": "Estoque"
+          "products": "Estoque",
+          "lgpd": {
+            "blocking": "Bloqueante",
+            "missing": "Faltantes",
+            "compliant": "Conforme",
+            "blockingConsents": "Faltam {count} consentimento(s) bloqueante(s)",
+            "missingConsents": "Faltam {count} consentimento(s)",
+            "allConsentsGranted": "Todos os consentimentos concedidos",
+            "cannotAttend": "Não é possível atender: faltam {count} consentimento(s) bloqueante(s): {types}",
+            "cannotAdvanceStage": "Não é possível avançar etapa: faltam {count} consentimento(s) bloqueante(s): {types}",
+            "clickToRequest": "Clique para solicitar consentimentos"
+          }
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"
@@ -1843,6 +2066,46 @@
     "packages": "Pacotes",
     "indicators": "Indicadores",
     "graph": "Tendências",
+    "lgpdCompliance": {
+      "notificationMetrics": {
+        "title": "Métricas de Notificações",
+        "totalSent": "Total Enviado",
+        "byChannel": "Por Canal",
+        "byStatus": "Por Status",
+        "email": "Email",
+        "whatsapp": "WhatsApp",
+        "sms": "SMS",
+        "push": "Push",
+        "inApp": "In-App",
+        "sent": "Enviado",
+        "delivered": "Entregue",
+        "pending": "Pendente",
+        "failed": "Falhou",
+        "successRate": "Taxa de Sucesso"
+      },
+      "title": "Conformidade LGPD",
+      "complianceScore": "Pontuação de Conformidade",
+      "clientsWithAllConsents": "Clientes com Todos os Consentimentos",
+      "pendingConsents": "Consentimentos Pendentes",
+      "expiredConsents": "Consentimentos Expirados",
+      "complianceOverview": "Visão Geral de Conformidade",
+      "clientsCompliant": "Clientes Conformes",
+      "totalClients": "Total de Clientes",
+      "clientsWithPendingConsents": "Clientes com Consentimentos Pendentes",
+      "clientsWithExpiredConsents": "Clientes com Consentimentos Expirados",
+      "consentsBreakdown": "Detalhamento de Consentimentos",
+      "totalConsents": "Total de Consentimentos",
+      "grantedConsents": "Consentimentos Concedidos",
+      "deniedConsents": "Consentimentos Negados",
+      "revokedConsents": "Consentimentos Revogados",
+      "blockingConsents": "Consentimentos Bloqueantes",
+      "message": {
+        "noCommerce": {
+          "title": "Nenhum Comércio Selecionado",
+          "content": "Por favor selecione um comércio para ver as métricas de conformidade LGPD."
+        }
+      }
+    },
     "surveys": "Pesquisas",
     "waitlist": "Lista Espera",
     "bookingsConfirm": "Conf. Reserva",
@@ -2217,6 +2480,7 @@
         "status": "Estado do cliente baseado em dias desde última atenção",
         "attentionStatus": "Estado do atendimento",
         "copy": "Copiar dados do cliente",
+        "copyBusinessData": "Copiar todos os dados do negócio",
         "attentions": "Número total de atendimentos",
         "survey": "Cliente completou pesquisa de satisfação",
         "form": "Cliente possui formulário de primeira atenção",
@@ -2771,6 +3035,7 @@
     "permissions-admin": "Permissões",
     "modules-admin": "Módulos",
     "forms-admin": "Formulários",
+    "lgpd-consent-admin": "Consentimentos LGPD",
     "seeSpy": "Espiadinha",
     "seeMenu": "Menu",
     "business-resume": "Estado do Sistema",
@@ -2829,6 +3094,7 @@
           "medical-exams-admin": "Gerenciar Exames Médicos",
           "medical-templates-admin": "Gerenciar Modelos Médicos",
           "pdf-templates-admin": "Gerenciar Modelos PDF",
+          "lgpd-consent-admin": "Gerenciar Consentimentos LGPD",
           "audit-log": "Auditoria e Conformidade"
         }
       }
@@ -4351,7 +4617,13 @@
       "priorityUrgent": "Urgente",
       "templates": "Plantillas",
       "mostUsedTemplates": "Plantillas Mais Usadas",
-      "interactionWarnings": "Advertências de Interações"
+      "interactionWarnings": "Advertências de Interações",
+      "createdSuccessfully": "Receita criada com sucesso",
+      "continue": "Continuar",
+      "viewPdf": "Ver PDF",
+      "downloadPdf": "Baixar PDF",
+      "printPdf": "Imprimir PDF",
+      "sendEmail": "Enviar por Email"
     },
     "examOrder": {
       "create": "Criar Pedido de Exame",
@@ -4497,7 +4769,8 @@
         "phone": "Deve digitar o Telefone",
         "sex": "Deve selecionar o Sexo",
         "font": "Deve selecionar a Fonte"
-      }
+      },
+      "personalDataError": "Erro de validação dos dados pessoais"
     }
   },
   "businessReports": {
@@ -5315,6 +5588,8 @@
     "exportError": "Erro ao exportar leads",
     "refresh": "Atualizar",
     "refreshing": "Atualizando...",
+    "showFilters": "Mostrar Filtros",
+    "hideFilters": "Ocultar Filtros",
     "source": {
       "label": "Origem",
       "publicSite": "Site Público",
@@ -5501,6 +5776,7 @@
         "your-plan": "Habilitar Tu Plano - Menú Principal Negócio",
         "surveys-admin": "Habilitar Pesquisas - Menú Principal Negócio",
         "forms-admin": "Habilitar Gerenciar Formulários - Menú Principal Negócio",
+        "lgpd-consent-admin": "Habilitar Gerenciar Consentimentos LGPD - Menú Principal Negócio",
         "manage-admin": "Habilitar Cadastrar Artefatos - Menú Principal Negócio",
         "control-admin": "Habilitar Gerenciamento Transacional - Menú Principal Negócio",
         "outcome-types-admin": "Habilitar Gerenciamento Tipos de Despesa - Menú Principal Negócio",
@@ -6045,6 +6321,17 @@
         "unavailable": "Eliminar Formulários - Seção Gerenciar Formulários"
       }
     },
+    "lgpd": {
+      "admin": {
+        "view": "Acessar Seção - Gerenciar Requisitos LGPD",
+        "read": "Ver dados - Seção Gerenciar Requisitos LGPD",
+        "edit": "Editar dados - Seção Gerenciar Requisitos LGPD",
+        "update": "Atualizar dados - Seção Gerenciar Requisitos LGPD",
+        "add": "Adicionar dados - Seção Gerenciar Requisitos LGPD",
+        "delete": "Eliminar dados - Seção Gerenciar Requisitos LGPD",
+        "limit": "Límite de dados - Seção Gerenciar Requisitos LGPD"
+      }
+    },
     "outcome-types": {
       "admin": {
         "view": "Acessar Seção - Gerenciar Tipos de Egreso",
@@ -6563,7 +6850,170 @@
       },
       "errorCreating": "Erro ao criar consentimento",
       "errorDenying": "Erro ao negar consentimento",
-      "errorRevoking": "Erro ao revogar consentimento"
+      "errorRevoking": "Erro ao revogar consentimento",
+      "form": {
+        "title": "Consentimentos LGPD",
+        "intro": "Prezado/a {clientName}, precisamos do seu consentimento para o tratamento dos seus dados pessoais de acordo com a Lei Geral de Proteção de Dados (LGPD).",
+        "lgpdInfo": "De acordo com a LGPD, você tem o direito de aceitar ou rejeitar cada tipo de consentimento. Sua decisão será registrada e pode ser modificada a qualquer momento.",
+        "required": "Obrigatório",
+        "readMore": "Ler mais",
+        "fullTerms": "Termos Legais Completos",
+        "dataDescription": "Descrição dos Dados",
+        "legalBasis": "Base Legal",
+        "retentionPeriod": "Prazo de Retenção",
+        "privacyPolicy": "Política de Privacidade",
+        "revocationInstructions": "Como Revogar",
+        "iAgree": "Concordo",
+        "iDoNotAgree": "Não concordo",
+        "submit": "Enviar Consentimentos",
+        "submitting": "Enviando...",
+        "tokenExpired": "O link expirou. Por favor, solicite um novo link.",
+        "errorLoading": "Erro ao carregar formulário",
+        "errorSubmitting": "Erro ao enviar consentimentos",
+        "successTitle": "Consentimentos Enviados!",
+        "successMessage": "Suas respostas foram registradas corretamente. Obrigado pela sua colaboração.",
+        "successSubmessage": "Seus consentimentos foram processados e salvos em nosso sistema.",
+        "legalFooter": "Seus dados serão tratados de acordo com a LGPD (Lei 13.709/2018). Você pode revogar seu consentimento a qualquer momento."
+      },
+      "widget": {
+        "title": "Consentimentos LGPD",
+        "summary": "{granted}/{total} completo",
+        "requestAllPending": "Solicitar Pendentes",
+        "requestSent": "Solicitação enviada com sucesso",
+        "willSendLinkViaWhatsapp": "Um link será enviado via WhatsApp",
+        "manageAll": "Gerenciar Todos",
+        "noRequirements": "Não há requisitos de consentimento configurados",
+        "blockingWarning": "Estes consentimentos são obrigatórios para continuar com o atendimento.",
+        "requestBlockingConsents": "Solicitar Consentimentos Obrigatórios"
+      },
+      "admin": {
+        "title": "Administração de Requisitos LGPD",
+        "addRequirement": "Adicionar Requisito de Consentimento",
+        "consentType": "Tipo de Consentimento",
+        "selectType": "Selecionar tipo",
+        "required": "Obrigatório",
+        "blockingForAttention": "Bloqueia a Atenção",
+        "timing": "Momento da Solicitação",
+        "methods": "Métodos de Solicitação",
+        "reminderIntervalHours": "Intervalo entre Lembretes (horas)",
+        "maxReminders": "Máximo de Lembretes",
+        "whatsappTemplate": "Modelo de WhatsApp",
+        "whatsappTemplatePlaceholder": "Mensagem que será enviada via WhatsApp ao cliente",
+        "formIntroText": "Texto Introdutório do Formulário",
+        "formIntroTextPlaceholder": "Texto que o cliente verá no formulário web",
+        "fullTerms": "Termos Legais Completos",
+        "fullTermsPlaceholder": "Termos legais completos conforme LGPD",
+        "markdownEditor": {
+          "clear": "Limpar",
+          "bold": "Negrito",
+          "italic": "Itálico",
+          "list": "Lista",
+          "orderedList": "Lista numerada",
+          "link": "Link",
+          "edit": "Editar",
+          "preview": "Visualizar",
+          "split": "Dividido"
+        },
+        "dataDescription": "Descrição dos Dados",
+        "dataDescriptionPlaceholder": "Descrição detalhada dos dados que serão processados",
+        "legalBasis": "Base Legal (LGPD Art. 7º)",
+        "legalBasisPlaceholder": "Base legal para o processamento dos dados",
+        "retentionPeriod": "Prazo de Retenção",
+        "retentionPeriodPlaceholder": "Prazo de retenção dos dados",
+        "privacyPolicyLink": "Link da Política de Privacidade",
+        "privacyPolicyLinkPlaceholder": "https://exemplo.com/politica-privacidade",
+        "revocationInstructions": "Instruções de Revogação",
+        "revocationInstructionsPlaceholder": "Como o cliente pode revogar o consentimento",
+        "templateSelector": "Selecionar Template",
+        "templateSelectorHelp": "Selecione um template pré-definido para preencher automaticamente os campos",
+        "selectTemplate": "Selecionar template...",
+        "preset": "Template Pré-configurado",
+        "selectPreset": "Selecionar preset...",
+        "timingOptions": {
+          "BOOKING": "Durante a Reserva",
+          "PRE_ATTENTION": "Antes da Atenção",
+          "CHECK_IN": "Durante o Check-In",
+          "FIRST_ATTENTION": "Primeira Atenção",
+          "ON_REGISTRATION": "No Cadastro Inicial",
+          "ON_LOGIN": "No Login",
+          "PERIODIC_RENEWAL": "Renovação Periódica",
+          "BEFORE_SERVICE": "Antes do Serviço",
+          "AFTER_ATTENTION": "Após Atenção"
+        },
+        "method": {
+          "EMAIL": "Email",
+          "WHATSAPP": "WhatsApp",
+          "WEB_FORM": "Formulário Web",
+          "PRESENTIAL": "Presencial",
+          "SMS": "SMS",
+          "PUSH_NOTIFICATION": "Notificação Push",
+          "IN_APP": "Dentro do App",
+          "QR_CODE": "Código QR"
+        },
+        "consentTypes": "Tipos de Consentimento",
+        "selectAll": "Selecionar Todos",
+        "deselectAll": "Deselecionar Todos",
+        "selected": "selecionados",
+        "creating": "Criando...",
+        "addBatch": "Adicionar em Lote",
+        "validate": {
+          "consentType": "O tipo de consentimento é obrigatório",
+          "consentTypes": "Você deve selecionar pelo menos um tipo de consentimento",
+          "timing": "O momento da solicitação é obrigatório",
+          "methods": "Você deve selecionar pelo menos um método"
+        },
+        "message": {
+          "noRequirements": {
+            "title": "Sem Requisitos Configurados",
+            "content": "Não há requisitos de consentimento configurados para este comércio. Adicione um para começar."
+          },
+          "noAccess": {
+            "title": "Sem Acesso",
+            "content": "Você não tem permissões para acessar esta seção."
+          }
+        },
+        "history": "Histórico",
+        "preview": "Visualização",
+        "version": "Versão",
+        "noHistory": "Não há histórico de versões disponível",
+        "changedFields": "Campos Modificados",
+        "description": "Descrição",
+        "changedBy": "Modificado por",
+        "action": {
+          "CREATE": "Criação",
+          "UPDATE": "Atualização",
+          "DELETE": "Exclusão"
+        },
+        "field": {
+          "consentType": "Tipo de Consentimento",
+          "required": "Obrigatório",
+          "blockingForAttention": "Bloqueia a Atenção",
+          "active": "Ativo",
+          "requestStrategy.timing": "Momento de Solicitação",
+          "requestStrategy.methods": "Métodos de Solicitação",
+          "requestStrategy.reminderIntervalHours": "Intervalo entre Lembretes",
+          "requestStrategy.maxReminders": "Máximo de Lembretes",
+          "templates.whatsapp": "Modelo de WhatsApp",
+          "templates.email": "Modelo de Email",
+          "templates.formIntroText": "Texto Introdutório",
+          "templates.fullTerms": "Termos Legais Completos",
+          "templates.dataDescription": "Descrição dos Dados",
+          "templates.legalBasis": "Base Legal",
+          "templates.retentionPeriod": "Prazo de Retenção",
+          "templates.privacyPolicyLink": "Link da Política de Privacidade",
+          "templates.revocationInstructions": "Instruções de Revogação"
+        },
+        "historyError": "Erro ao carregar o histórico",
+        "previewChannel": "Canal de Visualização",
+        "previewWeb": "Formulário Web",
+        "previewWhatsApp": "WhatsApp",
+        "previewEmail": "Email",
+        "previewWebForm": "Visualização do Formulário Web",
+        "previewWhatsAppMessage": "Visualização da Mensagem de WhatsApp",
+        "previewEmailMessage": "Visualização da Mensagem de Email",
+        "accept": "Aceitar",
+        "decline": "Recusar"
+      }
     },
     "portability": {
       "title": "Portabilidade de Dados (LGPD)",
@@ -6578,7 +7028,27 @@
       "error": "Erro ao gerar arquivo de portabilidade"
     }
   },
+  "businessLgpdConsentAdmin": {
+    "capacitiesList": {
+      "lgpd": {
+        "admin": {
+          "view": "Acessar esta seção",
+          "read": "Ver os Requisitos LGPD",
+          "edit": "Editar os Requisitos LGPD",
+          "update": "Atualizar os Requisitos LGPD",
+          "add": "Adicionar Requisitos LGPD",
+          "delete": "Excluir Requisitos LGPD",
+          "limit": "Quantidade limite de Requisitos LGPD"
+        }
+      }
+    }
+  },
   "errors": {
     "undefined": "Erro indefinido"
+  },
+  "digitalSignature": {
+    "icp": {
+      "sign": "Assinar com ICP"
+    }
   }
 }

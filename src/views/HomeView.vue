@@ -43,7 +43,7 @@ export default {
             class="home-logo"
             :alt="$t('logoAlt')"
             :src="$t('logo')"
-            width="300"
+            width="200"
             height="auto"
             fetchpriority="high"
           />

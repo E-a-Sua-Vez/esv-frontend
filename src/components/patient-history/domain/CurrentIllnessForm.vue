@@ -107,9 +107,7 @@ export default {
       // Append transcribed text as new paragraph
       const currentText = state.newCurrentIllness.illness || '';
       const newText =
-        currentText && currentText.trim() !== ''
-          ? `${currentText}\n\n${finalText}`
-          : finalText;
+        currentText && currentText.trim() !== '' ? `${currentText}\n\n${finalText}` : finalText;
 
       state.newCurrentIllness.illness = newText;
       sendData();
@@ -234,7 +232,10 @@ export default {
       <!-- Form Input Section -->
       <div class="form-input-section">
         <!-- Template Picker -->
-        <div class="form-field-modern" v-if="commerce && commerce.id && currentUser && currentUser.id">
+        <div
+          class="form-field-modern"
+          v-if="commerce && commerce.id && currentUser && currentUser.id"
+        >
           <TemplatePicker
             :commerce-id="commerce.id"
             :doctor-id="currentUser.id"

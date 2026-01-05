@@ -13,9 +13,10 @@ import Spinner from '../common/Spinner.vue';
 import Alert from '../common/Alert.vue';
 import Warning from '../common/Warning.vue';
 import UserMessage from '../common/UserMessage.vue';
+import CommerceLogo from '../common/CommerceLogo.vue';
 
 export default {
-  components: { Message, Spinner, Alert, Warning, UserMessage },
+  components: { Message, Spinner, Alert, Warning, UserMessage, CommerceLogo },
   name: 'MyUser',
   props: {
     messages: { type: Array, default: [] },
@@ -192,10 +193,11 @@ export default {
   <div>
     <div class="row mt-2 mb-2 centered">
       <div class="col-6" v-if="state.currentBusiness">
-        <img
+        <CommerceLogo
           v-if="state.currentBusiness?.logo"
           :src="state.currentBusiness?.logo"
-          class="img-thumbnail rounded-start item-image"
+          :loading="loading"
+          class="item-image"
         />
         <i v-else class="bi bi-person-circle"> </i>
       </div>
@@ -338,6 +340,16 @@ export default {
 </template>
 
 <style scoped>
+.item-image :deep(.logo) {
+  width: 100%;
+  max-width: 150px;
+  max-height: 150px;
+  object-fit: contain;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  padding: 0.25rem;
+}
+
 .user-title {
   font-size: 1.5rem;
   font-weight: 700;

@@ -69,6 +69,7 @@
   "continue": "Next",
   "update": "Update",
   "cancel": "Cancel",
+  "delete": "Delete",
   "active": "Active",
   "inactive": "Inactive",
   "serviceStatus": "Service Status",
@@ -690,6 +691,11 @@
     "resources": "Resources",
     "poweredBy": "Powered by"
   },
+  "attention": {
+    "lgpd": {
+      "blockingConsents": "Missing {count} blocking consent(s)"
+    }
+  },
   "contactTypes": {
     "CALL": "Call",
     "MESSAGE": "Message",
@@ -1250,7 +1256,18 @@
           "transfer": "Transfer Attention",
           "cancel": "Cancel Attention",
           "patient-history": "Medical History",
-          "products": "Products"
+          "products": "Products",
+          "lgpd": {
+            "blocking": "Blocking",
+            "missing": "Missing",
+            "compliant": "Compliant",
+            "blockingConsents": "Missing {count} blocking consent(s)",
+            "missingConsents": "Missing {count} consent(s)",
+            "allConsentsGranted": "All consents granted",
+            "cannotAttend": "Cannot attend: missing {count} blocking consent(s): {types}",
+            "cannotAdvanceStage": "Cannot advance stage: missing {count} blocking consent(s): {types}",
+            "clickToRequest": "Click to request consents"
+          }
         },
         "module": {
           "update": "Update attention Module"
@@ -1404,7 +1421,18 @@
           "transfer": "Transfer Attention",
           "cancel": "Cancel Attention",
           "patient-history": "Medical History",
-          "products": "Products"
+          "products": "Products",
+          "lgpd": {
+            "blocking": "Blocking",
+            "missing": "Missing",
+            "compliant": "Compliant",
+            "blockingConsents": "Missing {count} blocking consent(s)",
+            "missingConsents": "Missing {count} consent(s)",
+            "allConsentsGranted": "All consents granted",
+            "cannotAttend": "Cannot attend: missing {count} blocking consent(s): {types}",
+            "cannotAdvanceStage": "Cannot advance stage: missing {count} blocking consent(s): {types}",
+            "clickToRequest": "Click to request consents"
+          }
         },
         "module": {
           "update": "Update attention Module"
@@ -1433,6 +1461,190 @@
       "paymentType": "Should select the payment type",
       "paymentMethod": "Should select the payment method",
       "paymentAmount": "Should enter the amount"
+    }
+  },
+  "clientPortal": {
+    "menu": {
+      "welcome": "Welcome, {name}",
+      "loading": "Loading...",
+      "consents": "My Consents",
+      "profile": "My Profile",
+      "documents": "My Documents",
+      "history": "My History",
+      "logout": "Logout",
+      "comingSoon": "Coming Soon",
+      "navigationError": "Navigation error",
+      "sessionError": "Session validation error"
+    },
+    "consents": {
+      "title": "My LGPD Consents",
+      "backToMenu": "Back to Menu",
+      "loading": "Loading consents...",
+      "noConsents": "No consents registered",
+      "loadError": "Error loading consents",
+      "sessionError": "Session validation error",
+      "revokeNotImplemented": "Revocation will be implemented soon",
+      "revokeError": "Error revoking consent",
+      "export": "Export Data (Art. 9º LGPD)",
+      "summary": {
+        "all": "All",
+        "granted": "Granted",
+        "pending": "Pending",
+        "denied": "Denied",
+        "expired": "Expired",
+        "revoked": "Revoked"
+      },
+      "status": {
+        "granted": "Granted",
+        "denied": "Denied",
+        "pending": "Pending",
+        "expired": "Expired",
+        "revoked": "Revoked"
+      },
+      "card": {
+        "grantedAt": "Granted on",
+        "expiresAt": "Expires on",
+        "revokedAt": "Revoked on",
+        "revoke": "Revoke",
+        "viewHistory": "View History",
+        "viewTerms": "View Terms"
+      },
+      "revoke": {
+        "title": "Revoke Consent",
+        "confirmMessage": "Are you sure you want to revoke this consent?",
+        "reason": "Reason",
+        "optional": "Optional",
+        "reasonPlaceholder": "Enter the reason for revocation (optional)",
+        "cancel": "Cancel",
+        "confirm": "Confirm Revocation"
+      },
+      "history": {
+        "title": "Consent History",
+        "noHistory": "No history available",
+        "close": "Close",
+        "actions": {
+          "granted": "Granted",
+          "denied": "Denied",
+          "revoked": "Revoked",
+          "expired": "Expired",
+          "updated": "Updated"
+        }
+      },
+      "terms": {
+        "title": "Consent Terms",
+        "noTerms": "No terms available",
+        "close": "Close"
+      }
+    },
+    "telemedicine": {
+      "title": "My Telemedicine Sessions",
+      "backToMenu": "Back to Menu",
+      "loading": "Loading sessions...",
+      "noSessions": "No telemedicine sessions registered",
+      "loadError": "Error loading sessions",
+      "sessionNotAvailable": "Session not available",
+      "accessSession": "Access Session",
+      "sessionInfo": "Session Information",
+      "filters": {
+        "all": "All",
+        "active": "Active",
+        "scheduled": "Scheduled",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "status": {
+        "active": "Active",
+        "scheduled": "Scheduled",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "profile": {
+      "title": "My Profile",
+      "backToMenu": "Back to Menu",
+      "loading": "Loading profile...",
+      "loadError": "Error loading profile",
+      "personalInfo": "Personal Information",
+      "additionalInfo": "Additional Information",
+      "accountInfo": "Account Information",
+      "idNumber": "ID Number",
+      "email": "Email",
+      "phone": "Phone",
+      "country": "Country",
+      "code1": "Code 1",
+      "code2": "Code 2",
+      "code3": "Code 3",
+      "memberSince": "Member since",
+      "totalAttentions": "Total Attentions",
+      "frequentCustomer": "Frequent Customer",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "documents": {
+      "title": "My Documents",
+      "backToMenu": "Back to Menu",
+      "loading": "Loading documents...",
+      "loadError": "Error loading documents",
+      "noDocuments": "No documents available",
+      "download": "Download",
+      "unnamed": "Unnamed document"
+    },
+    "history": {
+      "title": "My Attention History",
+      "backToMenu": "Back to Menu",
+      "loading": "Loading history...",
+      "loadError": "Error loading history",
+      "noAttentions": "No attentions registered",
+      "filters": {
+        "all": "All",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "pending": "Pending"
+      },
+      "status": {
+        "terminated": "Completed",
+        "rated": "Rated",
+        "cancelled": "Cancelled",
+        "pending": "Pending"
+      },
+      "minutes": "minutes",
+      "hours": "hours"
+    },
+    "login": {
+      "welcome": "Client Portal",
+      "loading": "Loading...",
+      "processing": "Processing...",
+      "requestAccess": "Request Access",
+      "requestAccessDescription": "Enter your information to receive an access code",
+      "commerceId": "Commerce ID",
+      "commerceIdPlaceholder": "Enter commerce ID",
+      "idNumber": "ID Number",
+      "idNumberPlaceholder": "e.g: 12345678-9",
+      "email": "Email",
+      "emailPlaceholder": "example{'@'}email.com",
+      "phone": "Phone",
+      "phonePlaceholder": "+1234567890",
+      "sendCode": "Send Code",
+      "enterCode": "Enter Code",
+      "enterCodeDescription": "Enter the code you received via email, WhatsApp or SMS",
+      "codeSentVia": "Code sent via {via}",
+      "accessCode": "Access Code",
+      "codeHint": "Enter the 4-8 character code you received",
+      "validateAndAccess": "Validate and Access",
+      "requestNewCode": "Request New Code",
+      "tryAgain": "Try Again",
+      "accessGranted": "Access Granted",
+      "redirecting": "Redirecting to portal...",
+      "fillRequiredFields": "Please fill all required fields",
+      "errorSendingCode": "Error sending code",
+      "clientNotFound": "Client not found",
+      "invalidRequest": "Invalid request",
+      "errorRequestingCode": "Error requesting code",
+      "invalidCodeLength": "Code must be between 4 and 8 characters",
+      "invalidCode": "Invalid code",
+      "incorrectCode": "Incorrect code",
+      "tooManyAttempts": "Too many failed attempts. Please try again later",
+      "validationError": "Error validating code"
     }
   },
   "telemedicineSession": {
@@ -1549,7 +1761,18 @@
           "transfer": "Transfer Attention",
           "cancel": "Cancel Attention",
           "patient-history": "Medical History",
-          "products": "Products"
+          "products": "Products",
+          "lgpd": {
+            "blocking": "Blocking",
+            "missing": "Missing",
+            "compliant": "Compliant",
+            "blockingConsents": "Missing {count} blocking consent(s)",
+            "missingConsents": "Missing {count} consent(s)",
+            "allConsentsGranted": "All consents granted",
+            "cannotAttend": "Cannot attend: missing {count} blocking consent(s): {types}",
+            "cannotAdvanceStage": "Cannot advance stage: missing {count} blocking consent(s): {types}",
+            "clickToRequest": "Click to request consents"
+          }
         },
         "module": {
           "update": "Update attention Module"
@@ -2121,6 +2344,7 @@
         "status": "Client status based on days since last attention",
         "attentionStatus": "Attention status",
         "copy": "Copy client data",
+        "copyBusinessData": "Copy all business data",
         "attentions": "Total number of attentions",
         "survey": "Client has completed satisfaction survey",
         "form": "Client has first attention form",
@@ -2649,6 +2873,7 @@
     "reports": "Data Center",
     "your-plan": "Your Plan",
     "forms-admin": "Forms",
+    "lgpd-consent-admin": "LGPD Consents",
     "collaborators-admin": "Collaborators",
     "permissions-admin": "Permissions",
     "administrators-admin": "Administrators",
@@ -2711,6 +2936,7 @@
           "medical-exams-admin": "Manage Medical Exams",
           "medical-templates-admin": "Manage Medical Templates",
           "pdf-templates-admin": "Manage PDF Templates",
+          "lgpd-consent-admin": "Manage LGPD Consents",
           "audit-log": "Audit and Compliance"
         }
       }
@@ -5253,6 +5479,8 @@
     },
     "refresh": "Refresh",
     "refreshing": "Refreshing...",
+    "showFilters": "Show Filters",
+    "hideFilters": "Hide Filters",
     "validate": {
       "name": "Name is required",
       "email": "Email is required",
@@ -5421,6 +5649,7 @@
         "configuration": "Enable Manage Configurations - Main Menu Business",
         "documents": "Enable Manage Documents - Main Menu Business",
         "forms-admin": "Enable Manage Forms - Main Menu Business",
+        "lgpd-consent-admin": "Enable Manage LGPD Consents - Main Menu Business",
         "your-plan": "Enable Tu Plan - Main Menu Business",
         "surveys-admin": "Enable Surveys - Main Menu Business",
         "manage-admin": "Enable Artifacts Admin - Main Menu Business",
@@ -5908,6 +6137,17 @@
         "add": "Add data - Section Manage Forms",
         "limit": "Limit of data - Section Manage Forms",
         "unavailable": "Delete Forms - Section Manage Forms"
+      }
+    },
+    "lgpd": {
+      "admin": {
+        "view": "Get to this Section - Manage LGPD Requirements",
+        "read": "Read data - Section Manage LGPD Requirements",
+        "edit": "Edit data - Section Manage LGPD Requirements",
+        "update": "Update data - Section Manage LGPD Requirements",
+        "add": "Add data - Section Manage LGPD Requirements",
+        "delete": "Delete data - Section Manage LGPD Requirements",
+        "limit": "Limit of data - Section Manage LGPD Requirements"
       }
     },
     "outcome-types": {
@@ -6547,7 +6787,170 @@
       },
       "errorCreating": "Error creating consent",
       "errorDenying": "Error denying consent",
-      "errorRevoking": "Error revoking consent"
+      "errorRevoking": "Error revoking consent",
+      "form": {
+        "title": "LGPD Consents",
+        "intro": "Dear {clientName}, we need your consent for the processing of your personal data according to the General Data Protection Law (LGPD).",
+        "lgpdInfo": "According to LGPD, you have the right to accept or reject each type of consent. Your decision will be recorded and can be modified at any time.",
+        "required": "Required",
+        "readMore": "Read more",
+        "fullTerms": "Full Legal Terms",
+        "dataDescription": "Data Description",
+        "legalBasis": "Legal Basis",
+        "retentionPeriod": "Retention Period",
+        "privacyPolicy": "Privacy Policy",
+        "revocationInstructions": "How to Revoke",
+        "iAgree": "I Agree",
+        "iDoNotAgree": "I Do Not Agree",
+        "submit": "Submit Consents",
+        "submitting": "Submitting...",
+        "tokenExpired": "The link has expired. Please request a new link.",
+        "errorLoading": "Error loading form",
+        "errorSubmitting": "Error submitting consents",
+        "successTitle": "Consents Submitted!",
+        "successSubmessage": "Your consents have been processed and saved in our system.",
+        "successMessage": "Your responses have been recorded correctly. Thank you for your cooperation.",
+        "legalFooter": "Your data will be processed in accordance with LGPD (Lei 13.709/2018). You can revoke your consent at any time."
+      },
+      "widget": {
+        "title": "LGPD Consents",
+        "summary": "{granted}/{total} complete",
+        "requestAllPending": "Request Pending",
+        "requestSent": "Request sent successfully",
+        "willSendLinkViaWhatsapp": "A link will be sent via WhatsApp",
+        "manageAll": "Manage All",
+        "noRequirements": "No consent requirements configured",
+        "blockingWarning": "These consents are mandatory to continue with the attention.",
+        "requestBlockingConsents": "Request Mandatory Consents"
+      },
+      "admin": {
+        "title": "LGPD Consent Requirements Administration",
+        "addRequirement": "Add Consent Requirement",
+        "consentType": "Consent Type",
+        "selectType": "Select type",
+        "required": "Required",
+        "blockingForAttention": "Blocks Attention",
+        "timing": "Request Timing",
+        "methods": "Request Methods",
+        "reminderIntervalHours": "Reminder Interval (hours)",
+        "maxReminders": "Max Reminders",
+        "whatsappTemplate": "WhatsApp Template",
+        "whatsappTemplatePlaceholder": "Message to be sent via WhatsApp to the client",
+        "formIntroText": "Form Introduction Text",
+        "formIntroTextPlaceholder": "Text the client will see in the web form",
+        "fullTerms": "Full Legal Terms",
+        "fullTermsPlaceholder": "Full legal terms according to LGPD",
+        "markdownEditor": {
+          "clear": "Clear",
+          "bold": "Bold",
+          "italic": "Italic",
+          "list": "List",
+          "orderedList": "Ordered List",
+          "link": "Link",
+          "edit": "Edit",
+          "preview": "Preview",
+          "split": "Split"
+        },
+        "dataDescription": "Data Description",
+        "dataDescriptionPlaceholder": "Detailed description of data that will be processed",
+        "legalBasis": "Legal Basis (LGPD Art. 7º)",
+        "legalBasisPlaceholder": "Legal basis for data processing",
+        "retentionPeriod": "Retention Period",
+        "retentionPeriodPlaceholder": "Data retention period",
+        "privacyPolicyLink": "Privacy Policy Link",
+        "privacyPolicyLinkPlaceholder": "https://example.com/privacy-policy",
+        "revocationInstructions": "Revocation Instructions",
+        "revocationInstructionsPlaceholder": "How the client can revoke consent",
+        "templateSelector": "Select Template",
+        "templateSelectorHelp": "Select a predefined template to automatically fill the fields",
+        "selectTemplate": "Select template...",
+        "preset": "Pre-configured Template",
+        "selectPreset": "Select preset...",
+        "timingOptions": {
+          "BOOKING": "During Booking",
+          "PRE_ATTENTION": "Before Attention",
+          "CHECK_IN": "During Check-In",
+          "FIRST_ATTENTION": "First Attention",
+          "ON_REGISTRATION": "On Registration",
+          "ON_LOGIN": "On Login",
+          "PERIODIC_RENEWAL": "Periodic Renewal",
+          "BEFORE_SERVICE": "Before Service",
+          "AFTER_ATTENTION": "After Attention"
+        },
+        "method": {
+          "EMAIL": "Email",
+          "WHATSAPP": "WhatsApp",
+          "WEB_FORM": "Web Form",
+          "PRESENTIAL": "Presential",
+          "SMS": "SMS",
+          "PUSH_NOTIFICATION": "Push Notification",
+          "IN_APP": "In App",
+          "QR_CODE": "QR Code"
+        },
+        "consentTypes": "Consent Types",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "selected": "selected",
+        "creating": "Creating...",
+        "addBatch": "Add Batch",
+        "validate": {
+          "consentType": "Consent type is required",
+          "consentTypes": "You must select at least one consent type",
+          "timing": "Request timing is required",
+          "methods": "You must select at least one method"
+        },
+        "message": {
+          "noRequirements": {
+            "title": "No Requirements Configured",
+            "content": "No consent requirements configured for this commerce. Add one to get started."
+          },
+          "noAccess": {
+            "title": "No Access",
+            "content": "You do not have permissions to access this section."
+          }
+        },
+        "history": "History",
+        "preview": "Preview",
+        "version": "Version",
+        "noHistory": "No version history available",
+        "changedFields": "Changed Fields",
+        "description": "Description",
+        "changedBy": "Changed by",
+        "action": {
+          "CREATE": "Creation",
+          "UPDATE": "Update",
+          "DELETE": "Deletion"
+        },
+        "field": {
+          "consentType": "Consent Type",
+          "required": "Required",
+          "blockingForAttention": "Blocks Attention",
+          "active": "Active",
+          "requestStrategy.timing": "Request Timing",
+          "requestStrategy.methods": "Request Methods",
+          "requestStrategy.reminderIntervalHours": "Reminder Interval",
+          "requestStrategy.maxReminders": "Max Reminders",
+          "templates.whatsapp": "WhatsApp Template",
+          "templates.email": "Email Template",
+          "templates.formIntroText": "Intro Text",
+          "templates.fullTerms": "Full Legal Terms",
+          "templates.dataDescription": "Data Description",
+          "templates.legalBasis": "Legal Basis",
+          "templates.retentionPeriod": "Retention Period",
+          "templates.privacyPolicyLink": "Privacy Policy Link",
+          "templates.revocationInstructions": "Revocation Instructions"
+        },
+        "historyError": "Error loading history",
+        "previewChannel": "Preview Channel",
+        "previewWeb": "Web Form",
+        "previewWhatsApp": "WhatsApp",
+        "previewEmail": "Email",
+        "previewWebForm": "Web Form Preview",
+        "previewWhatsAppMessage": "WhatsApp Message Preview",
+        "previewEmailMessage": "Email Message Preview",
+        "accept": "Accept",
+        "decline": "Decline"
+      }
     },
     "portability": {
       "title": "Data Portability (LGPD)",
@@ -6602,6 +7005,21 @@
         "add": "Add data - Section Manage PDF Templates",
         "delete": "Delete data - Section Manage PDF Templates",
         "limit": "Limit of data - Section Manage PDF Templates"
+      }
+    }
+  },
+  "businessLgpdConsentAdmin": {
+    "capacitiesList": {
+      "lgpd": {
+        "admin": {
+          "view": "Access this section",
+          "read": "View LGPD Requirements",
+          "edit": "Edit LGPD Requirements",
+          "update": "Update LGPD Requirements",
+          "add": "Add LGPD Requirements",
+          "delete": "Delete LGPD Requirements",
+          "limit": "Limit amount of LGPD Requirements"
+        }
       }
     }
   }

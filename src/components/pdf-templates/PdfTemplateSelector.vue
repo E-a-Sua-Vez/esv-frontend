@@ -15,7 +15,7 @@
           :value="null"
           v-model="selectedTemplate"
           @change="emitChange"
-        >
+        />
         <label class="form-check-label" :for="`default-template-${uniqueId}`">
           <i class="bi bi-check-circle me-1"></i>
           {{ t('pdfTemplates.selector.useDefault') }}
@@ -36,7 +36,7 @@
           v-for="template in availableTemplates"
           :key="template.id"
           class="form-check template-option"
-          :class="{ 'selected': selectedTemplate === template.id }"
+          :class="{ selected: selectedTemplate === template.id }"
         >
           <input
             class="form-check-input"
@@ -45,7 +45,7 @@
             :value="template.id"
             v-model="selectedTemplate"
             @change="emitChange"
-          >
+          />
           <label class="form-check-label" :for="`template-${template.id}-${uniqueId}`">
             <div class="template-info">
               <div class="template-name">
@@ -77,11 +77,7 @@
 
     <!-- Botón para vista previa (opcional) -->
     <div v-if="selectedTemplate && showPreviewButton" class="mt-2">
-      <button
-        type="button"
-        class="btn btn-sm btn-outline-primary"
-        @click="previewTemplate"
-      >
+      <button type="button" class="btn btn-sm btn-outline-primary" @click="previewTemplate">
         <i class="bi bi-eye me-1"></i>
         {{ t('pdfTemplates.preview') }}
       </button>
@@ -99,25 +95,25 @@ const { t } = useI18n();
 const props = defineProps({
   modelValue: {
     type: [Number, String, null],
-    default: null
+    default: null,
   },
   documentType: {
     type: String,
     required: true,
-    validator: (value) => ['prescription', 'exam_order', 'reference'].includes(value)
+    validator: value => ['prescription', 'exam_order', 'reference'].includes(value),
   },
   commerceId: {
     type: [Number, String],
-    default: null
+    default: null,
   },
   label: {
     type: String,
-    default: null
+    default: null,
   },
   showPreviewButton: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 const emit = defineEmits(['update:modelValue', 'preview']);
@@ -169,9 +165,12 @@ const previewTemplate = () => {
 };
 
 // Watcher para cambios externos
-watch(() => props.modelValue, (newValue) => {
-  selectedTemplate.value = newValue;
-});
+watch(
+  () => props.modelValue,
+  newValue => {
+    selectedTemplate.value = newValue;
+  },
+);
 
 // Watcher para recargar si cambia el commerce o documentType
 watch([() => props.commerceId, () => props.documentType], () => {

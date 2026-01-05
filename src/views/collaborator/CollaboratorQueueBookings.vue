@@ -428,7 +428,7 @@ export default {
             true,
             undefined,
             'PENDING'
-          ),
+          )
         );
         const pendingBookingsArrays = await Promise.all(pendingBookingsPromises);
         const allPendingBookings = pendingBookingsArrays.flat().filter(Boolean);
@@ -446,7 +446,7 @@ export default {
             undefined,
             queueId,
             true
-          ),
+          )
         );
         const upcomingBookingsArrays = await Promise.all(upcomingBookingsPromises);
         const allUpcomingBookings = upcomingBookingsArrays.flat().filter(Boolean);
@@ -466,7 +466,7 @@ export default {
             true,
             undefined,
             'CONFIRMED'
-          ),
+          )
         );
         const confirmedBookingsArrays = await Promise.all(confirmedBookingsPromises);
         const allConfirmedBookings = confirmedBookingsArrays.flat().filter(Boolean);
@@ -484,7 +484,7 @@ export default {
             undefined,
             queueId,
             false
-          ),
+          )
         );
         const recentBookingsArrays = await Promise.all(recentBookingsPromises);
         // Combine and sort by date, then take first 5
@@ -751,7 +751,7 @@ export default {
             true,
             undefined,
             'PENDING'
-          ),
+          )
         );
         const bookingsArrays = await Promise.all(pendingBookingsPromises);
         const allBookings = bookingsArrays.flat().filter(Boolean);

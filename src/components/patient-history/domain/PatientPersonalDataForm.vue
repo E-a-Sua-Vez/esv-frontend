@@ -23,8 +23,15 @@ export default {
   async setup(props) {
     const loading = ref(false);
 
-    const { commerce, clientData, cacheData, patientForms, patientHistoryData, toggles, errorsAdd } =
-      toRefs(props);
+    const {
+      commerce,
+      clientData,
+      cacheData,
+      patientForms,
+      patientHistoryData,
+      toggles,
+      errorsAdd,
+    } = toRefs(props);
 
     const { receiveData } = props;
 

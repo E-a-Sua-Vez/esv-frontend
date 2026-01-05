@@ -34,7 +34,8 @@ export const getCollaboratorsByCommerceId = async commerceId =>
   (await requestBackend.get(`/${entity}/commerce/${commerceId}`, await getHeaders())).data;
 
 export const getDetailsCollaboratorsByCommerceId = async commerceId =>
-  (await requestBackend.get(`/${entity}/details/commerceId/${commerceId}`, await getHeaders())).data;
+  (await requestBackend.get(`/${entity}/details/commerceId/${commerceId}`, await getHeaders()))
+    .data;
 
 export const getCollaboratorById = async id =>
   (await requestBackend.get(`/${entity}/${id}`, await getHeaders())).data;

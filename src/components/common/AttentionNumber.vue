@@ -130,7 +130,14 @@ export default {
         : 'color-secondary-reverse';
     },
     identifier() {
-      return this.data.name || this.data.idNumber || undefined;
+      // Return name if available, otherwise return lastName or full name combination
+      if (this.data.name) return this.data.name;
+      if (this.data.lastName) return this.data.lastName;
+      if (this.attention && this.attention.client) {
+        if (this.attention.client.name) return this.attention.client.name;
+        if (this.attention.client.lastName) return this.attention.client.lastName;
+      }
+      return this.data.idNumber || undefined;
     },
     getCardTypeClass() {
       if (this.type === 'primary') return 'attention-card-primary';
@@ -649,7 +656,7 @@ export default {
         }
       }
 
-      return parts.length > 0 ? parts.join(' โ�ข ') : '';
+      return parts.length > 0 ? parts.join(' • ') : '';
     },
   },
 };

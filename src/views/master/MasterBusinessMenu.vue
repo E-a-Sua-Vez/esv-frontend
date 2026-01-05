@@ -147,7 +147,7 @@ export default {
     // Watch for business changes in store
     watch(
       () => store.getCurrentBusiness,
-      async (newBusiness) => {
+      async newBusiness => {
         if (newBusiness && newBusiness.id) {
           state.business = newBusiness;
           await loadCommerces();
@@ -259,7 +259,9 @@ export default {
               >
                 <i class="bi bi-shop me-2"></i>
                 <span v-if="state.commerce">{{ state.commerce.tag || 'Comercio' }}</span>
-                <span v-else>{{ $t('businessAdmin.selectCommerce') || 'Seleccionar Comercio' }}</span>
+                <span v-else>{{
+                  $t('businessAdmin.selectCommerce') || 'Seleccionar Comercio'
+                }}</span>
                 <i class="bi bi-chevron-down ms-2"></i>
               </button>
             </div>
@@ -270,10 +272,7 @@ export default {
           <div class="card mt-4 mb-4 business-card">
             <div class="row d-flex business-title">
               <div class="col-4 d-flex align-items-center justify-content-center">
-                <CommerceLogo
-                  :src="getBusinessLogo()"
-                  :business-id="state.business.id"
-                />
+                <CommerceLogo :src="getBusinessLogo()" :business-id="state.business.id" />
               </div>
               <div class="col-8 d-flex align-items-center">
                 <div class="flex-grow-1">
@@ -429,7 +428,7 @@ export default {
                     v-if="com.logo"
                     :src="com.logo"
                     class="commerce-mini-logo me-3"
-                    style="width: 50px; height: 50px; object-fit: cover; border-radius: 0.25rem;"
+                    style="width: 50px; height: 50px; object-fit: cover; border-radius: 0.25rem"
                   />
                   <div class="flex-grow-1">
                     <div class="fw-bold">{{ com.tag }}</div>

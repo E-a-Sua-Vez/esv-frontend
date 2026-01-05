@@ -144,7 +144,7 @@ export default {
           a =>
             a?.currentStage === 'TERMINATED' ||
             (['TERMINATED', 'RATED', 'SKIPED'].includes(a?.status) && !a?.currentStage)
-        ),
+        )
       );
     },
   },

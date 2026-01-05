@@ -389,8 +389,8 @@ export default {
                           @input="handleSearchChange"
                           :placeholder="$t('common.search')"
                         />
-                  </div>
-                </div>
+                      </div>
+                    </div>
                     <div class="col-6 col-md-3">
                       <select
                         class="form-control filter-select"
@@ -521,17 +521,14 @@ export default {
                           <i
                             :class="`bi bi-star${activation.active ? '-fill' : ''} activation-icon`"
                           ></i>
-                    </div>
+                        </div>
                       </div>
                       <div class="col activation-name-wrapper">
                         <h5 class="activation-title mb-0 fw-bold">
                           {{ activation.business?.name || 'N/A' }}
                         </h5>
                         <div class="activation-meta">
-                          <span
-                            v-if="activation.planPayedCopy?.name"
-                            class="activation-plan-badge"
-                          >
+                          <span v-if="activation.planPayedCopy?.name" class="activation-plan-badge">
                             <i class="bi bi-tag"></i> {{ activation.planPayedCopy.name }}
                           </span>
                           <span
@@ -562,13 +559,13 @@ export default {
                             class="activation-toggle-btn text-decoration-none"
                             :class="{ active: state.extendedEntity === index }"
                           >
-                        <i
-                          :id="index"
-                          :class="`bi ${
-                            state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                          }`"
-                        ></i>
-                      </a>
+                            <i
+                              :id="index"
+                              :class="`bi ${
+                                state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                              }`"
+                            ></i>
+                          </a>
                         </div>
                       </div>
                     </div>
@@ -715,9 +712,11 @@ export default {
                           <div class="col-auto">
                             <div class="activation-icon-wrapper">
                               <i
-                                :class="`bi bi-star${activation.active ? '-fill' : ''} activation-icon`"
+                                :class="`bi bi-star${
+                                  activation.active ? '-fill' : ''
+                                } activation-icon`"
                               ></i>
-                        </div>
+                            </div>
                           </div>
                           <div class="col activation-name-wrapper">
                             <h5 class="activation-title mb-0 fw-bold">
@@ -758,15 +757,15 @@ export default {
                                 class="activation-toggle-btn text-decoration-none"
                                 :class="{ active: state.extendedOldEntity === index }"
                               >
-                            <i
-                              :id="index"
-                              :class="`bi ${
-                                state.extendedOldEntity === index
-                                  ? 'bi-chevron-up'
-                                  : 'bi-chevron-down'
-                              }`"
-                            ></i>
-                          </a>
+                                <i
+                                  :id="index"
+                                  :class="`bi ${
+                                    state.extendedOldEntity === index
+                                      ? 'bi-chevron-up'
+                                      : 'bi-chevron-down'
+                                  }`"
+                                ></i>
+                              </a>
                             </div>
                           </div>
                         </div>
@@ -1005,7 +1004,9 @@ export default {
                 </div>
                 <!-- Pagination Desktop -->
                 <div v-if="state.filtered && state.filtered.length > 0" class="mt-3 mb-3">
-                  <div class="d-flex justify-content-center align-items-center flex-wrap gap-2 mb-2">
+                  <div
+                    class="d-flex justify-content-center align-items-center flex-wrap gap-2 mb-2"
+                  >
                     <span class="badge bg-secondary px-2 py-2 m-1">
                       {{ $t('businessPlanActivationAdmin.listResult') }} {{ state.counter }}
                     </span>
@@ -1092,17 +1093,14 @@ export default {
                           <i
                             :class="`bi bi-star${activation.active ? '-fill' : ''} activation-icon`"
                           ></i>
-                    </div>
+                        </div>
                       </div>
                       <div class="col activation-name-wrapper">
                         <h5 class="activation-title mb-0 fw-bold">
                           {{ activation.business?.name || 'N/A' }}
                         </h5>
                         <div class="activation-meta">
-                          <span
-                            v-if="activation.planPayedCopy?.name"
-                            class="activation-plan-badge"
-                          >
+                          <span v-if="activation.planPayedCopy?.name" class="activation-plan-badge">
                             <i class="bi bi-tag"></i> {{ activation.planPayedCopy.name }}
                           </span>
                           <span
@@ -1133,13 +1131,13 @@ export default {
                             class="activation-toggle-btn text-decoration-none"
                             :class="{ active: state.extendedEntity === index }"
                           >
-                        <i
-                          :id="index"
-                          :class="`bi ${
-                            state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                          }`"
-                        ></i>
-                      </a>
+                            <i
+                              :id="index"
+                              :class="`bi ${
+                                state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                              }`"
+                            ></i>
+                          </a>
                         </div>
                       </div>
                     </div>
@@ -1286,9 +1284,11 @@ export default {
                           <div class="col-auto">
                             <div class="activation-icon-wrapper">
                               <i
-                                :class="`bi bi-star${activation.active ? '-fill' : ''} activation-icon`"
+                                :class="`bi bi-star${
+                                  activation.active ? '-fill' : ''
+                                } activation-icon`"
                               ></i>
-                        </div>
+                            </div>
                           </div>
                           <div class="col activation-name-wrapper">
                             <h5 class="activation-title mb-0 fw-bold">
@@ -1329,15 +1329,15 @@ export default {
                                 class="activation-toggle-btn text-decoration-none"
                                 :class="{ active: state.extendedOldEntity === index }"
                               >
-                            <i
-                              :id="index"
-                              :class="`bi ${
-                                state.extendedOldEntity === index
-                                  ? 'bi-chevron-up'
-                                  : 'bi-chevron-down'
-                              }`"
-                            ></i>
-                          </a>
+                                <i
+                                  :id="index"
+                                  :class="`bi ${
+                                    state.extendedOldEntity === index
+                                      ? 'bi-chevron-up'
+                                      : 'bi-chevron-down'
+                                  }`"
+                                ></i>
+                              </a>
                             </div>
                           </div>
                         </div>

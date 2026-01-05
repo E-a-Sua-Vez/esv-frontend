@@ -1,5 +1,6 @@
 <script>
 import Popper from 'vue3-popper';
+import jsonToCsv from '../../shared/utils/jsonToCsv';
 
 export default {
   name: 'CommerceName',
@@ -9,6 +10,8 @@ export default {
     tag: { type: String, default: '' },
     active: { type: Boolean, default: true },
     keyName: { type: String, default: '' },
+    linkType: { type: String, default: 'commerce' }, // 'commerce' or 'business'
+    businessData: { type: Object, default: null }, // Complete business object for copying
   },
   computed: {
     statusClass() {
@@ -24,12 +27,26 @@ export default {
     },
     commerceLink() {
       if (!this.keyName) return '';
-      return `${import.meta.env.VITE_URL}/interno/comercio/${this.keyName}`;
+      const pathPrefix = this.linkType === 'business' ? 'negocio' : 'comercio';
+      return `${import.meta.env.VITE_URL}/interno/${pathPrefix}/${this.keyName}`;
     },
   },
   methods: {
     copyLink() {
-      if (this.commerceLink) {
+      // If businessData is provided, copy all business data in CSV format
+      if (this.businessData && typeof this.businessData === 'object') {
+        try {
+          const textToCopy = jsonToCsv([this.businessData]);
+          navigator.clipboard.writeText(textToCopy);
+        } catch (error) {
+          console.error('Error copying business data:', error);
+          // Fallback to copying link if CSV conversion fails
+          if (this.commerceLink) {
+            navigator.clipboard.writeText(this.commerceLink);
+          }
+        }
+      } else if (this.commerceLink) {
+        // Default behavior: copy link
         navigator.clipboard.writeText(this.commerceLink);
       }
     },
@@ -68,7 +85,14 @@ export default {
     <!-- Action Buttons -->
     <Popper v-if="commerceLink" :class="'dark'" arrow hover>
       <template #content>
-        <div>{{ $t('dashboard.clientCard.tooltip.copy') || 'Copiar link do comércio' }}</div>
+        <div>
+          {{
+            businessData
+              ? $t('dashboard.clientCard.tooltip.copyBusinessData') ||
+                'Copiar todos los datos del negocio'
+              : $t('dashboard.clientCard.tooltip.copy') || 'Copiar link do comércio'
+          }}
+        </div>
       </template>
       <button class="btn-copy-mini" @click.stop="copyLink()">
         <i class="bi bi-file-earmark-spreadsheet"></i>

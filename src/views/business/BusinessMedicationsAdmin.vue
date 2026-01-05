@@ -283,97 +283,98 @@ export default {
   <div>
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
-    <div class="content text-center">
-        <CommerceLogo
-          :src="state.business?.logo"
-          :loading="loading"
-        ></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessMedicationsAdmin.title`)"
-        :toggles="state.toggles"
-        component-name="businessMedicationsAdmin"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="false" :stack="alertError"></Alert>
-      </div>
-      <div id="businessMedicationsAdmin">
-        <div v-if="isActiveBusiness && state.toggles['medications.admin.view']">
-          <div v-if="!loading" id="businessMedicationsAdmin-result" class="mt-4">
-            <div>
-              <div v-if="!commerce">
-                <Message
-                  :title="$t('businessMedicationsAdmin.message.4.title')"
-                  :content="$t('businessMedicationsAdmin.message.4.content')"
-                />
-              </div>
-              <div v-if="commerce && state.medications.length === 0">
-                <Message
-                  :title="$t('businessMedicationsAdmin.message.2.title')"
-                  :content="$t('businessMedicationsAdmin.message.2.content')"
-                />
-              </div>
-              <div class="row mb-2">
-                <div class="col lefted">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                    @click="showAdd()"
-                    data-bs-toggle="modal"
-                    data-bs-target="#add-medication"
-                    :disabled="!state.toggles['medications.admin.add']"
-                  >
-                    <i class="bi bi-plus-lg"></i> {{ $t('add') }}
-                  </button>
-                </div>
-              </div>
+      <div class="content text-center">
+        <CommerceLogo :src="state.business?.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessMedicationsAdmin.title`)"
+          :toggles="state.toggles"
+          component-name="businessMedicationsAdmin"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div id="businessMedicationsAdmin">
+          <div v-if="isActiveBusiness && state.toggles['medications.admin.view']">
+            <div v-if="!loading" id="businessMedicationsAdmin-result" class="mt-4">
               <div>
-                <SearchAdminItem
-                  :business-items="state.medications"
-                  :type="'medications'"
-                  :receive-filtered-items="receiveFilteredItems"
-                >
-                </SearchAdminItem>
-                <div v-for="(medication, index) in state.filtered" :key="index" class="result-card">
-                  <div class="row">
-                    <div class="col-10">
-                        <MedicationSimpleName :medication="medication"></MedicationSimpleName>
-                    </div>
-                    <div class="col-2">
-                      <a href="#" @click.prevent="showUpdateForm(index)">
-                        <i
-                            :id="index"
-                          :class="`bi ${
-                            state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                          }`"
-                        ></i>
-                      </a>
-                    </div>
+                <div v-if="!commerce">
+                  <Message
+                    :title="$t('businessMedicationsAdmin.message.4.title')"
+                    :content="$t('businessMedicationsAdmin.message.4.content')"
+                  />
+                </div>
+                <div v-if="commerce && state.medications.length === 0">
+                  <Message
+                    :title="$t('businessMedicationsAdmin.message.2.title')"
+                    :content="$t('businessMedicationsAdmin.message.2.content')"
+                  />
+                </div>
+                <div class="row mb-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd()"
+                      data-bs-toggle="modal"
+                      data-bs-target="#add-medication"
+                      :disabled="!state.toggles['medications.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
                   </div>
-                  <div v-if="state.extendedEntity === index" class="mt-3">
+                </div>
+                <div>
+                  <SearchAdminItem
+                    :business-items="state.medications"
+                    :type="'medications'"
+                    :receive-filtered-items="receiveFilteredItems"
+                  >
+                  </SearchAdminItem>
+                  <div
+                    v-for="(medication, index) in state.filtered"
+                    :key="index"
+                    class="result-card"
+                  >
+                    <div class="row">
+                      <div class="col-10">
+                        <MedicationSimpleName :medication="medication"></MedicationSimpleName>
+                      </div>
+                      <div class="col-2">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :id="index"
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                    <div v-if="state.extendedEntity === index" class="mt-3">
                       <div class="form-fields-container">
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.name') }}
                           </label>
-                        <input
+                          <input
                             id="update-medication-name-form"
-                          v-model="medication.name"
-                          type="text"
+                            v-model="medication.name"
+                            type="text"
                             class="form-control-modern"
-                          :disabled="!state.toggles['medications.admin.update']"
+                            :disabled="!state.toggles['medications.admin.update']"
                             placeholder=""
-                        />
-                      </div>
+                          />
+                        </div>
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.activePrinciple') }}
                           </label>
-                        <input
+                          <input
                             id="update-medication-activePrinciple-form"
-                          v-model="medication.activePrinciple"
-                          type="text"
+                            v-model="medication.activePrinciple"
+                            type="text"
                             class="form-control-modern"
                             :disabled="!state.toggles['medications.admin.update']"
                             placeholder=""
@@ -507,7 +508,11 @@ export default {
                     :receive-filtered-items="receiveFilteredItems"
                   >
                   </SearchAdminItem>
-                  <div v-for="(medication, index) in state.filtered" :key="index" class="result-card">
+                  <div
+                    v-for="(medication, index) in state.filtered"
+                    :key="index"
+                    class="result-card"
+                  >
                     <div class="row">
                       <div class="col-10">
                         <MedicationSimpleName :medication="medication"></MedicationSimpleName>
@@ -555,63 +560,63 @@ export default {
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.presentation') }}
                           </label>
-                        <input
+                          <input
                             id="update-medication-presentation-form"
-                          v-model="medication.presentation"
-                          type="text"
+                            v-model="medication.presentation"
+                            type="text"
                             class="form-control-modern"
-                          :disabled="!state.toggles['medications.admin.update']"
+                            :disabled="!state.toggles['medications.admin.update']"
                             placeholder=""
-                        />
-                      </div>
+                          />
+                        </div>
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.route') }}
                           </label>
-                        <input
+                          <input
                             id="update-medication-route-form"
-                          v-model="medication.route"
-                          type="text"
+                            v-model="medication.route"
+                            type="text"
                             class="form-control-modern"
-                          :disabled="!state.toggles['medications.admin.update']"
+                            :disabled="!state.toggles['medications.admin.update']"
                             placeholder=""
-                        />
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div class="col">
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                        @click="update(medication)"
-                        :disabled="!state.toggles['medications.admin.update']"
-                      >
-                        {{ $t('businessMedicationsAdmin.update') }} <i class="bi bi-save"></i>
-                      </button>
-                      <button
-                        class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                        @click="goToUnavailable()"
-                        v-if="state.toggles['medications.admin.delete']"
-                      >
-                        {{ $t('businessMedicationsAdmin.delete') }}
-                        <i class="bi bi-trash-fill"></i>
-                      </button>
-                      <AreYouSure
-                        :show="state.goToUnavailable"
-                        @actionYes="unavailable(medication)"
-                        @actionNo="unavailableCancel()"
-                      >
-                      </AreYouSure>
+                      <div class="col">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="update(medication)"
+                          :disabled="!state.toggles['medications.admin.update']"
+                        >
+                          {{ $t('businessMedicationsAdmin.update') }} <i class="bi bi-save"></i>
+                        </button>
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                          @click="goToUnavailable()"
+                          v-if="state.toggles['medications.admin.delete']"
+                        >
+                          {{ $t('businessMedicationsAdmin.delete') }}
+                          <i class="bi bi-trash-fill"></i>
+                        </button>
+                        <AreYouSure
+                          :show="state.goToUnavailable"
+                          @actionYes="unavailable(medication)"
+                          @actionNo="unavailableCancel()"
+                        >
+                        </AreYouSure>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div v-if="(!isActiveBusiness() || !state.toggles['medications.admin.view']) && !loading">
-          <Message
-            :title="$t('businessMedicationsAdmin.message.1.title')"
-            :content="$t('businessMedicationsAdmin.message.1.content')"
-          />
+          <div v-if="(!isActiveBusiness() || !state.toggles['medications.admin.view']) && !loading">
+            <Message
+              :title="$t('businessMedicationsAdmin.message.1.title')"
+              :content="$t('businessMedicationsAdmin.message.1.content')"
+            />
           </div>
         </div>
       </div>
@@ -641,61 +646,57 @@ export default {
           <div class="modal-body text-center mb-0" id="attentions-component">
             <Spinner :show="loading"></Spinner>
             <Alert :show="false" :stack="alertError"></Alert>
-            <div
-              id="add-medication"
-              class="result-card mb-4"
-              v-if="state.showAdd"
-            >
+            <div id="add-medication" class="result-card mb-4" v-if="state.showAdd">
               <div class="form-fields-container">
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('businessMedicationsAdmin.name') }} *
                   </label>
-                <input
+                  <input
                     id="add-medication-name-form"
-                  v-model="state.newMedication.name"
-                  type="text"
+                    v-model="state.newMedication.name"
+                    type="text"
                     class="form-control-modern"
-                  :class="{ 'is-invalid': state.nameError }"
+                    :class="{ 'is-invalid': state.nameError }"
                     placeholder=""
-                />
-              </div>
+                  />
+                </div>
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('businessMedicationsAdmin.commercialName') }}
                   </label>
-                <input
+                  <input
                     id="add-medication-commercialName-form"
-                  v-model="state.newMedication.commercialName"
-                  type="text"
+                    v-model="state.newMedication.commercialName"
+                    type="text"
                     class="form-control-modern"
                     placeholder=""
-                />
-              </div>
+                  />
+                </div>
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('businessMedicationsAdmin.activePrinciple') }} *
                   </label>
-                <input
+                  <input
                     id="add-medication-activePrinciple-form"
-                  v-model="state.newMedication.activePrinciple"
-                  type="text"
+                    v-model="state.newMedication.activePrinciple"
+                    type="text"
                     class="form-control-modern"
                     placeholder=""
-                />
-              </div>
+                  />
+                </div>
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('businessMedicationsAdmin.presentation') }}
                   </label>
-                <input
+                  <input
                     id="add-medication-presentation-form"
-                  v-model="state.newMedication.presentation"
-                  type="text"
+                    v-model="state.newMedication.presentation"
+                    type="text"
                     class="form-control-modern"
                     placeholder=""
-                />
-              </div>
+                  />
+                </div>
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('businessMedicationsAdmin.dosageForm') }}
@@ -707,7 +708,7 @@ export default {
                     class="form-control-modern"
                     placeholder=""
                   />
-            </div>
+                </div>
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('businessMedicationsAdmin.route') }}
@@ -719,27 +720,24 @@ export default {
                     class="form-control-modern"
                     placeholder=""
                   />
+                </div>
               </div>
+              <div class="row g-1 errors" v-if="state.errorsAdd && state.errorsAdd.length > 0">
+                <Warning>
+                  <template v-slot:message>
+                    <li v-for="(error, index) in state.errorsAdd" :key="index">
+                      {{ $t(error) }}
+                    </li>
+                  </template>
+                </Warning>
               </div>
-              <div
-                class="row g-1 errors"
-                v-if="state.errorsAdd && state.errorsAdd.length > 0"
-              >
-              <Warning>
-                <template v-slot:message>
-                  <li v-for="(error, index) in state.errorsAdd" :key="index">
-                    {{ $t(error) }}
-                  </li>
-                </template>
-              </Warning>
-            </div>
               <div class="col mt-3">
-              <button
-                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                @click="add()"
-              >
-                {{ $t('businessMedicationsAdmin.add') }} <i class="bi bi-save"></i>
-              </button>
+                <button
+                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                  @click="add()"
+                >
+                  {{ $t('businessMedicationsAdmin.add') }} <i class="bi bi-save"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -865,5 +863,3 @@ export default {
   }
 }
 </style>
-
-

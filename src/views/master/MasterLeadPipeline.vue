@@ -2355,6 +2355,9 @@ export default {
       };
     });
 
+    // Desktop filters collapsed state
+    const desktopFiltersCollapsed = ref(true);
+
     // Intelligent Insights - Automatically generated recommendations
     const pipelineInsights = computed(() => {
       const insights = [];
@@ -2761,6 +2764,7 @@ export default {
       pipelineStats,
       pipelineInsights,
       showAnalytics,
+      desktopFiltersCollapsed,
     };
   },
 };
@@ -3631,6 +3635,20 @@ export default {
 
         <!-- Filters and Export Section -->
         <div class="control-box mb-4 text-center">
+          <!-- Collapse/Expand Button -->
+          <div class="row mb-2">
+            <div class="col-12 text-end">
+              <button
+                class="btn btn-sm btn-outline-secondary rounded-pill"
+                @click="desktopFiltersCollapsed = !desktopFiltersCollapsed"
+              >
+                <i class="bi" :class="desktopFiltersCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'"></i>
+                {{ desktopFiltersCollapsed ? $t('leadPipeline.showFilters') || 'Mostrar Filtros' : $t('leadPipeline.hideFilters') || 'Ocultar Filtros' }}
+              </button>
+            </div>
+          </div>
+
+          <div v-show="!desktopFiltersCollapsed">
           <div class="row my-2 justify-content-center">
             <div class="col-6 col-md-3">
               <input
@@ -3762,6 +3780,7 @@ export default {
                 </button>
               </div>
             </div>
+          </div>
           </div>
         </div>
 

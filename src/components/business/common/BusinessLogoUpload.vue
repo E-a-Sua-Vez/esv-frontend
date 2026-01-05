@@ -100,17 +100,21 @@ export default {
     };
 
     // Watch for show prop changes to load existing logo
-    watch(() => props.show, (newValue) => {
-      if (newValue && props.businessId) {
-        loadExistingLogo();
-      } else {
-        // Cleanup when modal closes
-        if (existingLogoUrl.value) {
-          URL.revokeObjectURL(existingLogoUrl.value);
-          existingLogoUrl.value = null;
+    watch(
+      () => props.show,
+      newValue => {
+        if (newValue && props.businessId) {
+          loadExistingLogo();
+        } else {
+          // Cleanup when modal closes
+          if (existingLogoUrl.value) {
+            URL.revokeObjectURL(existingLogoUrl.value);
+            existingLogoUrl.value = null;
+          }
         }
-      }
-    }, { immediate: true });
+      },
+      { immediate: true },
+    );
 
     // Close modal
     const closeModal = () => {

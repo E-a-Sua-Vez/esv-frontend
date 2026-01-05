@@ -76,7 +76,10 @@ export default {
           const total = counter / state.limit;
           const totalB = Math.trunc(total);
           state.totalPages = totalB <= 0 ? 1 : counter % state.limit === 0 ? totalB : totalB + 1;
-          const filtered = itemsArray.slice((state.page - 1) * state.limit, state.page * state.limit);
+          const filtered = itemsArray.slice(
+            (state.page - 1) * state.limit,
+            state.page * state.limit,
+          );
           if (isMounted.value) {
             state.filtered = filtered;
           }
@@ -228,7 +231,13 @@ export default {
       { deep: true }
     );
 
-    const watchers = [searchTextWatcher, typeWatcher, pageWatcher, limitWatcher, businessItemsWatcher];
+    const watchers = [
+      searchTextWatcher,
+      typeWatcher,
+      pageWatcher,
+      limitWatcher,
+      businessItemsWatcher,
+    ];
 
     return {
       state,
@@ -262,7 +271,9 @@ export default {
       </div>
       <div v-if="state.types">
         <div class="row justify-content-center my-1" v-if="state.types && state.types.length > 0">
-          <div class="col-12 col-md filter-card d-flex align-items-center justify-content-center flex-wrap gap-2">
+          <div
+            class="col-12 col-md filter-card d-flex align-items-center justify-content-center flex-wrap gap-2"
+          >
             <label class="metric-card-subtitle mx-2 mb-0" for="select-queue">
               {{ $t('dashboard.typeFilter') }}
             </label>

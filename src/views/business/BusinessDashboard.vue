@@ -15,6 +15,7 @@ import Alert from '../../components/common/Alert.vue';
 import DashboardIndicators from '../../components/dashboard/DashboardIndicators.vue';
 import DashboardGraphs from '../../components/dashboard/DashboardGraphs.vue';
 import DashboardSurveys from '../../components/dashboard/DashboardSurveys.vue';
+import DashboardLgpdCompliance from '../../components/dashboard/domain/DashboardLgpdCompliance.vue';
 import DashboardPackageMetrics from '../../components/dashboard/domain/DashboardPackageMetrics.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import { DateModel } from '../../shared/utils/date.model';
@@ -38,6 +39,7 @@ export default {
     DashboardGraphs,
     DashboardSurveys,
     DashboardPackageMetrics,
+    DashboardLgpdCompliance,
     ComponentMenu,
     DesktopContentLayout,
     DesktopFiltersPanel,
@@ -108,6 +110,7 @@ export default {
       showGraphs: false,
       showSurveyResults: false,
       showPackageMetrics: false,
+      showLgpdCompliance: false,
       calculatedMetrics: {
         'attention.created': attentionCreated,
         'survey.created': surveyCreated,
@@ -416,12 +419,15 @@ export default {
       state.showGraphs = false;
       state.showSurveyResults = false;
       state.showPackageMetrics = false;
+      state.showLgpdCompliance = false;
     };
 
     const showGraphs = () => {
       state.showIndicators = false;
       state.showGraphs = true;
       state.showSurveyResults = false;
+      state.showPackageMetrics = false;
+      state.showLgpdCompliance = false;
     };
 
     const showSurvey = () => {
@@ -429,6 +435,7 @@ export default {
       state.showGraphs = false;
       state.showSurveyResults = true;
       state.showPackageMetrics = false;
+      state.showLgpdCompliance = false;
     };
 
     const showPackageMetrics = () => {
@@ -436,6 +443,15 @@ export default {
       state.showGraphs = false;
       state.showSurveyResults = false;
       state.showPackageMetrics = true;
+      state.showLgpdCompliance = false;
+    };
+
+    const showLgpdCompliance = () => {
+      state.showIndicators = false;
+      state.showGraphs = false;
+      state.showSurveyResults = false;
+      state.showPackageMetrics = false;
+      state.showLgpdCompliance = true;
     };
 
     const surveyLabel = label => {
@@ -927,6 +943,7 @@ export default {
       showSurvey,
       showGraphs,
       showPackageMetrics,
+      showLgpdCompliance,
       getCurrentMonth,
       getLastMonth,
       getLastThreeMonths,
@@ -1288,6 +1305,9 @@ export default {
                     <span v-else-if="state.showPackageMetrics">{{
                       $t('package.metrics.title') || 'Métricas de Paquetes'
                     }}</span>
+                    <span v-else-if="state.showLgpdCompliance">{{
+                      $t('dashboard.lgpdCompliance.title') || 'Compliance LGPD'
+                    }}</span>
                   </div>
                   <div id="sub-title" class="metric-subtitle">
                     ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
@@ -1325,6 +1345,17 @@ export default {
                       >
                         {{ $t('dashboard.surveys') }} <br />
                         <i class="bi bi-patch-question-fill"></i>
+                      </button>
+                    </div>
+                    <div class="col-4 centered">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                        :class="state.showLgpdCompliance ? 'btn-selected' : ''"
+                        @click="showLgpdCompliance()"
+                        :disabled="false"
+                      >
+                        {{ $t('dashboard.lgpdCompliance.title') || 'Compliance LGPD' }} <br />
+                        <i class="bi bi-shield-check"></i>
                       </button>
                     </div>
                   </div>
@@ -1378,6 +1409,13 @@ export default {
                       :commerce-id="commerce?.id"
                     >
                     </DashboardPackageMetrics>
+                    <DashboardLgpdCompliance
+                      :commerce="commerce"
+                      :start-date="state.startDate"
+                      :end-date="state.endDate"
+                      v-if="state.showLgpdCompliance"
+                    >
+                    </DashboardLgpdCompliance>
                   </div>
                 </div>
               </template>

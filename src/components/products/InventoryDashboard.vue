@@ -136,7 +136,9 @@ export default {
       if (!this.kpis || !this.kpis.trends) return [];
       // Mostrar todos los puntos o máximo 30 para mejor visualización
       return this.kpis.trends.length > 30
-        ? this.kpis.trends.filter((_, index) => index % Math.ceil(this.kpis.trends.length / 30) === 0)
+        ? this.kpis.trends.filter(
+            (_, index) => index % Math.ceil(this.kpis.trends.length / 30) === 0,
+          )
         : this.kpis.trends;
     },
     getMaxValue(type = 'both') {
@@ -147,10 +149,7 @@ export default {
       } else if (type === 'replacement') {
         return Math.max(...trends.map(t => t.replacement || 0), 1);
       }
-      return Math.max(
-        ...trends.map(t => Math.max(t.consumption || 0, t.replacement || 0)),
-        1
-      );
+      return Math.max(...trends.map(t => Math.max(t.consumption || 0, t.replacement || 0)), 1);
     },
     getBarHeight(value, type) {
       const maxValue = this.getMaxValue(type);
@@ -300,7 +299,12 @@ export default {
     startDate: {
       handler(newVal, oldVal) {
         // Only reload if component is visible, not just a filter instance, and value actually changed
-        if (this.show && this.filtersLocation !== 'slot' && newVal !== oldVal && oldVal !== undefined) {
+        if (
+          this.show &&
+          this.filtersLocation !== 'slot' &&
+          newVal !== oldVal &&
+          oldVal !== undefined
+        ) {
           this.loadKpis();
         }
       },
@@ -308,7 +312,12 @@ export default {
     endDate: {
       handler(newVal, oldVal) {
         // Only reload if component is visible, not just a filter instance, and value actually changed
-        if (this.show && this.filtersLocation !== 'slot' && newVal !== oldVal && oldVal !== undefined) {
+        if (
+          this.show &&
+          this.filtersLocation !== 'slot' &&
+          newVal !== oldVal &&
+          oldVal !== undefined
+        ) {
           this.loadKpis();
         }
       },
@@ -345,622 +354,655 @@ export default {
       :refresh="loadKpis"
     ></slot>
     <div v-if="show" class="inventory-dashboard">
-    <Spinner :show="loading"></Spinner>
+      <Spinner :show="loading"></Spinner>
 
-    <div v-if="!loading && kpis" class="dashboard-content">
-      <!-- KPIs Principales -->
-      <div class="kpis-section">
-        <h3 class="dashboard-title">
-          <i class="bi bi-bar-chart-fill"></i>
-          {{ $t('inventoryDashboard.title') || 'Dashboard de Inventario' }}
-        </h3>
-        <div class="kpis-grid">
-          <!-- KPI: Productos Críticos -->
-          <div class="kpi-card kpi-critical">
-            <div class="kpi-icon">
-              <i class="bi bi-exclamation-triangle-fill"></i>
-            </div>
-            <div class="kpi-content">
-              <div class="kpi-label">
-                {{ $t('inventoryDashboard.critical') || 'Críticos' }}
+      <div v-if="!loading && kpis" class="dashboard-content">
+        <!-- KPIs Principales -->
+        <div class="kpis-section">
+          <h3 class="dashboard-title">
+            <i class="bi bi-bar-chart-fill"></i>
+            {{ $t('inventoryDashboard.title') || 'Dashboard de Inventario' }}
+          </h3>
+          <div class="kpis-grid">
+            <!-- KPI: Productos Críticos -->
+            <div class="kpi-card kpi-critical">
+              <div class="kpi-icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
               </div>
-              <div class="kpi-value">{{ kpis.critical || 0 }}</div>
-              <div class="kpi-description">
-                {{ $t('inventoryDashboard.criticalDesc') || 'Requieren acción inmediata' }}
+              <div class="kpi-content">
+                <div class="kpi-label">
+                  {{ $t('inventoryDashboard.critical') || 'Críticos' }}
+                </div>
+                <div class="kpi-value">{{ kpis.critical || 0 }}</div>
+                <div class="kpi-description">
+                  {{ $t('inventoryDashboard.criticalDesc') || 'Requieren acción inmediata' }}
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- KPI: Productos en Atención -->
-          <div class="kpi-card kpi-warning">
-            <div class="kpi-icon">
-              <i class="bi bi-exclamation-circle-fill"></i>
-            </div>
-            <div class="kpi-content">
-              <div class="kpi-label">
-                {{ $t('inventoryDashboard.attention') || 'En Atención' }}
+            <!-- KPI: Productos en Atención -->
+            <div class="kpi-card kpi-warning">
+              <div class="kpi-icon">
+                <i class="bi bi-exclamation-circle-fill"></i>
               </div>
-              <div class="kpi-value">{{ kpis.attention || 0 }}</div>
-              <div class="kpi-description">
-                {{ $t('inventoryDashboard.attentionDesc') || 'Monitorear de cerca' }}
+              <div class="kpi-content">
+                <div class="kpi-label">
+                  {{ $t('inventoryDashboard.attention') || 'En Atención' }}
+                </div>
+                <div class="kpi-value">{{ kpis.attention || 0 }}</div>
+                <div class="kpi-description">
+                  {{ $t('inventoryDashboard.attentionDesc') || 'Monitorear de cerca' }}
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- KPI: Productos Óptimos -->
-          <div class="kpi-card kpi-success">
-            <div class="kpi-icon">
-              <i class="bi bi-check-circle-fill"></i>
-            </div>
-            <div class="kpi-content">
-              <div class="kpi-label">
-                {{ $t('inventoryDashboard.optimal') || 'Óptimos' }}
+            <!-- KPI: Productos Óptimos -->
+            <div class="kpi-card kpi-success">
+              <div class="kpi-icon">
+                <i class="bi bi-check-circle-fill"></i>
               </div>
-              <div class="kpi-value">{{ kpis.optimal || 0 }}</div>
-              <div class="kpi-description">
-                {{ $t('inventoryDashboard.optimalDesc') || 'Stock en nivel adecuado' }}
+              <div class="kpi-content">
+                <div class="kpi-label">
+                  {{ $t('inventoryDashboard.optimal') || 'Óptimos' }}
+                </div>
+                <div class="kpi-value">{{ kpis.optimal || 0 }}</div>
+                <div class="kpi-description">
+                  {{ $t('inventoryDashboard.optimalDesc') || 'Stock en nivel adecuado' }}
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- KPI: Total de Productos -->
-          <div class="kpi-card kpi-info">
-            <div class="kpi-icon">
-              <i class="bi bi-box-seam-fill"></i>
-            </div>
-            <div class="kpi-content">
-              <div class="kpi-label">
-                {{ $t('inventoryDashboard.total') || 'Total' }}
+            <!-- KPI: Total de Productos -->
+            <div class="kpi-card kpi-info">
+              <div class="kpi-icon">
+                <i class="bi bi-box-seam-fill"></i>
               </div>
-              <div class="kpi-value">{{ kpis.total || 0 }}</div>
-              <div class="kpi-description">
-                {{ $t('inventoryDashboard.totalDesc') || 'Productos en inventario' }}
+              <div class="kpi-content">
+                <div class="kpi-label">
+                  {{ $t('inventoryDashboard.total') || 'Total' }}
+                </div>
+                <div class="kpi-value">{{ kpis.total || 0 }}</div>
+                <div class="kpi-description">
+                  {{ $t('inventoryDashboard.totalDesc') || 'Productos en inventario' }}
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- KPI: Valor Total -->
-          <div class="kpi-card kpi-value-card">
-            <div class="kpi-icon">
-              <i class="bi bi-currency-dollar"></i>
-            </div>
-            <div class="kpi-content">
-              <div class="kpi-label">
-                {{ $t('inventoryDashboard.totalValue') || 'Valor Total' }}
+            <!-- KPI: Valor Total -->
+            <div class="kpi-card kpi-value-card">
+              <div class="kpi-icon">
+                <i class="bi bi-currency-dollar"></i>
               </div>
-              <div class="kpi-value">{{ formatCurrency(kpis.totalValue) }}</div>
-              <div class="kpi-description">
-                {{ $t('inventoryDashboard.totalValueDesc') || 'Valor del inventario' }}
+              <div class="kpi-content">
+                <div class="kpi-label">
+                  {{ $t('inventoryDashboard.totalValue') || 'Valor Total' }}
+                </div>
+                <div class="kpi-value">{{ formatCurrency(kpis.totalValue) }}</div>
+                <div class="kpi-description">
+                  {{ $t('inventoryDashboard.totalValueDesc') || 'Valor del inventario' }}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Métricas Temporales -->
-      <div v-if="kpis.periodMetrics" class="period-metrics-section">
-        <h4 class="section-title">
-          <i class="bi bi-calendar-check"></i>
-          {{ $t('inventoryDashboard.periodMetrics') || 'Métricas del Período' }}
-        </h4>
-        <div class="period-metrics-grid">
-          <!-- Consumo Total -->
-          <div class="period-metric-card">
-            <div class="period-metric-header">
-              <div class="period-metric-icon consumption">
-                <i class="bi bi-arrow-down-circle-fill"></i>
+        <!-- Métricas Temporales -->
+        <div v-if="kpis.periodMetrics" class="period-metrics-section">
+          <h4 class="section-title">
+            <i class="bi bi-calendar-check"></i>
+            {{ $t('inventoryDashboard.periodMetrics') || 'Métricas del Período' }}
+          </h4>
+          <div class="period-metrics-grid">
+            <!-- Consumo Total -->
+            <div class="period-metric-card">
+              <div class="period-metric-header">
+                <div class="period-metric-icon consumption">
+                  <i class="bi bi-arrow-down-circle-fill"></i>
+                </div>
+                <div class="period-metric-title">
+                  {{ $t('inventoryDashboard.consumption') || 'Consumo Total' }}
+                </div>
               </div>
-              <div class="period-metric-title">
-                {{ $t('inventoryDashboard.consumption') || 'Consumo Total' }}
+              <div class="period-metric-value">
+                {{ formatNumber(kpis.periodMetrics.consumption.total) }}
               </div>
-            </div>
-            <div class="period-metric-value">
-              {{ formatNumber(kpis.periodMetrics.consumption.total) }}
-            </div>
-            <div class="period-metric-details">
-              <div class="period-metric-detail">
-                <span class="detail-label">{{ $t('inventoryDashboard.dailyAverage') || 'Promedio Diario' }}:</span>
-                <span class="detail-value">{{ formatNumber(kpis.periodMetrics.consumption.avgDaily) }}</span>
-              </div>
-              <div class="period-metric-detail">
-                <span class="detail-label">{{ $t('inventoryDashboard.transactions') || 'Transacciones' }}:</span>
-                <span class="detail-value">{{ kpis.periodMetrics.consumption.count }}</span>
-              </div>
-              <div
-                v-if="kpis.periodMetrics.consumption.vsPreviousPeriod !== null"
-                class="period-metric-comparison"
-                :class="{
-                  'trend-up': kpis.periodMetrics.consumption.trend === 'up',
-                  'trend-down': kpis.periodMetrics.consumption.trend === 'down',
-                  'trend-stable': kpis.periodMetrics.consumption.trend === 'stable',
-                }"
-              >
-                <i
+              <div class="period-metric-details">
+                <div class="period-metric-detail">
+                  <span class="detail-label"
+                    >{{ $t('inventoryDashboard.dailyAverage') || 'Promedio Diario' }}:</span
+                  >
+                  <span class="detail-value">{{
+                    formatNumber(kpis.periodMetrics.consumption.avgDaily)
+                  }}</span>
+                </div>
+                <div class="period-metric-detail">
+                  <span class="detail-label"
+                    >{{ $t('inventoryDashboard.transactions') || 'Transacciones' }}:</span
+                  >
+                  <span class="detail-value">{{ kpis.periodMetrics.consumption.count }}</span>
+                </div>
+                <div
+                  v-if="kpis.periodMetrics.consumption.vsPreviousPeriod !== null"
+                  class="period-metric-comparison"
                   :class="{
-                    'bi bi-arrow-up-circle-fill': kpis.periodMetrics.consumption.trend === 'up',
-                    'bi bi-arrow-down-circle-fill': kpis.periodMetrics.consumption.trend === 'down',
-                    'bi bi-dash-circle': kpis.periodMetrics.consumption.trend === 'stable',
-                  }"
-                ></i>
-                <span>
-                  {{ formatPercentage(Math.abs(kpis.periodMetrics.consumption.vsPreviousPeriod)) }}
-                  {{ $t('inventoryDashboard.vsPreviousPeriod') || 'vs período anterior' }}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Recargas Total -->
-          <div class="period-metric-card">
-            <div class="period-metric-header">
-              <div class="period-metric-icon replacement">
-                <i class="bi bi-arrow-up-circle-fill"></i>
-              </div>
-              <div class="period-metric-title">
-                {{ $t('inventoryDashboard.replacement') || 'Recargas Total' }}
-              </div>
-            </div>
-            <div class="period-metric-value">
-              {{ formatNumber(kpis.periodMetrics.replacement.total) }}
-            </div>
-            <div class="period-metric-details">
-              <div class="period-metric-detail">
-                <span class="detail-label">{{ $t('inventoryDashboard.dailyAverage') || 'Promedio Diario' }}:</span>
-                <span class="detail-value">{{ formatNumber(kpis.periodMetrics.replacement.avgDaily) }}</span>
-              </div>
-              <div class="period-metric-detail">
-                <span class="detail-label">{{ $t('inventoryDashboard.transactions') || 'Transacciones' }}:</span>
-                <span class="detail-value">{{ kpis.periodMetrics.replacement.count }}</span>
-              </div>
-              <div
-                v-if="kpis.periodMetrics.replacement.vsPreviousPeriod !== null"
-                class="period-metric-comparison"
-                :class="{
-                  'trend-up': kpis.periodMetrics.replacement.trend === 'up',
-                  'trend-down': kpis.periodMetrics.replacement.trend === 'down',
-                  'trend-stable': kpis.periodMetrics.replacement.trend === 'stable',
-                }"
-              >
-                <i
-                  :class="{
-                    'bi bi-arrow-up-circle-fill': kpis.periodMetrics.replacement.trend === 'up',
-                    'bi bi-arrow-down-circle-fill': kpis.periodMetrics.replacement.trend === 'down',
-                    'bi bi-dash-circle': kpis.periodMetrics.replacement.trend === 'stable',
-                  }"
-                ></i>
-                <span>
-                  {{ formatPercentage(Math.abs(kpis.periodMetrics.replacement.vsPreviousPeriod)) }}
-                  {{ $t('inventoryDashboard.vsPreviousPeriod') || 'vs período anterior' }}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Balance Neto -->
-          <div class="period-metric-card">
-            <div class="period-metric-header">
-              <div
-                class="period-metric-icon balance"
-                :class="{
-                  'balance-positive': kpis.periodMetrics.balance.net > 0,
-                  'balance-negative': kpis.periodMetrics.balance.net < 0,
-                  'balance-neutral': kpis.periodMetrics.balance.net === 0,
-                }"
-              >
-                <i class="bi bi-scale"></i>
-              </div>
-              <div class="period-metric-title">
-                {{ $t('inventoryDashboard.netBalance') || 'Balance Neto' }}
-              </div>
-            </div>
-            <div
-              class="period-metric-value"
-              :class="{
-                'text-success': kpis.periodMetrics.balance.net > 0,
-                'text-danger': kpis.periodMetrics.balance.net < 0,
-                'text-muted': kpis.periodMetrics.balance.net === 0,
-              }"
-            >
-              {{ formatNumber(kpis.periodMetrics.balance.net) }}
-            </div>
-            <div class="period-metric-details">
-              <div class="period-metric-detail">
-                <span class="detail-label">{{ $t('inventoryDashboard.ratio') || 'Ratio Recarga/Consumo' }}:</span>
-                <span class="detail-value">
-                  {{
-                    kpis.periodMetrics.balance.ratio !== null
-                      ? formatNumber(kpis.periodMetrics.balance.ratio, 2)
-                      : 'N/A'
-                  }}
-                </span>
-              </div>
-              <div class="period-metric-detail">
-                <span class="detail-label">{{ $t('inventoryDashboard.periodDays') || 'Días del Período' }}:</span>
-                <span class="detail-value">{{ kpis.periodMetrics.days }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Panel de Alertas Activas -->
-      <div class="alerts-section">
-        <h4 class="section-title">
-          <i class="bi bi-bell-fill text-warning"></i>
-          {{ $t('inventoryDashboard.activeAlerts') || 'Alertas Activas' }}
-        </h4>
-        <div class="alerts-list">
-          <!-- Alertas desde backend (más detalladas) -->
-          <div
-            v-for="(alert, index) in alerts"
-            :key="`alert-${index}`"
-            class="alert-item"
-            :class="{
-              'alert-critical': alert.level === 'CRITICAL',
-              'alert-warning': alert.level === 'ATTENTION' || alert.level === 'EXPIRATION',
-              'alert-info': alert.level === 'PREVENTIVE',
-            }"
-          >
-            <i
-              :class="{
-                'bi bi-exclamation-triangle-fill': alert.level === 'CRITICAL',
-                'bi bi-heart-pulse-fill': alert.level === 'EXPIRATION',
-                'bi bi-exclamation-circle-fill': alert.level === 'ATTENTION',
-                'bi bi-info-circle-fill': alert.level === 'PREVENTIVE',
-              }"
-            ></i>
-            <div class="alert-content">
-              <div class="alert-title">{{ alert.productName }}</div>
-              <div class="alert-description">{{ alert.message }}</div>
-              <div v-if="alert.daysUntilStockout" class="alert-detail">
-                <i class="bi bi-clock"></i>
-                {{ $t('inventoryDashboard.daysUntilStockout') || 'Días hasta agotarse' }}:
-                <strong>{{ alert.daysUntilStockout }}</strong>
-              </div>
-              <div v-if="alert.daysUntilExpiration" class="alert-detail">
-                <i class="bi bi-calendar-x"></i>
-                {{ $t('inventoryDashboard.daysUntilExpiration') || 'Días hasta expiración' }}:
-                <strong>{{ alert.daysUntilExpiration }}</strong>
-              </div>
-            </div>
-            <div class="alert-action">
-              <button
-                class="btn btn-sm btn-danger rounded-pill px-3"
-                @click="quickRecharge(alert.productId)"
-                v-if="alert.level === 'CRITICAL'"
-              >
-                <i class="bi bi-lightning-charge text-white"></i>
-                {{ $t('inventoryDashboard.recharge') || 'Recargar' }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Resumen de KPIs (si no hay alertas detalladas) -->
-          <template v-if="alerts.length === 0">
-            <div v-if="kpis.critical > 0" class="alert-item alert-critical">
-              <i class="bi bi-exclamation-triangle-fill"></i>
-              <div class="alert-content">
-                <div class="alert-title">
-                  {{ $t('inventoryDashboard.alertCritical') || 'Productos Críticos' }}
-                </div>
-                <div class="alert-description">
-                  {{ kpis.critical }}
-                  {{
-                    $t('inventoryDashboard.productsNeedAction') ||
-                    'productos requieren acción inmediata'
-                  }}
-                </div>
-              </div>
-              <div class="alert-count">{{ kpis.critical }}</div>
-            </div>
-            <div
-              v-if="kpis.expiringSoon && kpis.expiringSoon.length > 0"
-              class="alert-item alert-warning"
-            >
-              <i class="bi bi-heart-pulse-fill"></i>
-              <div class="alert-content">
-                <div class="alert-title">
-                  {{ $t('inventoryDashboard.alertExpiring') || 'Productos Próximos a Expirar' }}
-                </div>
-                <div class="alert-description">
-                  {{ kpis.expiringSoon.length }}
-                  {{
-                    $t('inventoryDashboard.productsExpiring') ||
-                    'productos expiran en los próximos 30 días'
-                  }}
-                </div>
-              </div>
-              <div class="alert-count">{{ kpis.expiringSoon.length }}</div>
-            </div>
-            <div v-if="kpis.attention > 0" class="alert-item alert-info">
-              <i class="bi bi-exclamation-circle-fill"></i>
-              <div class="alert-content">
-                <div class="alert-title">
-                  {{ $t('inventoryDashboard.alertAttention') || 'Productos en Atención' }}
-                </div>
-                <div class="alert-description">
-                  {{ kpis.attention }}
-                  {{ $t('inventoryDashboard.productsMonitor') || 'productos requieren monitoreo' }}
-                </div>
-              </div>
-              <div class="alert-count">{{ kpis.attention }}</div>
-            </div>
-            <div
-              v-if="
-                (!kpis.critical || kpis.critical === 0) &&
-                (!kpis.expiringSoon || kpis.expiringSoon.length === 0) &&
-                (!kpis.attention || kpis.attention === 0)
-              "
-              class="alert-item alert-success"
-            >
-              <i class="bi bi-check-circle-fill"></i>
-              <div class="alert-content">
-                <div class="alert-title">
-                  {{ $t('inventoryDashboard.allGood') || 'Todo en Orden' }}
-                </div>
-                <div class="alert-description">
-                  {{
-                    $t('inventoryDashboard.noAlerts') || 'No hay alertas activas en este momento'
-                  }}
-                </div>
-              </div>
-            </div>
-          </template>
-        </div>
-      </div>
-
-      <!-- Productos Críticos -->
-      <div
-        v-if="kpis.criticalProducts && kpis.criticalProducts.length > 0"
-        class="critical-products-section"
-      >
-        <h4 class="section-title">
-          <i class="bi bi-exclamation-triangle-fill text-danger"></i>
-          {{ $t('inventoryDashboard.criticalProducts') || 'Productos Críticos' }}
-        </h4>
-        <div class="critical-products-list">
-          <div
-            v-for="product in kpis.criticalProducts"
-            :key="product.productId"
-            class="critical-product-card"
-          >
-            <div class="product-info">
-              <div class="product-name">{{ product.productName }}</div>
-              <div class="product-stock">
-                <span class="stock-level">
-                  Stock: <strong>{{ product.actualLevel }}</strong> /
-                  {{ product.maximumLevel }}
-                </span>
-                <span
-                  class="stock-percentage"
-                  :class="{
-                    'text-danger': product.percentage <= 10,
-                    'text-warning': product.percentage > 10 && product.percentage <= 25,
+                    'trend-up': kpis.periodMetrics.consumption.trend === 'up',
+                    'trend-down': kpis.periodMetrics.consumption.trend === 'down',
+                    'trend-stable': kpis.periodMetrics.consumption.trend === 'stable',
                   }"
                 >
-                  ({{ formatPercentage(product.percentage) }})
-                </span>
-              </div>
-              <div v-if="product.daysUntilStockout !== null" class="product-prediction">
-                <i class="bi bi-clock"></i>
-                {{ $t('inventoryDashboard.stockoutIn') || 'Se agotará en' }}:
-                <strong>{{ getDaysUntilStockoutText(product.daysUntilStockout) }}</strong>
+                  <i
+                    :class="{
+                      'bi bi-arrow-up-circle-fill': kpis.periodMetrics.consumption.trend === 'up',
+                      'bi bi-arrow-down-circle-fill':
+                        kpis.periodMetrics.consumption.trend === 'down',
+                      'bi bi-dash-circle': kpis.periodMetrics.consumption.trend === 'stable',
+                    }"
+                  ></i>
+                  <span>
+                    {{
+                      formatPercentage(Math.abs(kpis.periodMetrics.consumption.vsPreviousPeriod))
+                    }}
+                    {{ $t('inventoryDashboard.vsPreviousPeriod') || 'vs período anterior' }}
+                  </span>
+                </div>
               </div>
             </div>
-            <div class="product-actions">
-              <button
-                class="btn btn-sm btn-danger rounded-pill px-3"
-                @click="quickRecharge(product.productId)"
-              >
-                <i class="bi bi-lightning-charge text-white"></i>
-                {{ $t('inventoryDashboard.recharge') || 'Recargar' }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Productos Próximos a Expirar -->
-      <div v-if="kpis.expiringSoon && kpis.expiringSoon.length > 0" class="expiring-section">
-        <h4 class="section-title">
-          <i class="bi bi-heart-pulse-fill text-warning"></i>
-          {{ $t('inventoryDashboard.expiringSoon') || 'Próximos a Expirar' }}
-        </h4>
-        <div class="expiring-list">
-          <div
-            v-for="product in kpis.expiringSoon"
-            :key="product.productId"
-            class="expiring-product-card"
-          >
-            <div class="product-info">
-              <div class="product-name">{{ product.productName }}</div>
-              <div class="expiration-info">
-                <i class="bi bi-calendar-x"></i>
-                {{ $t('inventoryDashboard.expires') || 'Expira' }}:
-                <strong>{{ getExpirationText(product.daysUntilExpiration) }}</strong>
-                <span class="expiration-date">
-                  ({{ new Date(product.expirationDate).toLocaleDateString() }})
-                </span>
+            <!-- Recargas Total -->
+            <div class="period-metric-card">
+              <div class="period-metric-header">
+                <div class="period-metric-icon replacement">
+                  <i class="bi bi-arrow-up-circle-fill"></i>
+                </div>
+                <div class="period-metric-title">
+                  {{ $t('inventoryDashboard.replacement') || 'Recargas Total' }}
+                </div>
+              </div>
+              <div class="period-metric-value">
+                {{ formatNumber(kpis.periodMetrics.replacement.total) }}
+              </div>
+              <div class="period-metric-details">
+                <div class="period-metric-detail">
+                  <span class="detail-label"
+                    >{{ $t('inventoryDashboard.dailyAverage') || 'Promedio Diario' }}:</span
+                  >
+                  <span class="detail-value">{{
+                    formatNumber(kpis.periodMetrics.replacement.avgDaily)
+                  }}</span>
+                </div>
+                <div class="period-metric-detail">
+                  <span class="detail-label"
+                    >{{ $t('inventoryDashboard.transactions') || 'Transacciones' }}:</span
+                  >
+                  <span class="detail-value">{{ kpis.periodMetrics.replacement.count }}</span>
+                </div>
+                <div
+                  v-if="kpis.periodMetrics.replacement.vsPreviousPeriod !== null"
+                  class="period-metric-comparison"
+                  :class="{
+                    'trend-up': kpis.periodMetrics.replacement.trend === 'up',
+                    'trend-down': kpis.periodMetrics.replacement.trend === 'down',
+                    'trend-stable': kpis.periodMetrics.replacement.trend === 'stable',
+                  }"
+                >
+                  <i
+                    :class="{
+                      'bi bi-arrow-up-circle-fill': kpis.periodMetrics.replacement.trend === 'up',
+                      'bi bi-arrow-down-circle-fill':
+                        kpis.periodMetrics.replacement.trend === 'down',
+                      'bi bi-dash-circle': kpis.periodMetrics.replacement.trend === 'stable',
+                    }"
+                  ></i>
+                  <span>
+                    {{
+                      formatPercentage(Math.abs(kpis.periodMetrics.replacement.vsPreviousPeriod))
+                    }}
+                    {{ $t('inventoryDashboard.vsPreviousPeriod') || 'vs período anterior' }}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Gráficos de Evolución -->
-      <div v-if="kpis.trends && kpis.trends.length > 0" class="charts-section">
-        <!-- Gráfico Comparativo Consumo vs Recarga (Barras Agrupadas) -->
-        <div class="chart-section">
-          <h4 class="section-title">
-            <i class="bi bi-bar-chart"></i>
-            {{ $t('inventoryDashboard.comparativeChart') || 'Comparativo Consumo vs Recarga' }}
-            <span v-if="startDate && endDate" class="trends-period">
-              ({{ new Date(startDate).toLocaleDateString() }} - {{ new Date(endDate).toLocaleDateString() }})
-            </span>
-          </h4>
-          <div class="trends-chart">
-            <div class="trends-legend">
-              <span class="legend-item">
-                <span class="legend-color consumption"></span>
-                {{ $t('inventoryDashboard.consumption') || 'Consumo' }}
-              </span>
-              <span class="legend-item">
-                <span class="legend-color replacement"></span>
-                {{ $t('inventoryDashboard.replacement') || 'Recargas' }}
-              </span>
-            </div>
-            <div class="trends-bars">
+            <!-- Balance Neto -->
+            <div class="period-metric-card">
+              <div class="period-metric-header">
+                <div
+                  class="period-metric-icon balance"
+                  :class="{
+                    'balance-positive': kpis.periodMetrics.balance.net > 0,
+                    'balance-negative': kpis.periodMetrics.balance.net < 0,
+                    'balance-neutral': kpis.periodMetrics.balance.net === 0,
+                  }"
+                >
+                  <i class="bi bi-scale"></i>
+                </div>
+                <div class="period-metric-title">
+                  {{ $t('inventoryDashboard.netBalance') || 'Balance Neto' }}
+                </div>
+              </div>
               <div
-                v-for="(trend, index) in getDisplayTrends()"
-                :key="index"
-                class="trend-bar-group"
+                class="period-metric-value"
+                :class="{
+                  'text-success': kpis.periodMetrics.balance.net > 0,
+                  'text-danger': kpis.periodMetrics.balance.net < 0,
+                  'text-muted': kpis.periodMetrics.balance.net === 0,
+                }"
               >
-                <div class="trend-date">
-                  {{
-                    new Date(trend.date).toLocaleDateString('es-ES', {
-                      day: '2-digit',
-                      month: '2-digit',
-                    })
-                  }}
+                {{ formatNumber(kpis.periodMetrics.balance.net) }}
+              </div>
+              <div class="period-metric-details">
+                <div class="period-metric-detail">
+                  <span class="detail-label"
+                    >{{ $t('inventoryDashboard.ratio') || 'Ratio Recarga/Consumo' }}:</span
+                  >
+                  <span class="detail-value">
+                    {{
+                      kpis.periodMetrics.balance.ratio !== null
+                        ? formatNumber(kpis.periodMetrics.balance.ratio, 2)
+                        : 'N/A'
+                    }}
+                  </span>
                 </div>
-                <div class="trend-bars-container">
-                  <div
-                    class="trend-bar consumption-bar"
-                    :style="getBarHeight(trend.consumption, 'consumption')"
-                    :title="`${$t('inventoryDashboard.consumption') || 'Consumo'}: ${formatNumber(trend.consumption)}`"
-                  ></div>
-                  <div
-                    class="trend-bar replacement-bar"
-                    :style="getBarHeight(trend.replacement, 'replacement')"
-                    :title="`${$t('inventoryDashboard.replacement') || 'Recargas'}: ${formatNumber(trend.replacement)}`"
-                  ></div>
+                <div class="period-metric-detail">
+                  <span class="detail-label"
+                    >{{ $t('inventoryDashboard.periodDays') || 'Días del Período' }}:</span
+                  >
+                  <span class="detail-value">{{ kpis.periodMetrics.days }}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Gráfico de Evolución de Consumo (Línea) -->
-        <div class="chart-section">
+        <!-- Panel de Alertas Activas -->
+        <div class="alerts-section">
           <h4 class="section-title">
-            <i class="bi bi-graph-up-arrow"></i>
-            {{ $t('inventoryDashboard.consumptionEvolution') || 'Evolución de Consumo' }}
+            <i class="bi bi-bell-fill text-warning"></i>
+            {{ $t('inventoryDashboard.activeAlerts') || 'Alertas Activas' }}
           </h4>
-          <div class="line-chart-container">
-            <div class="line-chart">
-              <svg class="line-chart-svg" :viewBox="getLineChartViewBox()">
-                <defs>
-                  <linearGradient id="consumptionGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#dc3545;stop-opacity:0.3" />
-                    <stop offset="100%" style="stop-color:#dc3545;stop-opacity:0" />
-                  </linearGradient>
-                </defs>
-                <polyline
-                  :points="getConsumptionLinePoints()"
-                  fill="none"
-                  stroke="#dc3545"
-                  stroke-width="2"
-                  class="line-chart-line"
-                />
-                <polygon
-                  :points="getConsumptionAreaPoints()"
-                  fill="url(#consumptionGradient)"
-                  class="line-chart-area"
-                />
-                <g v-for="(point, index) in getConsumptionPoints()" :key="index">
-                  <circle
-                    :cx="point.x"
-                    :cy="point.y"
-                    r="4"
-                    fill="#dc3545"
-                    class="line-chart-point"
-                    :title="`${formatNumber(point.value)} - ${new Date(point.date).toLocaleDateString()}`"
-                  />
-                </g>
-              </svg>
-              <div class="line-chart-labels">
+          <div class="alerts-list">
+            <!-- Alertas desde backend (más detalladas) -->
+            <div
+              v-for="(alert, index) in alerts"
+              :key="`alert-${index}`"
+              class="alert-item"
+              :class="{
+                'alert-critical': alert.level === 'CRITICAL',
+                'alert-warning': alert.level === 'ATTENTION' || alert.level === 'EXPIRATION',
+                'alert-info': alert.level === 'PREVENTIVE',
+              }"
+            >
+              <i
+                :class="{
+                  'bi bi-exclamation-triangle-fill': alert.level === 'CRITICAL',
+                  'bi bi-heart-pulse-fill': alert.level === 'EXPIRATION',
+                  'bi bi-exclamation-circle-fill': alert.level === 'ATTENTION',
+                  'bi bi-info-circle-fill': alert.level === 'PREVENTIVE',
+                }"
+              ></i>
+              <div class="alert-content">
+                <div class="alert-title">{{ alert.productName }}</div>
+                <div class="alert-description">{{ alert.message }}</div>
+                <div v-if="alert.daysUntilStockout" class="alert-detail">
+                  <i class="bi bi-clock"></i>
+                  {{ $t('inventoryDashboard.daysUntilStockout') || 'Días hasta agotarse' }}:
+                  <strong>{{ alert.daysUntilStockout }}</strong>
+                </div>
+                <div v-if="alert.daysUntilExpiration" class="alert-detail">
+                  <i class="bi bi-calendar-x"></i>
+                  {{ $t('inventoryDashboard.daysUntilExpiration') || 'Días hasta expiración' }}:
+                  <strong>{{ alert.daysUntilExpiration }}</strong>
+                </div>
+              </div>
+              <div class="alert-action">
+                <button
+                  class="btn btn-sm btn-danger rounded-pill px-3"
+                  @click="quickRecharge(alert.productId)"
+                  v-if="alert.level === 'CRITICAL'"
+                >
+                  <i class="bi bi-lightning-charge text-white"></i>
+                  {{ $t('inventoryDashboard.recharge') || 'Recargar' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Resumen de KPIs (si no hay alertas detalladas) -->
+            <template v-if="alerts.length === 0">
+              <div v-if="kpis.critical > 0" class="alert-item alert-critical">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div class="alert-content">
+                  <div class="alert-title">
+                    {{ $t('inventoryDashboard.alertCritical') || 'Productos Críticos' }}
+                  </div>
+                  <div class="alert-description">
+                    {{ kpis.critical }}
+                    {{
+                      $t('inventoryDashboard.productsNeedAction') ||
+                      'productos requieren acción inmediata'
+                    }}
+                  </div>
+                </div>
+                <div class="alert-count">{{ kpis.critical }}</div>
+              </div>
+              <div
+                v-if="kpis.expiringSoon && kpis.expiringSoon.length > 0"
+                class="alert-item alert-warning"
+              >
+                <i class="bi bi-heart-pulse-fill"></i>
+                <div class="alert-content">
+                  <div class="alert-title">
+                    {{ $t('inventoryDashboard.alertExpiring') || 'Productos Próximos a Expirar' }}
+                  </div>
+                  <div class="alert-description">
+                    {{ kpis.expiringSoon.length }}
+                    {{
+                      $t('inventoryDashboard.productsExpiring') ||
+                      'productos expiran en los próximos 30 días'
+                    }}
+                  </div>
+                </div>
+                <div class="alert-count">{{ kpis.expiringSoon.length }}</div>
+              </div>
+              <div v-if="kpis.attention > 0" class="alert-item alert-info">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <div class="alert-content">
+                  <div class="alert-title">
+                    {{ $t('inventoryDashboard.alertAttention') || 'Productos en Atención' }}
+                  </div>
+                  <div class="alert-description">
+                    {{ kpis.attention }}
+                    {{
+                      $t('inventoryDashboard.productsMonitor') || 'productos requieren monitoreo'
+                    }}
+                  </div>
+                </div>
+                <div class="alert-count">{{ kpis.attention }}</div>
+              </div>
+              <div
+                v-if="
+                  (!kpis.critical || kpis.critical === 0) &&
+                  (!kpis.expiringSoon || kpis.expiringSoon.length === 0) &&
+                  (!kpis.attention || kpis.attention === 0)
+                "
+                class="alert-item alert-success"
+              >
+                <i class="bi bi-check-circle-fill"></i>
+                <div class="alert-content">
+                  <div class="alert-title">
+                    {{ $t('inventoryDashboard.allGood') || 'Todo en Orden' }}
+                  </div>
+                  <div class="alert-description">
+                    {{
+                      $t('inventoryDashboard.noAlerts') || 'No hay alertas activas en este momento'
+                    }}
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Productos Críticos -->
+        <div
+          v-if="kpis.criticalProducts && kpis.criticalProducts.length > 0"
+          class="critical-products-section"
+        >
+          <h4 class="section-title">
+            <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+            {{ $t('inventoryDashboard.criticalProducts') || 'Productos Críticos' }}
+          </h4>
+          <div class="critical-products-list">
+            <div
+              v-for="product in kpis.criticalProducts"
+              :key="product.productId"
+              class="critical-product-card"
+            >
+              <div class="product-info">
+                <div class="product-name">{{ product.productName }}</div>
+                <div class="product-stock">
+                  <span class="stock-level">
+                    Stock: <strong>{{ product.actualLevel }}</strong> /
+                    {{ product.maximumLevel }}
+                  </span>
+                  <span
+                    class="stock-percentage"
+                    :class="{
+                      'text-danger': product.percentage <= 10,
+                      'text-warning': product.percentage > 10 && product.percentage <= 25,
+                    }"
+                  >
+                    ({{ formatPercentage(product.percentage) }})
+                  </span>
+                </div>
+                <div v-if="product.daysUntilStockout !== null" class="product-prediction">
+                  <i class="bi bi-clock"></i>
+                  {{ $t('inventoryDashboard.stockoutIn') || 'Se agotará en' }}:
+                  <strong>{{ getDaysUntilStockoutText(product.daysUntilStockout) }}</strong>
+                </div>
+              </div>
+              <div class="product-actions">
+                <button
+                  class="btn btn-sm btn-danger rounded-pill px-3"
+                  @click="quickRecharge(product.productId)"
+                >
+                  <i class="bi bi-lightning-charge text-white"></i>
+                  {{ $t('inventoryDashboard.recharge') || 'Recargar' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Productos Próximos a Expirar -->
+        <div v-if="kpis.expiringSoon && kpis.expiringSoon.length > 0" class="expiring-section">
+          <h4 class="section-title">
+            <i class="bi bi-heart-pulse-fill text-warning"></i>
+            {{ $t('inventoryDashboard.expiringSoon') || 'Próximos a Expirar' }}
+          </h4>
+          <div class="expiring-list">
+            <div
+              v-for="product in kpis.expiringSoon"
+              :key="product.productId"
+              class="expiring-product-card"
+            >
+              <div class="product-info">
+                <div class="product-name">{{ product.productName }}</div>
+                <div class="expiration-info">
+                  <i class="bi bi-calendar-x"></i>
+                  {{ $t('inventoryDashboard.expires') || 'Expira' }}:
+                  <strong>{{ getExpirationText(product.daysUntilExpiration) }}</strong>
+                  <span class="expiration-date">
+                    ({{ new Date(product.expirationDate).toLocaleDateString() }})
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráficos de Evolución -->
+        <div v-if="kpis.trends && kpis.trends.length > 0" class="charts-section">
+          <!-- Gráfico Comparativo Consumo vs Recarga (Barras Agrupadas) -->
+          <div class="chart-section">
+            <h4 class="section-title">
+              <i class="bi bi-bar-chart"></i>
+              {{ $t('inventoryDashboard.comparativeChart') || 'Comparativo Consumo vs Recarga' }}
+              <span v-if="startDate && endDate" class="trends-period">
+                ({{ new Date(startDate).toLocaleDateString() }} -
+                {{ new Date(endDate).toLocaleDateString() }})
+              </span>
+            </h4>
+            <div class="trends-chart">
+              <div class="trends-legend">
+                <span class="legend-item">
+                  <span class="legend-color consumption"></span>
+                  {{ $t('inventoryDashboard.consumption') || 'Consumo' }}
+                </span>
+                <span class="legend-item">
+                  <span class="legend-color replacement"></span>
+                  {{ $t('inventoryDashboard.replacement') || 'Recargas' }}
+                </span>
+              </div>
+              <div class="trends-bars">
                 <div
                   v-for="(trend, index) in getDisplayTrends()"
                   :key="index"
-                  class="line-chart-label"
+                  class="trend-bar-group"
                 >
-                  {{
-                    new Date(trend.date).toLocaleDateString('es-ES', {
-                      day: '2-digit',
-                      month: '2-digit',
-                    })
-                  }}
+                  <div class="trend-date">
+                    {{
+                      new Date(trend.date).toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                      })
+                    }}
+                  </div>
+                  <div class="trend-bars-container">
+                    <div
+                      class="trend-bar consumption-bar"
+                      :style="getBarHeight(trend.consumption, 'consumption')"
+                      :title="`${$t('inventoryDashboard.consumption') || 'Consumo'}: ${formatNumber(
+                        trend.consumption
+                      )}`"
+                    ></div>
+                    <div
+                      class="trend-bar replacement-bar"
+                      :style="getBarHeight(trend.replacement, 'replacement')"
+                      :title="`${
+                        $t('inventoryDashboard.replacement') || 'Recargas'
+                      }: ${formatNumber(trend.replacement)}`"
+                    ></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Gráfico de Evolución de Recargas (Línea) -->
-        <div class="chart-section">
-          <h4 class="section-title">
-            <i class="bi bi-graph-up-arrow"></i>
-            {{ $t('inventoryDashboard.replacementEvolution') || 'Evolución de Recargas' }}
-          </h4>
-          <div class="line-chart-container">
-            <div class="line-chart">
-              <svg class="line-chart-svg" :viewBox="getLineChartViewBox()">
-                <defs>
-                  <linearGradient id="replacementGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#28a745;stop-opacity:0.3" />
-                    <stop offset="100%" style="stop-color:#28a745;stop-opacity:0" />
-                  </linearGradient>
-                </defs>
-                <polyline
-                  :points="getReplacementLinePoints()"
-                  fill="none"
-                  stroke="#28a745"
-                  stroke-width="2"
-                  class="line-chart-line"
-                />
-                <polygon
-                  :points="getReplacementAreaPoints()"
-                  fill="url(#replacementGradient)"
-                  class="line-chart-area"
-                />
-                <g v-for="(point, index) in getReplacementPoints()" :key="index">
-                  <circle
-                    :cx="point.x"
-                    :cy="point.y"
-                    r="4"
-                    fill="#28a745"
-                    class="line-chart-point"
-                    :title="`${formatNumber(point.value)} - ${new Date(point.date).toLocaleDateString()}`"
+          <!-- Gráfico de Evolución de Consumo (Línea) -->
+          <div class="chart-section">
+            <h4 class="section-title">
+              <i class="bi bi-graph-up-arrow"></i>
+              {{ $t('inventoryDashboard.consumptionEvolution') || 'Evolución de Consumo' }}
+            </h4>
+            <div class="line-chart-container">
+              <div class="line-chart">
+                <svg class="line-chart-svg" :viewBox="getLineChartViewBox()">
+                  <defs>
+                    <linearGradient id="consumptionGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" style="stop-color: #dc3545; stop-opacity: 0.3" />
+                      <stop offset="100%" style="stop-color: #dc3545; stop-opacity: 0" />
+                    </linearGradient>
+                  </defs>
+                  <polyline
+                    :points="getConsumptionLinePoints()"
+                    fill="none"
+                    stroke="#dc3545"
+                    stroke-width="2"
+                    class="line-chart-line"
                   />
-                </g>
-              </svg>
-              <div class="line-chart-labels">
-                <div
-                  v-for="(trend, index) in getDisplayTrends()"
-                  :key="index"
-                  class="line-chart-label"
-                >
-                  {{
-                    new Date(trend.date).toLocaleDateString('es-ES', {
-                      day: '2-digit',
-                      month: '2-digit',
-                    })
-                  }}
+                  <polygon
+                    :points="getConsumptionAreaPoints()"
+                    fill="url(#consumptionGradient)"
+                    class="line-chart-area"
+                  />
+                  <g v-for="(point, index) in getConsumptionPoints()" :key="index">
+                    <circle
+                      :cx="point.x"
+                      :cy="point.y"
+                      r="4"
+                      fill="#dc3545"
+                      class="line-chart-point"
+                      :title="`${formatNumber(point.value)} - ${new Date(
+                        point.date
+                      ).toLocaleDateString()}`"
+                    />
+                  </g>
+                </svg>
+                <div class="line-chart-labels">
+                  <div
+                    v-for="(trend, index) in getDisplayTrends()"
+                    :key="index"
+                    class="line-chart-label"
+                  >
+                    {{
+                      new Date(trend.date).toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                      })
+                    }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gráfico de Evolución de Recargas (Línea) -->
+          <div class="chart-section">
+            <h4 class="section-title">
+              <i class="bi bi-graph-up-arrow"></i>
+              {{ $t('inventoryDashboard.replacementEvolution') || 'Evolución de Recargas' }}
+            </h4>
+            <div class="line-chart-container">
+              <div class="line-chart">
+                <svg class="line-chart-svg" :viewBox="getLineChartViewBox()">
+                  <defs>
+                    <linearGradient id="replacementGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" style="stop-color: #28a745; stop-opacity: 0.3" />
+                      <stop offset="100%" style="stop-color: #28a745; stop-opacity: 0" />
+                    </linearGradient>
+                  </defs>
+                  <polyline
+                    :points="getReplacementLinePoints()"
+                    fill="none"
+                    stroke="#28a745"
+                    stroke-width="2"
+                    class="line-chart-line"
+                  />
+                  <polygon
+                    :points="getReplacementAreaPoints()"
+                    fill="url(#replacementGradient)"
+                    class="line-chart-area"
+                  />
+                  <g v-for="(point, index) in getReplacementPoints()" :key="index">
+                    <circle
+                      :cx="point.x"
+                      :cy="point.y"
+                      r="4"
+                      fill="#28a745"
+                      class="line-chart-point"
+                      :title="`${formatNumber(point.value)} - ${new Date(
+                        point.date
+                      ).toLocaleDateString()}`"
+                    />
+                  </g>
+                </svg>
+                <div class="line-chart-labels">
+                  <div
+                    v-for="(trend, index) in getDisplayTrends()"
+                    :key="index"
+                    class="line-chart-label"
+                  >
+                    {{
+                      new Date(trend.date).toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                      })
+                    }}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div v-if="!loading && !kpis" class="no-data">
-      <Message
-        :icon="'bi-inbox'"
-        :title="$t('inventoryDashboard.noData') || 'Sin datos'"
-        :content="$t('inventoryDashboard.noDataDesc') || 'No hay datos de inventario disponibles'"
-      />
-    </div>
+      <div v-if="!loading && !kpis" class="no-data">
+        <Message
+          :icon="'bi-inbox'"
+          :title="$t('inventoryDashboard.noData') || 'Sin datos'"
+          :content="$t('inventoryDashboard.noDataDesc') || 'No hay datos de inventario disponibles'"
+        />
+      </div>
     </div>
   </div>
 </template>

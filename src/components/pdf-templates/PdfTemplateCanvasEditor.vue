@@ -4,8 +4,8 @@
     <div v-if="showTemplateSelector" class="predefined-selector-overlay">
       <PredefinedTemplateSelector
         :section="section"
-        :documentType="template?.documentType"
-        :pageSize="template?.pageSize || 'A4'"
+        :document-type="template?.documentType"
+        :page-size="template?.pageSize || 'A4'"
         :orientation="template?.orientation || 'portrait'"
         @apply="applyPredefinedTemplate"
         @cancel="closeTemplateSelector"
@@ -16,7 +16,12 @@
       <div class="toolbar-section">
         <div class="toolbar-title">Templates</div>
         <div class="btn-group" role="group">
-          <button type="button" class="btn btn-sm btn-success rounded-pill px-3" @click="openTemplateSelector" title="Seleccionar Template Predefinido">
+          <button
+            type="button"
+            class="btn btn-sm btn-success rounded-pill px-3"
+            @click="openTemplateSelector"
+            title="Seleccionar Template Predefinido"
+          >
             <i class="bi bi-layout-text-window-reverse"></i> Templates
           </button>
         </div>
@@ -25,22 +30,52 @@
       <div class="toolbar-section">
         <div class="toolbar-title">Insertar</div>
         <div class="btn-group" role="group">
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="addTextElement" title="Adicionar Texto">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="addTextElement"
+            title="Adicionar Texto"
+          >
             <i class="bi bi-type"></i> Texto
           </button>
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="addImageElement" title="Adicionar Imagem">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="addImageElement"
+            title="Adicionar Imagem"
+          >
             <i class="bi bi-image"></i> Imagem
           </button>
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="addLogoElement" title="Adicionar Logo">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="addLogoElement"
+            title="Adicionar Logo"
+          >
             <i class="bi bi-image-fill"></i> Logo
           </button>
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="addSignatureElement" title="Adicionar Assinatura">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="addSignatureElement"
+            title="Adicionar Assinatura"
+          >
             <i class="bi bi-pen"></i> Assinatura
           </button>
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="addQrCodeElement" title="Adicionar QR Code">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="addQrCodeElement"
+            title="Adicionar QR Code"
+          >
             <i class="bi bi-qr-code"></i> QR Code
           </button>
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="addLineElement" title="Adicionar Linha">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="addLineElement"
+            title="Adicionar Linha"
+          >
             <i class="bi bi-hr"></i> Linha
           </button>
         </div>
@@ -58,19 +93,44 @@
       <div class="toolbar-section">
         <div class="toolbar-title">Alineación</div>
         <div class="btn-group" role="group">
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="centerElementHorizontally" title="Centrar horizontalmente">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="centerElementHorizontally"
+            title="Centrar horizontalmente"
+          >
             <i class="bi bi-arrows-collapse-vertical"></i> Centro H
           </button>
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="centerElementVertically" title="Centrar verticalmente">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="centerElementVertically"
+            title="Centrar verticalmente"
+          >
             <i class="bi bi-arrows-collapse-horizontal"></i> Centro V
           </button>
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="centerElementBoth" title="Centrar ambos">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="centerElementBoth"
+            title="Centrar ambos"
+          >
             <i class="bi bi-arrows-move"></i> Centro HV
           </button>
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="alignElementTop" title="Alinear arriba">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="alignElementTop"
+            title="Alinear arriba"
+          >
             <i class="bi bi-align-top"></i> Top
           </button>
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="alignElementBottom" title="Alinear abajo">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="alignElementBottom"
+            title="Alinear abajo"
+          >
             <i class="bi bi-align-bottom"></i> Bottom
           </button>
         </div>
@@ -79,10 +139,22 @@
       <div class="toolbar-section">
         <div class="toolbar-title">Agrupación</div>
         <div class="btn-group" role="group">
-          <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" @click="groupElements" :disabled="selectedElements.length < 2" title="Agrupar elementos seleccionados">
+          <button
+            type="button"
+            class="btn btn-sm btn-primary rounded-pill px-3"
+            @click="groupElements"
+            :disabled="selectedElements.length < 2"
+            title="Agrupar elementos seleccionados"
+          >
             <i class="bi bi-collection"></i> Agrupar
           </button>
-          <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" @click="ungroupElements" :disabled="!canUngroup" title="Desagrupar elementos">
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-primary rounded-pill px-3"
+            @click="ungroupElements"
+            :disabled="!canUngroup"
+            title="Desagrupar elementos"
+          >
             <i class="bi bi-collection"></i> Desagrupar
           </button>
         </div>
@@ -91,35 +163,119 @@
       <div class="toolbar-section">
         <div class="toolbar-title">Formato</div>
         <div class="btn-group" role="group">
-          <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3" @click="toggleBold" :disabled="!isTextSelected" title="Negrita">
-            <i class="bi bi-type-bold" :class="{ active: isTextSelected && selectedElement?.bold }"></i>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-dark rounded-pill px-3"
+            @click="toggleBold"
+            :disabled="!isTextSelected"
+            title="Negrita"
+          >
+            <i
+              class="bi bi-type-bold"
+              :class="{ active: isTextSelected && selectedElement?.bold }"
+            ></i>
           </button>
-          <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3" @click="toggleItalic" :disabled="!isTextSelected" title="Cursiva">
-            <i class="bi bi-type-italic" :class="{ active: isTextSelected && selectedElement?.italic }"></i>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-dark rounded-pill px-3"
+            @click="toggleItalic"
+            :disabled="!isTextSelected"
+            title="Cursiva"
+          >
+            <i
+              class="bi bi-type-italic"
+              :class="{ active: isTextSelected && selectedElement?.italic }"
+            ></i>
           </button>
-          <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3" @click="toggleUnderline" :disabled="!isTextSelected" title="Subrayado">
-            <i class="bi bi-type-underline" :class="{ active: isTextSelected && selectedElement?.underline }"></i>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-dark rounded-pill px-3"
+            @click="toggleUnderline"
+            :disabled="!isTextSelected"
+            title="Subrayado"
+          >
+            <i
+              class="bi bi-type-underline"
+              :class="{ active: isTextSelected && selectedElement?.underline }"
+            ></i>
           </button>
           <div class="vr mx-1"></div>
-          <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3" @click="setParagraphAlign('left')" :disabled="!isTextSelected" title="Alinear izquierda">
-            <i class="bi bi-text-left" :class="{ active: isTextSelected && selectedElement?.align === 'left' }"></i>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-dark rounded-pill px-3"
+            @click="setParagraphAlign('left')"
+            :disabled="!isTextSelected"
+            title="Alinear izquierda"
+          >
+            <i
+              class="bi bi-text-left"
+              :class="{ active: isTextSelected && selectedElement?.align === 'left' }"
+            ></i>
           </button>
-          <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3" @click="setParagraphAlign('center')" :disabled="!isTextSelected" title="Alinear centro">
-            <i class="bi bi-text-center" :class="{ active: isTextSelected && selectedElement?.align === 'center' }"></i>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-dark rounded-pill px-3"
+            @click="setParagraphAlign('center')"
+            :disabled="!isTextSelected"
+            title="Alinear centro"
+          >
+            <i
+              class="bi bi-text-center"
+              :class="{ active: isTextSelected && selectedElement?.align === 'center' }"
+            ></i>
           </button>
-          <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3" @click="setParagraphAlign('right')" :disabled="!isTextSelected" title="Alinear derecha">
-            <i class="bi bi-text-right" :class="{ active: isTextSelected && selectedElement?.align === 'right' }"></i>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-dark rounded-pill px-3"
+            @click="setParagraphAlign('right')"
+            :disabled="!isTextSelected"
+            title="Alinear derecha"
+          >
+            <i
+              class="bi bi-text-right"
+              :class="{ active: isTextSelected && selectedElement?.align === 'right' }"
+            ></i>
           </button>
-          <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3" @click="setParagraphAlign('justify')" :disabled="!isTextSelected" title="Justificar">
-            <i class="bi bi-justify" :class="{ active: isTextSelected && selectedElement?.align === 'justify' }"></i>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-dark rounded-pill px-3"
+            @click="setParagraphAlign('justify')"
+            :disabled="!isTextSelected"
+            title="Justificar"
+          >
+            <i
+              class="bi bi-justify"
+              :class="{ active: isTextSelected && selectedElement?.align === 'justify' }"
+            ></i>
           </button>
           <div class="vr mx-1"></div>
-          <select class="form-select form-select-sm w-auto" :disabled="!isTextSelected" :value="isTextSelected ? (selectedElement.fontSize || 12) : 12" @change="setFontSize(parseInt($event.target.value, 10))" title="Tamaño de fuente">
-            <option v-for="size in [10,12,14,16,18,24,36,48,72]" :key="size" :value="size">{{ size }} pt</option>
+          <select
+            class="form-select form-select-sm w-auto"
+            :disabled="!isTextSelected"
+            :value="isTextSelected ? selectedElement.fontSize || 12 : 12"
+            @change="setFontSize(parseInt($event.target.value, 10))"
+            title="Tamaño de fuente"
+          >
+            <option v-for="size in [10, 12, 14, 16, 18, 24, 36, 48, 72]" :key="size" :value="size">
+              {{ size }} pt
+            </option>
           </select>
-          <input type="color" class="form-control form-control-color form-control-sm ms-2" :disabled="!isTextSelected" :value="isTextSelected ? (selectedElement.color || '#000000') : '#000000'" @input="setTextColor($event.target.value)" title="Color de texto" />
+          <input
+            type="color"
+            class="form-control form-control-color form-control-sm ms-2"
+            :disabled="!isTextSelected"
+            :value="isTextSelected ? selectedElement.color || '#000000' : '#000000'"
+            @input="setTextColor($event.target.value)"
+            title="Color de texto"
+          />
           <div class="vr mx-1"></div>
-          <select class="form-select form-select-sm w-auto" :disabled="!isTextSelected" :value="isTextSelected ? (selectedElement.fontFamily || 'Arial') : 'Arial'" @change="setFontFamily($event.target.value)" title="Familia de fuente">
+          <select
+            class="form-select form-select-sm w-auto"
+            :disabled="!isTextSelected"
+            :value="isTextSelected ? selectedElement.fontFamily || 'Arial' : 'Arial'"
+            @change="setFontFamily($event.target.value)"
+            title="Familia de fuente"
+          >
             <option value="Arial">Arial</option>
             <option value="Times New Roman">Times New Roman</option>
             <option value="Courier New">Courier New</option>
@@ -129,7 +285,17 @@
             <option value="Lucida Handwriting">Lucida Handwriting (Cursiva)</option>
             <option value="Monotype Corsiva">Monotype Corsiva (Cursiva)</option>
           </select>
-          <input type="number" min="1" max="2" step="0.1" class="form-control form-control-sm ms-2 w-auto" :disabled="!isTextSelected" :value="isTextSelected ? (selectedElement.lineHeight || 1.2) : 1.2" @input="setLineHeight(parseFloat($event.target.value))" title="Interlineado (multiplicador)" />
+          <input
+            type="number"
+            min="1"
+            max="2"
+            step="0.1"
+            class="form-control form-control-sm ms-2 w-auto"
+            :disabled="!isTextSelected"
+            :value="isTextSelected ? selectedElement.lineHeight || 1.2 : 1.2"
+            @input="setLineHeight(parseFloat($event.target.value))"
+            title="Interlineado (multiplicador)"
+          />
         </div>
       </div>
 
@@ -137,7 +303,8 @@
         <div class="toolbar-title">Ver</div>
         <div class="btn-group" role="group">
           <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="toggleGrid">
-            <i class="bi bi-grid-3x3"></i> {{ showGrid ? 'Ocultar cuadrícula' : 'Mostrar cuadrícula' }}
+            <i class="bi bi-grid-3x3"></i>
+            {{ showGrid ? 'Ocultar cuadrícula' : 'Mostrar cuadrícula' }}
           </button>
           <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="toggleRulers">
             <i class="bi bi-rulers"></i> {{ showRulers ? 'Ocultar reglas' : 'Mostrar reglas' }}
@@ -148,13 +315,27 @@
       <div class="toolbar-section">
         <div class="toolbar-title">Historial</div>
         <div class="btn-group" role="group">
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="undo" :disabled="!canUndo">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="undo"
+            :disabled="!canUndo"
+          >
             <i class="bi bi-arrow-counterclockwise"></i> Desfazer
           </button>
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="redo" :disabled="!canRedo">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="redo"
+            :disabled="!canRedo"
+          >
             <i class="bi bi-arrow-clockwise"></i> Refazer
           </button>
-          <button type="button" class="btn btn-sm btn-danger rounded-pill px-3" @click="clearCanvas">
+          <button
+            type="button"
+            class="btn btn-sm btn-danger rounded-pill px-3"
+            @click="clearCanvas"
+          >
             <i class="bi bi-trash"></i> Limpar
           </button>
         </div>
@@ -163,7 +344,12 @@
       <div class="toolbar-section ms-auto">
         <div class="toolbar-title">Acciones</div>
         <div class="btn-group" role="group">
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="saveTemplate" :disabled="saving">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="saveTemplate"
+            :disabled="saving"
+          >
             <i class="bi bi-save"></i> {{ saving ? 'Salvando...' : 'Salvar' }}
           </button>
         </div>
@@ -172,16 +358,32 @@
 
     <div class="page-info mb-2">
       <small>
-        Tamanho: {{ pageLabel }} ({{ canvasWidth }} × {{ canvasHeight }} pt) • Orientação: {{ orientationLabel }}
+        Tamanho: {{ pageLabel }} ({{ canvasWidth }} × {{ canvasHeight }} pt) • Orientação:
+        {{ orientationLabel }}
       </small>
     </div>
 
     <div class="editor-container">
       <div class="rulers">
-        <canvas ref="rulerHRef" :width="canvasWidth" height="24" class="ruler-horizontal" :class="{ 'ruler-hidden': !showRulers }"></canvas>
+        <canvas
+          ref="rulerHRef"
+          :width="canvasWidth"
+          height="24"
+          class="ruler-horizontal"
+          :class="{ 'ruler-hidden': !showRulers }"
+        ></canvas>
         <div class="ruler-body">
-          <canvas ref="rulerVRef" :height="canvasHeight" width="24" class="ruler-vertical" :class="{ 'ruler-hidden': !showRulers }"></canvas>
-          <div class="canvas-wrapper" :style="{ width: canvasWidth + 'px', height: canvasHeight + 'px' }">
+          <canvas
+            ref="rulerVRef"
+            :height="canvasHeight"
+            width="24"
+            class="ruler-vertical"
+            :class="{ 'ruler-hidden': !showRulers }"
+          ></canvas>
+          <div
+            class="canvas-wrapper"
+            :style="{ width: canvasWidth + 'px', height: canvasHeight + 'px' }"
+          >
             <canvas
               ref="canvasRef"
               :width="canvasWidth"
@@ -203,22 +405,81 @@
             <div class="group-title"><i class="bi bi-collection"></i> Múltiples elementos</div>
             <div class="group-body">
               <div class="alert alert-info small mb-3">
-                <i class="bi bi-info-circle"></i> {{ selectedElements.length }} elementos seleccionados
+                <i class="bi bi-info-circle"></i> {{ selectedElements.length }} elementos
+                seleccionados
               </div>
               <div class="btn-group btn-group-sm w-100 mb-2" role="group">
-                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="centerElementHorizontally" title="Centrar horizontalmente"><i class="bi bi-arrows-collapse-vertical"></i> H</button>
-                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="centerElementVertically" title="Centrar verticalmente"><i class="bi bi-arrows-collapse-horizontal"></i> V</button>
-                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="centerElementBoth" title="Centrar en ambos ejes"><i class="bi bi-arrows-move"></i> HV</button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-dark rounded-pill px-3"
+                  @click="centerElementHorizontally"
+                  title="Centrar horizontalmente"
+                >
+                  <i class="bi bi-arrows-collapse-vertical"></i> H
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-dark rounded-pill px-3"
+                  @click="centerElementVertically"
+                  title="Centrar verticalmente"
+                >
+                  <i class="bi bi-arrows-collapse-horizontal"></i> V
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-dark rounded-pill px-3"
+                  @click="centerElementBoth"
+                  title="Centrar en ambos ejes"
+                >
+                  <i class="bi bi-arrows-move"></i> HV
+                </button>
               </div>
               <div class="btn-group btn-group-sm w-100 mb-2" role="group">
-                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="alignElementTop" title="Alinear arriba"><i class="bi bi-align-top"></i> Top</button>
-                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="alignElementBottom" title="Alinear abajo"><i class="bi bi-align-bottom"></i> Bottom</button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-dark rounded-pill px-3"
+                  @click="alignElementTop"
+                  title="Alinear arriba"
+                >
+                  <i class="bi bi-align-top"></i> Top
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-dark rounded-pill px-3"
+                  @click="alignElementBottom"
+                  title="Alinear abajo"
+                >
+                  <i class="bi bi-align-bottom"></i> Bottom
+                </button>
               </div>
               <div class="btn-group btn-group-sm w-100 mb-2" role="group">
-                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" @click="groupElements" :disabled="selectedElements.length < 2" title="Agrupar elementos"><i class="bi bi-collection"></i> Agrupar</button>
-                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" @click="ungroupElements" :disabled="!canUngroup" title="Desagrupar"><i class="bi bi-collection"></i> Desagrupar</button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-primary rounded-pill px-3"
+                  @click="groupElements"
+                  :disabled="selectedElements.length < 2"
+                  title="Agrupar elementos"
+                >
+                  <i class="bi bi-collection"></i> Agrupar
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                  @click="ungroupElements"
+                  :disabled="!canUngroup"
+                  title="Desagrupar"
+                >
+                  <i class="bi bi-collection"></i> Desagrupar
+                </button>
               </div>
-              <button type="button" class="btn btn-sm btn-danger rounded-pill w-100" @click="deleteElement" title="Remover elementos"><i class="bi bi-trash"></i> Remover todos</button>
+              <button
+                type="button"
+                class="btn btn-sm btn-danger rounded-pill w-100"
+                @click="deleteElement"
+                title="Remover elementos"
+              >
+                <i class="bi bi-trash"></i> Remover todos
+              </button>
             </div>
           </div>
           <div class="text-muted small mt-3">
@@ -236,26 +497,51 @@
             <div class="group-body">
               <div class="form-group-modern mb-2">
                 <label class="form-label-modern">Tipo</label>
-                <input type="text" class="form-control-modern" :value="selectedElement.type" disabled />
+                <input
+                  type="text"
+                  class="form-control-modern"
+                  :value="selectedElement.type"
+                  disabled
+                />
               </div>
               <div class="form-row">
                 <div class="form-col">
                   <label class="form-label-modern">Posição X</label>
-                  <input type="number" v-model.number="selectedElement.x" class="form-control-modern" @input="updateElement" />
+                  <input
+                    type="number"
+                    v-model.number="selectedElement.x"
+                    class="form-control-modern"
+                    @input="updateElement"
+                  />
                 </div>
                 <div class="form-col">
                   <label class="form-label-modern">Posição Y</label>
-                  <input type="number" v-model.number="selectedElement.y" class="form-control-modern" @input="updateElement" />
+                  <input
+                    type="number"
+                    v-model.number="selectedElement.y"
+                    class="form-control-modern"
+                    @input="updateElement"
+                  />
                 </div>
               </div>
               <div class="form-row mt-2">
                 <div class="form-col">
                   <label class="form-label-modern">Largura</label>
-                  <input type="number" v-model.number="selectedElement.width" class="form-control-modern" @input="updateElement" />
+                  <input
+                    type="number"
+                    v-model.number="selectedElement.width"
+                    class="form-control-modern"
+                    @input="updateElement"
+                  />
                 </div>
                 <div class="form-col">
                   <label class="form-label-modern">Altura</label>
-                  <input type="number" v-model.number="selectedElement.height" class="form-control-modern" @input="updateElement" />
+                  <input
+                    type="number"
+                    v-model.number="selectedElement.height"
+                    class="form-control-modern"
+                    @input="updateElement"
+                  />
                 </div>
               </div>
             </div>
@@ -266,48 +552,137 @@
             <div class="group-body">
               <div class="form-group-modern mb-2">
                 <label class="form-label-modern">Contenido</label>
-                <textarea v-model="selectedElement.text" class="form-control-modern" rows="3" @input="updateElement"></textarea>
+                <textarea
+                  v-model="selectedElement.text"
+                  class="form-control-modern"
+                  rows="3"
+                  @input="updateElement"
+                ></textarea>
               </div>
               <div class="form-row">
                 <div class="form-col">
                   <label class="form-label-modern">Tamaño de Fuente</label>
-                  <input type="number" v-model.number="selectedElement.fontSize" class="form-control-modern" min="8" max="72" @input="updateElement" />
+                  <input
+                    type="number"
+                    v-model.number="selectedElement.fontSize"
+                    class="form-control-modern"
+                    min="8"
+                    max="72"
+                    @input="updateElement"
+                  />
                 </div>
                 <div class="form-col">
                   <label class="form-label-modern">Color</label>
-                  <input type="color" v-model="selectedElement.color" class="form-control-modern" style="height: 38px;" @input="updateElement" />
+                  <input
+                    type="color"
+                    v-model="selectedElement.color"
+                    class="form-control-modern"
+                    style="height: 38px"
+                    @input="updateElement"
+                  />
                 </div>
               </div>
 
               <div class="form-group-modern mt-2">
                 <label class="form-label-modern">Alineación</label>
                 <div class="btn-group btn-group-sm w-100" role="group">
-                  <input type="radio" class="btn-check" name="align" id="align-left" value="left" v-model="selectedElement.align" @change="updateElement" />
-                  <label class="btn btn-dark rounded-pill px-3" for="align-left" title="Izquierda"><i class="bi bi-text-left"></i></label>
-                  <input type="radio" class="btn-check" name="align" id="align-center" value="center" v-model="selectedElement.align" @change="updateElement" />
-                  <label class="btn btn-dark rounded-pill px-3" for="align-center" title="Centro"><i class="bi bi-text-center"></i></label>
-                  <input type="radio" class="btn-check" name="align" id="align-right" value="right" v-model="selectedElement.align" @change="updateElement" />
-                  <label class="btn btn-dark rounded-pill px-3" for="align-right" title="Derecha"><i class="bi bi-text-right"></i></label>
-                  <input type="radio" class="btn-check" name="align" id="align-justify" value="justify" v-model="selectedElement.align" @change="updateElement" />
-                  <label class="btn btn-dark rounded-pill px-3" for="align-justify" title="Justificar"><i class="bi bi-justify"></i></label>
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    name="align"
+                    id="align-left"
+                    value="left"
+                    v-model="selectedElement.align"
+                    @change="updateElement"
+                  />
+                  <label class="btn btn-dark rounded-pill px-3" for="align-left" title="Izquierda"
+                    ><i class="bi bi-text-left"></i
+                  ></label>
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    name="align"
+                    id="align-center"
+                    value="center"
+                    v-model="selectedElement.align"
+                    @change="updateElement"
+                  />
+                  <label class="btn btn-dark rounded-pill px-3" for="align-center" title="Centro"
+                    ><i class="bi bi-text-center"></i
+                  ></label>
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    name="align"
+                    id="align-right"
+                    value="right"
+                    v-model="selectedElement.align"
+                    @change="updateElement"
+                  />
+                  <label class="btn btn-dark rounded-pill px-3" for="align-right" title="Derecha"
+                    ><i class="bi bi-text-right"></i
+                  ></label>
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    name="align"
+                    id="align-justify"
+                    value="justify"
+                    v-model="selectedElement.align"
+                    @change="updateElement"
+                  />
+                  <label
+                    class="btn btn-dark rounded-pill px-3"
+                    for="align-justify"
+                    title="Justificar"
+                    ><i class="bi bi-justify"></i
+                  ></label>
                 </div>
               </div>
 
               <div class="form-group-modern mt-2">
                 <label class="form-label-modern">Estilos</label>
                 <div class="btn-group btn-group-sm w-100" role="group">
-                  <input type="checkbox" class="btn-check" id="bold" v-model="selectedElement.bold" @change="updateElement" />
-                  <label class="btn btn-dark rounded-pill px-3" for="bold" title="Negrita"><i class="bi bi-type-bold"></i></label>
-                  <input type="checkbox" class="btn-check" id="italic" v-model="selectedElement.italic" @change="updateElement" />
-                  <label class="btn btn-dark rounded-pill px-3" for="italic" title="Cursiva"><i class="bi bi-type-italic"></i></label>
-                  <input type="checkbox" class="btn-check" id="underline" v-model="selectedElement.underline" @change="updateElement" />
-                  <label class="btn btn-dark rounded-pill px-3" for="underline" title="Subrayado"><i class="bi bi-type-underline"></i></label>
+                  <input
+                    type="checkbox"
+                    class="btn-check"
+                    id="bold"
+                    v-model="selectedElement.bold"
+                    @change="updateElement"
+                  />
+                  <label class="btn btn-dark rounded-pill px-3" for="bold" title="Negrita"
+                    ><i class="bi bi-type-bold"></i
+                  ></label>
+                  <input
+                    type="checkbox"
+                    class="btn-check"
+                    id="italic"
+                    v-model="selectedElement.italic"
+                    @change="updateElement"
+                  />
+                  <label class="btn btn-dark rounded-pill px-3" for="italic" title="Cursiva"
+                    ><i class="bi bi-type-italic"></i
+                  ></label>
+                  <input
+                    type="checkbox"
+                    class="btn-check"
+                    id="underline"
+                    v-model="selectedElement.underline"
+                    @change="updateElement"
+                  />
+                  <label class="btn btn-dark rounded-pill px-3" for="underline" title="Subrayado"
+                    ><i class="bi bi-type-underline"></i
+                  ></label>
                 </div>
               </div>
 
               <div class="form-group-modern mt-2">
                 <label class="form-label-modern">Tipo de Lista</label>
-                <select v-model="selectedElement.listType" class="form-control-modern" @change="updateElement">
+                <select
+                  v-model="selectedElement.listType"
+                  class="form-control-modern"
+                  @change="updateElement"
+                >
                   <option value="">Sin lista</option>
                   <option value="bullet">• Viñetas</option>
                   <option value="dot">∘ Puntos</option>
@@ -323,7 +698,11 @@
               <div class="form-row">
                 <div class="form-col">
                   <label class="form-label-modern">Estilo</label>
-                  <select v-model="selectedElement.lineStyle" class="form-control-modern" @change="updateElement">
+                  <select
+                    v-model="selectedElement.lineStyle"
+                    class="form-control-modern"
+                    @change="updateElement"
+                  >
                     <option value="solid">Línea continua</option>
                     <option value="dashed">Línea punteada</option>
                     <option value="double">Línea doble</option>
@@ -331,7 +710,14 @@
                 </div>
                 <div class="form-col">
                   <label class="form-label-modern">Grosor</label>
-                  <input type="number" v-model.number="selectedElement.lineWidth" class="form-control-modern" min="1" max="10" @input="updateElement" />
+                  <input
+                    type="number"
+                    v-model.number="selectedElement.lineWidth"
+                    class="form-control-modern"
+                    min="1"
+                    max="10"
+                    @input="updateElement"
+                  />
                 </div>
               </div>
             </div>
@@ -341,15 +727,57 @@
             <div class="group-title"><i class="bi bi-aspect-ratio"></i> Alineación en Canvas</div>
             <div class="group-body">
               <div class="btn-group btn-group-sm w-100 mb-2" role="group">
-                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="centerElementHorizontally" title="Centrar horizontalmente"><i class="bi bi-arrows-collapse-vertical"></i> H</button>
-                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="centerElementVertically" title="Centrar verticalmente"><i class="bi bi-arrows-collapse-horizontal"></i> V</button>
-                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="centerElementBoth" title="Centrar en ambos ejes"><i class="bi bi-arrows-move"></i> HV</button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-dark rounded-pill px-3"
+                  @click="centerElementHorizontally"
+                  title="Centrar horizontalmente"
+                >
+                  <i class="bi bi-arrows-collapse-vertical"></i> H
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-dark rounded-pill px-3"
+                  @click="centerElementVertically"
+                  title="Centrar verticalmente"
+                >
+                  <i class="bi bi-arrows-collapse-horizontal"></i> V
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-dark rounded-pill px-3"
+                  @click="centerElementBoth"
+                  title="Centrar en ambos ejes"
+                >
+                  <i class="bi bi-arrows-move"></i> HV
+                </button>
               </div>
               <div class="btn-group btn-group-sm w-100" role="group">
-                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="alignElementTop" title="Alinear arriba"><i class="bi bi-align-top"></i> Top</button>
-                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="alignElementBottom" title="Alinear abajo"><i class="bi bi-align-bottom"></i> Bottom</button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-dark rounded-pill px-3"
+                  @click="alignElementTop"
+                  title="Alinear arriba"
+                >
+                  <i class="bi bi-align-top"></i> Top
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-dark rounded-pill px-3"
+                  @click="alignElementBottom"
+                  title="Alinear abajo"
+                >
+                  <i class="bi bi-align-bottom"></i> Bottom
+                </button>
               </div>
-              <button type="button" class="btn btn-sm btn-danger rounded-pill w-100 mt-2" @click="deleteElement" title="Remover elemento"><i class="bi bi-trash"></i> Remover</button>
+              <button
+                type="button"
+                class="btn btn-sm btn-danger rounded-pill w-100 mt-2"
+                @click="deleteElement"
+                title="Remover elemento"
+              >
+                <i class="bi bi-trash"></i> Remover
+              </button>
             </div>
           </div>
 
@@ -374,9 +802,9 @@
       <!-- Panel de Variables -->
       <div class="variables-panel">
         <VariablesPicker
-          :documentType="template?.documentType || 'all'"
+          :document-type="template?.documentType || 'all'"
           :collapsible="true"
-          :defaultCollapsed="false"
+          :default-collapsed="false"
           @insert-variable="insertVariableIntoText"
         />
       </div>
@@ -417,7 +845,9 @@ export default {
     const showGrid = ref(true);
     const showRulers = ref(true);
     const showTemplateSelector = ref(false);
-    const isTextSelected = computed(() => !!selectedElement.value && selectedElement.value.type === 'text');
+    const isTextSelected = computed(
+      () => !!selectedElement.value && selectedElement.value.type === 'text',
+    );
     const selectedElement = ref(null);
     const selectedElements = ref([]); // Para multi-select
     const elements = ref([]);
@@ -447,17 +877,23 @@ export default {
     const pageLabel = computed(() => {
       const ps = props.template?.pageSize || 'A4';
       switch (ps) {
-        case 'LETTER': return 'Letter';
-        case 'A5': return 'A5';
-        case 'LETTER_HALF': return 'Half Letter';
-        default: return 'A4';
+        case 'LETTER':
+          return 'Letter';
+        case 'A5':
+          return 'A5';
+        case 'LETTER_HALF':
+          return 'Half Letter';
+        default:
+          return 'A4';
       }
     });
-    const orientationLabel = computed(() => (props.template?.orientation || 'portrait') === 'portrait' ? 'Retrato' : 'Paisagem');
+    const orientationLabel = computed(() =>
+      (props.template?.orientation || 'portrait') === 'portrait' ? 'Retrato' : 'Paisagem',
+    );
 
     let ctx = null;
 
-    const getBaseDimensions = (pageSize) => {
+    const getBaseDimensions = pageSize => {
       switch (pageSize) {
         case 'LETTER':
           return { w: 612, h: 792 };
@@ -511,12 +947,8 @@ export default {
 
     const autoFitElements = () => {
       if (!elements.value || elements.value.length === 0) return;
-      const maxRight = Math.max(
-        ...elements.value.map(el => (el.x || 0) + (el.width || 0))
-      );
-      const maxBottom = Math.max(
-        ...elements.value.map(el => (el.y || 0) + (el.height || 0))
-      );
+      const maxRight = Math.max(...elements.value.map(el => (el.x || 0) + (el.width || 0)));
+      const maxBottom = Math.max(...elements.value.map(el => (el.y || 0) + (el.height || 0)));
       if (maxRight <= canvasWidth.value && maxBottom <= canvasHeight.value) return;
       const sx = canvasWidth.value / Math.max(maxRight, 1);
       const sy = canvasHeight.value / Math.max(maxBottom, 1);
@@ -528,7 +960,8 @@ export default {
         if (typeof el.width === 'number') el.width = Math.round(el.width * s);
         if (typeof el.height === 'number') el.height = Math.round(el.height * s);
         if (typeof el.fontSize === 'number') el.fontSize = Math.max(6, Math.round(el.fontSize * s));
-        if (typeof el.lineWidth === 'number') el.lineWidth = Math.max(1, Math.round(el.lineWidth * s));
+        if (typeof el.lineWidth === 'number')
+          el.lineWidth = Math.max(1, Math.round(el.lineWidth * s));
       });
     };
 
@@ -561,7 +994,7 @@ export default {
       }
 
       // Draw elements
-      elements.value.forEach((element) => {
+      elements.value.forEach(element => {
         const isSelected = selectedElements.value.includes(element);
         drawElement(element, isSelected);
       });
@@ -752,7 +1185,7 @@ export default {
           // Aplicar prefijo según tipo de lista
           if (element.listType === 'bullet') textLine = '• ' + line;
           else if (element.listType === 'dot') textLine = '∘ ' + line;
-          else if (element.listType === 'number') textLine = (i + 1) + '. ' + line;
+          else if (element.listType === 'number') textLine = i + 1 + '. ' + line;
 
           const yPos = (element.y || 0) + lineHeightPx * (i + 1);
 
@@ -888,16 +1321,16 @@ export default {
       ctx.fillStyle = '#007bff';
 
       // Esquinas
-      ctx.fillRect(x - handleSize/2, y - handleSize/2, handleSize, handleSize); // nw
-      ctx.fillRect(x + w - handleSize/2, y - handleSize/2, handleSize, handleSize); // ne
-      ctx.fillRect(x - handleSize/2, y + h - handleSize/2, handleSize, handleSize); // sw
-      ctx.fillRect(x + w - handleSize/2, y + h - handleSize/2, handleSize, handleSize); // se
+      ctx.fillRect(x - handleSize / 2, y - handleSize / 2, handleSize, handleSize); // nw
+      ctx.fillRect(x + w - handleSize / 2, y - handleSize / 2, handleSize, handleSize); // ne
+      ctx.fillRect(x - handleSize / 2, y + h - handleSize / 2, handleSize, handleSize); // sw
+      ctx.fillRect(x + w - handleSize / 2, y + h - handleSize / 2, handleSize, handleSize); // se
 
       // Bordes (medio de cada lado)
-      ctx.fillRect(x + w/2 - handleSize/2, y - handleSize/2, handleSize, handleSize); // n
-      ctx.fillRect(x + w/2 - handleSize/2, y + h - handleSize/2, handleSize, handleSize); // s
-      ctx.fillRect(x - handleSize/2, y + h/2 - handleSize/2, handleSize, handleSize); // w
-      ctx.fillRect(x + w - handleSize/2, y + h/2 - handleSize/2, handleSize, handleSize); // e
+      ctx.fillRect(x + w / 2 - handleSize / 2, y - handleSize / 2, handleSize, handleSize); // n
+      ctx.fillRect(x + w / 2 - handleSize / 2, y + h - handleSize / 2, handleSize, handleSize); // s
+      ctx.fillRect(x - handleSize / 2, y + h / 2 - handleSize / 2, handleSize, handleSize); // w
+      ctx.fillRect(x + w - handleSize / 2, y + h / 2 - handleSize / 2, handleSize, handleSize); // e
     };
 
     const getResizeHandle = (x, y, element) => {
@@ -917,10 +1350,12 @@ export default {
       if (Math.abs(x - (ex + ew)) < tolerance && Math.abs(y - (ey + eh)) < tolerance) return 'se';
 
       // Verificar bordes
-      if (Math.abs(x - (ex + ew/2)) < tolerance && Math.abs(y - ey) < tolerance) return 'n';
-      if (Math.abs(x - (ex + ew/2)) < tolerance && Math.abs(y - (ey + eh)) < tolerance) return 's';
-      if (Math.abs(x - ex) < tolerance && Math.abs(y - (ey + eh/2)) < tolerance) return 'w';
-      if (Math.abs(x - (ex + ew)) < tolerance && Math.abs(y - (ey + eh/2)) < tolerance) return 'e';
+      if (Math.abs(x - (ex + ew / 2)) < tolerance && Math.abs(y - ey) < tolerance) return 'n';
+      if (Math.abs(x - (ex + ew / 2)) < tolerance && Math.abs(y - (ey + eh)) < tolerance)
+        return 's';
+      if (Math.abs(x - ex) < tolerance && Math.abs(y - (ey + eh / 2)) < tolerance) return 'w';
+      if (Math.abs(x - (ex + ew)) < tolerance && Math.abs(y - (ey + eh / 2)) < tolerance)
+        return 'e';
 
       return null;
     };
@@ -1037,8 +1472,8 @@ export default {
 
         // Eliminar grupos que contengan alguno de los elementos eliminados
         const deletedIds = selectedElements.value.map(el => el.id);
-        groups.value = groups.value.filter(group =>
-          !group.elementIds.some(id => deletedIds.includes(id))
+        groups.value = groups.value.filter(
+          group => !group.elementIds.some(id => deletedIds.includes(id))
         );
 
         selectedElement.value = null;
@@ -1052,9 +1487,7 @@ export default {
 
           // Eliminar grupos que contengan este elemento
           const deletedId = selectedElement.value.id;
-          groups.value = groups.value.filter(group =>
-            !group.elementIds.includes(deletedId)
-          );
+          groups.value = groups.value.filter(group => !group.elementIds.includes(deletedId));
 
           selectedElement.value = null;
           saveHistory();
@@ -1080,7 +1513,12 @@ export default {
       let clickedElement = null;
       for (let i = elements.value.length - 1; i >= 0; i--) {
         const el = elements.value[i];
-        if (x >= el.x && x <= el.x + (el.width || 100) && y >= el.y && y <= el.y + (el.height || 50)) {
+        if (
+          x >= el.x &&
+          x <= el.x + (el.width || 100) &&
+          y >= el.y &&
+          y <= el.y + (el.height || 50)
+        ) {
           clickedElement = el;
           break;
         }
@@ -1096,7 +1534,9 @@ export default {
             // Agregar o remover el grupo completo de la selección
             const allInSelection = groupElements.every(el => selectedElements.value.includes(el));
             if (allInSelection) {
-              selectedElements.value = selectedElements.value.filter(el => !group.elementIds.includes(el.id));
+              selectedElements.value = selectedElements.value.filter(
+                el => !group.elementIds.includes(el.id),
+              );
             } else {
               groupElements.forEach(el => {
                 if (!selectedElements.value.includes(el)) {
@@ -1160,7 +1600,8 @@ export default {
 
         // Verificar si se está clickeando dentro de algún elemento seleccionado para moverlo
         const clickedOnSelected = selectedElements.value.find(
-          el => x >= el.x && x <= el.x + (el.width || 100) && y >= el.y && y <= el.y + (el.height || 50)
+          el =>
+            x >= el.x && x <= el.x + (el.width || 100) && y >= el.y && y <= el.y + (el.height || 50)
         );
 
         if (clickedOnSelected) {
@@ -1180,7 +1621,7 @@ export default {
         startX: x,
         startY: y,
         endX: x,
-        endY: y
+        endY: y,
       };
     };
 
@@ -1331,12 +1772,17 @@ export default {
     };
 
     const centerElementHorizontally = () => {
-      const elementsToCenter = selectedElements.value.length > 0 ? selectedElements.value : (selectedElement.value ? [selectedElement.value] : []);
+      const elementsToCenter =
+        selectedElements.value.length > 0
+          ? selectedElements.value
+          : selectedElement.value
+          ? [selectedElement.value]
+          : [];
 
       elementsToCenter.forEach(el => {
         const elementWidth = el.width || 100;
         // Posicionar el elemento para que su CENTRO esté en el centro horizontal de la página
-        el.x = (canvasWidth.value / 2) - (elementWidth / 2);
+        el.x = canvasWidth.value / 2 - elementWidth / 2;
       });
 
       saveHistory();
@@ -1344,12 +1790,17 @@ export default {
     };
 
     const centerElementVertically = () => {
-      const elementsToCenter = selectedElements.value.length > 0 ? selectedElements.value : (selectedElement.value ? [selectedElement.value] : []);
+      const elementsToCenter =
+        selectedElements.value.length > 0
+          ? selectedElements.value
+          : selectedElement.value
+          ? [selectedElement.value]
+          : [];
 
       elementsToCenter.forEach(el => {
         const elementHeight = el.height || 50;
         // Posicionar el elemento para que su CENTRO esté en el centro vertical de la página
-        el.y = (canvasHeight.value / 2) - (elementHeight / 2);
+        el.y = canvasHeight.value / 2 - elementHeight / 2;
       });
 
       saveHistory();
@@ -1357,14 +1808,19 @@ export default {
     };
 
     const centerElementBoth = () => {
-      const elementsToCenter = selectedElements.value.length > 0 ? selectedElements.value : (selectedElement.value ? [selectedElement.value] : []);
+      const elementsToCenter =
+        selectedElements.value.length > 0
+          ? selectedElements.value
+          : selectedElement.value
+          ? [selectedElement.value]
+          : [];
 
       elementsToCenter.forEach(el => {
         const elementWidth = el.width || 100;
         const elementHeight = el.height || 50;
         // Posicionar el elemento para que su CENTRO esté en el centro de la página
-        el.x = (canvasWidth.value / 2) - (elementWidth / 2);
-        el.y = (canvasHeight.value / 2) - (elementHeight / 2);
+        el.x = canvasWidth.value / 2 - elementWidth / 2;
+        el.y = canvasHeight.value / 2 - elementHeight / 2;
       });
 
       saveHistory();
@@ -1372,7 +1828,12 @@ export default {
     };
 
     const alignElementTop = () => {
-      const elementsToAlign = selectedElements.value.length > 0 ? selectedElements.value : (selectedElement.value ? [selectedElement.value] : []);
+      const elementsToAlign =
+        selectedElements.value.length > 0
+          ? selectedElements.value
+          : selectedElement.value
+          ? [selectedElement.value]
+          : [];
 
       elementsToAlign.forEach(el => {
         el.y = 0;
@@ -1383,7 +1844,12 @@ export default {
     };
 
     const alignElementBottom = () => {
-      const elementsToAlign = selectedElements.value.length > 0 ? selectedElements.value : (selectedElement.value ? [selectedElement.value] : []);
+      const elementsToAlign =
+        selectedElements.value.length > 0
+          ? selectedElements.value
+          : selectedElement.value
+          ? [selectedElement.value]
+          : [];
 
       elementsToAlign.forEach(el => {
         const elementHeight = el.height || 50;
@@ -1407,7 +1873,7 @@ export default {
 
       groups.value.push({
         id: groupId,
-        elementIds: elementIds
+        elementIds,
       });
 
       saveHistory();
@@ -1466,7 +1932,8 @@ export default {
         [props.section]: {
           ...props.template[props.section],
           type: props.section, // Asegurar que el tipo esté presente
-          enabled: elements.value.length > 0 ? true : (props.template[props.section]?.enabled || false), // Habilitar si hay elementos
+          enabled:
+            elements.value.length > 0 ? true : props.template[props.section]?.enabled || false, // Habilitar si hay elementos
           elements: elements.value,
         },
       };
@@ -1481,7 +1948,7 @@ export default {
       showTemplateSelector.value = false;
     };
 
-    const applyPredefinedTemplate = (templateElements) => {
+    const applyPredefinedTemplate = templateElements => {
       if (templateElements && Array.isArray(templateElements)) {
         elements.value = JSON.parse(JSON.stringify(templateElements));
         saveHistory();
@@ -1491,7 +1958,7 @@ export default {
     };
 
     // Insertar variable en el texto seleccionado
-    const insertVariableIntoText = (variable) => {
+    const insertVariableIntoText = variable => {
       if (selectedElement.value && selectedElement.value.type === 'text') {
         // Agregar variable al final del texto existente
         const currentText = selectedElement.value.text || '';
@@ -1526,7 +1993,7 @@ export default {
       });
 
       // Agregar listener para atajos de teclado
-      const handleKeyDown = (event) => {
+      const handleKeyDown = event => {
         // Evitar que se ejecute si estamos escribiendo en un input o textarea
         if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
           return;

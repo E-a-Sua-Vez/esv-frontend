@@ -69,7 +69,8 @@ export default {
     const { t } = useI18n();
     const loading = ref(false);
 
-    const { commerce, cacheData, patientHistoryData, toggles, errorsAdd } = toRefs(props);
+    const { commerce, client, attention, cacheData, patientHistoryData, toggles, errorsAdd } =
+      toRefs(props);
 
     const { receiveData, onSave } = props;
 
@@ -117,9 +118,7 @@ export default {
       // Append transcribed text as new paragraph
       const currentText = state.newMedicalOrder.medicalOrder || '';
       const newText =
-        currentText && currentText.trim() !== ''
-          ? `${currentText}\n\n${finalText}`
-          : finalText;
+        currentText && currentText.trim() !== '' ? `${currentText}\n\n${finalText}` : finalText;
 
       state.newMedicalOrder.medicalOrder = newText;
       sendData();
@@ -453,9 +452,9 @@ export default {
           reference: state.referenceData || null,
           text: state.newMedicalOrder?.medicalOrder || '',
         };
-        
+
         console.log('📤 Sending medical order data:', data);
-        
+
         if (typeof receiveData === 'function') {
           receiveData(data);
         } else {
@@ -468,15 +467,18 @@ export default {
 
     const handleSaveTextOrder = async () => {
       try {
-        if (!state.newMedicalOrder?.medicalOrder || state.newMedicalOrder.medicalOrder.trim() === '') {
+        if (
+          !state.newMedicalOrder?.medicalOrder ||
+          state.newMedicalOrder.medicalOrder.trim() === ''
+        ) {
           console.warn('⚠️ No medical order text to save');
           return;
         }
-        
+
         // First send data to parent to update newMedicalOrder
         console.log('💾 Saving text order:', state.newMedicalOrder.medicalOrder);
         sendData();
-        
+
         // Then trigger save if onSave is available
         if (onSave && typeof onSave === 'function') {
           await onSave();
@@ -543,22 +545,27 @@ export default {
     watch(patientHistoryData, async () => {
       try {
         loading.value = true;
-        
+
         if (!patientHistoryData.value?.id) {
           loading.value = false;
           return;
         }
-        
+
         // Safe check for medical order data
         const medicalOrder = patientHistoryData.value.medicalOrder;
-        if (medicalOrder && Array.isArray(medicalOrder) && medicalOrder.length > 0 && medicalOrder[0]) {
+        if (
+          medicalOrder &&
+          Array.isArray(medicalOrder) &&
+          medicalOrder.length > 0 &&
+          medicalOrder[0]
+        ) {
           state.oldMedicalOrder = [...medicalOrder]; // Create a copy to avoid reactivity issues
-          
+
           // Cargar el registro más reciente del día de hoy, o el más reciente en general
           const sortedOrders = [...state.oldMedicalOrder]
             .filter(order => order && order.createdAt) // Filter out null/invalid orders
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            
+
           if (sortedOrders.length > 0) {
             // Buscar registro del día de hoy
             const todayOrder = sortedOrders.find(
@@ -571,7 +578,7 @@ export default {
             }
           }
         }
-        
+
         loading.value = false;
       } catch (error) {
         console.error('❌ Error in patientHistoryData watcher:', error);

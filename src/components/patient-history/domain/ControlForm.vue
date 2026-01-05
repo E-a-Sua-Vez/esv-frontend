@@ -345,7 +345,7 @@ export default {
                     v-if="isSpeechSupported && toggles['patient.history.edit']"
                     type="button"
                     class="btn btn-sm ms-2 btn-outline-secondary d-flex align-items-center"
-                    :class="{ 'recording': isListeningSpeech }"
+                    :class="{ recording: isListeningSpeech }"
                     @click="toggleSpeechRecognition"
                     :title="isListeningSpeech ? 'Parar gravação' : 'Iniciar gravação de voz'"
                   >
@@ -1064,7 +1064,8 @@ export default {
 }
 
 @keyframes pulse-recording {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(-1px) scale(1);
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
   }
@@ -1075,7 +1076,8 @@ export default {
 }
 
 @keyframes mic-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }

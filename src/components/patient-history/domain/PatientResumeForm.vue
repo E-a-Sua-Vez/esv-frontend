@@ -372,22 +372,24 @@ export default {
         // Consultation Reason Section
         if (patientHistoryData.value?.consultationReason?.length > 0) {
           addSectionHeader('MOTIVO DA CONSULTA');
-          patientHistoryData.value.consultationReason.filter(item => item != null).forEach((item, index) => {
-            checkPageBreak(15);
-            doc.setFontSize(8);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(100, 100, 100);
-            const date = item.createdAt ? getDate(item.createdAt) : '';
-            doc.text(date, margin, yPos);
-            yPos += 5;
-            doc.setFontSize(9);
-            doc.setFont(undefined, 'normal');
-            doc.setTextColor(0, 0, 0);
-            const reasonText = safeString(item.reason);
-            const reasonLines = doc.splitTextToSize(reasonText, maxWidth);
-            doc.text(reasonLines, margin + 5, yPos);
-            yPos += reasonLines.length * 4 + 5;
-          });
+          patientHistoryData.value.consultationReason
+            .filter(item => item != null)
+            .forEach((item, index) => {
+              checkPageBreak(15);
+              doc.setFontSize(8);
+              doc.setFont(undefined, 'bold');
+              doc.setTextColor(100, 100, 100);
+              const date = item.createdAt ? getDate(item.createdAt) : '';
+              doc.text(date, margin, yPos);
+              yPos += 5;
+              doc.setFontSize(9);
+              doc.setFont(undefined, 'normal');
+              doc.setTextColor(0, 0, 0);
+              const reasonText = safeString(item.reason);
+              const reasonLines = doc.splitTextToSize(reasonText, maxWidth);
+              doc.text(reasonLines, margin + 5, yPos);
+              yPos += reasonLines.length * 4 + 5;
+            });
           yPos += sectionSpacing;
         }
 
@@ -810,19 +812,26 @@ export default {
       <Spinner :show="loading"></Spinner>
 
       <!-- Debug info when no data -->
-      <div v-if="!patientHistoryData || (!patientHistoryData.id && !patientHistoryData.clientId)" class="resume-no-data">
+      <div
+        v-if="!patientHistoryData || (!patientHistoryData.id && !patientHistoryData.clientId)"
+        class="resume-no-data"
+      >
         <div class="no-data-card">
           <i class="bi bi-info-circle text-info me-2"></i>
-          <span>{{ $t('patientHistoryView.noDataAvailable') || 'Nenhum dado de prontuário disponível para mostrar o resumo.' }}</span>
+          <span>{{
+            $t('patientHistoryView.noDataAvailable') ||
+            'Nenhum dado de prontuário disponível para mostrar o resumo.'
+          }}</span>
           <div class="debug-info mt-3" v-if="patientHistoryData">
             <small class="text-muted">
-              Debug: patientHistoryData existe mas não tem ID nem clientId ({{ Object.keys(patientHistoryData).length }} propriedades)
+              Debug: patientHistoryData existe mas não tem ID nem clientId ({{
+                Object.keys(patientHistoryData).length
+              }}
+              propriedades)
             </small>
           </div>
           <div class="debug-info mt-2" v-else>
-            <small class="text-muted">
-              Debug: patientHistoryData é null/undefined
-            </small>
+            <small class="text-muted"> Debug: patientHistoryData é null/undefined </small>
           </div>
         </div>
       </div>
@@ -1429,13 +1438,21 @@ export default {
           <div class="empty-state-icon">
             <i class="bi bi-file-text"></i>
           </div>
-          <h3 class="empty-state-title">{{ $t('patientHistoryView.newPatient') || 'Novo Paciente' }}</h3>
+          <h3 class="empty-state-title">
+            {{ $t('patientHistoryView.newPatient') || 'Novo Paciente' }}
+          </h3>
           <p class="empty-state-message">
-            {{ $t('patientHistoryView.noHistoryMessage') || 'Este paciente não possui histórico médico registrado ainda. O resumo será preenchido conforme as consultas forem sendo realizadas.' }}
+            {{
+              $t('patientHistoryView.noHistoryMessage') ||
+              'Este paciente não possui histórico médico registrado ainda. O resumo será preenchido conforme as consultas forem sendo realizadas.'
+            }}
           </p>
           <div class="empty-state-suggestion">
             <i class="bi bi-lightbulb me-2"></i>
-            <span>{{ $t('patientHistoryView.startConsultation') || 'Inicie preenchendo os dados pessoais e motivo da consulta.' }}</span>
+            <span>{{
+              $t('patientHistoryView.startConsultation') ||
+              'Inicie preenchendo os dados pessoais e motivo da consulta.'
+            }}</span>
           </div>
         </div>
       </div>

@@ -29,7 +29,7 @@
           </div>
 
           <div v-if="lastExport" class="mt-3">
-            <div class="metric-card p-3" style="border-left: 3px solid #0ea5e9;">
+            <div class="metric-card p-3" style="border-left: 3px solid #0ea5e9">
               <h6 class="mb-2">{{ $t('lgpd.portability.lastExport') }}</h6>
               <p class="mb-1 small">
                 <strong>{{ $t('lgpd.portability.fileName') }}:</strong> {{ lastExport.fileName }}
@@ -169,6 +169,3 @@ export default {
   color: #78350f;
 }
 </style>
-
-
-

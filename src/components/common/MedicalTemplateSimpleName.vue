@@ -16,8 +16,8 @@ export default {
         isFavorite: false,
       }),
     },
-    getTypeLabel: { type: Function, default: () => (type) => type },
-    getScopeLabel: { type: Function, default: () => (scope) => scope },
+    getTypeLabel: { type: Function, default: () => type => type },
+    getScopeLabel: { type: Function, default: () => scope => scope },
   },
   computed: {
     statusClass() {
@@ -345,5 +345,3 @@ export default {
   overflow: visible;
 }
 </style>
-
-
