@@ -37,3 +37,4 @@ export const verifySignature = async (documentContent, signatureBase64, certific
       await getHeaders()
     )
   ).data;
+

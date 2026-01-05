@@ -8,6 +8,7 @@ import {
   getValidatedPlanActivationByBusinessId,
 } from '../../application/services/plan-activation';
 import { getPermissions } from '../../application/services/permissions';
+import { getBusinessLogoUrl } from '../../application/services/business-logo';
 import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
@@ -57,6 +58,7 @@ export default {
       errorsAdd: [],
       errorPlan: false,
       acceptTermsError: false,
+      businessLogoUrl: null,
     });
 
     onBeforeMount(async () => {
@@ -83,6 +85,7 @@ export default {
           state.business.id,
           false
         );
+        await loadBusinessLogo();
         state.toggles = await getPermissions('plan', 'admin');
         alertError.value = '';
         loading.value = false;
@@ -145,6 +148,33 @@ export default {
       }
     };
 
+    // Load business logo from Firebase Storage
+    const loadBusinessLogo = async () => {
+      if (!state.business || !state.business.logo) {
+        return;
+      }
+
+      // If it's a business-logo path (Firebase Storage), load the URL
+      if (state.business.logo.startsWith('/business-logos/')) {
+        const parts = state.business.logo.split('/');
+        if (parts.length === 4) {
+          const businessId = parts[2];
+          const logoId = parts[3];
+          try {
+            const logoUrl = await getBusinessLogoUrl(businessId, logoId);
+            if (logoUrl) {
+              state.businessLogoUrl = logoUrl;
+            }
+          } catch (error) {
+            console.error('Error loading business logo:', error);
+          }
+        }
+      } else {
+        // Use static logo URL
+        state.businessLogoUrl = state.business.logo;
+      }
+    };
+
     return {
       state,
       loading,
@@ -161,20 +191,22 @@ export default {
 
 <template>
   <div>
-    <div class="content text-center">
-      <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
-        :title="$t(`businessPlan.title`)"
-        :toggles="state.toggles"
-        component-name="businessPlan"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
-      <div id="page-header" class="text-center">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="false" :stack="alertError"></Alert>
-      </div>
-      <div id="businessPlan">
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none">
+      <div class="content text-center">
+        <CommerceLogo :src="state.businessLogoUrl || state.business.logo" :loading="loading"></CommerceLogo>
+        <ComponentMenu
+          :title="$t(`businessPlan.title`)"
+          :toggles="state.toggles"
+          component-name="businessPlan"
+          @goBack="goBack"
+        >
+        </ComponentMenu>
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div id="businessPlan">
         <div v-if="state.toggles['plan.admin.view']">
           <div v-if="!loading" id="businessPlan-result" class="mt-4">
             <div>
@@ -277,16 +309,154 @@ export default {
           />
         </div>
       </div>
-      <!-- Modal Select Plan -->
-      <div
-        class="modal fade"
-        id="planSelectModal"
-        data-bs-backdrop="static"
-        data-bs-keyboard="false"
-        tabindex="-1"
-        aria-labelledby="staticBackdropLabel"
-        aria-hidden="true"
-      >
+      </div>
+    </div>
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading || state.businessLogoUrl"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="state.businessLogoUrl || $t('hubLogoBlanco')"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t(`businessPlan.title`)"
+              :toggles="state.toggles"
+              component-name="businessPlan"
+              @goBack="goBack"
+            >
+            </ComponentMenu>
+          </div>
+        </div>
+        <div id="businessPlan">
+          <div v-if="state.toggles['plan.admin.view']">
+            <div v-if="!loading" id="businessPlan-result" class="mt-4">
+              <div>
+                <div class="mb-4">
+                  <div v-if="state.plan.id && state.toggles['plan.admin.edit']">
+                    <div class="plan-card">
+                      <SimplePlanCard
+                        :show="true"
+                        :can-update="state.toggles[`plan.admin.update`]"
+                        :plan="state.plan"
+                        :show-tooltip="false"
+                        :plan-activation="state.currentPlanActivation"
+                      >
+                      </SimplePlanCard>
+                    </div>
+                    <PlanStatus
+                      :show="true"
+                      :plan-activation="state.currentPlanActivation"
+                      :can-renew="true"
+                      @renew="validateAdd()"
+                    >
+                    </PlanStatus>
+                  </div>
+                  <div v-else>
+                    <Message
+                      :title="$t('businessPlan.message.2.title')"
+                      :content="$t('businessPlan.message.2.content')"
+                    />
+                  </div>
+                </div>
+                <div
+                  v-if="
+                    !state.currentPlanActivationRequested.id && state.toggles['plan.admin.update']
+                  "
+                >
+                  <div v-if="!state.plan.id" class="plan-select-title m-2">
+                    <span class="fw-bold"> {{ $t('businessPlan.selectAPlan.1') }}</span>
+                    {{ $t('businessPlan.selectAPlan.2') }}
+                  </div>
+                  <div v-else class="plan-select-title m-2">
+                    <span class="fw-bold"> {{ $t('businessPlan.upgradePlan.1') }}</span>
+                    {{ $t('businessPlan.upgradePlan.2') }}
+                  </div>
+                  <div class="plan-card my-3">
+                    <div class="row row-cols-1 row-cols-md-1 g-1 m-2">
+                      <div v-for="(plan, index) in state.plans" :key="index">
+                        <Plan
+                          :plan="plan"
+                          :selected-plan="state.planSelected"
+                          @click="selectPlan(plan)"
+                        >
+                        </Plan>
+                      </div>
+                    </div>
+                    <div class="col">
+                      <a
+                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill my-2 px-4"
+                        @click="validateAdd()"
+                        ><i class="bi bi-emoji-heart-eyes"></i> {{ $t('businessPlan.iwantit') }}</a
+                      >
+                      <button
+                        id="openPlanModal"
+                        href="#planSelectModal"
+                        data-bs-toggle="modal"
+                        data-bs-target="#planSelectModal"
+                        hidden
+                      ></button>
+                    </div>
+                    <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
+                      <Warning>
+                        <template v-slot:message>
+                          <li v-for="(error, index) in state.errorsAdd" :key="index">
+                            {{ $t(error) }}
+                          </li>
+                        </template>
+                      </Warning>
+                    </div>
+                  </div>
+                </div>
+                <div class="plan-card" v-if="state.currentPlanActivationRequested.id">
+                  <Message
+                    :title="$t('businessPlan.message.3.title')"
+                    :content="$t('businessPlan.message.3.content')"
+                  />
+                  <span>{{ $t('businessPlan.request') }}</span>
+                  <Plan
+                    :plan="state.currentPlanActivationRequested.planPayedCopy"
+                    :selected-plan="state.currentPlanActivationRequested.planPayedCopy"
+                    @click="undefined"
+                  >
+                  </Plan>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="!state.toggles['plan.admin.view'] && !loading">
+            <Message
+              :title="$t('businessPlan.message.1.title')"
+              :content="$t('businessPlan.message.1.content')"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal Select Plan -->
+    <div
+      class="modal fade"
+      id="planSelectModal"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
         <div class="modal-dialog modal-xl">
           <div class="modal-content">
             <div class="modal-header border-0">
@@ -304,8 +474,8 @@ export default {
           </div>
         </div>
       </div>
-      <!-- Modal Data Conditions - Use Teleport to render outside component to avoid overflow/position issues -->
-      <Teleport to="body">
+    <!-- Modal Data Conditions - Use Teleport to render outside component to avoid overflow/position issues -->
+    <Teleport to="body">
         <div
           class="modal fade"
           id="conditionsModal"
@@ -338,8 +508,8 @@ export default {
           </div>
         </div>
       </Teleport>
-      <!-- Modal Use Conditions - Use Teleport to render outside component to avoid overflow/position issues -->
-      <Teleport to="body">
+    <!-- Modal Use Conditions - Use Teleport to render outside component to avoid overflow/position issues -->
+    <Teleport to="body">
         <div
           class="modal fade"
           id="useConditionsModal"
@@ -372,7 +542,6 @@ export default {
           </div>
         </div>
       </Teleport>
-    </div>
   </div>
 </template>
 
@@ -387,5 +556,80 @@ export default {
 }
 .plan-select-title {
   line-height: 1rem;
+}
+
+/* Desktop header styles */
+.desktop-header-row {
+  padding: 0 1rem;
+}
+
+.desktop-header-row .desktop-logo-wrapper {
+  flex: 0 0 auto;
+}
+
+.desktop-header-row .desktop-menu-wrapper {
+  padding-left: 0;
+}
+
+.desktop-commerce-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#commerce-logo-desktop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-height: 60px;
+}
+
+#commerce-logo-desktop .logo-desktop {
+  max-height: 60px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Desktop Header Layout Styles */
+@media (min-width: 992px) {
+  .desktop-header-row {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    justify-content: flex-start;
+  }
+
+  .desktop-logo-wrapper {
+    padding-right: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .desktop-commerce-logo {
+    display: flex;
+    align-items: center;
+    max-width: 150px;
+  }
+
+  .desktop-commerce-logo .logo-desktop {
+    max-width: 120px;
+    max-height: 100px;
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  #commerce-logo-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .desktop-menu-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    width: auto;
+  }
 }
 </style>

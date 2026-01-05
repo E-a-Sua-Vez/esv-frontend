@@ -24,3 +24,4 @@ export const downloadDataPortabilityFile = async (commerceId, clientId) => {
   });
   return response.data;
 };
+

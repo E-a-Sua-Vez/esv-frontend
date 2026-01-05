@@ -106,12 +106,6 @@ export default {
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-8">
-        <h2 class="portfolio-modal-title mb-2">{{ $t('accessAdmin.title') }}</h2>
-        <div class="divider-custom mb-3">
-          <div class="divider-custom-line"></div>
-          <div class="divider-custom-icon"><i class="bi bi-key"></i></div>
-          <div class="divider-custom-line"></div>
-        </div>
         <div class="w-100">
           <div id="accessAdmin" class="modern-access-card">
             <div class="access-card-header">

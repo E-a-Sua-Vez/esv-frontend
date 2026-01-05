@@ -14,3 +14,4 @@ export const validateCrm = async (crm, state, doctorName) =>
  */
 export const getRegionalCouncilInfo = async state =>
   (await requestBackend.get(`/${entity}/state/${state}`, await getHeaders())).data;
+

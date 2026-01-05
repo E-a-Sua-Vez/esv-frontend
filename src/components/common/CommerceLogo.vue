@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { globalStore } from '../../stores/index';
 import LogoSkeleton from '../../components/skeletons/LogoSkeleton.vue';
 import { getBusinessLogo, getBusinessLogoUrl } from '../../application/services/business-logo';
+import { useRoute } from 'vue-router';
 
 export default {
   name: 'CommerceLogo',

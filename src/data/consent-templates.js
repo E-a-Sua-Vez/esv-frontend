@@ -920,3 +920,4 @@ export const getTemplateByType = (consentType, variables = {}) => {
     whatsapp: replaceTemplateVariables(template.whatsapp || template.formIntroText, variables),
   };
 };
+

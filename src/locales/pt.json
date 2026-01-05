@@ -1931,6 +1931,8 @@
     "password": {
       "placeholder": "Senha"
     },
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha",
     "actions": {
       "1": {
         "action": "Entrar"

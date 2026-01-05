@@ -5,6 +5,7 @@ import { globalStore } from '../../stores';
 import { getBusinessExecutiveReport } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import { statusWhatsappConnectionById } from '../../application/services/business';
+import { getBusinessLogoUrl } from '../../application/services/business-logo';
 import {
   getTelemedicineStatistics,
   getTelemedicineHealthMetrics,
@@ -50,6 +51,7 @@ export default {
       telemedicineStats: null,
       telemedicineHealth: null,
       toggles: {},
+      businessLogoUrl: null,
     });
 
     onBeforeMount(async () => {
@@ -65,6 +67,7 @@ export default {
         state.reports = calculatedReports;
         await getWhatsappStatus();
         await getTelemedicineMonitoring();
+        await loadBusinessLogo();
         state.toggles = await getPermissions('executive', 'admin');
         alertError.value = '';
         loading.value = false;
@@ -131,6 +134,33 @@ export default {
       }
     };
 
+    // Load business logo from Firebase Storage
+    const loadBusinessLogo = async () => {
+      if (!state.business || !state.business.logo) {
+        return;
+      }
+
+      // If it's a business-logo path (Firebase Storage), load the URL
+      if (state.business.logo.startsWith('/business-logos/')) {
+        const parts = state.business.logo.split('/');
+        if (parts.length === 4) {
+          const businessId = parts[2];
+          const logoId = parts[3];
+          try {
+            const logoUrl = await getBusinessLogoUrl(businessId, logoId);
+            if (logoUrl) {
+              state.businessLogoUrl = logoUrl;
+            }
+          } catch (error) {
+            console.error('Error loading business logo:', error);
+          }
+        }
+      } else {
+        // Use static logo URL
+        state.businessLogoUrl = state.business.logo;
+      }
+    };
+
     // Helper methods for modern dashboard
     const calculateHealthPercentage = (active, total) => {
       if (!total || total === 0) return 0;
@@ -166,6 +196,7 @@ export default {
       showUpdateForm,
       getWhatsappStatus,
       getTelemedicineMonitoring,
+      loadBusinessLogo,
       calculateHealthPercentage,
       getStatusClass,
       getStatusIcon,
@@ -752,10 +783,10 @@ export default {
             <div class="desktop-commerce-logo">
               <div id="commerce-logo-desktop">
                 <img
-                  v-if="!loading || state.business.logo"
+                  v-if="!loading || state.businessLogoUrl"
                   class="rounded img-fluid logo-desktop"
                   :alt="$t('logoAlt')"
-                  :src="state.business.logo || $t('hubLogoBlanco')"
+                  :src="state.businessLogoUrl || $t('hubLogoBlanco')"
                   loading="lazy"
                 />
               </div>

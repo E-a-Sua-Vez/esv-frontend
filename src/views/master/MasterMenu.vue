@@ -8,7 +8,6 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import WelcomeMenu from '../../components/common/WelcomeMenu.vue';
-import { getBusinessLogoUrl } from '../../application/services/business-logo';
 
 export default {
   name: 'MasterMenu',
@@ -71,6 +70,10 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
+        await localStorage.removeItem('currentBusiness');
+        await localStorage.removeItem('currentCommerce');
+        store.setCurrentBusiness(undefined);
+        store.setCurrentCommerce(undefined);
         state.currentUser = store.getCurrentUser;
         state.businesses = await getBusinesses();
         state.business = store.getCurrentBusiness;

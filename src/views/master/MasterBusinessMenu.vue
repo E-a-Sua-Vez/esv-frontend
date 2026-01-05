@@ -272,7 +272,11 @@ export default {
           <div class="card mt-4 mb-4 business-card">
             <div class="row d-flex business-title">
               <div class="col-4 d-flex align-items-center justify-content-center">
-                <CommerceLogo :src="getBusinessLogo()" :business-id="state.business.id" />
+                <CommerceLogo
+                  v-if="state.business && state.business.id"
+                  :src="getBusinessLogo()"
+                  :business-id="state.business.id"
+                />
               </div>
               <div class="col-8 d-flex align-items-center">
                 <div class="flex-grow-1">
@@ -484,9 +488,10 @@ export default {
 }
 
 .business-title {
-  padding: 1.5rem 1rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+  background: linear-gradient(135deg, #004aad 0%, #00c2cb 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
+  padding: 1rem 1.25rem;
 }
 
 .business-title .col-4 {

@@ -107,6 +107,12 @@ router.beforeEach(async (to, from, next) => {
   const currentUserType = store.getCurrentUserType;
   const userNotExists = currentUser === undefined || currentUser === null;
 
+  // Limpiar toda la sesión al llegar a la página root
+  if (to.name === 'home') {
+    localStorage.clear();
+    await store.resetSession();
+  }
+
   /**
    * ROOT
    */
@@ -131,6 +137,7 @@ router.beforeEach(async (to, from, next) => {
   if (publicMasterRoutes.includes(to.name)) {
     if (userNotExists) {
       if (to.name === 'master-login') {
+        await localStorage.clear();
         await store.resetSession();
         await store.setCurrentUserType(USER_TYPES.MASTER);
         next();
@@ -142,6 +149,7 @@ router.beforeEach(async (to, from, next) => {
         return;
       } else {
         await logout();
+        await localStorage.clear();
         await store.resetSession();
         store.setCurrentUserType(USER_TYPES.MASTER);
         if (to.name !== 'master-login') {
@@ -159,6 +167,7 @@ router.beforeEach(async (to, from, next) => {
   if (publicCollaboratorViews.includes(to.name)) {
     if (userNotExists) {
       if (to.name === 'collaborator-login') {
+        await localStorage.clear();
         await store.resetSession();
         await store.setCurrentUserType(USER_TYPES.COLLABORATOR);
         next();
@@ -170,6 +179,7 @@ router.beforeEach(async (to, from, next) => {
         return;
       } else {
         await logout();
+         await localStorage.clear();
         await store.resetSession();
         store.setCurrentUserType(USER_TYPES.COLLABORATOR);
         if (to.name !== 'collaborator-login') {
@@ -187,6 +197,7 @@ router.beforeEach(async (to, from, next) => {
   if (publicBusinessViews.includes(to.name)) {
     if (userNotExists) {
       if (to.name === 'business-login') {
+        await localStorage.clear();
         await store.resetSession();
         await store.setCurrentUserType(USER_TYPES.BUSINESS);
         next();
@@ -198,6 +209,7 @@ router.beforeEach(async (to, from, next) => {
         return;
       } else {
         await logout();
+        await localStorage.clear();
         await store.resetSession();
         store.setCurrentUserType(USER_TYPES.BUSINESS);
         next({ name: 'business-login', replace: true });
@@ -219,6 +231,7 @@ router.beforeEach(async (to, from, next) => {
         (currentUserType === USER_TYPES.INVITED && getInvitedSessionAlive(currentUser.time)))
     ) {
       await signOut(undefined, currentUserType);
+      await localStorage.clear();
       await store.resetSession();
       store.setCurrentUserType(USER_TYPES.INVITED);
       const user = await signInInvited();
@@ -236,6 +249,7 @@ router.beforeEach(async (to, from, next) => {
       if (currentUserType === USER_TYPES.MASTER) {
         await logout();
       }
+      await localStorage.clear();
       await store.resetSession();
       await store.setCurrentUserType(USER_TYPES.MASTER);
       next({ name: 'master-login', replace: true });
@@ -245,6 +259,7 @@ router.beforeEach(async (to, from, next) => {
       if (sessionIsNotAlive) {
         if (to.name !== 'master-login') {
           await logout();
+          await localStorage.clear();
           await store.resetSession();
           await store.setCurrentUserType(USER_TYPES.MASTER);
           router.go({ name: 'master-login', replace: true });
@@ -256,6 +271,7 @@ router.beforeEach(async (to, from, next) => {
           return;
         } else {
           await logout();
+          await localStorage.clear();
           await store.resetSession();
           store.setCurrentUserType(USER_TYPES.MASTER);
           router.go({ name: 'master-login', replace: true });
@@ -273,6 +289,7 @@ router.beforeEach(async (to, from, next) => {
       if (currentUserType === USER_TYPES.COLLABORATOR) {
         await logout();
       }
+      await localStorage.clear();
       await store.resetSession();
       await store.setCurrentUserType(USER_TYPES.COLLABORATOR);
       next({ name: 'collaborator-login', replace: true });
@@ -282,6 +299,7 @@ router.beforeEach(async (to, from, next) => {
       if (sessionIsNotAlive) {
         if (to.name !== 'collaborator-login') {
           await logout();
+          await localStorage.clear();
           await store.resetSession();
           await store.setCurrentUserType(USER_TYPES.COLLABORATOR);
           router.go({ name: 'collaborator-login', replace: true });
@@ -293,6 +311,7 @@ router.beforeEach(async (to, from, next) => {
           return;
         } else {
           await logout();
+          await localStorage.clear();
           await store.resetSession();
           store.setCurrentUserType(USER_TYPES.COLLABORATOR);
           router.go({ name: 'collaborator-login', replace: true });
@@ -310,6 +329,7 @@ router.beforeEach(async (to, from, next) => {
       if (currentUserType === USER_TYPES.BUSINESS) {
         await logout();
       }
+      await localStorage.clear();
       await store.resetSession();
       await store.setCurrentUserType(USER_TYPES.BUSINESS);
       next({ name: 'business-login', replace: true });
@@ -319,6 +339,7 @@ router.beforeEach(async (to, from, next) => {
       if (sessionIsNotAlive) {
         if (to.name !== 'business-login') {
           await logout();
+          await localStorage.clear();
           await store.resetSession();
           await store.setCurrentUserType(USER_TYPES.BUSINESS);
           router.go({ name: 'business-login', replace: true });
@@ -330,6 +351,7 @@ router.beforeEach(async (to, from, next) => {
           return;
         } else {
           await logout();
+          await localStorage.clear();
           await store.resetSession();
           store.setCurrentUserType(USER_TYPES.BUSINESS);
           router.go({ name: 'business-login', replace: true });

@@ -137,7 +137,7 @@ export default {
 }
 
 .home-logo {
-  width: 300px;
+  width: 200px;
   max-width: 100%;
   height: auto;
 }
@@ -442,7 +442,7 @@ export default {
 
 @media (min-width: 1024px) {
   .home-logo {
-    width: 350px;
+    width: 250px;
   }
 
   .home-title {

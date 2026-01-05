@@ -36,6 +36,7 @@ export default {
       keyName,
       store,
       visible: false,
+      showPassword: false,
     };
   },
   computed: {
@@ -137,6 +138,9 @@ export default {
       // Call closeMenu as before
       this.closeMenu();
     },
+    togglePasswordVisibility() {
+      this.showPassword = !this.showPassword;
+    },
   },
   watch: {
     modalVisible(newVal) {
@@ -194,7 +198,7 @@ export default {
             <div class="input-wrapper">
               <i class="bi bi-key-fill input-icon"></i>
               <input
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 class="form-control modern-input"
                 id="password"
                 v-model="password"
@@ -202,6 +206,14 @@ export default {
                 v-bind:class="{ 'is-invalid': passwordError }"
                 :placeholder="$t('loginData.password.placeholder')"
               />
+              <button
+                type="button"
+                class="password-toggle-btn"
+                @click="togglePasswordVisibility"
+                :aria-label="showPassword ? $t('loginData.hidePassword') : $t('loginData.showPassword')"
+              >
+                <i :class="showPassword ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'"></i>
+              </button>
             </div>
           </div>
           <div class="recaptcha-area">
@@ -349,9 +361,39 @@ export default {
   transition: color 0.3s ease, transform 0.2s ease;
 }
 
+.password-toggle-btn {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--gris-default);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease, transform 0.2s ease;
+  z-index: 2;
+}
+
+.password-toggle-btn:hover {
+  color: var(--azul-turno);
+  transform: scale(1.1);
+}
+
+.password-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+  color: var(--verde-tu);
+}
+
 .modern-input {
   width: 100%;
-  padding: 0.875rem 1rem 0.875rem 3.5rem;
+  padding: 0.875rem 3.5rem 0.875rem 3.5rem;
   border: 1.75px solid #ced4da;
   border-radius: 1rem;
   font-size: 1rem;
@@ -439,7 +481,6 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
 }
 
 .actions-text {
@@ -511,12 +552,17 @@ export default {
   }
 
   .modern-input {
-    padding: 0.75rem 0.875rem 0.75rem 3rem;
+    padding: 0.75rem 3rem 0.75rem 3rem;
     font-size: 0.95rem;
   }
 
   .input-icon {
     left: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .password-toggle-btn {
+    right: 0.75rem;
     font-size: 1.1rem;
   }
 }
