@@ -447,6 +447,7 @@ export default {
         </div>
       </div>
     </div>
+
     <!-- Desktop Layout -->
     <div class="d-none d-lg-block">
       <div class="content text-center">

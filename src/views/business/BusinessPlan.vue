@@ -196,7 +196,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.businessLogoUrl || state.business.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
+        <CommerceLogo :src="state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessPlan.title`)"
           :toggles="state.toggles"
@@ -313,6 +313,7 @@ export default {
       </div>
       </div>
     </div>
+
     <!-- Desktop Layout -->
     <div class="d-none d-lg-block">
       <div class="content text-center">
@@ -321,7 +322,7 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <DesktopPageHeader
-          :logo="state.businessLogoUrl"
+          :logo="state.business?.logo"
           :business-id="state.business?.id"
           :loading="loading"
           :title="$t('businessPlan.title')"
@@ -434,6 +435,7 @@ export default {
         </div>
       </div>
     </div>
+
     <!-- Modal Select Plan -->
     <div
       class="modal fade"
@@ -460,7 +462,8 @@ export default {
             </div>
           </div>
         </div>
-      </div>
+    </div>
+
     <!-- Modal Data Conditions - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
         <div
@@ -494,7 +497,8 @@ export default {
             </div>
           </div>
         </div>
-      </Teleport>
+    </Teleport>
+
     <!-- Modal Use Conditions - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
         <div
@@ -528,7 +532,7 @@ export default {
             </div>
           </div>
         </div>
-      </Teleport>
+    </Teleport>
   </div>
 </template>
 

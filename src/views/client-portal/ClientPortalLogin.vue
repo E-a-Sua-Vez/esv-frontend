@@ -155,16 +155,10 @@
 
                   <!-- Ya tengo código button -->
                   <div class="mt-3">
-                    <button
-                      type="button"
-                      class="btn btn-outline-secondary btn-sm"
-                      :disabled="!hasInputData"
-                      @click="toggleCodeForm"
-                      :title="!hasInputData ? $t('clientPortal.login.enterDataFirst') : ''"
-                    >
-                      <i class="bi bi-key me-2"></i>
-                      {{ $t('clientPortal.login.alreadyHaveCode') }}
-                    </button>
+                    <a :disabled="!hasInputData" class="btn actions-link" @click="toggleCodeForm"  style="cursor: pointer;">
+                       {{ $t('clientPortal.login.alreadyHaveCode') }}
+                      <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
                   </div>
                 </div>
               </div>

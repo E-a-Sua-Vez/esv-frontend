@@ -4,8 +4,8 @@
       <!-- Commerce Logo - Only show if we have commerce logo, otherwise don't show any logo -->
       <CommerceLogo
         v-if="commerce && commerce.logo"
-        :src="commerce.logo"
-        :business-id="commerce.businessId"
+        :src="commerce?.logo"
+        :business-id="commerce?.businessId"
         :loading="false"
       ></CommerceLogo>
 

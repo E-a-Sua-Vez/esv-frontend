@@ -571,7 +571,7 @@ export default {
           <Alert :show="!!alertError" :stack="alertError"></Alert>
         </div>
         <DesktopPageHeader
-          :logo="commerce?.logo || state.business?.logo"
+          :logo="state.business?.logo"
           :business-id="state.business?.id"
           :loading="loading"
           :title="$t('audit-log.title')"

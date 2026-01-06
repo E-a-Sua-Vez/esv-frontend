@@ -116,12 +116,12 @@ export default {
     const showAdd = () => {
       state.showAdd = true;
       state.newConfiguration = {
-        commerceId: state.commerce.id,
+        commerceId: state.commerce?.id || '',
       };
-      // Reset selections when opening modal
-      state.typeSelected = undefined;
-      state.optionSelected = undefined;
-      state.options = [];
+      // Inicializar tipo y opciones por defecto si existen
+      state.typeSelected = state.types && state.types.length > 0 ? state.types[0].id : undefined;
+      state.options = state.allOptions && state.allOptions.length > 0 ? state.allOptions.filter(opt => opt.type === state.typeSelected) : [];
+      state.optionSelected = state.options && state.options.length > 0 ? state.options[0] : undefined;
     };
 
     const validateAdd = () => {
@@ -219,12 +219,6 @@ export default {
             <div v-if="isActiveBusiness && state.toggles['configuration.admin.view']">
               <div v-if="!loading" id="businessConfiguration-result" class="mt-4">
                 <div>
-                  <div v-if="state.configurations.length === 0">
-                    <Message
-                      :title="$t('businessConfiguration.message.2.title')"
-                      :content="$t('businessConfiguration.message.2.content')"
-                    />
-                  </div>
                   <div v-if="state.commerce" class="row mb-2">
                     <div class="col lefted">
                       <button
@@ -238,7 +232,13 @@ export default {
                       </button>
                     </div>
                   </div>
-                  <div class="mt-1">
+                  <div v-if="state.configurations.length === 0">
+                    <Message
+                      :title="$t('businessConfiguration.message.2.title')"
+                      :content="$t('businessConfiguration.message.2.content')"
+                    />
+                  </div>
+                  <div v-if="state.configurations.length > 0" class="mt-1 text-center d-md-block">
                     <span class="badge bg-secondary px-2 py-2 m-1"
                       >{{ $t('businessAdmin.listResult') }} {{ state.configurations.length }}
                     </span>
@@ -246,7 +246,7 @@ export default {
                   <div
                     class="config-tree-container"
                     v-if="
-                      state.configurations.length > 0 && state.toggles['configuration.admin.edit']
+                      state.toggles['configuration.admin.edit']
                     "
                   >
                     <div class="config-tree-section">
@@ -565,7 +565,7 @@ export default {
               <div
                 id="add-configuration"
                 class="configuration-card mb-4"
-                v-if="state.showAdd && state.toggles['configuration.admin.add']"
+                v-if="state.toggles['configuration.admin.add']"
               >
                 <div class="row g-1">
                   <div id="configuration-feature-form-add" class="row g-1">

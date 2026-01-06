@@ -96,7 +96,7 @@ export default {
     <div class="d-block d-lg-none">
       <div class="content text-center">
         <CommerceLogo
-          :src="commerce?.logo || state.business?.logo"
+          :src="state.business?.logo"
           :business-id="state.business?.id"
           :loading="loading"
         ></CommerceLogo>
@@ -127,7 +127,7 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <DesktopPageHeader
-          :logo="commerce?.logo || state.business?.logo"
+          :logo="state.business?.logo"
           :business-id="state.business?.id"
           :loading="loading"
           :title="$t('businessPermissionsAdmin.title')"

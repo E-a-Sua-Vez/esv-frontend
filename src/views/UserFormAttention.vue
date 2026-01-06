@@ -136,7 +136,7 @@ export default {
 <template>
   <div>
     <div class="content text-center">
-      <CommerceLogo :src="state.commerce.logo" :business-id="state.commerce.businessId" :loading="loading" :large-size="true"></CommerceLogo>
+      <CommerceLogo :src="state.commerce?.logo" :business-id="state.commerce?.businessId" :loading="loading" :large-size="true"></CommerceLogo>
       <QueueName :queue="state.queue"></QueueName>
       <Spinner :show="loading"></Spinner>
       <Alert :show="false" :stack="alertError"></Alert>

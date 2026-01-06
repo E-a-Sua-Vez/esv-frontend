@@ -188,13 +188,14 @@ export default {
   },
 };
 </script>
+
 <template>
   <div>
     <div class="content">
       <!-- Mobile/Tablet Layout -->
       <div class="d-block d-lg-none mobile-menu-layout">
         <div class="text-center">
-          <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+          <CommerceLogo :src="state.business?.logo" :loading="loading"></CommerceLogo>
           <WelcomeMenu
             :name="state.currentUser.name"
             :toggles="state.toggles"
@@ -373,6 +374,7 @@ export default {
           </div>
         </div>
       </div>
+
       <!-- Desktop Layout -->
       <div class="d-none d-lg-block desktop-menu-layout">
         <div id="page-header" class="text-center">
@@ -382,7 +384,7 @@ export default {
         </div>
         <div class="row align-items-center mb-1 desktop-header-row">
           <div class="col-auto desktop-logo-wrapper">
-            <CommerceLogo :src="state.business.logo" :loading="loading" />
+            <CommerceLogo :src="state.business?.logo" :loading="loading" />
           </div>
           <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
             <WelcomeMenu
@@ -541,6 +543,7 @@ export default {
     </div>
   </div>
 </template>
+
 <style scoped>
 .choose-attention {
   font-size: 1rem;

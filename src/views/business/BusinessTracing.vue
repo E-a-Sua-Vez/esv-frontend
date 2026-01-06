@@ -1180,7 +1180,7 @@ export default {
     <div class="d-block d-lg-none">
       <div class="content text-center">
         <CommerceLogo
-          :src="commerce?.logo || state.business?.logo"
+          :src="state.business?.logo"
           :business-id="state.business?.id"
           :loading="loading"
         ></CommerceLogo>
@@ -1299,7 +1299,7 @@ export default {
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
               <CommerceLogo
-                :src="commerce?.logo || state.business?.logo"
+                :src="state.business?.logo"
                 :business-id="state.business?.id"
                 :loading="loading"
                 desktop-size

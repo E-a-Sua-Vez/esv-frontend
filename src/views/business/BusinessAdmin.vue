@@ -774,7 +774,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo></CommerceLogo>
+        <CommerceLogo :src="state.business?.logo"></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessAdmin.title`)"
           :toggles="toggles"
@@ -2474,7 +2474,7 @@ export default {
         <Alert :show="!!alertError" :stack="alertError"></Alert>
       </div>
       <DesktopPageHeader
-        :logo="commerce?.logo || state.business?.logo"
+        :logo="state.business?.logo"
         :business-id="state.business?.id"
         :loading="loading"
         :title="$t('businessAdmin.title')"

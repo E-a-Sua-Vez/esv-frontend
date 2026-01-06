@@ -7,7 +7,6 @@ import {
   computed,
   onMounted,
   onBeforeUnmount,
-  nextTick,
 } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores/index';
@@ -20,7 +19,6 @@ import { useFirebaseListener } from '../../composables/useFirebaseListener';
 import { USER_TYPES, ENVIRONMENTS } from '../../shared/constants';
 import { getPermissions } from '../../application/services/permissions';
 import { getClientPortalPermissions } from '../../application/services/client-portal-permissions';
-import { getPatientPhoto, getPatientPhotoThumbnailUrl } from '../../application/services/patient-photo';
 import LocaleSelector from './LocaleSelector.vue';
 import CommerceSelector from './CommerceSelector.vue';
 import ModuleSelector from './ModuleSelector.vue';
@@ -80,7 +78,6 @@ export default {
       manageControlSubMenuOption: false,
       medicalManagementSubMenuOption: false,
       toggles: {},
-      clientPhotoUrl: null,
       clientPortalPermissions: {},
     });
 
@@ -316,7 +313,6 @@ export default {
 
       // Load client photo and permissions if in client portal
       if (isClientPortalRoute.value) {
-        loadClientPhoto();
         loadClientPortalPermissions();
       }
 
@@ -523,10 +519,8 @@ export default {
       () => router.currentRoute.value.path,
       (newPath) => {
         if (newPath.startsWith('/portal/') || newPath.startsWith('/public/portal/') || newPath.startsWith('/publico/portal/')) {
-          loadClientPhoto();
           loadClientPortalPermissions();
         } else {
-          state.clientPhotoUrl = null;
           state.clientPortalPermissions = {};
         }
       }
@@ -615,27 +609,6 @@ export default {
         };
       } catch (e) {
         return { client: null, commerce: null };
-      }
-    };
-
-    // Load client photo for client portal
-    const loadClientPhoto = async () => {
-      try {
-        const { client, commerce } = getClientPortalData();
-        
-        if (client && commerce && client.id) {
-          const photo = await getPatientPhoto(commerce.id, client.id);
-          if (photo && photo.id) {
-            const url = await getPatientPhotoThumbnailUrl(commerce.id, client.id, photo.id);
-            state.clientPhotoUrl = url;
-          } else {
-            state.clientPhotoUrl = null;
-          }
-        } else {
-          state.clientPhotoUrl = null;
-        }
-      } catch (err) {
-        state.clientPhotoUrl = null;
       }
     };
 
@@ -1074,14 +1047,7 @@ export default {
             >
               <a class="user-name-link" data-bs-toggle="modal" :data-bs-target="`#userModal`">
                 <span class="fw-bold user-name-display">
-                  <img
-                    v-if="state.clientPhotoUrl"
-                    :src="state.clientPhotoUrl"
-                    alt="Foto"
-                    class="user-avatar-photo"
-                    @error="state.clientPhotoUrl = null"
-                  />
-                  <i v-else class="bi bi-person-circle"></i>
+                  <i class="bi bi-person-circle"></i>
                   {{
                     getClientPortalData().client
                       ? `${getClientPortalData().client.name || ''} ${
@@ -2036,7 +2002,7 @@ export default {
               ></button>
             </div>
             <div class="modal-body text-center pb-3">
-              <MyUser :messages="state.messages" :clientPhotoUrl="state.clientPhotoUrl"> </MyUser>
+              <MyUser :messages="state.messages"> </MyUser>
             </div>
           </div>
         </div>

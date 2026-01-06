@@ -214,7 +214,7 @@ export default {
     <div class="d-block d-lg-none">
       <div class="content text-center">
         <CommerceLogo
-          :src="commerce?.logo || state.business?.logo"
+          :src="state.business?.logo"
           :loading="loading"
         ></CommerceLogo>
         <ComponentMenu
@@ -329,7 +329,7 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <DesktopPageHeader
-          :logo="commerce?.logo || state.business?.logo"
+          :logo="state.business?.logo"
           :loading="loading"
           :title="$t('businessFinancial.title')"
           :toggles="state.toggles"

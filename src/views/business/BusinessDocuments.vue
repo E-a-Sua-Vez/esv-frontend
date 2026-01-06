@@ -184,7 +184,7 @@ export default {
     <div class="d-block d-lg-none">
       <div class="content text-center">
         <CommerceLogo
-          :src="commerce?.logo || state.business?.logo"
+          :src="state.business?.logo"
           :business-id="state.business?.id"
           :loading="loading"
         ></CommerceLogo>

@@ -290,9 +290,10 @@ export default {
 
 <template>
   <div>
+    <!-- Desktop -->
     <div class="content text-center">
       <DesktopPageHeader
-        :logo="commerce?.logo || state.business?.logo"
+        :logo="state.business?.logo"
         :business-id="state.business?.id"
         :loading="loading"
         :title="$t(`businessOutcomeTypesAdmin.title`)"
@@ -426,6 +427,7 @@ export default {
         </div>
       </div>
     </div>
+
     <!-- Modal Add -->
     <div
       class="modal fade"

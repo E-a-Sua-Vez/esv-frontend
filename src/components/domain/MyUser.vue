@@ -20,7 +20,6 @@ export default {
   name: 'MyUser',
   props: {
     messages: { type: Array, default: [] },
-    clientPhotoUrl: { type: String, default: null },
   },
   async setup(props) {
     const router = useRouter();
@@ -211,13 +210,6 @@ export default {
     <div class="row mt-2 mb-2 centered">
       <div class="col centered">
         <div class="user-name-container">
-          <img
-            v-if="clientPhotoUrl"
-            :src="clientPhotoUrl"
-            alt="Foto"
-            class="user-photo"
-            @error="() => {}"
-          />
           <span class="user-title">
             {{ state.userName }}
             {{ state.currentUser ? (state.currentUser.active ? '🟢' : '🔴') : '' }}
@@ -374,15 +366,6 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-}
-
-.user-photo {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #dee2e6;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .user-title {
