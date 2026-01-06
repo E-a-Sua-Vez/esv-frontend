@@ -72,7 +72,11 @@ export const globalStore = defineStore('globalStore', {
     },
     async setCurrentUserType(value) {
       this.currentUserType = value;
-      localStorage.setItem(STORAGE_KEYS.CURRENT_USER_TYPE, value);
+      if (value === null || value === undefined) {
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER_TYPE);
+      } else {
+        localStorage.setItem(STORAGE_KEYS.CURRENT_USER_TYPE, value);
+      }
     },
     async setCurrentCommerce(value) {
       this.currentCommerce = value;
@@ -84,7 +88,11 @@ export const globalStore = defineStore('globalStore', {
     },
     async setCurrentAttentionChannel(value) {
       this.currentAttentionChannel = value;
-      localStorage.setItem(STORAGE_KEYS.CURRENT_ATTENTION_CHANNEL, value);
+      if (value === null || value === undefined) {
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_ATTENTION_CHANNEL);
+      } else {
+        localStorage.setItem(STORAGE_KEYS.CURRENT_ATTENTION_CHANNEL, value);
+      }
     },
     async setCurrentActiveAttentions(value) {
       this.currentActiveAttentions = value;

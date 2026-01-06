@@ -171,55 +171,52 @@ export default {
 
     <div v-else class="control-box">
       <!-- Summary Cards -->
-      <div class="row mb-3">
-        <div class="col-12 col-md-6 col-lg-3 mb-3">
+      <div class="row mb-3 align-items-stretch">
+        <div class="col-12 col-md-6 col-lg-3 mb-3 d-flex">
           <SimpleCard
             :title="$t('dashboard.lgpdCompliance.complianceScore')"
-            :value="metrics.complianceScore"
-            :suffix="'%'"
-            :trend="null"
+            :data="`${metrics.complianceScore}%`"
             :icon="'shield-check'"
-            :color="complianceScoreColor"
+            :iconStyleClass="complianceScoreColor === 'success' ? 'green-icon' : complianceScoreColor === 'warning' ? 'yellow-icon' : 'red-icon'"
           />
         </div>
-        <div class="col-12 col-md-6 col-lg-3 mb-3">
+        <div class="col-12 col-md-6 col-lg-3 mb-3 d-flex">
           <SimpleCard
             :title="$t('dashboard.lgpdCompliance.clientsWithAllConsents')"
-            :value="metrics.clientsWithAllConsents"
-            :suffix="` / ${metrics.totalClients}`"
-            :trend="null"
-            :icon="'people-check'"
-            :color="'success'"
+            :data="metrics.clientsWithAllConsents"
+            :subdata="`/ ${metrics.totalClients}`"
+            :icon="'people'"
+            :iconStyleClass="'green-icon'"
           />
         </div>
-        <div class="col-12 col-md-6 col-lg-3 mb-3">
+        <div class="col-12 col-md-6 col-lg-3 mb-3 d-flex">
           <SimpleCard
             :title="$t('dashboard.lgpdCompliance.pendingConsents')"
-            :value="metrics.pendingConsents"
-            :suffix="` / ${metrics.totalConsents}`"
-            :trend="null"
+            :data="metrics.pendingConsents"
+            :subdata="`/ ${metrics.totalConsents}`"
             :icon="'clock-history'"
-            :color="'warning'"
+            :iconStyleClass="'yellow-icon'"
           />
         </div>
-        <div class="col-12 col-md-6 col-lg-3 mb-3">
+        <div class="col-12 col-md-6 col-lg-3 mb-3 d-flex">
           <SimpleCard
             :title="$t('dashboard.lgpdCompliance.expiredConsents')"
-            :value="metrics.expiredConsents"
-            :suffix="` / ${metrics.totalConsents}`"
-            :trend="null"
+            :data="metrics.expiredConsents"
+            :subdata="`/ ${metrics.totalConsents}`"
             :icon="'exclamation-triangle'"
-            :color="'danger'"
+            :iconStyleClass="'red-icon'"
           />
         </div>
       </div>
 
       <!-- Compliance Gauge -->
-      <div class="row mb-3">
-        <div class="col-12 col-md-6 mb-3">
+      <div class="row mb-3 align-items-stretch">
+        <div class="col-12 col-md-6 mb-3 d-flex">
           <DetailsCard
             :title="$t('dashboard.lgpdCompliance.complianceOverview')"
             :details-opened="detailsOpened"
+            :icon="'graph-up-arrow'"
+            :iconStyleClass="'green-icon'"
             @toggle="toggleDetails"
           >
             <template #summary>
@@ -281,10 +278,12 @@ export default {
             </template>
           </DetailsCard>
         </div>
-        <div class="col-12 col-md-6 mb-3">
+        <div class="col-12 col-md-6 mb-3 d-flex">
           <DetailsCard
             :title="$t('dashboard.lgpdCompliance.consentsBreakdown')"
             :details-opened="false"
+            :icon="'pie-chart'"
+            :iconStyleClass="'blue-icon'"
           >
             <template #summary>
               <div class="d-flex align-items-center justify-content-between">
@@ -350,6 +349,8 @@ export default {
           <DetailsCard
             :title="$t('dashboard.lgpdCompliance.notificationMetrics.title')"
             :details-opened="false"
+            :icon="'bell'"
+            :iconStyleClass="'blue-icon'"
           >
             <template #summary>
               <div class="d-flex align-items-center justify-content-between">
@@ -485,5 +486,21 @@ export default {
 .metric-value {
   font-weight: bold;
   font-size: 1.1rem;
+}
+
+/* Ensure DetailsCard fills available space in flex container */
+.d-flex :deep(.modern-details-card),
+.d-flex :deep(> div) {
+  width: 100%;
+  flex: 1;
+}
+
+/* Ensure row with d-flex stretches cards to same height */
+.row.align-items-stretch .col-12 {
+  display: flex;
+}
+
+.row.align-items-stretch .col-md-6 {
+  display: flex;
 }
 </style>

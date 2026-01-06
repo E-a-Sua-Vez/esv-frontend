@@ -66,7 +66,7 @@ export default {
   <div v-if="show" class="modern-metric-card" :class="getCardTypeClass()">
     <div class="metric-card-header">
       <div class="metric-icon-container" :class="getIconContainerClass()">
-        <i :class="`bi ${icon}`"></i>
+        <i :class="`bi bi-${icon}`"></i>
       </div>
       <div class="metric-title-section">
         <span class="metric-label">{{ title }}</span>
@@ -98,6 +98,9 @@ export default {
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .modern-metric-card::before {

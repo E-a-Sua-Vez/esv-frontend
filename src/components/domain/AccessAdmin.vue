@@ -107,15 +107,8 @@ export default {
     <div class="row justify-content-center">
       <div class="col-lg-8">
         <div class="w-100">
-          <div id="accessAdmin" class="modern-access-card">
-            <div class="access-card-header">
-              <h3 class="access-card-title">
-                <i class="bi bi-key-fill me-2"></i>
-                {{ $t('accessAdmin.subtitle.1') }}
-              </h3>
-            </div>
-            <div v-if="!passwordChanged" class="access-card-body">
-              <p class="access-card-subtitle">{{ $t('accessAdmin.subtitle.2') }}</p>
+          <div id="accessAdmin" class="modern-access-card-content">
+            <div v-if="!passwordChanged" class="access-card-body-compact">
               <div class="form-group">
                 <label for="reset-email" class="form-label"> Usuario </label>
                 <div class="input-wrapper">
@@ -196,51 +189,21 @@ export default {
 </template>
 
 <style scoped>
-.modern-access-card {
-  background: var(--color-background);
-  margin: 0.5rem 0;
+.modern-access-card-content {
+  background: transparent;
+  border: none;
+  border-radius: 0;
   padding: 0;
-  border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 0;
+  box-shadow: none;
   overflow: visible;
   width: 100%;
 }
 
-.access-card-header {
-  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
-  padding: 0.75rem 1rem;
-  color: var(--color-background);
-}
-
-.access-card-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1.3;
-}
-
-.access-card-title i {
-  font-size: 1.25rem;
-}
-
-.access-card-body {
-  padding: 1.5rem;
+.access-card-body-compact {
+  padding: 0;
   overflow: visible;
   word-wrap: break-word;
-}
-
-.access-card-subtitle {
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: var(--gris-elite-1);
-  margin-bottom: 1rem;
-  text-align: center;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
 
 .form-group {

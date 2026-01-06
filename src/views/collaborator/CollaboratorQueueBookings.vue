@@ -21,6 +21,7 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import BookingCalendar from '../../components/bookings/domain/BookingCalendar.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import BookingDetailsCard from '../../components/clients/common/BookingDetailsCard.vue';
 import AttentionDetailsCard from '../../components/clients/common/AttentionDetailsCard.vue';
 
@@ -34,6 +35,7 @@ export default {
     Alert,
     BookingCalendar,
     ComponentMenu,
+    DesktopPageHeader,
     BookingDetailsCard,
     AttentionDetailsCard,
   },
@@ -788,7 +790,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="commerce?.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo :src="commerce?.logo || state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
         <ComponentMenu
           :title="$t(`collaboratorBookingsView.welcome`)"
           :toggles="state.toggles"
@@ -925,30 +927,15 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || commerce?.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="commerce?.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t(`collaboratorBookingsView.welcome`)"
-              :toggles="state.toggles"
-              component-name="collaboratorBookingsView"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('collaboratorBookingsView.welcome')"
+          :toggles="state.toggles"
+          component-name="collaboratorBookingsView"
+          @go-back="goBack"
+        />
         <div v-if="(!commerce || !commerce.id) && !loading" class="control-box">
           <Message
             :title="$t('businessQueuesAdmin.message.4.title')"

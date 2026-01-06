@@ -20,6 +20,7 @@ import Warning from '../../components/common/Warning.vue';
 import Popper from 'vue3-popper';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import { getCollaboratorTypes } from '../../shared/utils/data';
 import CollaboratorFormEdit from '../../components/collaborator/CollaboratorFormEdit.vue';
@@ -38,6 +39,7 @@ export default {
     Popper,
     AreYouSure,
     ComponentMenu,
+    DesktopPageHeader,
     SearchAdminItem,
     CollaboratorFormEdit,
     CollaboratorFormAdd,
@@ -487,6 +489,7 @@ export default {
       <div class="content text-center">
         <CommerceLogo
           :src="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
           :loading="loading"
         ></CommerceLogo>
         <ComponentMenu
@@ -670,28 +673,15 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || commerce?.logo || state.business?.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t(`businessCollaboratorsAdmin.title`)"
-              :toggles="state.toggles"
-              component-name="businessCollaboratorsAdmin"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('businessCollaboratorsAdmin.title')"
+          :toggles="state.toggles"
+          component-name="businessCollaboratorsAdmin"
+          @go-back="goBack"
+        />
           </div>
         </div>
         <div id="businessCollaboratorsAdmin">
@@ -854,8 +844,6 @@ export default {
             />
           </div>
         </div>
-      </div>
-    </div>
     <!-- Modal Add -->
     <div
       class="modal fade"

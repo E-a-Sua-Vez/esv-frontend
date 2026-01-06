@@ -52,6 +52,7 @@ export default {
         'your-plan',
         'business-resume',
         'go-minisite',
+        'client-portal',
       ],
       manageControlSubMenuOptions: [
         'tracing',
@@ -155,6 +156,14 @@ export default {
       return `${import.meta.env.VITE_URL}/interno/negocio/${businessKeyName}`;
     };
 
+    const getClientPortalLink = () => {
+      // Use commerce keyName for client portal, fallback to business if no commerce selected
+      const keyName = state.commerces.length > 0 && store.getCurrentCommerce?.keyName
+        ? store.getCurrentCommerce.keyName
+        : state.business.keyName;
+      return `/public/portal/${keyName}/login`;
+    };
+
     const onShowMobileMenuSide = () => {
       state.showMobileMenuSide = true;
       state.showMobileSpySide = false;
@@ -172,6 +181,7 @@ export default {
       isActiveBusiness,
       goToOption,
       getBusinessLink,
+      getClientPortalLink,
       onShowMobileMenuSide,
       onShowMobileSpySide,
     };
@@ -227,6 +237,16 @@ export default {
                         type="button"
                         class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
                         :href="`${getBusinessLink()}`"
+                        target="_blank"
+                      >
+                        {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
+                      </a>
+                    </div>
+                    <div v-else-if="option === 'client-portal'" class="centered">
+                      <a
+                        type="button"
+                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
+                        :href="`${getClientPortalLink()}`"
                         target="_blank"
                       >
                         {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
@@ -389,6 +409,16 @@ export default {
                     type="button"
                     class="btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
                     :href="`${getBusinessLink()}`"
+                    target="_blank"
+                  >
+                    {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
+                  </a>
+                </div>
+                <div v-else-if="option === 'client-portal'" class="centered">
+                  <a
+                    type="button"
+                    class="btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
+                    :href="`${getClientPortalLink()}`"
                     target="_blank"
                   >
                     {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>

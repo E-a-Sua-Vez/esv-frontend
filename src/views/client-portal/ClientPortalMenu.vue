@@ -1,71 +1,168 @@
 <template>
   <div>
-    <div class="content text-center">
-      <!-- Commerce Logo -->
-      <CommerceLogo
-        v-if="commerce && commerce.logo"
-        :src="commerce.logo"
-        :loading="false"
-      ></CommerceLogo>
+    <!-- Mobile/Tablet Layout -->
+    <div class="d-block d-lg-none mobile-menu-layout">
+      <div class="content text-center">
+        <CommerceLogo
+          v-if="commerce && commerce.logo"
+          :src="commerce.logo"
+          :loading="loading"
+        ></CommerceLogo>
+        <ComponentMenu
+          :title="$t('clientPortal.menu.welcome', { name: clientName })"
+          :toggles="toggles"
+          component-name="clientPortalMenu"
+          :is-client-portal="true"
+          @goBack="logout"
+        />
 
-      <!-- Welcome Section -->
-      <div id="page-header" class="text-center mt-4">
-        <div class="welcome">
-          <span>{{ $t('clientPortal.menu.welcome', { name: clientName }) }}</span>
+        <!-- Loading/Error States -->
+        <div v-if="loading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">{{ $t('clientPortal.menu.loading') }}</span>
+          </div>
+          <p class="mt-3 text-muted">{{ $t('clientPortal.menu.loading') }}</p>
         </div>
-      </div>
-
-      <!-- Loading State -->
-      <div v-if="loading" class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">{{ $t('clientPortal.menu.loading') }}</span>
+        <div v-else-if="error" class="errors">
+          <div class="alert alert-danger text-center">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>{{ error }}</strong>
+            <div class="mt-3">
+              <button @click="logout" class="btn btn-outline-danger">
+                {{ $t('clientPortal.menu.logout') }}
+              </button>
+            </div>
+          </div>
         </div>
-        <p class="mt-3 text-muted">{{ $t('clientPortal.menu.loading') }}</p>
-      </div>
 
-      <!-- Error State -->
-      <div v-else-if="error" class="errors">
-        <div class="alert alert-danger text-center">
-          <i class="bi bi-exclamation-triangle-fill me-2"></i>
-          <strong>{{ error }}</strong>
-          <div class="mt-3">
-            <button @click="logout" class="btn btn-outline-danger">
-              {{ $t('clientPortal.menu.logout') }}
-            </button>
+        <!-- Mobile Toggle between Menu and Spy -->
+        <div v-else id="menu-mobile">
+          <div class="sub-menu-spy">
+            <span v-if="showMobileMenuSide" @click="onShowMobileSpySide()">
+              {{ $t('clientPortal.menu.seeSpy') }}<i class="bi bi-arrow-right-circle-fill mx-1"></i>
+            </span>
+            <span v-else @click="onShowMobileMenuSide()">
+              {{ $t('clientPortal.menu.seeMenu') }}<i class="bi bi-arrow-left-circle-fill mx-1"></i>
+            </span>
+          </div>
+          <div class="mobile-content-wrapper">
+            <Transition name="slide" mode="out-in">
+              <div v-if="showMobileMenuSide === true" id="menu-side-mobile" :key="`menu-side-mobile`">
+                <div class="choose-attention my-3 mt-4">
+                  <span>{{ $t('clientPortal.menu.choose') }}</span>
+                </div>
+                <div class="row">
+                  <div
+                    v-for="option in menuOptions"
+                    :key="option"
+                    class="d-grid btn-group btn-group-justified mobile-button-wrapper"
+                  >
+                    <button
+                      type="button"
+                      class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2 btn-style"
+                      @click="goToOption(option)"
+                    >
+                      <i :class="`bi ${getOptionIcon(option)} me-2`"></i>
+                      {{ $t(`clientPortal.menu.${option}`) }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div v-else-if="showMobileSpySide" id="spy-side-mobile" :key="`spy-side-mobile`">
+                <ClientPortalSpy
+                  :upcoming-bookings="upcomingBookings"
+                  :last-attention="lastAttention"
+                  :pending-consents="pendingConsentsCount"
+                  :recent-documents="recentDocuments"
+                  :commerce="commerce"
+                />
+              </div>
+            </Transition>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Menu Options -->
-      <div v-else class="portal-menu-container">
-        <div class="portal-menu-card">
-          <div class="portal-menu-content">
-            <div class="row">
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block desktop-menu-layout">
+      <div class="content text-center">
+        <div class="row align-items-center mb-1 desktop-header-row">
+          <div class="col-auto desktop-logo-wrapper">
+            <div class="desktop-commerce-logo">
+              <div id="commerce-logo-desktop">
+                <img
+                  v-if="!loading && commerce?.logo"
+                  class="rounded img-fluid logo-desktop"
+                  :alt="$t('logoAlt')"
+                  :src="commerce.logo"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+            <ComponentMenu
+              :title="$t('clientPortal.menu.welcome', { name: clientName })"
+              :toggles="toggles"
+              component-name="clientPortalMenu"
+              :is-client-portal="true"
+              @goBack="logout"
+            />
+          </div>
+        </div>
+
+        <!-- Loading/Error States -->
+        <div v-if="loading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">{{ $t('clientPortal.menu.loading') }}</span>
+          </div>
+          <p class="mt-3 text-muted">{{ $t('clientPortal.menu.loading') }}</p>
+        </div>
+        <div v-else-if="error" class="errors">
+          <div class="alert alert-danger text-center">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>{{ error }}</strong>
+            <div class="mt-3">
+              <button @click="logout" class="btn btn-outline-danger">
+                {{ $t('clientPortal.menu.logout') }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop 2-Column Layout -->
+        <div v-else id="menu-desktop" class="row desktop-menu-content">
+          <div id="menu-side" class="col-lg-5 desktop-menu-column">
+            <div class="choose-attention my-3 mb-4">
+              <span>{{ $t('clientPortal.menu.choose') }}</span>
+            </div>
+            <div class="row menu-buttons-grid">
               <div
                 v-for="option in menuOptions"
                 :key="option"
-                class="col-12 col-md-6 col-lg-4 mb-3"
+                class="col-12 col-lg-6 menu-button-wrapper"
               >
-                <button
-                  type="button"
-                  class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill portal-menu-btn"
-                  @click="goToOption(option)"
-                >
-                  <i :class="`bi ${getOptionIcon(option)} me-2`"></i>
-                  {{ $t(`clientPortal.menu.${option}`) }}
-                </button>
+                <div>
+                  <button
+                    type="button"
+                    class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style"
+                    @click="goToOption(option)"
+                  >
+                    <i :class="`bi ${getOptionIcon(option)} me-2`"></i>
+                    {{ $t(`clientPortal.menu.${option}`) }}
+                  </button>
+                </div>
               </div>
             </div>
-
-            <!-- Logout Button -->
-            <div class="row mt-4">
-              <div class="col-12">
-                <button type="button" class="btn btn-outline-secondary btn-sm" @click="logout">
-                  <i class="bi bi-box-arrow-right me-2"></i>
-                  {{ $t('clientPortal.menu.logout') }}
-                </button>
-              </div>
-            </div>
+          </div>
+          <div id="spy-side" class="col-lg-7 desktop-spy-column" v-if="!loading">
+            <ClientPortalSpy
+              :upcoming-bookings="upcomingBookings"
+              :last-attention="lastAttention"
+              :pending-consents="pendingConsentsCount"
+              :recent-documents="recentDocuments"
+              :commerce="commerce"
+            />
           </div>
         </div>
       </div>
@@ -74,28 +171,68 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, onUnmounted, computed, reactive } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { validatePortalSession } from '../../application/services/client-portal';
+import { getClientPortalPermissions } from '../../application/services/client-portal-permissions';
+import { globalStore } from '../../stores';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import ClientPortalSpy from '../../components/client-portal/ClientPortalSpy.vue';
 
 export default {
   name: 'ClientPortalMenu',
   components: {
     CommerceLogo,
+    ComponentMenu,
+    ClientPortalSpy,
   },
   setup() {
     const router = useRouter();
+    const route = useRoute();
     const { t } = useI18n();
+    const store = globalStore();
 
     const loading = ref(true);
     const error = ref('');
     const client = ref(null);
     const commerce = ref(null);
     const sessionToken = ref('');
+    const commerceSlug = ref(route.params.commerceSlug);
 
-    const menuOptions = ref(['consents', 'telemedicine', 'profile', 'documents', 'history']);
+    // Permisos del cliente
+    const permissions = ref({});
+    const menuOptions = computed(() => {
+      const options = [];
+      if (permissions.value['client-portal.menu.consents']) options.push('consents');
+      if (permissions.value['client-portal.menu.telemedicine']) options.push('telemedicine');
+      if (permissions.value['client-portal.menu.profile']) options.push('profile');
+      if (permissions.value['client-portal.menu.documents']) options.push('documents');
+      if (permissions.value['client-portal.menu.history']) options.push('history');
+      return options;
+    });
+
+    // Toggles para ComponentMenu
+    const toggles = reactive({
+      'clientPortal.menu.view': true,
+    });
+
+    // Mobile toggle between menu and spy
+    const showMobileMenuSide = ref(true);
+    const showMobileSpySide = ref(false);
+
+    // Spy data
+    const upcomingBookings = ref([]);
+    const lastAttention = ref(null);
+    const pendingConsentsCount = ref(0);
+    const recentDocuments = ref([]);
+
+    // Session management variables
+    let sessionCheckInterval = null;
+    let inactivityTimeout = null;
+    const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutos
+    const SESSION_CHECK_INTERVAL_MS = 5 * 60 * 1000; // Verificar cada 5 minutos
 
     const clientName = computed(() => {
       if (client.value) {
@@ -117,34 +254,53 @@ export default {
 
     const goToOption = async option => {
       try {
+        const slug = commerceSlug.value;
         if (option === 'consents') {
-          await router.push({ path: '/portal/consents' });
+          await router.push({ name: 'client-portal-consents', params: { commerceSlug: slug } });
         } else if (option === 'telemedicine') {
-          await router.push({ path: '/portal/telemedicine' });
+          await router.push({ name: 'client-portal-telemedicine', params: { commerceSlug: slug } });
         } else if (option === 'profile') {
-          await router.push({ path: '/portal/profile' });
+          await router.push({ name: 'client-portal-profile', params: { commerceSlug: slug } });
         } else if (option === 'documents') {
-          await router.push({ path: '/portal/documents' });
+          await router.push({ name: 'client-portal-documents', params: { commerceSlug: slug } });
         } else if (option === 'history') {
-          await router.push({ path: '/portal/history' });
+          await router.push({ name: 'client-portal-history', params: { commerceSlug: slug } });
         }
       } catch (err) {
         error.value = err.message || t('clientPortal.menu.navigationError');
       }
     };
 
-    const logout = () => {
+    const logout = async () => {
+      // Limpiar localStorage
       localStorage.removeItem('clientPortalSessionToken');
       localStorage.removeItem('clientPortalSessionExpiresAt');
       localStorage.removeItem('clientPortalClient');
       localStorage.removeItem('clientPortalCommerce');
-      router.push({ path: '/portal/login' });
+
+      // Limpiar store
+      await store.setCurrentUserType(null);
+      await store.setCurrentUser(null);
+      await store.setCurrentCommerce(null);
+      await store.setCurrentPermissions(null);
+
+      router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
+    };
+
+    const onShowMobileMenuSide = () => {
+      showMobileMenuSide.value = true;
+      showMobileSpySide.value = false;
+    };
+
+    const onShowMobileSpySide = () => {
+      showMobileMenuSide.value = false;
+      showMobileSpySide.value = true;
     };
 
     const validateSession = async () => {
       const token = localStorage.getItem('clientPortalSessionToken');
       if (!token) {
-        router.push({ path: '/portal/login' });
+        router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
         return;
       }
 
@@ -177,6 +333,24 @@ export default {
       }
     };
 
+    const loadPermissions = async () => {
+      try {
+        const clientPermissions = await getClientPortalPermissions('client-portal', 'menu');
+        permissions.value = clientPermissions;
+        console.log('Client portal permissions loaded:', clientPermissions);
+      } catch (err) {
+        console.error('Error loading permissions:', err);
+        // Si falla, usamos todos los permisos por defecto para no bloquear al cliente
+        permissions.value = {
+          'client-portal.menu.consents': true,
+          'client-portal.menu.telemedicine': true,
+          'client-portal.menu.profile': true,
+          'client-portal.menu.documents': true,
+          'client-portal.menu.history': true,
+        };
+      }
+    };
+
     onMounted(async () => {
       // Tentar carregar dados do localStorage primeiro
       const storedClient = localStorage.getItem('clientPortalClient');
@@ -199,19 +373,16 @@ export default {
       // Validar sessão
       await validateSession();
 
+      // Cargar permisos
+      await loadPermissions();
+
       // Iniciar monitoramento de sessão se válida
-      const token = localStorage.getItem('clientPortalSessionToken');
-      if (token) {
+      if (client.value && commerce.value) {
         startSessionMonitoring();
       }
     });
 
-    // Session management - timeout de inatividade
-    let sessionCheckInterval = null;
-    let inactivityTimeout = null;
-    const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutos
-    const SESSION_CHECK_INTERVAL_MS = 5 * 60 * 1000; // Verificar cada 5 minutos
-
+    // Session management functions
     const resetInactivityTimer = () => {
       if (inactivityTimeout) {
         clearTimeout(inactivityTimeout);
@@ -271,10 +442,19 @@ export default {
       client,
       commerce,
       menuOptions,
+      toggles,
+      showMobileMenuSide,
+      showMobileSpySide,
+      upcomingBookings,
+      lastAttention,
+      pendingConsentsCount,
+      recentDocuments,
       clientName,
       getOptionIcon,
       goToOption,
       logout,
+      onShowMobileMenuSide,
+      onShowMobileSpySide,
     };
   },
 };
@@ -283,45 +463,15 @@ export default {
 <style scoped>
 @import '../../shared/styles/prontuario-common.css';
 
-.portal-menu-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-.portal-menu-card {
-  width: 100%;
-  max-width: 800px;
-  background: var(--color-background);
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 0.5px solid var(--gris-default);
-  overflow: hidden;
-}
-
-.portal-menu-content {
-  padding: 1.5rem;
-}
-
-.portal-menu-btn {
-  width: 100%;
-  padding: 1rem 2rem;
+.choose-attention {
+  padding-bottom: 1rem;
   font-size: 1rem;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  min-height: 60px;
+  font-weight: 700;
 }
 
-.portal-menu-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 74, 173, 0.4);
+.btn-style {
+  line-height: 1rem;
+  padding: 0.65rem 0rem;
 }
 
 .errors {
@@ -331,15 +481,176 @@ export default {
   padding: 0 0.5rem;
 }
 
-@media (max-width: 768px) {
-  .portal-menu-content {
-    padding: 1rem;
+/* Mobile Layout */
+.mobile-menu-layout {
+  width: 100%;
+}
+
+.sub-menu-spy {
+  margin: 2rem 0 1rem 0;
+  display: flex;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--azul-turno);
+  cursor: pointer;
+}
+
+.sub-menu-spy span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mobile-content-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-button-wrapper {
+  margin-bottom: 0.25rem;
+}
+
+.mobile-button-wrapper .btn {
+  width: 66.666667%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Slide transition for mobile */
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.slide-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+/* Desktop Layout */
+.desktop-menu-layout {
+  width: 100%;
+}
+
+.desktop-header-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0 1rem;
+}
+
+.desktop-logo-wrapper {
+  flex: 0 0 auto;
+  max-width: 200px;
+}
+
+.desktop-commerce-logo {
+  display: flex;
+  align-items: center;
+  max-width: 150px;
+  text-align: left;
+}
+
+.logo-desktop {
+  max-width: 120px;
+  max-height: 100px;
+  width: auto;
+  height: auto;
+  margin-bottom: 0;
+}
+
+.desktop-menu-wrapper {
+  flex: 1 1 0%;
+  min-width: 0;
+  width: auto;
+  text-align: left;
+}
+
+.desktop-menu-content {
+  padding: 0 1rem;
+  min-height: 60vh;
+}
+
+.desktop-menu-column {
+  padding: 1rem;
+  border-right: 1px solid var(--gris-clear);
+}
+
+.desktop-spy-column {
+  padding: 1rem;
+}
+
+.menu-buttons-grid {
+  gap: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.menu-button-wrapper {
+  padding: 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.menu-button-wrapper > div {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.menu-button-wrapper .btn,
+.mobile-button-wrapper .btn {
+  width: 100%;
+  max-width: 100%;
+  font-size: 0.85rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.menu-button-wrapper .btn:hover,
+.mobile-button-wrapper .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.menu-button-wrapper .btn:active,
+.mobile-button-wrapper .btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .desktop-menu-column {
+    border-right: none;
+    border-bottom: 1px solid var(--gris-clear);
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+  }
+}
+
+@media (max-width: 991px) {
+  .choose-attention {
+    font-size: 0.95rem;
   }
 
-  .portal-menu-btn {
-    padding: 0.875rem 1.5rem;
-    font-size: 0.95rem;
-    min-height: 55px;
+  .menu-button-wrapper .btn,
+  .mobile-button-wrapper .btn {
+    font-size: 0.9rem;
   }
 }
 </style>

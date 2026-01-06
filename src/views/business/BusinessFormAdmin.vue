@@ -24,6 +24,7 @@ import { getQueueByCommerce } from '../../application/services/queue';
 import { getQuestionFormTypes, getFormTypes } from '../../shared/utils/data';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 
 export default {
@@ -41,6 +42,7 @@ export default {
     Popper,
     AreYouSure,
     ComponentMenu,
+    DesktopPageHeader,
     SearchAdminItem,
   },
   async setup() {
@@ -436,6 +438,7 @@ export default {
       <div class="content text-center">
         <CommerceLogo
           :src="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
           :loading="loading"
         ></CommerceLogo>
         <ComponentMenu
@@ -741,626 +744,614 @@ export default {
           </div>
         </div>
       </div>
-      <!-- Desktop Layout -->
-      <div class="d-none d-lg-block">
-        <div class="container-fluid">
-          <div id="page-header" class="text-center mb-3">
-            <Spinner :show="loading"></Spinner>
-            <Alert :show="false" :stack="alertError"></Alert>
-          </div>
-          <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-            <div class="col-auto desktop-logo-wrapper">
-              <div class="desktop-commerce-logo">
-                <div id="commerce-logo-desktop">
-                  <img
-                    v-if="!loading || commerce?.logo || state.business?.logo"
-                    class="rounded img-fluid logo-desktop"
-                    :alt="$t('logoAlt')"
-                    :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
-                    loading="lazy"
+
+    </div>
+
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="container-fluid">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('businessFormsAdmin.title')"
+          :toggles="state.toggles"
+          component-name="businessFormsAdmin"
+          @go-back="goBack"
+        />
+        <div id="businessFormsAdmin">
+          <div v-if="isActiveBusiness && state.toggles['forms.admin.view']">
+            <div v-if="!loading" id="businessFormsAdmin-result" class="mt-4">
+              <div>
+                <div v-if="state.forms.length === 0">
+                  <Message
+                    :title="$t('businessFormsAdmin.message.2.title')"
+                    :content="$t('businessFormsAdmin.message.2.content')"
                   />
                 </div>
-              </div>
-            </div>
-            <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-              <ComponentMenu
-                :title="$t(`businessFormsAdmin.title`)"
-                :toggles="state.toggles"
-                component-name="businessFormsAdmin"
-                @goBack="goBack"
-              >
-              </ComponentMenu>
-            </div>
-          </div>
-          <div id="businessFormsAdmin">
-            <div v-if="isActiveBusiness && state.toggles['forms.admin.view']">
-              <div v-if="!loading" id="businessFormsAdmin-result" class="mt-4">
-                <div>
-                  <div v-if="state.forms.length === 0">
-                    <Message
-                      :title="$t('businessFormsAdmin.message.2.title')"
-                      :content="$t('businessFormsAdmin.message.2.content')"
-                    />
-                  </div>
-                  <div v-if="commerce && commerce.id" class="row mb-2">
-                    <div class="col lefted">
-                      <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                        @click="showAdd(form)"
-                        data-bs-toggle="modal"
-                        :data-bs-target="`#add-form`"
-                        :disabled="!state.toggles['forms.admin.add']"
-                      >
-                        <i class="bi bi-plus-lg"></i> {{ $t('add') }}
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <SearchAdminItem
-                      :business-items="state.forms"
-                      :type="'forms'"
-                      :receive-filtered-items="receiveFilteredItems"
+                <div v-if="commerce && commerce.id" class="row mb-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd(form)"
+                      data-bs-toggle="modal"
+                      :data-bs-target="`#add-form`"
+                      :disabled="!state.toggles['forms.admin.add']"
                     >
-                    </SearchAdminItem>
-                    <div v-for="(form, index) in state.filtered" :key="index" class="result-card">
-                      <div class="row">
-                        <div class="col-10">
-                          <FormName :type="form.type" :active="form.active"></FormName>
-                        </div>
-                        <div class="col-2">
-                          <a href="#" @click.prevent="showUpdateForm(index)">
-                            <i
-                              :id="index"
-                              :class="`bi ${
-                                state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                              }`"
-                            ></i>
-                          </a>
-                        </div>
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <SearchAdminItem
+                    :business-items="state.forms"
+                    :type="'forms'"
+                    :receive-filtered-items="receiveFilteredItems"
+                  >
+                  </SearchAdminItem>
+                  <div v-for="(form, index) in state.filtered" :key="index" class="result-card">
+                    <div class="row">
+                      <div class="col-10">
+                        <FormName :type="form.type" :active="form.active"></FormName>
                       </div>
+                      <div class="col-2">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :id="index"
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                    <div
+                      v-if="state.toggles['forms.admin.read']"
+                      :class="{ show: state.extendedEntity === index }"
+                      class="detailed-data transition-slow"
+                    >
+                      <FormFormEdit
+                        :form="form"
+                        :types="state.types"
+                        :queues="state.queues"
+                        :services="state.services"
+                        :toggles="state.toggles"
+                        :errors="{
+                          typeError: state.typeError,
+                          errorsUpdate: state.errorsUpdate,
+                        }"
+                        :show-service="showService"
+                        :select-service="(f, s) => selectServiceIndex(index, s)"
+                        :delete-service="deleteService"
+                        :selected-service="state.service"
+                        @update:form="form = $event"
+                        @update:selectedService="state.service = $event"
+                        @selectType="selectType"
+                      />
                       <div
-                        v-if="state.toggles['forms.admin.read']"
-                        :class="{ show: state.extendedEntity === index }"
-                        class="detailed-data transition-slow"
+                        id="form-questions-form-update"
+                        v-if="
+                          state.showUpdateQuestions === true ||
+                          (form.questions && form.questions.length > 0)
+                        "
+                        class="row g-1 mt-2"
                       >
-                        <FormFormEdit
-                          :form="form"
-                          :types="state.types"
-                          :queues="state.queues"
-                          :services="state.services"
-                          :toggles="state.toggles"
-                          :errors="{
-                            typeError: state.typeError,
-                            errorsUpdate: state.errorsUpdate,
-                          }"
-                          :show-service="showService"
-                          :select-service="(f, s) => selectServiceIndex(index, s)"
-                          :delete-service="deleteService"
-                          :selected-service="state.service"
-                          @update:form="form = $event"
-                          @update:selectedService="state.service = $event"
-                          @selectType="selectType"
-                        />
+                        <span @click="addUpdateQuestion(index)" class="add-question my-2">
+                          <i class="bi bi-plus-circle"></i>
+                          {{ $t('businessFormsAdmin.addQuestion') }}
+                        </span>
                         <div
-                          id="form-questions-form-update"
-                          v-if="
-                            state.showUpdateQuestions === true ||
-                            (form.questions && form.questions.length > 0)
-                          "
-                          class="row g-1 mt-2"
+                          v-for="(question, ind) in form.questions"
+                          :key="`question-update.${ind}`"
+                          class="result-card mb-1"
                         >
-                          <span @click="addUpdateQuestion(index)" class="add-question my-2">
-                            <i class="bi bi-plus-circle"></i>
-                            {{ $t('businessFormsAdmin.addQuestion') }}
-                          </span>
+                          <div class="row g-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessFormsAdmin.question') }}
+                            </div>
+                            <div class="col-7">
+                              <input
+                                type="text"
+                                class="form-control"
+                                v-model="question.title"
+                                v-bind:class="{ 'is-invalid': state.questionTitleError }"
+                                placeholder="Question title"
+                              />
+                            </div>
+                          </div>
+                          <div class="row g-1 mt-1" v-if="form.type !== 'FIRST_ATTENTION'">
+                            <div class="col-4 text-label">
+                              {{ $t('businessFormsAdmin.type') }}
+                            </div>
+                            <div class="col-7">
+                              <select
+                                class="form-control-modern form-select-modern"
+                                v-model="question.type"
+                                id="types"
+                                :class="{ 'is-invalid': state.typeError }"
+                              >
+                                <option
+                                  v-for="typ in state.question_types"
+                                  :key="typ"
+                                  :value="typ"
+                                >
+                                  {{ $t(`forms.question_types.${typ}`) }}
+                                </option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="row g-1 mt-1" v-else>
+                            <div class="col-4 text-label">
+                              {{ $t('businessFormsAdmin.type') }}
+                              <Popper
+                                :class="'dark p-1'"
+                                arrow
+                                disable-click-away
+                                :content="$t('businessFormsAdmin.typeQuestionHelp')"
+                              >
+                                <i class="bi bi-info-circle-fill h7"></i>
+                              </Popper>
+                            </div>
+                            <div class="col-7">
+                              <select
+                                class="form-control-modern form-select-modern"
+                                v-model="question.patientHistoryItem"
+                                id="types"
+                                @change="selectTypeItem(question)"
+                                :class="{ 'is-invalid': state.typeError }"
+                              >
+                                <option
+                                  v-for="typ in state.patientHistoryItems"
+                                  :key="typ"
+                                  :value="typ"
+                                >
+                                  {{ typ.name }}
+                                </option>
+                              </select>
+                            </div>
+                          </div>
                           <div
-                            v-for="(question, ind) in form.questions"
-                            :key="`question-update.${ind}`"
-                            class="result-card mb-1"
+                            v-if="
+                              question.type === 'OPEN_OPTIONS' ||
+                              question.type === 'CHOOSE_OPTION'
+                            "
+                            class="row g-1 mt-1"
                           >
-                            <div class="row g-1">
-                              <div class="col-4 text-label">
-                                {{ $t('businessFormsAdmin.question') }}
-                              </div>
-                              <div class="col-7">
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  v-model="question.title"
-                                  v-bind:class="{ 'is-invalid': state.questionTitleError }"
-                                  placeholder="Question title"
-                                />
-                              </div>
+                            <div class="col-4 text-label">
+                              {{ $t('businessFormsAdmin.otherOption') }}
                             </div>
-                            <div class="row g-1 mt-1" v-if="form.type !== 'FIRST_ATTENTION'">
-                              <div class="col-4 text-label">
-                                {{ $t('businessFormsAdmin.type') }}
-                              </div>
-                              <div class="col-7">
-                                <select
-                                  class="form-control-modern form-select-modern"
-                                  v-model="question.type"
-                                  id="types"
-                                  :class="{ 'is-invalid': state.typeError }"
-                                >
-                                  <option
-                                    v-for="typ in state.question_types"
-                                    :key="typ"
-                                    :value="typ"
-                                  >
-                                    {{ $t(`forms.question_types.${typ}`) }}
-                                  </option>
-                                </select>
-                              </div>
+                            <div class="col-8">
+                              <Toggle v-model="question.otherOption" />
                             </div>
-                            <div class="row g-1 mt-1" v-else>
-                              <div class="col-4 text-label">
-                                {{ $t('businessFormsAdmin.type') }}
-                                <Popper
-                                  :class="'dark p-1'"
-                                  arrow
-                                  disable-click-away
-                                  :content="$t('businessFormsAdmin.typeQuestionHelp')"
-                                >
-                                  <i class="bi bi-info-circle-fill h7"></i>
-                                </Popper>
-                              </div>
-                              <div class="col-7">
-                                <select
-                                  class="form-control-modern form-select-modern"
-                                  v-model="question.patientHistoryItem"
-                                  id="types"
-                                  @change="selectTypeItem(question)"
-                                  :class="{ 'is-invalid': state.typeError }"
-                                >
-                                  <option
-                                    v-for="typ in state.patientHistoryItems"
-                                    :key="typ"
-                                    :value="typ"
-                                  >
-                                    {{ typ.name }}
-                                  </option>
-                                </select>
-                              </div>
-                            </div>
-                            <div
-                              v-if="
-                                question.type === 'OPEN_OPTIONS' ||
-                                question.type === 'CHOOSE_OPTION'
-                              "
-                              class="row g-1 mt-1"
-                            >
-                              <div class="col-4 text-label">
-                                {{ $t('businessFormsAdmin.otherOption') }}
-                              </div>
-                              <div class="col-8">
-                                <Toggle v-model="question.otherOption" />
-                              </div>
-                            </div>
-                            <div
-                              v-if="
-                                (question.type === 'OPEN_OPTIONS' ||
-                                  question.type === 'CHOOSE_OPTION') &&
-                                question.otherOption === true
-                              "
-                              class="row g-1 mt-1"
-                            >
-                              <div class="col-4 text-label">
-                                {{ $t('businessFormsAdmin.otherOpen') }}
-                              </div>
-                              <div class="col-8">
-                                <Toggle v-model="question.otherOptionOpen" />
-                              </div>
-                            </div>
-                            <div
-                              v-if="
-                                question.type === 'OPEN_WRITING' || question.type === 'OPEN_WRITING'
-                              "
-                              class="row g-1 mt-1"
-                            >
-                              <div class="col-4 text-label">
-                                {{ $t('businessFormsAdmin.analize') }}
-                              </div>
-                              <div class="col-8">
-                                <Toggle v-model="question.analize" />
-                              </div>
-                            </div>
-                            <div class="row g-1 mt-1">
-                              <div class="col-4 text-label">
-                                {{ $t('businessFormsAdmin.order') }}
-                              </div>
-                              <div class="col-7">
-                                <input
-                                  min="1"
-                                  :max="form.questions.length + 1"
-                                  type="number"
-                                  class="form-control"
-                                  v-model="question.order"
-                                  v-bind:class="{ 'is-invalid': state.orderAddError }"
-                                  placeholder="1"
-                                />
-                              </div>
-                            </div>
-                            <div
-                              class="row g-1 mt-1"
-                              v-if="
-                                question.type === 'OPEN_OPTIONS' ||
-                                question.type === 'CHOOSE_OPTION'
-                              "
-                            >
-                              <div class="col-4 text-label">
-                                {{ $t('businessFormsAdmin.options') }}
-                                <Popper
-                                  :class="'dark p-1'"
-                                  arrow
-                                  disable-click-away
-                                  :content="$t('businessFormsAdmin.optionsHelp')"
-                                >
-                                  <i class="bi bi-info-circle-fill h7"></i>
-                                </Popper>
-                              </div>
-                              <div class="col-7">
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  v-model="question.options"
-                                  v-bind:class="{ 'is-invalid': state.questionOptionsError }"
-                                  placeholder="Answer 1,Anwswer 2"
-                                />
-                              </div>
-                            </div>
-                            <span
-                              @click="deleteUpdateQuestion(question, index)"
-                              class="delete-question"
-                            >
-                              <i class="bi bi-trash3-fill"></i>
-                              {{ $t('businessFormsAdmin.deleteQuestion') }}
-                            </span>
                           </div>
-                        </div>
-                        <div
-                          v-if="state.toggles['forms.admin.read'] && state.extendedEntity === index"
-                          class="row g-1 mt-2"
-                        >
-                          <div class="col">
-                            <button
-                              class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                              @click="update(form)"
-                              :disabled="!state.toggles['forms.admin.update']"
-                            >
-                              {{ $t('businessFormsAdmin.update') }} <i class="bi bi-save"></i>
-                            </button>
-                            <button
-                              class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                              @click="goToUnavailable()"
-                              v-if="state.toggles['forms.admin.unavailable']"
-                            >
-                              {{ $t('businessQueuesAdmin.unavailable') }}
-                              <i class="bi bi-trash-fill"></i>
-                            </button>
-                            <AreYouSure
-                              :show="state.goToUnavailable"
-                              :yes-disabled="state.toggles['forms.admin.unavailable']"
-                              :no-disabled="state.toggles['forms.admin.unavailable']"
-                              @actionYes="unavailable(form)"
-                              @actionNo="unavailableCancel()"
-                            >
-                            </AreYouSure>
+                          <div
+                            v-if="
+                              (question.type === 'OPEN_OPTIONS' ||
+                                question.type === 'CHOOSE_OPTION') &&
+                              question.otherOption === true
+                            "
+                            class="row g-1 mt-1"
+                          >
+                            <div class="col-4 text-label">
+                              {{ $t('businessFormsAdmin.otherOpen') }}
+                            </div>
+                            <div class="col-8">
+                              <Toggle v-model="question.otherOptionOpen" />
+                            </div>
                           </div>
+                          <div
+                            v-if="
+                              question.type === 'OPEN_WRITING' || question.type === 'OPEN_WRITING'
+                            "
+                            class="row g-1 mt-1"
+                          >
+                            <div class="col-4 text-label">
+                              {{ $t('businessFormsAdmin.analize') }}
+                            </div>
+                            <div class="col-8">
+                              <Toggle v-model="question.analize" />
+                            </div>
+                          </div>
+                          <div class="row g-1 mt-1">
+                            <div class="col-4 text-label">
+                              {{ $t('businessFormsAdmin.order') }}
+                            </div>
+                            <div class="col-7">
+                              <input
+                                min="1"
+                                :max="form.questions.length + 1"
+                                type="number"
+                                class="form-control"
+                                v-model="question.order"
+                                v-bind:class="{ 'is-invalid': state.orderAddError }"
+                                placeholder="1"
+                              />
+                            </div>
+                          </div>
+                          <div
+                            class="row g-1 mt-1"
+                            v-if="
+                              question.type === 'OPEN_OPTIONS' ||
+                              question.type === 'CHOOSE_OPTION'
+                            "
+                          >
+                            <div class="col-4 text-label">
+                              {{ $t('businessFormsAdmin.options') }}
+                              <Popper
+                                :class="'dark p-1'"
+                                arrow
+                                disable-click-away
+                                :content="$t('businessFormsAdmin.optionsHelp')"
+                              >
+                                <i class="bi bi-info-circle-fill h7"></i>
+                              </Popper>
+                            </div>
+                            <div class="col-7">
+                              <input
+                                type="text"
+                                class="form-control"
+                                v-model="question.options"
+                                v-bind:class="{ 'is-invalid': state.questionOptionsError }"
+                                placeholder="Answer 1,Anwswer 2"
+                              />
+                            </div>
+                          </div>
+                          <span
+                            @click="deleteUpdateQuestion(question, index)"
+                            class="delete-question"
+                          >
+                            <i class="bi bi-trash3-fill"></i>
+                            {{ $t('businessFormsAdmin.deleteQuestion') }}
+                          </span>
                         </div>
                       </div>
                       <div
-                        v-if="(!isActiveBusiness || !state.toggles['forms.admin.read']) && !loading"
+                        v-if="state.toggles['forms.admin.read'] && state.extendedEntity === index"
+                        class="row g-1 mt-2"
                       >
-                        <Message
-                          :title="$t('businessFormsAdmin.message.1.title')"
-                          :content="$t('businessFormsAdmin.message.1.content')"
-                        />
+                        <div class="col">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            @click="update(form)"
+                            :disabled="!state.toggles['forms.admin.update']"
+                          >
+                            {{ $t('businessFormsAdmin.update') }} <i class="bi bi-save"></i>
+                          </button>
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                            @click="goToUnavailable()"
+                            v-if="state.toggles['forms.admin.unavailable']"
+                          >
+                            {{ $t('businessQueuesAdmin.unavailable') }}
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                          <AreYouSure
+                            :show="state.goToUnavailable"
+                            :yes-disabled="state.toggles['forms.admin.unavailable']"
+                            :no-disabled="state.toggles['forms.admin.unavailable']"
+                            @actionYes="unavailable(form)"
+                            @actionNo="unavailableCancel()"
+                          >
+                          </AreYouSure>
+                        </div>
                       </div>
+                    </div>
+                    <div
+                      v-if="(!isActiveBusiness || !state.toggles['forms.admin.read']) && !loading"
+                    >
+                      <Message
+                        :title="$t('businessFormsAdmin.message.1.title')"
+                        :content="$t('businessFormsAdmin.message.1.content')"
+                      />
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div v-if="(!isActiveBusiness() || !state.toggles['forms.admin.view']) && !loading">
-            <Message
-              :title="$t('businessFormsAdmin.message.1.title')"
-              :content="$t('businessFormsAdmin.message.1.content')"
-            />
           </div>
         </div>
+        <div v-if="(!isActiveBusiness || !state.toggles['forms.admin.view']) && !loading">
+          <Message
+            :title="$t('businessFormsAdmin.message.1.title')"
+            :content="$t('businessFormsAdmin.message.1.content')"
+          />
+        </div>
       </div>
-      <!-- Modal Add -->
-      <div
-        class="modal fade"
-        :id="`add-form`"
-        data-bs-keyboard="false"
-        tabindex="-1"
-        aria-labelledby="staticBackdropLabel"
-        aria-hidden="true"
-      >
-        <div class="modal-dialog modal-xl">
-          <div class="modal-content">
-            <div class="modal-header border-0 centered active-name">
-              <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
-              <button
-                id="close-modal"
-                class="btn-close"
-                type="button"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div class="modal-body text-center mb-0" id="attentions-component">
-              <Spinner :show="loading"></Spinner>
-              <Alert :show="false" :stack="alertError"></Alert>
-              <div
-                id="add-form"
-                class="result-card mb-4"
-                v-if="state.showAdd && state.toggles['forms.admin.add']"
-              >
-                <div v-if="state.forms.length < state.toggles['forms.admin.limit']">
-                  <FormFormAdd
-                    v-model="state.newForm"
-                    :types="state.types"
-                    :queues="state.queues"
-                    :services="state.services"
-                    :toggles="state.toggles"
-                    :errors="{
-                      typeError: state.typeError,
-                      errorsAdd: state.errorsAdd,
-                    }"
-                    :show-service="showService"
-                    :select-service="selectService"
-                    :delete-service="deleteService"
-                    :selected-service="state.service"
-                    @update:modelValue="state.newForm = $event"
-                    @update:selectedService="state.service = $event"
-                    @selectType="selectType"
-                  />
+    </div>
+
+    <!-- Modal Add -->
+    <div
+      class="modal fade"
+      :id="`add-form`"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
+            <button
+              id="close-modal"
+              class="btn-close"
+              type="button"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body text-center mb-0" id="attentions-component">
+            <Spinner :show="loading"></Spinner>
+            <Alert :show="false" :stack="alertError"></Alert>
+            <div
+              id="add-form"
+              class="result-card mb-4"
+              v-if="state.showAdd && state.toggles['forms.admin.add']"
+            >
+              <div v-if="state.forms.length < state.toggles['forms.admin.limit']">
+                <FormFormAdd
+                  v-model="state.newForm"
+                  :types="state.types"
+                  :queues="state.queues"
+                  :services="state.services"
+                  :toggles="state.toggles"
+                  :errors="{
+                    typeError: state.typeError,
+                    errorsAdd: state.errorsAdd,
+                  }"
+                  :show-service="showService"
+                  :select-service="selectService"
+                  :delete-service="deleteService"
+                  :selected-service="state.service"
+                  @update:modelValue="state.newForm = $event"
+                  @update:selectedService="state.service = $event"
+                  @selectType="selectType"
+                />
+                <div
+                  id="form-questions-form-add"
+                  v-if="state.showAddQuestions === true"
+                  class="row g-1"
+                >
+                  <div>
+                    <span @click="addAddQuestion(state.questions)" class="add-question">
+                      <i class="bi bi-plus-circle"></i> {{ $t('businessFormsAdmin.addQuestion') }}
+                    </span>
+                    <Popper
+                      :class="'dark p-1'"
+                      arrow
+                      disable-click-away
+                      :content="$t('businessFormsAdmin.addQuestionHelp')"
+                    >
+                      <i class="bi bi-info-circle-fill h7"></i>
+                    </Popper>
+                  </div>
                   <div
-                    id="form-questions-form-add"
-                    v-if="state.showAddQuestions === true"
-                    class="row g-1"
+                    v-for="(question, ind) in state.questions"
+                    :key="`question-add.${ind}`"
+                    class="result-card mb-1"
                   >
+                    <div class="row g-1">
+                      <div class="col-4 text-label">
+                        {{ $t('businessFormsAdmin.question') }}
+                      </div>
+                      <div class="col-7">
+                        <input
+                          type="text"
+                          class="form-control"
+                          v-model="question.title"
+                          v-bind:class="{ 'is-invalid': state.questionTitleError }"
+                          placeholder="Question title"
+                        />
+                      </div>
+                    </div>
+                    <div class="row g-1 mt-1" v-if="state.newForm.type !== 'FIRST_ATTENTION'">
+                      <div class="col-4 text-label">
+                        {{ $t('businessFormsAdmin.type') }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disable-click-away
+                          :content="$t('businessFormsAdmin.typeQuestionHelp')"
+                        >
+                          <i class="bi bi-info-circle-fill h7"></i>
+                        </Popper>
+                      </div>
+                      <div class="col-7">
+                        <select
+                          class="form-control-modern form-select-modern"
+                          v-model="question.type"
+                          id="types"
+                          :class="{ 'is-invalid': state.typeError }"
+                        >
+                          <option v-for="typ in state.question_types" :key="typ" :value="typ">
+                            {{ $t(`forms.question_types.${typ}`) }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="row g-1 mt-1" v-else>
+                      <div class="col-4 text-label">
+                        {{ $t('businessFormsAdmin.type') }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disable-click-away
+                          :content="$t('businessFormsAdmin.typeQuestionHelp')"
+                        >
+                          <i class="bi bi-info-circle-fill h7"></i>
+                        </Popper>
+                      </div>
+                      <div class="col-7">
+                        <select
+                          class="form-control-modern form-select-modern"
+                          v-model="question.patientHistoryItem"
+                          id="types"
+                          @change="selectTypeItem(question)"
+                          :class="{ 'is-invalid': state.typeError }"
+                        >
+                          <option
+                            v-for="typ in state.patientHistoryItems"
+                            :key="typ"
+                            :value="typ"
+                          >
+                            {{ typ.name }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                    <div
+                      v-if="question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION'"
+                      class="row g-1 mt-1"
+                    >
+                      <div class="col-4 text-label">
+                        {{ $t('businessFormsAdmin.otherOption') }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disable-click-away
+                          :content="$t('businessFormsAdmin.otherOptionQuestionHelp')"
+                        >
+                          <i class="bi bi-info-circle-fill h7"></i>
+                        </Popper>
+                      </div>
+                      <div class="col-8">
+                        <Toggle v-model="question.otherOption" />
+                      </div>
+                    </div>
+                    <div
+                      v-if="
+                        (question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION') &&
+                        question.otherOption === true
+                      "
+                      class="row g-1 mt-1"
+                    >
+                      <div class="col-4 text-label">
+                        {{ $t('businessFormsAdmin.otherOpen') }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disable-click-away
+                          :content="$t('businessFormsAdmin.otherOpenQuestionHelp')"
+                        >
+                          <i class="bi bi-info-circle-fill h7"></i>
+                        </Popper>
+                      </div>
+                      <div class="col-8">
+                        <Toggle v-model="question.otherOptionOpen" />
+                      </div>
+                    </div>
+                    <div
+                      v-if="question.type === 'OPEN_WRITING' || question.type === 'OPEN_WRITING'"
+                      class="row g-1 mt-1"
+                    >
+                      <div class="col-4 text-label">
+                        {{ $t('businessFormsAdmin.analize') }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disable-click-away
+                          :content="$t('businessFormsAdmin.analizeIAQuestionHelp')"
+                        >
+                          <i class="bi bi-info-circle-fill h7"></i>
+                        </Popper>
+                      </div>
+                      <div class="col-8">
+                        <Toggle v-model="question.analize" />
+                      </div>
+                    </div>
+                    <div class="row g-1 mt-1">
+                      <div class="col-4 text-label">
+                        {{ $t('businessFormsAdmin.order') }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disable-click-away
+                          :content="$t('businessFormsAdmin.orderQuestionHelp')"
+                        >
+                          <i class="bi bi-info-circle-fill h7"></i>
+                        </Popper>
+                      </div>
+                      <div class="col-7">
+                        <input
+                          min="1"
+                          :max="state.questions.length + 1"
+                          type="number"
+                          class="form-control"
+                          v-model="question.order"
+                          v-bind:class="{ 'is-invalid': state.orderAddError }"
+                          placeholder="1"
+                        />
+                      </div>
+                    </div>
+                    <div
+                      class="row g-1 mt-1"
+                      v-if="question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION'"
+                    >
+                      <div class="col-4 text-label">
+                        {{ $t('businessFormsAdmin.options') }}
+                        <Popper
+                          :class="'dark p-1'"
+                          arrow
+                          disable-click-away
+                          :content="$t('businessFormsAdmin.optionsHelp')"
+                        >
+                          <i class="bi bi-info-circle-fill h7"></i>
+                        </Popper>
+                      </div>
+                      <div class="col-7">
+                        <input
+                          type="text"
+                          class="form-control"
+                          v-model="question.options"
+                          v-bind:class="{ 'is-invalid': state.questionOptionsError }"
+                          placeholder="Answer 1,Anwswer 2"
+                        />
+                      </div>
+                    </div>
                     <div>
-                      <span @click="addAddQuestion(state.questions)" class="add-question">
-                        <i class="bi bi-plus-circle"></i> {{ $t('businessFormsAdmin.addQuestion') }}
+                      <span @click="deleteAddQuestion(question)" class="delete-question">
+                        <i class="bi bi-trash3-fill"></i>
+                        {{ $t('businessFormsAdmin.deleteQuestion') }}
                       </span>
                       <Popper
                         :class="'dark p-1'"
                         arrow
                         disable-click-away
-                        :content="$t('businessFormsAdmin.addQuestionHelp')"
+                        :content="$t('businessFormsAdmin.deleteQuestionHelp')"
                       >
                         <i class="bi bi-info-circle-fill h7"></i>
                       </Popper>
                     </div>
-                    <div
-                      v-for="(question, ind) in state.questions"
-                      :key="`question-add.${ind}`"
-                      class="result-card mb-1"
-                    >
-                      <div class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessFormsAdmin.question') }}
-                        </div>
-                        <div class="col-7">
-                          <input
-                            type="text"
-                            class="form-control"
-                            v-model="question.title"
-                            v-bind:class="{ 'is-invalid': state.questionTitleError }"
-                            placeholder="Question title"
-                          />
-                        </div>
-                      </div>
-                      <div class="row g-1 mt-1" v-if="state.newForm.type !== 'FIRST_ATTENTION'">
-                        <div class="col-4 text-label">
-                          {{ $t('businessFormsAdmin.type') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessFormsAdmin.typeQuestionHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-7">
-                          <select
-                            class="form-control-modern form-select-modern"
-                            v-model="question.type"
-                            id="types"
-                            :class="{ 'is-invalid': state.typeError }"
-                          >
-                            <option v-for="typ in state.question_types" :key="typ" :value="typ">
-                              {{ $t(`forms.question_types.${typ}`) }}
-                            </option>
-                          </select>
-                        </div>
-                      </div>
-                      <div class="row g-1 mt-1" v-else>
-                        <div class="col-4 text-label">
-                          {{ $t('businessFormsAdmin.type') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessFormsAdmin.typeQuestionHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-7">
-                          <select
-                            class="form-control-modern form-select-modern"
-                            v-model="question.patientHistoryItem"
-                            id="types"
-                            @change="selectTypeItem(question)"
-                            :class="{ 'is-invalid': state.typeError }"
-                          >
-                            <option
-                              v-for="typ in state.patientHistoryItems"
-                              :key="typ"
-                              :value="typ"
-                            >
-                              {{ typ.name }}
-                            </option>
-                          </select>
-                        </div>
-                      </div>
-                      <div
-                        v-if="question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION'"
-                        class="row g-1 mt-1"
-                      >
-                        <div class="col-4 text-label">
-                          {{ $t('businessFormsAdmin.otherOption') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessFormsAdmin.otherOptionQuestionHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <Toggle v-model="question.otherOption" />
-                        </div>
-                      </div>
-                      <div
-                        v-if="
-                          (question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION') &&
-                          question.otherOption === true
-                        "
-                        class="row g-1 mt-1"
-                      >
-                        <div class="col-4 text-label">
-                          {{ $t('businessFormsAdmin.otherOpen') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessFormsAdmin.otherOpenQuestionHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <Toggle v-model="question.otherOptionOpen" />
-                        </div>
-                      </div>
-                      <div
-                        v-if="question.type === 'OPEN_WRITING' || question.type === 'OPEN_WRITING'"
-                        class="row g-1 mt-1"
-                      >
-                        <div class="col-4 text-label">
-                          {{ $t('businessFormsAdmin.analize') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessFormsAdmin.analizeIAQuestionHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <Toggle v-model="question.analize" />
-                        </div>
-                      </div>
-                      <div class="row g-1 mt-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessFormsAdmin.order') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessFormsAdmin.orderQuestionHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-7">
-                          <input
-                            min="1"
-                            :max="state.questions.length + 1"
-                            type="number"
-                            class="form-control"
-                            v-model="question.order"
-                            v-bind:class="{ 'is-invalid': state.orderAddError }"
-                            placeholder="1"
-                          />
-                        </div>
-                      </div>
-                      <div
-                        class="row g-1 mt-1"
-                        v-if="question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION'"
-                      >
-                        <div class="col-4 text-label">
-                          {{ $t('businessFormsAdmin.options') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessFormsAdmin.optionsHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-7">
-                          <input
-                            type="text"
-                            class="form-control"
-                            v-model="question.options"
-                            v-bind:class="{ 'is-invalid': state.questionOptionsError }"
-                            placeholder="Answer 1,Anwswer 2"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <span @click="deleteAddQuestion(question)" class="delete-question">
-                          <i class="bi bi-trash3-fill"></i>
-                          {{ $t('businessFormsAdmin.deleteQuestion') }}
-                        </span>
-                        <Popper
-                          :class="'dark p-1'"
-                          arrow
-                          disable-click-away
-                          :content="$t('businessFormsAdmin.deleteQuestionHelp')"
-                        >
-                          <i class="bi bi-info-circle-fill h7"></i>
-                        </Popper>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col mt-3">
-                    <button
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(state.newForm)"
-                    >
-                      {{ $t('businessFormsAdmin.add') }} <i class="bi bi-save"></i>
-                    </button>
                   </div>
                 </div>
-                <div v-else>
-                  <Message
-                    :title="$t('businessFormsAdmin.message.3.title')"
-                    :content="$t('businessFormsAdmin.message.3.content')"
-                  />
+                <div class="col mt-3">
+                  <button
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    @click="add(state.newForm)"
+                  >
+                    {{ $t('businessFormsAdmin.add') }} <i class="bi bi-save"></i>
+                  </button>
                 </div>
               </div>
+              <div v-else>
+                <Message
+                  :title="$t('businessFormsAdmin.message.3.title')"
+                  :content="$t('businessFormsAdmin.message.3.content')"
+                />
+              </div>
             </div>
-            <div class="mx-2 mb-4 text-center">
-              <a
-                class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-                >{{ $t('close') }} <i class="bi bi-check-lg"></i
-              ></a>
-            </div>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a
+              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+              >{{ $t('close') }} <i class="bi bi-check-lg"></i
+            ></a>
           </div>
         </div>
       </div>

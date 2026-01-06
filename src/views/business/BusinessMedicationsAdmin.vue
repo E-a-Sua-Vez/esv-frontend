@@ -17,6 +17,7 @@ import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import MedicationSimpleName from '../../components/common/MedicationSimpleName.vue';
 
@@ -30,6 +31,7 @@ export default {
     Warning,
     AreYouSure,
     ComponentMenu,
+    DesktopPageHeader,
     SearchAdminItem,
     MedicationSimpleName,
   },
@@ -284,7 +286,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business?.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo :src="state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessMedicationsAdmin.title`)"
           :toggles="state.toggles"
@@ -452,22 +454,15 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <CommerceLogo :src="state.business?.logo" :loading="loading" :desktop-size="false" />
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t(`businessMedicationsAdmin.title`)"
-              :toggles="state.toggles"
-              component-name="businessMedicationsAdmin"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('businessMedicationsAdmin.title')"
+          :toggles="state.toggles"
+          component-name="businessMedicationsAdmin"
+          @go-back="goBack"
+        />
         <div id="businessMedicationsAdmin">
           <div v-if="isActiveBusiness && state.toggles['medications.admin.view']">
             <div id="businessMedicationsAdmin-controls" class="control-box">

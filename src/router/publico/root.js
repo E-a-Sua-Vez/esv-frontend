@@ -34,7 +34,7 @@ const RootRoutes = [
     },
   },
   {
-    path: '/portal/login',
+    path: '/public/portal/:commerceSlug/login',
     name: 'client-portal-login',
     component: ClientPortalLogin,
     meta: {
@@ -43,7 +43,7 @@ const RootRoutes = [
     },
   },
   {
-    path: '/portal',
+    path: '/public/portal/:commerceSlug/menu',
     name: 'client-portal-menu',
     component: ClientPortalMenu,
     meta: {
@@ -52,7 +52,7 @@ const RootRoutes = [
     },
   },
   {
-    path: '/portal/consents',
+    path: '/public/portal/:commerceSlug/consents',
     name: 'client-portal-consents',
     component: ClientConsentsView,
     meta: {
@@ -61,7 +61,7 @@ const RootRoutes = [
     },
   },
   {
-    path: '/portal/telemedicine',
+    path: '/public/portal/:commerceSlug/telemedicine',
     name: 'client-portal-telemedicine',
     component: ClientTelemedicineView,
     meta: {
@@ -70,7 +70,7 @@ const RootRoutes = [
     },
   },
   {
-    path: '/portal/profile',
+    path: '/public/portal/:commerceSlug/profile',
     name: 'client-portal-profile',
     component: ClientProfileView,
     meta: {
@@ -79,7 +79,7 @@ const RootRoutes = [
     },
   },
   {
-    path: '/portal/documents',
+    path: '/public/portal/:commerceSlug/documents',
     name: 'client-portal-documents',
     component: ClientDocumentsView,
     meta: {
@@ -88,7 +88,7 @@ const RootRoutes = [
     },
   },
   {
-    path: '/portal/history',
+    path: '/public/portal/:commerceSlug/history',
     name: 'client-portal-history',
     component: ClientHistoryView,
     meta: {

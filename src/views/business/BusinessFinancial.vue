@@ -15,6 +15,7 @@ import IncomesFinancialManagement from '../../components/financial/domain/Income
 import OutcomesFinancialManagement from '../../components/financial/domain/OutcomesFinancialManagement.vue';
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
 import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import DateRangeFilters from '../../components/common/desktop/DateRangeFilters.vue';
 
 export default {
@@ -30,6 +31,7 @@ export default {
     IncomesFinancialManagement,
     OutcomesFinancialManagement,
     DesktopContentLayout,
+    DesktopPageHeader,
     DesktopFiltersPanel,
     DateRangeFilters,
   },
@@ -326,30 +328,14 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || commerce?.logo || state.business?.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t(`businessFinancial.title`)"
-              :toggles="state.toggles"
-              component-name="businessFinancial"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :loading="loading"
+          :title="$t('businessFinancial.title')"
+          :toggles="state.toggles"
+          component-name="businessFinancial"
+          @go-back="goBack"
+        />
         <div id="businessFinancial" v-if="isActiveBusiness()">
           <div v-if="!state.allCommerces || state.allCommerces.length === 0" class="control-box">
             <Message

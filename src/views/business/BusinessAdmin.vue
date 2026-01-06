@@ -21,6 +21,7 @@ import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import SearchBar from '../../components/common/SearchBar.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import { USER_TYPES } from '../../shared/constants';
 
 export default {
@@ -37,6 +38,7 @@ export default {
     Popper,
     SearchBar,
     ComponentMenu,
+    DesktopPageHeader,
   },
   async setup() {
     const router = useRouter();
@@ -592,16 +594,24 @@ export default {
           if (!serviceInfo.attentionDays.includes(day)) {
             serviceInfo.attentionDays.push(day);
           }
+          // If personalized is already enabled, add this day to personalizedHours
+          if (serviceInfo.personalized === true) {
+            if (!serviceInfo.personalizedHours) {
+              serviceInfo.personalizedHours = {};
+            }
+            serviceInfo.personalizedHours[day] = {
+              attentionHourFrom: serviceInfo.attentionHourFrom || 8,
+              attentionHourTo: serviceInfo.attentionHourTo || 16,
+            };
+          }
         } else {
           serviceInfo.attentionDays = serviceInfo.attentionDays.filter(el => el !== day);
+          // Remove from personalizedHours if it exists
+          if (serviceInfo.personalizedHours && serviceInfo.personalizedHours[day]) {
+            delete serviceInfo.personalizedHours[day];
+          }
         }
         serviceInfo.attentionDays.sort();
-        if (serviceInfo.personalized === true) {
-          serviceInfo.personalizedHours[day] = {
-            attentionHourFrom: serviceInfo.attentionHourFrom,
-            attentionHourTo: serviceInfo.attentionHourTo,
-          };
-        }
       }
     };
 
@@ -610,12 +620,19 @@ export default {
         if (!serviceInfo.personalizedHours) {
           serviceInfo.personalizedHours = {};
         }
+        // Initialize attentionDays array if it doesn't exist
+        if (!serviceInfo.attentionDays) {
+          serviceInfo.attentionDays = [];
+        }
+        // If there are already selected days, initialize personalized hours for them
         if (serviceInfo.attentionDays && serviceInfo.attentionDays.length > 0) {
           serviceInfo.attentionDays.forEach(day => {
-            serviceInfo.personalizedHours[day] = {
-              attentionHourFrom: serviceInfo.attentionHourFrom,
-              attentionHourTo: serviceInfo.attentionHourTo,
-            };
+            if (!serviceInfo.personalizedHours[day]) {
+              serviceInfo.personalizedHours[day] = {
+                attentionHourFrom: serviceInfo.attentionHourFrom || 8,
+                attentionHourTo: serviceInfo.attentionHourTo || 16,
+              };
+            }
           });
         }
       }
@@ -1144,7 +1161,7 @@ export default {
                       </div>
                       <!-- Datos de localizacion -->
                       <div class="row g-1">
-                        <a class="nav-link fw-bold" data-bs-toggle="collapse" href="#add-location">
+                        <a class="nav-link fw-bold section-toggle-button" data-bs-toggle="collapse" href="#add-location">
                           {{ $t('businessAdmin.location') }} <i class="bi bi-chevron-down"></i>
                         </a>
                       </div>
@@ -1244,7 +1261,7 @@ export default {
                       </div>
                       <!-- Datos de Contacto -->
                       <div class="row g-1">
-                        <a class="nav-link fw-bold" data-bs-toggle="collapse" href="#add-contact">
+                        <a class="nav-link fw-bold section-toggle-button" data-bs-toggle="collapse" href="#add-contact">
                           {{ $t('businessAdmin.contact') }} <i class="bi bi-chevron-down"></i>
                         </a>
                       </div>
@@ -1372,7 +1389,7 @@ export default {
                       </div>
                       <!-- Datos de Servicio -->
                       <div class="row g-1">
-                        <a class="nav-link fw-bold" data-bs-toggle="collapse" href="#add-service">
+                        <a class="nav-link fw-bold section-toggle-button" data-bs-toggle="collapse" href="#add-service">
                           {{ $t('businessAdmin.service') }} <i class="bi bi-chevron-down"></i>
                         </a>
                       </div>
@@ -1618,12 +1635,14 @@ export default {
                         </div>
                       </div>
                       <div class="col">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="add(state.newBusiness)"
-                        >
-                          {{ $t('businessAdmin.add') }} <i class="bi bi-save"></i>
-                        </button>
+                        <div class="d-flex gap-2 flex-wrap justify-content-center">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            @click="add(state.newBusiness)"
+                          >
+                            {{ $t('businessAdmin.add') }} <i class="bi bi-save"></i>
+                          </button>
+                        </div>
                       </div>
                       <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
                         <Warning>
@@ -1904,7 +1923,7 @@ export default {
                         <!-- Datos de localizacion -->
                         <div class="row g-1">
                           <a
-                            class="nav-link fw-bold"
+                            class="nav-link fw-bold section-toggle-button"
                             data-bs-toggle="collapse"
                             aria-expanded="true"
                             :aria-controls="`update-location-${index}`"
@@ -2011,7 +2030,7 @@ export default {
                         <!-- Datos de Contacto -->
                         <div class="row g-1">
                           <a
-                            class="nav-link fw-bold"
+                            class="nav-link fw-bold section-toggle-button"
                             data-bs-toggle="collapse"
                             :href="`#update-contact-${index}`"
                           >
@@ -2144,7 +2163,7 @@ export default {
                         <!-- Datos de Servicio -->
                         <div class="row g-1">
                           <a
-                            class="nav-link fw-bold"
+                            class="nav-link fw-bold section-toggle-button"
                             data-bs-toggle="collapse"
                             :href="`#update-service-${index}`"
                           >
@@ -2398,116 +2417,42 @@ export default {
                             </div>
                           </div>
                         </div>
+                        <div v-if="toggles['businesses.admin.read']" class="row g-1 mt-2">
+                          <div class="col">
+                            <div class="d-flex gap-2 flex-wrap justify-content-center">
+                              <button
+                                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                                @click="update(business)"
+                                :disabled="!toggles['businesses.admin.update']"
+                              >
+                                {{ $t('businessAdmin.update') }} <i class="bi bi-save"></i>
+                              </button>
+                              <button
+                                type="button"
+                                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                                @click="selectBusiness(business)"
+                              >
+                                <i class="bi bi-eye-fill me-2"></i>
+                                {{ $t('businessAdmin.viewAsBusiness') }}
+                              </button>
+                            </div>
+                          </div>
+                          <div class="row g-1 errors" id="feedback" v-if="state.errorsUpdate.length > 0">
+                            <Warning>
+                              <template v-slot:message>
+                                <li v-for="(error, errorIndex) in state.errorsUpdate" :key="errorIndex">
+                                  {{ $t(error) }}
+                                </li>
+                              </template>
+                            </Warning>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <div v-if="toggles['businesses.admin.read']" class="row g-1 mt-2">
-                    <div class="col">
-                      <div class="d-flex gap-2 flex-wrap justify-content-center">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(business)"
-                          :disabled="!toggles['businesses.admin.update']"
-                        >
-                          {{ $t('businessAdmin.update') }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          type="button"
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="selectBusiness(business)"
-                        >
-                          <i class="bi bi-eye-fill me-2"></i>
-                          {{ $t('businessAdmin.viewAsBusiness') }}
-                        </button>
-                      </div>
-                    </div>
-                    <div class="row g-1 errors" id="feedback" v-if="state.errorsUpdate.length > 0">
-                      <Warning>
-                        <template v-slot:message>
-                          <li v-for="(error, errorIndex) in state.errorsUpdate" :key="errorIndex">
-                            {{ $t(error) }}
-                          </li>
-                        </template>
-                      </Warning>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="d-flex justify-content-center align-items-center flex-wrap gap-2 mb-2">
-            <span class="badge bg-secondary px-2 py-2 m-1">
-              {{ $t('businessAdmin.listResult') }} {{ state.counter }}
-            </span>
-            <span class="badge bg-secondary px-2 py-2 m-1">
-              {{ $t('page') }} {{ state.page }} {{ $t('of') }} {{ state.totalPages }}
-            </span>
-            <select
-              class="btn btn-sm btn-light fw-bold text-dark select mx-1"
-              v-model="state.limit"
-              @change="refreshPagination()"
-            >
-              <option v-for="lim in state.limits" :key="lim" :value="lim">
-                {{ lim }}
-              </option>
-            </select>
-          </div>
-          <div class="centered mt-2" v-if="state.filtered">
-            <nav>
-              <ul class="pagination pagination-ul">
-                <li class="page-item">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
-                    aria-label="First"
-                    @click="setPage(1)"
-                    :disabled="state.page === 1 || state.totalPages === 0"
-                  >
-                    <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
-                  </button>
-                </li>
-                <li class="page-item">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
-                    aria-label="Previous"
-                    @click="setPage(state.page - 1)"
-                    :disabled="state.page === 1 || state.totalPages === 0"
-                  >
-                    <span aria-hidden="true">&laquo;</span>
-                  </button>
-                </li>
-                <li>
-                  <select
-                    class="btn btn-md btn-light fw-bold text-dark select mx-1 py-1"
-                    v-model="state.page"
-                    :disabled="state.totalPages === 0"
-                  >
-                    <option v-for="pag in state.totalPages" :key="pag" :value="pag">
-                      {{ pag }}
-                    </option>
-                  </select>
-                </li>
-                <li class="page-item">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
-                    aria-label="Next"
-                    @click="setPage(state.page + 1)"
-                    :disabled="state.page === state.totalPages || state.totalPages === 0"
-                  >
-                    <span aria-hidden="true">&raquo;</span>
-                  </button>
-                </li>
-                <li class="page-item">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
-                    aria-label="Last"
-                    @click="setPage(state.totalPages)"
-                    :disabled="state.page === state.totalPages || state.totalPages === 1"
-                  >
-                    <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
-                  </button>
-                </li>
-              </ul>
-            </nav>
           </div>
         </div>
         <div v-if="!toggles['businesses.admin.view'] && !loading">
@@ -2528,28 +2473,15 @@ export default {
         <!-- Alert show prop was always false, fixed to show if alertError has value -->
         <Alert :show="!!alertError" :stack="alertError"></Alert>
       </div>
-      <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-        <div class="col-auto desktop-logo-wrapper">
-          <div class="desktop-commerce-logo">
-            <div id="commerce-logo-desktop">
-              <img
-                class="rounded img-fluid logo-desktop"
-                :alt="$t('logoAlt')"
-                :src="$t('logo')"
-                loading="lazy"
-              />
-            </div>
-          </div>
-        </div>
-        <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-          <ComponentMenu
-            :title="$t('businessAdmin.title')"
-            :toggles="toggles"
-            component-name="businessAdmin"
-            @goBack="goBack"
-          />
-        </div>
-      </div>
+      <DesktopPageHeader
+        :logo="commerce?.logo || state.business?.logo"
+        :business-id="state.business?.id"
+        :loading="loading"
+        :title="$t('businessAdmin.title')"
+        :toggles="state.toggles"
+        component-name="businessAdmin"
+        @go-back="goBack"
+      />
       <div id="businessAdmin">
         <div v-if="toggles['businesses.admin.view']">
           <div v-if="!loading" id="businessAdmin-result" class="mt-4">
@@ -2998,12 +2930,14 @@ export default {
                         </div>
                       </div>
                       <div class="col">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          type="submit"
-                        >
-                          {{ $t('businessAdmin.add') }} <i class="bi bi-save"></i>
-                        </button>
+                        <div class="d-flex gap-2 flex-wrap justify-content-center">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            type="submit"
+                          >
+                            {{ $t('businessAdmin.add') }} <i class="bi bi-save"></i>
+                          </button>
+                        </div>
                       </div>
                       <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
                         <Warning>
@@ -3685,4 +3619,44 @@ export default {
 .logo-loading-placeholder i {
   font-size: 1.5rem;
 }
+
+
+.section-toggle-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.625rem;
+  margin-bottom: 0.375rem;
+  background: rgba(0, 0, 0, 0.85);
+  border: none;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.section-toggle-button:hover {
+  background: rgba(0, 0, 0, 0.95);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.section-toggle-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.section-toggle-button[aria-expanded='true'] {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.section-toggle-button[aria-expanded='true']:hover {
+  background: rgba(0, 0, 0, 0.95);
+}
+
 </style>

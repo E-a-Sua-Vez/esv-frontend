@@ -4,7 +4,7 @@
     <Alert :show="!!alertError" :stack="alertError"></Alert>
 
     <div class="content text-center">
-      <CommerceLogo :src="state.commerce?.logo" :loading="loading"></CommerceLogo>
+      <CommerceLogo :src="state.commerce?.logo || state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
       <ComponentMenu
         :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
           state.currentUser?.alias || state.currentUser?.name
@@ -233,6 +233,7 @@ export default {
       attention: {},
       user: {},
       client: {},
+      business: {},
       commerce: computed(() => store.getCurrentCommerce),
       queue: {},
       toggles: {},
@@ -619,6 +620,7 @@ export default {
 
         // Load critical data first (sequential)
         state.currentUser = await store.getCurrentUser;
+        state.business = await store.getActualBusiness();
         const attentionDetails = await getAttentionDetails(id, state.currentUser?.id);
 
         if (attentionDetails) {

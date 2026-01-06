@@ -22,6 +22,7 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 
 const router = useRouter();
@@ -268,26 +269,14 @@ function goBack() {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <CommerceLogo
-                :src="commerce?.logo || state.business?.logo"
-                :loading="loading"
-                :desktop-size="false"
-              />
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t('businessPatientHistoryItemAdmin.title')"
-              :toggles="state.toggles"
-              component-name="businessPatientHistoryItemAdmin"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :loading="loading"
+          :title="$t('businessPatientHistoryItemAdmin.title')"
+          :toggles="state.toggles"
+          component-name="businessPatientHistoryItemAdmin"
+          @go-back="goBack"
+        />
         <div id="businessPatientHistoryItemAdmin">
           <div v-if="isActiveBusiness && state.toggles['patient-history-item.admin.view']">
             <div v-if="!loading" id="businessPatientHistoryItemAdmin-result" class="mt-4">

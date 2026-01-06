@@ -16,6 +16,7 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import DashboardAttentionsAndBookingsManagement from '../../components/attentions/DashboardAttentionsAndBookingsManagement.vue';
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
 import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import DateRangeFilters from '../../components/common/desktop/DateRangeFilters.vue';
 import { DateModel } from '../../shared/utils/date.model';
 
@@ -1180,6 +1181,7 @@ export default {
       <div class="content text-center">
         <CommerceLogo
           :src="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
           :loading="loading"
         ></CommerceLogo>
         <ComponentMenu
@@ -1296,15 +1298,12 @@ export default {
         <div class="row align-items-center mb-1 desktop-header-row">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || commerce?.logo || state.business?.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
+              <CommerceLogo
+                :src="commerce?.logo || state.business?.logo"
+                :business-id="state.business?.id"
+                :loading="loading"
+                desktop-size
+              />
             </div>
           </div>
           <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">

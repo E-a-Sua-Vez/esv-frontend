@@ -9,6 +9,7 @@ export default {
     title: { type: String, default: '' },
     toggles: { type: Object, default: {} },
     componentName: { type: String, default: '' },
+    isClientPortal: { type: Boolean, default: false },
   },
   data() {
     const store = globalStore();
@@ -21,6 +22,12 @@ export default {
       this.$emit('goBack');
     },
     async goInit() {
+      // Si es portal de clientes, emitir evento en lugar de navegar
+      if (this.isClientPortal) {
+        this.$emit('goBack');
+        return;
+      }
+
       const userType = await this.store.getCurrentUserType;
       if (userType) {
         if (userType === 'collaborator') {

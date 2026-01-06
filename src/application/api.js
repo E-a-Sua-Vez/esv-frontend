@@ -34,7 +34,7 @@ validateHttps(eventURL);
 validateHttps(queryURL);
 
 const BACKEND_CONFIG = {
-  timeout: 30000,
+  timeout: 60000,
   baseURL: backendURL,
   contentType: 'application/json',
 };

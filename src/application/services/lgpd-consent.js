@@ -59,3 +59,4 @@ export const getAllConsents = async filters => {
   return (await requestBackend.get(`/${entity}/?${params}`, await getHeaders())).data;
 };
 
+

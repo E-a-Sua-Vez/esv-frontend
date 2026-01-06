@@ -19,6 +19,7 @@ import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import SpecificCalendarForm from '../../components/domain/SpecificCalendarForm.vue';
 import CommerceFormEdit from '../../components/commerce/CommerceFormEdit.vue';
@@ -37,6 +38,7 @@ export default {
     Popper,
     AreYouSure,
     ComponentMenu,
+    DesktopPageHeader,
     SearchAdminItem,
     SpecificCalendarForm,
     CommerceFormEdit,
@@ -621,6 +623,7 @@ export default {
       <div class="content text-center">
         <CommerceLogo
           :src="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
           :loading="loading"
         ></CommerceLogo>
         <ComponentMenu
@@ -690,6 +693,8 @@ export default {
                       :commerce="commerce"
                       :categories="state.categories"
                       :toggles="state.toggles"
+                      :business-id="state.business.id"
+                      :business-logo="state.business?.logo"
                       :errors="{
                         tagUpdateError: state.tagUpdateError,
                         phoneUpdateError: state.phoneUpdateError,
@@ -764,29 +769,18 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || commerce?.logo || state.business?.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t(`businessCommercesAdmin.title`)"
-              :toggles="state.toggles"
-              component-name="businessCommercesAdmin"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('businessCommercesAdmin.title')"
+          :toggles="state.toggles"
+          component-name="businessCommercesAdmin"
+          @go-back="goBack"
+        />
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessCommercesAdmin">
           <div v-if="isActiveBusiness() && state.toggles['commerces.admin.view']">
@@ -844,6 +838,8 @@ export default {
                       :commerce="commerce"
                       :categories="state.categories"
                       :toggles="state.toggles"
+                      :business-id="state.business.id"
+                      :business-logo="state.business?.logo"
                       :errors="{
                         tagUpdateError: state.tagUpdateError,
                         phoneUpdateError: state.phoneUpdateError,
@@ -910,6 +906,7 @@ export default {
         </div>
       </div>
     </div>
+
     <!-- Modal Add -->
     <div
       class="modal fade"
@@ -944,6 +941,8 @@ export default {
                   v-model="state.newCommerce"
                   :categories="state.categories"
                   :toggles="state.toggles"
+                  :business-id="state.business?.id"
+                  :business-logo="state.business?.logo"
                   :errors="{
                     nameError: state.nameError,
                     keyNameError: state.keyNameError,

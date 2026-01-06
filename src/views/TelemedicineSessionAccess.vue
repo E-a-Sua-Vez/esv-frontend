@@ -5,6 +5,7 @@
       <CommerceLogo
         v-if="commerce && commerce.logo"
         :src="commerce.logo"
+        :business-id="commerce.businessId"
         :loading="false"
       ></CommerceLogo>
 

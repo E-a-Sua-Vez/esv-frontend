@@ -877,6 +877,7 @@ export default {
         <div class="col-12 col-lg-8">
           <CommerceLogo
             :src="state.commerce.logo"
+            :business-id="state.commerce.businessId"
             :loading="loading"
             :large-size="true"
           ></CommerceLogo>

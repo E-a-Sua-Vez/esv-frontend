@@ -281,19 +281,32 @@ export default {
             aria-modal="true"
             aria-hidden="true"
           >
-            <div class="modal-dialog modal-xl">
-              <div class="modal-content modern-modal-content">
-                <div class="modal-header border-0">
+            <div class="modal-dialog modal-xl modern-modal-wrapper">
+              <div class="modal-content modern-modal-container">
+                <div class="modal-header border-0 active-name modern-modal-header">
+                  <div class="modern-modal-header-inner">
+                    <div class="modern-modal-icon-wrapper">
+                      <i class="bi bi-key-fill"></i>
+                    </div>
+                    <div class="modern-modal-title-wrapper">
+                      <h5 class="modal-title fw-bold modern-modal-title">
+                        {{ $t('accessAdmin.subtitle.1') }}
+                      </h5>
+                      <p class="modern-modal-subtitle">
+                        {{ $t('accessAdmin.subtitle.2') }}
+                      </p>
+                    </div>
+                  </div>
                   <button
-                    id="close-modal"
-                    class="btn-close"
+                    class="btn-close modern-modal-close-btn"
                     type="button"
                     data-bs-dismiss="modal"
                     aria-label="Close"
-                    tabindex="0"
-                  ></button>
+                  >
+                    <i class="bi bi-x-lg"></i>
+                  </button>
                 </div>
-                <div class="modal-body text-center modern-modal-body">
+                <div class="modal-body modern-modal-body-compact">
                   <Suspense>
                     <template #default>
                       <AccessAdmin :user-type="userType" @closeModal="closeMenu()"> </AccessAdmin>
@@ -565,5 +578,108 @@ export default {
     right: 0.75rem;
     font-size: 1.1rem;
   }
+}
+
+/* Modern Modal Styles */
+.modern-modal-wrapper {
+  max-width: 600px;
+}
+
+.modern-modal-container {
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+  border: none;
+}
+
+.modern-modal-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  border-radius: 1rem 1rem 0 0;
+  min-height: auto;
+  position: relative;
+}
+
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.modern-modal-icon-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-modal-icon-wrapper i {
+  font-size: 1.125rem;
+  color: #ffffff;
+}
+
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-background);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.modern-modal-subtitle {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.modern-modal-close-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+}
+
+.modern-modal-close-btn i {
+  font-size: 1rem;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.modern-modal-close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.modern-modal-body-compact {
+  padding: 1.5rem;
+  background-color: var(--color-background);
 }
 </style>

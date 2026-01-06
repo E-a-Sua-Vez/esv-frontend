@@ -5,27 +5,57 @@ import { requestBackend, getHeaders } from '../api';
  * Handles uploading, retrieving, and managing patient photos
  */
 
+// In-memory cache for patient photos
+const photoCache = {
+  metadata: new Map(), // commerceId_clientId -> photo metadata
+  thumbnails: new Map(), // commerceId_clientId_photoId -> thumbnail URL
+  fullPhotos: new Map(), // commerceId_clientId_photoId -> full photo URL
+};
+
+// Helper to generate cache keys
+const getCacheKey = (commerceId, clientId, photoId = null) => {
+  return photoId
+    ? `${commerceId}_${clientId}_${photoId}`
+    : `${commerceId}_${clientId}`;
+};
+
+// Clear cache for a specific client (useful after upload/delete)
+export const clearClientPhotoCache = (commerceId, clientId) => {
+  const baseKey = getCacheKey(commerceId, clientId);
+
+  // Clear metadata
+  photoCache.metadata.delete(baseKey);
+
+  // Clear all related thumbnails and photos
+  for (const key of photoCache.thumbnails.keys()) {
+    if (key.startsWith(baseKey)) {
+      const url = photoCache.thumbnails.get(key);
+      if (url) URL.revokeObjectURL(url); // Clean up blob URL
+      photoCache.thumbnails.delete(key);
+    }
+  }
+
+  for (const key of photoCache.fullPhotos.keys()) {
+    if (key.startsWith(baseKey)) {
+      const url = photoCache.fullPhotos.get(key);
+      if (url) URL.revokeObjectURL(url); // Clean up blob URL
+      photoCache.fullPhotos.delete(key);
+    }
+  }
+
+};
+
 // Upload patient photo (from camera capture or file upload)
 export const uploadPatientPhoto = async (commerceId, clientId, photoData) => {
   try {
-    console.log('📸 PatientPhoto: Starting upload with data:', {
-      commerceId,
-      clientId,
-      hasBlob: !!photoData.blob,
-      hasFile: !!photoData.file,
-      filename: photoData.filename,
-    });
-
     const formData = new FormData();
 
     // Add photo file or blob
     if (photoData.blob) {
       // From camera capture
-      console.log('📸 PatientPhoto: Adding blob to FormData');
       formData.append('photo', photoData.blob, photoData.filename);
     } else if (photoData.file) {
       // From file upload
-      console.log('📸 PatientPhoto: Adding file to FormData');
       formData.append('photo', photoData.file, photoData.filename);
     } else {
       throw new Error('No photo data provided');
@@ -37,7 +67,6 @@ export const uploadPatientPhoto = async (commerceId, clientId, photoData) => {
     formData.append('photoType', 'patient_profile');
     formData.append('uploadDate', new Date().toISOString());
 
-    console.log('📸 PatientPhoto: Sending request to backend...');
     const response = await requestBackend.post(
       `/patient-photos/${commerceId}/${clientId}`,
       formData,
@@ -49,39 +78,39 @@ export const uploadPatientPhoto = async (commerceId, clientId, photoData) => {
       },
     );
 
-    console.log('📸 PatientPhoto: Upload successful:', response.data);
+
+    // Clear cache after successful upload
+    clearClientPhotoCache(commerceId, clientId);
+
     return response.data;
   } catch (error) {
-    console.error('Error uploading patient photo:', error);
     throw new Error(error.response?.data?.message || 'Error al subir la foto del paciente');
   }
 };
 
 // Get patient photo
 export const getPatientPhoto = async (commerceId, clientId) => {
-  try {
-    console.log('📸 PatientPhoto Frontend: Requesting photo metadata for:', {
-      commerceId,
-      clientId,
-    });
+  const cacheKey = getCacheKey(commerceId, clientId);
 
+  // Check cache first
+  if (photoCache.metadata.has(cacheKey)) {
+    return photoCache.metadata.get(cacheKey);
+  }
+
+  try {
     // Debug auth headers
     const headers = await getHeaders();
-    console.log('📸 PatientPhoto Frontend: Auth headers:', headers);
+    const response = await requestBackend.get(`/patient-photos/${commerceId}/${clientId}`, headers);
 
-    const response = await requestBackend.get(`/patient-photos/${commerceId}/${clientId}`);
-    console.log('📸 PatientPhoto Frontend: Response received:', response.data);
+    // Store in cache
+    photoCache.metadata.set(cacheKey, response.data);
+
     return response.data;
   } catch (error) {
     if (error.response?.status === 404) {
-      // No photo found - this is normal for new patients
-      console.log('📸 PatientPhoto Frontend: No photo found (404)');
+      photoCache.metadata.set(cacheKey, null);
       return null;
     }
-    if (error.response?.status === 401) {
-      console.error('📸 PatientPhoto Frontend: Authentication error (401):', error.response.data);
-    }
-    console.error('📸 PatientPhoto Frontend: Error getting patient photo:', error);
     throw new Error(error.response?.data?.message || 'Error al obtener la foto del paciente');
   }
 };
@@ -89,24 +118,34 @@ export const getPatientPhoto = async (commerceId, clientId) => {
 // Get patient photo URL for display
 export const getPatientPhotoUrl = async (commerceId, clientId, photoId) => {
   if (!commerceId || !clientId || !photoId) {
-    console.warn('🔍 PatientPhoto: Missing parameters for photo URL:', {
-      commerceId,
-      clientId,
-      photoId,
-    });
     return null;
+  }
+
+  const cacheKey = getCacheKey(commerceId, clientId, photoId);
+
+  // Check cache first - verify it belongs to this specific client
+  if (photoCache.fullPhotos.has(cacheKey)) {
+    const cachedUrl = photoCache.fullPhotos.get(cacheKey);
+    // Verify the cache key matches exactly (commerceId + clientId + photoId)
+    if (cachedUrl && cacheKey.startsWith(`${commerceId}_${clientId}_`)) {
+      return cachedUrl;
+    } else {
+      // Invalid cache entry, remove it
+      if (cachedUrl) URL.revokeObjectURL(cachedUrl);
+      photoCache.fullPhotos.delete(cacheKey);
+    }
   }
 
   try {
     // Debug auth headers
     const headers = await getHeaders();
-    console.log('📸 PatientPhoto: Full photo auth headers:', headers);
 
     // Make an authenticated request to get the photo blob
     const response = await requestBackend.get(
       `/patient-photos/${commerceId}/${clientId}/${photoId}`,
       {
         responseType: 'blob',
+        ...headers,
       },
     );
 
@@ -115,16 +154,12 @@ export const getPatientPhotoUrl = async (commerceId, clientId, photoId) => {
       type: response.headers['content-type'] || 'image/jpeg',
     });
     const url = URL.createObjectURL(blob);
-    console.log('🔍 PatientPhoto: Generated authenticated full photo URL');
+
+    // Store in cache with verified key
+    photoCache.fullPhotos.set(cacheKey, url);
+
     return url;
   } catch (error) {
-    if (error.response?.status === 401) {
-      console.error(
-        '📸 PatientPhoto: Authentication error for full photo (401):',
-        error.response.data,
-      );
-    }
-    console.error('🔍 PatientPhoto: Error loading full photo:', error);
     return null;
   }
 };
@@ -132,25 +167,32 @@ export const getPatientPhotoUrl = async (commerceId, clientId, photoId) => {
 // Get patient photo thumbnail URL
 export const getPatientPhotoThumbnailUrl = async (commerceId, clientId, photoId) => {
   if (!commerceId || !clientId || !photoId) {
-    console.warn('🔍 PatientPhoto: Missing parameters for thumbnail URL:', {
-      commerceId,
-      clientId,
-      photoId,
-    });
     return null;
+  }
+
+  const cacheKey = getCacheKey(commerceId, clientId, photoId);
+
+  // Check cache first - verify it belongs to this specific client
+  if (photoCache.thumbnails.has(cacheKey)) {
+    const cachedUrl = photoCache.thumbnails.get(cacheKey);
+    // Verify the cache key matches exactly (commerceId + clientId + photoId)
+    if (cachedUrl && cacheKey.startsWith(`${commerceId}_${clientId}_`)) {
+      return cachedUrl;
+    } else {
+      // Invalid cache entry, remove it
+      if (cachedUrl) URL.revokeObjectURL(cachedUrl);
+      photoCache.thumbnails.delete(cacheKey);
+    }
   }
 
   try {
     // Debug auth headers
     const headers = await getHeaders();
-    console.log('📸 PatientPhoto: Thumbnail auth headers:', headers);
 
     // Make an authenticated request to get the thumbnail blob
     const response = await requestBackend.get(
       `/patient-photos/${commerceId}/${clientId}/${photoId}/thumbnail`,
-      {
-        responseType: 'blob',
-      },
+      { responseType: 'blob', ...headers }
     );
 
     // Create a blob URL that can be used in img src
@@ -158,16 +200,12 @@ export const getPatientPhotoThumbnailUrl = async (commerceId, clientId, photoId)
       type: response.headers['content-type'] || 'image/jpeg',
     });
     const url = URL.createObjectURL(blob);
-    console.log('🔍 PatientPhoto: Generated authenticated thumbnail URL');
+
+    // Store in cache with verified key
+    photoCache.thumbnails.set(cacheKey, url);
+
     return url;
   } catch (error) {
-    if (error.response?.status === 401) {
-      console.error(
-        '📸 PatientPhoto: Authentication error for thumbnail (401):',
-        error.response.data,
-      );
-    }
-    console.error('🔍 PatientPhoto: Error loading thumbnail:', error);
     return null;
   }
 };
@@ -175,12 +213,19 @@ export const getPatientPhotoThumbnailUrl = async (commerceId, clientId, photoId)
 // Delete patient photo
 export const deletePatientPhoto = async (commerceId, clientId, photoId) => {
   try {
+    // Get auth headers
+    const headers = await getHeaders();
+
     const response = await requestBackend.delete(
       `/patient-photos/${commerceId}/${clientId}/${photoId}`,
+      headers
     );
+
+    // Clear cache after successful deletion
+    clearClientPhotoCache(commerceId, clientId);
+
     return response.data;
   } catch (error) {
-    console.error('Error deleting patient photo:', error);
     throw new Error(error.response?.data?.message || 'Error al eliminar la foto del paciente');
   }
 };
@@ -199,7 +244,6 @@ export const updatePatientPhoto = async (commerceId, clientId, photoData) => {
     // Upload new photo
     return await uploadPatientPhoto(commerceId, clientId, photoData);
   } catch (error) {
-    console.error('Error updating patient photo:', error);
     throw new Error(error.response?.data?.message || 'Error al actualizar la foto del paciente');
   }
 };

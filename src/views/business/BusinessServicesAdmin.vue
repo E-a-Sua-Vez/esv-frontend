@@ -22,6 +22,7 @@ import { getServiceTypes } from '../../shared/utils/data';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import ServiceFormEdit from '../../components/service/ServiceFormEdit.vue';
 import ServiceFormAdd from '../../components/service/ServiceFormAdd.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 
 export default {
   name: 'BusinessServicesAdmin',
@@ -39,6 +40,7 @@ export default {
     SearchAdminItem,
     ServiceFormEdit,
     ServiceFormAdd,
+    DesktopPageHeader,
   },
   async setup() {
     const router = useRouter();
@@ -383,6 +385,7 @@ export default {
       <div class="content text-center">
         <CommerceLogo
           :src="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
           :loading="loading"
         ></CommerceLogo>
         <ComponentMenu
@@ -524,30 +527,15 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || commerce?.logo || state.business?.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t(`businessServicesAdmin.title`)"
-              :toggles="state.toggles"
-              component-name="businessServicesAdmin"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('businessServicesAdmin.title')"
+          :toggles="state.toggles"
+          component-name="businessServicesAdmin"
+          @go-back="goBack"
+        />
         <div id="businessServicesAdmin">
           <div v-if="isActiveBusiness && state.toggles['services.admin.view']">
             <div id="businessServicesAdmin-controls" class="control-box">
@@ -668,6 +656,7 @@ export default {
         </div>
       </div>
     </div>
+
     <!-- Modal Add -->
     <div
       class="modal fade"

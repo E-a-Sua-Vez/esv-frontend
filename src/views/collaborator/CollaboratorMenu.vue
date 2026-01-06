@@ -47,6 +47,7 @@ export default {
         'product-stock',
         'dashboard',
         'go-minisite',
+        'client-portal',
       ],
       currentPlanActivation: {},
       toggles: {},
@@ -127,6 +128,11 @@ export default {
       return `${import.meta.env.VITE_URL}/interno/comercio/${commerceKeyName}`;
     };
 
+    const getClientPortalLink = () => {
+      const commerceKeyName = state.commerce.keyName;
+      return `/public/portal/${commerceKeyName}/login`;
+    };
+
     const onShowMobileMenuSide = () => {
       state.showMobileMenuSide = true;
       state.showMobileSpySide = false;
@@ -144,6 +150,7 @@ export default {
       isActiveBusiness,
       goToOption,
       getCommerceLink,
+      getClientPortalLink,
       onShowMobileMenuSide,
       onShowMobileSpySide,
     };
@@ -155,7 +162,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none mobile-menu-layout">
       <div class="content text-center">
-        <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo :src="state.commerce.logo || state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
         <WelcomeMenu
           :title="$t(`collaboratorMenu.welcome`)"
           :name="state.currentUser.name"
@@ -199,6 +206,17 @@ export default {
                         type="button"
                         class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
                         :href="`${getCommerceLink()}`"
+                        target="_blank"
+                      >
+                        {{ $t(`collaboratorMenu.${option}`) }}
+                        <i class="bi bi-box-arrow-up-right"></i>
+                      </a>
+                    </div>
+                    <div v-else-if="option === 'client-portal'" class="centered">
+                      <a
+                        type="button"
+                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
+                        :href="`${getClientPortalLink()}`"
                         target="_blank"
                       >
                         {{ $t(`collaboratorMenu.${option}`) }}
@@ -317,6 +335,16 @@ export default {
                     type="button"
                     class="btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
                     :href="`${getCommerceLink()}`"
+                    target="_blank"
+                  >
+                    {{ $t(`collaboratorMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
+                  </a>
+                </div>
+                <div v-else-if="option === 'client-portal'" class="centered">
+                  <a
+                    type="button"
+                    class="btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
+                    :href="`${getClientPortalLink()}`"
                     target="_blank"
                   >
                     {{ $t(`collaboratorMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>

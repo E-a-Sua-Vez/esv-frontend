@@ -1,23 +1,28 @@
 <template>
   <div>
     <div class="content text-center">
-      <!-- Commerce Logo -->
-      <CommerceLogo
-        v-if="commerce && commerce.logo"
-        :src="commerce.logo"
-        :loading="false"
-      ></CommerceLogo>
-
-      <!-- Header -->
-      <div id="page-header" class="text-center mt-4">
-        <div class="welcome">
-          <span>{{ $t('clientPortal.history.title') }}</span>
+      <div class="row align-items-center mb-1 desktop-header-row">
+        <div class="col-auto desktop-logo-wrapper">
+          <div class="desktop-commerce-logo">
+            <div id="commerce-logo-desktop">
+              <img
+                v-if="!loading && commerce?.logo"
+                class="rounded img-fluid logo-desktop"
+                :alt="$t('logoAlt')"
+                :src="commerce.logo"
+                loading="lazy"
+              />
+            </div>
+          </div>
         </div>
-        <div class="mt-2">
-          <button type="button" class="btn btn-link text-muted" @click="goBack">
-            <i class="bi bi-arrow-left me-2"></i>
-            {{ $t('clientPortal.history.backToMenu') }}
-          </button>
+        <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+          <ComponentMenu
+            :title="$t('clientPortal.history.title')"
+            :toggles="toggles"
+            component-name="clientPortalHistory"
+            :is-client-portal="true"
+            @goBack="goBack"
+          />
         </div>
       </div>
 
@@ -38,66 +43,159 @@
       </div>
 
       <!-- History Content -->
-      <div v-else class="history-container">
-        <!-- Filter Tabs -->
-        <div class="filter-tabs mb-4">
+      <div v-else class="history-container-modern">
+        <!-- Filter Tabs Modern -->
+        <div class="filter-tabs-modern">
           <button
             v-for="filter in filters"
             :key="filter"
             type="button"
-            class="btn btn-sm"
-            :class="activeFilter === filter ? 'btn-dark' : 'btn-outline-dark'"
+            class="filter-btn-modern"
+            :class="{ active: activeFilter === filter }"
             @click="setFilter(filter)"
           >
+            <i
+              :class="`bi ${
+                filter === 'all'
+                  ? 'bi-list-ul'
+                  : filter === 'completed'
+                  ? 'bi-check-circle'
+                  : filter === 'cancelled'
+                  ? 'bi-x-circle'
+                  : 'bi-clock'
+              }`"
+            ></i>
             {{ $t(`clientPortal.history.filters.${filter}`) }}
           </button>
         </div>
 
-        <!-- Attentions List -->
-        <div class="attentions-list">
-          <div v-if="filteredAttentions.length === 0" class="text-center py-5">
-            <i class="bi bi-clock-history" style="font-size: 3rem; color: var(--gris-elite-1)"></i>
-            <p class="mt-3 text-muted">{{ $t('clientPortal.history.noAttentions') }}</p>
-          </div>
-
-          <div v-else>
-            <div v-for="attention in filteredAttentions" :key="attention.id" class="attention-card">
-              <div class="attention-header">
-                <div class="attention-number">
-                  <i class="bi bi-hash"></i>
-                  {{ attention.number }}
-                </div>
-                <div class="attention-status-badge" :class="getStatusClass(attention.status)">
-                  {{ $t(`clientPortal.history.status.${attention.status?.toLowerCase()}`) }}
-                </div>
+        <!-- Upcoming Attentions Highlight -->
+        <div v-if="upcomingAttentions.length > 0" class="upcoming-section">
+          <h6 class="upcoming-title">
+            <i class="bi bi-calendar-check"></i>
+            Próximas Atenciones
+          </h6>
+          <div class="upcoming-cards">
+            <div
+              v-for="attention in upcomingAttentions"
+              :key="attention.id"
+              class="upcoming-card"
+            >
+              <div class="upcoming-icon">
+                <i class="bi bi-calendar-event"></i>
               </div>
-              <div class="attention-body">
-                <div class="attention-info-item">
-                  <i class="bi bi-calendar-event me-2"></i>
-                  <span>{{ formatDate(attention.createdAt) }}</span>
-                </div>
-                <div class="attention-info-item" v-if="attention.endAt">
-                  <i class="bi bi-clock me-2"></i>
-                  <span
-                    >{{ formatTime(attention.createdAt) }} - {{ formatTime(attention.endAt) }}</span
-                  >
-                </div>
-                <div class="attention-info-item" v-if="attention.duration">
-                  <i class="bi bi-hourglass-split me-2"></i>
-                  <span>{{ formatDuration(attention.duration) }}</span>
+              <div class="upcoming-content">
+                <div class="upcoming-date">{{ formatDate(attention.createdAt) }}</div>
+                <div class="upcoming-time" v-if="attention.createdAt">
+                  <i class="bi bi-clock"></i>
+                  {{ formatTime(attention.createdAt) }}
                 </div>
                 <div
-                  class="attention-info-item"
+                  class="upcoming-service"
                   v-if="attention.servicesDetails && attention.servicesDetails.length > 0"
                 >
-                  <i class="bi bi-briefcase me-2"></i>
-                  <span>
-                    {{ attention.servicesDetails.map(s => s.name || s).join(', ') }}
-                  </span>
+                  {{ attention.servicesDetails.map(s => s.name || s).join(', ') }}
                 </div>
-                <div class="attention-info-item" v-if="attention.comment">
-                  <i class="bi bi-chat-left-text me-2"></i>
-                  <span>{{ attention.comment }}</span>
+              </div>
+              <div class="upcoming-badge">
+                <i class="bi bi-hourglass-split"></i>
+                Pendiente
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline Container -->
+        <div class="timeline-history-container">
+          <div v-if="filteredAttentions.length === 0" class="empty-state-history">
+            <i class="bi bi-clock-history"></i>
+            <p>{{ $t('clientPortal.history.noAttentions') }}</p>
+          </div>
+
+          <div v-else class="timeline-list">
+            <div
+              v-for="(attention, index) in filteredAttentions"
+              :key="attention.id"
+              class="timeline-item-history"
+            >
+              <!-- Timeline dot -->
+              <div class="timeline-dot-history" :class="getStatusClass(attention.status)">
+                <i
+                  :class="`bi ${
+                    getStatusClass(attention.status)['badge-completed']
+                      ? 'bi-check-lg'
+                      : getStatusClass(attention.status)['badge-cancelled']
+                      ? 'bi-x-lg'
+                      : 'bi-clock'
+                  }`"
+                ></i>
+              </div>
+
+              <!-- Timeline line -->
+              <div
+                v-if="index < filteredAttentions.length - 1"
+                class="timeline-line-history"
+              ></div>
+
+              <!-- Attention card -->
+              <div class="attention-card-modern">
+                <div class="attention-header-modern">
+                  <div class="attention-number-modern">
+                    <i class="bi bi-hash"></i>
+                    {{ attention.number }}
+                  </div>
+                  <div class="attention-status-modern" :class="getStatusClass(attention.status)">
+                    <i
+                      :class="`bi ${
+                        getStatusClass(attention.status)['badge-completed']
+                          ? 'bi-check-circle-fill'
+                          : getStatusClass(attention.status)['badge-cancelled']
+                          ? 'bi-x-circle-fill'
+                          : 'bi-clock-fill'
+                      }`"
+                    ></i>
+                    {{ $t(`clientPortal.history.status.${attention.status?.toLowerCase()}`) }}
+                  </div>
+                </div>
+
+                <div class="attention-body-modern">
+                  <div class="attention-info-row">
+                    <div class="info-item-modern">
+                      <i class="bi bi-calendar3"></i>
+                      <span>{{ formatDate(attention.createdAt) }}</span>
+                    </div>
+                    <div class="info-item-modern" v-if="attention.createdAt">
+                      <i class="bi bi-clock"></i>
+                      <span>{{ formatTime(attention.createdAt) }}</span>
+                    </div>
+                  </div>
+
+                  <div
+                    class="attention-info-row"
+                    v-if="attention.endAt || attention.duration"
+                  >
+                    <div class="info-item-modern" v-if="attention.endAt">
+                      <i class="bi bi-clock-history"></i>
+                      <span>Fin: {{ formatTime(attention.endAt) }}</span>
+                    </div>
+                    <div class="info-item-modern" v-if="attention.duration">
+                      <i class="bi bi-hourglass-split"></i>
+                      <span>{{ formatDuration(attention.duration) }}</span>
+                    </div>
+                  </div>
+
+                  <div
+                    class="attention-service-modern"
+                    v-if="attention.servicesDetails && attention.servicesDetails.length > 0"
+                  >
+                    <i class="bi bi-briefcase"></i>
+                    <span>{{ attention.servicesDetails.map(s => s.name || s).join(', ') }}</span>
+                  </div>
+
+                  <div class="attention-comment-modern" v-if="attention.comment">
+                    <i class="bi bi-chat-left-text"></i>
+                    <span>{{ attention.comment }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -110,19 +208,24 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { getClientAttentions } from '../../application/services/client-portal';
+import { getClientPortalPermissions } from '../../application/services/client-portal-permissions';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 
 export default {
   name: 'ClientHistoryView',
   components: {
+    ComponentMenu,
     CommerceLogo,
   },
   setup() {
     const router = useRouter();
+    const route = useRoute();
     const { t } = useI18n();
+    const commerceSlug = ref(route.params.commerceSlug);
 
     const loading = ref(true);
     const error = ref('');
@@ -130,26 +233,51 @@ export default {
     const client = ref(null);
     const commerce = ref(null);
     const activeFilter = ref('all');
+    const permissions = ref({});
+
+    // Toggles para ComponentMenu (computed basado en permisos)
+    const toggles = computed(() => ({
+      'clientPortal.history.view': permissions.value['client-portal.history.view'] || false,
+      'clientPortal.history.details': permissions.value['client-portal.history.view'] || false,
+    }));
 
     const filters = ['all', 'completed', 'cancelled', 'pending'];
 
-    const filteredAttentions = computed(() => {
-      if (activeFilter.value === 'all') {
-        return attentions.value;
-      }
+    // Identificar próximas atenciones (pendientes en el futuro)
+    const upcomingAttentions = computed(() => {
+      const now = new Date();
       return attentions.value.filter(attention => {
-        const status = attention.status?.toLowerCase();
-        if (activeFilter.value === 'completed') {
-          return status === 'terminated' || status === 'rated';
-        }
-        if (activeFilter.value === 'cancelled') {
-          return attention.cancelled === true;
-        }
-        if (activeFilter.value === 'pending') {
-          return status === 'pending';
-        }
-        return true;
-      });
+        if (attention.status?.toLowerCase() !== 'pending') return false;
+        const attentionDate = new Date(attention.createdAt);
+        return attentionDate >= now;
+      }).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    });
+
+    const filteredAttentions = computed(() => {
+      let filtered = [];
+      const upcomingIds = upcomingAttentions.value.map(a => a.id);
+
+      if (activeFilter.value === 'all') {
+        filtered = attentions.value.filter(a => !upcomingIds.includes(a.id));
+      } else {
+        filtered = attentions.value.filter(attention => {
+          if (upcomingIds.includes(attention.id)) return false;
+          const status = attention.status?.toLowerCase();
+          if (activeFilter.value === 'completed') {
+            return status === 'terminated' || status === 'rated';
+          }
+          if (activeFilter.value === 'cancelled') {
+            return attention.cancelled === true;
+          }
+          if (activeFilter.value === 'pending') {
+            return status === 'pending';
+          }
+          return true;
+        });
+      }
+
+      // Ordenar por fecha descendente
+      return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     });
 
     const getStatusClass = status => {
@@ -200,7 +328,7 @@ export default {
     };
 
     const goBack = () => {
-      router.push({ path: '/portal' });
+      router.push({ name: 'client-portal-menu', params: { commerceSlug: commerceSlug.value } });
     };
 
     const loadAttentions = async () => {
@@ -213,7 +341,7 @@ export default {
         const storedCommerce = localStorage.getItem('clientPortalCommerce');
 
         if (!storedClient || !storedCommerce) {
-          router.push({ path: '/portal/login' });
+          router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
           return;
         }
 
@@ -232,7 +360,23 @@ export default {
       }
     };
 
+    const loadPermissions = async () => {
+      try {
+        const clientPermissions = await getClientPortalPermissions('client-portal', 'history');
+        permissions.value = clientPermissions;
+        console.log('Client history permissions loaded:', clientPermissions);
+      } catch (err) {
+        console.error('Error loading permissions:', err);
+        // Permisos por defecto si falla
+        permissions.value = {
+          'client-portal.history.view': true,
+          'client-portal.history.details': true,
+        };
+      }
+    };
+
     onMounted(async () => {
+      await loadPermissions();
       await loadAttentions();
     });
 
@@ -244,6 +388,7 @@ export default {
       commerce,
       activeFilter,
       filters,
+      upcomingAttentions,
       filteredAttentions,
       getStatusClass,
       formatDate,
@@ -251,6 +396,8 @@ export default {
       formatDuration,
       setFilter,
       goBack,
+      permissions,
+      toggles,
     };
   },
 };
@@ -259,103 +406,408 @@ export default {
 <style scoped>
 @import '../../shared/styles/prontuario-common.css';
 
-.history-container {
-  max-width: 1000px;
+/* Desktop Header Styles */
+.desktop-header-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0 1rem;
+}
+
+.desktop-logo-wrapper {
+  flex: 0 0 auto;
+  max-width: 200px;
+}
+
+.desktop-commerce-logo {
+  display: flex;
+  align-items: center;
+  max-width: 150px;
+  text-align: left;
+}
+
+.logo-desktop {
+  max-width: 120px;
+  max-height: 100px;
+  width: auto;
+  height: auto;
+  margin-bottom: 0;
+}
+
+.desktop-menu-wrapper {
+  flex: 1 1 0%;
+  min-width: 0;
+  width: auto;
+  text-align: left;
+}
+
+/* History Container */
+.history-container-modern {
+  max-width: 900px;
   margin: 0 auto;
   padding: 1rem;
 }
 
-.filter-tabs {
+/* Filter Tabs Modern */
+.filter-tabs-modern {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.625rem;
   justify-content: center;
   flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 0.75rem;
 }
 
-.attentions-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.attention-card {
+.filter-btn-modern {
+  padding: 0.625rem 1.25rem;
+  border: 2px solid transparent;
   background: var(--color-background);
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 0.5px solid var(--gris-default);
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.attention-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.attention-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
-  color: white;
-}
-
-.attention-number {
-  font-size: 1.25rem;
+  border-radius: 0.75rem;
   font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.attention-status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+.filter-btn-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(68, 111, 252, 0.15);
+  border-color: rgba(68, 111, 252, 0.3);
 }
 
-.badge-completed {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: #10b981;
-  color: #10b981;
+.filter-btn-modern.active {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  border-color: var(--azul-turno);
+  box-shadow: 0 4px 12px rgba(68, 111, 252, 0.3);
 }
 
-.badge-cancelled {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: #ef4444;
-  color: #ef4444;
+.filter-btn-modern i {
+  font-size: 1rem;
 }
 
-.badge-pending {
-  background: rgba(59, 130, 246, 0.2);
-  border-color: #3b82f6;
-  color: #3b82f6;
+/* Upcoming Section */
+.upcoming-section {
+  margin-bottom: 2rem;
 }
 
-.attention-body {
-  padding: 1rem;
-}
-
-.attention-info-item {
+.upcoming-title {
   display: flex;
   align-items: center;
-  margin-bottom: 0.75rem;
-  font-size: 0.875rem;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.875rem;
+}
+
+.upcoming-title i {
+  font-size: 1.125rem;
+  color: var(--azul-turno);
+}
+
+.upcoming-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.875rem;
+}
+
+.upcoming-card {
+  background: linear-gradient(135deg, rgba(4, 159, 217, 0.08) 0%, rgba(0, 182, 122, 0.08) 100%);
+  border: 2px solid var(--azul-turno);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  box-shadow: 0 4px 12px rgba(4, 159, 217, 0.15);
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%,
+  100% {
+    border-color: var(--azul-turno);
+  }
+  50% {
+    border-color: var(--verde-tu);
+  }
+}
+
+.upcoming-icon {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  border-radius: 0.5rem;
+  color: white;
+  font-size: 1.25rem;
+}
+
+.upcoming-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.upcoming-date {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.upcoming-time {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.upcoming-time i {
+  font-size: 0.6875rem;
+}
+
+.upcoming-service {
+  font-size: 0.8125rem;
+  color: var(--azul-turno);
+  font-weight: 500;
+}
+
+.upcoming-badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.625rem;
+  background: var(--azul-turno);
+  color: white;
+  border-radius: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+/* Timeline Container */
+.timeline-history-container {
+  position: relative;
+}
+
+.empty-state-history {
+  text-align: center;
+  padding: 3rem 1rem;
   color: var(--color-text-secondary);
 }
 
-.attention-info-item:last-child {
+.empty-state-history i {
+  font-size: 3rem;
+  opacity: 0.5;
+  margin-bottom: 1rem;
+}
+
+.empty-state-history p {
+  font-size: 0.9375rem;
+  margin: 0;
+}
+
+/* Timeline List */
+.timeline-list {
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+/* Timeline Item */
+.timeline-item-history {
+  position: relative;
+  padding-left: 3rem;
+  margin-bottom: 1rem;
+}
+
+.timeline-item-history:last-child {
   margin-bottom: 0;
 }
 
-.attention-info-item i {
+/* Timeline Dot */
+.timeline-dot-history {
+  position: absolute;
+  left: 0;
+  top: 0.875rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: var(--color-background);
+  border: 2px solid var(--azul-turno);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--azul-turno);
-  width: 1.25rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+}
+
+.timeline-dot-history.badge-completed {
+  border-color: #10b981;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.timeline-dot-history.badge-cancelled {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.timeline-dot-history.badge-pending {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+/* Timeline Line */
+.timeline-line-history {
+  position: absolute;
+  left: 0.75rem;
+  top: 2.375rem;
+  bottom: -1rem;
+  width: 2px;
+  background: linear-gradient(180deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  opacity: 0.2;
+  z-index: 1;
+}
+
+/* Attention Card Modern */
+.attention-card-modern {
+  background: var(--color-background);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+
+.attention-card-modern:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateX(4px);
+  border-color: rgba(4, 159, 217, 0.2);
+}
+
+/* Attention Header Modern */
+.attention-header-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0.875rem;
+  background: linear-gradient(135deg, rgba(4, 159, 217, 0.08) 0%, rgba(0, 182, 122, 0.08) 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.attention-number-modern {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--azul-turno);
+}
+
+.attention-status-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.attention-status-modern.badge-completed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.attention-status-modern.badge-cancelled {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.attention-status-modern.badge-pending {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.attention-status-modern i {
+  font-size: 0.625rem;
+}
+
+/* Attention Body Modern */
+.attention-body-modern {
+  padding: 0.875rem;
+}
+
+.attention-info-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.625rem;
+}
+
+.attention-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-item-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.info-item-modern i {
+  font-size: 0.6875rem;
+  color: var(--azul-turno);
+  opacity: 0.7;
+}
+
+.attention-service-modern,
+.attention-comment-modern {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 0.5rem;
+  margin-top: 0.625rem;
+  font-size: 0.8125rem;
+}
+
+.attention-service-modern i,
+.attention-comment-modern i {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  font-size: 0.875rem;
+  color: var(--azul-turno);
+}
+
+.attention-service-modern span {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.attention-comment-modern span {
+  color: var(--color-text-secondary);
+  font-style: italic;
 }
 
 .errors {
@@ -365,25 +817,51 @@ export default {
   padding: 0 0.5rem;
 }
 
+/* Responsive Design */
 @media (max-width: 768px) {
-  .history-container {
-    padding: 0.5rem;
+  .history-container-modern {
+    padding: 0.75rem;
   }
 
-  .filter-tabs {
-    gap: 0.25rem;
+  .filter-tabs-modern {
+    gap: 0.375rem;
+    padding: 0.625rem;
   }
 
-  .filter-tabs .btn {
+  .filter-btn-modern {
+    padding: 0.375rem 0.75rem;
     font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
   }
 
-  .attention-header {
+  .upcoming-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-item-history {
+    padding-left: 2.5rem;
+  }
+
+  .timeline-dot-history {
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.625rem;
+  }
+
+  .timeline-line-history {
+    left: 0.625rem;
+  }
+
+  .attention-header-modern {
     flex-direction: column;
     gap: 0.5rem;
     align-items: flex-start;
   }
+
+  .attention-info-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }
 </style>
+
 

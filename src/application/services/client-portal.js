@@ -3,11 +3,18 @@ import { requestBackend } from '../api';
 const entity = 'client-portal';
 
 /**
- * Solicita código de acesso ao portal
+ * Obtiene información del comercio por slug
  */
-export const requestPortalAccess = async (commerceId, email, phone, idNumber) => {
-  const response = await requestBackend.post(`/${entity}/request-access`, {
-    commerceId,
+export const getCommerceBySlug = async slug => {
+  const response = await requestBackend.get(`/${entity}/commerce/${slug}`);
+  return response.data;
+};
+
+/**
+ * Solicita código de acesso ao portal (usando slug)
+ */
+export const requestPortalAccess = async (commerceSlug, email, phone, idNumber) => {
+  const response = await requestBackend.post(`/${entity}/${commerceSlug}/request-access`, {
     email,
     phone,
     idNumber,
@@ -16,12 +23,11 @@ export const requestPortalAccess = async (commerceId, email, phone, idNumber) =>
 };
 
 /**
- * Valida código de acesso
+ * Valida código de acesso (usando slug)
  */
-export const validatePortalCode = async (code, commerceId) => {
-  const response = await requestBackend.post(`/${entity}/validate-code`, {
+export const validatePortalCode = async (code, commerceSlug) => {
+  const response = await requestBackend.post(`/${entity}/${commerceSlug}/validate-code`, {
     code,
-    commerceId,
   });
   return response.data;
 };
@@ -34,8 +40,14 @@ export const validatePortalSession = async token => {
   return response.data;
 };
 
-/**
- * Renova sessão
+/** * Obtiene los permisos del cliente por token de sesión
+ */
+export const getClientPermissions = async token => {
+  const response = await requestBackend.get(`/${entity}/permissions/${token}`);
+  return response.data;
+};
+
+/** * Renova sessão
  */
 export const renewPortalSession = async token => {
   const response = await requestBackend.post(`/${entity}/session/${token}/renew`);

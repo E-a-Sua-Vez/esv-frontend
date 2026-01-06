@@ -16,6 +16,7 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import Toggle from '@vueform/toggle';
@@ -33,6 +34,7 @@ export default {
     Spinner,
     Alert,
     ComponentMenu,
+    DesktopPageHeader,
     SearchAdminItem,
     AreYouSure,
     Toggle,
@@ -714,6 +716,7 @@ export default {
       <div class="content text-center">
         <CommerceLogo
           :src="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
           :loading="loading"
         ></CommerceLogo>
         <ComponentMenu
@@ -989,30 +992,15 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || commerce?.logo || state.business?.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t('lgpd.consent.admin.title')"
-              :toggles="state.toggles"
-              component-name="businessLgpdConsentAdmin"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('lgpd.consent.admin.title')"
+          :toggles="state.toggles"
+          component-name="businessLgpdConsentAdmin"
+          @go-back="goBack"
+        />
         <div id="businessLgpdConsentAdmin">
           <div v-if="isActiveBusiness && state.toggles['lgpd.admin.view']">
             <div v-if="!loading" id="businessLgpdConsentAdmin-result" class="mt-4">
@@ -1528,8 +1516,8 @@ export default {
           </div>
         </div>
       </div>
-    </div>
   </div>
+
   <!-- Modal de Histórico de Versões -->
   <div
     v-if="showHistoryModal"
@@ -1593,7 +1581,6 @@ export default {
           </button>
         </div>
       </div>
-    </div>
   </div>
 
   <!-- Modal de Preview de Template -->
@@ -1675,6 +1662,8 @@ export default {
         </div>
       </div>
     </div>
+  </div>
+  </div>
   </div>
 </template>
 

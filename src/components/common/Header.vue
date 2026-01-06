@@ -19,6 +19,8 @@ import { useI18n } from 'vue-i18n';
 import { useFirebaseListener } from '../../composables/useFirebaseListener';
 import { USER_TYPES, ENVIRONMENTS } from '../../shared/constants';
 import { getPermissions } from '../../application/services/permissions';
+import { getClientPortalPermissions } from '../../application/services/client-portal-permissions';
+import { getPatientPhoto, getPatientPhotoThumbnailUrl } from '../../application/services/patient-photo';
 import LocaleSelector from './LocaleSelector.vue';
 import CommerceSelector from './CommerceSelector.vue';
 import ModuleSelector from './ModuleSelector.vue';
@@ -78,6 +80,8 @@ export default {
       manageControlSubMenuOption: false,
       medicalManagementSubMenuOption: false,
       toggles: {},
+      clientPhotoUrl: null,
+      clientPortalPermissions: {},
     });
 
     // Computed properties to determine if selectors should be shown (based on store state)
@@ -310,6 +314,12 @@ export default {
       window.addEventListener('scroll', handleScroll);
       handleScroll();
 
+      // Load client photo and permissions if in client portal
+      if (isClientPortalRoute.value) {
+        loadClientPhoto();
+        loadClientPortalPermissions();
+      }
+
       // Update padding when header size changes
       updateMainContentPadding();
 
@@ -508,6 +518,20 @@ export default {
       { immediate: true }
     );
 
+    // Watch for route changes to reload client photo and permissions
+    watch(
+      () => router.currentRoute.value.path,
+      (newPath) => {
+        if (newPath.startsWith('/portal/') || newPath.startsWith('/public/portal/') || newPath.startsWith('/publico/portal/')) {
+          loadClientPhoto();
+          loadClientPortalPermissions();
+        } else {
+          state.clientPhotoUrl = null;
+          state.clientPortalPermissions = {};
+        }
+      }
+    );
+
     // Watch for module changes (only update state, no API call needed - optimized)
     watch(
       () => store.getCurrentModule?.id,
@@ -574,6 +598,66 @@ export default {
 
     const shouldShowMobileModuleSelector = computed(() => shouldShowDesktopModuleSelector.value);
 
+    // Check if current route is a client portal route
+    const isClientPortalRoute = computed(() => {
+      const path = router.currentRoute.value.path;
+      return path.startsWith('/portal/') || path.startsWith('/public/portal/') || path.startsWith('/publico/portal/');
+    });
+
+    // Get client portal data from localStorage
+    const getClientPortalData = () => {
+      try {
+        const clientData = localStorage.getItem('clientPortalClient');
+        const commerceData = localStorage.getItem('clientPortalCommerce');
+        return {
+          client: clientData ? JSON.parse(clientData) : null,
+          commerce: commerceData ? JSON.parse(commerceData) : null,
+        };
+      } catch (e) {
+        return { client: null, commerce: null };
+      }
+    };
+
+    // Load client photo for client portal
+    const loadClientPhoto = async () => {
+      try {
+        const { client, commerce } = getClientPortalData();
+        
+        if (client && commerce && client.id) {
+          const photo = await getPatientPhoto(commerce.id, client.id);
+          if (photo && photo.id) {
+            const url = await getPatientPhotoThumbnailUrl(commerce.id, client.id, photo.id);
+            state.clientPhotoUrl = url;
+          } else {
+            state.clientPhotoUrl = null;
+          }
+        } else {
+          state.clientPhotoUrl = null;
+        }
+      } catch (err) {
+        state.clientPhotoUrl = null;
+      }
+    };
+
+    // Load client portal permissions
+    const loadClientPortalPermissions = async () => {
+      try {
+        const permissions = await getClientPortalPermissions('client-portal', 'menu');
+        state.clientPortalPermissions = permissions;
+        console.log('Client portal permissions loaded in Header:', permissions);
+      } catch (err) {
+        console.error('Error loading client portal permissions:', err);
+        // If permissions fail to load, default to all enabled to not block the client
+        state.clientPortalPermissions = {
+          'client-portal.menu.consents': true,
+          'client-portal.menu.telemedicine': true,
+          'client-portal.menu.profile': true,
+          'client-portal.menu.documents': true,
+          'client-portal.menu.history': true,
+        };
+      }
+    };
+
     // Check if current route is a public commerce queue route
     const isPublicCommerceQueueRoute = () => {
       const path = router.currentRoute.value.path;
@@ -623,6 +707,17 @@ export default {
 
     // Get menu options based on user type - matching exact structure from BusinessMenu, CollaboratorMenu, MasterMenu
     const getMenuOptions = () => {
+      // Client Portal menu options
+      if (isClientPortalRoute.value) {
+        const options = [];
+        if (state.clientPortalPermissions['client-portal.menu.consents']) options.push('consents');
+        if (state.clientPortalPermissions['client-portal.menu.telemedicine']) options.push('telemedicine');
+        if (state.clientPortalPermissions['client-portal.menu.profile']) options.push('profile');
+        if (state.clientPortalPermissions['client-portal.menu.documents']) options.push('documents');
+        if (state.clientPortalPermissions['client-portal.menu.history']) options.push('history');
+        return options;
+      }
+
       const userType = state.currentUserType;
       if (userType === USER_TYPES.BUSINESS) {
         return [
@@ -637,9 +732,10 @@ export default {
           'your-plan',
           'business-resume',
           'go-minisite',
+          'client-portal',
         ];
       } else if (userType === USER_TYPES.COLLABORATOR) {
-        return ['queue-manage', 'booking-manage', 'tracing', 'product-stock', 'dashboard'];
+        return ['queue-manage', 'booking-manage', 'tracing', 'product-stock', 'dashboard', 'go-minisite', 'client-portal'];
       } else if (userType === USER_TYPES.MASTER) {
         return [
           'business-master-admin',
@@ -700,10 +796,43 @@ export default {
       return `${import.meta.env.VITE_URL}/interno/negocio/${businessKeyName}`;
     };
 
+    const getClientPortalLink = () => {
+      // Prioritize commerce keyName, fallback to business keyName
+      const keyName = state.currentCommerce?.keyName || state.currentBusiness?.keyName;
+      if (!keyName) return '#';
+      return `/public/portal/${keyName}/login`;
+    };
+
     // Navigate to menu option - matching exact logic from BusinessMenu.goToOption
     const navigateToMenuOption = async (option, closeMenu = true) => {
       try {
         if (!option) return;
+
+        // Client Portal navigation
+        if (isClientPortalRoute.value) {
+          const routeParams = router.currentRoute.value.params;
+          const commerceSlug = routeParams.commerceSlug;
+
+          const routeMap = {
+            'consents': 'client-portal-consents',
+            'telemedicine': 'client-portal-telemedicine',
+            'profile': 'client-portal-profile',
+            'documents': 'client-portal-documents',
+            'history': 'client-portal-history',
+          };
+
+          const routeName = routeMap[option];
+          if (routeName) {
+            router.push({ name: routeName, params: { commerceSlug } });
+          }
+
+          // Close menus
+          if (closeMenu) {
+            closeMobileMenu();
+            closeDesktopMenu();
+          }
+          return;
+        }
 
         const userType = state.currentUserType;
 
@@ -729,6 +858,15 @@ export default {
           } else if (option === 'go-minisite') {
             // Special handling for go-minisite - it's a link, not a route
             window.open(getBusinessLink(), '_blank');
+            // Close menus if requested
+            if (closeMenu) {
+              closeMobileMenu();
+              closeDesktopMenu();
+            }
+            return;
+          } else if (option === 'client-portal') {
+            // Special handling for client-portal - it's a link, not a route
+            window.open(getClientPortalLink(), '_blank');
             // Close menus if requested
             if (closeMenu) {
               closeMobileMenu();
@@ -764,6 +902,11 @@ export default {
     };
 
     const getMenuTranslationKey = () => {
+      // Client Portal translation key
+      if (isClientPortalRoute.value) {
+        return 'clientPortal.menu';
+      }
+
       const userType = state.currentUserType;
       if (userType === USER_TYPES.BUSINESS) {
         return 'businessMenu';
@@ -775,6 +918,32 @@ export default {
       return '';
     };
 
+    const logoutClientPortal = () => {
+      try {
+        // Safely clear localStorage
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem('clientPortalSessionToken');
+          localStorage.removeItem('clientPortalSessionExpiresAt');
+          localStorage.removeItem('clientPortalClient');
+          localStorage.removeItem('clientPortalCommerce');
+        }
+
+        // Clear store
+        store.setCurrentUserType(null);
+        store.setCurrentUser(null);
+        store.setCurrentCommerce(null);
+
+        // Redirect to login
+        const commerceSlug = router.currentRoute.value.params.commerceSlug;
+        router.push({ name: 'client-portal-login', params: { commerceSlug } });
+      } catch (error) {
+        console.error('Error during client portal logout:', error);
+        // Try to redirect anyway
+        const commerceSlug = router.currentRoute.value.params.commerceSlug;
+        router.push({ name: 'client-portal-login', params: { commerceSlug } });
+      }
+    };
+
     return {
       state,
       store,
@@ -782,6 +951,7 @@ export default {
       scrolled,
       getDateAndHour,
       logout,
+      logoutClientPortal,
       loginInvited,
       getUser,
       USER_TYPES, // Expose for template use
@@ -798,6 +968,7 @@ export default {
       getControlSubMenuOptions,
       getMedicalManagementSubMenuOptions,
       getBusinessLink,
+      getClientPortalLink,
       handleCommerceChanged,
       handleModuleChanged,
       desktopCommerceSelectorRef,
@@ -813,6 +984,8 @@ export default {
       shouldShowDesktopModuleSelector,
       shouldShowMobileModuleSelector,
       isPublicCommerceQueueRoute,
+      isClientPortalRoute,
+      getClientPortalData,
     };
   },
 };
@@ -827,7 +1000,7 @@ export default {
       >
         <div class="container-fluid nav-container">
           <div class="navbar-brand-wrapper">
-            <a class="navbar-brand" href="/">
+            <a class="navbar-brand" href="#" @click.prevent>
               <img :src="$t('hubLogoBlanco')" alt="Hub" class="logo" />
             </a>
             <LocaleSelector class="d-none d-lg-block"></LocaleSelector>
@@ -893,6 +1066,50 @@ export default {
                 }}</span>
               </button>
             </div>
+
+            <!-- Client Portal User Info -->
+            <div
+              v-else-if="isClientPortalRoute && !isPublicCommerceQueueRoute() && getClientPortalData().client"
+              class="user-info"
+            >
+              <a class="user-name-link" data-bs-toggle="modal" :data-bs-target="`#userModal`">
+                <span class="fw-bold user-name-display">
+                  <img
+                    v-if="state.clientPhotoUrl"
+                    :src="state.clientPhotoUrl"
+                    alt="Foto"
+                    class="user-avatar-photo"
+                    @error="state.clientPhotoUrl = null"
+                  />
+                  <i v-else class="bi bi-person-circle"></i>
+                  {{
+                    getClientPortalData().client
+                      ? `${getClientPortalData().client.name || ''} ${
+                          getClientPortalData().client.lastName || ''
+                        }`.trim() || 'Cliente'
+                      : 'Cliente'
+                  }}
+                </span>
+                <span
+                  v-if="getClientPortalData().commerce && getClientPortalData().commerce.tag"
+                  class="commerce-name-display"
+                >
+                  | {{ getClientPortalData().commerce.tag }}
+                </span>
+              </a>
+              <button
+                class="user-menu-trigger-icon"
+                @click="toggleDesktopMenu"
+                :class="{ active: desktopMenuOpen }"
+                aria-label="Toggle menu"
+                :title="desktopMenuOpen ? $t('close') : $t('menu')"
+              >
+                <i class="bi bi-list user-menu-icon" :class="{ rotated: desktopMenuOpen }"></i>
+                <span class="menu-label">{{
+                  desktopMenuOpen ? $t('close') || 'Cerrar' : $t('menu') || 'Menú'
+                }}</span>
+              </button>
+            </div>
           </div>
           <div
             v-else-if="
@@ -917,6 +1134,20 @@ export default {
                 state.currentUserType === USER_TYPES.BUSINESS ||
                 state.currentUserType === USER_TYPES.MASTER)
             "
+            class="mobile-menu-toggle d-lg-none"
+            @click="toggleMobileMenu"
+            :aria-expanded="mobileMenuOpen"
+            aria-label="Toggle navigation"
+          >
+            <span class="hamburger-icon" :class="{ active: mobileMenuOpen }">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </button>
+          <!-- Client Portal Mobile Menu Toggle -->
+          <button
+            v-else-if="isClientPortalRoute && !isPublicCommerceQueueRoute() && getClientPortalData().client"
             class="mobile-menu-toggle d-lg-none"
             @click="toggleMobileMenu"
             :aria-expanded="mobileMenuOpen"
@@ -955,7 +1186,7 @@ export default {
       <!-- Desktop Side Menu -->
       <div class="desktop-side-menu d-none d-lg-block" :class="{ active: desktopMenuOpen }">
         <div class="desktop-menu-header">
-          <h5 class="desktop-menu-title">
+          <h5 v-if="!isClientPortalRoute" class="desktop-menu-title">
             <i class="bi bi-person-circle me-2"></i>
             {{ state.userName || $t('menu') }}
             <span
@@ -973,6 +1204,22 @@ export default {
               class="module-name-in-menu"
             >
               | {{ state.currentModule.tag }}
+            </span>
+          </h5>
+          <h5 v-else class="desktop-menu-title">
+            <i class="bi bi-person-circle me-2"></i>
+            {{
+              getClientPortalData().client
+                ? `${getClientPortalData().client.name || ''} ${
+                    getClientPortalData().client.lastName || ''
+                  }`.trim() || 'Cliente'
+                : 'Cliente'
+            }}
+            <span
+              v-if="getClientPortalData().commerce && getClientPortalData().commerce.tag"
+              class="commerce-name-in-menu"
+            >
+              | {{ getClientPortalData().commerce.tag }}
             </span>
           </h5>
           <button class="desktop-menu-close" @click="closeDesktopMenu" aria-label="Close menu">
@@ -1101,6 +1348,17 @@ export default {
                     type="button"
                     class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
                     :href="getBusinessLink()"
+                    target="_blank"
+                    @click="closeDesktopMenu"
+                  >
+                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                    <i class="bi bi-box-arrow-up-right"></i>
+                  </a>
+                  <a
+                    v-else-if="option === 'client-portal'"
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
+                    :href="getClientPortalLink()"
                     target="_blank"
                     @click="closeDesktopMenu"
                   >
@@ -1248,6 +1506,30 @@ export default {
             </div>
           </div>
 
+          <!-- Client Portal Menu Options Section -->
+          <div v-else-if="isClientPortalRoute" class="desktop-menu-item-wrapper">
+            <div class="choose-attention my-3 mt-4">
+              <span>{{ $t(`${getMenuTranslationKey()}.choose`) || '¿Qué deseas hacer hoy?' }}</span>
+            </div>
+            <div class="row">
+              <div
+                v-for="option in getMenuOptions()"
+                :key="option"
+                class="d-grid btn-group btn-group-justified desktop-button-wrapper"
+              >
+                <div class="centered">
+                  <button
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style desktop-menu-btn"
+                    @click="navigateToMenuOption(option, true)"
+                  >
+                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Idioma Section (before logout) -->
           <div
             v-if="
@@ -1260,6 +1542,14 @@ export default {
             "
             class="desktop-menu-item-wrapper"
           >
+            <div class="desktop-menu-label-row">
+              <span class="desktop-menu-label-text">{{ $t('language') || 'Idioma' }}</span>
+              <LocaleSelector class="desktop-locale-selector"></LocaleSelector>
+            </div>
+          </div>
+
+          <!-- Client Portal Idioma Section -->
+          <div v-else-if="isClientPortalRoute" class="desktop-menu-item-wrapper">
             <div class="desktop-menu-label-row">
               <span class="desktop-menu-label-text">{{ $t('language') || 'Idioma' }}</span>
               <LocaleSelector class="desktop-locale-selector"></LocaleSelector>
@@ -1289,6 +1579,22 @@ export default {
               <span>{{ $t('logout') }}</span>
             </button>
           </div>
+
+          <!-- Client Portal Logout Section -->
+          <div v-else-if="isClientPortalRoute" class="desktop-menu-item-wrapper logout-wrapper">
+            <button
+              class="desktop-menu-item logout-item"
+              @click="
+                () => {
+                  logoutClientPortal();
+                  closeDesktopMenu();
+                }
+              "
+            >
+              <i class="bi bi-box-arrow-right"></i>
+              <span>{{ $t('clientPortal.menu.logout') || 'Cerrar Sesión' }}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1300,7 +1606,7 @@ export default {
       ></div>
       <div class="mobile-menu d-lg-none" :class="{ active: mobileMenuOpen }">
         <div class="mobile-menu-header">
-          <h5 class="mobile-menu-title">
+          <h5 v-if="!isClientPortalRoute" class="mobile-menu-title">
             <i class="bi bi-person-circle me-2"></i>
             {{ state.userName || $t('menu') }}
             <span
@@ -1318,6 +1624,22 @@ export default {
               class="module-name-in-menu"
             >
               | {{ state.currentModule.tag }}
+            </span>
+          </h5>
+          <h5 v-else class="mobile-menu-title">
+            <i class="bi bi-person-circle me-2"></i>
+            {{
+              getClientPortalData().client
+                ? `${getClientPortalData().client.name || ''} ${
+                    getClientPortalData().client.lastName || ''
+                  }`.trim() || 'Cliente'
+                : 'Cliente'
+            }}
+            <span
+              v-if="getClientPortalData().commerce && getClientPortalData().commerce.tag"
+              class="commerce-name-in-menu"
+            >
+              | {{ getClientPortalData().commerce.tag }}
             </span>
           </h5>
           <button class="mobile-menu-close" @click="closeMobileMenu" aria-label="Close menu">
@@ -1445,6 +1767,18 @@ export default {
                     type="button"
                     class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
                     :href="getBusinessLink()"
+                    target="_blank"
+                    @click="closeMobileMenu"
+                  >
+                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                    <i class="bi bi-box-arrow-up-right"></i>
+                  </a>
+                </div>
+                <div v-else-if="option === 'client-portal'" class="centered">
+                  <a
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
+                    :href="getClientPortalLink()"
                     target="_blank"
                     @click="closeMobileMenu"
                   >
@@ -1584,6 +1918,30 @@ export default {
             </div>
           </div>
 
+          <!-- Client Portal Menu Options Section (Mobile) -->
+          <div v-else-if="isClientPortalRoute" class="mobile-menu-item-wrapper">
+            <div class="choose-attention my-3 mt-4">
+              <span>{{ $t(`${getMenuTranslationKey()}.choose`) || '¿Qué deseas hacer hoy?' }}</span>
+            </div>
+            <div class="row">
+              <div
+                v-for="option in getMenuOptions()"
+                :key="option"
+                class="d-grid btn-group btn-group-justified mobile-button-wrapper"
+              >
+                <div class="centered">
+                  <button
+                    type="button"
+                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
+                    @click="navigateToMenuOption(option)"
+                  >
+                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Idioma Section (before logout) -->
           <div
             v-if="
@@ -1596,6 +1954,14 @@ export default {
             "
             class="mobile-menu-item-wrapper"
           >
+            <div class="mobile-menu-label-row">
+              <span class="mobile-menu-label-text">{{ $t('language') || 'Idioma' }}</span>
+              <LocaleSelector class="mobile-locale-selector"></LocaleSelector>
+            </div>
+          </div>
+
+          <!-- Client Portal Idioma Section (Mobile) -->
+          <div v-else-if="isClientPortalRoute" class="mobile-menu-item-wrapper">
             <div class="mobile-menu-label-row">
               <span class="mobile-menu-label-text">{{ $t('language') || 'Idioma' }}</span>
               <LocaleSelector class="mobile-locale-selector"></LocaleSelector>
@@ -1623,6 +1989,22 @@ export default {
             >
               <i class="bi bi-box-arrow-right"></i>
               <span>{{ $t('logout') }}</span>
+            </button>
+          </div>
+
+          <!-- Client Portal Logout Section (Mobile) -->
+          <div v-else-if="isClientPortalRoute" class="mobile-menu-item-wrapper logout-wrapper">
+            <button
+              class="mobile-menu-item logout-item"
+              @click="
+                () => {
+                  logoutClientPortal();
+                  closeMobileMenu();
+                }
+              "
+            >
+              <i class="bi bi-box-arrow-right"></i>
+              <span>{{ $t('clientPortal.menu.logout') || 'Cerrar Sesión' }}</span>
             </button>
           </div>
         </div>
@@ -1654,7 +2036,7 @@ export default {
               ></button>
             </div>
             <div class="modal-body text-center pb-3">
-              <MyUser :messages="state.messages"> </MyUser>
+              <MyUser :messages="state.messages" :clientPhotoUrl="state.clientPhotoUrl"> </MyUser>
             </div>
           </div>
         </div>
@@ -2593,5 +2975,24 @@ export default {
   .desktop-side-menu {
     width: 400px;
   }
+}
+
+/* User avatar photo styles */
+.user-avatar-photo {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
+
+.modal-avatar-photo {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 0.375rem;
+  vertical-align: middle;
 }
 </style>

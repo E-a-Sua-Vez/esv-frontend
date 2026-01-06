@@ -1,23 +1,28 @@
 <template>
   <div>
     <div class="content text-center">
-      <!-- Commerce Logo -->
-      <CommerceLogo
-        v-if="commerce && commerce.logo"
-        :src="commerce.logo"
-        :loading="false"
-      ></CommerceLogo>
-
-      <!-- Header -->
-      <div id="page-header" class="text-center mt-4">
-        <div class="welcome">
-          <span>{{ $t('clientPortal.consents.title') }}</span>
+      <div class="row align-items-center mb-1 desktop-header-row">
+        <div class="col-auto desktop-logo-wrapper">
+          <div class="desktop-commerce-logo">
+            <div id="commerce-logo-desktop">
+              <img
+                v-if="!loading && commerce?.logo"
+                class="rounded img-fluid logo-desktop"
+                :alt="$t('logoAlt')"
+                :src="commerce.logo"
+                loading="lazy"
+              />
+            </div>
+          </div>
         </div>
-        <div class="mt-2">
-          <button type="button" class="btn btn-link text-muted" @click="goBack">
-            <i class="bi bi-arrow-left me-2"></i>
-            {{ $t('clientPortal.consents.backToMenu') }}
-          </button>
+        <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+          <ComponentMenu
+            :title="$t('clientPortal.consents.title')"
+            :toggles="toggles"
+            component-name="clientPortalConsents"
+            :is-client-portal="true"
+            @goBack="goBack"
+          />
         </div>
       </div>
 
@@ -45,7 +50,7 @@
             type="button"
             class="btn btn-outline-primary btn-sm"
             @click="exportConsents"
-            :disabled="consents.length === 0"
+            :disabled="consents.length === 0 || !canViewConsents"
           >
             <i class="bi bi-download me-2"></i>
             {{ $t('clientPortal.consents.export') }}
@@ -94,14 +99,16 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, onUnmounted, computed, reactive } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import {
   validatePortalSession,
   getClientConsents,
   revokeConsent,
 } from '../../application/services/client-portal';
+import { getClientPortalPermissions } from '../../application/services/client-portal-permissions';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import ConsentSummaryCards from '../../components/client-portal/ConsentSummaryCards.vue';
 import ConsentStatusCard from '../../components/client-portal/ConsentStatusCard.vue';
@@ -113,6 +120,7 @@ import jsonToCsv from '../../shared/utils/jsonToCsv';
 export default {
   name: 'ClientConsentsView',
   components: {
+    ComponentMenu,
     CommerceLogo,
     ConsentSummaryCards,
     ConsentStatusCard,
@@ -122,7 +130,9 @@ export default {
   },
   setup() {
     const router = useRouter();
+    const route = useRoute();
     const { t } = useI18n();
+    const commerceSlug = ref(route.params.commerceSlug);
 
     const loading = ref(true);
     const error = ref('');
@@ -134,6 +144,23 @@ export default {
     const showHistoryModal = ref(false);
     const showTermsModal = ref(false);
     const selectedConsent = ref(null);
+
+    // Permisos del cliente
+    const permissions = ref({});
+
+    // Toggles para ComponentMenu (computed basado en permisos)
+    const toggles = computed(() => ({
+      'clientPortal.consents.view': permissions.value['client-portal.consents.view'] || false,
+      'clientPortal.consents.export': permissions.value['client-portal.consents.view'] || false,
+      'clientPortal.consents.revoke': permissions.value['client-portal.consents.reject'] || false,
+    }));
+
+    // Permisos individuales para acciones específicas
+    const canViewConsents = computed(() => permissions.value['client-portal.consents.view'] || false);
+    const canRevokeConsents = computed(() => permissions.value['client-portal.consents.reject'] || false);
+
+    let sessionCheckInterval = null;
+    let inactivityTimeout = null;
 
     const summary = computed(() => {
       const s = {
@@ -173,8 +200,28 @@ export default {
     };
 
     const handleRevoke = consent => {
+      if (!canRevokeConsents.value) {
+        error.value = t('clientPortal.consents.noPermissionRevoke');
+        return;
+      }
       selectedConsent.value = consent;
       showRevokeModal.value = true;
+    };
+
+    const loadPermissions = async () => {
+      try {
+        const clientPermissions = await getClientPortalPermissions('client-portal', 'consents');
+        permissions.value = clientPermissions;
+        console.log('Client consents permissions loaded:', clientPermissions);
+      } catch (err) {
+        console.error('Error loading permissions:', err);
+        // Si falla, damos permisos por defecto para no bloquear
+        permissions.value = {
+          'client-portal.consents.view': true,
+          'client-portal.consents.accept': true,
+          'client-portal.consents.reject': true,
+        };
+      }
     };
 
     const confirmRevoke = async reason => {
@@ -227,7 +274,7 @@ export default {
     };
 
     const goBack = () => {
-      router.push({ path: '/portal' });
+      router.push({ name: 'client-portal-menu', params: { commerceSlug: commerceSlug.value } });
     };
 
     const exportConsents = () => {
@@ -301,7 +348,7 @@ export default {
     const validateSession = async () => {
       const token = localStorage.getItem('clientPortalSessionToken');
       if (!token) {
-        router.push({ path: '/portal/login' });
+        router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
         return;
       }
 
@@ -314,12 +361,12 @@ export default {
           // Carregar consentimentos
           await loadConsents();
         } else {
-          router.push({ path: '/portal/login' });
+          router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
         }
       } catch (err) {
         error.value = err.response?.data?.message || t('clientPortal.consents.sessionError');
         if (err.response?.status === 401 || err.response?.status === 403) {
-          setTimeout(() => router.push({ path: '/portal/login' }), 2000);
+          setTimeout(() => router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } }), 2000);
         }
       } finally {
         loading.value = false;
@@ -348,6 +395,9 @@ export default {
       // Validar sessão e carregar dados
       await validateSession();
 
+      // Cargar permisos
+      await loadPermissions();
+
       // Iniciar monitoramento de sessão
       const token = localStorage.getItem('clientPortalSessionToken');
       if (token) {
@@ -356,8 +406,6 @@ export default {
     });
 
     // Session management - timeout de inatividade
-    let sessionCheckInterval = null;
-    let inactivityTimeout = null;
     const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutos
     const SESSION_CHECK_INTERVAL_MS = 5 * 60 * 1000; // Verificar cada 5 minutos
 
@@ -367,7 +415,7 @@ export default {
       }
       inactivityTimeout = setTimeout(() => {
         console.log('Session expired due to inactivity');
-        router.push({ path: '/portal/login' });
+        router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
       }, INACTIVITY_TIMEOUT_MS);
     };
 
@@ -386,11 +434,11 @@ export default {
           try {
             const response = await validatePortalSession(token);
             if (!response || !response.valid || response.expired) {
-              router.push({ path: '/portal/login' });
+              router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
             }
           } catch (err) {
             if (err.response?.status === 401 || err.response?.status === 403) {
-              router.push({ path: '/portal/login' });
+              router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
             }
           }
         }
@@ -425,6 +473,7 @@ export default {
       filteredConsents,
       showRevokeModal,
       showHistoryModal,
+      toggles,
       showTermsModal,
       selectedConsent,
       setFilter,
@@ -444,6 +493,41 @@ export default {
 
 <style scoped>
 @import '../../shared/styles/prontuario-common.css';
+
+/* Desktop Header Styles */
+.desktop-header-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0 1rem;
+}
+
+.desktop-logo-wrapper {
+  flex: 0 0 auto;
+  max-width: 200px;
+}
+
+.desktop-commerce-logo {
+  display: flex;
+  align-items: center;
+  max-width: 150px;
+  text-align: left;
+}
+
+.logo-desktop {
+  max-width: 120px;
+  max-height: 100px;
+  width: auto;
+  height: auto;
+  margin-bottom: 0;
+}
+
+.desktop-menu-wrapper {
+  flex: 1 1 0%;
+  min-width: 0;
+  width: auto;
+  text-align: left;
+}
 
 .consents-container {
   max-width: 1200px;

@@ -20,6 +20,7 @@ export default {
   name: 'MyUser',
   props: {
     messages: { type: Array, default: [] },
+    clientPhotoUrl: { type: String, default: null },
   },
   async setup(props) {
     const router = useRouter();
@@ -46,7 +47,12 @@ export default {
       state.currentUser = store.getCurrentUser;
       state.currentBusiness = store.getCurrentBusiness;
       if (state.currentUser !== undefined && state.currentUser !== null) {
-        state.userName = state.currentUser.alias || state.currentUser.name;
+        // For client portal, format name properly
+        if (store.getCurrentUserType === 'client') {
+          state.userName = `${state.currentUser.name || ''} ${state.currentUser.lastName || ''}`.trim() || 'Cliente';
+        } else {
+          state.userName = state.currentUser.alias || state.currentUser.name;
+        }
       }
       state.currentUserType = store.getCurrentUserType;
     };
@@ -204,10 +210,19 @@ export default {
     </div>
     <div class="row mt-2 mb-2 centered">
       <div class="col centered">
-        <span class="user-title">
-          {{ state.userName }}
-          {{ state.currentUser ? (state.currentUser.active ? '🟢' : '🔴') : '' }}
-        </span>
+        <div class="user-name-container">
+          <img
+            v-if="clientPhotoUrl"
+            :src="clientPhotoUrl"
+            alt="Foto"
+            class="user-photo"
+            @error="() => {}"
+          />
+          <span class="user-title">
+            {{ state.userName }}
+            {{ state.currentUser ? (state.currentUser.active ? '🟢' : '🔴') : '' }}
+          </span>
+        </div>
       </div>
     </div>
     <div class="row user-subtitle">
@@ -230,7 +245,7 @@ export default {
         <span>{{ state.currentUser?.email }} </span>
       </div>
     </div>
-    <div class="row user-subtitle">
+    <div class="row user-subtitle" v-if="state.currentUserType !== 'client'">
       <div class="col-6 righted">
         <span class="user-subtitle">
           <span class="fw-bold"> {{ $t('myUser.lastSignIn') }} </span>
@@ -273,7 +288,11 @@ export default {
       </div>
     </div>
     <div class="row col mx-4 mt-3 mb-1" v-if="state.showActions">
-      <button class="btn btn-md btn-size fw-bold btn-dark rounded-pill my-1" @click="sendEmail()">
+      <button
+        v-if="state.currentUserType !== 'client'"
+        class="btn btn-md btn-size fw-bold btn-dark rounded-pill my-1"
+        @click="sendEmail()"
+      >
         {{ $t('myUser.password') }} <i class="bi bi-key-fill"></i>
       </button>
       <div v-if="state.passwordChanged === true">
@@ -348,6 +367,22 @@ export default {
   border-radius: 0.375rem;
   border: 1px solid rgba(0, 0, 0, 0.125);
   padding: 0.25rem;
+}
+
+.user-name-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.user-photo {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .user-title {

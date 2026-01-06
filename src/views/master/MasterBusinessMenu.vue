@@ -244,7 +244,7 @@ export default {
           <div class="d-flex justify-content-between align-items-center">
             <button
               type="button"
-              class="btn btn-sm fw-bold btn-outline-secondary rounded-pill px-3"
+              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-3"
               @click="goBackToBusinessAdmin()"
             >
               <i class="bi bi-arrow-left me-2"></i>
@@ -400,9 +400,9 @@ export default {
     >
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
-          <div class="modal-header">
+          <div class="modal-header border-0 centered active-name">
             <h5 class="modal-title">
-              {{ $t('businessAdmin.selectCommerce') || 'Seleccionar Comercio' }}
+              <i class="bi bi-shop"></i> {{ $t('businessAdmin.selectCommerce') || 'Seleccionar Comercio' }}
             </h5>
             <button
               type="button"
@@ -451,8 +451,8 @@ export default {
           </div>
           <div class="modal-footer">
             <button
-              type="button"
-              class="btn btn-secondary rounded-pill px-4"
+              type="button btn-dark btn"
+              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
               @click="closeCommerceModal()"
             >
               {{ $t('close') || 'Cerrar' }}
@@ -488,7 +488,6 @@ export default {
 }
 
 .business-title {
-  background: linear-gradient(135deg, #004aad 0%, #00c2cb 100%);
   color: white;
   border-radius: 16px 16px 0 0;
   padding: 1rem 1.25rem;

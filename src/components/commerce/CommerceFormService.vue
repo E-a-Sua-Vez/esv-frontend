@@ -226,35 +226,23 @@ export default {
             {{ $t('businessCommercesAdmin.attentionDays') }}
           </label>
           <div
-            class="form-fields-container"
-            style="padding: 0.375rem; gap: 0.375rem; flex-direction: row; flex-wrap: wrap"
+            class="form-fields-container days-container"
+            style="padding: 0.375rem; gap: 0.75rem; flex-direction: row; flex-wrap: wrap; align-items: center"
           >
             <div
               v-for="day in [1, 2, 3, 4, 5, 6, 7]"
               :key="day"
-              style="
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                gap: 0.5rem;
-                min-width: auto;
-              "
+              class="day-toggle-container"
             >
+              <label class="form-check-label day-label">{{ $t(`days.${day}`) }}</label>
               <input
                 type="checkbox"
                 :id="`${prefix}day-${day}`"
                 :checked="dayChecked(day)"
                 :disabled="isAdd ? false : !toggles['commerces.admin.edit']"
                 @click="checkDay($event, day)"
-                class="form-check-input"
+                class="toggle-checkbox"
               />
-              <label
-                :for="`${prefix}day-${day}`"
-                class="form-check-label"
-                style="margin: 0; text-transform: capitalize"
-              >
-                {{ $t(`days.${day}`) }}
-              </label>
             </div>
           </div>
         </div>
@@ -327,25 +315,14 @@ export default {
           />
         </div>
         <!-- Telemedicine Recording Configuration -->
-        <div class="form-group-modern">
+        <div class="form-group-modern form-group-toggle">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.telemedicineRecordingEnabled') }}
           </label>
-          <div class="form-check form-switch">
-            <input
-              :id="`${prefix}commerce-telemedicineRecordingEnabled-form`"
-              class="form-check-input"
-              type="checkbox"
-              :disabled="isAdd ? false : !toggles['commerces.admin.edit']"
-              v-model="telemedicineRecordingEnabled"
-            />
-            <label
-              class="form-check-label"
-              :for="`${prefix}commerce-telemedicineRecordingEnabled-form`"
-            >
-              {{ $t('businessCommercesAdmin.telemedicineRecordingEnabledDescription') }}
-            </label>
-          </div>
+          <Toggle
+            v-model="telemedicineRecordingEnabled"
+            :disabled="isAdd ? false : !toggles['commerces.admin.edit']"
+          />
         </div>
       </div>
     </div>
@@ -476,5 +453,70 @@ export default {
 
 .section-toggle-button[aria-expanded='true'] .section-toggle-icon {
   transform: rotate(180deg);
+}
+
+/* Days container alignment */
+.days-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.day-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: auto;
+}
+
+.day-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0;
+  text-transform: capitalize;
+  min-width: 30px;
+}
+
+/* Toggle-styled checkbox */
+.toggle-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 40px;
+  height: 20px;
+  background-color: #ddd;
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border: none;
+  outline: none;
+}
+
+.toggle-checkbox:checked {
+  background-color: #00c2cb;
+}
+
+.toggle-checkbox::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-checkbox:checked::before {
+  transform: translateX(20px);
+}
+
+.toggle-checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

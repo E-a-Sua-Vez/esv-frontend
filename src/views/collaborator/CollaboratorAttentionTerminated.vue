@@ -4,7 +4,7 @@
     <Alert :show="!!alertError" :stack="alertError"></Alert>
 
     <div class="content text-center">
-      <CommerceLogo :src="state.commerce?.logo" :loading="loading"></CommerceLogo>
+      <CommerceLogo :src="state.commerce?.logo || state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
       <ComponentMenu
         :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
           state.currentUser?.alias || state.currentUser?.name
@@ -344,6 +344,7 @@ export default {
       attention: {},
       user: {},
       client: {},
+      business: {},
       commerce: computed(() => store.getCurrentCommerce),
       queue: {},
       toggles: {},
@@ -483,6 +484,7 @@ export default {
 
         // Load current user first (required for attention details)
         state.currentUser = await store.getCurrentUser;
+        state.business = await store.getActualBusiness();
 
         // Load attention details and permissions in parallel
         const [attentionDetailsResult, togglesResult] = await Promise.allSettled([

@@ -169,6 +169,7 @@ export default {
       <div class="logo-container mb-2" v-if="!loading">
         <CommerceLogo
           :src="state.commerce.logo"
+          :business-id="state.commerce.businessId"
           :loading="loading"
           :large-size="true"
         ></CommerceLogo>

@@ -185,11 +185,11 @@ export default {
 </script>
 
 <template>
-  <div v-if="show">
+  <div v-if="show" class="details-card-wrapper">
     <div class="modern-details-card" :class="getCardTypeClass()">
       <div class="metric-card-header">
         <div class="metric-icon-container" :class="getIconContainerClass()">
-          <i :class="`bi ${icon}`"></i>
+          <i :class="`bi bi-${icon}`"></i>
         </div>
         <div class="metric-title-section">
           <span class="metric-label">{{ title }}</span>
@@ -386,6 +386,13 @@ export default {
 </template>
 
 <style scoped>
+.details-card-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .modern-details-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
   backdrop-filter: blur(10px);

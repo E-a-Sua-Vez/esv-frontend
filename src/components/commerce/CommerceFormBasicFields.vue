@@ -1,9 +1,12 @@
 <script>
 import Toggle from '@vueform/toggle';
+import CommerceLogoUpload from '../common/CommerceLogoUpload.vue';
+import { uploadCommerceLogo, getCommerceLogoUrl } from '../../application/services/commerce-logo';
+import { getBusinessLogo, getBusinessLogoUrl } from '../../application/services/business-logo';
 
 export default {
   name: 'CommerceFormBasicFields',
-  components: { Toggle },
+  components: { Toggle, CommerceLogoUpload },
   props: {
     modelValue: { type: Object, required: true },
     categories: { type: Array, default: () => [] },
@@ -11,8 +14,20 @@ export default {
     errors: { type: Object, default: () => ({}) },
     prefix: { type: String, default: '' },
     isAdd: { type: Boolean, default: false },
+    businessId: { type: String, default: '' },
+    businessLogo: { type: String, default: '' },
   },
   emits: ['update:modelValue'],
+  data() {
+    return {
+      showLogoUploadModal: false,
+      uploadingLogo: false,
+      logoPreviewUrl: null,
+      businessLogoPreviewUrl: null,
+      businessLogoLoading: false,
+      logoLoadFailed: false,
+    };
+  },
   computed: {
     commerce: {
       get() {
@@ -21,6 +36,189 @@ export default {
       set(value) {
         this.$emit('update:modelValue', value);
       },
+    },
+    hasOwnLogo() {
+      // Commerce has its own logo only if it starts with /commerce-logos/
+      // If it has /business-logos/ it's using the inherited business logo
+      const logo = this.commerce.logo;
+      return logo && logo.startsWith('/commerce-logos/');
+    },
+    effectiveLogoUrl() {
+      // Commerce's own logo takes priority
+      if (this.hasOwnLogo) {
+        return this.logoPreviewUrl || null; // Don't return raw path
+      }
+      // Use business logo as fallback
+      if (this.businessLogoLoading) {
+        return null;
+      }
+      return this.businessLogoPreviewUrl;
+    },
+    isUsingBusinessLogo() {
+      return !this.hasOwnLogo && !!this.businessLogoPreviewUrl;
+    },
+  },
+  watch: {
+    'commerce.logo': {
+      immediate: true,
+      handler(newLogo) {
+        if (newLogo) {
+          this.loadCommerceLogoPreview();
+        } else {
+          this.logoPreviewUrl = null;
+        }
+      },
+    },
+    businessLogo: {
+      immediate: true,
+      handler(newLogo) {
+        if (newLogo) {
+          this.loadBusinessLogoPreview();
+        }
+      },
+    },
+    businessId: {
+      immediate: true,
+      handler(newId) {
+        if (newId && !this.businessLogo) {
+          this.loadBusinessLogoPreview();
+        }
+      },
+    },
+  },
+  methods: {
+    openLogoUpload() {
+      this.showLogoUploadModal = true;
+    },
+    closeLogoUpload() {
+      this.showLogoUploadModal = false;
+    },
+    async loadCommerceLogoPreview() {
+      const logo = this.commerce.logo;
+      if (!logo) {
+        this.logoPreviewUrl = null;
+        return;
+      }
+
+      // Only load if it's a commerce-logos path
+      if (logo.startsWith('/commerce-logos/')) {
+        try {
+          // Path format: /commerce-logos/{commerceId}/{logoId}
+          const parts = logo.split('/');
+          if (parts.length === 4) {
+            const commerceId = parts[2];
+            const logoId = parts[3];
+            console.log('🏪 Loading commerce logo:', { commerceId, logoId });
+            
+            const url = await getCommerceLogoUrl(commerceId, logoId);
+            if (url) {
+              this.logoPreviewUrl = url;
+              this.logoLoadFailed = false;
+              console.log('🏪 Commerce logo loaded:', url);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Error loading commerce logo preview:', error);
+          this.logoLoadFailed = true;
+        }
+      } else if (logo.startsWith('http://') || logo.startsWith('https://')) {
+        // Direct URL
+        this.logoPreviewUrl = logo;
+        this.logoLoadFailed = false;
+      }
+    },
+    async loadBusinessLogoPreview() {
+      const businessId = this.businessId || this.commerce?.businessId;
+      const logo = this.businessLogo;
+
+      console.log('🔍 loadBusinessLogoPreview called with:', { businessId, logo });
+
+      if (!logo && !businessId) {
+        this.businessLogoPreviewUrl = null;
+        this.businessLogoLoading = false;
+        return;
+      }
+
+      this.businessLogoLoading = true;
+
+      try {
+        // If we have a direct logo URL (http/https), use it directly
+        if (logo && (logo.startsWith('http://') || logo.startsWith('https://'))) {
+          console.log('🔍 Using direct URL:', logo);
+          this.businessLogoPreviewUrl = logo;
+          return;
+        }
+
+        // If it's a business-logos path, extract businessId and logoId from path
+        // Path format: /business-logos/{businessId}/{logoId}
+        if (logo && logo.startsWith('/business-logos/')) {
+          const parts = logo.split('/');
+          console.log('🔍 Path parts:', parts);
+          if (parts.length === 4) {
+            const pathBusinessId = parts[2];
+            const logoId = parts[3];
+            console.log('🔍 Extracted from path:', { pathBusinessId, logoId });
+            
+            const url = await getBusinessLogoUrl(pathBusinessId, logoId);
+            console.log('🔍 Got signed URL:', url);
+            if (url) {
+              this.businessLogoPreviewUrl = url;
+              return;
+            }
+          }
+        }
+
+        // Fallback: Try to get logo metadata from backend using businessId
+        if (businessId) {
+          console.log('🔍 Fallback: getting logo metadata for business:', businessId);
+          const logoData = await getBusinessLogo(businessId);
+          console.log('🔍 Logo metadata:', logoData);
+          if (logoData && logoData.id) {
+            const url = await getBusinessLogoUrl(businessId, logoData.id);
+            console.log('🔍 Got signed URL from fallback:', url);
+            if (url) {
+              this.businessLogoPreviewUrl = url;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading business logo preview:', error);
+      } finally {
+        this.businessLogoLoading = false;
+        console.log('🔍 Final businessLogoPreviewUrl:', this.businessLogoPreviewUrl);
+      }
+    },
+    handleLogoError() {
+      this.logoLoadFailed = true;
+    },
+    async onLogoUploaded(logoData) {
+      try {
+        this.uploadingLogo = true;
+        const commerceId = this.commerce.id;
+        const businessId = this.businessId || this.commerce.businessId;
+
+        if (!commerceId) {
+          throw new Error('Commerce ID not found');
+        }
+
+        // Upload logo to S3
+        const uploadedLogo = await uploadCommerceLogo(commerceId, businessId, logoData);
+
+        // Update commerce logo field with reference path
+        // Format: /commerce-logos/{commerceId}/{logoId}
+        this.commerce.logo = `/commerce-logos/${commerceId}/${uploadedLogo.id}`;
+
+        // Reload preview
+        await this.loadCommerceLogoPreview();
+
+        this.showLogoUploadModal = false;
+      } catch (error) {
+        console.error('Error uploading commerce logo:', error);
+        alert(this.$t('commerceAdmin.logoUpload.errors.saveFailed'));
+      } finally {
+        this.uploadingLogo = false;
+      }
     },
   },
 };
@@ -95,16 +293,62 @@ export default {
       <label class="form-label-modern">
         {{ $t('businessCommercesAdmin.logo') }}
       </label>
-      <input
-        :id="`${prefix}commerce-logo-form`"
-        :disabled="isAdd ? false : !toggles['commerces.admin.edit']"
-        min="10"
-        type="text"
-        class="form-control-modern"
-        v-model="commerce.logo"
-        placeholder="url/logo.png"
-      />
+      <div class="logo-section">
+        <div class="d-flex flex-column gap-2">
+          <!-- Logo Preview - Always show with fallback to business logo -->
+          <div v-if="effectiveLogoUrl" class="logo-preview-container">
+            <div class="logo-preview-small">
+              <img
+                :src="effectiveLogoUrl"
+                :alt="$t('businessCommercesAdmin.logo')"
+                class="logo-preview-img"
+                @error="handleLogoError"
+              />
+            </div>
+            <!-- Badge indicating if using business logo as default -->
+            <span
+              v-if="isUsingBusinessLogo"
+              class="badge bg-secondary small mt-1"
+              :title="$t('commerceAdmin.logoUpload.usingBusinessLogo')"
+            >
+              <i class="bi bi-building me-1"></i>
+              {{ $t('commerceAdmin.logoUpload.businessDefault') }}
+            </span>
+          </div>
+          <!-- Upload Button -->
+          <div class="d-flex align-items-center gap-2">
+            <button
+              v-if="!isAdd && commerce.id"
+              type="button"
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+              @click="openLogoUpload"
+              :disabled="!toggles['commerces.admin.edit']"
+            >
+              <i class="bi bi-image me-1"></i>
+              {{
+                hasOwnLogo
+                  ? $t('commerceAdmin.logoUpload.replaceLogo')
+                  : $t('commerceAdmin.logoUpload.selectLogo')
+              }}
+            </button>
+            <span v-if="hasOwnLogo" class="small text-muted">
+              <i class="bi bi-check-circle text-success"></i>
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Commerce Logo Upload Modal - Using Teleport for proper modal rendering -->
+    <Teleport to="body">
+      <CommerceLogoUpload
+        :show="showLogoUploadModal && !!commerce.id"
+        :commerce-id="commerce.id"
+        :business-id="businessId || commerce.businessId"
+        @logo-uploaded="onLogoUploaded"
+        @close="closeLogoUpload"
+      />
+    </Teleport>
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessCommercesAdmin.category') }}
@@ -222,5 +466,47 @@ export default {
   background-position: right 0.75rem center;
   background-size: 16px 12px;
   padding-right: 2.5rem;
+}
+
+/* Logo Preview Styles (matching BusinessAdmin) */
+.text-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+}
+
+.logo-section {
+  flex: 1;
+}
+
+.logo-preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.logo-preview-small {
+  width: 80px;
+  height: 80px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.logo-preview-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0.25rem;
 }
 </style>

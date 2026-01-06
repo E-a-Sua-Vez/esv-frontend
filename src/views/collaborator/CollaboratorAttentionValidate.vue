@@ -55,6 +55,7 @@ import AttentionDetailsCard from '../../components/clients/common/AttentionDetai
 import ClientDetailsCard from '../../components/clients/common/ClientDetailsCard.vue';
 import AttentionDetailsNumber from '../../components/common/AttentionDetailsNumber.vue';
 import AttentionStepBar from '../../components/attentions/common/AttentionStepBar.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import Popper from 'vue3-popper';
 import TelemedicineSessionStarter from '../../components/telemedicine/domain/TelemedicineSessionStarter.vue';
 import TelemedicineVideoCall from '../../components/telemedicine/domain/TelemedicineVideoCall.vue';
@@ -83,6 +84,7 @@ export default {
     ClientDetailsCard,
     AttentionDetailsNumber,
     AttentionStepBar,
+    DesktopPageHeader,
     Popper,
     TelemedicineSessionStarter,
     TelemedicineVideoCall,
@@ -111,6 +113,7 @@ export default {
       attentionDetails: {},
       queue: {},
       commerce: {},
+      business: {},
       commerceIds: {},
       user: {},
       toggles: {},
@@ -247,6 +250,7 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
+        state.business = await store.getActualBusiness();
         // Pass collaboratorId for security validation (optional, maintains backward compatibility)
         state.attention = await getAttentionDetails(id, state.currentUser?.id);
         if (state.attention.id) {
@@ -1583,7 +1587,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.commerce.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo :src="state.commerce?.logo || state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
         <ComponentMenu
           :title="`${$t(`collaboratorAttentionValidate.hello-user`)}, ${
             state.currentUser.alias || state.currentUser.name
@@ -1998,32 +2002,15 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || state.commerce.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="state.commerce.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="`${$t(`collaboratorAttentionValidate.hello-user`)}, ${
-                state.currentUser.alias || state.currentUser.name
-              }!`"
-              :toggles="state.toggles"
-              component-name="collaboratorAttentionValidate"
-              @goBack="queueAttentions"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="state.commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${state.currentUser.alias || state.currentUser.name}!`"
+          :toggles="state.toggles"
+          component-name="collaboratorAttentionValidate"
+          @go-back="queueAttentions"
+        />
         <QueueName
           :queue="state.queue"
           :commerce="state.commerce"

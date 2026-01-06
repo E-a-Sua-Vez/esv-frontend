@@ -1612,7 +1612,14 @@
     },
     "login": {
       "welcome": "Client Portal",
+      "loginMessage": "Enter your information to access",
       "loading": "Loading...",
+      "loadingCommerce": "Loading establishment information...",
+      "atLeastOneRequired": "Complete at least one of the fields below",
+      "optional": "Optional",
+      "commerceNotFound": "The establishment does not exist or is not available. Please check the URL.",
+      "commerceNotFoundTitle": "Establishment Not Found",
+      "errorLoadingCommerce": "Error loading establishment information",
       "processing": "Processing...",
       "requestAccess": "Request Access",
       "requestAccessDescription": "Enter your information to receive an access code",
@@ -1628,10 +1635,14 @@
       "enterCode": "Enter Code",
       "enterCodeDescription": "Enter the code you received via email, WhatsApp or SMS",
       "codeSentVia": "Code sent via {via}",
+      "codeSentViaMultiple": "Code sent via Email and WhatsApp",
+      "codeSentViaEmailWhatsapp": "Code sent via Email and WhatsApp",
+      "codeSentViaEmailSms": "Code sent via Email and SMS",
       "accessCode": "Access Code",
       "codeHint": "Enter the 4-8 character code you received",
       "validateAndAccess": "Validate and Access",
       "requestNewCode": "Request New Code",
+      "didntReceiveCode": "Didn't receive the code?",
       "tryAgain": "Try Again",
       "accessGranted": "Access Granted",
       "redirecting": "Redirecting to portal...",
@@ -1644,7 +1655,16 @@
       "invalidCode": "Invalid code",
       "incorrectCode": "Incorrect code",
       "tooManyAttempts": "Too many failed attempts. Please try again later",
-      "validationError": "Error validating code"
+      "validationError": "Error validating code",
+      "captchaRequired": "Please complete the reCAPTCHA",
+      "captchaError": "Error validating reCAPTCHA. Please try again",
+      "alreadyHaveCode": "I already have a code",
+      "enterDataFirst": "Enter your ID, email or phone first",
+      "needNewCode": "I need a new code",
+      "rateLimitError": "You must wait before requesting another code",
+      "waitBeforeRetry": "You can request again in {seconds} seconds",
+      "waitToRequestAgain": "Wait {seconds} to request again",
+      "cooldownMessage": "You can request a new code in"
     }
   },
   "telemedicineSession": {
@@ -2888,6 +2908,7 @@
     "control-admin": "Control",
     "medical-management": "Medical Management",
     "go-minisite": "Minisite",
+    "client-portal": "Client Portal",
     "outcome-types-admin": "Outcome Types",
     "booking-manage": "Bookings 360° Vision",
     "company-admin": "Companies",
@@ -2954,6 +2975,7 @@
     "tracing": "Clients Management",
     "product-stock": "Stock Control",
     "go-minisite": "Minisite",
+    "client-portal": "Client Portal",
     "seeSpy": "See Spy",
     "seeMenu": "See Menu",
     "message": {
@@ -4132,6 +4154,30 @@
       "module": "You should select the module"
     }
   },
+  "commerceAdmin": {
+    "logoUpload": {
+      "title": "Manage Commerce Logo",
+      "selectLogo": "Select Logo",
+      "selectNewLogo": "Select New Logo",
+      "fileFormats": "JPG, PNG or WebP (max. 5MB)",
+      "recommendedSize": "Recommended size: 250x230px or similar aspect ratio",
+      "preview": "Logo preview",
+      "currentLogo": "Current Logo",
+      "businessLogo": "Business Logo",
+      "usingBusinessLogo": "Using business logo as default",
+      "businessDefault": "Default",
+      "usingBusinessLogoHint": "This commerce is using the business logo. You can keep it or upload a specific logo.",
+      "replaceLogo": "Replace Logo",
+      "replaceHint": "Click the button below to replace the current logo",
+      "saveLogo": "Save Logo",
+      "retake": "Select Another",
+      "errors": {
+        "fileFormatNotSupported": "File format not supported. Use JPG, PNG or WebP.",
+        "fileTooLarge": "The file is too large. Maximum 5MB allowed.",
+        "saveFailed": "Error saving the logo. Please try again."
+      }
+    }
+  },
   "businessCommercesAdmin": {
     "title": "Commerces",
     "return": "Return",
@@ -5065,6 +5111,36 @@
           "update": "Update the Permissions",
           "add": "Add Permissions"
         }
+      }
+    },
+    "client-portal": {
+      "menu": {
+        "consents": "View Menu - Client Portal Consents",
+        "telemedicine": "View Menu - Client Portal Telemedicine",
+        "profile": "View Menu - Client Portal Profile",
+        "documents": "View Menu - Client Portal Documents",
+        "history": "View Menu - Client Portal History"
+      },
+      "consents": {
+        "view": "View Consents - Client Portal",
+        "accept": "Accept Consents - Client Portal",
+        "reject": "Reject Consents - Client Portal"
+      },
+      "telemedicine": {
+        "view": "View Telemedicine - Client Portal",
+        "schedule": "Schedule Consultations - Client Portal"
+      },
+      "profile": {
+        "view": "View Profile - Client Portal",
+        "edit": "Edit Profile - Client Portal"
+      },
+      "documents": {
+        "view": "View Documents - Client Portal",
+        "download": "Download Documents - Client Portal"
+      },
+      "history": {
+        "view": "View Medical History - Client Portal",
+        "details": "View History Details - Client Portal"
       }
     },
     "validate": {

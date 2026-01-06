@@ -29,6 +29,7 @@ import Warning from '../../components/common/Warning.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import { getQueueTypes } from '../../shared/utils/data';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import SpecificCalendarForm from '../../components/domain/SpecificCalendarForm.vue';
 
@@ -47,6 +48,7 @@ export default {
     AreYouSure,
     Popper,
     ComponentMenu,
+    DesktopPageHeader,
     SearchAdminItem,
     SpecificCalendarForm,
   },
@@ -859,6 +861,7 @@ export default {
       <div class="content text-center">
         <CommerceLogo
           :src="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
           :loading="loading"
         ></CommerceLogo>
         <ComponentMenu
@@ -1366,30 +1369,15 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || commerce?.logo || state.business?.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t(`businessQueuesAdmin.title`)"
-              :toggles="state.toggles"
-              component-name="businessQueuesAdmin"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('businessQueuesAdmin.title')"
+          :toggles="state.toggles"
+          component-name="businessQueuesAdmin"
+          @go-back="goBack"
+        />
         <div id="businessQueuesAdmin">
           <div v-if="isActiveBusiness() && state.toggles['queues.admin.view']">
             <div id="businessQueuesAdmin-controls" class="control-box">

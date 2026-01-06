@@ -21,6 +21,7 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import { DateModel } from '../../shared/utils/date.model';
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
 import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import DateRangeFilters from '../../components/common/desktop/DateRangeFilters.vue';
 
 Chart.register(...registerables);
@@ -43,6 +44,7 @@ export default {
     ComponentMenu,
     DesktopContentLayout,
     DesktopFiltersPanel,
+    DesktopPageHeader,
     DateRangeFilters,
   },
   async setup() {
@@ -968,6 +970,7 @@ export default {
         <div class="text-center">
           <CommerceLogo
             :src="commerce?.logo || state.business?.logo"
+            :business-id="state.business?.id"
             :loading="loading"
           ></CommerceLogo>
           <ComponentMenu
@@ -1064,6 +1067,9 @@ export default {
                 <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
                 <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
                 <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
+                <span v-else-if="state.showLgpdCompliance">{{
+                  $t('dashboard.lgpdCompliance.title') || 'Compliance LGPD'
+                }}</span>
                 <span v-else-if="state.showPackageMetrics">{{
                   $t('package.metrics.title') || 'Métricas de Paquetes'
                 }}</span>
@@ -1073,7 +1079,7 @@ export default {
                 {{ $t('dashboard.dates.to') }} {{ state.endDate }})
               </div>
               <div class="row col mx-1 mt-3 mb-1">
-                <div class="col-4 centered">
+                <div class="col-3 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showIndicators ? 'btn-selected' : ''"
@@ -1084,7 +1090,7 @@ export default {
                     <i class="bi bi-stoplights-fill"></i>
                   </button>
                 </div>
-                <div class="col-4 centered">
+                <div class="col-3 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showGraphs ? 'btn-selected' : ''"
@@ -1095,7 +1101,7 @@ export default {
                     <i class="bi bi-bar-chart-line-fill"></i>
                   </button>
                 </div>
-                <div class="col-4 centered">
+                <div class="col-3 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showSurveyResults ? 'btn-selected' : ''"
@@ -1104,6 +1110,17 @@ export default {
                   >
                     {{ $t('dashboard.surveys') }} <br />
                     <i class="bi bi-patch-question-fill"></i>
+                  </button>
+                </div>
+                <div class="col-3 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showLgpdCompliance ? 'btn-selected' : ''"
+                    @click="showLgpdCompliance()"
+                    :disabled="false"
+                  >
+                    {{ $t('dashboard.lgpdCompliance.title') || 'LGPD' }} <br />
+                    <i class="bi bi-shield-check"></i>
                   </button>
                 </div>
               </div>
@@ -1152,6 +1169,12 @@ export default {
                   :queues="state.queues"
                 >
                 </DashboardSurveys>
+                <DashboardLgpdCompliance
+                  v-if="state.showLgpdCompliance"
+                  :commerce="commerce"
+                  :start-date="state.startDate"
+                  :end-date="state.endDate"
+                />
               </div>
             </div>
           </div>
@@ -1169,30 +1192,15 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || commerce?.logo || state.business?.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t(`dashboard.title`)"
-              :toggles="state.toggles"
-              component-name="dashboard"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('dashboard.title')"
+          :toggles="state.toggles"
+          component-name="dashboard"
+          @go-back="goBack"
+        />
         <div id="dashboard" v-if="isActiveBusiness()">
           <div v-if="!commerce" class="control-box">
             <Message
@@ -1314,7 +1322,7 @@ export default {
                     {{ $t('dashboard.dates.to') }} {{ state.endDate }})
                   </div>
                   <div class="row col mx-1 mt-3 mb-1">
-                    <div class="col-4 centered">
+                    <div class="col-3 centered">
                       <button
                         class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                         :class="state.showIndicators ? 'btn-selected' : ''"
@@ -1325,7 +1333,7 @@ export default {
                         <i class="bi bi-stoplights-fill"></i>
                       </button>
                     </div>
-                    <div class="col-4 centered">
+                    <div class="col-3 centered">
                       <button
                         class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                         :class="state.showGraphs ? 'btn-selected' : ''"
@@ -1336,7 +1344,7 @@ export default {
                         <i class="bi bi-bar-chart-line-fill"></i>
                       </button>
                     </div>
-                    <div class="col-4 centered">
+                    <div class="col-3 centered">
                       <button
                         class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                         :class="state.showSurveyResults ? 'btn-selected' : ''"
@@ -1347,7 +1355,7 @@ export default {
                         <i class="bi bi-patch-question-fill"></i>
                       </button>
                     </div>
-                    <div class="col-4 centered">
+                    <div class="col-3 centered">
                       <button
                         class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                         :class="state.showLgpdCompliance ? 'btn-selected' : ''"

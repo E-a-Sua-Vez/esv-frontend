@@ -22,6 +22,11 @@ export default {
     getCapacities() {
       const list = [];
       Object.entries(this.toggles).forEach(toggle => {
+        // Skip capabilities for client portal
+        if (this.componentName && this.componentName.includes('clientPortal')) {
+          return;
+        }
+
         // If toggle key already starts with componentName, strip it to avoid duplication
         let toggleKey = toggle[0];
         if (this.componentName && toggleKey.startsWith(`${this.componentName}.`)) {

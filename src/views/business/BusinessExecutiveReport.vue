@@ -19,6 +19,7 @@ import Warning from '../../components/common/Warning.vue';
 import SimpleDownloadCard from '../../components/reports/SimpleDownloadCard.vue';
 import CommerceName from '../../components/common/CommerceName.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 
 export default {
   name: 'BusinessExecutiveReport',
@@ -31,6 +32,7 @@ export default {
     SimpleDownloadCard,
     CommerceName,
     ComponentMenu,
+    DesktopPageHeader,
   },
   async setup() {
     const router = useRouter();
@@ -211,7 +213,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo :src="state.business.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessExecutiveReport.title`)"
           :toggles="state.toggles"
@@ -778,30 +780,15 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || state.businessLogoUrl"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="state.businessLogoUrl || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t(`businessExecutiveReport.title`)"
-              :toggles="state.toggles"
-              component-name="businessExecutiveReport"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('businessExecutiveReport.title')"
+          :toggles="state.toggles"
+          component-name="businessExecutiveReport"
+          @go-back="goBack"
+        />
         <div id="businessExecutiveReport">
           <div v-if="!loading && isActiveBusiness && state.toggles['executive.admin.view']">
             <div v-if="!loading" id="businessExecutiveReport-result" class="mt-4">

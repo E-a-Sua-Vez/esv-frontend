@@ -16,6 +16,7 @@ import Alert from '../../components/common/Alert.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
 import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import DateRangeFilters from '../../components/common/desktop/DateRangeFilters.vue';
 import { DateModel } from '../../shared/utils/date.model';
 
@@ -29,6 +30,7 @@ export default {
     ComponentMenu,
     DesktopContentLayout,
     DesktopFiltersPanel,
+    DesktopPageHeader,
     DateRangeFilters,
   },
   async setup() {
@@ -452,7 +454,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business?.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo :src="state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
         <ComponentMenu
           :title="$t('audit-log.title')"
           :toggles="state.toggles"
@@ -568,22 +570,15 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="!!alertError" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <CommerceLogo :src="state.business?.logo" :loading="loading" :desktop-size="true" />
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t('audit-log.title')"
-              :toggles="state.toggles"
-              component-name="audit-log"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('audit-log.title')"
+          :toggles="state.toggles"
+          component-name="audit-log"
+          @go-back="goBack"
+        />
         <div id="audit-log" v-if="isActiveBusiness && state.toggles['audit-log.admin.view']">
           <div v-if="!commerce || !commerce.id" class="control-box">
             <Message
@@ -1140,7 +1135,7 @@ code {
 .form-group-modern {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .form-label-modern {

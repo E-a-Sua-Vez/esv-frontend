@@ -13,6 +13,7 @@ export const USER_TYPES = {
   COLLABORATOR: 'collaborator',
   MASTER: 'master',
   INVITED: 'invited',
+  CLIENT: 'client',
 };
 
 // Attention statuses

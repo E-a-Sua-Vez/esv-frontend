@@ -1442,7 +1442,14 @@
     },
     "login": {
       "welcome": "Portal do Cliente",
+      "loginMessage": "Digite suas informações para acessar",
       "loading": "Carregando...",
+      "loadingCommerce": "Carregando informações do estabelecimento...",
+      "atLeastOneRequired": "Complete ao menos um dos campos abaixo",
+      "optional": "Opcional",
+      "commerceNotFound": "O estabelecimento não existe ou não está disponível. Por favor, verifique a URL.",
+      "commerceNotFoundTitle": "Estabelecimento Não Encontrado",
+      "errorLoadingCommerce": "Erro ao carregar informações do estabelecimento",
       "processing": "Processando...",
       "requestAccess": "Solicitar Acesso",
       "requestAccessDescription": "Digite suas informações para receber um código de acesso",
@@ -1458,10 +1465,14 @@
       "enterCode": "Digitar Código",
       "enterCodeDescription": "Digite o código que recebeu por email, WhatsApp ou SMS",
       "codeSentVia": "Código enviado por {via}",
+      "codeSentViaMultiple": "Código enviado por Email e WhatsApp",
+      "codeSentViaEmailWhatsapp": "Código enviado por Email e WhatsApp",
+      "codeSentViaEmailSms": "Código enviado por Email e SMS",
       "accessCode": "Código de Acesso",
       "codeHint": "Digite o código de 4-8 caracteres que recebeu",
       "validateAndAccess": "Validar e Acessar",
       "requestNewCode": "Solicitar Novo Código",
+      "didntReceiveCode": "Não recebeu o código?",
       "tryAgain": "Tentar Novamente",
       "accessGranted": "Acesso Concedido",
       "redirecting": "Redirecionando para o portal...",
@@ -1474,7 +1485,16 @@
       "invalidCode": "Código inválido",
       "incorrectCode": "Código incorreto",
       "tooManyAttempts": "Muitas tentativas falhadas. Por favor tente mais tarde",
-      "validationError": "Erro ao validar código"
+      "validationError": "Erro ao validar código",
+      "captchaRequired": "Por favor complete o reCAPTCHA",
+      "captchaError": "Erro ao validar reCAPTCHA. Tente novamente",
+      "alreadyHaveCode": "Já tenho código",
+      "enterDataFirst": "Insira seu ID, email ou telefone primeiro",
+      "needNewCode": "Preciso de um novo código",
+      "rateLimitError": "Deve aguardar antes de solicitar outro código",
+      "waitBeforeRetry": "Poderá solicitar novamente em {seconds} segundos",
+      "waitToRequestAgain": "Aguarde {seconds} para solicitar novamente",
+      "cooldownMessage": "Você poderá solicitar um novo código em"
     }
   },
   "telemedicineSession": {
@@ -3045,6 +3065,7 @@
     "manage-admin": "Cadastro",
     "control-admin": "Gestão",
     "go-minisite": "Minisite",
+    "client-portal": "Portal do Cliente",
     "outcome-types-admin": "Tipos de Despesa",
     "booking-manage": "Reservas Visão 360°",
     "company-admin": "Empresas",
@@ -3153,6 +3174,7 @@
     "queue-manage": "Atender Filas do Dia",
     "booking-manage": "Reservas Visão 360°",
     "go-minisite": "Minisite",
+    "client-portal": "Portal do Cliente",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -4296,6 +4318,30 @@
       "type": "Você deve selecionar o tipo"
     }
   },
+  "commerceAdmin": {
+    "logoUpload": {
+      "title": "Gerenciar Logo do Comércio",
+      "selectLogo": "Selecionar Logo",
+      "selectNewLogo": "Selecionar Novo Logo",
+      "fileFormats": "JPG, PNG ou WebP (máx. 5MB)",
+      "recommendedSize": "Tamanho recomendado: 250x230px ou proporção similar",
+      "preview": "Pré-visualização do logo",
+      "currentLogo": "Logo Atual",
+      "businessLogo": "Logo do Negócio",
+      "usingBusinessLogo": "Usando o logo do negócio como padrão",
+      "businessDefault": "Padrão",
+      "usingBusinessLogoHint": "Este comércio está usando o logo do negócio. Você pode mantê-lo ou fazer upload de um logo específico.",
+      "replaceLogo": "Substituir Logo",
+      "replaceHint": "Clique no botão abaixo para substituir o logo atual",
+      "saveLogo": "Salvar Logo",
+      "retake": "Selecionar Outro",
+      "errors": {
+        "fileFormatNotSupported": "Formato de arquivo não suportado. Use JPG, PNG ou WebP.",
+        "fileTooLarge": "O arquivo é muito grande. Máximo 5MB permitido.",
+        "saveFailed": "Erro ao salvar o logo. Tente novamente."
+      }
+    }
+  },
   "businessCommercesAdmin": {
     "title": "Comércios/Unidades",
     "return": "Voltar",
@@ -5176,6 +5222,36 @@
     "validate": {
       "permission": "Você deve adicionar o permissão",
       "email": "Você deve adicionar o email"
+    },
+    "client-portal": {
+      "menu": {
+        "consents": "Ver Menu - Consentimentos Portal do Cliente",
+        "telemedicine": "Ver Menu - Telemedicina Portal do Cliente",
+        "profile": "Ver Menu - Perfil Portal do Cliente",
+        "documents": "Ver Menu - Documentos Portal do Cliente",
+        "history": "Ver Menu - Histórico Portal do Cliente"
+      },
+      "consents": {
+        "view": "Ver Consentimentos - Portal do Cliente",
+        "accept": "Aceitar Consentimentos - Portal do Cliente",
+        "reject": "Rejeitar Consentimentos - Portal do Cliente"
+      },
+      "telemedicine": {
+        "view": "Ver Telemedicina - Portal do Cliente",
+        "schedule": "Agendar Consultas - Portal do Cliente"
+      },
+      "profile": {
+        "view": "Ver Perfil - Portal do Cliente",
+        "edit": "Editar Perfil - Portal do Cliente"
+      },
+      "documents": {
+        "view": "Ver Documentos - Portal do Cliente",
+        "download": "Baixar Documentos - Portal do Cliente"
+      },
+      "history": {
+        "view": "Ver Histórico Médico - Portal do Cliente",
+        "details": "Ver Detalhes do Histórico - Portal do Cliente"
+      }
     }
   },
   "businessPlansAdmin": {
@@ -5680,6 +5756,7 @@
   "permissions": {
     "sections": {
       "client": "Gestão Cliente",
+      "client-portal": "Portal do Cliente",
       "document-client": "Documentos Cliente",
       "dashboard": "Performance Hub",
       "collaborator": "Ações Colaborador",
@@ -6354,6 +6431,36 @@
         "add": "Adicionar dados - Seção Gerenciar Elementos de Histórico Médico",
         "limit": "Límite de dados - Seção Gerenciar Elementos de Histórico Médico",
         "unavailable": "Eliminar Elementos de Histórico Médico - Seção Gerenciar Elementos de Histórico Médico"
+      }
+    },
+    "client-portal": {
+      "menu": {
+        "consents": "Ver Menu - Consentimentos Portal Cliente",
+        "telemedicine": "Ver Menu - Telemedicina Portal Cliente",
+        "profile": "Ver Menu - Perfil Portal Cliente",
+        "documents": "Ver Menu - Documentos Portal Cliente",
+        "history": "Ver Menu - Histórico Portal Cliente"
+      },
+      "consents": {
+        "view": "Ver Consentimentos - Portal Cliente",
+        "accept": "Aceitar Consentimentos - Portal Cliente",
+        "reject": "Rejeitar Consentimentos - Portal Cliente"
+      },
+      "telemedicine": {
+        "view": "Ver Telemedicina - Portal Cliente",
+        "schedule": "Agendar Consultas - Portal Cliente"
+      },
+      "profile": {
+        "view": "Ver Perfil - Portal Cliente",
+        "edit": "Editar Perfil - Portal Cliente"
+      },
+      "documents": {
+        "view": "Ver Documentos - Portal Cliente",
+        "download": "Baixar Documentos - Portal Cliente"
+      },
+      "history": {
+        "view": "Ver Histórico Médico - Portal Cliente",
+        "details": "Ver Detalhes do Histórico - Portal Cliente"
       }
     }
   },

@@ -1,23 +1,28 @@
 <template>
   <div>
     <div class="content text-center">
-      <!-- Commerce Logo -->
-      <CommerceLogo
-        v-if="commerce && commerce.logo"
-        :src="commerce.logo"
-        :loading="false"
-      ></CommerceLogo>
-
-      <!-- Header -->
-      <div id="page-header" class="text-center mt-4">
-        <div class="welcome">
-          <span>{{ $t('clientPortal.documents.title') }}</span>
+      <div class="row align-items-center mb-1 desktop-header-row">
+        <div class="col-auto desktop-logo-wrapper">
+          <div class="desktop-commerce-logo">
+            <div id="commerce-logo-desktop">
+              <img
+                v-if="!loading && commerce?.logo"
+                class="rounded img-fluid logo-desktop"
+                :alt="$t('logoAlt')"
+                :src="commerce.logo"
+                loading="lazy"
+              />
+            </div>
+          </div>
         </div>
-        <div class="mt-2">
-          <button type="button" class="btn btn-link text-muted" @click="goBack">
-            <i class="bi bi-arrow-left me-2"></i>
-            {{ $t('clientPortal.documents.backToMenu') }}
-          </button>
+        <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
+          <ComponentMenu
+            :title="$t('clientPortal.documents.title')"
+            :toggles="toggles"
+            component-name="clientPortalDocuments"
+            :is-client-portal="true"
+            @goBack="goBack"
+          />
         </div>
       </div>
 
@@ -38,54 +43,69 @@
       </div>
 
       <!-- Documents Content -->
-      <div v-else class="documents-container">
-        <div v-if="documents.length === 0" class="text-center py-5">
-          <i class="bi bi-file-earmark" style="font-size: 3rem; color: var(--gris-elite-1)"></i>
-          <p class="mt-3 text-muted">{{ $t('clientPortal.documents.noDocuments') }}</p>
+      <div v-else class="documents-container-modern">
+        <div v-if="documents.length === 0" class="empty-state">
+          <i class="bi bi-file-earmark"></i>
+          <p>{{ $t('clientPortal.documents.noDocuments') }}</p>
         </div>
 
-        <div v-else class="documents-list">
-          <div v-for="document in documents" :key="document.id" class="document-card">
-            <div class="document-icon">
-              <i
-                :class="`bi ${
-                  document.type === 'PDF' || document.name?.endsWith('.pdf')
-                    ? 'bi-file-pdf-fill text-danger'
-                    : document.name?.endsWith('.jpg') || document.name?.endsWith('.png')
-                    ? 'bi-file-image-fill text-primary'
-                    : 'bi-file-earmark-text-fill'
-                }`"
-              ></i>
+        <div v-else class="timeline-container">
+          <div v-for="(document, index) in documents" :key="document.id" class="timeline-item">
+            <!-- Timeline dot -->
+            <div class="timeline-dot">
+              <div class="dot-inner"></div>
             </div>
-            <div class="document-info">
-              <h6 class="document-name">
-                {{ document.name || $t('clientPortal.documents.unnamed') }}
-              </h6>
-              <p class="document-meta">
-                <span v-if="document.createdAt">
-                  <i class="bi bi-calendar me-1"></i>
-                  {{ formatDate(document.createdAt) }}
-                </span>
-                <span v-if="document.size" class="ms-3">
-                  <i class="bi bi-file-earmark me-1"></i>
-                  {{ formatSize(document.size) }}
-                </span>
-              </p>
-              <p v-if="document.description" class="document-description">
-                {{ document.description }}
-              </p>
-            </div>
-            <div class="document-actions">
-              <a
-                v-if="document.url || document.downloadUrl"
-                :href="document.url || document.downloadUrl"
-                target="_blank"
-                class="btn btn-sm btn-dark rounded-pill"
-                :download="document.name"
-              >
-                <i class="bi bi-download me-2"></i>
-                {{ $t('clientPortal.documents.download') }}
-              </a>
+
+            <!-- Timeline line (not for last item) -->
+            <div v-if="index < documents.length - 1" class="timeline-line"></div>
+
+            <!-- Document card -->
+            <div class="document-card-modern">
+              <div class="document-icon-modern">
+                <i
+                  :class="`bi ${
+                    document.type === 'PDF' || document.name?.endsWith('.pdf')
+                      ? 'bi-file-pdf-fill'
+                      : document.name?.endsWith('.jpg') || document.name?.endsWith('.png')
+                      ? 'bi-file-image-fill'
+                      : 'bi-file-earmark-text-fill'
+                  }`"
+                ></i>
+              </div>
+
+              <div class="document-content-modern">
+                <h6 class="document-title-modern">
+                  {{ document.name || $t('clientPortal.documents.unnamed') }}
+                </h6>
+
+                <div class="document-meta-modern">
+                  <span v-if="document.createdAt" class="meta-item">
+                    <i class="bi bi-calendar3"></i>
+                    {{ formatDate(document.createdAt) }}
+                  </span>
+                  <span v-if="document.size" class="meta-item">
+                    <i class="bi bi-hdd"></i>
+                    {{ formatSize(document.size) }}
+                  </span>
+                </div>
+
+                <p v-if="document.description" class="document-description-modern">
+                  {{ document.description }}
+                </p>
+              </div>
+
+              <div class="document-action-modern">
+                <a
+                  v-if="document.url || document.downloadUrl"
+                  :href="document.url || document.downloadUrl"
+                  target="_blank"
+                  class="btn-download-modern"
+                  :download="document.name"
+                  :title="$t('clientPortal.documents.download')"
+                >
+                  <i class="bi bi-download"></i>
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -95,26 +115,38 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { getClientDocuments } from '../../application/services/client-portal';
+import { getClientPortalPermissions } from '../../application/services/client-portal-permissions';
+import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 
 export default {
   name: 'ClientDocumentsView',
   components: {
+    ComponentMenu,
     CommerceLogo,
   },
   setup() {
     const router = useRouter();
+    const route = useRoute();
     const { t } = useI18n();
+    const commerceSlug = ref(route.params.commerceSlug);
 
     const loading = ref(true);
     const error = ref('');
     const documents = ref([]);
     const client = ref(null);
     const commerce = ref(null);
+    const permissions = ref({});
+
+    // Toggles para ComponentMenu (computed basado en permisos)
+    const toggles = computed(() => ({
+      'clientPortal.documents.view': permissions.value['client-portal.documents.view'] || false,
+      'clientPortal.documents.download': permissions.value['client-portal.documents.view'] || false,
+    }));
 
     const formatDate = dateString => {
       if (!dateString) return '';
@@ -134,7 +166,7 @@ export default {
     };
 
     const goBack = () => {
-      router.push({ path: '/portal' });
+      router.push({ name: 'client-portal-menu', params: { commerceSlug: commerceSlug.value } });
     };
 
     const loadDocuments = async () => {
@@ -147,7 +179,7 @@ export default {
         const storedCommerce = localStorage.getItem('clientPortalCommerce');
 
         if (!storedClient || !storedCommerce) {
-          router.push({ path: '/portal/login' });
+          router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
           return;
         }
 
@@ -166,7 +198,23 @@ export default {
       }
     };
 
+    const loadPermissions = async () => {
+      try {
+        const clientPermissions = await getClientPortalPermissions('client-portal', 'documents');
+        permissions.value = clientPermissions;
+        console.log('Client documents permissions loaded:', clientPermissions);
+      } catch (err) {
+        console.error('Error loading permissions:', err);
+        // Permisos por defecto si falla
+        permissions.value = {
+          'client-portal.documents.view': true,
+          'client-portal.documents.download': true,
+        };
+      }
+    };
+
     onMounted(async () => {
+      await loadPermissions();
       await loadDocuments();
     });
 
@@ -179,6 +227,8 @@ export default {
       formatDate,
       formatSize,
       goBack,
+      permissions,
+      toggles,
     };
   },
 };
@@ -187,66 +237,223 @@ export default {
 <style scoped>
 @import '../../shared/styles/prontuario-common.css';
 
-.documents-container {
-  max-width: 1000px;
+/* Desktop Header Styles */
+.desktop-header-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0 1rem;
+}
+
+.desktop-logo-wrapper {
+  flex: 0 0 auto;
+  max-width: 200px;
+}
+
+.desktop-commerce-logo {
+  display: flex;
+  align-items: center;
+  max-width: 150px;
+  text-align: left;
+}
+
+.logo-desktop {
+  max-width: 120px;
+  max-height: 100px;
+  width: auto;
+  height: auto;
+  margin-bottom: 0;
+}
+
+.desktop-menu-wrapper {
+  flex: 1 1 0%;
+  min-width: 0;
+  width: auto;
+  text-align: left;
+}
+
+/* Documents Container */
+.documents-container-modern {
+  max-width: 900px;
   margin: 0 auto;
   padding: 1rem;
 }
 
-.documents-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--color-text-secondary);
 }
 
-.document-card {
-  background: var(--color-background);
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 0.5px solid var(--gris-default);
-  padding: 1.5rem;
+.empty-state i {
+  font-size: 3rem;
+  opacity: 0.5;
+  margin-bottom: 1rem;
+}
+
+.empty-state p {
+  font-size: 0.9375rem;
+  margin: 0;
+}
+
+/* Timeline Container */
+.timeline-container {
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+/* Timeline Item */
+.timeline-item {
+  position: relative;
+  padding-left: 3rem;
+  margin-bottom: 1rem;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Timeline Dot */
+.timeline-dot {
+  position: absolute;
+  left: 0;
+  top: 0.875rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  transition: all 0.3s ease;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(4, 159, 217, 0.3);
+  z-index: 2;
 }
 
-.document-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.dot-inner {
+  width: 0.5rem;
+  height: 0.5rem;
+  background: white;
+  border-radius: 50%;
 }
 
-.document-icon {
-  font-size: 2.5rem;
+/* Timeline Line */
+.timeline-line {
+  position: absolute;
+  left: 0.75rem;
+  top: 2.375rem;
+  bottom: -1rem;
+  width: 2px;
+  background: linear-gradient(180deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  opacity: 0.3;
+  z-index: 1;
+}
+
+/* Document Card Modern */
+.document-card-modern {
+  background: var(--color-background);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+
+.document-card-modern:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateX(4px);
+  border-color: rgba(4, 159, 217, 0.2);
+}
+
+/* Document Icon */
+.document-icon-modern {
   flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(4, 159, 217, 0.1) 0%, rgba(0, 182, 122, 0.1) 100%);
+  border-radius: 0.5rem;
+  font-size: 1.25rem;
+  color: var(--azul-turno);
 }
 
-.document-info {
+/* Document Content */
+.document-content-modern {
   flex: 1;
   min-width: 0;
 }
 
-.document-name {
-  font-size: 1.1rem;
+.document-title-modern {
+  font-size: 0.9375rem;
   font-weight: 600;
-  margin: 0 0 0.5rem 0;
   color: var(--color-text);
+  margin: 0 0 0.375rem 0;
+  line-height: 1.3;
 }
 
-.document-meta {
-  font-size: 0.875rem;
+.document-meta-modern {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.375rem;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
   color: var(--color-text-secondary);
-  margin: 0 0 0.5rem 0;
 }
 
-.document-description {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
+.meta-item i {
+  font-size: 0.6875rem;
+  opacity: 0.7;
+}
+
+.document-description-modern {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
   margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.document-actions {
+/* Document Action */
+.document-action-modern {
   flex-shrink: 0;
+}
+
+.btn-download-modern {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  color: white;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.btn-download-modern:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(4, 159, 217, 0.4);
+  color: white;
+}
+
+.btn-download-modern:active {
+  transform: scale(0.95);
 }
 
 .errors {
@@ -256,24 +463,55 @@ export default {
   padding: 0 0.5rem;
 }
 
+/* Responsive Design */
 @media (max-width: 768px) {
-  .documents-container {
-    padding: 0.5rem;
+  .documents-container-modern {
+    padding: 0.75rem;
   }
 
-  .document-card {
-    flex-direction: column;
-    text-align: center;
-    gap: 1rem;
+  .timeline-item {
+    padding-left: 2.5rem;
   }
 
-  .document-actions {
-    width: 100%;
+  .timeline-dot {
+    width: 1.25rem;
+    height: 1.25rem;
   }
 
-  .document-actions .btn {
-    width: 100%;
+  .dot-inner {
+    width: 0.375rem;
+    height: 0.375rem;
+  }
+
+  .timeline-line {
+    left: 0.625rem;
+  }
+
+  .document-card-modern {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .document-icon-modern {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 1.125rem;
+  }
+
+  .document-title-modern {
+    font-size: 0.875rem;
+  }
+
+  .meta-item {
+    font-size: 0.6875rem;
+  }
+
+  .btn-download-modern {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 0.9375rem;
   }
 }
 </style>
+
 

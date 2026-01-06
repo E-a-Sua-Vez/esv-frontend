@@ -1551,10 +1551,26 @@
     }
   },
   "clientPortal": {
+    "spy": {
+      "title": "Panel Informativo",
+      "upcomingBookings": "Próximas Reservas",
+      "lastAttention": "Última Atención",
+      "newAttention": "Nueva Atención",
+      "pendingConsents": "Consentimientos Pendientes",
+      "recentDocuments": "Documentos Recientes",
+      "service": "Servicio",
+      "scheduleService": "Agendar Servicio",
+      "consentsWaiting": "consentimiento(s) esperando",
+      "reviewConsents": "Haz clic para revisar"
+    },
     "menu": {
       "welcome": "Bienvenido, {name}",
       "loading": "Cargando...",
+      "choose": "¿Qué deseas hacer hoy?",
+      "seeMenu": "Ver Menú",
+      "seeSpy": "Ver Información",
       "consents": "Mis Consentimientos",
+      "telemedicine": "Telemedicina",
       "profile": "Mi Perfil",
       "documents": "Mis Documentos",
       "history": "Mi Historial",
@@ -1699,7 +1715,14 @@
     },
     "login": {
       "welcome": "Portal del Cliente",
+      "loginMessage": "Ingresa tu información para acceder",
       "loading": "Cargando...",
+      "loadingCommerce": "Cargando información del establecimiento...",
+      "atLeastOneRequired": "Completa al menos uno de los campos a continuación",
+      "optional": "Opcional",
+      "commerceNotFound": "El establecimiento no existe o no está disponible. Por favor verifica la URL.",
+      "commerceNotFoundTitle": "Establecimiento No Encontrado",
+      "errorLoadingCommerce": "Error al cargar información del establecimiento",
       "processing": "Procesando...",
       "requestAccess": "Solicitar Acceso",
       "requestAccessDescription": "Ingrese su información para recibir un código de acceso",
@@ -1715,10 +1738,14 @@
       "enterCode": "Ingresar Código",
       "enterCodeDescription": "Ingrese el código que recibió por email, WhatsApp o SMS",
       "codeSentVia": "Código enviado por {via}",
+      "codeSentViaMultiple": "Código enviado por Email y WhatsApp",
+      "codeSentViaEmailWhatsapp": "Código enviado por Email y WhatsApp",
+      "codeSentViaEmailSms": "Código enviado por Email y SMS",
       "accessCode": "Código de Acceso",
       "codeHint": "Ingrese el código de 4-8 caracteres que recibió",
       "validateAndAccess": "Validar y Acceder",
       "requestNewCode": "Solicitar Nuevo Código",
+      "didntReceiveCode": "¿No recibiste el código?",
       "tryAgain": "Intentar Nuevamente",
       "accessGranted": "Acceso Concedido",
       "redirecting": "Redirigiendo al portal...",
@@ -1731,7 +1758,16 @@
       "invalidCode": "Código inválido",
       "incorrectCode": "Código incorrecto",
       "tooManyAttempts": "Demasiados intentos fallidos. Por favor intente más tarde",
-      "validationError": "Error al validar el código"
+      "validationError": "Error al validar el código",
+      "captchaRequired": "Por favor completa el reCAPTCHA",
+      "captchaError": "Error al validar reCAPTCHA. Intenta nuevamente",
+      "alreadyHaveCode": "Ya tengo código",
+      "enterDataFirst": "Ingresa tu ID, email o teléfono primero",
+      "needNewCode": "Necesito un nuevo código",
+      "rateLimitError": "Debe esperar antes de solicitar otro código",
+      "waitBeforeRetry": "Podrá solicitar nuevamente en {seconds} segundos",
+      "waitToRequestAgain": "Espere {seconds} para solicitar nuevamente",
+      "cooldownMessage": "Podrás solicitar un nuevo código en"
     }
   },
   "telemedicineSession": {
@@ -3044,6 +3080,7 @@
     "control-admin": "Gestión",
     "company-admin": "Compañías",
     "go-minisite": "Minisite",
+    "client-portal": "Portal del Cliente",
     "seeSpy": "MetricSpy",
     "seeMenu": "Menú",
     "booking-manage": "Reservas Visión 360°",
@@ -3154,6 +3191,7 @@
     "queue-manage": "Atender Filas del Día",
     "booking-manage": "Reservas Visión 360°",
     "go-minisite": "Minisite",
+    "client-portal": "Portal del Cliente",
     "seeSpy": "Ver Spy",
     "seeMenu": "Ver Menú",
     "message": {
@@ -4287,6 +4325,30 @@
       "email": "Debes ingresar el email",
       "module": "Debes seleccionar un módulo",
       "type": "Debe seleccionar el tipo"
+    }
+  },
+  "commerceAdmin": {
+    "logoUpload": {
+      "title": "Gestionar Logo del Comercio",
+      "selectLogo": "Seleccionar Logo",
+      "selectNewLogo": "Seleccionar Nuevo Logo",
+      "fileFormats": "JPG, PNG o WebP (máx. 5MB)",
+      "recommendedSize": "Tamaño recomendado: 250x230px o proporción similar",
+      "preview": "Vista previa del logo",
+      "currentLogo": "Logo Actual",
+      "businessLogo": "Logo del Negocio",
+      "usingBusinessLogo": "Usando el logo del negocio como predeterminado",
+      "businessDefault": "Predeterminado",
+      "usingBusinessLogoHint": "Este comercio está usando el logo del negocio. Puedes mantenerlo o subir un logo específico.",
+      "replaceLogo": "Reemplazar Logo",
+      "replaceHint": "Haz clic en el botón de abajo para reemplazar el logo actual",
+      "saveLogo": "Guardar Logo",
+      "retake": "Seleccionar Otro",
+      "errors": {
+        "fileFormatNotSupported": "Formato de archivo no soportado. Use JPG, PNG o WebP.",
+        "fileTooLarge": "El archivo es muy grande. Máximo 5MB permitido.",
+        "saveFailed": "Error al guardar el logo. Intente nuevamente."
+      }
     }
   },
   "businessCommercesAdmin": {
@@ -5690,6 +5752,7 @@
   "permissions": {
     "sections": {
       "client": "Gestión Cliente",
+      "client-portal": "Portal del Cliente",
       "document-client": "Documentos Cliente",
       "dashboard": "Performance Hub",
       "collaborator": "Acciones Colaborador",
@@ -5805,7 +5868,8 @@
         "medical-exams-admin": "Habilitar Gestionar Exámenes Médicos - Menú Principal Negocio",
         "medical-templates-admin": "Habilitar Gestionar Plantillas Médicas - Menú Principal Negocio",
         "pdf-templates-admin": "Habilitar Gestionar Plantillas PDF - Menú Principal Negocio",
-        "audit-log": "Habilitar Auditoría y Cumplimiento - Menú Principal Negocio"
+        "audit-log": "Habilitar Auditoría y Cumplimiento - Menú Principal Negocio",
+        "documents": "Habilitar Documentos - Menú Principal Negocio"
       },
       "bookings": {
         "manage": "Reservas Visión 360°"
@@ -6340,6 +6404,36 @@
         "add": "Agregar datos - Sección Administrar Elementos de Historial Médico",
         "limit": "Límite de datos - Sección Administrar Elementos de Historial Médico",
         "unavailable": "Eliminar Elementos de Historial Médico - Sección Administrar Elementos de Historial Médico"
+      }
+    },
+    "client-portal": {
+      "menu": {
+        "consents": "Ver Menú - Consentimientos Portal Cliente",
+        "telemedicine": "Ver Menú - Telemedicina Portal Cliente",
+        "profile": "Ver Menú - Perfil Portal Cliente",
+        "documents": "Ver Menú - Documentos Portal Cliente",
+        "history": "Ver Menú - Historial Portal Cliente"
+      },
+      "consents": {
+        "view": "Ver Consentimientos - Portal Cliente",
+        "accept": "Aceptar Consentimientos - Portal Cliente",
+        "reject": "Rechazar Consentimientos - Portal Cliente"
+      },
+      "telemedicine": {
+        "view": "Ver Telemedicina - Portal Cliente",
+        "schedule": "Programar Consultas - Portal Cliente"
+      },
+      "profile": {
+        "view": "Ver Perfil - Portal Cliente",
+        "edit": "Editar Perfil - Portal Cliente"
+      },
+      "documents": {
+        "view": "Ver Documentos - Portal Cliente",
+        "download": "Descargar Documentos - Portal Cliente"
+      },
+      "history": {
+        "view": "Ver Historial Médico - Portal Cliente",
+        "details": "Ver Detalles del Historial - Portal Cliente"
       }
     }
   },

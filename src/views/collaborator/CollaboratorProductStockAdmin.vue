@@ -14,6 +14,7 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import ProductsStockManagement from '../../components/products/ProductsStockManagement.vue';
 import ProductAttentionManagement from '../../components/products/ProductsAttentionManagement.vue';
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
 import DateRangeFilters from '../../components/common/desktop/DateRangeFilters.vue';
 
@@ -29,6 +30,7 @@ export default {
     ProductsStockManagement,
     ProductAttentionManagement,
     DesktopContentLayout,
+    DesktopPageHeader,
     DesktopFiltersPanel,
     DateRangeFilters,
   },
@@ -299,7 +301,8 @@ export default {
     <div class="d-block d-lg-none">
       <div class="content text-center">
         <CommerceLogo
-          :src="commerce && commerce.logo ? commerce.logo : null"
+          :src="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
           :loading="loading"
         ></CommerceLogo>
         <ComponentMenu
@@ -391,30 +394,15 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading && commerce?.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="commerce.logo"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t(`businessProductStockAdmin.title`)"
-              :toggles="state.toggles"
-              component-name="businessProductStockAdmin"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('businessProductStockAdmin.title')"
+          :toggles="state.toggles"
+          component-name="businessProductStockAdmin"
+          @go-back="goBack"
+        />
         <div id="product-stock" v-if="isActiveBusiness()">
           <div v-if="!commerce || !commerce.id">
             <div v-if="!loading" class="control-box">

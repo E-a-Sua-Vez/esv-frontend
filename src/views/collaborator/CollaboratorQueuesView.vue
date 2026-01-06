@@ -24,6 +24,7 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import Popper from 'vue3-popper';
 
 export default {
@@ -36,6 +37,7 @@ export default {
     Alert,
     ToggleCapabilities,
     ComponentMenu,
+    DesktopPageHeader,
     Popper,
   },
   async setup() {
@@ -58,6 +60,7 @@ export default {
 
     const state = reactive({
       currentUser: {},
+      business: {},
       queue: {},
       queues: [],
       groupedQueues: [],
@@ -114,6 +117,7 @@ export default {
       try {
         loading.value = true;
         state.currentUser = store.getCurrentUser;
+        state.business = await store.getActualBusiness();
         state.collaborator = state.currentUser;
         if (!state.collaborator || !state.collaborator.id) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
@@ -851,7 +855,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="commerce?.logo" :loading="loading"></CommerceLogo>
+        <CommerceLogo :src="commerce?.logo || state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
         <ComponentMenu
           :title="$t(`collaboratorQueuesView.welcome`)"
           :toggles="state.toggles"
@@ -1077,30 +1081,15 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || commerce?.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="commerce?.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t(`collaboratorQueuesView.welcome`)"
-              :toggles="state.toggles"
-              component-name="collaboratorQueuesView"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('collaboratorQueuesView.welcome')"
+          :toggles="state.toggles"
+          component-name="collaboratorQueuesView"
+          @go-back="goBack"
+        />
         <div v-if="(!commerce || !commerce.id) && !loading" class="control-box">
           <Message
             :title="$t('businessQueuesAdmin.message.4.title')"

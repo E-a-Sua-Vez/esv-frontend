@@ -3300,6 +3300,22 @@ export default {
       }
     });
 
+    // Computed property to check if there are available queues
+    const hasAvailableQueues = computed(() => {
+      if (!state.commerce || !state.commerce.id) {
+        return true; // Don't show message until commerce is loaded
+      }
+      // Check if there are any queues in state.queues or any type in groupedQueues
+      if (state.queues && state.queues.length > 0) {
+        return true;
+      }
+      if (state.groupedQueues && Object.keys(state.groupedQueues).length > 0) {
+        const totalQueues = Object.values(state.groupedQueues).flat();
+        return totalQueues.length > 0;
+      }
+      return false;
+    });
+
     // Computed property to validate if form fields are complete
     const isFormValid = computed(() => {
       try {
@@ -3483,6 +3499,7 @@ export default {
       isTelemedicineEnabled,
       isActiveCommerce,
       isAvailableCommerce,
+      hasAvailableQueues,
       goBack,
       getQueue,
       getAttention,
@@ -3523,7 +3540,7 @@ export default {
 <template>
   <div>
     <div class="content text-center">
-      <CommerceLogo :src="state.commerce.logo" :loading="loading" :large-size="true"></CommerceLogo>
+      <CommerceLogo :src="state.commerce.logo" :business-id="state.commerce.businessId" :loading="loading" :large-size="true"></CommerceLogo>
       <div id="page-header" class="text-center mt-2">
         <div class="welcome mb-2">
           <span>{{ $t('commerceQueuesView.welcome') }}</span>
@@ -3531,46 +3548,56 @@ export default {
       </div>
       <div v-if="isActiveCommerce(state.commerce) && !loading">
         <div v-if="isAvailableCommerce(state.commerce)">
-          <div class="centered mb-2">
-            <div class="progress-container col-10 mx-4">
-              <div class="modern-progress">
-                <div
-                  class="progress-segment progress-primary"
-                  role="progressbar"
-                  :style="`width: ${showFormStep()}%`"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                ></div>
+          <!-- No queues available message -->
+          <div v-if="!hasAvailableQueues" class="mt-3">
+            <Message
+              :title="$t('commerceQueuesView.message.title')"
+              :content="$t('commerceQueuesView.message.content')"
+              :icon="'bi bi-emoji-frown'"
+            />
+          </div>
+          <!-- Normal flow when queues are available -->
+          <div v-else>
+            <div class="centered mb-2">
+              <div class="progress-container col-10 mx-4">
+                <div class="modern-progress">
+                  <div
+                    class="progress-segment progress-primary"
+                    role="progressbar"
+                    :style="`width: ${showFormStep()}%`"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                  ></div>
+                </div>
               </div>
             </div>
-          </div>
-          <!-- FORM -->
-          <Transition name="slide-fade" mode="out-in">
-            <div v-if="state.showFillForm">
-              <ClientForm
-                :show="true"
-                :commerce="state.commerce"
-                :name="state.newUser.name || name"
-                :last-name="state.newUser.lastName || lastName"
-                :id-number="state.newUser.idNumber || idNumber"
-                :email="state.newUser.email || email"
-                :phone="state.newUser.phone || phone"
-                :birthday="state.newUser.birthday || birthday"
-                :address-text="state.newUser.addressText || addressText"
-                :address-code="state.newUser.addressCode || addressCode"
-                :address-complement="state.newUser.addressComplement || addressComplement"
-                :origin="state.newUser.origin || origin"
-                :code1="state.newUser.code1 || code1"
-                :code2="state.newUser.code2 || code2"
-                :code3="state.newUser.code3 || code3"
-                :health-agreement-id="state.newUser.healthAgreementId || healthAgreementId"
-                :client="client"
-                :errors-add="state.errorsAdd"
-                :receive-data="receiveData"
-              >
-              </ClientForm>
-            </div>
-          </Transition>
+            <!-- FORM -->
+            <Transition name="slide-fade" mode="out-in">
+              <div v-if="state.showFillForm">
+                <ClientForm
+                  :show="true"
+                  :commerce="state.commerce"
+                  :name="state.newUser.name || name"
+                  :last-name="state.newUser.lastName || lastName"
+                  :id-number="state.newUser.idNumber || idNumber"
+                  :email="state.newUser.email || email"
+                  :phone="state.newUser.phone || phone"
+                  :birthday="state.newUser.birthday || birthday"
+                  :address-text="state.newUser.addressText || addressText"
+                  :address-code="state.newUser.addressCode || addressCode"
+                  :address-complement="state.newUser.addressComplement || addressComplement"
+                  :origin="state.newUser.origin || origin"
+                  :code1="state.newUser.code1 || code1"
+                  :code2="state.newUser.code2 || code2"
+                  :code3="state.newUser.code3 || code3"
+                  :health-agreement-id="state.newUser.healthAgreementId || healthAgreementId"
+                  :client="client"
+                  :errors-add="state.errorsAdd"
+                  :receive-data="receiveData"
+                >
+                </ClientForm>
+              </div>
+            </Transition>
           <Transition name="slide-fade" mode="out-in">
             <div v-if="state.showPickQueue">
               <!-- QUEUES -->
@@ -4572,14 +4599,7 @@ export default {
               </div>
             </div>
           </Transition>
-        </div>
-        <div v-else>
-          <Message
-            :title="$t('commerceQueuesView.message2.title')"
-            :content="$t('commerceQueuesView.message2.content')"
-            :icon="'bi bi-emoji-frown'"
-          >
-          </Message>
+          </div>
         </div>
       </div>
       <div v-if="!isActiveCommerce(state.commerce) && !loading">

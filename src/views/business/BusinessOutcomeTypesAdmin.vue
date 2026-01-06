@@ -20,6 +20,7 @@ import Warning from '../../components/common/Warning.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import { getOutcomeTypes } from '../../shared/utils/data';
 
 export default {
@@ -37,6 +38,7 @@ export default {
     AreYouSure,
     ComponentMenu,
     SearchAdminItem,
+    DesktopPageHeader,
   },
   async setup() {
     const router = useRouter();
@@ -289,14 +291,15 @@ export default {
 <template>
   <div>
     <div class="content text-center">
-      <CommerceLogo :src="commerce?.logo || state.business?.logo" :loading="loading"></CommerceLogo>
-      <ComponentMenu
+      <DesktopPageHeader
+        :logo="commerce?.logo || state.business?.logo"
+        :business-id="state.business?.id"
+        :loading="loading"
         :title="$t(`businessOutcomeTypesAdmin.title`)"
         :toggles="state.toggles"
         component-name="businessOutcomeTypesAdmin"
-        @goBack="goBack"
-      >
-      </ComponentMenu>
+        @go-back="goBack"
+      />
       <div id="page-header" class="text-center">
         <Spinner :show="loading"></Spinner>
         <Alert :show="false" :stack="alertError"></Alert>

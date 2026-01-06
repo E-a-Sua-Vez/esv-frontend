@@ -211,6 +211,7 @@ export default {
     // Temperature filter - array of selected temperatures ('QUENTE', 'MORNO', 'FRIO') - empty means show all
     const temperatureFilter = ref([]);
     const showAnalytics = ref(false);
+    const showMobileFilters = ref(false); // Control de filtros colapsables en móvil
 
     const isMaster = computed(() => {
       const userType = store.getCurrentUserType;
@@ -1770,6 +1771,17 @@ export default {
       return labels[status] || status;
     };
 
+    const getStatusIcon = status => {
+      if (!status) return 'bi-question-circle';
+      const icons = {
+        [LEAD_STATUS.INTERESTED]: 'bi-heart-fill',
+        [LEAD_STATUS.REJECTED]: 'bi-x-circle-fill',
+        [LEAD_STATUS.SUCCESS]: 'bi-check-circle-fill',
+        [LEAD_STATUS.MAYBE_LATER]: 'bi-clock-fill',
+      };
+      return icons[status] || 'bi-circle';
+    };
+
     const formatDateTime = date => {
       if (!date) return '';
       const d = new Date(date);
@@ -2742,6 +2754,7 @@ export default {
       getStageIcon,
       getStageColor,
       getStatusLabel,
+      getStatusIcon,
       formatDateTime,
       dateFilterFrom,
       dateFilterTo,
@@ -2764,6 +2777,7 @@ export default {
       pipelineStats,
       pipelineInsights,
       showAnalytics,
+      showMobileFilters,
       desktopFiltersCollapsed,
     };
   },
@@ -2788,96 +2802,170 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
 
-        <!-- Filters and Export Section -->
-        <div class="control-box mb-4 text-center">
-          <div class="row my-2 justify-content-center">
-            <div class="col-6 col-md-3">
-              <input
-                id="filterFromDate"
-                class="form-control metric-controls"
-                type="date"
-                v-model="dateFilterFrom"
-                @change="loadLeads(true)"
-                :placeholder="$t('leadPipeline.filterFromDate') || 'Data De'"
-              />
+        <!-- Filters Section -->
+        <div class="filters-container mb-3">
+          <!-- Mobile Filter Toggle Button (Only visible on mobile/tablet) -->
+          <div class="d-block d-lg-none mb-2">
+            <button
+              class="btn btn-xs btn-outline-primary mobile-filter-toggle"
+              @click="showMobileFilters = !showMobileFilters"
+            >
+              <i class="bi" :class="showMobileFilters ? 'bi-funnel-fill' : 'bi-funnel'"></i>
+              <span class="mx-1">{{ showMobileFilters ? 'Ocultar' : 'Filtros' }}</span>
+              <i class="bi" :class="showMobileFilters ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+            </button>
+          </div>
+
+          <!-- Mobile Filters Content (Collapsible) -->
+          <div class="d-block d-lg-none mobile-filters-wrapper" :class="{ 'collapsed': !showMobileFilters }">
+            <div class="mobile-filters-content">
+          <!-- Date Filters Row -->
+          <div class="filters-row mb-3">
+            <div class="filter-group">
+              <div class="input-with-info">
+                <div class="input-icon-wrapper">
+                  <i class="bi bi-calendar-event input-icon"></i>
+                  <input
+                    id="filterFromDate"
+                    class="form-control form-control-sm compact-date-input"
+                    type="date"
+                    v-model="dateFilterFrom"
+                    @change="loadLeads(true)"
+                  />
+                </div>
+                <Popper
+                  class="filter-info-tooltip dark"
+                  arrow
+                  :content="$t('leadPipeline.filterFromDate') || 'Data De'"
+                >
+                  <i class="bi bi-info-circle filter-info-icon"></i>
+                </Popper>
+              </div>
             </div>
-            <div class="col-6 col-md-3">
-              <input
-                id="filterToDate"
-                class="form-control metric-controls"
-                type="date"
-                v-model="dateFilterTo"
-                @change="loadLeads(true)"
-                :placeholder="$t('leadPipeline.filterToDate') || 'Data Até'"
-              />
+            <div class="filter-group">
+              <div class="input-with-info">
+                <div class="input-icon-wrapper">
+                  <i class="bi bi-calendar-check input-icon"></i>
+                  <input
+                    id="filterToDate"
+                    class="form-control form-control-sm compact-date-input"
+                    type="date"
+                    v-model="dateFilterTo"
+                    @change="loadLeads(true)"
+                  />
+                </div>
+                <Popper
+                  class="filter-info-tooltip dark"
+                  arrow
+                  :content="$t('leadPipeline.filterToDate') || 'Data Até'"
+                >
+                  <i class="bi bi-info-circle filter-info-icon"></i>
+                </Popper>
+              </div>
             </div>
-            <div class="col-6 col-md-3">
-              <button
-                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2 w-100"
-                @click="resetDateFilters"
-                :disabled="loading"
+            <div class="filter-group-action">
+              <Popper
+                class="filter-info-tooltip dark"
+                arrow
+                :content="$t('leadPipeline.clearFilter') || 'Limpar Filtro'"
               >
-                <i class="bi bi-eraser-fill me-1"></i
-                >{{ $t('leadPipeline.clearFilter') || 'Limpar Filtro' }}
-              </button>
+                <button
+                  class="btn btn-sm btn-outline-dark clear-filter-btn"
+                  @click="resetDateFilters"
+                  :disabled="loading"
+                >
+                  <i class="bi bi-eraser-fill"></i>
+                </button>
+              </Popper>
             </div>
           </div>
 
           <!-- Status Filters -->
-          <div class="row my-2">
-            <div class="col-12">
-              <label class="form-label small fw-bold mb-2">{{
-                $t('leadPipeline.filterByStatus') || 'Filtrar por Status'
-              }}</label>
-              <div class="d-flex flex-wrap gap-2 justify-content-center">
+          <div class="filters-row mb-3">
+            <div class="filter-section-header">
+              <i class="bi bi-funnel-fill filter-section-icon-info"></i>
+              <span class="filter-section-label">Status</span>
+              <Popper
+                class="filter-info-tooltip dark"
+                arrow
+                :content="$t('leadPipeline.filterByStatus') || 'Filtrar por Status'"
+              >
+                <i class="bi bi-info-circle filter-info-icon"></i>
+              </Popper>
+            </div>
+            <div class="filter-buttons-group">
+              <Popper
+                v-for="status in Object.values(LEAD_STATUS)"
+                :key="status"
+                class="filter-info-tooltip dark"
+                arrow
+                :content="getStatusLabel(status)"
+              >
                 <button
-                  v-for="status in Object.values(LEAD_STATUS)"
-                  :key="status"
-                  class="btn btn-sm rounded-pill"
-                  :class="statusFilter.includes(status) ? 'btn-primary' : 'btn-outline-primary'"
+                  class="btn btn-sm filter-option-btn"
+                  :class="statusFilter.includes(status) ? 'btn-primary active' : 'btn-outline-primary'"
                   @click="toggleStatusFilter(status)"
                 >
-                  {{ getStatusLabel(status) }}
+                  <i :class="getStatusIcon(status)"></i>
                 </button>
-              </div>
+              </Popper>
             </div>
           </div>
 
-          <!-- Time Indicator Filters -->
-          <div class="row my-2">
+<!-- Compact Time Indicator Filters -->
+          <div class="row mb-2">
             <div class="col-12">
-              <label class="form-label small fw-bold mb-2">{{
-                $t('leadPipeline.filterByTime') || 'Filtrar por Tempo desde Criação'
-              }}</label>
-              <div class="d-flex flex-wrap gap-2 justify-content-center">
-                <button
-                  class="btn btn-sm rounded-pill"
-                  :class="
-                    timeIndicatorFilter.includes('green') ? 'btn-success' : 'btn-outline-success'
-                  "
-                  @click="toggleTimeIndicatorFilter('green')"
+              <div class="compact-filter-section">
+                <Popper
+                  class="filter-tooltip dark"
+                  arrow
+                  :content="$t('leadPipeline.filterByTime') || 'Filtrar por Tempo desde Criação'"
                 >
-                  <i class="bi bi-circle-fill me-1" style="font-size: 0.6rem"></i>
-                  {{ getTimeIndicatorLabel('green') }}
-                </button>
-                <button
-                  class="btn btn-sm rounded-pill"
-                  :class="
-                    timeIndicatorFilter.includes('yellow') ? 'btn-warning' : 'btn-outline-warning'
-                  "
-                  @click="toggleTimeIndicatorFilter('yellow')"
-                >
-                  <i class="bi bi-circle-fill me-1" style="font-size: 0.6rem"></i>
-                  {{ getTimeIndicatorLabel('yellow') }}
-                </button>
-                <button
-                  class="btn btn-sm rounded-pill"
-                  :class="timeIndicatorFilter.includes('red') ? 'btn-danger' : 'btn-outline-danger'"
-                  @click="toggleTimeIndicatorFilter('red')"
-                >
-                  <i class="bi bi-circle-fill me-1" style="font-size: 0.6rem"></i>
-                  {{ getTimeIndicatorLabel('red') }}
-                </button>
+                  <span class="filter-section-icon">
+                    <i class="bi bi-clock-fill"></i>
+                  </span>
+                </Popper>
+                <div class="compact-filter-buttons">
+                  <Popper
+                    class="filter-tooltip dark"
+                    arrow
+                    :content="getTimeIndicatorLabel('green')"
+                  >
+                    <button
+                      class="btn btn-sm compact-filter-btn"
+                      :class="timeIndicatorFilter.includes('green') ? 'btn-success' : 'btn-outline-success'"
+                      @click="toggleTimeIndicatorFilter('green')"
+                    >
+                      <i class="bi bi-circle-fill" style="color: #28a745; font-size: 0.8rem"></i>
+                    </button>
+                  </Popper>
+                  <Popper
+                    class="filter-tooltip dark"
+                    arrow
+                    :content="getTimeIndicatorLabel('yellow')"
+                  >
+                    <button
+                      class="btn btn-sm compact-filter-btn"
+                      :class="timeIndicatorFilter.includes('yellow') ? 'btn-warning' : 'btn-outline-warning'"
+                      @click="toggleTimeIndicatorFilter('yellow')"
+                    >
+                      <i class="bi bi-circle-fill" style="color: #ffc107; font-size: 0.8rem"></i>
+                    </button>
+                  </Popper>
+                  <Popper
+                    class="filter-tooltip dark"
+                    arrow
+                    :content="getTimeIndicatorLabel('red')"
+                  >
+                    <button
+                      class="btn btn-sm compact-filter-btn"
+                      :class="timeIndicatorFilter.includes('red') ? 'btn-danger' : 'btn-outline-danger'"
+                      @click="toggleTimeIndicatorFilter('red')"
+                    >
+                      <i class="bi bi-circle-fill" style="color: #dc3545; font-size: 0.8rem"></i>
+                    </button>
+                  </Popper>
+                </div>
               </div>
             </div>
           </div>
@@ -2922,44 +3010,85 @@ export default {
               </div>
             </div>
           </div>
+            </div>
+          </div>
         </div>
 
         <div v-if="!loading" class="lead-pipeline-container">
           <!-- Add Lead Button and Export CSV -->
           <div class="row mb-3">
             <div class="col-12 text-start d-flex gap-2">
-              <button
-                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                @click="showAdd()"
-                :disabled="!isMaster && !toggles['leadPipeline.admin.add']"
-              >
-                <i class="bi bi-plus-lg"></i> {{ $t('add') }}
-              </button>
-              <button
-                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                @click="showAnalytics = true"
-                :disabled="loading"
-              >
-                <i class="bi bi-graph-up-arrow me-1"></i
-                >{{ $t('leadPipeline.analytics.title') || 'Analytics & Insights' }}
-              </button>
-              <button
-                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                @click="exportLeadsToCSV"
-                :disabled="loading"
-              >
-                <i class="bi bi-download me-1"></i
-                >{{ $t('leadPipeline.exportCSV') || 'Export to CSV' }}
-              </button>
-              <button
-                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                @click="refreshLeads"
-                :disabled="loading"
-              >
-                <i class="bi bi-arrow-clockwise me-1" :class="{ spinning: loading }"></i>
-                <span v-if="!loading">{{ $t('leadPipeline.refresh') || 'Refresh' }}</span>
-                <span v-else>{{ $t('leadPipeline.refreshing') || 'Refreshing...' }}</span>
-              </button>
+              <!-- Desktop Buttons -->
+              <div class="d-none d-md-flex gap-2">
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                  @click="showAdd()"
+                  :disabled="!isMaster && !toggles['leadPipeline.admin.add']"
+                >
+                  <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                </button>
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                  @click="showAnalytics = true"
+                  :disabled="loading"
+                >
+                  <i class="bi bi-graph-up-arrow me-1"></i
+                  >{{ $t('leadPipeline.analytics.title') || 'Analytics & Insights' }}
+                </button>
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                  @click="exportLeadsToCSV"
+                  :disabled="loading"
+                >
+                  <i class="bi bi-download me-1"></i
+                  >{{ $t('leadPipeline.exportCSV') || 'Export to CSV' }}
+                </button>
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                  @click="refreshLeads"
+                  :disabled="loading"
+                >
+                  <i class="bi bi-arrow-clockwise me-1" :class="{ spinning: loading }"></i>
+                  <span v-if="!loading">{{ $t('leadPipeline.refresh') || 'Refresh' }}</span>
+                  <span v-else>{{ $t('leadPipeline.refreshing') || 'Refreshing...' }}</span>
+                </button>
+              </div>
+
+              <!-- Mobile Buttons (Icon Only) -->
+              <div class="d-flex d-md-none gap-1 w-100 justify-content-center">
+                <button
+                  class="btn btn-sm btn-dark mobile-action-btn"
+                  @click="showAdd()"
+                  :disabled="!isMaster && !toggles['leadPipeline.admin.add']"
+                  :title="$t('add')"
+                >
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-dark mobile-action-btn"
+                  @click="showAnalytics = true"
+                  :disabled="loading"
+                  :title="$t('leadPipeline.analytics.title') || 'Analytics'"
+                >
+                  <i class="bi bi-graph-up-arrow"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-dark mobile-action-btn"
+                  @click="exportLeadsToCSV"
+                  :disabled="loading"
+                  :title="$t('leadPipeline.exportCSV') || 'Export CSV'"
+                >
+                  <i class="bi bi-download"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-dark mobile-action-btn"
+                  @click="refreshLeads"
+                  :disabled="loading"
+                  :title="loading ? ($t('leadPipeline.refreshing') || 'Refreshing...') : ($t('leadPipeline.refresh') || 'Refresh')"
+                >
+                  <i class="bi bi-arrow-clockwise" :class="{ spinning: loading }"></i>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -3633,154 +3762,212 @@ export default {
           </div>
         </div>
 
-        <!-- Filters and Export Section -->
-        <div class="control-box mb-4 text-center">
-          <!-- Collapse/Expand Button -->
-          <div class="row mb-2">
-            <div class="col-12 text-end">
-              <button
-                class="btn btn-sm btn-outline-secondary rounded-pill"
-                @click="desktopFiltersCollapsed = !desktopFiltersCollapsed"
+        <!-- Filters Section -->
+        <div class="filters-container mb-4">
+          <!-- Desktop Filters Row -->
+          <div class="desktop-filters-row">
+            <!-- Date Inputs -->
+            <div class="filter-group">
+              <div class="input-with-info">
+                <div class="input-icon-wrapper">
+                  <i class="bi bi-calendar-event input-icon"></i>
+                  <input
+                    id="filterFromDateDesktop"
+                    class="form-control form-control-sm compact-date-input"
+                    type="date"
+                    v-model="dateFilterFrom"
+                    @change="loadLeads(true)"
+                  />
+                </div>
+                <Popper
+                  class="filter-info-tooltip dark"
+                  arrow
+                  :content="$t('leadPipeline.filterFromDate') || 'Data De'"
+                >
+                  <i class="bi bi-info-circle filter-info-icon"></i>
+                </Popper>
+              </div>
+            </div>
+            <div class="filter-group">
+              <div class="input-with-info">
+                <div class="input-icon-wrapper">
+                  <i class="bi bi-calendar-check input-icon"></i>
+                  <input
+                    id="filterToDateDesktop"
+                    class="form-control form-control-sm compact-date-input"
+                    type="date"
+                    v-model="dateFilterTo"
+                    @change="loadLeads(true)"
+                  />
+                </div>
+                <Popper
+                  class="filter-info-tooltip dark"
+                  arrow
+                  :content="$t('leadPipeline.filterToDate') || 'Data Até'"
+                >
+                  <i class="bi bi-info-circle filter-info-icon"></i>
+                </Popper>
+              </div>
+            </div>
+            <div class="filter-group-action">
+              <Popper
+                class="filter-info-tooltip dark"
+                arrow
+                :content="$t('leadPipeline.clearFilter') || 'Limpar Filtro'"
               >
-                <i class="bi" :class="desktopFiltersCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'"></i>
-                {{ desktopFiltersCollapsed ? $t('leadPipeline.showFilters') || 'Mostrar Filtros' : $t('leadPipeline.hideFilters') || 'Ocultar Filtros' }}
-              </button>
-            </div>
-          </div>
-
-          <div v-show="!desktopFiltersCollapsed">
-          <div class="row my-2 justify-content-center">
-            <div class="col-6 col-md-3">
-              <input
-                id="filterFromDateDesktop"
-                class="form-control metric-controls"
-                type="date"
-                v-model="dateFilterFrom"
-                @change="loadLeads(true)"
-                :placeholder="$t('leadPipeline.filterFromDate') || 'Data De'"
-              />
-            </div>
-            <div class="col-6 col-md-3">
-              <input
-                id="filterToDateDesktop"
-                class="form-control metric-controls"
-                type="date"
-                v-model="dateFilterTo"
-                @change="loadLeads(true)"
-                :placeholder="$t('leadPipeline.filterToDate') || 'Data Até'"
-              />
-            </div>
-            <div class="col-6 col-md-3">
-              <button
-                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2 w-100"
-                @click="resetDateFilters"
-                :disabled="loading"
-              >
-                <i class="bi bi-eraser-fill me-1"></i
-                >{{ $t('leadPipeline.clearFilter') || 'Limpar Filtro' }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Status Filters -->
-          <div class="row my-2">
-            <div class="col-12">
-              <label class="form-label small fw-bold mb-2">{{
-                $t('leadPipeline.filterByStatus') || 'Filtrar por Status'
-              }}</label>
-              <div class="d-flex flex-wrap gap-2 justify-content-center">
                 <button
+                  class="btn btn-sm btn-outline-dark clear-filter-btn"
+                  @click="resetDateFilters"
+                  :disabled="loading"
+                >
+                  <i class="bi bi-eraser-fill"></i>
+                </button>
+              </Popper>
+            </div>
+
+            <!-- Status Filter Section -->
+            <div class="desktop-filter-section">
+              <div class="filter-section-header">
+                <i class="bi bi-funnel-fill filter-section-icon-info"></i>
+                <span class="filter-section-label">Status</span>
+                <Popper
+                  class="filter-info-tooltip dark"
+                  arrow
+                  :content="$t('leadPipeline.filterByStatus') || 'Filtrar por Status'"
+                >
+                  <i class="bi bi-info-circle filter-info-icon"></i>
+                </Popper>
+              </div>
+              <div class="desktop-filter-buttons">
+                <Popper
                   v-for="status in Object.values(LEAD_STATUS)"
                   :key="status"
-                  class="btn btn-sm rounded-pill"
-                  :class="statusFilter.includes(status) ? 'btn-primary' : 'btn-outline-primary'"
-                  @click="toggleStatusFilter(status)"
+                  class="filter-info-tooltip dark"
+                  arrow
+                  :content="getStatusLabel(status)"
                 >
-                  {{ getStatusLabel(status) }}
-                </button>
+                  <button
+                    class="btn btn-sm filter-option-btn"
+                    :class="statusFilter.includes(status) ? 'btn-primary active' : 'btn-outline-primary'"
+                    @click="toggleStatusFilter(status)"
+                  >
+                    <i :class="getStatusIcon(status)"></i>
+                  </button>
+                </Popper>
               </div>
             </div>
-          </div>
 
-          <!-- Time Indicator Filters -->
-          <div class="row my-2">
-            <div class="col-12">
-              <label class="form-label small fw-bold mb-2">{{
-                $t('leadPipeline.filterByTime') || 'Filtrar por Tempo desde Criação'
-              }}</label>
-              <div class="d-flex flex-wrap gap-2 justify-content-center">
-                <button
-                  class="btn btn-sm rounded-pill"
-                  :class="
-                    timeIndicatorFilter.includes('green') ? 'btn-success' : 'btn-outline-success'
-                  "
-                  @click="toggleTimeIndicatorFilter('green')"
+            <!-- Time Indicator Filter Section -->
+            <div class="col-auto">
+              <div class="desktop-filter-section">
+                <Popper
+                  class="filter-tooltip dark"
+                  arrow
+                  :content="$t('leadPipeline.filterByTime') || 'Filtrar por Tempo desde Criação'"
                 >
-                  <i class="bi bi-circle-fill me-1" style="font-size: 0.6rem"></i>
-                  {{ getTimeIndicatorLabel('green') }}
-                </button>
-                <button
-                  class="btn btn-sm rounded-pill"
-                  :class="
-                    timeIndicatorFilter.includes('yellow') ? 'btn-warning' : 'btn-outline-warning'
-                  "
-                  @click="toggleTimeIndicatorFilter('yellow')"
-                >
-                  <i class="bi bi-circle-fill me-1" style="font-size: 0.6rem"></i>
-                  {{ getTimeIndicatorLabel('yellow') }}
-                </button>
-                <button
-                  class="btn btn-sm rounded-pill"
-                  :class="timeIndicatorFilter.includes('red') ? 'btn-danger' : 'btn-outline-danger'"
-                  @click="toggleTimeIndicatorFilter('red')"
-                >
-                  <i class="bi bi-circle-fill me-1" style="font-size: 0.6rem"></i>
-                  {{ getTimeIndicatorLabel('red') }}
-                </button>
+                  <span class="filter-section-icon">
+                    <i class="bi bi-clock-fill"></i>
+                  </span>
+                </Popper>
+                <div class="desktop-filter-buttons">
+                  <Popper
+                    class="filter-tooltip dark"
+                    arrow
+                    :content="getTimeIndicatorLabel('green')"
+                  >
+                    <button
+                      class="btn btn-sm compact-filter-btn"
+                      :class="timeIndicatorFilter.includes('green') ? 'btn-success' : 'btn-outline-success'"
+                      @click="toggleTimeIndicatorFilter('green')"
+                    >
+                      <i class="bi bi-circle-fill" style="color: #28a745; font-size: 0.8rem"></i>
+                    </button>
+                  </Popper>
+                  <Popper
+                    class="filter-tooltip dark"
+                    arrow
+                    :content="getTimeIndicatorLabel('yellow')"
+                  >
+                    <button
+                      class="btn btn-sm compact-filter-btn"
+                      :class="timeIndicatorFilter.includes('yellow') ? 'btn-warning' : 'btn-outline-warning'"
+                      @click="toggleTimeIndicatorFilter('yellow')"
+                    >
+                      <i class="bi bi-circle-fill" style="color: #ffc107; font-size: 0.8rem"></i>
+                    </button>
+                  </Popper>
+                  <Popper
+                    class="filter-tooltip dark"
+                    arrow
+                    :content="getTimeIndicatorLabel('red')"
+                  >
+                    <button
+                      class="btn btn-sm compact-filter-btn"
+                      :class="timeIndicatorFilter.includes('red') ? 'btn-danger' : 'btn-outline-danger'"
+                      @click="toggleTimeIndicatorFilter('red')"
+                    >
+                      <i class="bi bi-circle-fill" style="color: #dc3545; font-size: 0.8rem"></i>
+                    </button>
+                  </Popper>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Temperature Filters -->
-          <div class="row my-2">
-            <div class="col-12">
-              <label class="form-label small fw-bold mb-2">{{
-                $t('leadPipeline.filterByTemperature') || 'Filtrar por Prioridade'
-              }}</label>
-              <div class="d-flex flex-wrap gap-2 justify-content-center">
-                <button
-                  class="btn btn-sm rounded-pill"
-                  :class="
-                    temperatureFilter.includes('QUENTE') ? 'btn-danger' : 'btn-outline-danger'
-                  "
-                  @click="toggleTemperatureFilter('QUENTE')"
+            <!-- Temperature Filter Section -->
+            <div class="col-auto">
+              <div class="desktop-filter-section">
+                <Popper
+                  class="filter-tooltip dark"
+                  arrow
+                  :content="$t('leadPipeline.filterByTemperature') || 'Filtrar por Prioridade'"
                 >
-                  <i class="bi bi-thermometer-half me-1"></i>
-                  {{ getTemperatureLabel('QUENTE') }}
-                </button>
-                <button
-                  class="btn btn-sm rounded-pill"
-                  :class="
-                    temperatureFilter.includes('MORNO') ? 'btn-success' : 'btn-outline-success'
-                  "
-                  @click="toggleTemperatureFilter('MORNO')"
-                >
-                  <i class="bi bi-thermometer-half me-1"></i>
-                  {{ getTemperatureLabel('MORNO') }}
-                </button>
-                <button
-                  class="btn btn-sm rounded-pill"
-                  :class="
-                    temperatureFilter.includes('FRIO') ? 'btn-primary' : 'btn-outline-primary'
-                  "
-                  @click="toggleTemperatureFilter('FRIO')"
-                >
-                  <i class="bi bi-thermometer-half me-1"></i>
-                  {{ getTemperatureLabel('FRIO') }}
-                </button>
+                  <span class="filter-section-icon">
+                    <i class="bi bi-thermometer-half"></i>
+                  </span>
+                </Popper>
+                <div class="desktop-filter-buttons">
+                  <Popper
+                    class="filter-tooltip dark"
+                    arrow
+                    :content="getTemperatureLabel('QUENTE')"
+                  >
+                    <button
+                      class="btn btn-sm compact-filter-btn"
+                      :class="temperatureFilter.includes('QUENTE') ? 'btn-danger' : 'btn-outline-danger'"
+                      @click="toggleTemperatureFilter('QUENTE')"
+                    >
+                      <i class="bi bi-thermometer-high"></i>
+                    </button>
+                  </Popper>
+                  <Popper
+                    class="filter-tooltip dark"
+                    arrow
+                    :content="getTemperatureLabel('MORNO')"
+                  >
+                    <button
+                      class="btn btn-sm compact-filter-btn"
+                      :class="temperatureFilter.includes('MORNO') ? 'btn-success' : 'btn-outline-success'"
+                      @click="toggleTemperatureFilter('MORNO')"
+                    >
+                      <i class="bi bi-thermometer-half"></i>
+                    </button>
+                  </Popper>
+                  <Popper
+                    class="filter-tooltip dark"
+                    arrow
+                    :content="getTemperatureLabel('FRIO')"
+                  >
+                    <button
+                      class="btn btn-sm compact-filter-btn"
+                      :class="temperatureFilter.includes('FRIO') ? 'btn-primary' : 'btn-outline-primary'"
+                      @click="toggleTemperatureFilter('FRIO')"
+                    >
+                      <i class="bi bi-thermometer-snow"></i>
+                    </button>
+                  </Popper>
+                </div>
               </div>
             </div>
-          </div>
           </div>
         </div>
 
@@ -6948,5 +7135,381 @@ export default {
 .lead-time-indicator .badge {
   padding: 0.25rem 0.5rem;
   font-size: 0.7rem;
+}
+
+/* Enhanced Filter Styles */
+.filters-container {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  padding: 0.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.filters-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.desktop-filters-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.filter-group-action {
+  display: flex;
+  align-items: center;
+}
+
+.input-with-info {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  position: relative;
+}
+
+.input-icon-wrapper {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  font-size: 0.85rem;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.compact-date-input {
+  padding-left: 1.8rem !important;
+  padding-right: 0.5rem !important;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  transition: all 0.2s ease;
+  font-size: 0.8rem;
+  height: 32px;
+  width: 125px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.compact-date-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0, 74, 173, 0.25);
+  border-color: var(--azul-turno, #004aad);
+  transform: translateY(-1px);
+}
+
+.clear-filter-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.clear-filter-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.filter-info-icon {
+  color: #6c757d;
+  font-size: 0.8rem;
+  cursor: help;
+  transition: color 0.2s ease;
+}
+
+.filter-info-icon:hover {
+  color: var(--azul-turno, #004aad);
+}
+
+/* Filter Sections */
+.filter-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-right: 0.5rem;
+}
+
+.filter-section-icon-info {
+  color: var(--azul-turno, #004aad);
+  font-size: 0.8rem;
+}
+
+.filter-section-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.filter-buttons-group {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-option-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  padding: 0 !important;
+  border: 1px solid;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.filter-option-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.filter-option-btn.active {
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.filter-option-btn i {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Desktop Filter Sections */
+.desktop-filter-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  background: rgba(248, 249, 250, 0.8);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.desktop-filter-section:hover {
+  background: rgba(248, 249, 250, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.desktop-filter-buttons {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+  .filters-container {
+    padding: 1rem;
+  }
+
+  .filters-row {
+    gap: 0.75rem;
+  }
+
+  .filter-section-header {
+    margin-right: 0.5rem;
+  }
+
+  .filter-section-label {
+    font-size: 0.8rem;
+  }
+
+  .compact-date-input {
+    width: 130px;
+    height: 34px;
+    font-size: 0.85rem;
+  }
+
+  .filter-option-btn,
+  .clear-filter-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .filter-option-btn i {
+    font-size: 0.85rem;
+  }
+
+  .filter-buttons-group {
+    gap: 0.375rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .filters-container {
+    padding: 0.75rem;
+  }
+
+  .filters-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .filter-section-header {
+    justify-content: center;
+  }
+
+  .compact-date-input {
+    width: 120px;
+    height: 32px;
+    font-size: 0.8rem;
+    padding-left: 2rem !important;
+  }
+
+  .input-icon {
+    font-size: 0.8rem;
+    left: 0.5rem;
+  }
+
+  .filter-option-btn,
+  .clear-filter-btn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Mobile Action Buttons */
+.mobile-action-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+.mobile-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.mobile-action-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-action-btn i {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.mobile-action-btn:disabled {
+  opacity: 0.6;
+  transform: none !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Mobile Filter Toggle and Collapsible Styles */
+.mobile-filter-toggle {
+  border-radius: 20px !important;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.15);
+}
+
+.mobile-filter-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.25);
+}
+
+.mobile-filter-toggle i {
+  font-size: 0.75rem;
+}
+
+.mobile-filter-toggle span {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.mobile-filters-wrapper {
+  transition: all 0.3s ease;
+  overflow: hidden;
+  max-height: 500px;
+}
+
+.mobile-filters-wrapper.collapsed {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.mobile-filters-content {
+  padding-top: 1rem;
+}
+
+/* Spinning animation for refresh button */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Enhanced Tooltip Styles */
+:deep(.filter-info-tooltip) {
+  z-index: 1050 !important;
+}
+
+:deep(.filter-info-tooltip.dark .popper) {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  color: white;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  max-width: 220px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:deep(.filter-info-tooltip.dark .popper[data-popper-placement^="top"] > .popper__arrow) {
+  border-top-color: #2d3748;
+}
+
+:deep(.filter-info-tooltip.dark .popper[data-popper-placement^="bottom"] > .popper__arrow) {
+  border-bottom-color: #2d3748;
+}
+
+:deep(.filter-info-tooltip.dark .popper[data-popper-placement^="left"] > .popper__arrow) {
+  border-left-color: #2d3748;
+}
+
+:deep(.filter-info-tooltip.dark .popper[data-popper-placement^="right"] > .popper__arrow) {
+  border-right-color: #2d3748;
 }
 </style>

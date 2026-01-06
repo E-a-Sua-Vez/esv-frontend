@@ -20,6 +20,8 @@ export default {
     toggles: { type: Object, default: () => ({}) },
     errors: { type: Object, default: () => ({}) },
     locale: { type: String, default: 'es' },
+    businessId: { type: String, default: '' },
+    businessLogo: { type: String, default: '' },
     onInitializedSpecificCalendar: { type: Function, default: null },
     onInitializedPersonalizedHours: { type: Function, default: null },
   },
@@ -44,6 +46,8 @@ export default {
       :categories="categories"
       :toggles="toggles"
       :is-add="false"
+      :business-id="businessId || localCommerce.businessId"
+      :business-logo="businessLogo"
       :errors="{
         nameError: false,
         keyNameError: false,

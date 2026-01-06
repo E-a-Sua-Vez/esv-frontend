@@ -42,6 +42,7 @@ export default {
       commerce: {},
       getNumberRemote: {},
       extendedEntity: false,
+      brokenLogos: new Set(),
     });
 
     onBeforeMount(async () => {
@@ -147,6 +148,36 @@ export default {
 
     const hasMultipleCommerces = () => state.commerces && state.commerces.length > 1;
 
+    const handleLogoError = (commerceId, isBusiness = false) => {
+      if (isBusiness) {
+        state.brokenLogos.add('business_logo');
+      } else {
+        state.brokenLogos.add(commerceId);
+      }
+    };
+
+    const getCommerceLogo = (commerce) => {
+      if (!commerce) return null;
+      // Si el logo del commerce está roto, devolver null para que intente el business logo
+      if (state.brokenLogos.has(commerce.id)) {
+        return null;
+      }
+      return commerce.logo || null;
+    };
+
+    const getBusinessLogo = () => {
+      if (state.brokenLogos.has('business_logo')) {
+        return null;
+      }
+      return state.business?.logo || null;
+    };
+
+    const hasValidLogo = (commerce) => {
+      const commerceLogo = getCommerceLogo(commerce);
+      const businessLogo = getBusinessLogo();
+      return commerceLogo || businessLogo;
+    };
+
     return {
       state,
       id,
@@ -165,6 +196,10 @@ export default {
       validateCaptchaError,
       showDetails,
       hasMultipleCommerces,
+      handleLogoError,
+      getCommerceLogo,
+      getBusinessLogo,
+      hasValidLogo,
     };
   },
 };
@@ -214,8 +249,23 @@ export default {
               aria-expanded="false"
             >
               <div class="unit-select-content">
-                <div class="unit-select-logo" v-if="state.commerce.logo">
-                  <img :src="state.commerce.logo" class="unit-logo-img" />
+                <div class="unit-select-logo">
+                  <!-- Try commerce logo first -->
+                  <img
+                    v-if="getCommerceLogo(state.commerce)"
+                    :src="getCommerceLogo(state.commerce)"
+                    class="unit-logo-img"
+                    @error="handleLogoError(state.commerce.id)"
+                  />
+                  <!-- Fallback to business logo -->
+                  <img
+                    v-else-if="getBusinessLogo()"
+                    :src="getBusinessLogo()"
+                    class="unit-logo-img"
+                    @error="handleLogoError(null, true)"
+                  />
+                  <!-- Final fallback to icon -->
+                  <i v-else class="bi bi-shop unit-logo-fallback"></i>
                 </div>
                 <div class="unit-select-info">
                   <span class="unit-select-name">{{ state.commerce.tag }}</span>
@@ -233,8 +283,23 @@ export default {
             <ul class="dropdown-menu unit-dropdown" aria-labelledby="select-commerce">
               <li v-for="com in state.commerces" :key="com.id" :value="com" class="list-item">
                 <div class="unit-option" @click="selectCommerce(com)">
-                  <div class="unit-option-logo" v-if="com.logo">
-                    <img :src="com.logo" class="unit-logo-img" />
+                  <div class="unit-option-logo">
+                    <!-- Try commerce logo first -->
+                    <img
+                      v-if="getCommerceLogo(com)"
+                      :src="getCommerceLogo(com)"
+                      class="unit-logo-img"
+                      @error="handleLogoError(com.id)"
+                    />
+                    <!-- Fallback to business logo -->
+                    <img
+                      v-else-if="getBusinessLogo()"
+                      :src="getBusinessLogo()"
+                      class="unit-logo-img"
+                      @error="handleLogoError(null, true)"
+                    />
+                    <!-- Final fallback to icon -->
+                    <i v-else class="bi bi-shop unit-logo-fallback"></i>
                   </div>
                   <div class="unit-option-info">
                     <div class="unit-option-name">{{ com.tag }}</div>
@@ -254,8 +319,23 @@ export default {
           <!-- Single unit display (no dropdown) -->
           <div v-else class="unit-select-single">
             <div class="unit-select-content">
-              <div class="unit-select-logo" v-if="state.commerce.logo">
-                <img :src="state.commerce.logo" class="unit-logo-img" />
+              <div class="unit-select-logo">
+                <!-- Try commerce logo first -->
+                <img
+                  v-if="getCommerceLogo(state.commerce)"
+                  :src="getCommerceLogo(state.commerce)"
+                  class="unit-logo-img"
+                  @error="handleLogoError(state.commerce.id)"
+                />
+                <!-- Fallback to business logo -->
+                <img
+                  v-else-if="getBusinessLogo()"
+                  :src="getBusinessLogo()"
+                  class="unit-logo-img"
+                  @error="handleLogoError(null, true)"
+                />
+                <!-- Final fallback to icon -->
+                <i v-else class="bi bi-shop unit-logo-fallback"></i>
               </div>
               <div class="unit-select-info">
                 <span class="unit-select-name">{{ state.commerce.tag }}</span>
@@ -548,6 +628,17 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.unit-logo-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--azul-turno);
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.1) 0%, rgba(0, 194, 203, 0.1) 100%);
 }
 
 .unit-select-info {

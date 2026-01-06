@@ -13,6 +13,7 @@ import RolPermissionsAdmin from '../../components/permissions/RolPermissionsAdmi
 import PlanPermissionsAdmin from '../../components/permissions/PlanPermissionsAdmin.vue';
 import CollaboratorPermissionsAdmin from '../../components/permissions/CollaboratorPermissionsAdmin.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 
 export default {
   name: 'BusinessPermissionsAdmin',
@@ -27,6 +28,7 @@ export default {
     PlanPermissionsAdmin,
     CollaboratorPermissionsAdmin,
     ComponentMenu,
+    DesktopPageHeader,
   },
   async setup() {
     const router = useRouter();
@@ -95,6 +97,7 @@ export default {
       <div class="content text-center">
         <CommerceLogo
           :src="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
           :loading="loading"
         ></CommerceLogo>
         <ComponentMenu
@@ -123,30 +126,15 @@ export default {
           <Spinner :show="loading"></Spinner>
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
-        <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
-          <div class="col-auto desktop-logo-wrapper">
-            <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || commerce?.logo || state.business?.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="commerce?.logo || state.business?.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
-            <ComponentMenu
-              :title="$t(`businessPermissionsAdmin.title`)"
-              :toggles="state.toggles"
-              component-name="businessPermissionsAdmin"
-              @goBack="goBack"
-            >
-            </ComponentMenu>
-          </div>
-        </div>
+        <DesktopPageHeader
+          :logo="commerce?.logo || state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('businessPermissionsAdmin.title')"
+          :toggles="state.toggles"
+          component-name="businessPermissionsAdmin"
+          @go-back="goBack"
+        />
         <div id="businessPermissionsAdmin" class="">
           <div id="users" class="row" v-if="state.toggles['permissions.collaborators.view']">
             <CollaboratorPermissionsAdmin></CollaboratorPermissionsAdmin>
