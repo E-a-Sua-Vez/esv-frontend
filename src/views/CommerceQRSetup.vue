@@ -168,7 +168,7 @@ export default {
       <!-- Commerce Logo -->
       <div class="logo-container mb-2" v-if="!loading">
         <CommerceLogo
-          :src="state.commerce?.logo"
+          :commerce-id="state.commerce?.id"
           :business-id="state.commerce?.businessId"
           :loading="loading"
           :large-size="true"
@@ -184,8 +184,13 @@ export default {
       <!-- Commerce Info Card -->
       <div class="commerce-info-card mb-3" v-if="!loading && state.commerce && state.commerce.tag">
         <div class="commerce-info-card-content">
-          <div class="commerce-info-logo" v-if="state.commerce.logo">
-            <img :src="state.commerce.logo" class="commerce-logo-img" />
+          <div class="commerce-info-logo">
+            <CommerceLogo
+              :commerce-id="state.commerce?.id"
+              :business-id="state.commerce?.businessId"
+              :loading="loading"
+              class="commerce-logo-img"
+            />
           </div>
           <div class="commerce-info-details">
             <span class="commerce-info-name">{{ state.commerce.tag }}</span>

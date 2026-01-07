@@ -876,7 +876,7 @@ export default {
       <div class="row justify-content-center">
         <div class="col-12 col-lg-8">
           <CommerceLogo
-            :src="state.commerce?.logo"
+            :commerce-id="state.commerce?.id"
             :business-id="state.commerce?.businessId"
             :loading="loading"
             :large-size="true"

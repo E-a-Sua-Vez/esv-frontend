@@ -1186,6 +1186,7 @@ export default {
           </div>
         </div>
       </div>
+
       <!-- Desktop Layout -->
       <div class="d-none d-lg-block desktop-dashboard-layout">
         <div id="page-header" class="text-center">

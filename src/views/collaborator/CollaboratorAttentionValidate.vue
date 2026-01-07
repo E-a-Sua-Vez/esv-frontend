@@ -41,7 +41,6 @@ import {
   updatedAttentions,
 } from '../../application/firebase';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
-import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
 import AttentionNumber from '../../components/common/AttentionNumber.vue';
 import Message from '../../components/common/Message.vue';
@@ -49,6 +48,7 @@ import QR from '../../components/common/QR.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import ProductAttentionManagement from '../../components/products/domain/ProductAttentionManagement.vue';
 import PatientHistoryManagement from '../../components/patient-history/domain/PatientHistoryManagement.vue';
 import AttentionDetailsCard from '../../components/clients/common/AttentionDetailsCard.vue';
@@ -71,13 +71,13 @@ export default {
   components: {
     Message,
     QR,
-    CommerceLogo,
     QueueName,
     AttentionNumber,
     Spinner,
     Alert,
     ToggleCapabilities,
     ComponentMenu,
+    CommerceLogo,
     ProductAttentionManagement,
     PatientHistoryManagement,
     AttentionDetailsCard,
@@ -105,6 +105,7 @@ export default {
 
     // Use global commerce and module from store
     const globalCommerce = computed(() => store.getCurrentCommerce);
+    const business = computed(() => store.getCurrentBusiness);
     const module = computed(() => store.getCurrentModule);
 
     const state = reactive({
@@ -1587,7 +1588,11 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.commerce?.logo || state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :commerce-id="state.commerce?.id"
+          :business-id="state.business?.id"
+          :loading="loading"
+        />
         <ComponentMenu
           :title="`${$t(`collaboratorAttentionValidate.hello-user`)}, ${
             state.currentUser.alias || state.currentUser.name
@@ -2003,8 +2008,8 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <DesktopPageHeader
-          :logo="state.commerce?.logo || state.business?.logo"
-          :business-id="state.business?.id"
+          :commerce-id="state.commerce?.id"
+          :business-id="business?.id"
           :loading="loading"
           :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${state.currentUser.alias || state.currentUser.name}!`"
           :toggles="state.toggles"

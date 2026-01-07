@@ -64,18 +64,12 @@ export const addLeadContact = async (id, body) => {
   }
 
   try {
-    console.log('addLeadContact - Request:', {
-      url: `/${entity}/${id}/contact`,
-      body,
-    });
-
     const response = await requestBackend.post(
       `/${entity}/${id}/contact`,
       body,
       await getHeaders()
     );
 
-    console.log('addLeadContact - Response:', response.data);
     return response.data;
   } catch (error) {
     console.error('addLeadContact - Error:', error);

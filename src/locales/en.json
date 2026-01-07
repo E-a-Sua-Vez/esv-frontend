@@ -53,7 +53,9 @@
     "retry": "Retry",
     "pending": "Pending",
     "viewDetails": "View Details",
-    "save": "Save"
+    "save": "Save",
+    "previous": "Previous",
+    "next": "Next"
   },
   "noResults": "😓 No Results",
   "lostConnection": "Lost your internet connection. Please check your connection and realod the page.",
@@ -5626,7 +5628,12 @@
         "message": "Your win rate is {rate}%. Consider improving lead qualification.",
         "action": "Focus on higher quality leads"
       }
-    }
+    },
+    "searchPlaceholder": "Search by name, company or email...",
+    "clearSearch": "Clear search",
+    "searchLeads": "Search Leads",
+    "showAll": "Show All",
+    "showLimited": "Show Limited (20 per page)"
   },
   "permissions": {
     "sections": {

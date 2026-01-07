@@ -1,10 +1,9 @@
 <template>
   <div>
     <div class="content text-center">
-      <!-- Commerce Logo - Only show if we have commerce logo, otherwise don't show any logo -->
+      <!-- Commerce Logo -->
       <CommerceLogo
-        v-if="commerce && commerce.logo"
-        :src="commerce?.logo"
+        :commerce-id="commerce?.id"
         :business-id="commerce?.businessId"
         :loading="false"
       ></CommerceLogo>

@@ -312,9 +312,7 @@ export default {
       handleScroll();
 
       // Load client photo and permissions if in client portal
-      if (isClientPortalRoute.value) {
-        loadClientPortalPermissions();
-      }
+      // Eliminado: permisos ahora se actualizan vía watcher y localStorage
 
       // Update padding when header size changes
       updateMainContentPadding();
@@ -519,7 +517,7 @@ export default {
       () => router.currentRoute.value.path,
       (newPath) => {
         if (newPath.startsWith('/portal/') || newPath.startsWith('/public/portal/') || newPath.startsWith('/publico/portal/')) {
-          loadClientPortalPermissions();
+          // Eliminado: permisos ahora se actualizan vía watcher y localStorage
         } else {
           state.clientPortalPermissions = {};
         }
@@ -612,24 +610,26 @@ export default {
       }
     };
 
-    // Load client portal permissions
-    const loadClientPortalPermissions = async () => {
+    // Watcher para permisos en localStorage
+    const updateClientPortalPermissions = () => {
       try {
-        const permissions = await getClientPortalPermissions('client-portal', 'menu');
-        state.clientPortalPermissions = permissions;
-        console.log('Client portal permissions loaded in Header:', permissions);
+        const permissionsStr = localStorage.getItem('clientPortalPermissions');
+        if (permissionsStr) {
+          state.clientPortalPermissions = JSON.parse(permissionsStr);
+        }
       } catch (err) {
-        console.error('Error loading client portal permissions:', err);
-        // If permissions fail to load, default to all enabled to not block the client
-        state.clientPortalPermissions = {
-          'client-portal.menu.consents': true,
-          'client-portal.menu.telemedicine': true,
-          'client-portal.menu.profile': true,
-          'client-portal.menu.documents': true,
-          'client-portal.menu.history': true,
-        };
+        console.error('Header: Error leyendo permisos desde localStorage:', err);
       }
     };
+
+    // Actualizar permisos al montar y cuando cambien en localStorage
+    onMounted(() => {
+      updateClientPortalPermissions();
+      window.addEventListener('storage', updateClientPortalPermissions);
+    });
+    onBeforeUnmount(() => {
+      window.removeEventListener('storage', updateClientPortalPermissions);
+    });
 
     // Check if current route is a public commerce queue route
     const isPublicCommerceQueueRoute = () => {

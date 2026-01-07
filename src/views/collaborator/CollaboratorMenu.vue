@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
@@ -7,18 +7,17 @@ import { getValidatedPlanActivationByBusinessId } from '../../application/servic
 import { getCommerceById } from '../../application/services/commerce';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
-import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import PlanStatus from '../../components/plan/PlanStatus.vue';
 import WelcomeMenu from '../../components/common/WelcomeMenu.vue';
 import CollaboratorSpySection from '../../components/collaborator/CollaboratorSpySection.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import { getCollaboratorById } from '../../application/services/collaborator';
 
 export default {
   name: 'CollaboratorMenu',
   components: {
-    CommerceLogo,
     Message,
     Spinner,
     Alert,
@@ -26,6 +25,7 @@ export default {
     ToggleCapabilities,
     WelcomeMenu,
     CollaboratorSpySection,
+    CommerceLogo,
   },
   async setup() {
     const router = useRouter();
@@ -35,9 +35,12 @@ export default {
 
     const store = globalStore();
 
+    // Use global commerce and business from store
+    const commerce = computed(() => store.getCurrentCommerce);
+    const business = computed(() => store.getCurrentBusiness);
+
     const state = reactive({
       currentUser: {},
-      commerce: {},
       collaborator: {},
       manageSubMenuOption: false,
       collaboratorOptions: [
@@ -64,27 +67,43 @@ export default {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
         }
 
-        // Use commerce from store if available, otherwise fetch
-        const storeCommerce = store.getCurrentCommerce;
-        if (storeCommerce && storeCommerce.id) {
-          state.commerce = storeCommerce;
-        } else if (state.currentUser.commerceId) {
-          state.commerce = await getCommerceById(state.currentUser.commerceId);
-          store.setCurrentCommerce(state.commerce);
+        // Set initial commerce if not set - check both commerceId and commercesId
+        if (!commerce.value || !commerce.value.id) {
+          // First try commerceId (single commerce)
+          if (state.collaborator.commerceId) {
+            const initialCommerce = await getCommerceById(state.collaborator.commerceId);
+            if (initialCommerce && initialCommerce.id) {
+              await store.setCurrentCommerce(initialCommerce);
+            }
+          }
+          // If still no commerce, try commercesId (multiple commerces)
+          if (
+            (!commerce.value || !commerce.value.id) &&
+            state.collaborator.commercesId &&
+            state.collaborator.commercesId.length > 0
+          ) {
+            const firstCommerceId = state.collaborator.commercesId[0];
+            if (firstCommerceId) {
+              const initialCommerce = await getCommerceById(firstCommerceId);
+              if (initialCommerce && initialCommerce.id) {
+                await store.setCurrentCommerce(initialCommerce);
+              }
+            }
+          }
         }
 
-        // Only renew business if not already loaded
-        const currentBusiness = store.getCurrentBusiness;
-        if (currentBusiness && currentBusiness.id) {
-          state.business = currentBusiness;
-        } else {
-          state.business = await store.renewActualBusiness();
+        // Load business if not set
+        if (!business.value || !business.value.id) {
+          const businessData = await store.renewActualBusiness();
+          if (businessData && businessData.id) {
+            await store.setCurrentBusiness(businessData);
+          }
         }
 
         // Load plan activation and permissions in parallel
         const [planActivation, toggles] = await Promise.all([
-          state.commerce?.id
-            ? getValidatedPlanActivationByBusinessId(state.commerce.id, true)
+          commerce.value?.id
+            ? getValidatedPlanActivationByBusinessId(commerce.value?.id, true)
             : Promise.resolve({}),
           getPermissions('collaborator', 'main-menu'),
         ]);
@@ -105,9 +124,9 @@ export default {
         alertError.value = '';
         if (option) {
           if (option === 'queue-manage') {
-            router.push({ path: `/interno/commerce/${state.commerce.id}/colaborador/filas` });
+            router.push({ path: `/interno/commerce/${commerce.value?.id}/colaborador/filas` });
           } else if (option === 'booking-manage') {
-            router.push({ path: `/interno/commerce/${state.commerce.id}/colaborador/bookings` });
+            router.push({ path: `/interno/commerce/${commerce.value?.id}/colaborador/bookings` });
           } else if (option === 'dashboard') {
             router.push({ path: '/interno/colaborador/dashboard' });
           } else if (option === 'tracing') {
@@ -122,15 +141,15 @@ export default {
         alertError.value = error.message;
       }
     };
-    const isActiveBusiness = () => state.commerce && state.commerce.active === true;
+    const isActiveBusiness = () => commerce.value && commerce.value.active === true;
     const getCommerceLink = () => {
-      const commerceKeyName = state.commerce.keyName;
-      return `${import.meta.env.VITE_URL}/interno/comercio/${commerceKeyName}`;
+      const commerceKeyName = commerce.value?.keyName;
+      return commerceKeyName ? `${import.meta.env.VITE_URL}/interno/comercio/${commerceKeyName}` : '';
     };
 
     const getClientPortalLink = () => {
-      const commerceKeyName = state.commerce.keyName;
-      return `/public/portal/${commerceKeyName}/login`;
+      const commerceKeyName = commerce.value?.keyName;
+      return commerceKeyName ? `/public/portal/${commerceKeyName}/login` : '';
     };
 
     const onShowMobileMenuSide = () => {
@@ -145,6 +164,8 @@ export default {
 
     return {
       state,
+      commerce,
+      business,
       loading,
       alertError,
       isActiveBusiness,
@@ -162,7 +183,13 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none mobile-menu-layout">
       <div class="content text-center">
-        <CommerceLogo :src="state.commerce.logo || state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
+        <div class="mobile-commerce-logo">
+          <CommerceLogo
+            :business-id="business?.id"
+            :commerce-id="commerce?.id"
+            :loading="loading"
+          />
+        </div>
         <WelcomeMenu
           :title="$t(`collaboratorMenu.welcome`)"
           :name="state.currentUser.name"
@@ -276,7 +303,7 @@ export default {
               >
                 <CollaboratorSpySection
                   :show="true"
-                  :commerce="state.commerce"
+                  :commerce="commerce"
                   :collaborator="state.collaborator"
                 >
                 </CollaboratorSpySection>
@@ -298,13 +325,11 @@ export default {
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading || state.commerce.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="state.commerce.logo || $t('hubLogoBlanco')"
-                  loading="lazy"
+           <div id="commerce-logo-desktop">
+                <CommerceLogo
+                  :business-id="business?.id"
+                  :commerce-id="commerce?.id"
+                  :loading="loading"
                 />
               </div>
             </div>
@@ -400,7 +425,7 @@ export default {
           <div id="spy-side" class="col-lg-7 desktop-spy-column" v-if="!loading">
             <CollaboratorSpySection
               :show="true"
-              :commerce="state.commerce"
+              :commerce="commerce"
               :collaborator="state.collaborator"
             >
             </CollaboratorSpySection>
@@ -410,6 +435,7 @@ export default {
     </div>
   </div>
 </template>
+
 <style scoped>
 .choose-attention {
   padding-bottom: 1rem;

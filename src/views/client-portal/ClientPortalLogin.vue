@@ -3,15 +3,11 @@
     <div class="content text-center">
       <!-- Commerce Logo -->
       <CommerceLogo
-        v-if="commerce && commerce.logo"
-        :src="commerce.logo"
+        :commerce-id="commerce?.id"
+        :business-id="commerce?.businessId"
         :loading="false"
         :large-size="true"
-      ></CommerceLogo>
-      <CommerceLogo
-        v-else
-        :src="$t('logo')"
-        :large-size="true"
+        :fallback-src="$t('logo')"
       ></CommerceLogo>
 
       <div id="page-header" class="text-center mt-4" v-if="!authenticated">
@@ -24,7 +20,7 @@
       </div>
 
       <div class="login-container">
-        <form @submit.prevent="(e) => { console.log('🟢 Form submitted!', { codeRequested: codeRequested }); codeRequested ? validateCode() : requestCode(); }">
+        <form @submit.prevent="codeRequested ? validateCode() : requestCode()">
           <div class="modern-login-card text-center">
             <div class="login-card-content">
               <!-- Loading Commerce State -->
@@ -60,7 +56,6 @@
                 <div class="form-group">
                   <label for="idNumber" class="form-label">
                     {{ $t('clientPortal.login.idNumber') }}
-                    <span class="optional-badge">{{ $t('clientPortal.login.optional') }}</span>
                   </label>
                   <div class="input-wrapper">
                     <i class="bi bi-person-vcard input-icon"></i>
@@ -70,42 +65,6 @@
                       type="text"
                       class="form-control modern-input"
                       :placeholder="$t('clientPortal.login.idNumberPlaceholder')"
-                      :disabled="requesting"
-                    />
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label for="email" class="form-label">
-                    {{ $t('clientPortal.login.email') }}
-                    <span class="optional-badge">{{ $t('clientPortal.login.optional') }}</span>
-                  </label>
-                  <div class="input-wrapper">
-                    <i class="bi bi-envelope input-icon"></i>
-                    <input
-                      id="email"
-                      v-model="email"
-                      type="email"
-                      class="form-control modern-input"
-                      :placeholder="$t('clientPortal.login.emailPlaceholder')"
-                      :disabled="requesting"
-                    />
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label for="phone" class="form-label">
-                    {{ $t('clientPortal.login.phone') }}
-                    <span class="optional-badge">{{ $t('clientPortal.login.optional') }}</span>
-                  </label>
-                  <div class="input-wrapper">
-                    <i class="bi bi-telephone input-icon"></i>
-                    <input
-                      id="phone"
-                      v-model="phone"
-                      type="tel"
-                      class="form-control modern-input"
-                      :placeholder="$t('clientPortal.login.phonePlaceholder')"
                       :disabled="requesting"
                     />
                   </div>
@@ -130,7 +89,6 @@
                     type="submit"
                     class="btn btn-lg fw-bold btn-dark text-white rounded-pill modern-submit-btn"
                     :disabled="requesting || (!idNumber && !email && !phone) || !canRequestCode"
-                    @click="() => console.log('🟡 Button clicked!', { requesting: requesting, idNumber: idNumber, email: email, phone: phone })"
                   >
                     <span v-if="!requesting && canRequestCode">{{ $t('clientPortal.login.sendCode') }}</span>
                     <span v-else-if="!canRequestCode">
@@ -176,7 +134,7 @@
                       id="accessCode"
                       v-model="accessCode"
                       type="text"
-                      class="form-control modern-input"
+                      class="form-control modern-input text-center"
                       placeholder="XXXX-XXXX"
                       maxlength="8"
                       pattern="[A-Z0-9]{4,8}"
@@ -184,6 +142,7 @@
                       autocomplete="off"
                       :disabled="validating"
                       @input="accessCode = accessCode.toUpperCase().replace(/[^A-Z0-9]/g, '')"
+                      style="letter-spacing: 0.5rem; font-weight: bold; font-size: 1.5rem"
                     />
                   </div>
                   <div class="form-text mt-2">
@@ -267,7 +226,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, nextTick, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { VueRecaptcha } from 'vue-recaptcha';
@@ -444,10 +403,6 @@ export default {
           sentVia.value = response.sentVia;
           startCooldown(); // Start cooldown after successful request
           showCodeForm.value = false; // Reset this flag
-          // Não mostrar o código em produção, apenas para debug
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Access code:', response.code);
-          }
         } else {
           error.value = t('clientPortal.login.errorSendingCode');
         }
@@ -484,6 +439,7 @@ export default {
         if (response && response.valid && response.sessionToken) {
           // Salvar token de sessão
           localStorage.setItem('clientPortalSessionToken', response.sessionToken);
+          localStorage.setItem('clientPortalSessionExpiresAt', response.expiresAt);
           localStorage.setItem('clientPortalSessionExpiresAt', response.expiresAt);
 
           // Establecer userType como 'client' en store
@@ -549,6 +505,13 @@ export default {
       // Cargar datos del comercio
       await loadCommerce();
 
+      // Enfocar el input de idNumber después de que el componente se monte
+      await nextTick();
+      const idNumberInput = document.getElementById('idNumber');
+      if (idNumberInput) {
+        idNumberInput.focus();
+      }
+
       // Verificar se já existe sessão válida
       const existingToken = localStorage.getItem('clientPortalSessionToken');
       const expiresAt = localStorage.getItem('clientPortalSessionExpiresAt');
@@ -572,7 +535,6 @@ export default {
             return;
           } else {
             // Token inválido ou expirado por inatividade, limpar localStorage
-            console.log('Session expired or invalid, clearing localStorage');
             if (typeof localStorage !== 'undefined') {
               localStorage.removeItem('clientPortalSessionToken');
               localStorage.removeItem('clientPortalSessionExpiresAt');
@@ -589,6 +551,17 @@ export default {
             localStorage.removeItem('clientPortalClient');
             localStorage.removeItem('clientPortalCommerce');
           }
+        }
+      }
+    });
+
+    // Watcher para enfocar el input de código cuando se muestra
+    watch([codeRequested, showCodeForm], async (newValues) => {
+      if (newValues[0] || newValues[1]) {
+        await nextTick();
+        const accessCodeInput = document.getElementById('accessCode');
+        if (accessCodeInput) {
+          accessCodeInput.focus();
         }
       }
     });

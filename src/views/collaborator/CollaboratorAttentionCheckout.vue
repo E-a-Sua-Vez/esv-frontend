@@ -4,7 +4,11 @@
     <Alert :show="!!alertError" :stack="alertError"></Alert>
 
     <div class="content text-center">
-      <CommerceLogo :src="state.commerce?.logo || state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
+      <CommerceLogo
+        :commerce-id="commerce?.id"
+        :business-id="business?.id"
+        :loading="loading"
+      />
       <ComponentMenu
         :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
           state.currentUser?.alias || state.currentUser?.name
@@ -197,7 +201,6 @@ import {
 } from '../../application/firebase';
 import AttentionBasePage from '../../components/attentions/common/AttentionBasePage.vue';
 import ProductAttentionManagement from '../../components/products/domain/ProductAttentionManagement.vue';
-import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import Spinner from '../../components/common/Spinner.vue';
@@ -209,7 +212,6 @@ export default {
   components: {
     AttentionBasePage,
     ProductAttentionManagement,
-    CommerceLogo,
     QueueName,
     ComponentMenu,
     Spinner,
@@ -228,13 +230,15 @@ export default {
     const alertError = ref('');
     const statsUpdateTrigger = ref(0);
 
+    // Use global commerce and business from store
+    const commerce = computed(() => store.getCurrentCommerce);
+    const business = computed(() => store.getCurrentBusiness);
+
     const state = reactive({
       currentUser: {},
       attention: {},
       user: {},
       client: {},
-      business: {},
-      commerce: computed(() => store.getCurrentCommerce),
       queue: {},
       toggles: {},
       togglesStock: {},
@@ -482,25 +486,6 @@ export default {
       // Get processing attentions from Firebase listener (already filtered by date)
       const processingArray = processingAttentionsRef?.value || [];
       const processingList = Array.isArray(processingArray) ? processingArray : [];
-      console.log(
-        '🔍 [Checkout] updateAttentionDetails - Processing Array from Firebase:',
-        processingArray,
-      );
-      console.log(
-        '🔍 [Checkout] updateAttentionDetails - Processing List length:',
-        processingList.length,
-      );
-      if (processingList.length > 0) {
-        processingList.forEach((att, index) => {
-          console.log(`🔍 [Checkout] Processing Attention ${index}:`, {
-            id: att.id,
-            number: att.number,
-            status: att.status,
-            currentStage: att.currentStage,
-            queueId: att.queueId,
-          });
-        });
-      }
       state.queueProcessingDetails.splice(
         0,
         state.queueProcessingDetails.length,
@@ -567,15 +552,9 @@ export default {
             }
 
             // Initialize Firebase listeners for this queue
-            console.log('🔍 [Checkout] Initializing Firebase listeners for queue:', queueId);
             pendingAttentionsRef = updatedAvailableAttentions(queueId);
             processingAttentionsRef = updatedProcessingAttentions(queueId);
             terminatedAttentionsRef = updatedTerminatedAttentions(queueId);
-            console.log('🔍 [Checkout] Firebase listeners initialized:', {
-              pending: !!pendingAttentionsRef,
-              processing: !!processingAttentionsRef,
-              terminated: !!terminatedAttentionsRef,
-            });
 
             // Set up watchers that call updateAttentionDetails (watch the ref's value)
             pendingWatcherStop = watch(
@@ -620,7 +599,6 @@ export default {
 
         // Load critical data first (sequential)
         state.currentUser = await store.getCurrentUser;
-        state.business = await store.getActualBusiness();
         const attentionDetails = await getAttentionDetails(id, state.currentUser?.id);
 
         if (attentionDetails) {
@@ -696,8 +674,8 @@ export default {
 
           // Track access (non-blocking, non-critical)
           if (state.currentUser?.id) {
-            trackAttentionAccess(state.attention.id, state.currentUser.id).catch(error => {
-              console.log('Could not track attention access:', error);
+            trackAttentionAccess(state.attention.id, state.currentUser.id).catch(() => {
+              // Silent fail - not critical
             });
           }
         }

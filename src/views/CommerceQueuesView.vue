@@ -3540,7 +3540,7 @@ export default {
 <template>
   <div>
     <div class="content text-center">
-      <CommerceLogo :src="state.commerce?.logo" :business-id="state.commerce?.businessId" :loading="loading" :large-size="true"></CommerceLogo>
+      <CommerceLogo :commerce-id="state.commerce?.id" :business-id="state.commerce?.businessId" :loading="loading" :large-size="true"></CommerceLogo>
       <div id="page-header" class="text-center mt-2">
         <div class="welcome mb-2">
           <span>{{ $t('commerceQueuesView.welcome') }}</span>

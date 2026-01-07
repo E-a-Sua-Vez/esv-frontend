@@ -137,8 +137,6 @@ export default {
 
     // Initialize prescription data from attention prop
     const initializeFromAttention = async attentionValue => {
-      console.log('📋 Initializing prescription - attention prop:', attentionValue);
-
       // Always set commerce and client IDs first (these are always available from props)
       if (commerce.value?.id) state.prescription.commerceId = commerce.value.id;
       if (client.value?.id) state.prescription.clientId = client.value.id;
@@ -156,7 +154,6 @@ export default {
       // Set attention ID immediately if we have it
       if (attentionId) {
         state.prescription.attentionId = attentionId;
-        console.log('✅ Attention ID set from prop:', state.prescription.attentionId);
       }
 
       // Try to get doctor info from attention details
@@ -167,10 +164,8 @@ export default {
         typeof attentionValue === 'object' &&
         (!attentionValue?.collaboratorId || !attentionValue?.collaborator)
       ) {
-        console.log('🔄 Loading attention details for ID:', attentionId);
         try {
           attentionDetails = await getAttentionDetails(attentionId);
-          console.log('✅ Attention details loaded:', attentionDetails);
           // Ensure attentionId is set (in case getAttentionDetails succeeds but ID was missing)
           if (attentionDetails?.id) {
             state.prescription.attentionId = attentionDetails.id;
@@ -186,22 +181,13 @@ export default {
         state.prescription.doctorId = attentionDetails.collaboratorId;
         state.prescription.doctorName =
           attentionDetails?.collaborator?.name || attentionDetails?.collaborator?.alias || '';
-        console.log('👨‍⚕️ Doctor info set from attention:', {
-          doctorId: state.prescription.doctorId,
-          doctorName: state.prescription.doctorName,
-        });
       } else {
         // Fallback: Get current user from store (should be the collaborator creating the prescription)
-        console.log('🔄 No collaborator info in attention, using current user from store');
         try {
           const currentUser = await store.getCurrentUser;
           if (currentUser && currentUser.id) {
             state.prescription.doctorId = currentUser.id;
             state.prescription.doctorName = currentUser.name || currentUser.alias || '';
-            console.log('👨‍⚕️ Doctor info set from current user:', {
-              doctorId: state.prescription.doctorId,
-              doctorName: state.prescription.doctorName,
-            });
           } else {
             console.error('❌ No current user found in store');
           }
@@ -297,8 +283,6 @@ export default {
         // Add medication to list
         const medication = { ...state.currentMedication };
         state.prescription.medications.push(medication);
-        console.log('Medication added. Total medications:', state.prescription.medications.length);
-        console.log('Medications:', state.prescription.medications);
 
         // Check for interactions
         await checkInteractions();
@@ -380,16 +364,6 @@ export default {
     const createPrescriptionHandler = async () => {
       state.errors = [];
 
-      // Debug: Log current state
-      console.log('🔍 Validation check - attention prop:', attention.value);
-      console.log('🔍 Validation check - prescription state:', {
-        attentionId: state.prescription.attentionId,
-        doctorId: state.prescription.doctorId,
-        doctorName: state.prescription.doctorName,
-        commerceId: state.prescription.commerceId,
-        clientId: state.prescription.clientId,
-      });
-
       // Validate required fields
       if (!state.prescription.attentionId) {
         // Try to extract ID one more time before failing
@@ -401,7 +375,6 @@ export default {
         }
         if (attentionId) {
           state.prescription.attentionId = attentionId;
-          console.log('✅ Attention ID set during validation:', attentionId);
         } else {
           state.errors.push('ID de atención no disponible');
         }
@@ -431,9 +404,6 @@ export default {
           date: new Date().toISOString(),
           pdfTemplateId: state.pdfTemplate.selected,
         };
-        console.log('📤 Creating prescription with data:', prescriptionData);
-        console.log('💊 Medications array:', JSON.stringify(prescriptionData.medications, null, 2));
-        console.log('💊 Medications count:', prescriptionData.medications?.length || 0);
         const prescription = await createPrescription(prescriptionData);
         state.createdPrescription = prescription;
         state.showPdfActions = true;
@@ -563,7 +533,6 @@ export default {
 
     const handleSignatureVerified = result => {
       // Verification result is already shown in the component
-      console.log('Signature verification:', result);
     };
 
     const handleSignatureCancel = () => {
@@ -634,7 +603,6 @@ export default {
           }
           if (attentionId) {
             state.prescription.attentionId = attentionId;
-            console.log('✅ Attention ID set in sendData:', attentionId);
           }
         }
 
@@ -645,8 +613,6 @@ export default {
             .toString(36)
             .substr(2, 9)}`;
         }
-
-        console.log('💊 Sending prescription data:', state.prescription);
 
         if (typeof receiveData.value === 'function') {
           receiveData.value(state.prescription);

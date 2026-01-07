@@ -199,17 +199,7 @@ export default {
 
     // Initialize Firebase listeners for real-time updates (independent mode)
     initializeFirebaseListeners() {
-      console.log('🔍 [QueueAttentionDetails] initializeFirebaseListeners called', {
-        queueId: this.queue?.id,
-        hasExternalData: this.hasExternalData,
-        useFirebaseListeners: this.useFirebaseListeners,
-      });
-
       if (!this.queue?.id || this.hasExternalData) {
-        console.log('🔍 [QueueAttentionDetails] Skipping Firebase initialization:', {
-          noQueueId: !this.queue?.id,
-          hasExternalData: this.hasExternalData,
-        });
         return;
       }
 
@@ -224,24 +214,14 @@ export default {
         this.terminatedAttentionsRef._unsubscribe();
       }
 
-      console.log(
-        '🔍 [QueueAttentionDetails] Initializing Firebase listeners for queue:',
-        this.queue.id,
-      );
       // Initialize Firebase listeners
       this.pendingAttentionsRef = updatedAvailableAttentions(this.queue.id);
       this.processingAttentionsRef = updatedProcessingAttentions(this.queue.id);
       this.terminatedAttentionsRef = updatedTerminatedAttentions(this.queue.id);
-      console.log('🔍 [QueueAttentionDetails] Firebase listeners initialized:', {
-        pending: !!this.pendingAttentionsRef,
-        processing: !!this.processingAttentionsRef,
-        terminated: !!this.terminatedAttentionsRef,
-      });
 
       // Function to update internal state from Firebase listeners
       const updateFromFirebase = () => {
         if (!this.queue?.id) {
-          console.log('🔍 [QueueAttentionDetails] updateFromFirebase: No queue ID');
           return;
         }
 
@@ -259,23 +239,8 @@ export default {
         // Get processing attentions from Firebase
         const processingArray = this.processingAttentionsRef?.value || [];
         const processingList = Array.isArray(processingArray) ? processingArray : [];
-        console.log(
-          '🔍 [QueueAttentionDetails] updateFromFirebase - Processing Array:',
-          processingArray,
-        );
-        console.log(
-          '🔍 [QueueAttentionDetails] updateFromFirebase - Processing List length:',
-          processingList.length,
-        );
         if (processingList.length > 0) {
           processingList.forEach((att, idx) => {
-            console.log(`🔍 [QueueAttentionDetails] Processing Attention ${idx}:`, {
-              id: att.id,
-              number: att.number,
-              status: att.status,
-              currentStage: att.currentStage,
-              queueId: att.queueId,
-            });
           });
         }
         this.internalProcessing.splice(0, this.internalProcessing.length, ...processingList);
@@ -289,12 +254,6 @@ export default {
           return numB - numA;
         });
         this.internalTerminated.splice(0, this.internalTerminated.length, ...sortedTerminated);
-
-        console.log('🔍 [QueueAttentionDetails] updateFromFirebase - Final counts:', {
-          pending: this.internalPending.length,
-          processing: this.internalProcessing.length,
-          terminated: this.internalTerminated.length,
-        });
       };
 
       // Watch for changes in Firebase listeners
@@ -395,11 +354,6 @@ export default {
 
   mounted() {
     // Initialize Firebase listeners if queue is provided and no external data
-    console.log('🔍 [QueueAttentionDetails] mounted', {
-      queueId: this.queue?.id,
-      hasExternalData: this.hasExternalData,
-      useFirebaseListeners: this.useFirebaseListeners,
-    });
 
     if (this.useFirebaseListeners) {
       this.initializeFirebaseListeners();
@@ -411,7 +365,6 @@ export default {
       this.$nextTick(() => {
         setTimeout(() => {
           if (this.useFirebaseListeners && !this.pendingAttentionsRef) {
-            console.log('🔍 [QueueAttentionDetails] Retrying Firebase initialization after delay');
             this.initializeFirebaseListeners();
           }
         }, 500);

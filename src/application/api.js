@@ -9,13 +9,6 @@ const backendURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 const eventURL = import.meta.env.VITE_EVENT_URL || 'http://localhost:3001';
 const queryURL = import.meta.env.VITE_QUERY_URL || 'http://localhost:3003';
 
-// Log URLs in development for debugging
-if (import.meta.env.DEV) {
-  console.log('[API Config] Backend URL:', backendURL);
-  console.log('[API Config] Event URL:', eventURL);
-  console.log('[API Config] Query URL:', queryURL);
-}
-
 // HTTPS enforcement in production
 const validateHttps = url => {
   if (!url) return;

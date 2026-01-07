@@ -126,14 +126,6 @@ export default {
             }
             state.filteredCollaboratorQueues = groupedQueues.value['COLLABORATOR'];
             refresh(state.filteredCollaboratorQueues);
-
-            if (props.preselectedServiceId) {
-              console.log(
-                '[QueueForm] Filtered collaborators by preselectedServiceId:',
-                props.preselectedServiceId,
-                state.filteredCollaboratorQueues.length,
-              );
-            }
           }
         }
         loading.value = false;

@@ -56,14 +56,9 @@ export default {
                   receiveSelectedServices(state.selectedServices);
                 }
                 refresh(filteredServices);
-                console.log(
-                  '[ServiceForm] Filtered services to preselected service only:',
-                  filteredServices,
-                );
               } else {
                 state.services = queue.value.services;
                 refresh(queue.value.services);
-                console.log('[ServiceForm] Preselected service not found, showing all services');
               }
             } else {
               state.services = queue.value.services;

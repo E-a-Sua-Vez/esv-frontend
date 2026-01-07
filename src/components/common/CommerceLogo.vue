@@ -8,6 +8,7 @@ import { useRoute } from 'vue-router';
 
 export default {
   name: 'CommerceLogo',
+  inheritAttrs: false,
   components: { LogoSkeleton },
   props: {
     src: { type: String, default: undefined },
@@ -26,7 +27,9 @@ export default {
     const businessLogoUrl = ref(null);
     const businessLogoLoaded = ref(false);
     const businessLogoError = ref(false);
-    let cachedLogoBlobUrl = null;
+
+    // No cache needed - browser handles caching automatically
+    // and authenticated endpoints don't work with fetch() without credentials
 
     // Load commerce-specific logo
     const loadCommerceLogo = async () => {
@@ -35,13 +38,33 @@ export default {
       }
 
       try {
-        const logoMetadata = await getCommerceLogo(props.commerceId);
-        if (logoMetadata && logoMetadata.id) {
-          const url = await getCommerceLogoUrl(props.commerceId, logoMetadata.id);
-          if (url) {
-            logoUrl.value = url;
-            cachedLogoBlobUrl = url;
-            return true;
+        // First get the path from backend
+        const path = await getCommerceLogo(props.commerceId);
+        if (path) {
+          let logoId;
+          // Handle both relative paths and full URLs
+          if (path.startsWith('/')) {
+            // Relative path: /commerce-logos/commerceId/logoId
+            const parts = path.split('/');
+            if (parts.length === 4) {
+              logoId = parts[3];
+            }
+          } else if (path.startsWith('http')) {
+            // Full URL: http://localhost:3000/commerce-logos/commerceId/logoId
+            const url = new URL(path);
+            const parts = url.pathname.split('/');
+            if (parts.length === 4) {
+              logoId = parts[3];
+            }
+          }
+
+          if (logoId) {
+            // Use getCommerceLogoUrl to get blob URL with authentication
+            const blobUrl = await getCommerceLogoUrl(props.commerceId, logoId);
+            if (blobUrl) {
+              logoUrl.value = blobUrl;
+              return true;
+            }
           }
         }
       } catch (error) {
@@ -63,7 +86,6 @@ export default {
             const url = await getCommerceLogoUrl(commerceIdFromPath, logoId);
             if (url) {
               logoUrl.value = url;
-              cachedLogoBlobUrl = url;
               return true;
             }
           } catch (error) {
@@ -90,7 +112,6 @@ export default {
             const url = await getBusinessLogoUrl(businessIdFromPath, logoId);
             if (url) {
               logoUrl.value = url;
-              cachedLogoBlobUrl = url;
             } else {
               logoError.value = true;
             }
@@ -113,20 +134,38 @@ export default {
         logoLoading.value = true;
         logoError.value = false;
 
-        // Check if business has a custom logo
-        const logoMetadata = await getBusinessLogo(props.businessId);
+        // First get the path from backend
+        const path = await getBusinessLogo(props.businessId);
+        if (path) {
+          let logoId;
+          // Handle both relative paths and full URLs
+          if (path.startsWith('/')) {
+            // Relative path: /business-logos/businessId/logoId
+            const parts = path.split('/');
+            if (parts.length === 4) {
+              logoId = parts[3];
+            }
+          } else if (path.startsWith('http')) {
+            // Full URL: http://localhost:3000/business-logos/businessId/logoId
+            const url = new URL(path);
+            const parts = url.pathname.split('/');
+            if (parts.length === 4) {
+              logoId = parts[3];
+            }
+          }
 
-        if (logoMetadata && logoMetadata.id) {
-          // Get logo URL from S3
-          const url = await getBusinessLogoUrl(props.businessId, logoMetadata.id);
-          if (url) {
-            logoUrl.value = url;
-            cachedLogoBlobUrl = url;
+          if (logoId) {
+            // Use getBusinessLogoUrl to get blob URL with authentication
+            const blobUrl = await getBusinessLogoUrl(props.businessId, logoId);
+            if (blobUrl) {
+              logoUrl.value = blobUrl;
+            } else {
+              logoError.value = true;
+            }
           } else {
             logoError.value = true;
           }
         } else {
-          // No custom logo, use default
           logoError.value = true;
         }
       } catch (error) {
@@ -137,31 +176,21 @@ export default {
       }
     };
 
-    // Main logo loading function with commerce-first strategy
+    // Main logo loading function
     const loadLogo = async () => {
       logoLoading.value = true;
       logoError.value = false;
 
       try {
-        // Priority 1: Commerce logo path
-        if (props.src && props.src.startsWith('/commerce-logos/')) {
-          const loaded = await loadCommerceLogoFromPath();
-          if (loaded) return;
-        }
-
-        // Priority 2: Commerce-specific logo by commerceId
+        // If commerceId is provided, try to load commerce logo first
         if (props.commerceId) {
           const loaded = await loadCommerceLogo();
-          if (loaded) return;
+          if (loaded) {
+            return;
+          }
         }
 
-        // Priority 3: Business logo path
-        if (props.src && props.src.startsWith('/business-logos/')) {
-          await loadBusinessLogo();
-          return;
-        }
-
-        // Priority 4: Business logo by businessId
+        // Fallback to business logo if businessId is provided
         if (props.businessId) {
           await loadBusinessLogo();
           return;
@@ -208,42 +237,27 @@ export default {
       }
     };
 
-    // Watch for businessId, commerceId or src changes
+    // Watch for businessId or commerceId changes
     watch(
-      () => [props.businessId, props.commerceId, props.src],
-      ([newBusinessId, newCommerceId, newSrc]) => {
-        if (newCommerceId || newBusinessId || (newSrc && (newSrc.startsWith('/business-logos/') || newSrc.startsWith('/commerce-logos/')))) {
+      () => [props.commerceId, props.businessId],
+      ([newCommerceId, newBusinessId] = [], [oldCommerceId, oldBusinessId] = []) => {
+        if (newCommerceId || newBusinessId) {
           loadLogo();
         } else {
           logoUrl.value = null;
-          if (cachedLogoBlobUrl) {
-            URL.revokeObjectURL(cachedLogoBlobUrl);
-            cachedLogoBlobUrl = null;
-          }
-        }
-        // Preload business logo as fallback if businessId is available and we're using commerce logo
-        if (newBusinessId && (newCommerceId || (newSrc && newSrc.startsWith('/commerce-logos/')))) {
-          loadBusinessLogoAsFallback();
         }
       },
       { immediate: true },
     );
 
     onMounted(() => {
-      if (props.commerceId || props.businessId || (props.src && (props.src.startsWith('/business-logos/') || props.src.startsWith('/commerce-logos/')))) {
+      if (props.commerceId || props.businessId) {
         loadLogo();
-      }
-      // Preload business logo as fallback
-      if (props.businessId && (props.commerceId || (props.src && props.src.startsWith('/commerce-logos/')))) {
-        loadBusinessLogoAsFallback();
       }
     });
 
     onUnmounted(() => {
-      if (cachedLogoBlobUrl) {
-        URL.revokeObjectURL(cachedLogoBlobUrl);
-        cachedLogoBlobUrl = null;
-      }
+      // No cleanup needed for data URLs
     });
 
     return {
@@ -267,13 +281,13 @@ export default {
         'img-fluid',
         'logo',
         { 'desktop-size': desktopSize, 'large-size': largeSize, 'mx-auto': !desktopSize },
+        $attrs.class
       ]"
       :alt="this.$t('logoAlt')"
-      :src="logoError ? (businessLogoUrl || fallbackSrc || this.$t('logo')) : (logoUrl || (src === undefined ? this.$t('logo') : src))"
+      :src="logoUrl || this.$t('logo')"
       loading="lazy"
       width="250"
       height="230"
-      @error="handleImageError"
     />
   </div>
 </template>

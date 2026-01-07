@@ -171,13 +171,6 @@ export default {
       if (this.loadingAttentions) return;
       try {
         this.loadingAttentions = true;
-        console.log('[PackageDetailsCard] Loading attentions for package:', {
-          packageId: this.pkg.id,
-          hasAttentionsId: !!this.pkg.attentionsId,
-          attentionsIdLength: this.pkg.attentionsId?.length || 0,
-          clientId: this.pkg.clientId,
-          commerceId: this.commerce.id,
-        });
 
         // If package has attentionsId array, we can use it directly
         if (
@@ -185,7 +178,6 @@ export default {
           Array.isArray(this.pkg.attentionsId) &&
           this.pkg.attentionsId.length > 0
         ) {
-          console.log('[PackageDetailsCard] Using attentionsId array:', this.pkg.attentionsId);
           // Load attentions by IDs
           const attentionPromises = this.pkg.attentionsId.map(id =>
             getAttentionsDetails(
@@ -213,12 +205,7 @@ export default {
               .then(res => {
                 const att = res?.[0] || null;
                 if (att) {
-                  console.log('[PackageDetailsCard] Loaded attention by ID:', {
-                    attentionId: id,
-                    found: !!att,
-                    packageId: att?.packageId,
-                    status: att?.status,
-                  });
+
                 }
                 return att;
               })
@@ -229,20 +216,9 @@ export default {
           );
           const attentions = await Promise.all(attentionPromises);
           this.packageAttentions = attentions.filter(att => att !== null);
-          console.log('[PackageDetailsCard] Loaded attentions from attentionsId:', {
-            requested: this.pkg.attentionsId.length,
-            loaded: this.packageAttentions.length,
-            attentions: this.packageAttentions.map(att => ({
-              id: att.attentionId || att.id,
-              status: att.status,
-              packageId: att.packageId,
-            })),
-          });
+
         } else {
           // Fallback: load all attentions for client and filter by packageId
-          console.log(
-            '[PackageDetailsCard] Loading all attentions for client and filtering by packageId',
-          );
           const allAttentions = await getAttentionsDetails(
             this.commerce.id,
             undefined, // from
@@ -265,65 +241,19 @@ export default {
             undefined, // userId
             this.pkg.clientId // clientId
           );
-          console.log('[PackageDetailsCard] All attentions loaded:', {
-            total: allAttentions?.length || 0,
-            packageId: this.pkg.id,
-            sampleAttentions: allAttentions?.slice(0, 3).map(att => ({
-              id: att.attentionId || att.id,
-              packageId: att.packageId,
-              status: att.status,
-            })),
-          });
+
           // Filter attentions that belong to this package
           // Attentions have a direct property named packageId
-          console.log('[PackageDetailsCard] Filtering attentions:', {
-            packageId: this.pkg.id,
-            packageIdType: typeof this.pkg.id,
-            totalAttentions: allAttentions?.length || 0,
-            allPackageIds: allAttentions?.map(att => ({
-              attentionId: att.attentionId || att.id,
-              packageId: att.packageId,
-              packageIdType: typeof att.packageId,
-              status: att.status,
-            })),
-          });
+
           this.packageAttentions = (allAttentions || []).filter(att => {
             // Use String() to ensure both are strings for comparison
             const attPackageId = String(att.packageId || '').trim();
             const pkgId = String(this.pkg.id || '').trim();
             const matches = attPackageId === pkgId && attPackageId !== '';
             if (att.packageId || this.pkg.id) {
-              console.log('[PackageDetailsCard] Checking attention:', {
-                attentionId: att.attentionId || att.id,
-                attPackageId: att.packageId,
-                attPackageIdString: attPackageId,
-                packageId: this.pkg.id,
-                packageIdString: pkgId,
-                matches,
-                strictEqual: attPackageId === pkgId,
-                bothNotEmpty: attPackageId !== '' && pkgId !== '',
-              });
+
             }
             return matches;
-          });
-          console.log('[PackageDetailsCard] Filtered package attentions:', {
-            count: this.packageAttentions.length,
-            packageId: this.pkg.id,
-            attentions: this.packageAttentions.map(att => ({
-              id: att.attentionId || att.id,
-              status: att.status,
-              packageId: att.packageId,
-            })),
-          });
-          console.log('[PackageDetailsCard] pendingAttentions computed will have:', {
-            total: this.packageAttentions.length,
-            valid: this.packageAttentions.filter(
-              att =>
-                att.status === 'PENDING' ||
-                att.status === 'PROCESSING' ||
-                att.status === 'TERMINATED',
-            ).length,
-            allStatuses: this.packageAttentions.map(att => att.status),
           });
         }
       } catch (error) {
@@ -387,15 +317,6 @@ export default {
           this.packageBookings = (allBookings || []).filter(
             booking => booking.packageId === this.pkg.id
           );
-          console.log('[PackageDetailsCard] Filtered package bookings:', {
-            count: this.packageBookings.length,
-            packageId: this.pkg.id,
-            bookings: this.packageBookings.map(book => ({
-              id: book.bookingId || book.id,
-              status: book.status,
-              packageId: book.packageId,
-            })),
-          });
         }
       } catch (error) {
         console.error('Error loading package bookings:', error);

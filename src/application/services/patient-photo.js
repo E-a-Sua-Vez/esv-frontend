@@ -5,6 +5,45 @@ import { requestBackend, getHeaders } from '../api';
  * Handles uploading, retrieving, and managing patient photos
  */
 
+/**
+ * Get appropriate headers for authentication
+ * Uses client portal token if available, otherwise falls back to regular auth
+ */
+const getAuthHeaders = async () => {
+  const clientPortalToken = localStorage.getItem('clientPortalSessionToken');
+  if (clientPortalToken) {
+    return { headers: { Authorization: `Bearer ${clientPortalToken}` } };
+  }
+  // Fallback to regular authentication
+  return await getHeaders();
+};
+
+/**
+ * Get appropriate headers for file uploads
+ * Uses client portal token if available, otherwise falls back to regular auth
+ */
+const getUploadHeaders = async () => {
+  const clientPortalToken = localStorage.getItem('clientPortalSessionToken');
+  const baseHeaders = {
+    'Content-Type': 'multipart/form-data',
+  };
+
+  if (clientPortalToken) {
+    baseHeaders.Authorization = `Bearer ${clientPortalToken}`;
+    return { headers: baseHeaders };
+  }
+
+  // Fallback to regular authentication
+  const regularHeaders = await getHeaders();
+  return {
+    ...regularHeaders,
+    headers: {
+      ...regularHeaders.headers,
+      ...baseHeaders,
+    },
+  };
+};
+
 // In-memory cache for patient photos
 const photoCache = {
   metadata: new Map(), // commerceId_clientId -> photo metadata
@@ -67,13 +106,12 @@ export const uploadPatientPhoto = async (commerceId, clientId, photoData) => {
     formData.append('photoType', 'patient_profile');
     formData.append('uploadDate', new Date().toISOString());
 
+    const headers = await getUploadHeaders();
     const response = await requestBackend.post(
       `/patient-photos/${commerceId}/${clientId}`,
       formData,
       {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        ...headers,
         timeout: 30000, // 30 seconds timeout for photo upload
       },
     );
@@ -98,8 +136,8 @@ export const getPatientPhoto = async (commerceId, clientId) => {
   }
 
   try {
-    // Debug auth headers
-    const headers = await getHeaders();
+    // Use appropriate authentication headers
+    const headers = await getAuthHeaders();
     const response = await requestBackend.get(`/patient-photos/${commerceId}/${clientId}`, headers);
 
     // Store in cache
@@ -137,8 +175,8 @@ export const getPatientPhotoUrl = async (commerceId, clientId, photoId) => {
   }
 
   try {
-    // Debug auth headers
-    const headers = await getHeaders();
+    // Use appropriate authentication headers
+    const headers = await getAuthHeaders();
 
     // Make an authenticated request to get the photo blob
     const response = await requestBackend.get(
@@ -186,8 +224,8 @@ export const getPatientPhotoThumbnailUrl = async (commerceId, clientId, photoId)
   }
 
   try {
-    // Debug auth headers
-    const headers = await getHeaders();
+    // Use appropriate authentication headers
+    const headers = await getAuthHeaders();
 
     // Make an authenticated request to get the thumbnail blob
     const response = await requestBackend.get(
@@ -213,8 +251,8 @@ export const getPatientPhotoThumbnailUrl = async (commerceId, clientId, photoId)
 // Delete patient photo
 export const deletePatientPhoto = async (commerceId, clientId, photoId) => {
   try {
-    // Get auth headers
-    const headers = await getHeaders();
+    // Use appropriate authentication headers
+    const headers = await getAuthHeaders();
 
     const response = await requestBackend.delete(
       `/patient-photos/${commerceId}/${clientId}/${photoId}`,

@@ -169,7 +169,6 @@ export default {
 
     const createNewAttention = () => {
       // Redirigir al mini sitio público del comercio para crear una nueva reserva
-      console.log('Commerce data for minisite:', props.commerce);
 
       // Intentar usar keyName primero, si no está disponible usar el commerceSlug de la URL
       let commerceIdentifier = props.commerce?.keyName;
@@ -181,7 +180,6 @@ export default {
 
       if (commerceIdentifier) {
         const minisiteUrl = `${import.meta.env.VITE_URL}/publico/comercio/${commerceIdentifier}/filas`;
-        console.log('Opening minisite URL:', minisiteUrl);
         window.open(minisiteUrl, '_blank');
       } else {
         console.error('Cannot open minisite: no commerce identifier available');

@@ -8,17 +8,10 @@ import { requestBackend, getHeaders } from '../api';
 // Upload business logo (from file upload)
 export const uploadBusinessLogo = async (businessId, logoData) => {
   try {
-    console.log('🏢 BusinessLogo: Starting upload with data:', {
-      businessId,
-      hasFile: !!logoData.file,
-      filename: logoData.filename,
-    });
-
     const formData = new FormData();
 
     // Add logo file
     if (logoData.file) {
-      console.log('🏢 BusinessLogo: Adding file to FormData');
       formData.append('logo', logoData.file, logoData.filename);
     } else {
       throw new Error('No logo data provided');
@@ -29,7 +22,6 @@ export const uploadBusinessLogo = async (businessId, logoData) => {
     formData.append('logoType', 'business_logo');
     formData.append('uploadDate', new Date().toISOString());
 
-    console.log('🏢 BusinessLogo: Sending request to backend...');
     const response = await requestBackend.post(`/business-logos/${businessId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -37,7 +29,6 @@ export const uploadBusinessLogo = async (businessId, logoData) => {
       timeout: 30000, // 30 seconds timeout for logo upload
     });
 
-    console.log('🏢 BusinessLogo: Upload successful:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error uploading business logo:', error);
@@ -45,21 +36,24 @@ export const uploadBusinessLogo = async (businessId, logoData) => {
   }
 };
 
-// Get business logo metadata
+// Get business logo URL
 export const getBusinessLogo = async businessId => {
   try {
-    console.log('🏢 BusinessLogo Frontend: Requesting logo metadata for:', { businessId });
-
     const headers = await getHeaders();
-    console.log('🏢 BusinessLogo Frontend: Auth headers:', headers);
 
     const response = await requestBackend.get(`/business-logos/${businessId}`);
-    console.log('🏢 BusinessLogo Frontend: Response received:', response.data);
-    return response.data;
+    const relativePath = response.data;
+
+    // If backend returns a relative path, construct full URL
+    if (relativePath && relativePath.startsWith('/')) {
+      const backendURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+      return `${backendURL.replace(/\/$/, '')}${relativePath}`;
+    }
+
+    return relativePath || null;
   } catch (error) {
     if (error.response?.status === 404) {
       // No logo found - this is normal for businesses without custom logos
-      console.log('🏢 BusinessLogo Frontend: No logo found (404)');
       return null;
     }
     if (error.response?.status === 401) {
@@ -73,7 +67,6 @@ export const getBusinessLogo = async businessId => {
 // Get business logo URL for display
 export const getBusinessLogoUrl = async (businessId, logoId) => {
   if (!businessId || !logoId) {
-    console.warn('🔍 BusinessLogo: Missing parameters for logo URL:', { businessId, logoId });
     return null;
   }
 
@@ -83,6 +76,7 @@ export const getBusinessLogoUrl = async (businessId, logoId) => {
     // Make an authenticated request to get the logo blob
     const response = await requestBackend.get(`/business-logos/${businessId}/${logoId}`, {
       responseType: 'blob',
+      ...headers,
     });
 
     // Create a blob URL that can be used in img src
@@ -106,13 +100,11 @@ export const getBusinessLogoUrl = async (businessId, logoId) => {
 // Get business logo thumbnail URL
 export const getBusinessLogoThumbnailUrl = async (businessId, logoId) => {
   if (!businessId || !logoId) {
-    console.warn('🔍 BusinessLogo: Missing parameters for thumbnail URL:', { businessId, logoId });
     return null;
   }
 
   try {
     const headers = await getHeaders();
-    console.log('🏢 BusinessLogo: Thumbnail auth headers:', headers);
 
     // Make an authenticated request to get the thumbnail blob
     const response = await requestBackend.get(`/business-logos/${businessId}/${logoId}/thumbnail`, {
@@ -124,7 +116,6 @@ export const getBusinessLogoThumbnailUrl = async (businessId, logoId) => {
       type: response.headers['content-type'] || 'image/jpeg',
     });
     const url = URL.createObjectURL(blob);
-    console.log('🔍 BusinessLogo: Generated authenticated thumbnail URL');
     return url;
   } catch (error) {
     if (error.response?.status === 401) {

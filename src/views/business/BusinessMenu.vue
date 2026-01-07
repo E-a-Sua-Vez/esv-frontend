@@ -195,7 +195,7 @@ export default {
       <!-- Mobile/Tablet Layout -->
       <div class="d-block d-lg-none mobile-menu-layout">
         <div class="text-center">
-          <CommerceLogo :src="state.business?.logo" :loading="loading"></CommerceLogo>
+          <CommerceLogo :business-id="state.business?.id" :loading="loading"></CommerceLogo>
           <WelcomeMenu
             :name="state.currentUser.name"
             :toggles="state.toggles"
@@ -384,7 +384,7 @@ export default {
         </div>
         <div class="row align-items-center mb-1 desktop-header-row">
           <div class="col-auto desktop-logo-wrapper">
-            <CommerceLogo :src="state.business?.logo" :loading="loading" />
+            <CommerceLogo :business-id="state.business?.id" :loading="loading" />
           </div>
           <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
             <WelcomeMenu

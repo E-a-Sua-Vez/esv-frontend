@@ -56,7 +56,9 @@
     "pending": "Pendiente",
     "viewDetails": "Ver Detalles",
     "remove": "Eliminar",
-    "save": "Guardar"
+    "save": "Guardar",
+    "previous": "Anterior",
+    "next": "Siguiente"
   },
   "yes": "Sí",
   "YES": "Sí",
@@ -5747,7 +5749,12 @@
         "message": "Tu tasa de cierre es {rate}%. Considera mejorar la calificación de leads.",
         "action": "Enfócate en leads de mayor calidad"
       }
-    }
+    },
+    "searchPlaceholder": "Buscar por nombre, empresa o email...",
+    "clearSearch": "Limpiar búsqueda",
+    "searchLeads": "Buscar Leads",
+    "showAll": "Mostrar Todos",
+    "showLimited": "Mostrar Limitado (20 por página)"
   },
   "permissions": {
     "sections": {

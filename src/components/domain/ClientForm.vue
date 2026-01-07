@@ -444,15 +444,6 @@ export default {
           state.newUser.healthAgreementId =
             healthAgreementId.value != 'undefined' ? healthAgreementId.value : '';
         }
-
-        // ✅ Debug: Log birthday and origin updates
-        console.log('🔍 ClientForm - watch updated:', {
-          birthdayProp: birthday.value,
-          originProp: origin.value,
-          stateBirthday: state.newUser.birthday,
-          stateOrigin: state.newUser.origin,
-          birthdayInput: state.birthdayInput,
-        });
       },
       { deep: true, immediate: true },
     );

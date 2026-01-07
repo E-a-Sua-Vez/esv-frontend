@@ -139,9 +139,6 @@ export function updatedProcessingAttentions(queueId) {
   today.setHours(0, 0, 0, 0);
   const dateToRequest = Timestamp.fromDate(today);
 
-  console.log('🔍 [updatedProcessingAttentions] Initializing listener for queueId:', queueId);
-  console.log('🔍 [updatedProcessingAttentions] Date filter:', dateToRequest.toDate());
-
   // Query with single orderBy to avoid composite index requirements
   // We'll sort by number in JavaScript after fetching
   const attentionQuery = query(
@@ -155,10 +152,6 @@ export function updatedProcessingAttentions(queueId) {
   const unsubscribe = onSnapshot(
     attentionQuery,
     snapshot => {
-      console.log(
-        '🔍 [updatedProcessingAttentions] Snapshot received, docs count:',
-        snapshot.docs.length,
-      );
       const mappedDocs = snapshot.docs.map(doc => {
         const data = doc.data();
         return {
@@ -177,19 +170,6 @@ export function updatedProcessingAttentions(queueId) {
         const numB = b.number || 0;
         return numA - numB;
       });
-      console.log('🔍 [updatedProcessingAttentions] Mapped attentions:', mappedDocs.length);
-      if (mappedDocs.length > 0) {
-        mappedDocs.forEach((att, idx) => {
-          console.log(`🔍 [updatedProcessingAttentions] Attention ${idx}:`, {
-            id: att.id,
-            number: att.number,
-            status: att.status,
-            currentStage: att.currentStage,
-            queueId: att.queueId,
-            createdAt: att.createdAt,
-          });
-        });
-      }
       attentions.value = mappedDocs;
     },
     error => {

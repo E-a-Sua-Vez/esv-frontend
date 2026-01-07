@@ -4,7 +4,11 @@
     <Alert :show="!!alertError" :stack="alertError"></Alert>
 
     <div class="content text-center">
-      <CommerceLogo :src="state.commerce?.logo || state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
+      <CommerceLogo
+        :commerce-id="state.commerce?.id"
+        :business-id="state.business?.id"
+        :loading="loading"
+      />
       <ComponentMenu
         :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
           state.currentUser?.alias || state.currentUser?.name
@@ -307,7 +311,6 @@ import {
 } from '../../application/firebase';
 import AttentionStepBar from '../../components/attentions/common/AttentionStepBar.vue';
 import AttentionTimeline from '../../components/attentions/common/AttentionTimeline.vue';
-import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
 import AttentionNumber from '../../components/common/AttentionNumber.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
@@ -320,7 +323,6 @@ export default {
   components: {
     AttentionStepBar,
     AttentionTimeline,
-    CommerceLogo,
     QueueName,
     AttentionNumber,
     ComponentMenu,
@@ -339,13 +341,16 @@ export default {
     const alertError = ref('');
     const statsUpdateTrigger = ref(0);
 
+    // Use global commerce and business from store
+    const commerce = computed(() => store.getCurrentCommerce);
+    const business = computed(() => store.getCurrentBusiness);
+
     const state = reactive({
       currentUser: {},
       attention: {},
       user: {},
       client: {},
       business: {},
-      commerce: computed(() => store.getCurrentCommerce),
       queue: {},
       toggles: {},
       queueEstimatedDuration: null,
@@ -1123,25 +1128,6 @@ export default {
       // Get processing attentions from Firebase listener (already filtered by date)
       const processingArray = processingAttentionsRef?.value || [];
       const processingList = Array.isArray(processingArray) ? processingArray : [];
-      console.log(
-        '🔍 [Terminated] updateAttentionDetails - Processing Array from Firebase:',
-        processingArray,
-      );
-      console.log(
-        '🔍 [Terminated] updateAttentionDetails - Processing List length:',
-        processingList.length,
-      );
-      if (processingList.length > 0) {
-        processingList.forEach((att, index) => {
-          console.log(`🔍 [Terminated] Processing Attention ${index}:`, {
-            id: att.id,
-            number: att.number,
-            status: att.status,
-            currentStage: att.currentStage,
-            queueId: att.queueId,
-          });
-        });
-      }
       state.queueProcessingDetails.splice(
         0,
         state.queueProcessingDetails.length,
@@ -1210,15 +1196,9 @@ export default {
             }
 
             // Initialize Firebase listeners for this queue
-            console.log('🔍 [Terminated] Initializing Firebase listeners for queue:', queueId);
             pendingAttentionsRef = updatedAvailableAttentions(queueId);
             processingAttentionsRef = updatedProcessingAttentions(queueId);
             terminatedAttentionsRef = updatedTerminatedAttentions(queueId);
-            console.log('🔍 [Terminated] Firebase listeners initialized:', {
-              pending: !!pendingAttentionsRef,
-              processing: !!processingAttentionsRef,
-              terminated: !!terminatedAttentionsRef,
-            });
 
             // Watch for changes in Firebase listeners - watch directly the ref value
             pendingWatcherStop = watch(

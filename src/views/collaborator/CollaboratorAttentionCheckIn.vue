@@ -4,7 +4,11 @@
     <Alert :show="!!alertError" :stack="alertError"></Alert>
 
     <div class="content text-center">
-      <CommerceLogo :src="state.commerce?.logo || state.business?.logo" :loading="loading"></CommerceLogo>
+      <CommerceLogo
+        :commerce-id="state.commerce?.id"
+        :business-id="state.business?.id"
+        :loading="loading"
+      />
       <ComponentMenu
         :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
           state.currentUser?.alias || state.currentUser?.name
@@ -260,7 +264,6 @@ import {
 import { getFormPersonalizedByCommerceId } from '../../application/services/form-personalized';
 import { getConsentStatus } from '../../application/services/consent';
 import AttentionBasePage from '../../components/attentions/common/AttentionBasePage.vue';
-import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import Spinner from '../../components/common/Spinner.vue';
@@ -273,7 +276,6 @@ export default {
   name: 'CollaboratorAttentionCheckIn',
   components: {
     AttentionBasePage,
-    CommerceLogo,
     QueueName,
     ComponentMenu,
     Spinner,
@@ -292,13 +294,16 @@ export default {
     const alertError = ref('');
     const statsUpdateTrigger = ref(0);
 
+    // Use global commerce and business from store
+    const commerce = computed(() => store.getCurrentCommerce);
+    const business = computed(() => store.getCurrentBusiness);
+
     const state = reactive({
       currentUser: {},
       attention: {},
       user: {},
       client: {},
       business: {},
-      commerce: computed(() => store.getCurrentCommerce),
       queue: {},
       toggles: {},
       queueEstimatedDuration: null,
@@ -423,16 +428,8 @@ export default {
     // Helper function to validate attention status/stage and redirect if needed
     const validateAndRedirect = (attention, commerceOverride = null) => {
       if (!attention || !attention.id) {
-        console.log('[CheckIn] No attention or attention.id, skipping validation');
         return false;
       }
-
-      console.log('[CheckIn] Validating attention:', {
-        id: attention.id,
-        status: attention.status,
-        currentStage: attention.currentStage,
-        hasCommerce: !!commerceOverride || !!state.commerce || !!attention.commerce,
-      });
 
       // Use commerceOverride if provided, otherwise use state.commerce, fallback to attention.commerce
       const commerce = commerceOverride || state.commerce || attention.commerce;
@@ -447,7 +444,6 @@ export default {
         attention.status === 'USER_CANCELLED';
 
       if (isTerminated) {
-        console.log('[CheckIn] Attention is terminated, redirecting to terminated page');
         router.push({ path: `/interno/colaborador/atencion/${id}/terminated` });
         return true;
       }
@@ -455,60 +451,46 @@ export default {
       // PRIORITY: Check basic status first, even without commerce
       // This ensures PROCESSING status always redirects, regardless of commerce availability
       if (attention.status === 'PROCESSING') {
-        console.log('[CheckIn] Status is PROCESSING, redirecting to atender (basic status check)');
         router.push({ path: `/interno/colaborador/atencion/${id}/atender` });
         return true;
       }
 
       // If no commerce available, we've already checked basic status above
       if (!commerce) {
-        console.log('[CheckIn] No commerce available, basic status check completed');
         return false;
       }
 
       const isStagesEnabled = getActiveFeature(commerce, 'attention-stages-enabled', 'PRODUCT');
       const isCheckoutEnabled = getActiveFeature(commerce, 'attention-checkout-enabled', 'PRODUCT');
 
-      console.log('[CheckIn] Features:', { isStagesEnabled, isCheckoutEnabled });
-
       if (isStagesEnabled && attention.currentStage) {
         // Validate stage for check-in page
         if (attention.currentStage !== 'CHECK_IN') {
-          console.log('[CheckIn] Stage is not CHECK_IN, currentStage:', attention.currentStage);
           // Stage changed, redirect accordingly
           if (
             ['PRE_CONSULTATION', 'CONSULTATION', 'POST_CONSULTATION'].includes(
               attention.currentStage
             )
           ) {
-            console.log('[CheckIn] Redirecting to atender page (stage-based)');
             router.push({ path: `/interno/colaborador/atencion/${id}/atender` });
             return true;
           } else if (isCheckoutEnabled && attention.currentStage === 'CHECKOUT') {
-            console.log('[CheckIn] Redirecting to checkout page');
             router.push({ path: `/interno/colaborador/atencion/${id}/checkout` });
             return true;
           } else if (attention.currentStage === 'TERMINATED') {
-            console.log('[CheckIn] Redirecting to terminated page (stage-based)');
             router.push({ path: `/interno/colaborador/atencion/${id}/terminated` });
             return true;
           }
-        } else {
-          console.log('[CheckIn] Stage is CHECK_IN, validation passed');
         }
       } else if (!isStagesEnabled) {
         // Traditional mode: check status
         // For check-in page, must be PENDING
         // Note: PROCESSING status is already handled above, so this is just for other statuses
         if (attention.status !== 'PENDING') {
-          console.log('[CheckIn] Traditional mode, status is not PENDING:', attention.status);
           if (attention.status === 'TERMINATED' || attention.status === 'RATED') {
-            console.log('[CheckIn] Redirecting to terminated page (traditional mode)');
             router.push({ path: `/interno/colaborador/atencion/${id}/terminated` });
             return true;
           }
-        } else {
-          console.log('[CheckIn] Traditional mode, status is PENDING, validation passed');
         }
       }
 
@@ -519,42 +501,20 @@ export default {
     watch(
       () => firebaseAttentions.value,
       async (newAttentions, oldAttentions) => {
-        console.log('[CheckIn] Firebase watcher triggered', {
-          newAttentions,
-          oldAttentions,
-          isArray: Array.isArray(newAttentions),
-          length: newAttentions?.length,
-        });
-
         if (newAttentions && Array.isArray(newAttentions) && newAttentions.length > 0) {
           const firebaseAttention = newAttentions[0];
           // Update attention with Firebase data
           if (firebaseAttention && firebaseAttention.id) {
-            console.log('[CheckIn] Firebase attention received:', {
-              id: firebaseAttention.id,
-              status: firebaseAttention.status,
-              currentStage: firebaseAttention.currentStage,
-              previousStatus: state.attention?.status,
-              previousStage: state.attention?.currentStage,
-            });
-
             // Check if status or stage actually changed to avoid unnecessary redirects
             const statusChanged = firebaseAttention.status !== state.attention?.status;
             const stageChanged = firebaseAttention.currentStage !== state.attention?.currentStage;
 
             if (statusChanged || stageChanged) {
-              console.log('[CheckIn] Status or stage changed, validating for redirect', {
-                statusChanged,
-                stageChanged,
-              });
-
               // Get commerce for validation (use state.commerce, fallback to firebaseAttention.commerce)
               const commerceForValidation =
                 state.commerce || firebaseAttention.commerce || store.getCurrentCommerce;
               // Validate and redirect if needed BEFORE updating state
-              console.log('[CheckIn] Firebase watcher - Validating attention for redirect');
               if (validateAndRedirect(firebaseAttention, commerceForValidation)) {
-                console.log('[CheckIn] Firebase watcher - Validation triggered redirect, stopping');
                 return; // Stop here if redirecting
               }
             }
@@ -574,12 +534,6 @@ export default {
           } else {
             console.warn('[CheckIn] Firebase attention missing id:', firebaseAttention);
           }
-        } else {
-          console.log('[CheckIn] Firebase watcher - No valid attentions in array', {
-            hasNewAttentions: !!newAttentions,
-            isArray: Array.isArray(newAttentions),
-            length: newAttentions?.length,
-          });
         }
       },
       { immediate: true, deep: true }
@@ -627,15 +581,9 @@ export default {
             }
 
             // Initialize Firebase listeners for this queue
-            console.log('🔍 [CheckIn] Initializing Firebase listeners for queue:', queueId);
             pendingAttentionsRef = updatedAvailableAttentions(queueId);
             processingAttentionsRef = updatedProcessingAttentions(queueId);
             terminatedAttentionsRef = updatedTerminatedAttentions(queueId);
-            console.log('🔍 [CheckIn] Firebase listeners initialized:', {
-              pending: !!pendingAttentionsRef,
-              processing: !!processingAttentionsRef,
-              terminated: !!terminatedAttentionsRef,
-            });
 
             // Function to update attention details from Firebase listeners (same as CollaboratorQueueAttentions)
             const updateAttentionDetails = () => {
@@ -667,25 +615,6 @@ export default {
               // Get processing attentions from Firebase listener (already filtered by date)
               const processingArray = processingAttentionsRef?.value || [];
               const processingList = Array.isArray(processingArray) ? processingArray : [];
-              console.log(
-                '🔍 [CheckIn] updateAttentionDetails - Processing Array from Firebase:',
-                processingArray,
-              );
-              console.log(
-                '🔍 [CheckIn] updateAttentionDetails - Processing List length:',
-                processingList.length,
-              );
-              if (processingList.length > 0) {
-                processingList.forEach((att, index) => {
-                  console.log(`🔍 [CheckIn] Processing Attention ${index}:`, {
-                    id: att.id,
-                    number: att.number,
-                    status: att.status,
-                    currentStage: att.currentStage,
-                    queueId: att.queueId,
-                  });
-                });
-              }
               state.queueProcessingDetails.splice(
                 0,
                 state.queueProcessingDetails.length,
@@ -763,13 +692,13 @@ export default {
 
         // Load critical data in parallel
         const currentUser = await store.getCurrentUser;
-        state.business = await store.getActualBusiness();
         const [toggles, attentionDetails] = await Promise.all([
           getPermissions('collaborator'),
           getAttentionDetails(id, currentUser?.id),
         ]);
 
         state.currentUser = currentUser;
+        state.business = await store.getActualBusiness();
         state.toggles = toggles;
 
         if (attentionDetails) {
@@ -825,13 +754,10 @@ export default {
             // Now that commerce is loaded, validate and redirect if needed
             // Use store commerce or attentionDetails commerce for validation
             const commerceForValidation = store.getCurrentCommerce || attentionDetails.commerce;
-            console.log('[CheckIn] onBeforeMount - Validating attention after commerce load');
             if (validateAndRedirect(attentionDetails, commerceForValidation)) {
-              console.log('[CheckIn] onBeforeMount - Validation triggered redirect, stopping');
               loading.value = false;
               return; // Stop here if redirecting
             }
-            console.log('[CheckIn] onBeforeMount - Validation passed, continuing');
           } else {
             // No commerce in attentionDetails, validate with what we have
             if (validateAndRedirect(attentionDetails)) {

@@ -8,18 +8,10 @@ import { requestBackend, getHeaders } from '../api';
 // Upload commerce logo (from file upload)
 export const uploadCommerceLogo = async (commerceId, businessId, logoData) => {
   try {
-    console.log('🏪 CommerceLogo: Starting upload with data:', {
-      commerceId,
-      businessId,
-      hasFile: !!logoData.file,
-      filename: logoData.filename,
-    });
-
     const formData = new FormData();
 
     // Add logo file
     if (logoData.file) {
-      console.log('🏪 CommerceLogo: Adding file to FormData');
       formData.append('logo', logoData.file, logoData.filename);
     } else {
       throw new Error('No logo data provided');
@@ -31,7 +23,6 @@ export const uploadCommerceLogo = async (commerceId, businessId, logoData) => {
     formData.append('logoType', 'commerce_logo');
     formData.append('uploadDate', new Date().toISOString());
 
-    console.log('🏪 CommerceLogo: Sending request to backend...');
     const response = await requestBackend.post(`/commerce-logos/${commerceId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -39,7 +30,6 @@ export const uploadCommerceLogo = async (commerceId, businessId, logoData) => {
       timeout: 30000, // 30 seconds timeout for logo upload
     });
 
-    console.log('🏪 CommerceLogo: Upload successful:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error uploading commerce logo:', error);
@@ -47,21 +37,24 @@ export const uploadCommerceLogo = async (commerceId, businessId, logoData) => {
   }
 };
 
-// Get commerce logo metadata
+// Get commerce logo URL
 export const getCommerceLogo = async commerceId => {
   try {
-    console.log('🏪 CommerceLogo Frontend: Requesting logo metadata for:', { commerceId });
-
     const headers = await getHeaders();
-    console.log('🏪 CommerceLogo Frontend: Auth headers:', headers);
 
     const response = await requestBackend.get(`/commerce-logos/${commerceId}`);
-    console.log('🏪 CommerceLogo Frontend: Response received:', response.data);
-    return response.data;
+    const relativePath = response.data;
+
+    // If backend returns a relative path, construct full URL
+    if (relativePath && relativePath.startsWith('/')) {
+      const backendURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+      return `${backendURL.replace(/\/$/, '')}${relativePath}`;
+    }
+
+    return relativePath || null;
   } catch (error) {
     if (error.response?.status === 404) {
       // No logo found - this is normal for commerces without custom logos
-      console.log('🏪 CommerceLogo Frontend: No logo found (404)');
       return null;
     }
     if (error.response?.status === 401) {
@@ -121,7 +114,6 @@ export const getCommerceLogoThumbnailUrl = async (commerceId, logoId) => {
       type: response.headers['content-type'] || 'image/jpeg',
     });
     const url = URL.createObjectURL(blob);
-    console.log('🔍 CommerceLogo: Generated authenticated thumbnail URL');
     return url;
   } catch (error) {
     if (error.response?.status === 401) {

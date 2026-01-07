@@ -1,18 +1,22 @@
 <template>
   <div>
     <div class="content text-center">
-      <div class="row align-items-center mb-1 desktop-header-row">
+      <div class="d-block d-lg-none">
+        <CommerceLogo
+          :commerce-id="commerce?.id"
+          :business-id="commerce?.businessId"
+          :loading="loading"
+        ></CommerceLogo>
+      </div>
+      <div class="row align-items-center mb-1 desktop-header-row d-none d-lg-flex">
         <div class="col-auto desktop-logo-wrapper">
           <div class="desktop-commerce-logo">
-            <div id="commerce-logo-desktop">
-              <img
-                v-if="!loading && commerce?.logo"
-                class="rounded img-fluid logo-desktop"
-                :alt="$t('logoAlt')"
-                :src="commerce.logo"
-                loading="lazy"
-              />
-            </div>
+            <CommerceLogo
+              :commerce-id="commerce?.id"
+              :business-id="commerce?.businessId"
+              :loading="loading"
+              class="logo-desktop"
+            />
           </div>
         </div>
         <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
@@ -24,6 +28,15 @@
             @goBack="goBack"
           />
         </div>
+      </div>
+      <div class="d-block d-lg-none">
+        <ComponentMenu
+          :title="$t('clientPortal.telemedicine.title')"
+          :toggles="toggles"
+          component-name="clientPortalTelemedicine"
+          :is-client-portal="true"
+          @goBack="goBack"
+        />
       </div>
 
       <!-- Loading State -->
@@ -339,7 +352,6 @@ export default {
       try {
         const clientPermissions = await getClientPortalPermissions('client-portal', 'telemedicine');
         permissions.value = clientPermissions;
-        console.log('Client telemedicine permissions loaded:', clientPermissions);
       } catch (err) {
         console.error('Error loading permissions:', err);
         // Permisos por defecto si falla

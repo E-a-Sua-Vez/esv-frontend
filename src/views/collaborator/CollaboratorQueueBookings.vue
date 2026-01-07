@@ -16,11 +16,11 @@ import {
 import { DateModel } from '../../shared/utils/date.model';
 import { updatedTodayAttentionsByCommerce } from '../../application/firebase';
 import Message from '../../components/common/Message.vue';
-import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import BookingCalendar from '../../components/bookings/domain/BookingCalendar.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import BookingDetailsCard from '../../components/clients/common/BookingDetailsCard.vue';
 import AttentionDetailsCard from '../../components/clients/common/AttentionDetailsCard.vue';
@@ -28,13 +28,13 @@ import AttentionDetailsCard from '../../components/clients/common/AttentionDetai
 export default {
   name: 'CollaboratorQueueBookings',
   components: {
-    CommerceLogo,
     Message,
     VueRecaptcha,
     Spinner,
     Alert,
     BookingCalendar,
     ComponentMenu,
+    CommerceLogo,
     DesktopPageHeader,
     BookingDetailsCard,
     AttentionDetailsCard,
@@ -49,6 +49,7 @@ export default {
 
     // Use global commerce and module from store
     const commerce = computed(() => store.getCurrentCommerce);
+    const business = computed(() => store.getCurrentBusiness);
     const module = computed(() => store.getCurrentModule);
 
     const state = reactive({
@@ -113,7 +114,6 @@ export default {
         if (!state.collaborator || !state.collaborator.id) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
         }
-        state.business = await store.getActualBusiness();
         // Set initial commerce if not set - check both commerceId and commercesId
         if (!commerce.value || !commerce.value.id) {
           // First try commerceId (single commerce)
@@ -549,21 +549,9 @@ export default {
         const attentionsArrays = await Promise.all(todayAttentionsPromises);
         const allAttentions = attentionsArrays.flat().filter(Boolean);
 
-        console.log("📊 Today's attentions from API:", {
-          collaboratorQueueIds,
-          today,
-          totalFromAPI: allAttentions.length,
-          attentionsByQueue: attentionsArrays.map((arr, idx) => ({
-            queueId: collaboratorQueueIds[idx],
-            count: arr.length,
-          })),
-        });
-
         // The API already filters by date range (today to today), so we trust it
         // Only do minimal validation - ensure we have attentions with valid IDs
         const validAttentions = allAttentions.filter(attention => attention && attention.id);
-
-        console.log('✅ Valid attentions after filtering:', validAttentions.length);
 
         // Sort by number (ascending) to show in order, then by creation date
         validAttentions.sort((a, b) => {
@@ -591,21 +579,6 @@ export default {
           state.recentAttentions = validAttentions.slice(0, 100); // Show up to 100 attentions
         } else {
           // Fallback to Firebase subscription data if API returns empty
-          console.log('⚠️ API returned empty, trying Firebase subscription data as fallback');
-          console.log('🔍 Checking Firebase subscription:', {
-            hasSubscription: !!state.todayAttentionsSubscription,
-            subscriptionType: typeof state.todayAttentionsSubscription,
-            hasValue: state.todayAttentionsSubscription
-              ? 'value' in state.todayAttentionsSubscription
-              : false,
-            isArray:
-              state.todayAttentionsSubscription &&
-              Array.isArray(state.todayAttentionsSubscription.value),
-            subscriptionValue: state.todayAttentionsSubscription
-              ? state.todayAttentionsSubscription.value
-              : null,
-          });
-
           if (
             state.todayAttentionsSubscription &&
             Array.isArray(state.todayAttentionsSubscription.value)
@@ -613,21 +586,6 @@ export default {
             const firebaseAttentions = state.todayAttentionsSubscription.value;
             const collaboratorQueueIds = getCollaboratorQueueIds();
             const today = new DateModel().toString();
-
-            console.log('📊 Firebase subscription data:', {
-              totalInFirebase: firebaseAttentions.length,
-              collaboratorQueueIds,
-              today,
-              firstAttention: firebaseAttentions[0]
-                ? {
-                    id: firebaseAttentions[0].id,
-                    queueId: firebaseAttentions[0].queueId,
-                    date: firebaseAttentions[0].date,
-                    createdAt: firebaseAttentions[0].createdAt,
-                    createdDate: firebaseAttentions[0].createdDate,
-                  }
-                : null,
-            });
 
             // Filter by collaborator queue IDs
             // Note: Firebase already filters by createdAt >= today, so we mainly need to filter by queueId
@@ -697,17 +655,12 @@ export default {
               return dateA - dateB;
             });
 
-            console.log('✅ Filtered Firebase attentions:', filteredFirebaseAttentions.length);
             if (filteredFirebaseAttentions.length > 0) {
               state.recentAttentions = filteredFirebaseAttentions.slice(0, 100);
             } else {
-              console.log(
-                '⚠️ Firebase subscription has data but no attentions match queueId filter'
-              );
               state.recentAttentions = [];
             }
           } else {
-            console.log('❌ No attentions found from API or Firebase subscription available');
             state.recentAttentions = [];
           }
         }
@@ -775,6 +728,7 @@ export default {
       loading,
       alertError,
       commerce,
+      business,
       module,
       isActiveCommerce,
       goBack,
@@ -790,7 +744,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="commerce?.logo || state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
+        <CommerceLogo :commerce-id="commerce?.id" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
         <ComponentMenu
           :title="$t(`collaboratorBookingsView.welcome`)"
           :toggles="state.toggles"
@@ -928,7 +882,7 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <DesktopPageHeader
-          :logo="commerce?.logo || state.business?.logo"
+          :commerce-id="commerce?.id"
           :business-id="state.business?.id"
           :loading="loading"
           :title="$t('collaboratorBookingsView.welcome')"

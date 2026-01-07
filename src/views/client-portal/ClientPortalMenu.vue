@@ -4,8 +4,8 @@
     <div class="d-block d-lg-none mobile-menu-layout">
       <div class="content text-center">
         <CommerceLogo
-          v-if="commerce && commerce.logo"
-          :src="commerce.logo"
+          :commerce-id="commerce?.id"
+          :business-id="commerce?.businessId"
           :loading="loading"
         ></CommerceLogo>
         <ComponentMenu
@@ -89,15 +89,12 @@
         <div class="row align-items-center mb-1 desktop-header-row">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
-              <div id="commerce-logo-desktop">
-                <img
-                  v-if="!loading && commerce?.logo"
-                  class="rounded img-fluid logo-desktop"
-                  :alt="$t('logoAlt')"
-                  :src="commerce.logo"
-                  loading="lazy"
-                />
-              </div>
+              <CommerceLogo
+                :commerce-id="commerce?.id"
+                :business-id="commerce?.businessId"
+                :loading="loading"
+                class="logo-desktop"
+              />
             </div>
           </div>
           <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
@@ -279,7 +276,7 @@ export default {
       localStorage.removeItem('clientPortalCommerce');
 
       // Limpiar store
-      await store.setCurrentUserType(null);
+      await store.setCurrentUserType('client');
       await store.setCurrentUser(null);
       await store.setCurrentCommerce(null);
       await store.setCurrentPermissions(null);
@@ -299,8 +296,34 @@ export default {
 
     const validateSession = async () => {
       const token = localStorage.getItem('clientPortalSessionToken');
+      const expiresAt = localStorage.getItem('clientPortalSessionExpiresAt');
+
       if (!token) {
         router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
+        return;
+      }
+
+      // Si el token existe y no ha expirado, asumir válido (evitar doble validación)
+      if (expiresAt && new Date(expiresAt) > new Date()) {
+        // Cargar datos desde localStorage si existen
+        const storedClient = localStorage.getItem('clientPortalClient');
+        const storedCommerce = localStorage.getItem('clientPortalCommerce');
+        if (storedClient) {
+          try {
+            client.value = JSON.parse(storedClient);
+          } catch (e) {
+            console.error('Error parsing stored client:', e);
+          }
+        }
+        if (storedCommerce) {
+          try {
+            commerce.value = JSON.parse(storedCommerce);
+          } catch (e) {
+            console.error('Error parsing stored commerce:', e);
+          }
+        }
+        sessionToken.value = token;
+        loading.value = false;
         return;
       }
 
@@ -333,21 +356,39 @@ export default {
       }
     };
 
-    const loadPermissions = async () => {
+    const loadPermissions = async (clientPortalSessionToken) => {
       try {
-        const clientPermissions = await getClientPortalPermissions('client-portal', 'menu');
-        permissions.value = clientPermissions;
-        console.log('Client portal permissions loaded:', clientPermissions);
+        // Asegurar token válido: usar argumento o el almacenado
+        const token = clientPortalSessionToken || localStorage.getItem('clientPortalSessionToken');
+        const clientPermissions = await getClientPortalPermissions('client-portal', 'menu', undefined, token);
+
+        // Si la respuesta viene vacía o sin permisos verdaderos, aplicamos default
+        const hasAnyPermission = clientPermissions && Object.values(clientPermissions).some(v => !!v);
+        if (!clientPermissions || !hasAnyPermission) {
+          const defaultPermissions = {
+            'client-portal.menu.consents': true,
+            'client-portal.menu.telemedicine': true,
+            'client-portal.menu.profile': true,
+            'client-portal.menu.documents': true,
+            'client-portal.menu.history': true,
+          };
+          permissions.value = defaultPermissions;
+          localStorage.setItem('clientPortalPermissions', JSON.stringify(defaultPermissions));
+        } else {
+          permissions.value = clientPermissions;
+          localStorage.setItem('clientPortalPermissions', JSON.stringify(clientPermissions));
+        }
       } catch (err) {
-        console.error('Error loading permissions:', err);
         // Si falla, usamos todos los permisos por defecto para no bloquear al cliente
-        permissions.value = {
+        const defaultPermissions = {
           'client-portal.menu.consents': true,
           'client-portal.menu.telemedicine': true,
           'client-portal.menu.profile': true,
           'client-portal.menu.documents': true,
           'client-portal.menu.history': true,
         };
+        permissions.value = defaultPermissions;
+        localStorage.setItem('clientPortalPermissions', JSON.stringify(defaultPermissions));
       }
     };
 
@@ -355,6 +396,8 @@ export default {
       // Tentar carregar dados do localStorage primeiro
       const storedClient = localStorage.getItem('clientPortalClient');
       const storedCommerce = localStorage.getItem('clientPortalCommerce');
+      const clientPortalSessionToken = localStorage.getItem('clientPortalSessionToken');
+
       if (storedClient) {
         try {
           client.value = JSON.parse(storedClient);
@@ -370,11 +413,11 @@ export default {
         }
       }
 
-      // Validar sessão
+      // Validar sessão solo si no hay datos o token expirado
       await validateSession();
 
       // Cargar permisos
-      await loadPermissions();
+      await loadPermissions(clientPortalSessionToken);
 
       // Iniciar monitoramento de sessão se válida
       if (client.value && commerce.value) {
@@ -388,7 +431,6 @@ export default {
         clearTimeout(inactivityTimeout);
       }
       inactivityTimeout = setTimeout(() => {
-        console.log('Session expired due to inactivity');
         logout();
       }, INACTIVITY_TIMEOUT_MS);
     };

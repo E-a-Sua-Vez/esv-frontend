@@ -55,7 +55,9 @@
     "pending": "Pendente",
     "viewDetails": "Ver Detalhes",
     "remove": "Remover",
-    "save": "Salvar"
+    "save": "Salvar",
+    "previous": "Anterior",
+    "next": "Próximo"
   },
   "lostConnection": "Você perdeu sua coneção ao internet. Revise sua coneção e tente recarregar a página.",
   "refresh": "Reload",
@@ -5751,7 +5753,12 @@
         "message": "Sua taxa de fechamento é {rate}%. Considere melhorar a qualificação de leads.",
         "action": "Foque em leads de maior qualidade"
       }
-    }
+    },
+    "searchPlaceholder": "Buscar por nome, empresa ou email...",
+    "clearSearch": "Limpar busca",
+    "searchLeads": "Buscar Leads",
+    "showAll": "Mostrar Todos",
+    "showLimited": "Mostrar Limitado (20 por página)"
   },
   "permissions": {
     "sections": {

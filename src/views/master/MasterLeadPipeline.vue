@@ -213,6 +213,20 @@ export default {
     const showAnalytics = ref(false);
     const showMobileFilters = ref(false); // Control de filtros colapsables en móvil
 
+    // Search filter - text to search in lead name and company
+    const searchText = ref('');
+
+    // Pagination settings
+    const pageSize = ref(20);
+    const showAll = ref(false);
+    const currentPages = reactive({
+      NEW: 1,
+      IN_CONTACT: 1,
+      WAITLIST: 1,
+      IN_DEAL: 1,
+      CLOSED: 1,
+    });
+
     const isMaster = computed(() => {
       const userType = store.getCurrentUserType;
       return userType === USER_TYPES.MASTER || userType === 'master';
@@ -461,7 +475,6 @@ export default {
           !status
         ) {
           status = LEAD_STATUS.SUCCESS;
-          console.log('Moving lead from IN_DEAL to CLOSED - setting status to SUCCESS');
         }
 
         // Validate transition unless explicitly skipped (for contact-based moves)
@@ -689,6 +702,10 @@ export default {
 
         selectedLead.value = { ...(leadDetails || lead), contacts: contacts || [] };
 
+        // Initialize temp fields
+        tempTemperature.value = selectedLead.value.temperature || '';
+        tempMessage.value = selectedLead.value.message || '';
+
         // Fetch transitions/history for this lead
         try {
           const transitions = await getLeadTransitions(lead.id);
@@ -745,7 +762,6 @@ export default {
         await new Promise(resolve => setTimeout(resolve, 300));
 
         const modalElement = document.getElementById('lead-details-modal');
-        console.log('Modal element:', modalElement);
 
         if (modalElement) {
           // Remove any existing modal backdrop
@@ -762,7 +778,6 @@ export default {
           // Get or create modal instance
           let modal = Modal.getInstance(modalElement);
           if (!modal) {
-            console.log('Creating new modal instance');
             modal = new Modal(modalElement, {
               backdrop: true,
               keyboard: false,
@@ -823,6 +838,7 @@ export default {
       newContact.result = CONTACT_RESULTS.NO_RESPONSE;
       newContact.scheduledAt = undefined;
       resetTemperatureField();
+      resetMessageField();
     };
 
     const updateLeadTemperature = async (leadId, temperature) => {
@@ -865,8 +881,14 @@ export default {
 
     const tempTemperature = ref('');
 
+    const tempMessage = ref('');
+
     const resetTemperatureField = () => {
       tempTemperature.value = '';
+    };
+
+    const resetMessageField = () => {
+      tempMessage.value = '';
     };
 
     const handleTemperatureChange = event => {
@@ -881,6 +903,22 @@ export default {
         // Update the selectedLead value to reflect the change
         if (selectedLead.value) {
           selectedLead.value.temperature = newTemperature;
+        }
+      }
+    };
+
+    const saveMessage = async () => {
+      if (selectedLead.value && selectedLead.value.id && tempMessage.value !== undefined) {
+        const newMessage = tempMessage.value || undefined;
+        try {
+          await updateLead(selectedLead.value.id, { message: newMessage });
+          // Update the selectedLead value to reflect the change
+          if (selectedLead.value) {
+            selectedLead.value.message = newMessage;
+          }
+        } catch (error) {
+          alertError.value =
+            error?.response?.data?.message || error?.message || 'Error updating message';
         }
       }
     };
@@ -931,7 +969,6 @@ export default {
         // If lead is in WAITLIST, move it to IN_CONTACT first before saving the contact
         const leadCurrentStage = selectedLead.value.pipelineStage || selectedLead.value.stage;
         if (leadCurrentStage === PIPELINE_STAGES.WAITLIST) {
-          console.log('Lead is in WAITLIST - moving to IN_CONTACT before saving contact...');
           try {
             await updateLeadStage(selectedLead.value.id, PIPELINE_STAGES.IN_CONTACT, undefined);
             // Update local state
@@ -954,17 +991,11 @@ export default {
                 }
               }
             }
-            console.log('Lead moved to IN_CONTACT successfully');
           } catch (stageError) {
             console.error('Error moving lead from WAITLIST to IN_CONTACT:', stageError);
             // Continue with contact save even if stage update fails
           }
         }
-
-        console.log('Saving contact:', {
-          leadId: selectedLead.value.id,
-          contact: newContact,
-        });
 
         const contactData = {
           type: newContact.type,
@@ -973,15 +1004,8 @@ export default {
           scheduledAt: newContact.scheduledAt || undefined,
         };
 
-        console.log('Calling addLeadContact with:', {
-          leadId: selectedLead.value.id,
-          contactData,
-        });
-
         // Ensure we're actually calling the service
-        console.log('About to call addLeadContact service...');
         const savedContact = await addLeadContact(selectedLead.value.id, contactData);
-        console.log('Contact saved successfully:', savedContact);
 
         if (!savedContact || !savedContact.id) {
           console.warn('Contact saved but response is missing ID:', savedContact);
@@ -1082,7 +1106,6 @@ export default {
 
         // Check contact result and move lead accordingly
         const currentStage = selectedLead.value.pipelineStage || selectedLead.value.stage;
-        console.log('Current lead stage:', currentStage);
 
         // Only apply automatic stage transitions when lead is in NEW stage
         if (currentStage === PIPELINE_STAGES.NEW) {
@@ -1091,24 +1114,12 @@ export default {
             // Update immediately but catch errors so contact save still succeeds
             (async () => {
               try {
-                console.log(
-                  'Contact marked as rejected, moving lead to CLOSED stage with REJECTED status...',
-                  {
-                    leadId: selectedLead.value.id,
-                    currentStage,
-                    targetStage: PIPELINE_STAGES.CLOSED,
-                    targetStatus: LEAD_STATUS.REJECTED,
-                  }
-                );
-
                 // updateLeadStage signature: (id, stage, status)
                 const updatedLead = await updateLeadStage(
                   selectedLead.value.id,
                   PIPELINE_STAGES.CLOSED,
                   LEAD_STATUS.REJECTED
                 );
-
-                console.log('Lead moved to CLOSED with REJECTED status successfully:', updatedLead);
 
                 // Update local state
                 if (updatedLead) {
@@ -1214,20 +1225,12 @@ export default {
             // Update immediately but catch errors so contact save still succeeds
             (async () => {
               try {
-                console.log('Contact marked as contact later, moving lead to WAITLIST stage...', {
-                  leadId: selectedLead.value.id,
-                  currentStage,
-                  targetStage: PIPELINE_STAGES.WAITLIST,
-                });
-
                 // updateLeadStage signature: (id, stage, status)
                 const updatedLead = await updateLeadStage(
                   selectedLead.value.id,
                   PIPELINE_STAGES.WAITLIST,
                   undefined
                 );
-
-                console.log('Lead moved to WAITLIST stage successfully:', updatedLead);
 
                 // Update local state
                 if (updatedLead) {
@@ -1291,20 +1294,12 @@ export default {
             // Update immediately but catch errors so contact save still succeeds
             (async () => {
               try {
-                console.log('Contact marked as interested, moving lead to IN_DEAL stage...', {
-                  leadId: selectedLead.value.id,
-                  currentStage,
-                  targetStage: PIPELINE_STAGES.IN_DEAL,
-                });
-
                 // updateLeadStage signature: (id, stage, status)
                 const updatedLead = await updateLeadStage(
                   selectedLead.value.id,
                   PIPELINE_STAGES.IN_DEAL,
                   undefined
                 );
-
-                console.log('Lead moved to IN_DEAL stage successfully:', updatedLead);
 
                 // Update local state
                 if (updatedLead) {
@@ -1368,23 +1363,12 @@ export default {
             // Update immediately but catch errors so contact save still succeeds
             (async () => {
               try {
-                console.log(
-                  'Contact marked as waiting for response, moving lead to IN_CONTACT stage...',
-                  {
-                    leadId: selectedLead.value.id,
-                    currentStage,
-                    targetStage: PIPELINE_STAGES.IN_CONTACT,
-                  }
-                );
-
                 // updateLeadStage signature: (id, stage, status)
                 const updatedLead = await updateLeadStage(
                   selectedLead.value.id,
                   PIPELINE_STAGES.IN_CONTACT,
                   undefined
                 );
-
-                console.log('Lead moved to IN_CONTACT stage successfully:', updatedLead);
 
                 // Update local state
                 if (updatedLead) {
@@ -1439,20 +1423,12 @@ export default {
             // Update immediately but catch errors so contact save still succeeds
             (async () => {
               try {
-                console.log('Contact marked as no response, moving lead to WAITLIST stage...', {
-                  leadId: selectedLead.value.id,
-                  currentStage,
-                  targetStage: PIPELINE_STAGES.WAITLIST,
-                });
-
                 // updateLeadStage signature: (id, stage, status)
                 const updatedLead = await updateLeadStage(
                   selectedLead.value.id,
                   PIPELINE_STAGES.WAITLIST,
                   undefined
                 );
-
-                console.log('Lead moved to WAITLIST stage successfully:', updatedLead);
 
                 // Update local state
                 if (updatedLead) {
@@ -1549,13 +1525,6 @@ export default {
           }
           // For any other contact result, lead stays in NEW stage
           // No automatic transition - user must explicitly move the lead or create another contact
-          else {
-            console.log(
-              'Contact saved in NEW stage with result:',
-              newContact.result,
-              '- Lead remains in NEW stage'
-            );
-          }
         }
         // Automatically move lead to IN_CONTACT stage when a contact is added (for non-NEW stages)
         // Only move if not already IN_CONTACT or CLOSED
@@ -1565,12 +1534,6 @@ export default {
           // Update immediately but catch errors so contact save still succeeds
           (async () => {
             try {
-              console.log('Moving lead to IN_CONTACT stage in database...', {
-                leadId: selectedLead.value.id,
-                currentStage,
-                targetStage: PIPELINE_STAGES.IN_CONTACT,
-              });
-
               // updateLeadStage signature: (id, stage, status)
               // Backend gets userId from auth token automatically
               const updatedLead = await updateLeadStage(
@@ -1578,8 +1541,6 @@ export default {
                 PIPELINE_STAGES.IN_CONTACT,
                 undefined
               );
-
-              console.log('Lead stage updated in database successfully:', updatedLead);
 
               // Update local state
               if (updatedLead) {
@@ -1646,8 +1607,6 @@ export default {
               // The contact was already saved successfully
             }
           })(); // Execute immediately but don't await (non-blocking)
-        } else {
-          console.log('Lead already in IN_CONTACT or CLOSED stage, skipping move');
         }
 
         loading.value = false;
@@ -2488,6 +2447,114 @@ export default {
       return insights;
     });
 
+    // Filtered leads based on search text and pagination
+    const filteredLeads = computed(() => {
+      let baseLeads = leads;
+
+      // First, apply search filter if there's search text
+      if (searchText.value && searchText.value.trim() !== '') {
+        const searchTerm = searchText.value.toLowerCase().trim();
+        baseLeads = {
+          NEW: [],
+          IN_CONTACT: [],
+          WAITLIST: [],
+          IN_DEAL: [],
+          CLOSED: [],
+        };
+
+        // Filter each stage by search term
+        Object.keys(leads).forEach(stage => {
+          baseLeads[stage] = leads[stage].filter(lead => {
+            const name = (lead.name || '').toLowerCase();
+            const company = (lead.company || '').toLowerCase();
+            const email = (lead.email || '').toLowerCase();
+
+            return (
+              name.includes(searchTerm) ||
+              company.includes(searchTerm) ||
+              email.includes(searchTerm)
+            );
+          });
+        });
+      }
+
+      // Then apply pagination if not showing all
+      if (!showAll.value) {
+        const paginated = {
+          NEW: [],
+          IN_CONTACT: [],
+          WAITLIST: [],
+          IN_DEAL: [],
+          CLOSED: [],
+        };
+
+        Object.keys(baseLeads).forEach(stage => {
+          const stageLeads = baseLeads[stage];
+          const currentPage = currentPages[stage] || 1;
+          const startIndex = (currentPage - 1) * pageSize.value;
+          const endIndex = startIndex + pageSize.value;
+
+          paginated[stage] = stageLeads.slice(startIndex, endIndex);
+        });
+
+        return paginated;
+      }
+
+      return baseLeads;
+    });
+
+    // Pagination functions
+    const getTotalPages = (stage) => {
+      const stageLeads = searchText.value && searchText.value.trim() !== ''
+        ? leads[stage].filter(lead => {
+            const searchTerm = searchText.value.toLowerCase().trim();
+            const name = (lead.name || '').toLowerCase();
+            const company = (lead.company || '').toLowerCase();
+            const email = (lead.email || '').toLowerCase();
+            return name.includes(searchTerm) || company.includes(searchTerm) || email.includes(searchTerm);
+          })
+        : leads[stage];
+      return Math.ceil(stageLeads.length / pageSize.value);
+    };
+
+    const goToPage = (stage, page) => {
+      const totalPages = getTotalPages(stage);
+      if (page >= 1 && page <= totalPages) {
+        currentPages[stage] = page;
+      }
+    };
+
+    const nextPage = (stage) => {
+      const totalPages = getTotalPages(stage);
+      if (currentPages[stage] < totalPages) {
+        currentPages[stage]++;
+      }
+    };
+
+    const prevPage = (stage) => {
+      if (currentPages[stage] > 1) {
+        currentPages[stage]--;
+      }
+    };
+
+    const toggleShowAll = () => {
+      showAll.value = !showAll.value;
+      // Reset all pages to 1 when toggling
+      if (!showAll.value) {
+        Object.keys(currentPages).forEach(stage => {
+          currentPages[stage] = 1;
+        });
+      }
+    };
+
+    const showTop20 = () => {
+      showAll.value = false;
+      // Reset all pages to 1
+      Object.keys(currentPages).forEach(stage => {
+        currentPages[stage] = 1;
+      });
+    };
+
     const showAdd = () => {
       showAddLead.value = true;
       // Ensure toggles are set if not loaded yet (for master users)
@@ -2737,6 +2804,9 @@ export default {
       saveTemperature,
       tempTemperature,
       resetTemperatureField,
+      saveMessage,
+      tempMessage,
+      resetMessageField,
       formatDate,
       getContactResultIcon,
       getContactResultClass,
@@ -2779,6 +2849,17 @@ export default {
       showAnalytics,
       showMobileFilters,
       desktopFiltersCollapsed,
+      searchText,
+      filteredLeads,
+      pageSize,
+      showAll,
+      currentPages,
+      getTotalPages,
+      goToPage,
+      nextPage,
+      prevPage,
+      toggleShowAll,
+      showTop20,
     };
   },
 };
@@ -2819,6 +2900,40 @@ export default {
           <!-- Mobile Filters Content (Collapsible) -->
           <div class="d-block d-lg-none mobile-filters-wrapper" :class="{ 'collapsed': !showMobileFilters }">
             <div class="mobile-filters-content">
+          <!-- Search Filter Row -->
+          <div class="filters-row mb-3">
+            <div class="filter-group flex-grow-1">
+              <div class="input-with-info">
+                <div class="d-flex gap-2 align-items-center">
+                  <div class="input-icon-wrapper flex-grow-1">
+                    <i class="bi bi-search input-icon"></i>
+                    <input
+                      type="text"
+                      class="form-control form-control-sm"
+                      v-model="searchText"
+                      :placeholder="$t('leadPipeline.searchPlaceholder') || 'Buscar por nombre, empresa o email...'"
+                    />
+                  </div>
+                  <button
+                    v-if="searchText"
+                    class="btn btn-sm btn-outline-secondary"
+                    @click="searchText = ''"
+                    :title="$t('leadPipeline.clearSearch') || 'Limpar busca'"
+                  >
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+                <Popper
+                  class="filter-info-tooltip dark"
+                  arrow
+                  :content="$t('leadPipeline.searchLeads') || 'Buscar Leads'"
+                >
+                  <i class="bi bi-info-circle filter-info-icon"></i>
+                </Popper>
+              </div>
+            </div>
+          </div>
+
           <!-- Date Filters Row -->
           <div class="filters-row mb-3">
             <div class="filter-group">
@@ -3112,8 +3227,30 @@ export default {
                     <h5>
                       <i class="bi bi-inbox-fill"></i>
                       {{ $t('leadPipeline.newLeads') || 'New Leads' }}
-                      <span class="badge bg-primary">{{ leads.NEW.length }}</span>
+                      <span class="badge bg-light text-dark">{{ leads.NEW?.length || 0 }}</span>
                     </h5>
+                    <!-- Pagination Controls -->
+                    <div v-if="!showAll" class="pagination-controls">
+                      <button
+                        class="btn btn-sm btn-outline-secondary pagination-btn"
+                        @click="prevPage('NEW')"
+                        :disabled="currentPages.NEW <= 1"
+                        :title="$t('common.previous') || 'Previous'"
+                      >
+                        <i class="bi bi-chevron-left"></i>
+                      </button>
+                      <span class="pagination-info">
+                        {{ currentPages.NEW }} / {{ getTotalPages('NEW') }}
+                      </span>
+                      <button
+                        class="btn btn-sm btn-outline-secondary pagination-btn"
+                        @click="nextPage('NEW')"
+                        :disabled="currentPages.NEW >= getTotalPages('NEW')"
+                        :title="$t('common.next') || 'Next'"
+                      >
+                        <i class="bi bi-chevron-right"></i>
+                      </button>
+                    </div>
                   </div>
                   <div
                     class="pipeline-body"
@@ -3123,7 +3260,7 @@ export default {
                     :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.NEW }"
                   >
                     <div
-                      v-for="lead in leads.NEW"
+                      v-for="lead in filteredLeads.NEW"
                       :key="lead.id"
                       class="modern-lead-card metric-type-info"
                       :class="{
@@ -3216,7 +3353,7 @@ export default {
                       </div>
                       <div class="lead-card-accent"></div>
                     </div>
-                    <div v-if="leads.NEW.length === 0" class="empty-state">
+                    <div v-if="filteredLeads.NEW.length === 0" class="empty-state">
                       <Message
                         :icon="'bi-inbox'"
                         :title="$t('leadPipeline.noLeads') || 'No new leads'"
@@ -3232,8 +3369,30 @@ export default {
                     <h5>
                       <i class="bi bi-chat-dots-fill"></i>
                       {{ $t('leadPipeline.inContact') || 'In Contact' }}
-                      <span class="badge bg-warning">{{ leads.IN_CONTACT.length }}</span>
+                      <span class="badge bg-warning text-dark">{{ leads.IN_CONTACT?.length || 0 }}</span>
                     </h5>
+                    <!-- Pagination Controls -->
+                    <div v-if="!showAll" class="pagination-controls">
+                      <button
+                        class="btn btn-sm btn-outline-secondary pagination-btn"
+                        @click="prevPage('IN_CONTACT')"
+                        :disabled="currentPages.IN_CONTACT <= 1"
+                        :title="$t('common.previous') || 'Previous'"
+                      >
+                        <i class="bi bi-chevron-left"></i>
+                      </button>
+                      <span class="pagination-info">
+                        {{ currentPages.IN_CONTACT }} / {{ getTotalPages('IN_CONTACT') }}
+                      </span>
+                      <button
+                        class="btn btn-sm btn-outline-secondary pagination-btn"
+                        @click="nextPage('IN_CONTACT')"
+                        :disabled="currentPages.IN_CONTACT >= getTotalPages('IN_CONTACT')"
+                        :title="$t('common.next') || 'Next'"
+                      >
+                        <i class="bi bi-chevron-right"></i>
+                      </button>
+                    </div>
                   </div>
                   <div
                     class="pipeline-body"
@@ -3243,7 +3402,7 @@ export default {
                     :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.IN_CONTACT }"
                   >
                     <div
-                      v-for="lead in leads.IN_CONTACT"
+                      v-for="lead in filteredLeads.IN_CONTACT"
                       :key="lead.id"
                       class="modern-lead-card metric-type-warning"
                       :class="{
@@ -3362,7 +3521,7 @@ export default {
                       </div>
                       <div class="lead-card-accent"></div>
                     </div>
-                    <div v-if="leads.IN_CONTACT.length === 0" class="empty-state">
+                    <div v-if="filteredLeads.IN_CONTACT.length === 0" class="empty-state">
                       <Message
                         :icon="'bi-chat-dots'"
                         :title="$t('leadPipeline.noLeads') || 'No leads in contact'"
@@ -3378,8 +3537,30 @@ export default {
                     <h5>
                       <i class="bi bi-pause-circle-fill"></i>
                       {{ $t('leadPipeline.waitlist') || 'Waitlist' }}
-                      <span class="badge bg-info">{{ leads.WAITLIST.length }}</span>
+                      <span class="badge bg-info text-dark">{{ leads.WAITLIST?.length || 0 }}</span>
                     </h5>
+                    <!-- Pagination Controls -->
+                    <div v-if="!showAll" class="pagination-controls">
+                      <button
+                        class="btn btn-sm btn-outline-secondary pagination-btn"
+                        @click="prevPage('WAITLIST')"
+                        :disabled="currentPages.WAITLIST <= 1"
+                        :title="$t('common.previous') || 'Previous'"
+                      >
+                        <i class="bi bi-chevron-left"></i>
+                      </button>
+                      <span class="pagination-info">
+                        {{ currentPages.WAITLIST }} / {{ getTotalPages('WAITLIST') }}
+                      </span>
+                      <button
+                        class="btn btn-sm btn-outline-secondary pagination-btn"
+                        @click="nextPage('WAITLIST')"
+                        :disabled="currentPages.WAITLIST >= getTotalPages('WAITLIST')"
+                        :title="$t('common.next') || 'Next'"
+                      >
+                        <i class="bi bi-chevron-right"></i>
+                      </button>
+                    </div>
                   </div>
                   <div
                     class="pipeline-body"
@@ -3389,7 +3570,7 @@ export default {
                     :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.WAITLIST }"
                   >
                     <div
-                      v-for="lead in leads.WAITLIST"
+                      v-for="lead in filteredLeads.WAITLIST"
                       :key="lead.id"
                       class="modern-lead-card metric-type-info"
                       :class="{
@@ -3465,7 +3646,7 @@ export default {
                       </div>
                       <div class="lead-card-accent"></div>
                     </div>
-                    <div v-if="leads.WAITLIST.length === 0" class="empty-state">
+                    <div v-if="filteredLeads.WAITLIST.length === 0" class="empty-state">
                       <Message
                         :icon="'bi-pause-circle'"
                         :title="$t('leadPipeline.noLeads') || 'No leads in waitlist'"
@@ -3481,8 +3662,30 @@ export default {
                     <h5>
                       <i class="bi bi-hand-thumbs-up-fill"></i>
                       {{ $t('leadPipeline.inDeal') || 'In Deal' }}
-                      <span class="badge bg-success">{{ leads.IN_DEAL.length }}</span>
+                      <span class="badge bg-success">{{ leads.IN_DEAL?.length || 0 }}</span>
                     </h5>
+                    <!-- Pagination Controls -->
+                    <div v-if="!showAll" class="pagination-controls">
+                      <button
+                        class="btn btn-sm btn-outline-secondary pagination-btn"
+                        @click="prevPage('IN_DEAL')"
+                        :disabled="currentPages.IN_DEAL <= 1"
+                        :title="$t('common.previous') || 'Previous'"
+                      >
+                        <i class="bi bi-chevron-left"></i>
+                      </button>
+                      <span class="pagination-info">
+                        {{ currentPages.IN_DEAL }} / {{ getTotalPages('IN_DEAL') }}
+                      </span>
+                      <button
+                        class="btn btn-sm btn-outline-secondary pagination-btn"
+                        @click="nextPage('IN_DEAL')"
+                        :disabled="currentPages.IN_DEAL >= getTotalPages('IN_DEAL')"
+                        :title="$t('common.next') || 'Next'"
+                      >
+                        <i class="bi bi-chevron-right"></i>
+                      </button>
+                    </div>
                   </div>
                   <div
                     class="pipeline-body"
@@ -3492,7 +3695,7 @@ export default {
                     :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.IN_DEAL }"
                   >
                     <div
-                      v-for="lead in leads.IN_DEAL"
+                      v-for="lead in filteredLeads.IN_DEAL"
                       :key="lead.id"
                       class="modern-lead-card metric-type-success"
                       :class="{
@@ -3588,7 +3791,7 @@ export default {
                       </div>
                       <div class="lead-card-accent"></div>
                     </div>
-                    <div v-if="leads.IN_DEAL.length === 0" class="empty-state">
+                    <div v-if="filteredLeads.IN_DEAL.length === 0" class="empty-state">
                       <Message
                         :icon="'bi-hand-thumbs-up'"
                         :title="$t('leadPipeline.noLeads') || 'No leads in deal'"
@@ -3604,8 +3807,30 @@ export default {
                     <h5>
                       <i class="bi bi-check-circle-fill"></i>
                       {{ $t('leadPipeline.closed') || 'Closed' }}
-                      <span class="badge bg-secondary">{{ leads.CLOSED.length }}</span>
+                      <span class="badge bg-secondary">{{ leads.CLOSED?.length || 0 }}</span>
                     </h5>
+                    <!-- Pagination Controls -->
+                    <div v-if="!showAll" class="pagination-controls">
+                      <button
+                        class="btn btn-sm btn-outline-secondary pagination-btn"
+                        @click="prevPage('CLOSED')"
+                        :disabled="currentPages.CLOSED <= 1"
+                        :title="$t('common.previous') || 'Previous'"
+                      >
+                        <i class="bi bi-chevron-left"></i>
+                      </button>
+                      <span class="pagination-info">
+                        {{ currentPages.CLOSED }} / {{ getTotalPages('CLOSED') }}
+                      </span>
+                      <button
+                        class="btn btn-sm btn-outline-secondary pagination-btn"
+                        @click="nextPage('CLOSED')"
+                        :disabled="currentPages.CLOSED >= getTotalPages('CLOSED')"
+                        :title="$t('common.next') || 'Next'"
+                      >
+                        <i class="bi bi-chevron-right"></i>
+                      </button>
+                    </div>
                   </div>
                   <div
                     class="pipeline-body"
@@ -3615,7 +3840,7 @@ export default {
                     :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.CLOSED }"
                   >
                     <div
-                      v-for="lead in leads.CLOSED"
+                      v-for="lead in filteredLeads.CLOSED"
                       :key="lead.id"
                       class="modern-lead-card"
                       :class="{
@@ -3706,7 +3931,7 @@ export default {
                       </div>
                       <div class="lead-card-accent"></div>
                     </div>
-                    <div v-if="leads.CLOSED.length === 0" class="empty-state">
+                    <div v-if="filteredLeads.CLOSED.length === 0" class="empty-state">
                       <Message
                         :icon="'bi-check-circle'"
                         :title="$t('leadPipeline.noLeads') || 'No closed leads'"
@@ -3766,6 +3991,36 @@ export default {
         <div class="filters-container mb-4">
           <!-- Desktop Filters Row -->
           <div class="desktop-filters-row">
+            <!-- Search Filter -->
+            <div class="filter-group" style="max-width: 280px;">
+              <div class="input-with-info">
+                <div class="input-icon-wrapper">
+                  <i class="bi bi-search input-icon"></i>
+                  <input
+                    type="text"
+                    class="form-control form-control-sm compact-search-input"
+                    v-model="searchText"
+                    :placeholder="$t('leadPipeline.searchPlaceholder') || 'Buscar por nombre, empresa o email...'"
+                  />
+                  <button
+                    v-if="searchText"
+                    class="btn btn-sm clear-search-btn"
+                    @click="searchText = ''"
+                    :title="$t('leadPipeline.clearSearch') || 'Limpar busca'"
+                  >
+                    <i class="bi bi-x-circle-fill"></i>
+                  </button>
+                </div>
+                <Popper
+                  class="filter-info-tooltip dark"
+                  arrow
+                  :content="$t('leadPipeline.searchLeads') || 'Buscar Leads'"
+                >
+                  <i class="bi bi-info-circle filter-info-icon"></i>
+                </Popper>
+              </div>
+            </div>
+
             <!-- Date Inputs -->
             <div class="filter-group">
               <div class="input-with-info">
@@ -4007,6 +4262,18 @@ export default {
                 <span v-if="!loading">{{ $t('leadPipeline.refresh') || 'Refresh' }}</span>
                 <span v-else>{{ $t('leadPipeline.refreshing') || 'Refreshing...' }}</span>
               </button>
+              <!-- General Pagination Controls -->
+              <div class="general-pagination-controls">
+                <button
+                  class="btn btn-sm btn-outline-primary rounded-pill px-3 py-2"
+                  @click="toggleShowAll"
+                  :disabled="loading"
+                  :title="showAll ? ($t('leadPipeline.showLimited') || 'Show Limited (20 per page)') : ($t('leadPipeline.showAll') || 'Show All Leads')"
+                >
+                  <i class="bi me-1" :class="showAll ? 'bi-dash-circle' : 'bi-plus-circle'"></i>
+                  {{ showAll ? ($t('leadPipeline.showLimited') || 'Show Limited') : ($t('leadPipeline.showAll') || 'Show All') }}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -4026,8 +4293,30 @@ export default {
                 <div class="pipeline-header">
                   <h5>
                     <i class="bi bi-inbox-fill"></i> {{ $t('leadPipeline.newLeads') }}
-                    <span class="badge bg-primary">{{ leads.NEW?.length || 0 }}</span>
+                    <span class="badge bg-light text-dark">{{ leads.NEW?.length || 0 }}</span>
                   </h5>
+                  <!-- Pagination Controls -->
+                  <div v-if="!showAll" class="pagination-controls">
+                    <button
+                      class="btn btn-sm btn-outline-secondary pagination-btn"
+                      @click="prevPage('NEW')"
+                      :disabled="currentPages.NEW <= 1"
+                      :title="$t('common.previous') || 'Previous'"
+                    >
+                      <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <span class="pagination-info">
+                      {{ currentPages.NEW }} / {{ getTotalPages('NEW') }}
+                    </span>
+                    <button
+                      class="btn btn-sm btn-outline-secondary pagination-btn"
+                      @click="nextPage('NEW')"
+                      :disabled="currentPages.NEW >= getTotalPages('NEW')"
+                      :title="$t('common.next') || 'Next'"
+                    >
+                      <i class="bi bi-chevron-right"></i>
+                    </button>
+                  </div>
                 </div>
                 <div
                   class="pipeline-body"
@@ -4037,7 +4326,7 @@ export default {
                   :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.NEW }"
                 >
                   <div
-                    v-for="lead in leads.NEW"
+                    v-for="lead in filteredLeads.NEW"
                     :key="lead.id"
                     class="modern-lead-card metric-type-primary"
                     :class="{
@@ -4133,7 +4422,7 @@ export default {
                     </div>
                     <div class="lead-card-accent"></div>
                   </div>
-                  <div v-if="!leads.NEW || leads.NEW.length === 0" class="empty-state">
+                  <div v-if="!filteredLeads.NEW || filteredLeads.NEW.length === 0" class="empty-state">
                     <Message
                       :icon="'bi-inbox'"
                       :title="$t('leadPipeline.noLeads') || 'No new leads'"
@@ -4148,8 +4437,30 @@ export default {
                 <div class="pipeline-header">
                   <h5>
                     <i class="bi bi-chat-dots-fill"></i> {{ $t('leadPipeline.inContact') }}
-                    <span class="badge bg-warning">{{ leads.IN_CONTACT?.length || 0 }}</span>
+                    <span class="badge bg-warning text-dark">{{ leads.IN_CONTACT?.length || 0 }}</span>
                   </h5>
+                  <!-- Pagination Controls -->
+                  <div v-if="!showAll" class="pagination-controls">
+                    <button
+                      class="btn btn-sm btn-outline-secondary pagination-btn"
+                      @click="prevPage('IN_CONTACT')"
+                      :disabled="currentPages.IN_CONTACT <= 1"
+                      :title="$t('common.previous') || 'Previous'"
+                    >
+                      <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <span class="pagination-info">
+                      {{ currentPages.IN_CONTACT }} / {{ getTotalPages('IN_CONTACT') }}
+                    </span>
+                    <button
+                      class="btn btn-sm btn-outline-secondary pagination-btn"
+                      @click="nextPage('IN_CONTACT')"
+                      :disabled="currentPages.IN_CONTACT >= getTotalPages('IN_CONTACT')"
+                      :title="$t('common.next') || 'Next'"
+                    >
+                      <i class="bi bi-chevron-right"></i>
+                    </button>
+                  </div>
                 </div>
                 <div
                   class="pipeline-body"
@@ -4159,7 +4470,7 @@ export default {
                   :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.IN_CONTACT }"
                 >
                   <div
-                    v-for="lead in leads.IN_CONTACT"
+                    v-for="lead in filteredLeads.IN_CONTACT"
                     :key="lead.id"
                     class="modern-lead-card metric-type-warning"
                     :class="{
@@ -4295,8 +4606,30 @@ export default {
                 <div class="pipeline-header">
                   <h5>
                     <i class="bi bi-pause-circle-fill"></i> {{ $t('leadPipeline.waitlist') }}
-                    <span class="badge bg-info">{{ leads.WAITLIST?.length || 0 }}</span>
+                    <span class="badge bg-info text-dark">{{ leads.WAITLIST?.length || 0 }}</span>
                   </h5>
+                  <!-- Pagination Controls -->
+                  <div v-if="!showAll" class="pagination-controls">
+                    <button
+                      class="btn btn-sm btn-outline-secondary pagination-btn"
+                      @click="prevPage('WAITLIST')"
+                      :disabled="currentPages.WAITLIST <= 1"
+                      :title="$t('common.previous') || 'Previous'"
+                    >
+                      <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <span class="pagination-info">
+                      {{ currentPages.WAITLIST }} / {{ getTotalPages('WAITLIST') }}
+                    </span>
+                    <button
+                      class="btn btn-sm btn-outline-secondary pagination-btn"
+                      @click="nextPage('WAITLIST')"
+                      :disabled="currentPages.WAITLIST >= getTotalPages('WAITLIST')"
+                      :title="$t('common.next') || 'Next'"
+                    >
+                      <i class="bi bi-chevron-right"></i>
+                    </button>
+                  </div>
                 </div>
                 <div
                   class="pipeline-body"
@@ -4306,7 +4639,7 @@ export default {
                   :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.WAITLIST }"
                 >
                   <div
-                    v-for="lead in leads.WAITLIST"
+                    v-for="lead in filteredLeads.WAITLIST"
                     :key="lead.id"
                     class="modern-lead-card metric-type-info"
                     :class="{
@@ -4423,6 +4756,28 @@ export default {
                     <i class="bi bi-hand-thumbs-up-fill"></i> {{ $t('leadPipeline.inDeal') }}
                     <span class="badge bg-success">{{ leads.IN_DEAL?.length || 0 }}</span>
                   </h5>
+                  <!-- Pagination Controls -->
+                  <div v-if="!showAll" class="pagination-controls">
+                    <button
+                      class="btn btn-sm btn-outline-secondary pagination-btn"
+                      @click="prevPage('IN_DEAL')"
+                      :disabled="currentPages.IN_DEAL <= 1"
+                      :title="$t('common.previous') || 'Previous'"
+                    >
+                      <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <span class="pagination-info">
+                      {{ currentPages.IN_DEAL }} / {{ getTotalPages('IN_DEAL') }}
+                    </span>
+                    <button
+                      class="btn btn-sm btn-outline-secondary pagination-btn"
+                      @click="nextPage('IN_DEAL')"
+                      :disabled="currentPages.IN_DEAL >= getTotalPages('IN_DEAL')"
+                      :title="$t('common.next') || 'Next'"
+                    >
+                      <i class="bi bi-chevron-right"></i>
+                    </button>
+                  </div>
                 </div>
                 <div
                   class="pipeline-body"
@@ -4432,7 +4787,7 @@ export default {
                   :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.IN_DEAL }"
                 >
                   <div
-                    v-for="lead in leads.IN_DEAL"
+                    v-for="lead in filteredLeads.IN_DEAL"
                     :key="lead.id"
                     class="modern-lead-card metric-type-success"
                     :class="{
@@ -4567,6 +4922,28 @@ export default {
                     <i class="bi bi-check-circle-fill"></i> {{ $t('leadPipeline.closed') }}
                     <span class="badge bg-secondary">{{ leads.CLOSED?.length || 0 }}</span>
                   </h5>
+                  <!-- Pagination Controls -->
+                  <div v-if="!showAll" class="pagination-controls">
+                    <button
+                      class="btn btn-sm btn-outline-secondary pagination-btn"
+                      @click="prevPage('CLOSED')"
+                      :disabled="currentPages.CLOSED <= 1"
+                      :title="$t('common.previous') || 'Previous'"
+                    >
+                      <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <span class="pagination-info">
+                      {{ currentPages.CLOSED }} / {{ getTotalPages('CLOSED') }}
+                    </span>
+                    <button
+                      class="btn btn-sm btn-outline-secondary pagination-btn"
+                      @click="nextPage('CLOSED')"
+                      :disabled="currentPages.CLOSED >= getTotalPages('CLOSED')"
+                      :title="$t('common.next') || 'Next'"
+                    >
+                      <i class="bi bi-chevron-right"></i>
+                    </button>
+                  </div>
                 </div>
                 <div
                   class="pipeline-body"
@@ -4576,7 +4953,7 @@ export default {
                   :class="{ 'drag-over': dragOverStage === PIPELINE_STAGES.CLOSED }"
                 >
                   <div
-                    v-for="lead in leads.CLOSED"
+                    v-for="lead in filteredLeads.CLOSED"
                     :key="lead.id"
                     :class="`modern-lead-card metric-type-${
                       lead.status === LEAD_STATUS.SUCCESS ? 'success' : 'danger'
@@ -4993,20 +5370,46 @@ export default {
                               : 'Salvar temperatura'
                           "
                         >
-                          <i class="bi bi-check-lg me-1"></i>
-                          {{ $t('common.save') || 'Salvar' }}
+                          <i class="bi bi-check-lg"></i>
                         </button>
                       </div>
                     </div>
-                    <div class="form-group-modern" v-if="selectedLead.message">
+                    <div class="form-group-modern" v-if="selectedLead.message || selectedLead.id">
                       <label class="form-label-modern">{{
                         $t('leadPipeline.message') || 'Message'
                       }}</label>
-                      <div
-                        class="form-control-modern form-control-readonly"
-                        style="min-height: 60px; text-align: left; padding: 0.5rem"
-                      >
-                        {{ selectedLead.message }}
+                      <div class="d-flex gap-2 align-items-start">
+                        <textarea
+                          v-if="selectedLead.id"
+                          class="form-control-modern flex-grow-1"
+                          v-model="tempMessage"
+                          rows="5"
+                          style="min-width: 400px;"
+                          :placeholder="$t('leadPipeline.messagePlaceholder') || 'Enter message...'"
+                        ></textarea>
+                        <div
+                          v-else
+                          class="form-control-modern form-control-readonly flex-grow-1"
+                          style="min-height: 60px; text-align: left; padding: 0.5rem"
+                        >
+                          {{ selectedLead.message }}
+                        </div>
+                        <button
+                          v-if="selectedLead.id"
+                          class="btn btn-sm btn-dark rounded-pill px-3"
+                          @click="saveMessage"
+                          :disabled="
+                            loading ||
+                            tempMessage === (selectedLead?.message || '')
+                          "
+                          :title="
+                            tempMessage === (selectedLead?.message || '')
+                              ? 'No changes to save'
+                              : 'Save message'
+                          "
+                        >
+                          <i class="bi bi-check-lg"></i>
+                        </button>
                       </div>
                     </div>
                     <div class="form-group-modern" v-if="selectedLead.notes">
@@ -6308,6 +6711,7 @@ export default {
   justify-content: space-between;
   flex-shrink: 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 3.5rem;
 }
 
 .pipeline-header h5 {
@@ -6345,23 +6749,67 @@ export default {
   gap: 0.5rem;
 }
 
-/* Custom scrollbar for pipeline body */
-.pipeline-body::-webkit-scrollbar {
-  width: 6px;
+/* Pagination Controls */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.5rem !important;
+  margin-right: 0.25rem !important;
 }
 
-.pipeline-body::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
+.pagination-btn {
+  padding: 0.125rem 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  border-radius: 50%;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--azul-turno);
 }
 
-.pipeline-body::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
+.pagination-btn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: white;
+  color: var(--azul-turno);
+  transform: scale(1.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.pipeline-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.pagination-info {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0 0.25rem;
+  min-width: 2rem;
+  text-align: center;
+}
+
+/* General Pagination Controls */
+.general-pagination-controls {
+  margin-left: auto;
+}
+
+.general-pagination-controls .btn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.general-pagination-controls .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Drag and Drop Styles */
@@ -6564,6 +7012,7 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-transform: uppercase;
 }
 
 .lead-date-text {
@@ -6627,6 +7076,12 @@ export default {
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
+  text-transform: uppercase;
+}
+
+/* Email should be lowercase */
+.bi-envelope + .lead-info-text {
+  text-transform: lowercase;
 }
 
 .lead-source-badge-mini {
@@ -7207,6 +7662,41 @@ export default {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.compact-search-input {
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  transition: all 0.2s ease;
+  font-size: 0.8rem;
+  height: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.compact-search-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0, 74, 173, 0.25);
+  border-color: var(--azul-turno);
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0;
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 0.85rem;
+  z-index: 3;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.clear-search-btn:hover {
+  color: var(--azul-turno);
+}
+
 .compact-date-input:focus {
   box-shadow: 0 0 0 0.2rem rgba(0, 74, 173, 0.25);
   border-color: var(--azul-turno, #004aad);
@@ -7511,5 +8001,62 @@ export default {
 
 :deep(.filter-info-tooltip.dark .popper[data-popper-placement^="right"] > .popper__arrow) {
   border-right-color: #2d3748;
+}
+
+/* Pagination Controls */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+
+.pagination-btn {
+  padding: 0.125rem 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  border-radius: 0.25rem;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: var(--azul-turno);
+  border-color: var(--azul-turno);
+  color: white;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0 0.25rem;
+  min-width: 2rem;
+  text-align: center;
+}
+
+/* General Pagination Controls */
+.general-pagination-controls {
+  margin-left: auto;
+}
+
+.general-pagination-controls .btn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.general-pagination-controls .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 </style>

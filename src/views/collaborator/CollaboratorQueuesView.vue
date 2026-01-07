@@ -20,17 +20,16 @@ import { getQueueByCommerce } from '../../application/services/queue';
 import { getActiveFeature } from '../../shared/features';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
-import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import Popper from 'vue3-popper';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
 
 export default {
   name: 'CollaboratorQueuesView',
   components: {
-    CommerceLogo,
     Message,
     VueRecaptcha,
     Spinner,
@@ -39,6 +38,7 @@ export default {
     ComponentMenu,
     DesktopPageHeader,
     Popper,
+    CommerceLogo
   },
   async setup() {
     const router = useRouter();
@@ -56,13 +56,14 @@ export default {
 
     // Use global commerce and module from store
     const commerce = computed(() => store.getCurrentCommerce);
+    const business = computed(() => store.getCurrentBusiness);
     const module = computed(() => store.getCurrentModule);
 
     const state = reactive({
       currentUser: {},
-      business: {},
       queue: {},
       queues: [],
+      business: {},
       groupedQueues: [],
       collaborator: {},
       modules: ref({}),
@@ -834,6 +835,7 @@ export default {
       loading,
       alertError,
       commerce,
+      business,
       module,
       getQueue,
       isActiveCommerce,
@@ -855,7 +857,10 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="commerce?.logo || state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :commerce-id="commerce?.id"
+          :business-id="state.business?.id"
+          :loading="loading"></CommerceLogo>
         <ComponentMenu
           :title="$t(`collaboratorQueuesView.welcome`)"
           :toggles="state.toggles"
@@ -1082,7 +1087,7 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <DesktopPageHeader
-          :logo="commerce?.logo || state.business?.logo"
+          :commerce-id="state.commerce?.id"
           :business-id="state.business?.id"
           :loading="loading"
           :title="$t('collaboratorQueuesView.welcome')"

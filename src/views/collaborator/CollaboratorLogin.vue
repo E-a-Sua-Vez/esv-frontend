@@ -4,11 +4,10 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores/index';
 import Message from '../../components/common/Message.vue';
 import Login from '../../components/domain/Login.vue';
-import CommerceLogo from '../../components/common/CommerceLogo.vue';
 
 export default {
   name: 'CollaboratorLogin',
-  components: { Login, CommerceLogo, Message },
+  components: { Login, Message },
   async setup() {
     const router = useRouter();
     const store = globalStore();
@@ -34,7 +33,7 @@ export default {
 <template>
   <div>
     <div class="content text-center">
-      <CommerceLogo :src="$t('logo')" @click="goSite()" :large-size="true"></CommerceLogo>
+      <img :src="$t('logo')" @click="goSite()" class="logo large-logo" />
       <div id="page-header" class="text-center mt-4">
         <div class="welcome">
           <span>{{ $t('collaboratorLogin.welcome') }}</span>
@@ -58,5 +57,10 @@ export default {
 .get-attention {
   padding-bottom: 1rem;
   font-size: 1rem;
+}
+.large-logo {
+  width: 200px;
+  height: auto;
+  cursor: pointer;
 }
 </style>

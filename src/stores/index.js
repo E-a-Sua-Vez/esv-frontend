@@ -101,16 +101,24 @@ export const globalStore = defineStore('globalStore', {
     async resetSession() {
       // Clear state
       this.currentUser = null;
+      this.currentPermissions = null;
       this.currentQueue = null;
       this.currentModule = null;
-      this.currentPermissions = null;
+      this.currentCommerce = null;
+      this.currentBusiness = null;
+      this.currentUserType = null;
+      this.currentAttentionChannel = null;
       this.currentActiveAttentions = null;
 
       // Clear storage
       removeStorageItem(STORAGE_KEYS.CURRENT_USER);
+      removeStorageItem(STORAGE_KEYS.CURRENT_PERMISSIONS);
       removeStorageItem(STORAGE_KEYS.CURRENT_QUEUE);
       removeStorageItem(STORAGE_KEYS.CURRENT_MODULE);
-      removeStorageItem(STORAGE_KEYS.CURRENT_PERMISSIONS);
+      removeStorageItem(STORAGE_KEYS.CURRENT_COMMERCE);
+      removeStorageItem(STORAGE_KEYS.CURRENT_BUSINESS);
+      removeStorageItem(STORAGE_KEYS.CURRENT_USER_TYPE);
+      removeStorageItem(STORAGE_KEYS.CURRENT_ATTENTION_CHANNEL);
       removeStorageItem(STORAGE_KEYS.CURRENT_ACTIVE_ATTENTIONS);
     },
     async getActualBusiness() {

@@ -27,7 +27,6 @@ import {
 import { getPermissions } from '../../application/services/permissions';
 import { getActiveFeature } from '../../shared/features';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
-import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
 import QueueAttentionDetails from '../../components/domain/QueueAttentionDetails.vue';
 import AttentionNumber from '../../components/common/AttentionNumber.vue';
@@ -35,6 +34,7 @@ import Message from '../../components/common/Message.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import Popper from 'vue3-popper';
 
@@ -42,7 +42,6 @@ export default {
   name: 'CollaboratorQueueAttentions',
   components: {
     Message,
-    CommerceLogo,
     QueueName,
     QueueAttentionDetails,
     AttentionNumber,
@@ -50,6 +49,7 @@ export default {
     Alert,
     ToggleCapabilities,
     ComponentMenu,
+    CommerceLogo,
     DesktopPageHeader,
     Popper,
   },
@@ -65,12 +65,14 @@ export default {
 
     // Use global commerce and module from store
     const globalCommerce = computed(() => store.getCurrentCommerce);
+    const business = computed(() => store.getCurrentBusiness);
     const module = computed(() => store.getCurrentModule);
 
     const state = reactive({
       currentUser: {},
       queue: {},
       commerce: {},
+      business: {},
       attention: {},
       user: {},
       toggles: {},
@@ -160,36 +162,11 @@ export default {
       // Get pending attentions from Firebase listener (already filtered by date and status)
       const pendingArray = pendingAttentionsRef?.value || [];
 
-      console.log('🔍 [updateAttentionDetails] Pending Array from Firebase:', pendingArray);
-      console.log('🔍 [updateAttentionDetails] Pending Array length:', pendingArray?.length || 0);
-
       // Ensure we have an array and filter/sort properly
       const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
 
-      console.log('🔍 [updateAttentionDetails] Pending List after array check:', pendingList);
-      console.log('🔍 [updateAttentionDetails] Pending List length:', pendingList.length);
-
-      // Log each attention details
-      if (pendingList.length > 0) {
-        pendingList.forEach((att, index) => {
-          console.log(`🔍 [updateAttentionDetails] Attention ${index}:`, {
-            id: att.id,
-            attentionId: att.attentionId,
-            number: att.number,
-            status: att.status,
-            createdAt: att.createdAt,
-            createdAtType: typeof att.createdAt,
-            queueId: att.queueId,
-            user: att.user,
-            fullObject: att,
-          });
-        });
-      }
-
       // Firebase already filters by today and PENDING status, just sort by number
       const filteredPending = [...pendingList].filter(att => att && att.status === 'PENDING');
-      console.log('🔍 [updateAttentionDetails] Filtered PENDING:', filteredPending);
-      console.log('🔍 [updateAttentionDetails] Filtered PENDING length:', filteredPending.length);
 
       // Sort and create a new array to ensure Vue reactivity
       const sortedPending = [...filteredPending].sort((a, b) => {
@@ -204,23 +181,6 @@ export default {
 
       // Force component re-render by updating key
       state.listUpdateKey++;
-
-      console.log(
-        '🔍 [updateAttentionDetails] Final queuePendingDetails:',
-        state.queuePendingDetails,
-      );
-      console.log(
-        '🔍 [updateAttentionDetails] Final queuePendingDetails length:',
-        state.queuePendingDetails.length,
-      );
-      console.log('🔍 [updateAttentionDetails] Final queuePendingDetails (spread):', [
-        ...state.queuePendingDetails,
-      ]);
-      console.log(
-        '🔍 [updateAttentionDetails] Final queuePendingDetails isArray:',
-        Array.isArray(state.queuePendingDetails),
-      );
-      console.log('🔍 [updateAttentionDetails] listUpdateKey:', state.listUpdateKey);
 
       // Get processing attentions from Firebase listener (already filtered by date)
       const processingArray = processingAttentionsRef?.value || [];
@@ -258,14 +218,6 @@ export default {
       // Get the next available attention (first in sorted list - lowest number)
       if (state.queuePendingDetails && state.queuePendingDetails.length > 0) {
         const nextAttention = state.queuePendingDetails[0];
-        console.log('🔍 [updateAttentionDetails] Next Attention (first in list):', {
-          nextAttention,
-          id: nextAttention.attentionId || nextAttention.id,
-          number: nextAttention.number,
-          status: nextAttention.status,
-          createdAt: nextAttention.createdAt,
-          user: nextAttention.user,
-        });
 
         if (nextAttention) {
           state.attention = {
@@ -273,24 +225,11 @@ export default {
             id: nextAttention.attentionId || nextAttention.id,
           };
 
-          console.log('🔍 [updateAttentionDetails] State.attention set to:', state.attention);
-
           if (nextAttention.user) {
             state.user = nextAttention.user;
-            console.log('🔍 [updateAttentionDetails] State.user set to:', state.user);
           }
         }
       } else {
-        console.log('🔍 [updateAttentionDetails] No pending attentions found');
-        console.log(
-          '🔍 [updateAttentionDetails] pendingAttentionsRef exists:',
-          !!pendingAttentionsRef,
-        );
-        console.log(
-          '🔍 [updateAttentionDetails] pendingAttentionsRef.value:',
-          pendingAttentionsRef?.value,
-        );
-
         // No pending attentions - only clear if we're sure there are none
         // Don't clear if we're still loading
         if (pendingAttentionsRef && pendingAttentionsRef.value !== undefined) {
@@ -386,6 +325,9 @@ export default {
             await store.setCurrentCommerce(state.commerce);
           }
         }
+
+        // Load business
+        state.business = await store.getActualBusiness();
 
         loading.value = false;
       } else {
@@ -698,7 +640,11 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.commerce?.logo || state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :commerce-id="state.commerce?.id"
+          :business-id="business?.id"
+          :loading="loading"
+        />
         <ComponentMenu
           :title="`${$t(`collaboratorQueueAttentions.hello-user`)}, ${
             state.currentUser.alias || state.currentUser.name
@@ -756,7 +702,8 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <DesktopPageHeader
-          :logo="state.commerce?.logo || state.business?.logo"
+          :commerce-id="state.commerce?.id"
+          :business-id="business?.id"
           :loading="loading"
           :title="`${$t('collaboratorQueueAttentions.hello-user')}, ${state.currentUser.alias || state.currentUser.name}!`"
           :toggles="state.toggles"

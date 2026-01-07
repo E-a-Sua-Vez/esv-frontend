@@ -34,34 +34,18 @@ export default {
     const { t } = useI18n();
     const checkoutEnabled = computed(() => {
       if (!props.commerce) {
-        console.log('[AttentionStepBar] No commerce provided');
         return false;
       }
 
       // Log all features for debugging
       if (process.env.NODE_ENV === 'development') {
-        console.log(
-          '[AttentionStepBar] Commerce:',
-          props.commerce?.id,
-          'Features:',
-          props.commerce?.features,
-        );
         const allFeatures = props.commerce?.features || [];
 
         // Log all PRODUCT type features
         const productFeatures = allFeatures.filter(f => f.type === 'PRODUCT');
-        console.log('[AttentionStepBar] PRODUCT features:', productFeatures);
-        console.log(
-          '[AttentionStepBar] PRODUCT feature names:',
-          productFeatures.map(f => ({ name: f.name, active: f.active, title: f.title })),
-        );
 
         // Log all feature names for debugging
-        console.log('[AttentionStepBar] All PRODUCT feature names (expanded):');
         productFeatures.forEach((f, index) => {
-          console.log(
-            `  [${index}] name: "${f.name}", active: ${f.active}, title: "${f.title || 'N/A'}"`,
-          );
         });
 
         // Log features containing 'checkout' or 'stages' (case insensitive)
@@ -72,7 +56,6 @@ export default {
               f.name.toLowerCase().includes('stages') ||
               f.name.toLowerCase().includes('check-out'))
         );
-        console.log('[AttentionStepBar] Checkout/Stages related features:', checkoutRelated);
 
         // Also check if the name field might be different - try common variations
         const possibleCheckoutNames = [
@@ -86,7 +69,6 @@ export default {
         possibleCheckoutNames.forEach(name => {
           const found = allFeatures.find(f => f.name === name);
           if (found) {
-            console.log(`[AttentionStepBar] Found feature with name "${name}":`, found);
           }
         });
 
@@ -94,20 +76,17 @@ export default {
         const checkoutFeature = allFeatures.find(
           f => f.name === 'attention-checkout-enabled' && f.type === 'PRODUCT',
         );
-        console.log('[AttentionStepBar] Checkout feature found:', checkoutFeature);
 
         // Try to find stages feature
         const stagesFeature = allFeatures.find(
           f => f.name === 'attention-stages-enabled' && f.type === 'PRODUCT',
         );
-        console.log('[AttentionStepBar] Stages feature found:', stagesFeature);
       }
 
       const enabled = getActiveFeature(props.commerce, 'attention-checkout-enabled', 'PRODUCT');
 
       // Debug: Log to help verify feature detection
       if (process.env.NODE_ENV === 'development') {
-        console.log('[AttentionStepBar] checkoutEnabled result:', enabled);
       }
       return enabled;
     });
@@ -117,7 +96,6 @@ export default {
       const enabled = getActiveFeature(props.commerce, 'attention-stages-enabled', 'PRODUCT');
       // Debug: Log to help verify feature detection
       if (process.env.NODE_ENV === 'development') {
-        console.log('[AttentionStepBar] stagesEnabled:', enabled);
       }
       return enabled;
     });
@@ -153,18 +131,10 @@ export default {
 
         // Debug log
         if (process.env.NODE_ENV === 'development') {
-          console.log(
-            '[AttentionStepBar] ✅ Adding checkout step. Total steps:',
-            baseSteps.length + 1,
-          );
         }
       } else {
         // Debug log when checkout is NOT enabled
         if (process.env.NODE_ENV === 'development') {
-          console.log(
-            '[AttentionStepBar] ❌ Checkout NOT enabled. checkoutEnabled.value:',
-            checkoutEnabled.value,
-          );
         }
       }
 
@@ -178,10 +148,6 @@ export default {
 
       // Debug log final steps
       if (process.env.NODE_ENV === 'development') {
-        console.log(
-          '[AttentionStepBar] Final steps:',
-          baseSteps.map(s => s.id),
-        );
       }
 
       return baseSteps;

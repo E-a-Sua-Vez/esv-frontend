@@ -10,7 +10,6 @@ import { LineChart, DoughnutChart, BarChart, useBarChart } from 'vue-chart-3';
 import { getPermissions } from '../../application/services/permissions';
 import { getActiveFeature } from '../../shared/features';
 import Message from '../../components/common/Message.vue';
-import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import DashboardIndicators from '../../components/dashboard/DashboardIndicators.vue';
@@ -18,6 +17,7 @@ import DashboardGraphs from '../../components/dashboard/DashboardGraphs.vue';
 import DashboardSurveysResult from '../../components/dashboard/DashboardSurveysResult.vue';
 import DashboardSurveys from '../../components/dashboard/DashboardSurveys.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import CollaboratorSpySection from '../../components/collaborator/CollaboratorSpySection.vue';
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
@@ -32,7 +32,6 @@ Chart.register(...registerables);
 export default {
   name: 'CollaboratorDashboard',
   components: {
-    CommerceLogo,
     Message,
     Spinner,
     Alert,
@@ -44,6 +43,7 @@ export default {
     DashboardSurveysResult,
     DashboardSurveys,
     ComponentMenu,
+    CommerceLogo,
     CollaboratorSpySection,
     DesktopContentLayout,
     DesktopPageHeader,
@@ -87,11 +87,11 @@ export default {
 
     // Use global commerce and module from store
     const commerce = computed(() => store.getCurrentCommerce);
+    const business = computed(() => store.getCurrentBusiness);
     const module = computed(() => store.getCurrentModule);
 
     const state = reactive({
       currentUser: {},
-      business: {},
       startDate: new Date(new Date().setDate(new Date().getDate() - 14)).toISOString().slice(0, 10),
       endDate: new Date().toISOString().slice(0, 10),
       activeBusiness: false,
@@ -196,7 +196,6 @@ export default {
             }
           }
         }
-        state.business = await store.getActualBusiness();
         await loadQueues();
         state.toggles = await getPermissions('dashboard');
         await refresh();
@@ -911,6 +910,7 @@ export default {
       loading,
       alertError,
       commerce,
+      business,
       module,
       attentionNumberEvolutionProps,
       attentionDurationEvolutionProps,
@@ -953,10 +953,10 @@ export default {
     <div class="d-block d-lg-none">
       <div class="content text-center">
         <CommerceLogo
-          :src="commerce && commerce.logo ? commerce.logo : null"
-          :business-id="state.business?.id"
+          :commerce-id="commerce?.id"
+          :business-id="business?.id"
           :loading="loading"
-        ></CommerceLogo>
+        />
         <ComponentMenu
           :title="$t(`dashboard.title`)"
           :toggles="state.toggles"
@@ -1192,7 +1192,7 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <DesktopPageHeader
-          :logo="commerce?.logo || state.business?.logo"
+          :commerce-id="commerce?.id"
           :business-id="state.business?.id"
           :loading="loading"
           :title="$t('dashboard.title')"

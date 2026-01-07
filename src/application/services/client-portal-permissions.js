@@ -4,10 +4,15 @@ import { getClientPermissions } from './client-portal';
  * Obtiene permisos del cliente desde el backend basados en su token de sesión
  * Similar a getPermissions de permissions.js pero específico para el portal del cliente
  */
-export const getClientPortalPermissions = async (moduleIn, typeIn, actionIn) => {
+export const getClientPortalPermissions = async (
+  moduleIn,
+  typeIn,
+  actionIn,
+  clientPortalSessionToken
+) => {
   try {
     const result = {};
-    const token = localStorage.getItem('clientPortalSessionToken');
+    const token = clientPortalSessionToken || localStorage.getItem('clientPortalSessionToken');
 
     if (!token) {
       console.warn('No client portal session token found');

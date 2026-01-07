@@ -1,18 +1,22 @@
 <template>
   <div>
     <div class="content text-center">
-      <div class="row align-items-center mb-1 desktop-header-row">
+      <div class="d-block d-lg-none">
+        <CommerceLogo
+          :commerce-id="commerce?.id"
+          :business-id="commerce?.businessId"
+          :loading="loading"
+        ></CommerceLogo>
+      </div>
+      <div class="row align-items-center mb-1 desktop-header-row d-none d-lg-flex">
         <div class="col-auto desktop-logo-wrapper">
           <div class="desktop-commerce-logo">
-            <div id="commerce-logo-desktop">
-              <img
-                v-if="!loading && commerce?.logo"
-                class="rounded img-fluid logo-desktop"
-                :alt="$t('logoAlt')"
-                :src="commerce.logo"
-                loading="lazy"
-              />
-            </div>
+            <CommerceLogo
+              :commerce-id="commerce?.id"
+              :business-id="commerce?.businessId"
+              :loading="loading"
+              class="logo-desktop"
+            />
           </div>
         </div>
         <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
@@ -24,6 +28,15 @@
             @goBack="goBack"
           />
         </div>
+      </div>
+      <div class="d-block d-lg-none">
+        <ComponentMenu
+          :title="$t('clientPortal.consents.title')"
+          :toggles="toggles"
+          component-name="clientPortalConsents"
+          :is-client-portal="true"
+          @goBack="goBack"
+        />
       </div>
 
       <!-- Loading State -->
@@ -212,7 +225,6 @@ export default {
       try {
         const clientPermissions = await getClientPortalPermissions('client-portal', 'consents');
         permissions.value = clientPermissions;
-        console.log('Client consents permissions loaded:', clientPermissions);
       } catch (err) {
         console.error('Error loading permissions:', err);
         // Si falla, damos permisos por defecto para no bloquear
@@ -347,8 +359,35 @@ export default {
 
     const validateSession = async () => {
       const token = localStorage.getItem('clientPortalSessionToken');
+      const expiresAt = localStorage.getItem('clientPortalSessionExpiresAt');
+
       if (!token) {
         router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
+        return;
+      }
+
+      // Si el token existe y no ha expirado, asumir válido (evitar doble validación)
+      if (expiresAt && new Date(expiresAt) > new Date()) {
+        // Cargar datos desde localStorage si existen
+        const storedClient = localStorage.getItem('clientPortalClient');
+        const storedCommerce = localStorage.getItem('clientPortalCommerce');
+        if (storedClient) {
+          try {
+            client.value = JSON.parse(storedClient);
+          } catch (e) {
+            console.error('Error parsing stored client:', e);
+          }
+        }
+        if (storedCommerce) {
+          try {
+            commerce.value = JSON.parse(storedCommerce);
+          } catch (e) {
+            console.error('Error parsing stored commerce:', e);
+          }
+        }
+
+        // Carregar consentimentos
+        await loadConsents();
         return;
       }
 
@@ -414,7 +453,6 @@ export default {
         clearTimeout(inactivityTimeout);
       }
       inactivityTimeout = setTimeout(() => {
-        console.log('Session expired due to inactivity');
         router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
       }, INACTIVITY_TIMEOUT_MS);
     };

@@ -6,11 +6,11 @@ import { getCommerceById } from '../../application/services/commerce';
 import { getPermissions } from '../../application/services/permissions';
 import { getServiceByCommerce } from '../../application/services/service';
 import Message from '../../components/common/Message.vue';
-import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import ProductsStockManagement from '../../components/products/ProductsStockManagement.vue';
 import ProductAttentionManagement from '../../components/products/ProductsAttentionManagement.vue';
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
@@ -21,12 +21,12 @@ import DateRangeFilters from '../../components/common/desktop/DateRangeFilters.v
 export default {
   name: 'CollaboratorProductStockAdmin',
   components: {
-    CommerceLogo,
     Message,
     Spinner,
     Alert,
     ToggleCapabilities,
     ComponentMenu,
+    CommerceLogo,
     ProductsStockManagement,
     ProductAttentionManagement,
     DesktopContentLayout,
@@ -43,11 +43,11 @@ export default {
 
     // Use global commerce and module from store
     const commerce = computed(() => store.getCurrentCommerce);
+    const business = computed(() => store.getCurrentBusiness);
     const module = computed(() => store.getCurrentModule);
 
     const state = reactive({
       currentUser: {},
-      business: {},
       activeBusiness: false,
       queues: ref([]),
       services: ref([]),
@@ -84,7 +84,6 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        state.business = await store.getActualBusiness();
         // Set initial commerce if not set - check both commerceId and commercesId
         if (!commerce.value || !commerce.value.id) {
           // First try commerceId (single commerce)
@@ -278,6 +277,7 @@ export default {
       handleFiltersToggle,
       handleCommerceChanged,
       commerce,
+      business,
       module,
       selectedCommerces,
       productsFilterInstanceRef,
@@ -301,10 +301,10 @@ export default {
     <div class="d-block d-lg-none">
       <div class="content text-center">
         <CommerceLogo
-          :src="commerce?.logo || state.business?.logo"
-          :business-id="state.business?.id"
+          :commerce-id="commerce?.id"
+          :business-id="business?.id"
           :loading="loading"
-        ></CommerceLogo>
+        />
         <ComponentMenu
           :title="$t(`businessProductStockAdmin.title`)"
           :toggles="state.toggles"
@@ -395,7 +395,7 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <DesktopPageHeader
-          :logo="commerce?.logo || state.business?.logo"
+          :commerce-id="commerce?.id"
           :business-id="state.business?.id"
           :loading="loading"
           :title="$t('businessProductStockAdmin.title')"
@@ -409,6 +409,14 @@ export default {
               <Message
                 :title="$t('businessProductStockAdmin.message.3.title')"
                 :content="$t('businessProductStockAdmin.message.3.content')"
+              />
+            </div>
+          </div>
+          <div v-else-if="!state.toggles['products-stock.products.view'] && !state.toggles['products-stock.attentions.view']">
+            <div v-if="!loading" class="control-box mt-4">
+              <Message
+                :title="$t('businessProductStockAdmin.message.4.title')"
+                :content="$t('businessProductStockAdmin.message.4.content')"
               />
             </div>
           </div>

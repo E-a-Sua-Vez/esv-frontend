@@ -32,6 +32,7 @@ export default {
       currentUserType: '',
       currentUser: {},
       currentBusiness: {},
+      currentCommerce: {},
       showActions: false,
       showMessages: true,
       errors: [],
@@ -45,6 +46,7 @@ export default {
       state.currentUserType = undefined;
       state.currentUser = store.getCurrentUser;
       state.currentBusiness = store.getCurrentBusiness;
+      state.currentCommerce = store.getCurrentCommerce;
       if (state.currentUser !== undefined && state.currentUser !== null) {
         // For client portal, format name properly
         if (store.getCurrentUserType === 'client') {
@@ -199,12 +201,11 @@ export default {
     <div class="row mt-2 mb-2 centered">
       <div class="col-6" v-if="state.currentBusiness">
         <CommerceLogo
-          v-if="state.currentBusiness?.logo"
-          :src="state.currentBusiness?.logo"
+          :commerce-id="state.currentCommerce?.id"
+          :business-id="state.currentBusiness?.id"
           :loading="loading"
           class="item-image"
         />
-        <i v-else class="bi bi-person-circle"> </i>
       </div>
     </div>
     <div class="row mt-2 mb-2 centered">

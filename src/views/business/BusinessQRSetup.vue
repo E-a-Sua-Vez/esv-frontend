@@ -217,7 +217,7 @@ export default {
       <!-- Business Logo -->
       <div class="logo-container mb-2" v-if="!loading">
         <CommerceLogo
-          :src="state.business?.logo"
+          :business-id="state.business?.id"
           :loading="loading"
           :large-size="true"
         ></CommerceLogo>
@@ -250,22 +250,11 @@ export default {
             >
               <div class="unit-select-content">
                 <div class="unit-select-logo">
-                  <!-- Try commerce logo first -->
-                  <img
-                    v-if="getCommerceLogo(state.commerce)"
-                    :src="getCommerceLogo(state.commerce)"
+                  <CommerceLogo
+                    :commerce-id="state.commerce?.id"
+                    :business-id="state.business?.id"
                     class="unit-logo-img"
-                    @error="handleLogoError(state.commerce.id)"
                   />
-                  <!-- Fallback to business logo -->
-                  <img
-                    v-else-if="getBusinessLogo()"
-                    :src="getBusinessLogo()"
-                    class="unit-logo-img"
-                    @error="handleLogoError(null, true)"
-                  />
-                  <!-- Final fallback to icon -->
-                  <i v-else class="bi bi-shop unit-logo-fallback"></i>
                 </div>
                 <div class="unit-select-info">
                   <span class="unit-select-name">{{ state.commerce.tag }}</span>
@@ -284,22 +273,11 @@ export default {
               <li v-for="com in state.commerces" :key="com.id" :value="com" class="list-item">
                 <div class="unit-option" @click="selectCommerce(com)">
                   <div class="unit-option-logo">
-                    <!-- Try commerce logo first -->
-                    <img
-                      v-if="getCommerceLogo(com)"
-                      :src="getCommerceLogo(com)"
+                    <CommerceLogo
+                      :commerce-id="com?.id"
+                      :business-id="state.business?.id"
                       class="unit-logo-img"
-                      @error="handleLogoError(com.id)"
                     />
-                    <!-- Fallback to business logo -->
-                    <img
-                      v-else-if="getBusinessLogo()"
-                      :src="getBusinessLogo()"
-                      class="unit-logo-img"
-                      @error="handleLogoError(null, true)"
-                    />
-                    <!-- Final fallback to icon -->
-                    <i v-else class="bi bi-shop unit-logo-fallback"></i>
                   </div>
                   <div class="unit-option-info">
                     <div class="unit-option-name">{{ com.tag }}</div>
@@ -320,22 +298,11 @@ export default {
           <div v-else class="unit-select-single">
             <div class="unit-select-content">
               <div class="unit-select-logo">
-                <!-- Try commerce logo first -->
-                <img
-                  v-if="getCommerceLogo(state.commerce)"
-                  :src="getCommerceLogo(state.commerce)"
+                <CommerceLogo
+                  :commerce-id="state.commerce?.id"
+                  :business-id="state.business?.id"
                   class="unit-logo-img"
-                  @error="handleLogoError(state.commerce.id)"
                 />
-                <!-- Fallback to business logo -->
-                <img
-                  v-else-if="getBusinessLogo()"
-                  :src="getBusinessLogo()"
-                  class="unit-logo-img"
-                  @error="handleLogoError(null, true)"
-                />
-                <!-- Final fallback to icon -->
-                <i v-else class="bi bi-shop unit-logo-fallback"></i>
               </div>
               <div class="unit-select-info">
                 <span class="unit-select-name">{{ state.commerce.tag }}</span>

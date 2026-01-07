@@ -5,7 +5,6 @@ import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { getServiceByCommerce } from '../../application/services/service';
 import Message from '../../components/common/Message.vue';
-import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
@@ -13,6 +12,7 @@ import DashboardSurveysManagement from '../../components/dashboard/DashboardSurv
 import DashboardAttentionsManagement from '../../components/attentions/DashboardAttentionsManagement.vue';
 import DashboardClientsManagement from '../../components/clients/DashboardClientsManagement.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import DashboardAttentionsAndBookingsManagement from '../../components/attentions/DashboardAttentionsAndBookingsManagement.vue';
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
@@ -23,7 +23,6 @@ import { DateModel } from '../../shared/utils/date.model';
 export default {
   name: 'CollaboratorTracing',
   components: {
-    CommerceLogo,
     Message,
     Spinner,
     Alert,
@@ -32,6 +31,7 @@ export default {
     DashboardAttentionsManagement,
     DashboardClientsManagement,
     ComponentMenu,
+    CommerceLogo,
     DashboardAttentionsAndBookingsManagement,
     DesktopContentLayout,
     DesktopPageHeader,
@@ -116,6 +116,7 @@ export default {
 
     // Use global commerce from store
     const commerce = computed(() => store.getCurrentCommerce);
+    const business = computed(() => store.getCurrentBusiness);
 
     // Compute selectedCommerces - use all commerces for Tracing components
     const selectedCommerces = computed(() => {
@@ -1141,6 +1142,7 @@ export default {
       goBack,
       isActiveBusiness,
       commerce,
+      business,
       selectedCommerces,
       showClients,
       showSurveys,
@@ -1181,10 +1183,10 @@ export default {
     <div class="d-block d-lg-none">
       <div class="content text-center">
         <CommerceLogo
-          :src="commerce?.logo || state.business?.logo"
-          :business-id="state.business?.id"
+          :commerce-id="commerce?.id"
+          :business-id="business?.id"
           :loading="loading"
-        ></CommerceLogo>
+        />
         <ComponentMenu
           :title="$t(`dashboard.tracing.title`)"
           :toggles="state.toggles"
@@ -1297,8 +1299,9 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <DesktopPageHeader
-          :logo="commerce?.logo || state.business?.logo"
+          :logo="business?.logo || commerce?.logo"
           :business-id="state.business?.id"
+          :commerce-id="commerce?.id"
           :loading="loading"
           :title="$t('dashboard.tracing.title')"
           :toggles="state.toggles"
