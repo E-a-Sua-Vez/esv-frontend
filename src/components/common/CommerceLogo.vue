@@ -272,7 +272,7 @@ export default {
 };
 </script>
 <template>
-  <div id="commerce-logo">
+  <div id="commerce-logo" style="cursor: pointer;" @click="$emit('click', $event)">
     <LogoSkeleton v-if="(loading || logoLoading) && src === undefined && !logoUrl"></LogoSkeleton>
     <img
       v-else

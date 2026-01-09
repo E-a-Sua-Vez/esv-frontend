@@ -205,6 +205,18 @@ const setupResponseInterceptor = (instance, apiName) => {
         }
       }
 
+      // Suppress 404 errors from Backend API for internal-message read endpoints (idempotent)
+      if (
+        apiName === 'Backend API' &&
+        error.response?.status === 404 &&
+        originalRequest?.url &&
+        /\/internal-message\//.test(originalRequest.url) &&
+        (originalRequest.url.endsWith('/read') || originalRequest.url.endsWith('/bulk/read'))
+      ) {
+        // Treat as soft-success to avoid noisy logs/toasts
+        return Promise.resolve({ data: { skipped: true } });
+      }
+
       // Suppress 404 errors from Event API - these are expected when resources don't exist yet
       // Event API is used for optional features like lead transitions/history
       // Check this BEFORE calling handleApiError to prevent logging

@@ -1,27 +1,23 @@
 <script>
-import { ref, reactive, onBeforeMount, watch, toRefs } from 'vue';
+import { ref, reactive, onBeforeMount, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores/index';
 import { signOut, signInInvited } from '../../application/services/auth';
 import { getDateAndHour } from '../../shared/utils/date';
 import { sendResetPasswordEmail } from '../../application/firebase';
 import { changePassword } from '../../application/services/auth';
-import { markAllAsRead } from '../../application/services/message';
 import { USER_TYPES } from '../../shared/constants';
+import { useMessageInbox } from '../../composables/useMessageInbox';
 import Message from '../common/Message.vue';
 import Spinner from '../common/Spinner.vue';
 import Alert from '../common/Alert.vue';
 import Warning from '../common/Warning.vue';
-import UserMessage from '../common/UserMessage.vue';
 import CommerceLogo from '../common/CommerceLogo.vue';
-
 export default {
-  components: { Message, Spinner, Alert, Warning, UserMessage, CommerceLogo },
+  components: { Message, Spinner, Alert, Warning, CommerceLogo },
   name: 'MyUser',
-  props: {
-    messages: { type: Array, default: [] },
-  },
-  async setup(props) {
+  emits: ['toggle-inbox'],
+  async setup(props, { emit }) {
     const router = useRouter();
     let store = globalStore();
     const loading = ref(false);
@@ -34,12 +30,12 @@ export default {
       currentBusiness: {},
       currentCommerce: {},
       showActions: false,
-      showMessages: true,
       errors: [],
       passwordChanged: false,
     });
 
-    const { messages } = toRefs(props);
+    // Solo necesitamos el contador de mensajes no leídos
+    const { unreadCount } = useMessageInbox();
 
     const getUser = store => {
       state.userName = undefined;
@@ -147,35 +143,13 @@ export default {
       }
     };
 
-    const markMessagesAsRead = async () => {
-      try {
-        alertError.value = '';
-        if (state.currentUserType && state.currentUser && state.currentUser.id) {
-          if (state.currentUserType === USER_TYPES.BUSINESS) {
-            const body = {
-              administratorId: state.currentUser.id,
-            };
-            await markAllAsRead(body);
-          } else if (state.currentUserType === USER_TYPES.COLLABORATOR) {
-            const body = {
-              collaboratorId: state.currentUser.id,
-            };
-            await markAllAsRead(body);
-          }
-        }
-      } catch (error) {
-        alertError.value = error.message;
-      }
-    };
-
     const showActions = () => {
-      state.showActions = true;
-      state.showMessages = false;
+      state.showActions = !state.showActions;
     };
 
-    const showMessages = () => {
-      state.showActions = false;
-      state.showMessages = true;
+    const openInbox = () => {
+      // Emitir evento para que el Header abra la bandeja principal
+      emit('toggle-inbox');
     };
 
     return {
@@ -188,9 +162,9 @@ export default {
       loginInvited,
       getUser,
       showActions,
-      showMessages,
+      openInbox,
       sendEmail,
-      markMessagesAsRead,
+      unreadCount,
     };
   },
 };
@@ -264,17 +238,20 @@ export default {
       <div class="col-6 centered">
         <button
           class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-          :class="state.showMessages ? 'btn-selected' : ''"
-          @click="showMessages()"
+          @click="openInbox()"
+          title="Abrir bandeja de entrada"
         >
           <div class="row centered">
             <div class="col-7">
               {{ $t('myUser.messages') }}
             </div>
-            <div class="col-4 centered">
+            <div class="col-4 centered" v-if="unreadCount > 0">
               <span class="badge bg-danger rounded-pill px-2 py-1 mx-1">
-                <i class="bi bi-envelope-fill"></i> {{ messages.length || 0 }}
+                <i class="bi bi-envelope-fill"></i> {{ unreadCount }}
               </span>
+            </div>
+            <div class="col-4 centered" v-else>
+              <i class="bi bi-envelope"></i>
             </div>
           </div>
         </button>
@@ -308,45 +285,6 @@ export default {
       <button class="btn btn-md btn-size fw-bold btn-danger rounded-pill my-1" @click="logout()">
         {{ $t('myUser.logout') }} <i class="bi bi-box-arrow-right"></i>
       </button>
-    </div>
-    <div class="row col mx-1 mt-3 mb-1" v-if="state.showMessages">
-      <div v-if="messages && messages.length === 0">
-        <Message
-          :icon="'bi-inbox-fill'"
-          :title="$t('myUser.message.1.title')"
-          :content="$t('myUser.message.1.content')"
-        />
-      </div>
-      <div v-else class="message-box">
-        <div class="righted">
-          <button
-            class="btn btn-sm btn-size fw-bold btn-success rounded-pill mb-2"
-            @click="markMessagesAsRead()"
-            :disabled="
-              !(
-                messages &&
-                messages.length > 1 &&
-                messages.filter(msg => msg.type === 'SYSTEM').length !== messages.length
-              )
-            "
-          >
-            {{ $t('myUser.markAsRead') }} <i class="bi bi-check-all"></i>
-          </button>
-        </div>
-        <div v-for="message in messages" :key="message.id">
-          <Transition mode="out-in">
-            <UserMessage
-              :closable="true"
-              :id="message.id"
-              :icon="message.icon"
-              :title="message.title"
-              :content="message.content"
-              :date="message.createdAt"
-              :type="message.type"
-            />
-          </Transition>
-        </div>
-      </div>
     </div>
   </div>
 </template>

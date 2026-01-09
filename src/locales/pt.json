@@ -45,6 +45,8 @@
   "common": {
     "loading": "Carregando...",
     "close": "Fechar",
+    "cancel": "Cancelar",
+    "sending": "Enviando...",
     "filterByType": "Filtrar por tipo:",
     "all": "Todos",
     "search": "Buscar:",
@@ -370,6 +372,121 @@
       "STANDARD": "Standard",
       "FULL": "Full",
       "ASSISTANT": "Asistente"
+    },
+    "roles": {
+      "DOCTOR": "Médico",
+      "SPECIALIST": "Especialista",
+      "GENERAL_DOCTOR": "Médico Geral",
+      "NURSE": "Enfermeiro",
+      "MEDICAL_ASSISTANT": "Assistente Médico",
+      "SECRETARY": "Secretário",
+      "ADMINISTRATOR": "Administrador",
+      "THERAPIST": "Terapeuta"
+    },
+    "medicalData": {
+      "title": "Dados Médicos",
+      "medicalLicense": "Licença Médica",
+      "medicalLicensePlaceholder": "Ex: CRM-12345",
+      "specialization": "Especialização",
+      "specializationPlaceholder": "Ex: Cardiologia",
+      "clinicName": "Nome da Clínica",
+      "clinicNamePlaceholder": "Ex: Clínica São João",
+      "clinicAddress": "Endereço da Clínica",
+      "clinicAddressPlaceholder": "Endereço completo da clínica",
+      "professionalAddress": "Endereço Profissional",
+      "professionalAddressPlaceholder": "Endereço do consultório",
+      "clinicPhone": "Telefone da Clínica",
+      "clinicPhonePlaceholder": "Ex: +55 11 1234-5678",
+      "professionalPhone": "Telefone Profissional",
+      "professionalPhonePlaceholder": "Telefone do consultório",
+      "professionalEmail": "Email Profissional",
+      "professionalEmailPlaceholder": "email{at}clinica.com",
+      "save": "Salvar Dados Médicos",
+      "saved": "Dados médicos salvos com sucesso",
+      "error": "Erro ao salvar dados médicos"
+    },
+    "profilePhoto": {
+      "title": "Foto do Perfil",
+      "upload": "Carregar Foto",
+      "uploading": "Carregando...",
+      "uploaded": "Foto carregada com sucesso",
+      "update": "Alterar Foto",
+      "remove": "Remover Foto",
+      "error": "Erro ao processar a foto",
+      "maxSize": "Tamanho máximo: 5MB",
+      "supportedFormats": "Formatos: JPG, PNG, JPEG",
+      "takePhoto": "Tirar Foto",
+      "capture": "Capturar",
+      "noPhoto": "Sem foto de perfil",
+      "current": "Foto Atual",
+      "uploadHelp": "Selecione uma imagem ou use a câmera",
+      "uploadSuccess": "Foto carregada com sucesso",
+      "cropOptions": "Opções de Corte",
+      "cropToSquare": "Cortar para quadrado",
+      "compress": "Comprimir imagem"
+    }
+  },
+  "collaborator": {
+    "profilePhoto": {
+      "title": "Foto de Perfil do Colaborador",
+      "current": "Foto atual",
+      "update": "Atualizar Foto",
+      "upload": "Enviar Foto",
+      "fileFormats": "JPG, PNG, WEBP (máx 5MB)"
+    },
+    "medicalData": {
+      "title": "Dados Médicos",
+      "license": {
+        "title": "Licença Médica",
+        "number": "Número da Licença",
+        "numberPlaceholder": "Informe o número da licença médica",
+        "state": "Estado/Província",
+        "statePlaceholder": "Informe o estado ou província da licença"
+      },
+      "specialization": "Especialização",
+      "specializationPlaceholder": "Informe sua especialização médica",
+      "subspecialization": "Subespecialização",
+      "subspecializationPlaceholder": "Informe sua subespecialização (opcional)",
+      "education": {
+        "title": "Formação Acadêmica",
+        "school": "Faculdade de Medicina",
+        "schoolPlaceholder": "Informe o nome da sua faculdade de medicina",
+        "graduationYear": "Ano de Graduação",
+        "graduationYearPlaceholder": "2026"
+      },
+      "contact": {
+        "title": "Contato Profissional",
+        "address": "Endereço Profissional",
+        "addressPlaceholder": "Informe seu endereço profissional",
+        "phone": "Telefone Profissional",
+        "phonePlaceholder": "Informe seu telefone profissional",
+        "mobile": "Celular Profissional",
+        "mobilePlaceholder": "Informe seu celular profissional",
+        "email": "Email Profissional",
+        "emailPlaceholder": "Informe seu email profissional",
+        "emergencyPhone": "Telefone de Emergência",
+        "emergencyPhonePlaceholder": "Informe um telefone de emergência"
+      },
+      "clinic": {
+        "title": "Informações da Clínica/Hospital",
+        "name": "Nome da Clínica",
+        "namePlaceholder": "Informe o nome da sua clínica ou hospital",
+        "phone": "Telefone da Clínica",
+        "phonePlaceholder": "Informe o telefone da clínica",
+        "address": "Endereço da Clínica",
+        "addressPlaceholder": "Informe o endereço da clínica ou hospital"
+      },
+      "additional": {
+        "title": "Configurações Adicionais",
+        "workingHours": "Horário de Atendimento",
+        "workingHoursPlaceholder": "Ex: Segunda a Sexta 8:00–18:00",
+        "languages": "Idiomas",
+        "languagesPlaceholder": "Português, Espanhol, Inglês",
+        "languagesHelp": "Separe os idiomas com vírgulas",
+        "insurance": "Convênios Aceitos",
+        "insurancePlaceholder": "Unimed, Amil, Bradesco",
+        "insuranceHelp": "Separe os convênios com vírgulas"
+      }
     }
   },
   "documents": {
@@ -7163,8 +7280,174 @@
     "undefined": "Erro indefinido"
   },
   "digitalSignature": {
+    "title": "Assinatura Digital",
+    "upload": "Enviar Assinatura",
+    "current": "Assinatura Atual",
+    "crm": "CRM",
+    "crmPlaceholder": "123456",
+    "crmState": "Estado do CRM",
+    "crmStatePlaceholder": "SP",
+    "uploadHelp": "Selecione uma imagem da sua assinatura (JPG, PNG, WEBP máx 5MB)",
     "icp": {
       "sign": "Assinar com ICP"
+    }
+  },
+  "messages": {
+    "inbox": "Caixa de Entrada",
+    "openInbox": "Abrir caixa de entrada",
+    "markAsRead": "Marcar como lido",
+    "markAllAsRead": "Marcar todos como lidos",
+    "archive": "Arquivar",
+    "archiveAll": "Arquivar todos",
+    "confirmArchiveAll": "Tem certeza de que deseja arquivar todas as mensagens?",
+    "viewDetails": "Ver detalhes",
+    "options": "Opções",
+    "loading": "Carregando mensagens...",
+    "noMessages": "Nenhuma mensagem encontrada",
+    "loadMore": "Carregar mais",
+    "compose": {
+      "title": "Nova Mensagem",
+      "newMessage": "Nova mensagem",
+      "messageType": "Tipo de mensagem",
+      "chat": "Chat (usuário para usuário)",
+      "notification": "Notificação do sistema",
+      "recipient": "Destinatário",
+      "selectRecipientType": "Selecionar tipo de destinatário",
+      "collaborator": "Colaborador",
+      "administrator": "Administrador",
+      "business": "Negócio",
+      "selectRecipient": "Selecionar destinatário",
+      "chooseRecipient": "Escolher destinatário...",
+      "category": "Categoria",
+      "priority": "Prioridade",
+      "titlePlaceholder": "Digite o título da mensagem",
+      "content": "Conteúdo",
+      "contentPlaceholder": "Escreva sua mensagem aqui...",
+      "actionLink": "Link de ação (opcional)",
+      "actionLinkPlaceholder": "/produtos/123",
+      "actionLabel": "Rótulo do botão",
+      "actionLabelPlaceholder": "Ver detalhes",
+      "massMessage": "Mensagem em massa",
+      "send": "Enviar",
+      "error": "Erro ao enviar mensagem. Tente novamente."
+    },
+    "tabs": {
+      "all": "Todas",
+      "unread": "Não lidas",
+      "notifications": "Notificações",
+      "chat": "Chat"
+    },
+    "filters": {
+      "category": "Categoria",
+      "priority": "Prioridade",
+      "allCategories": "Todas as categorias",
+      "allPriorities": "Todas as prioridades",
+      "clear": "Limpar filtros"
+    },
+    "categories": {
+      "direct_message": "Mensagem Direta",
+      "announcement": "Anúncio",
+      "attention_reminder": "Lembrete de Atendimento",
+      "booking_reminder": "Lembrete de Agendamento",
+      "booking_confirmed": "Agendamento Confirmado",
+      "booking_cancelled": "Agendamento Cancelado",
+      "stock": "Estoque",
+      "low_stock": "Estoque Baixo",
+      "out_of_stock": "Sem Estoque",
+      "payment_received": "Pagamento Recebido",
+      "payment_pending": "Pagamento Pendente",
+      "payment_overdue": "Pagamento Vencido",
+      "plan_expiring": "Plano Expirando",
+      "plan_expired": "Plano Expirado",
+      "plan_upgraded": "Plano Atualizado",
+      "survey_pending": "Pesquisa Pendente",
+      "document_available": "Documento Disponível",
+      "form_pending": "Formulário Pendente",
+      "system_update": "Atualização do Sistema",
+      "feature_announcement": "Nova Funcionalidade",
+      "maintenance": "Manutenção",
+      "task_assigned": "Tarefa Atribuída",
+      "task_completed": "Tarefa Concluída",
+      "task_overdue": "Tarefa Vencida",
+      "booking": "Agendamento",
+      "payment": "Pagamento",
+      "attention": "Atendimento",
+      "system": "Sistema",
+      "chat": "Chat",
+      "queue": "Fila",
+      "client": "Cliente",
+      "collaborator": "Colaborador",
+      "document": "Documento",
+      "report": "Relatório",
+      "alert": "Alerta",
+      "reminder": "Lembrete",
+      "task": "Tarefa",
+      "message": "Mensagem",
+      "notification": "Notificação",
+      "promotion": "Promoção",
+      "update": "Atualização",
+      "security": "Segurança",
+      "billing": "Faturamento",
+      "subscription": "Assinatura",
+      "feedback": "Feedback"
+    },
+    "priorities": {
+      "urgent": "Urgente",
+      "high": "Alta",
+      "normal": "Normal",
+      "low": "Baixa"
+    },
+    "statuses": {
+      "unread": "Não lida",
+      "read": "Lida",
+      "archived": "Arquivada",
+      "sent": "Enviada"
+    },
+    "time": {
+      "justNow": "Agora mesmo",
+      "minutesAgo": "{count} minuto atrás | {count} minutos atrás",
+      "hoursAgo": "{count} hora atrás | {count} horas atrás",
+      "daysAgo": "{count} dia atrás | {count} dias atrás"
+    }
+  },
+  "chat": {
+    "title": "Chat",
+    "newChat": "Novo Chat",
+    "selectConversation": "Selecione uma conversa para começar",
+    "noConversations": "Você não tem conversas",
+    "noMessages": "Sem mensagens",
+    "loadingConversations": "Carregando conversas...",
+    "archive": "Arquivar",
+    "unknownUser": "Usuário desconhecido",
+    "userType": {
+      "master": "Master",
+      "administrator": "Administrador",
+      "business": "Negócio",
+      "collaborator": "Colaborador"
+    },
+    "time": {
+      "today": "Hoje",
+      "yesterday": "Ontem",
+      "justNow": "Agora mesmo"
+    },
+    "status": {
+      "sent": "Enviado",
+      "delivered": "Entregue",
+      "read": "Lido"
+    },
+    "input": {
+      "placeholder": "Digite uma mensagem...",
+      "send": "Enviar",
+      "hint": "Pressione Enter para enviar, Shift + Enter para nova linha"
+    }
+  },
+  "permissions": {
+    "chats": {
+      "admin": {
+        "participate": "Participar em chats",
+        "start": "Iniciar chats",
+        "view": "Ver chats"
+      }
     }
   }
 }

@@ -39,6 +39,7 @@ const auth = getAuth(app);
 // Initialize Firebase Authentication and get a reference to the service
 
 const firestore = getFirestore(app);
+export const db = firestore; // Export for use in other modules
 export const attentionCollection = collection(firestore, 'attention');
 export const queueCollection = collection(firestore, 'queue');
 export const bookingCollection = collection(firestore, 'booking');

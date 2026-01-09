@@ -6,7 +6,14 @@ import { getActiveModulesByCommerceId } from '../../application/services/module'
 import {
   getCollaboratorsByCommerceId,
   updateCollaborator,
+  updateCollaboratorExtended,
   addCollaborator,
+  updateProfilePhoto,
+  uploadProfilePhoto,
+  updateMedicalData,
+  updateDigitalSignature,
+  uploadDigitalSignature,
+  updateCollaboratorRole,
 } from '../../application/services/collaborator';
 import { getPermissions } from '../../application/services/permissions';
 import { getServiceByCommerce } from '../../application/services/service';
@@ -214,20 +221,10 @@ export default {
     };
 
     const validateUpdate = collaborator => {
+      // Se elimina la validación de teléfono para no bloquear guardados
       state.errorsUpdate = [];
-      if (collaborator.bot === true) {
-        return true;
-      }
-      if (!collaborator.phone || collaborator.phone.length < 10) {
-        state.phoneUpdateError = true;
-        state.errorsUpdate.push('businessCollaboratorsAdmin.validate.phone');
-      } else {
-        state.phoneUpdateError = false;
-      }
-      if (state.errorsUpdate.length === 0) {
-        return true;
-      }
-      return false;
+      state.phoneUpdateError = false;
+      return true;
     };
 
     const showAdd = () => {
@@ -267,17 +264,94 @@ export default {
     const update = async collaborator => {
       try {
         loading.value = true;
+        // 0) Actualizar rol explícitamente si está definido (independiente de validación general)
+        if (collaborator.role) {
+          try {
+            await updateCollaboratorRole(collaborator.id, collaborator.role);
+          } catch (e) {
+            console.warn('Role update failed', e);
+          }
+        }
+        // 1) Procesar sub-actualizaciones independientes (no bloquear por validación general)
+        // Guardar foto de perfil si está presente
+        if (collaborator.profilePhoto) {
+          try {
+            if (collaborator.profilePhoto.file) {
+              const res = await uploadProfilePhoto(collaborator.id, collaborator.profilePhoto.file);
+              if (res && res.photoUrl) {
+                collaborator.profilePhoto = res.photoUrl;
+              }
+            } else if (collaborator.profilePhoto.url) {
+              await updateProfilePhoto(collaborator.id, collaborator.profilePhoto.url);
+              collaborator.profilePhoto = collaborator.profilePhoto.url;
+            }
+          } catch (e) {
+            console.warn('Profile photo update failed', e);
+          }
+        }
+
+        // Guardar datos médicos si existen
+        if (collaborator.medicalData && Object.keys(collaborator.medicalData).length > 0) {
+          try {
+            await updateMedicalData(collaborator.id, collaborator.medicalData);
+          } catch (e) {
+            console.warn('Medical data update failed', e);
+          }
+        }
+
+        // Guardar firma digital si está presente
+        if (
+          collaborator.digitalSignature ||
+          collaborator.digitalSignatureFile ||
+          collaborator.crm ||
+          collaborator.crmState
+        ) {
+          try {
+            if (collaborator.digitalSignatureFile) {
+              const res = await uploadDigitalSignature(
+                collaborator.id,
+                collaborator.digitalSignatureFile
+              );
+              if (res && res.signatureUrl) {
+                collaborator.digitalSignature = res.signatureUrl;
+                collaborator.digitalSignatureFile = null;
+              }
+            } else {
+              await updateDigitalSignature(
+                collaborator.id,
+                collaborator.digitalSignature || null,
+                collaborator.crm || null,
+                collaborator.crmState || null
+              );
+            }
+          } catch (e) {
+            console.warn('Digital signature update failed', e);
+          }
+        }
+
+        // 2) Validar y guardar cambios generales solo si pasa validación
         if (validateUpdate(collaborator)) {
-          await updateCollaborator(collaborator.id, collaborator);
+          try {
+            await updateCollaboratorExtended(collaborator.id, collaborator);
+          } catch (e) {
+            console.warn('General collaborator extended update failed', e);
+          }
+        }
+
+        // 3) Refrescar listado
+        try {
           const collaborators = await getCollaboratorsByCommerceId(commerce.value.id);
           state.collaborators = collaborators;
+        } catch (e) {
+          console.warn('Refresh collaborators failed', e);
         }
+
         state.extendedEntity = undefined;
         state.service = undefined;
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     };
@@ -574,6 +648,7 @@ export default {
                     >
                       <CollaboratorFormEdit
                         :collaborator="collaborator"
+                        :commerce-id="commerce?.id"
                         :types="state.types"
                         :modules="state.modules"
                         :commerces="state.allCommerces"
@@ -599,7 +674,7 @@ export default {
                         :show-service="showService"
                         @update:collaborator="collaborator = $event"
                       />
-                      <div class="col">
+                      <div class="col centered d-flex justify-content-center gap-3">
                         <button
                           class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                           @click="update(collaborator)"
@@ -682,8 +757,6 @@ export default {
           component-name="businessCollaboratorsAdmin"
           @go-back="goBack"
         />
-          </div>
-        </div>
         <div id="businessCollaboratorsAdmin">
           <div v-if="isActiveBusiness && state.toggles['collaborators.admin.view']">
             <div id="businessCollaboratorsAdmin-controls" class="control-box">
@@ -755,6 +828,7 @@ export default {
                     >
                       <CollaboratorFormEdit
                         :collaborator="collaborator"
+                        :commerce-id="commerce?.id"
                         :types="state.types"
                         :modules="state.modules"
                         :commerces="state.allCommerces"
@@ -780,7 +854,7 @@ export default {
                         :show-service="showService"
                         @update:collaborator="collaborator = $event"
                       />
-                      <div class="col">
+                      <div class="col d-flex justify-content-center gap-3">
                         <button
                           class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
                           @click="update(collaborator)"
@@ -844,6 +918,9 @@ export default {
             />
           </div>
         </div>
+      </div>
+    </div>
+
     <!-- Modal Add -->
     <div
       class="modal fade"

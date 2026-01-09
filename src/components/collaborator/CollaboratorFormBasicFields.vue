@@ -13,6 +13,7 @@ export default {
     errors: { type: Object, default: () => ({}) },
     prefix: { type: String, default: '' },
     isAdd: { type: Boolean, default: false },
+    showRole: { type: Boolean, default: false }, // Nuevo prop para mostrar el selector de rol
   },
   emits: ['update:modelValue'],
   computed: {
@@ -148,6 +149,39 @@ export default {
         </option>
       </select>
     </div>
+
+    <!-- Campo de rol específico (solo mostrar si showRole es true) -->
+    <div class="form-group-modern" v-if="showRole">
+      <label class="form-label-modern">
+        {{ $t('businessCollaboratorsAdmin.role') || 'Rol Específico' }}
+      </label>
+      <select
+        :id="`${prefix}collaborator-role-form`"
+        class="form-control-modern form-select-modern"
+        v-model="collaborator.role"
+        :disabled="isAdd ? false : !toggles['collaborators.admin.edit']"
+      >
+        <option value="">
+          {{ $t('businessCollaboratorsAdmin.selectRole') || 'Seleccionar rol' }}
+        </option>
+        <optgroup :label="$t('collaborator.role.categories.medical') || 'Personal Médico'">
+          <option value="DOCTOR">{{ $t('collaborator.role.types.DOCTOR') || 'Médico General' }}</option>
+          <option value="SPECIALIST">{{ $t('collaborator.role.types.SPECIALIST') || 'Médico Especialista' }}</option>
+          <option value="NURSE">{{ $t('collaborator.role.types.NURSE') || 'Enfermero/a' }}</option>
+          <option value="MEDICAL_ASSISTANT">{{ $t('collaborator.role.types.MEDICAL_ASSISTANT') || 'Asistente Médico' }}</option>
+        </optgroup>
+        <optgroup :label="$t('collaborator.role.categories.administrative') || 'Personal Administrativo'">
+          <option value="SECRETARY">{{ $t('collaborator.role.types.SECRETARY') || 'Secretaria' }}</option>
+          <option value="RECEPTIONIST">{{ $t('collaborator.role.types.RECEPTIONIST') || 'Recepcionista' }}</option>
+        </optgroup>
+        <optgroup :label="$t('collaborator.role.categories.general') || 'Roles Generales'">
+          <option value="STANDARD">{{ $t('collaborator.role.types.STANDARD') || 'Estándar' }}</option>
+          <option value="ASSISTANT">{{ $t('collaborator.role.types.ASSISTANT') || 'Asistente' }}</option>
+          <option value="FULL">{{ $t('collaborator.role.types.FULL') || 'Completo' }}</option>
+        </optgroup>
+      </select>
+    </div>
+
     <div class="form-group-modern form-group-toggle">
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.active') }}

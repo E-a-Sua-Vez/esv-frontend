@@ -16,6 +16,8 @@ import { messageCollection } from '../../application/firebase';
 import { query, where, orderBy, onSnapshot as firestoreOnSnapshot } from 'firebase/firestore';
 import { useI18n } from 'vue-i18n';
 import { useFirebaseListener } from '../../composables/useFirebaseListener';
+import { usePermissions } from '../../composables/usePermissions';
+import { useMessageInbox } from '../../composables/useMessageInbox';
 import { USER_TYPES, ENVIRONMENTS } from '../../shared/constants';
 import { getPermissions } from '../../application/services/permissions';
 import { getClientPortalPermissions } from '../../application/services/client-portal-permissions';
@@ -24,9 +26,19 @@ import CommerceSelector from './CommerceSelector.vue';
 import ModuleSelector from './ModuleSelector.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import MyUser from '../domain/MyUser.vue';
+import MessageNotificationBadge from '../messages/MessageNotificationBadge.vue';
+import MessageInbox from '../messages/MessageInbox.vue';
 
 export default {
-  components: { LocaleSelector, CommerceSelector, ModuleSelector, Spinner, MyUser },
+  components: {
+    LocaleSelector,
+    CommerceSelector,
+    ModuleSelector,
+    Spinner,
+    MyUser,
+    MessageNotificationBadge,
+    MessageInbox,
+  },
   name: 'Header',
   async setup() {
     const router = useRouter();
@@ -34,6 +46,21 @@ export default {
     let store = globalStore();
 
     const loading = ref(false);
+
+    // Initialize permissions composable
+    const {
+      loadPermissions,
+      canAccessInbox,
+      canAccessMessageComponents,
+      canAccessChatComponents,
+      permissionsLoaded,
+      canSendMessages,
+      canStartChats,
+      canSendMassMessages
+    } = usePermissions();
+
+    // Initialize message inbox for real-time count
+    const { unreadCount: menuUnreadCount } = useMessageInbox();
 
     // Track query parameters for dynamic listener
     const messageQueryParams = ref({ collaboratorId: null, administratorId: null });
@@ -242,6 +269,8 @@ export default {
       state.currentUser = store.getCurrentUser || null;
       if (state.currentUser !== undefined && state.currentUser !== null) {
         state.userName = state.currentUser.alias || state.currentUser.name;
+        // Load permissions when user is set
+        await loadPermissions();
       }
       state.currentUserType = store.getCurrentUserType || null;
       const business = store.getCurrentBusiness;
@@ -256,7 +285,6 @@ export default {
         try {
           state.toggles = await getPermissions('business', 'main-menu');
         } catch (error) {
-          console.error('Error loading permissions:', error);
           state.toggles = {};
         }
       }
@@ -541,6 +569,7 @@ export default {
 
     const mobileMenuOpen = ref(false);
     const desktopMenuOpen = ref(false);
+    const inboxOpen = ref(false);
 
     // Template refs for CommerceSelector and ModuleSelector components
     const desktopCommerceSelectorRef = ref(null);
@@ -618,7 +647,7 @@ export default {
           state.clientPortalPermissions = JSON.parse(permissionsStr);
         }
       } catch (err) {
-        console.error('Header: Error leyendo permisos desde localStorage:', err);
+        // Error reading from localStorage
       }
     };
 
@@ -658,6 +687,14 @@ export default {
 
     const closeDesktopMenu = () => {
       desktopMenuOpen.value = false;
+    };
+
+    const toggleInbox = () => {
+      inboxOpen.value = !inboxOpen.value;
+    };
+
+    const closeInbox = () => {
+      inboxOpen.value = false;
     };
 
     // Handle commerce change - close menus and refresh user data
@@ -910,7 +947,6 @@ export default {
         const commerceSlug = router.currentRoute.value.params.commerceSlug;
         router.push({ name: 'client-portal-login', params: { commerceSlug } });
       } catch (error) {
-        console.error('Error during client portal logout:', error);
         // Try to redirect anyway
         const commerceSlug = router.currentRoute.value.params.commerceSlug;
         router.push({ name: 'client-portal-login', params: { commerceSlug } });
@@ -934,6 +970,9 @@ export default {
       desktopMenuOpen,
       toggleDesktopMenu,
       closeDesktopMenu,
+      inboxOpen,
+      toggleInbox,
+      closeInbox,
       getMenuOptions,
       navigateToMenuOption,
       getMenuTranslationKey,
@@ -959,6 +998,19 @@ export default {
       isPublicCommerceQueueRoute,
       isClientPortalRoute,
       getClientPortalData,
+
+      // Permissions
+      canAccessInbox,
+      canAccessMessageComponents,
+      canAccessChatComponents,
+      permissionsLoaded,
+      canSendMessages,
+      canStartChats,
+      canSendMassMessages,
+
+      // Message count for menu
+      menuUnreadCount,
+
     };
   },
 };
@@ -1019,13 +1071,14 @@ export default {
                 >
                   | {{ state.currentModule.tag }}
                 </span>
-                <span
-                  v-if="state.messages.length > 0"
-                  class="message-indicator badge bg-danger rounded-pill px-2 py-1 mx-1"
-                >
-                  <i class="bi bi-envelope-fill"></i> {{ state.messages.length || 0 }}
-                </span>
               </a>
+
+              <!-- New Message Notification Badge -->
+              <MessageNotificationBadge
+                v-if="canAccessInbox"
+                @toggle-inbox="toggleInbox"
+              />
+
               <button
                 class="user-menu-trigger-icon"
                 @click="toggleDesktopMenu"
@@ -1063,6 +1116,13 @@ export default {
                   | {{ getClientPortalData().commerce.tag }}
                 </span>
               </a>
+
+              <!-- New Message Notification Badge -->
+              <MessageNotificationBadge
+                v-if="canAccessInbox"
+                @toggle-inbox="toggleInbox"
+              />
+
               <button
                 class="user-menu-trigger-icon"
                 @click="toggleDesktopMenu"
@@ -1279,10 +1339,10 @@ export default {
               <i class="bi bi-person-circle"></i>
               <span>{{ $t('myUser.title') || 'Mi Perfil' }}</span>
               <span
-                v-if="state.messages.length > 0"
+                v-if="menuUnreadCount > 0"
                 class="message-indicator badge bg-danger rounded-pill ms-auto"
               >
-                {{ state.messages.length || 0 }}
+                {{ menuUnreadCount }}
               </span>
             </a>
           </div>
@@ -1699,10 +1759,10 @@ export default {
               <i class="bi bi-person-circle"></i>
               <span>{{ $t('myUser.title') || 'Mi Perfil' }}</span>
               <span
-                v-if="state.messages.length > 0"
+                v-if="menuUnreadCount > 0"
                 class="message-indicator badge bg-danger rounded-pill ms-auto"
               >
-                {{ state.messages.length || 0 }}
+                {{ menuUnreadCount }}
               </span>
             </a>
           </div>
@@ -2002,12 +2062,28 @@ export default {
               ></button>
             </div>
             <div class="modal-body text-center pb-3">
-              <MyUser :messages="state.messages"> </MyUser>
+              <MyUser @toggle-inbox="toggleInbox"> </MyUser>
             </div>
           </div>
         </div>
       </div>
     </Teleport>
+
+    <!-- New Internal Messages Inbox -->
+    <MessageInbox
+      v-if="state.currentUser && state.currentUser.name !== 'invitado' && canAccessInbox"
+      :isOpen="inboxOpen"
+      :user-role="state.currentUserType || 'collaborator'"
+      :user-data="{
+        id: state.currentUser?.id,
+        businessId: state.currentUser?.businessId,
+        commerceId: state.currentUser?.commerceId,
+        commerceIds: state.currentUser?.commerceIds,
+        commercesId: state.currentUser?.commercesId
+      }"
+      @close="closeInbox"
+    />
+
   </div>
 </template>
 

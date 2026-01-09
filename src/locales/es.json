@@ -46,6 +46,8 @@
   "common": {
     "loading": "Cargando...",
     "close": "Cerrar",
+    "cancel": "Cancelar",
+    "sending": "Enviando...",
     "filterByType": "Filtrar por tipo:",
     "all": "Todos",
     "search": "Buscar:",
@@ -74,6 +76,7 @@
   "update": "Actualizar",
   "cancel": "Cancelar",
   "delete": "Eliminar",
+  "preview": "Vista Previa",
   "active": "Activo",
   "inactive": "Inactivo",
   "myUser": {
@@ -382,7 +385,173 @@
       "STANDARD": "Standard",
       "FULL": "Full",
       "ASSISTANT": "Asistente"
+    },
+    "roles": {
+      "DOCTOR": "Médico",
+      "SPECIALIST": "Especialista",
+      "GENERAL_DOCTOR": "Médico General",
+      "NURSE": "Enfermero",
+      "MEDICAL_ASSISTANT": "Asistente Médico",
+      "SECRETARY": "Secretario",
+      "ADMINISTRATOR": "Administrador",
+      "THERAPIST": "Terapeuta"
+    },
+    "medicalData": {
+      "title": "Datos Médicos",
+      "medicalLicense": "Licencia Médica",
+      "medicalLicensePlaceholder": "Ej: CRM-12345",
+      "specialization": "Especialización",
+      "specializationPlaceholder": "Ej: Cardiología",
+      "clinicName": "Nombre de la Clínica",
+      "clinicNamePlaceholder": "Ej: Clínica San Juan",
+      "clinicAddress": "Dirección de la Clínica",
+      "clinicAddressPlaceholder": "Dirección completa de la clínica",
+      "professionalAddress": "Dirección Profesional",
+      "professionalAddressPlaceholder": "Dirección del consultorio",
+      "clinicPhone": "Teléfono de la Clínica",
+      "clinicPhonePlaceholder": "Ej: +55 11 1234-5678",
+      "professionalPhone": "Teléfono Profesional",
+      "professionalPhonePlaceholder": "Teléfono del consultorio",
+      "professionalEmail": "Email Profesional",
+      "professionalEmailPlaceholder": "email{at}clinica.com",
+      "save": "Guardar Datos Médicos",
+      "saved": "Datos médicos guardados exitosamente",
+      "error": "Error al guardar datos médicos"
+    },
+    "profilePhoto": {
+      "title": "Foto de Perfil",
+      "upload": "Subir Foto",
+      "uploading": "Subiendo...",
+      "uploaded": "Foto subida exitosamente",
+      "update": "Cambiar Foto",
+      "remove": "Remover Foto",
+      "error": "Error al procesar la foto",
+      "maxSize": "Tamaño máximo: 5MB",
+      "supportedFormats": "Formatos: JPG, PNG, JPEG",
+      "takePhoto": "Tomar Foto",
+      "takePhotoDesc": "Usar la cámara para capturar foto de perfil",
+      "uploadFile": "Subir Archivo",
+      "uploadFileDesc": "Seleccionar archivo desde dispositivo",
+      "selectPhoto": "Seleccionar Foto",
+      "fileFormats": "JPG, PNG, WEBP (máx 5MB)",
+      "capture": "Capturar",
+      "capturing": "Capturando...",
+      "cancel": "Cancelar",
+      "back": "Volver",
+      "preview": "Vista previa",
+      "savePhoto": "Guardar Foto",
+      "retake": "Repetir",
+      "noPhoto": "Sin foto de perfil",
+      "current": "Foto Actual",
+      "uploadHelp": "Selecciona una imagen o usa la cámara",
+      "uploadSuccess": "Foto subida exitosamente",
+      "cropOptions": "Opciones de Recorte",
+      "cropToSquare": "Recortar a cuadrado",
+      "compress": "Comprimir imagen",
+      "tryBackCamera": "Probar cámara trasera",
+      "cameraDenied": "Acceso a la cámara denegado. Por favor permite el acceso en la configuración del navegador.",
+      "cameraNotFound": "No se encontró ninguna cámara en este dispositivo.",
+      "cameraNotReadable": "La cámara está siendo usada por otra aplicación.",
+      "cameraOverconstrained": "Las especificaciones de la cámara no son compatibles.",
+      "cameraNotSupported": "Tu navegador no soporta acceso a la cámara.",
+      "cameraUnknown": "Error desconocido: {error}",
+      "cameraError": "Error al acceder a la cámara",
+      "captureFailed": "Error al capturar la foto",
+      "invalidFormat": "Formato no válido. Use JPG, PNG o WEBP.",
+      "fileTooLarge": "Archivo muy grande. Máximo 5MB.",
+      "saveFailed": "Error al guardar la foto"
     }
+  },
+  "collaborator": {
+    "role": {
+      "categories": {
+        "medical": "Personal Médico",
+        "administrative": "Personal Administrativo",
+        "general": "Roles Generales"
+      },
+      "types": {
+        "DOCTOR": "Médico General",
+        "SPECIALIST": "Médico Especialista",
+        "NURSE": "Enfermero/a",
+        "MEDICAL_ASSISTANT": "Asistente Médico",
+        "SECRETARY": "Secretaria",
+        "RECEPTIONIST": "Recepcionista",
+        "STANDARD": "Estándar",
+        "ASSISTANT": "Asistente",
+        "FULL": "Completo"
+      }
+    },
+    "profilePhoto": {
+      "title": "Foto de Perfil del Colaborador",
+      "current": "Foto actual",
+      "update": "Actualizar Foto",
+      "upload": "Subir Foto",
+      "fileFormats": "JPG, PNG, WEBP (máx 5MB)"
+    },
+    "medicalData": {
+      "title": "Datos Médicos",
+      "license": {
+        "title": "Licencia Médica",
+        "number": "Número de Licencia",
+        "numberPlaceholder": "Ingrese el número de licencia médica",
+        "state": "Estado/Provincia",
+        "statePlaceholder": "Ingrese el estado o provincia de la licencia"
+      },
+      "specialization": "Especialización",
+      "specializationPlaceholder": "Ingrese su especialización médica",
+      "subspecialization": "Subespecialización",
+      "subspecializationPlaceholder": "Ingrese su subespecialización (opcional)",
+      "education": {
+        "title": "Formación Académica",
+        "school": "Escuela de Medicina",
+        "schoolPlaceholder": "Ingrese el nombre de su escuela de medicina",
+        "graduationYear": "Año de Graduación",
+        "graduationYearPlaceholder": "2026"
+      },
+      "contact": {
+        "title": "Información de Contacto Profesional",
+        "address": "Dirección Profesional",
+        "addressPlaceholder": "Ingrese su dirección profesional",
+        "phone": "Teléfono Profesional",
+        "phonePlaceholder": "Ingrese su teléfono profesional",
+        "mobile": "Celular Profesional",
+        "mobilePlaceholder": "Ingrese su celular profesional",
+        "email": "Email Profesional",
+        "emailPlaceholder": "Ingrese su email profesional",
+        "emergencyPhone": "Teléfono de Emergencia",
+        "emergencyPhonePlaceholder": "Ingrese un teléfono de emergencia"
+      },
+      "clinic": {
+        "title": "Información de Clínica/Hospital",
+        "name": "Nombre de la Clínica",
+        "namePlaceholder": "Ingrese el nombre de su clínica o hospital",
+        "phone": "Teléfono de la Clínica",
+        "phonePlaceholder": "Ingrese el teléfono de la clínica",
+        "address": "Dirección de la Clínica",
+        "addressPlaceholder": "Ingrese la dirección de la clínica o hospital"
+      },
+      "additional": {
+        "title": "Configuraciones Adicionales",
+        "workingHours": "Horario de Atención",
+        "workingHoursPlaceholder": "Ej: Lunes a Viernes 8:00-18:00",
+        "languages": "Idiomas",
+        "languagesPlaceholder": "Español, Inglés, Portugués",
+        "languagesHelp": "Separe los idiomas con comas",
+        "insurance": "Seguros que Acepta",
+        "insurancePlaceholder": "OSDE, Swiss Medical, Galeno",
+        "insuranceHelp": "Separe los seguros con comas"
+      }
+    }
+  },
+  "digitalSignature": {
+    "title": "Firma Digital",
+    "current": "Firma Digital Actual",
+    "upload": "Subir Firma Digital",
+    "uploadHelp": "Seleccione una imagen de su firma digital (JPG, PNG, WEBP máx 5MB)",
+    "crm": "Número CRM",
+    "crmPlaceholder": "123456",
+    "crmState": "Estado del CRM",
+    "crmStatePlaceholder": "SP"
   },
   "documents": {
     "types": {
@@ -4281,6 +4450,8 @@
     "active": "Activo:",
     "module": "Módulo:",
     "bot": "Es Bot:",
+    "role": "Rol:",
+    "selectRole": "Seleccionar rol",
     "update": "Actualizar",
     "commerces": "Comercios:",
     "add": "Agregar",
@@ -7132,6 +7303,194 @@
   "digitalSignature": {
     "icp": {
       "sign": "Firmar con ICP"
+    }
+  },
+  "messages": {
+    "inbox": "Bandeja de Entrada",
+    "openInbox": "Abrir bandeja de entrada",
+    "markAsRead": "Marcar como leído",
+    "markAllAsRead": "Marcar todos como leídos",
+    "archive": "Archivar",
+    "archiveAll": "Archivar todos",
+    "confirmArchiveAll": "¿Estás seguro de que deseas archivar todos los mensajes?",
+    "viewDetails": "Ver detalles",
+    "options": "Opciones",
+    "loading": "Cargando mensajes...",
+    "noMessages": "No se encontraron mensajes",
+    "loadMore": "Cargar más",
+    "compose": {
+      "title": "Nuevo Mensaje",
+      "newMessage": "Nuevo mensaje",
+      "messageType": "Tipo de mensaje",
+      "chat": "Chat (usuario a usuario)",
+      "notification": "Notificación del sistema",
+      "recipient": "Destinatario",
+      "selectRecipientType": "Seleccionar tipo de destinatario",
+      "collaborator": "Colaborador",
+      "administrator": "Administrador",
+      "business": "Negocio",
+      "selectRecipient": "Seleccionar destinatario",
+      "chooseRecipient": "Elegir destinatario...",
+      "category": "Categoría",
+      "priority": "Prioridad",
+      "titlePlaceholder": "Escribe el título del mensaje",
+      "content": "Contenido",
+      "contentPlaceholder": "Escribe tu mensaje aquí...",
+      "actionLink": "Enlace de acción (opcional)",
+      "actionLinkPlaceholder": "/productos/123",
+      "actionLabel": "Etiqueta del botón",
+      "actionLabelPlaceholder": "Ver detalles",
+      "massMessage": "Mensaje masivo",
+      "send": "Enviar",
+      "error": "Error al enviar el mensaje. Inténtalo de nuevo."
+    },
+    "tabs": {
+      "all": "Todos",
+      "unread": "No leídos",
+      "notifications": "Notificaciones",
+      "chat": "Chat"
+    },
+    "filters": {
+      "category": "Categoría",
+      "priority": "Prioridad",
+      "allCategories": "Todas las categorías",
+      "allPriorities": "Todas las prioridades",
+      "clear": "Limpiar filtros"
+    },
+    "categories": {
+      "direct_message": "Mensaje Directo",
+      "announcement": "Anuncio",
+      "attention_reminder": "Recordatorio de Atención",
+      "booking_reminder": "Recordatorio de Reserva",
+      "booking_confirmed": "Reserva Confirmada",
+      "booking_cancelled": "Reserva Cancelada",
+      "stock": "Inventario",
+      "low_stock": "Stock Bajo",
+      "out_of_stock": "Sin Stock",
+      "payment_received": "Pago Recibido",
+      "payment_pending": "Pago Pendiente",
+      "payment_overdue": "Pago Vencido",
+      "plan_expiring": "Plan por Vencer",
+      "plan_expired": "Plan Vencido",
+      "plan_upgraded": "Plan Actualizado",
+      "survey_pending": "Encuesta Pendiente",
+      "document_available": "Documento Disponible",
+      "form_pending": "Formulario Pendiente",
+      "system_update": "Actualización del Sistema",
+      "feature_announcement": "Nueva Funcionalidad",
+      "maintenance": "Mantenimiento",
+      "task_assigned": "Tarea Asignada",
+      "task_completed": "Tarea Completada",
+      "task_overdue": "Tarea Vencida",
+      "STOCK": "Inventario",
+      "LOW_STOCK": "Stock Bajo",
+      "OUT_OF_STOCK": "Sin Stock",
+      "DIRECT_MESSAGE": "Mensaje Directo",
+      "ANNOUNCEMENT": "Anuncio",
+      "ATTENTION_REMINDER": "Recordatorio de Atención",
+      "BOOKING_REMINDER": "Recordatorio de Reserva",
+      "BOOKING_CONFIRMED": "Reserva Confirmada",
+      "BOOKING_CANCELLED": "Reserva Cancelada",
+      "PAYMENT_RECEIVED": "Pago Recibido",
+      "PAYMENT_PENDING": "Pago Pendiente",
+      "PAYMENT_OVERDUE": "Pago Vencido",
+      "PLAN_EXPIRING": "Plan por Vencer",
+      "PLAN_EXPIRED": "Plan Vencido",
+      "PLAN_UPGRADED": "Plan Actualizado",
+      "SURVEY_PENDING": "Encuesta Pendiente",
+      "DOCUMENT_AVAILABLE": "Documento Disponible",
+      "FORM_PENDING": "Formulario Pendiente",
+      "SYSTEM_UPDATE": "Actualización del Sistema",
+      "FEATURE_ANNOUNCEMENT": "Nueva Funcionalidad",
+      "MAINTENANCE": "Mantenimiento",
+      "TASK_ASSIGNED": "Tarea Asignada",
+      "TASK_COMPLETED": "Tarea Completada",
+      "TASK_OVERDUE": "Tarea Vencida",
+      "NOTIFICATION": "Notificación",
+      "booking": "Reserva",
+      "payment": "Pago",
+      "attention": "Atención",
+      "system": "Sistema",
+      "chat": "Chat",
+      "queue": "Cola",
+      "client": "Cliente",
+      "collaborator": "Colaborador",
+      "document": "Documento",
+      "report": "Reporte",
+      "alert": "Alerta",
+      "reminder": "Recordatorio",
+      "task": "Tarea",
+      "message": "Mensaje",
+      "notification": "Notificación",
+      "promotion": "Promoción",
+      "announcement": "Anuncio",
+      "update": "Actualización",
+      "maintenance": "Mantenimiento",
+      "security": "Seguridad",
+      "billing": "Facturación",
+      "subscription": "Suscripción",
+      "feedback": "Retroalimentación"
+    },
+    "priorities": {
+      "urgent": "Urgente",
+      "high": "Alta",
+      "normal": "Normal",
+      "low": "Baja"
+    },
+    "statuses": {
+      "unread": "No leído",
+      "read": "Leído",
+      "archived": "Archivado",
+      "sent": "Enviado"
+    },
+    "time": {
+      "justNow": "Justo ahora",
+      "minutesAgo": "hace {count} minuto | hace {count} minutos",
+      "hoursAgo": "hace {count} hora | hace {count} horas",
+      "daysAgo": "hace {count} día | hace {count} días"
+    },
+    "sender": {
+      "unknown": "Remitente desconocido"
+    }
+  },
+  "chat": {
+    "title": "Chat",
+    "newChat": "Nuevo Chat",
+    "selectConversation": "Selecciona una conversación para comenzar",
+    "noConversations": "No tienes conversaciones",
+    "noMessages": "Sin mensajes",
+    "loadingConversations": "Cargando conversaciones...",
+    "archive": "Archivar",
+    "unknownUser": "Usuario desconocido",
+    "userType": {
+      "master": "Master",
+      "administrator": "Administrador",
+      "business": "Negocio",
+      "collaborator": "Colaborador"
+    },
+    "time": {
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "justNow": "Ahora"
+    },
+    "status": {
+      "sent": "Enviado",
+      "delivered": "Entregado",
+      "read": "Leído"
+    },
+    "input": {
+      "placeholder": "Escribe un mensaje...",
+      "send": "Enviar",
+      "hint": "Presiona Enter para enviar, Shift + Enter para nueva línea"
+    }
+  },
+  "permissions": {
+    "chats": {
+      "admin": {
+        "participate": "Participar en chats",
+        "start": "Iniciar chats",
+        "view": "Ver chats"
+      }
     }
   }
 }

@@ -44,6 +44,8 @@
   "common": {
     "loading": "Loading...",
     "close": "Close",
+    "cancel": "Cancel",
+    "sending": "Sending...",
     "filterByType": "Filter by Type:",
     "all": "All",
     "search": "Search:",
@@ -333,6 +335,121 @@
       "STANDARD": "Standard",
       "FULL": "Full",
       "ASSISTANT": "Assistant"
+    },
+    "roles": {
+      "DOCTOR": "Doctor",
+      "SPECIALIST": "Specialist",
+      "GENERAL_DOCTOR": "General Doctor",
+      "NURSE": "Nurse",
+      "MEDICAL_ASSISTANT": "Medical Assistant",
+      "SECRETARY": "Secretary",
+      "ADMINISTRATOR": "Administrator",
+      "THERAPIST": "Therapist"
+    },
+    "medicalData": {
+      "title": "Medical Data",
+      "medicalLicense": "Medical License",
+      "medicalLicensePlaceholder": "Ex: CRM-12345",
+      "specialization": "Specialization",
+      "specializationPlaceholder": "Ex: Cardiology",
+      "clinicName": "Clinic Name",
+      "clinicNamePlaceholder": "Ex: San Juan Clinic",
+      "clinicAddress": "Clinic Address",
+      "clinicAddressPlaceholder": "Complete clinic address",
+      "professionalAddress": "Professional Address",
+      "professionalAddressPlaceholder": "Office address",
+      "clinicPhone": "Clinic Phone",
+      "clinicPhonePlaceholder": "Ex: +55 11 1234-5678",
+      "professionalPhone": "Professional Phone",
+      "professionalPhonePlaceholder": "Office phone",
+      "professionalEmail": "Professional Email",
+      "professionalEmailPlaceholder": "email{at}clinic.com",
+      "save": "Save Medical Data",
+      "saved": "Medical data saved successfully",
+      "error": "Error saving medical data"
+    },
+    "profilePhoto": {
+      "title": "Profile Photo",
+      "upload": "Upload Photo",
+      "uploading": "Uploading...",
+      "uploaded": "Photo uploaded successfully",
+      "update": "Change Photo",
+      "remove": "Remove Photo",
+      "error": "Error processing photo",
+      "maxSize": "Max size: 5MB",
+      "supportedFormats": "Formats: JPG, PNG, JPEG",
+      "takePhoto": "Take Photo",
+      "capture": "Capture",
+      "noPhoto": "No profile photo",
+      "current": "Current Photo",
+      "uploadHelp": "Select an image or use camera",
+      "uploadSuccess": "Photo uploaded successfully",
+      "cropOptions": "Crop Options",
+      "cropToSquare": "Crop to square",
+      "compress": "Compress image"
+    }
+  },
+  "collaborator": {
+    "profilePhoto": {
+      "title": "Collaborator Profile Photo",
+      "current": "Current photo",
+      "update": "Update Photo",
+      "upload": "Upload Photo",
+      "fileFormats": "JPG, PNG, WEBP (max 5MB)"
+    },
+    "medicalData": {
+      "title": "Medical Data",
+      "license": {
+        "title": "Medical License",
+        "number": "License Number",
+        "numberPlaceholder": "Enter medical license number",
+        "state": "State/Province",
+        "statePlaceholder": "Enter license state or province"
+      },
+      "specialization": "Specialization",
+      "specializationPlaceholder": "Enter your medical specialization",
+      "subspecialization": "Subspecialization",
+      "subspecializationPlaceholder": "Enter your subspecialization (optional)",
+      "education": {
+        "title": "Education",
+        "school": "Medical School",
+        "schoolPlaceholder": "Enter your medical school",
+        "graduationYear": "Graduation Year",
+        "graduationYearPlaceholder": "2026"
+      },
+      "contact": {
+        "title": "Professional Contact",
+        "address": "Professional Address",
+        "addressPlaceholder": "Enter your professional address",
+        "phone": "Professional Phone",
+        "phonePlaceholder": "Enter your professional phone",
+        "mobile": "Professional Mobile",
+        "mobilePlaceholder": "Enter your professional mobile",
+        "email": "Professional Email",
+        "emailPlaceholder": "Enter your professional email",
+        "emergencyPhone": "Emergency Phone",
+        "emergencyPhonePlaceholder": "Enter an emergency phone"
+      },
+      "clinic": {
+        "title": "Clinic/Hospital Information",
+        "name": "Clinic Name",
+        "namePlaceholder": "Enter your clinic or hospital name",
+        "phone": "Clinic Phone",
+        "phonePlaceholder": "Enter the clinic phone",
+        "address": "Clinic Address",
+        "addressPlaceholder": "Enter the clinic or hospital address"
+      },
+      "additional": {
+        "title": "Additional Settings",
+        "workingHours": "Working Hours",
+        "workingHoursPlaceholder": "e.g., Monday to Friday 8:00–18:00",
+        "languages": "Languages",
+        "languagesPlaceholder": "Spanish, English, Portuguese",
+        "languagesHelp": "Separate languages with commas",
+        "insurance": "Accepted Insurances",
+        "insurancePlaceholder": "List accepted insurances",
+        "insuranceHelp": "Separate insurances with commas"
+      }
     }
   },
   "documents": {
@@ -6716,7 +6833,9 @@
     "upload": "Upload Signature",
     "current": "Current Signature",
     "crm": "CRM",
+    "crmPlaceholder": "123456",
     "crmState": "CRM State",
+    "crmStatePlaceholder": "SP",
     "uploadSuccess": "Digital signature updated successfully",
     "uploadError": "Error updating digital signature",
     "uploadHelp": "Select an image of your signature (PNG, JPG, etc.)",
@@ -7105,6 +7224,166 @@
           "delete": "Delete LGPD Requirements",
           "limit": "Limit amount of LGPD Requirements"
         }
+      }
+    }
+  },
+  "messages": {
+    "inbox": "Inbox",
+    "openInbox": "Open inbox",
+    "markAsRead": "Mark as read",
+    "markAllAsRead": "Mark all as read",
+    "archive": "Archive",
+    "archiveAll": "Archive all",
+    "confirmArchiveAll": "Are you sure you want to archive all messages?",
+    "viewDetails": "View details",
+    "options": "Options",
+    "loading": "Loading messages...",
+    "noMessages": "No messages found",
+    "loadMore": "Load more",
+    "compose": {
+      "title": "New Message",
+      "newMessage": "New message",
+      "messageType": "Message type",
+      "chat": "Chat (user to user)",
+      "notification": "System notification",
+      "recipient": "Recipient",
+      "selectRecipientType": "Select recipient type",
+      "collaborator": "Collaborator",
+      "administrator": "Administrator",
+      "business": "Business",
+      "selectRecipient": "Select recipient",
+      "chooseRecipient": "Choose recipient...",
+      "category": "Category",
+      "priority": "Priority",
+      "titlePlaceholder": "Enter message title",
+      "content": "Content",
+      "contentPlaceholder": "Write your message here...",
+      "actionLink": "Action link (optional)",
+      "actionLinkPlaceholder": "/products/123",
+      "actionLabel": "Button label",
+      "actionLabelPlaceholder": "View details",
+      "send": "Send",
+      "error": "Error sending message. Please try again."
+    },
+    "tabs": {
+      "all": "All",
+      "unread": "Unread",
+      "notifications": "Notifications",
+      "chat": "Chat"
+    },
+    "filters": {
+      "category": "Category",
+      "priority": "Priority",
+      "allCategories": "All categories",
+      "allPriorities": "All priorities",
+      "clear": "Clear filters"
+    },
+    "categories": {
+      "direct_message": "Direct Message",
+      "announcement": "Announcement",
+      "attention_reminder": "Attention Reminder",
+      "booking_reminder": "Booking Reminder",
+      "booking_confirmed": "Booking Confirmed",
+      "booking_cancelled": "Booking Cancelled",
+      "stock": "Stock",
+      "low_stock": "Low Stock",
+      "out_of_stock": "Out of Stock",
+      "payment_received": "Payment Received",
+      "payment_pending": "Payment Pending",
+      "payment_overdue": "Payment Overdue",
+      "plan_expiring": "Plan Expiring",
+      "plan_expired": "Plan Expired",
+      "plan_upgraded": "Plan Upgraded",
+      "survey_pending": "Survey Pending",
+      "document_available": "Document Available",
+      "form_pending": "Form Pending",
+      "system_update": "System Update",
+      "feature_announcement": "Feature Announcement",
+      "maintenance": "Maintenance",
+      "task_assigned": "Task Assigned",
+      "task_completed": "Task Completed",
+      "task_overdue": "Task Overdue",
+      "booking": "Booking",
+      "payment": "Payment",
+      "attention": "Attention",
+      "system": "System",
+      "chat": "Chat",
+      "queue": "Queue",
+      "client": "Client",
+      "collaborator": "Collaborator",
+      "document": "Document",
+      "report": "Report",
+      "alert": "Alert",
+      "reminder": "Reminder",
+      "task": "Task",
+      "message": "Message",
+      "notification": "Notification",
+      "promotion": "Promotion",
+      "update": "Update",
+      "security": "Security",
+      "billing": "Billing",
+      "subscription": "Subscription",
+      "feedback": "Feedback"
+    },
+    "priorities": {
+      "urgent": "Urgent",
+      "high": "High",
+      "normal": "Normal",
+      "low": "Low"
+    },
+    "statuses": {
+      "unread": "Unread",
+      "read": "Read",
+      "archived": "Archived",
+      "sent": "Sent"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{count} minute ago | {count} minutes ago",
+      "hoursAgo": "{count} hour ago | {count} hours ago",
+      "daysAgo": "{count} day ago | {count} days ago"
+    },
+    "sender": {
+      "unknown": "Unknown sender"
+    }
+  },
+  "chat": {
+    "title": "Chat",
+    "newChat": "New Chat",
+    "selectConversation": "Select a conversation to start",
+    "noConversations": "You have no conversations",
+    "noMessages": "No messages",
+    "loadingConversations": "Loading conversations...",
+    "archive": "Archive",
+    "unknownUser": "Unknown user",
+    "userType": {
+      "master": "Master",
+      "administrator": "Administrator",
+      "business": "Business",
+      "collaborator": "Collaborator"
+    },
+    "time": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "justNow": "Just now"
+    },
+    "status": {
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "read": "Read"
+    },
+    "input": {
+      "placeholder": "Type a message...",
+      "send": "Send",
+      "hint": "Press Enter to send, Shift + Enter for new line"
+    }
+  },
+  "permissions": {
+    "chats": {
+      "admin": {
+        "participate": "Participate in chats",
+        "start": "Start chats",
+        "view": "View chats"
       }
     }
   }
