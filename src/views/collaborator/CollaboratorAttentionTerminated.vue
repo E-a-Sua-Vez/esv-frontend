@@ -2,21 +2,38 @@
   <div>
     <Spinner :show="loading"></Spinner>
     <Alert :show="!!alertError" :stack="alertError"></Alert>
-
     <div class="content text-center">
-      <CommerceLogo
-        :commerce-id="state.commerce?.id"
-        :business-id="state.business?.id"
-        :loading="loading"
-      />
-      <ComponentMenu
-        :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
-          state.currentUser?.alias || state.currentUser?.name
-        }!`"
-        :toggles="state.toggles"
-        component-name="collaboratorAttentionTerminated"
-        @goBack="goToQueue"
-      />
+      <!-- Mobile/Tablet Header -->
+      <div class="d-block d-lg-none">
+        <CommerceLogo
+          :commerce-id="state.commerce?.id"
+          :business-id="state.business?.id"
+          :loading="loading"
+        />
+        <ComponentMenu
+          :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
+            state.currentUser?.alias || state.currentUser?.name
+          }!`"
+          :toggles="state.toggles"
+          component-name="collaboratorAttentionTerminated"
+          @goBack="goToQueue"
+        />
+      </div>
+
+      <!-- Desktop Header -->
+      <div class="d-none d-lg-block">
+        <DesktopPageHeader
+          :commerce-id="state.commerce?.id"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
+            state.currentUser?.alias || state.currentUser?.name
+          }!`"
+          :toggles="state.toggles"
+          component-name="collaboratorAttentionTerminated"
+          @go-back="goToQueue"
+        />
+      </div>
       <QueueName
         v-if="state.queue"
         :queue="state.queue"
@@ -314,6 +331,8 @@ import AttentionTimeline from '../../components/attentions/common/AttentionTimel
 import QueueName from '../../components/common/QueueName.vue';
 import AttentionNumber from '../../components/common/AttentionNumber.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Message from '../../components/common/Message.vue';
@@ -326,6 +345,8 @@ export default {
     QueueName,
     AttentionNumber,
     ComponentMenu,
+    CommerceLogo,
+    DesktopPageHeader,
     Spinner,
     Alert,
     Message,

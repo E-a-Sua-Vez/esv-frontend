@@ -68,8 +68,9 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
+        // Seleccionar el primer comercio disponible solo si existe
         state.commerce =
-          state.commerces && state.commerces.length >= 0 ? state.commerces[0] : undefined;
+          state.commerces && state.commerces.length > 0 ? state.commerces[0] : undefined;
         if (state.commerce) {
           selectCommerce(state.commerce);
         }
@@ -126,6 +127,10 @@ export default {
 
     const validateAdd = () => {
       state.errorsAdd = [];
+      // Validar comercio seleccionado
+      if (!state.newConfiguration.commerceId) {
+        state.errorsAdd.push('businessConfiguration.validate.commerce');
+      }
       if (state.optionSelected) {
         state.newConfiguration.type = state.optionSelected.type;
         state.newConfiguration.name = state.optionSelected.name;
@@ -142,6 +147,8 @@ export default {
     const add = async () => {
       try {
         loading.value = true;
+        // Asegurar que el commerceId esté seteado con el comercio activo actual
+        state.newConfiguration.commerceId = state.commerce?.id || state.newConfiguration.commerceId || '';
         if (validateAdd()) {
           await addFeatureToggle(state.newConfiguration);
           const configurations = await getFeatureToggleByCommerceId(state.commerce.id);

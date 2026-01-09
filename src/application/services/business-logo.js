@@ -41,7 +41,11 @@ export const getBusinessLogo = async businessId => {
   try {
     const headers = await getHeaders();
 
-    const response = await requestBackend.get(`/business-logos/${businessId}`);
+    // Mark request as _silent to suppress noisy network error logs in interceptor
+    const response = await requestBackend.get(`/business-logos/${businessId}`, {
+      _silent: true,
+      ...headers,
+    });
     const relativePath = response.data;
 
     // If backend returns a relative path, construct full URL
@@ -58,6 +62,12 @@ export const getBusinessLogo = async businessId => {
     }
     if (error.response?.status === 401) {
       console.error('🏢 BusinessLogo Frontend: Authentication error (401):', error.response.data);
+      // Treat as no logo for now
+      return null;
+    }
+    // Network errors: return null silently so UI can fallback without throwing
+    if (!error.response || error.code === 'ERR_NETWORK') {
+      return null;
     }
     console.error('🏢 BusinessLogo Frontend: Error getting business logo:', error);
     throw new Error(error.response?.data?.message || 'Error al obtener el logo del negocio');

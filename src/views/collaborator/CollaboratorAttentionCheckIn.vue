@@ -1,7 +1,7 @@
 <template>
   <div>
     <Spinner :show="loading"></Spinner>
-    <Alert :show="!!alertError" :stack="alertError"></Alert>
+    <Alert :show="false" :stack="alertError" :error-message="errorMessage"></Alert>
 
     <div class="content text-center">
       <CommerceLogo
@@ -33,7 +33,7 @@
         :attention="state.attention"
         :user="state.user"
         :client="state.client"
-        :commerce="state.commerce"
+        :commerce="state.commerce || {}"
         :queue="state.queue"
         :toggles="state.toggles"
         :attention-stats="attentionStats"
@@ -264,6 +264,7 @@ import {
 import { getFormPersonalizedByCommerceId } from '../../application/services/form-personalized';
 import { getConsentStatus } from '../../application/services/consent';
 import AttentionBasePage from '../../components/attentions/common/AttentionBasePage.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import Spinner from '../../components/common/Spinner.vue';
@@ -276,6 +277,7 @@ export default {
   name: 'CollaboratorAttentionCheckIn',
   components: {
     AttentionBasePage,
+    CommerceLogo,
     QueueName,
     ComponentMenu,
     Spinner,
@@ -292,6 +294,7 @@ export default {
 
     const loading = ref(false);
     const alertError = ref('');
+    const errorMessage = ref('');
     const statsUpdateTrigger = ref(0);
 
     // Use global commerce and business from store
@@ -304,6 +307,7 @@ export default {
       user: {},
       client: {},
       business: {},
+      commerce: {},
       queue: {},
       toggles: {},
       queueEstimatedDuration: null,
@@ -719,6 +723,7 @@ export default {
             if (!currentCommerce || currentCommerce.id !== attentionCommerce.id) {
               // Commerce is different, update store immediately
               await store.setCurrentCommerce(attentionCommerce);
+              state.commerce = attentionCommerce;
 
               // Load full commerce with features in background (non-blocking) if needed
               if (
@@ -729,6 +734,7 @@ export default {
                   .then(fullCommerce => {
                     if (fullCommerce && fullCommerce.features) {
                       store.setCurrentCommerce(fullCommerce);
+                      state.commerce = fullCommerce;
                     }
                   })
                   .catch(() => {
@@ -744,6 +750,7 @@ export default {
                 .then(fullCommerce => {
                   if (fullCommerce && fullCommerce.features) {
                     store.setCurrentCommerce(fullCommerce);
+                    state.commerce = fullCommerce;
                   }
                 })
                 .catch(() => {
@@ -754,6 +761,7 @@ export default {
             // Now that commerce is loaded, validate and redirect if needed
             // Use store commerce or attentionDetails commerce for validation
             const commerceForValidation = store.getCurrentCommerce || attentionDetails.commerce;
+            state.commerce = state.commerce?.id ? state.commerce : (commerceForValidation || {});
             if (validateAndRedirect(attentionDetails, commerceForValidation)) {
               loading.value = false;
               return; // Stop here if redirecting
@@ -886,6 +894,7 @@ export default {
       try {
         loading.value = true;
         alertError.value = '';
+        errorMessage.value = '';
 
         // Check if attention is PENDING (traditional flow) or CHECK_IN (stages flow)
         const isStagesEnabled = getActiveFeature(
@@ -922,8 +931,9 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value =
-          error.response?.data?.message || error.message || 'Erro ao avançar etapa';
+        const msg = error?.response?.data?.message || error?.message;
+        errorMessage.value = Array.isArray(msg) ? msg[0] : msg;
+        alertError.value = error?.response?.status || 500;
         loading.value = false;
       }
     };
@@ -1149,6 +1159,7 @@ export default {
       state,
       loading,
       alertError,
+      errorMessage,
       attentionStats,
       estimatedTime,
       goToAttend,

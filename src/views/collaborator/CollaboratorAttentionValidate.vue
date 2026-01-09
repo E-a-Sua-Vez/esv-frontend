@@ -421,7 +421,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error?.response?.status || 0;
         loading.value = false;
       }
     });
@@ -830,7 +830,7 @@ export default {
         state.attention = await attend(state.attention.number, body);
         // Reload the page to show the updated status
         await router.push({ path: `/interno/colaborador/atencion/${state.attention.id}/validar` });
-        window.location.reload();
+        // Evitar recarga total para prevenir condiciones de carrera en actualización del componente
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -843,6 +843,12 @@ export default {
     const loadStockData = async () => {
       try {
         loading.value = true;
+
+        // Guard: attention must exist
+        if (!state.attention || (!state.attention.id && !state.attention.attentionId)) {
+          loading.value = false;
+          return;
+        }
 
         // Load togglesStock if not already loaded
         if (!state.togglesStock || Object.keys(state.togglesStock).length === 0) {
@@ -874,6 +880,11 @@ export default {
     const getAttentionProducts = async () => {
       try {
         loading.value = true;
+        // Guard: attention must exist
+        if (!state.attention || (!state.attention.id && !state.attention.attentionId)) {
+          loading.value = false;
+          return;
+        }
         const attentionId = state.attention.id || state.attention.attentionId;
         state.productConsumptions = await getProductsConsumptionsDetails(
           undefined,
@@ -895,6 +906,12 @@ export default {
     const getPatientHistory = async () => {
       try {
         loading.value = true;
+
+        // Guard: required ids must exist
+        if (!state.attention?.clientId || !state.commerce?.id) {
+          loading.value = false;
+          return;
+        }
 
         // Fetch all data in parallel
         const [result, items, forms, client] = await Promise.all([
@@ -942,6 +959,11 @@ export default {
 
     // Live update interval for stats
     let statsInterval = null;
+    // Modal handlers to properly attach/detach
+    let patientHistoryModalHandler = null;
+    let stockProductsModalHandler = null;
+    let patientHistoryModalEl = null;
+    let stockProductsModalEl = null;
 
     onMounted(() => {
       // Update stats every 30 seconds for live updates
@@ -954,35 +976,55 @@ export default {
       nextTick(() => {
         const clientId = state.attention?.clientId;
         if (clientId) {
-          const patientHistoryModal = document.getElementById(`patientHistoryModal-${clientId}`);
-          if (patientHistoryModal) {
-            patientHistoryModal.addEventListener('shown.bs.modal', async () => {
+          patientHistoryModalEl = document.getElementById(`patientHistoryModal-${clientId}`);
+          if (patientHistoryModalEl) {
+            patientHistoryModalHandler = async () => {
               // Always load patient history when modal opens
               await getPatientHistory();
-            });
+            };
+            patientHistoryModalEl.addEventListener('shown.bs.modal', patientHistoryModalHandler);
           }
         }
 
         // Setup modal listener for stock/products modal
         const attentionId = state.attention?.id;
         if (attentionId) {
-          const stockModal = document.getElementById(`attentionsProductsModal-${attentionId}`);
-          if (stockModal) {
-            stockModal.addEventListener('shown.bs.modal', async () => {
+          stockProductsModalEl = document.getElementById(`attentionsProductsModal-${attentionId}`);
+          if (stockProductsModalEl) {
+            stockProductsModalHandler = async () => {
               // Load stock data when modal opens (toggles and product consumptions)
               await loadStockData();
-            });
+            };
+            stockProductsModalEl.addEventListener('shown.bs.modal', stockProductsModalHandler);
           }
         }
       });
     });
 
+    let isMounted = true;
+
     onUnmounted(() => {
+      isMounted = false;
       if (statsInterval) {
         clearInterval(statsInterval);
       }
       if (state.connectionStatusInterval) {
         clearInterval(state.connectionStatusInterval);
+      }
+      // Clean up modal event listeners
+      try {
+        if (patientHistoryModalEl && patientHistoryModalHandler) {
+          patientHistoryModalEl.removeEventListener('shown.bs.modal', patientHistoryModalHandler);
+          patientHistoryModalHandler = null;
+          patientHistoryModalEl = null;
+        }
+        if (stockProductsModalEl && stockProductsModalHandler) {
+          stockProductsModalEl.removeEventListener('shown.bs.modal', stockProductsModalHandler);
+          stockProductsModalHandler = null;
+          stockProductsModalEl = null;
+        }
+      } catch (e) {
+        console.warn('Modal listener cleanup warning:', e);
       }
       // Clean up Firebase listeners for queue modal
       if (pendingAttentionsRef && pendingAttentionsRef._unsubscribe) {
@@ -1041,12 +1083,25 @@ export default {
         clearInterval(state.connectionStatusInterval);
       }
       state.connectionStatusInterval = setInterval(async () => {
+        if (!isMounted) {
+          return;
+        }
         if (state.attention?.telemedicineSessionId) {
           try {
             const session = await getTelemedicineSession(state.attention.telemedicineSessionId);
+            if (!session) {
+              // If no session data is returned, skip this cycle safely
+              return;
+            }
             state.telemedicineSession = session;
             // Check if client has validated access key (indicates they're likely connected)
-            state.clientConnected = session.accessKeyValidated || false;
+            state.clientConnected = !!session.accessKeyValidated;
+
+            // If session ended, stop polling to avoid unnecessary updates
+            const status = session.status?.toLowerCase();
+            if (status === 'completed' || status === 'cancelled') {
+              stopConnectionStatusPolling();
+            }
           } catch (err) {
             console.error('Error polling connection status:', err);
           }
@@ -2009,7 +2064,7 @@ export default {
         </div>
         <DesktopPageHeader
           :commerce-id="state.commerce?.id"
-          :business-id="business?.id"
+          :business-id="state.business?.id"
           :loading="loading"
           :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${state.currentUser.alias || state.currentUser.name}!`"
           :toggles="state.toggles"

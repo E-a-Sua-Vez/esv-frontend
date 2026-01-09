@@ -188,7 +188,7 @@ export default {
       default: false,
     },
   },
-  emits: ['close', 'call-ended'],
+  emits: ['close', 'call-ended', 'session-ended'],
   setup(props, { emit }) {
     const loading = ref(true);
     const error = ref(null);

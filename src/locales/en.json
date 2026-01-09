@@ -720,6 +720,11 @@
       "title": "Check-Out Enabled",
       "description": "Activates the Check-Out stage in the attention flow"
     }
+    ,
+    "allow-attention-without-consents": {
+      "title": "Allow attention without consents",
+      "description": "Allows starting/advancing attention even if required LGPD consents are missing"
+    }
   },
   "document": {
     "types": {

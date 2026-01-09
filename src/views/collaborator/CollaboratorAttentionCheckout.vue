@@ -1,22 +1,40 @@
 <template>
   <div>
     <Spinner :show="loading"></Spinner>
-    <Alert :show="!!alertError" :stack="alertError"></Alert>
+    <Alert :show="false" :stack="alertError" :error-message="errorMessage"></Alert>
 
     <div class="content text-center">
-      <CommerceLogo
-        :commerce-id="commerce?.id"
-        :business-id="business?.id"
-        :loading="loading"
-      />
-      <ComponentMenu
-        :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
-          state.currentUser?.alias || state.currentUser?.name
-        }!`"
-        :toggles="state.toggles"
-        component-name="collaboratorAttentionCheckout"
-        @goBack="goBack"
-      />
+      <!-- Mobile/Tablet Header -->
+      <div class="d-block d-lg-none">
+        <CommerceLogo
+          :commerce-id="commerce?.id"
+          :business-id="business?.id"
+          :loading="loading"
+        />
+        <ComponentMenu
+          :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
+            state.currentUser?.alias || state.currentUser?.name
+          }!`"
+          :toggles="state.toggles"
+          component-name="collaboratorAttentionCheckout"
+          @goBack="goBack"
+        />
+      </div>
+
+      <!-- Desktop Header -->
+      <div class="d-none d-lg-block">
+        <DesktopPageHeader
+          :commerce-id="state.commerce?.id || commerce?.id"
+          :business-id="state.business?.id || business?.id"
+          :loading="loading"
+          :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
+            state.currentUser?.alias || state.currentUser?.name
+          }!`"
+          :toggles="state.toggles"
+          component-name="collaboratorAttentionCheckout"
+          @go-back="goBack"
+        />
+      </div>
       <QueueName
         v-if="state.queue"
         :queue="state.queue"
@@ -206,6 +224,8 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Message from '../../components/common/Message.vue';
+import CommerceLogo from '../../components/common/CommerceLogo.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 
 export default {
   name: 'CollaboratorAttentionCheckout',
@@ -217,6 +237,8 @@ export default {
     Spinner,
     Alert,
     Message,
+    CommerceLogo,
+    DesktopPageHeader,
   },
   setup() {
     const route = useRoute();
@@ -228,6 +250,7 @@ export default {
     const comment = ref('');
     const loading = ref(false);
     const alertError = ref('');
+    const errorMessage = ref('');
     const statsUpdateTrigger = ref(0);
 
     // Use global commerce and business from store
@@ -752,6 +775,7 @@ export default {
       try {
         loading.value = true;
         alertError.value = '';
+        errorMessage.value = '';
         const body = {
           comment: comment.value || undefined,
           collaboratorId: state.currentUser?.id,
@@ -774,10 +798,12 @@ export default {
           loading.value = false;
         }
       } catch (error) {
-        alertError.value =
-          error.response?.data?.message ||
-          error.message ||
+        const msg =
+          error?.response?.data?.message ||
+          error?.message ||
           t('collaboratorAttentionValidate.message.7.content');
+        errorMessage.value = Array.isArray(msg) ? msg[0] : msg;
+        alertError.value = error?.response?.status || 500;
         loading.value = false;
       }
     };
@@ -795,6 +821,8 @@ export default {
       comment,
       loading,
       alertError,
+      commerce,
+      business,
       attentionStats,
       estimatedTime,
       finishCheckout,
@@ -802,6 +830,7 @@ export default {
       loadStockData,
       goBack,
       getActiveFeature,
+      errorMessage,
     };
   },
 };

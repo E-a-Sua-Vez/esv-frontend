@@ -623,6 +623,7 @@ export default {
       state,
       loading,
       alertError,
+      business,
       collaboratorQueues,
       attendAttention,
       finishCurrentCancelledAttention,

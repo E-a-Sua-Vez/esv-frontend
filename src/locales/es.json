@@ -822,6 +822,11 @@
       "title": "Check-Out Habilitado",
       "description": "Activa la etapa de Check-Out en el flujo de atención"
     }
+    ,
+    "allow-attention-without-consents": {
+      "title": "Permitir atención sin consentimientos",
+      "description": "Permite iniciar/avanzar atención aunque falten consentimientos LGPD requeridos"
+    }
   },
   "document": {
     "types": {

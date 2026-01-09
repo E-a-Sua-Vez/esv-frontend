@@ -166,7 +166,8 @@
       "ALL_IN_ONE": "Tudo em Um",
       "ONLY_SURVEYS": "Só Pesquisas Inteligentes",
       "QUEUES_BOOKING": "Só Filas e Reservas"
-    }
+    },
+    "attentionProducts": "Produtos de Atenção"
   },
   "surveys": {
     "types": {
@@ -767,6 +768,11 @@
     "attention-checkout-enabled": {
       "title": "Check-Out Habilitado",
       "description": "Ativa a etapa de Check-Out no fluxo de atendimento"
+    }
+    ,
+    "allow-attention-without-consents": {
+      "title": "Permitir atendimento sem consentimentos",
+      "description": "Permite iniciar/avançar atendimento mesmo faltando consentimentos LGPD obrigatórios"
     }
   },
   "document": {
