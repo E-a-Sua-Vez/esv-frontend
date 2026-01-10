@@ -1,5 +1,10 @@
 <script>
 import QueueAttentionDetails from '../domain/QueueAttentionDetails.vue';
+import {
+  updatedAvailableAttentions,
+  updatedProcessingAttentions,
+  updatedTerminatedAttentions,
+} from '../../application/firebase';
 
 export default {
   components: { QueueAttentionDetails },
@@ -21,7 +26,48 @@ export default {
   data() {
     return {
       extendedEntity: false,
+      // Internal Firebase listeners for modal
+      internalPendingDetails: [],
+      internalProcessingDetails: [],
+      internalTerminatedDetails: [],
+      pendingAttentionsRef: null,
+      processingAttentionsRef: null,
+      terminatedAttentionsRef: null,
     };
+  },
+  computed: {
+    // Use external props if provided, otherwise use internal Firebase data
+    finalPendingDetails() {
+      return Array.isArray(this.queuePendingDetails) && this.queuePendingDetails.length > 0
+        ? this.queuePendingDetails
+        : this.internalPendingDetails;
+    },
+    finalProcessingDetails() {
+      return Array.isArray(this.queueProcessingDetails) && this.queueProcessingDetails.length > 0
+        ? this.queueProcessingDetails
+        : this.internalProcessingDetails;
+    },
+    finalTerminatedDetails() {
+      return Array.isArray(this.queueTerminatedDetails) && this.queueTerminatedDetails.length > 0
+        ? this.queueTerminatedDetails
+        : this.internalTerminatedDetails;
+    },
+  },
+  mounted() {
+    // Initialize Firebase listeners when details is true and we have a queue
+    if (this.details && this.queue?.id) {
+      this.initializeFirebaseListeners();
+    }
+  },
+  beforeUnmount() {
+    this.cleanupFirebaseListeners();
+  },
+  watch: {
+    queue(newQueue, oldQueue) {
+      if (this.details && newQueue?.id && newQueue.id !== oldQueue?.id) {
+        this.initializeFirebaseListeners();
+      }
+    },
   },
   methods: {
     showDetails() {
@@ -30,6 +76,61 @@ export default {
     openDrawer() {
       if (this.useDrawer) {
         this.$emit('open-drawer');
+      }
+    },
+
+    initializeFirebaseListeners() {
+      if (!this.queue?.id) return;
+
+      // Clean up previous listeners
+      this.cleanupFirebaseListeners();
+
+      // Initialize Firebase listeners
+      this.pendingAttentionsRef = updatedAvailableAttentions(this.queue.id);
+      this.processingAttentionsRef = updatedProcessingAttentions(this.queue.id);
+      this.terminatedAttentionsRef = updatedTerminatedAttentions(this.queue.id);
+
+      // Watch for changes and update internal data
+      this.$watch(
+        () => this.pendingAttentionsRef?.value,
+        (newVal) => {
+          if (Array.isArray(newVal)) {
+            this.internalPendingDetails.splice(0, this.internalPendingDetails.length, ...newVal);
+          }
+        },
+        { immediate: true, deep: true }
+      );
+
+      this.$watch(
+        () => this.processingAttentionsRef?.value,
+        (newVal) => {
+          if (Array.isArray(newVal)) {
+            this.internalProcessingDetails.splice(0, this.internalProcessingDetails.length, ...newVal);
+          }
+        },
+        { immediate: true, deep: true }
+      );
+
+      this.$watch(
+        () => this.terminatedAttentionsRef?.value,
+        (newVal) => {
+          if (Array.isArray(newVal)) {
+            this.internalTerminatedDetails.splice(0, this.internalTerminatedDetails.length, ...newVal);
+          }
+        },
+        { immediate: true, deep: true }
+      );
+    },
+
+    cleanupFirebaseListeners() {
+      if (this.pendingAttentionsRef && this.pendingAttentionsRef._unsubscribe) {
+        this.pendingAttentionsRef._unsubscribe();
+      }
+      if (this.processingAttentionsRef && this.processingAttentionsRef._unsubscribe) {
+        this.processingAttentionsRef._unsubscribe();
+      }
+      if (this.terminatedAttentionsRef && this.terminatedAttentionsRef._unsubscribe) {
+        this.terminatedAttentionsRef._unsubscribe();
       }
     },
   },
@@ -159,9 +260,9 @@ export default {
               <QueueAttentionDetails
                 :key="`queue-modal-${queue?.id}-${listUpdateKey || 0}`"
                 :queue="queue"
-                :queue-pending-details="queuePendingDetails"
-                :queue-processing-details="queueProcessingDetails"
-                :queue-terminated-details="queueTerminatedDetails"
+                :queue-pending-details="finalPendingDetails"
+                :queue-processing-details="finalProcessingDetails"
+                :queue-terminated-details="finalTerminatedDetails"
                 :commerce="commerce"
               ></QueueAttentionDetails>
             </div>

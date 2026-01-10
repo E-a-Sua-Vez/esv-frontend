@@ -38,20 +38,16 @@
       <QueueName
         v-if="state.queue"
         :queue="state.queue"
-        :commerce="state.commerce"
+        :commerce="state.commerce || commerce"
         :details="true"
-        :queue-pending-details="state.queuePendingDetails"
-        :queue-processing-details="state.queueProcessingDetails"
-        :queue-terminated-details="state.queueTerminatedDetails"
-        :list-update-key="state.listUpdateKey"
       />
 
       <AttentionBasePage
-        v-if="state.attention && state.attention.id"
+        v-if="state.attention && state.attention.id && (state.commerce || commerce)"
         :attention="state.attention"
         :user="state.user"
         :client="state.client"
-        :commerce="state.commerce"
+        :commerce="state.commerce || commerce"
         :queue="state.queue"
         :toggles="state.toggles"
         :attention-stats="attentionStats"
@@ -62,7 +58,7 @@
           <div class="checkout-content my-4">
             <!-- Gestión de Stock (si aplica) -->
             <div
-              v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')"
+              v-if="getActiveFeature(state.commerce || commerce, 'attention-stock-register', 'PRODUCT')"
               class="estoque-card-compact my-3"
             >
               <div class="requirement-card-compact estoque-card">
@@ -172,7 +168,7 @@
               :show-product-attention-management="true"
               :toggles="state.togglesStock"
               :attention="{ attentionId: state.attention.id, ...state.attention }"
-              :commerce="state.commerce"
+              :commerce="state.commerce || commerce"
               :product-attentions-in="state.productConsumptions"
               :show-search-filters="false"
               @getProductConsuptions="getAttentionProducts"
@@ -262,6 +258,7 @@ export default {
       attention: {},
       user: {},
       client: {},
+      commerce: null,
       queue: {},
       toggles: {},
       togglesStock: {},

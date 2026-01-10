@@ -51,7 +51,16 @@
       <div v-else class="video-container">
         <!-- Video local -->
         <div class="video-wrapper local-video">
-          <video ref="localVideo" autoplay muted playsinline class="video-element"></video>
+          <video
+            ref="localVideo"
+            autoplay
+            muted
+            playsinline
+            class="video-element"
+            :disablepictureinpicture="true"
+            :controlslist="'nodownload nofullscreen noremoteplayback'"
+            preload="metadata"
+          ></video>
           <div class="video-overlay">
             <span class="video-label">Tú</span>
             <span v-if="!localStream" class="video-status">
@@ -62,7 +71,15 @@
 
         <!-- Video remoto -->
         <div class="video-wrapper remote-video">
-          <video ref="remoteVideo" autoplay playsinline class="video-element"></video>
+          <video
+            ref="remoteVideo"
+            autoplay
+            playsinline
+            class="video-element"
+            :disablepictureinpicture="true"
+            :controlslist="'nodownload nofullscreen noremoteplayback'"
+            preload="metadata"
+          ></video>
           <div class="video-overlay">
             <span class="video-label">
               {{ userType === 'doctor' ? 'Paciente' : 'Médico' }}
@@ -1137,6 +1154,45 @@ export default {
 
           statusPollInterval.value = setInterval(pollSessionStatus, 10000); // Poll cada 10 segundos en lugar de 3 para reducir carga
         }
+
+        // Add event listeners to prevent videos from pausing when hidden
+        if (localVideo.value) {
+          localVideo.value.addEventListener('pause', (e) => {
+            e.target.play().catch(() => {});
+          });
+        }
+
+        if (remoteVideo.value) {
+          remoteVideo.value.addEventListener('pause', (e) => {
+            e.target.play().catch(() => {});
+          });
+        }
+
+        // Keep videos playing even when hidden
+        const keepVideosPlaying = () => {
+          if (localVideo.value && localStream.value && localVideo.value.paused) {
+            localVideo.value.play().catch(() => {});
+          }
+          if (remoteVideo.value && remoteStream.value && remoteVideo.value.paused) {
+            remoteVideo.value.play().catch(() => {});
+          }
+        };
+
+        // Check every second to ensure videos keep playing
+        const videoKeepAliveInterval = setInterval(keepVideosPlaying, 1000);
+
+        // Add Page Visibility API listener to prevent pause when tab becomes inactive
+        const handleVisibilityChange = () => {
+          setTimeout(() => {
+            keepVideosPlaying();
+          }, 100);
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // Store references for cleanup
+        window.__telemedicineVideoKeepAlive = videoKeepAliveInterval;
+        window.__telemedicineVisibilityHandler = handleVisibilityChange;
       } catch (err) {
         console.error('[TelemedicineVideoCall] Error starting video call:', err);
         error.value = err.message || 'Error al iniciar la videollamada';
@@ -1145,6 +1201,18 @@ export default {
     });
 
     onUnmounted(() => {
+      // Clean up video keep alive interval
+      if (window.__telemedicineVideoKeepAlive) {
+        clearInterval(window.__telemedicineVideoKeepAlive);
+        delete window.__telemedicineVideoKeepAlive;
+      }
+
+      // Clean up visibility handler
+      if (window.__telemedicineVisibilityHandler) {
+        document.removeEventListener('visibilitychange', window.__telemedicineVisibilityHandler);
+        delete window.__telemedicineVisibilityHandler;
+      }
+
       // Stop recording if active
       if (isRecording.value && mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
@@ -1176,15 +1244,17 @@ export default {
       localVideo,
       async newVal => {
         if (newVal && localStream.value && !newVal.srcObject) {
-          console.log(
-            '[TelemedicineVideoCall] Local video element became available, setting stream'
-          );
           newVal.srcObject = localStream.value;
+
+          // Add pause listener to prevent auto-pause
+          newVal.addEventListener('pause', (e) => {
+            e.target.play().catch(() => {});
+          });
+
           try {
             await newVal.play();
-            console.log('[TelemedicineVideoCall] Local video playing (watch)');
           } catch (playErr) {
-            console.warn('[TelemedicineVideoCall] Could not autoplay video (watch):', playErr);
+            // Autoplay might be blocked by browser
           }
         }
       },
@@ -1196,18 +1266,17 @@ export default {
       remoteVideo,
       async newVal => {
         if (newVal && remoteStream.value && !newVal.srcObject) {
-          console.log(
-            '[TelemedicineVideoCall] Remote video element became available, setting stream'
-          );
           newVal.srcObject = remoteStream.value;
+
+          // Add pause listener to prevent auto-pause
+          newVal.addEventListener('pause', (e) => {
+            e.target.play().catch(() => {});
+          });
+
           try {
             await newVal.play();
-            console.log('[TelemedicineVideoCall] Remote video playing (watch)');
           } catch (playErr) {
-            console.warn(
-              '[TelemedicineVideoCall] Could not autoplay remote video (watch):',
-              playErr
-            );
+            // Autoplay might be blocked by browser
           }
         }
       },
@@ -1355,6 +1424,8 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  min-width: 1px !important;
+  min-height: 1px !important;
 }
 
 .video-overlay {
@@ -1402,56 +1473,113 @@ export default {
 
 .controls-group {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  padding: 1rem;
+  justify-content: center;
+  align-items: center;
 }
 
 .btn-control {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  border: none;
-  background: rgba(0, 0, 0, 0.1);
-  color: var(--color-text);
+  border: 2px solid transparent;
+  background: linear-gradient(145deg, #f8fafc, #e2e8f0);
+  color: #475569;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  position: relative;
 }
 
 .btn-control:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.2);
-  transform: scale(1.05);
+  background: linear-gradient(145deg, #e2e8f0, #cbd5e1);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 12px -2px rgba(0, 0, 0, 0.15), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  color: #334155;
 }
 
 .btn-control:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background: #f1f5f9;
+  color: #94a3b8;
+  box-shadow: none;
 }
 
 .btn-control-active {
-  background: var(--gradient-primary);
+  background: linear-gradient(145deg, #3b82f6, #2563eb);
   color: white;
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-control-active:hover:not(:disabled) {
+  background: linear-gradient(145deg, #2563eb, #1d4ed8);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3), 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .btn-control-danger {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(145deg, #ef4444, #dc2626);
   color: white;
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25), 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-control-danger:hover:not(:disabled) {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: linear-gradient(145deg, #dc2626, #b91c1c);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(239, 68, 68, 0.3), 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .btn-control-recording {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(145deg, #ef4444, #dc2626);
   color: white;
+  border-color: rgba(255, 255, 255, 0.2);
   animation: pulse-recording 2s infinite;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25), 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-control-recording:hover:not(:disabled) {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: linear-gradient(145deg, #dc2626, #b91c1c);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(239, 68, 68, 0.3), 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Focus states for accessibility */
+.btn-control:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: #3b82f6;
+  ring-offset: 2px;
+  ring-offset-color: #ffffff;
+}
+
+.btn-control-active:focus {
+  ring-color: #60a5fa;
+}
+
+.btn-control-danger:focus,
+.btn-control-recording:focus {
+  ring-color: #f87171;
+}
+
+/* Additional enhancement for inactive buttons */
+.btn-control:not(.btn-control-active):not(.btn-control-danger):not(.btn-control-recording) {
+  background: linear-gradient(145deg, #f8fafc, #e2e8f0);
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-control:not(.btn-control-active):not(.btn-control-danger):not(.btn-control-recording):hover {
+  background: linear-gradient(145deg, #e2e8f0, #cbd5e1);
+  color: #475569;
+  border-color: #cbd5e1;
 }
 
 .recording-indicator {
@@ -1467,14 +1595,17 @@ export default {
 }
 
 @keyframes pulse-recording {
-  0%,
-  100% {
-    opacity: 1;
+  0% {
     transform: scale(1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25), 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   50% {
-    opacity: 0.8;
-    transform: scale(0.95);
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35), 0 3px 6px rgba(0, 0, 0, 0.15);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25), 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
 

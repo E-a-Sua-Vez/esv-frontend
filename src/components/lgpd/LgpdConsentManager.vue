@@ -1,7 +1,8 @@
 <template>
   <div class="lgpd-consent-manager">
-    <div v-if="loading" class="text-center">
+    <div v-if="loading" class="text-center py-5">
       <Spinner />
+      <p class="text-muted mt-3">{{ $t('common.loadingData') }}...</p>
     </div>
 
     <div v-else>
@@ -300,6 +301,10 @@ export default {
       type: String,
       required: true,
     },
+    isVisible: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['consent-updated'],
   setup(props, { emit }) {
@@ -344,8 +349,11 @@ export default {
         .length;
     });
 
-    const loadConsentStatus = async () => {
+    const loadConsentStatus = async (showLoading = true) => {
       try {
+        if (showLoading) {
+          loading.value = true;
+        }
         const status = await getConsentStatus(props.commerceId, props.clientId);
         // Solo actualizar si hay cambios para evitar re-renders innecesarios
         if (JSON.stringify(consentStatus.value) !== JSON.stringify(status)) {
@@ -357,6 +365,10 @@ export default {
         console.error('Error loading consent status:', error);
         // Fallback: cargar solo consentimientos si falla el estado consolidado
         await loadConsents();
+      } finally {
+        if (showLoading) {
+          loading.value = false;
+        }
       }
     };
 
@@ -520,7 +532,8 @@ export default {
       }
       consentStatusIntervalId = setInterval(() => {
         if (props.commerceId && props.clientId) {
-          loadConsentStatus();
+          // No mostrar spinner en actualizaciones automáticas
+          loadConsentStatus(false);
         }
       }, 10000); // 10 segundos
     };
@@ -533,9 +546,11 @@ export default {
     };
 
     onMounted(() => {
-      loadConsentStatus();
-      // Iniciar polling para atualização em tempo real
-      startConsentStatusPolling();
+      // Solo cargar si el componente es visible
+      if (props.isVisible) {
+        loadConsentStatus();
+        startConsentStatusPolling();
+      }
     });
 
     onUnmounted(() => {
@@ -544,12 +559,24 @@ export default {
 
     // Watch para mudanças em props
     watch(
-      () => [props.commerceId, props.clientId],
-      () => {
-        stopConsentStatusPolling();
-        if (props.commerceId && props.clientId) {
+      () => [props.commerceId, props.clientId, props.isVisible],
+      ([newCommerceId, newClientId, newIsVisible], [oldCommerceId, oldClientId, oldIsVisible]) => {
+        // Si el componente se hace visible, cargar datos
+        if (newIsVisible && !oldIsVisible && newCommerceId && newClientId) {
           loadConsentStatus();
           startConsentStatusPolling();
+        }
+        // Si el componente se oculta, detener polling
+        else if (!newIsVisible && oldIsVisible) {
+          stopConsentStatusPolling();
+        }
+        // Si cambian commerceId o clientId mientras está visible, recargar
+        else if (newIsVisible && (newCommerceId !== oldCommerceId || newClientId !== oldClientId)) {
+          stopConsentStatusPolling();
+          if (newCommerceId && newClientId) {
+            loadConsentStatus();
+            startConsentStatusPolling();
+          }
         }
       }
     );

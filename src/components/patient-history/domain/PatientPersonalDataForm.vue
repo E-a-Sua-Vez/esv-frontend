@@ -69,18 +69,32 @@ export default {
     };
 
     const calculateAge = birthday => {
-      const hoy = new Date();
-      const fechaNacimiento = new Date(birthday);
-      let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
-      const diferenciaMeses = hoy.getMonth() - fechaNacimiento.getMonth();
-      if (
-        diferenciaMeses < 0 ||
-        (diferenciaMeses === 0 && hoy.getDate() < fechaNacimiento.getDate())
-      ) {
-        edad--;
+      if (!birthday) return null;
+
+      // Parse the date string to avoid timezone issues
+      const parts = birthday.split('-');
+      if (parts.length !== 3) return null;
+
+      const birthDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      const today = new Date();
+
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
       }
-      return edad;
+
+      return age >= 0 ? age : null;
     };
+
+    // Computed property for calculated age - always derives from birthday
+    const calculatedAge = computed(() => {
+      if (state.newPersonalData.birthday) {
+        return calculateAge(state.newPersonalData.birthday);
+      }
+      return null;
+    });
 
     onBeforeMount(async () => {
       try {
@@ -130,6 +144,10 @@ export default {
               (clientData.value.personalInfo && clientData.value.personalInfo.birthday) ||
               undefined;
             state.newPersonalData.birthday = birthday ? birthday : '';
+            // Calculate age if birthday exists
+            if (state.newPersonalData.birthday) {
+              state.newPersonalData.age = calculateAge(state.newPersonalData.birthday);
+            }
             const addressCode =
               clientData.value.userAddressCode ||
               (clientData.value.personalInfo && clientData.value.personalInfo.addressCode) ||
@@ -157,6 +175,10 @@ export default {
         if (cacheData.value && Object.keys(cacheData.value).length > 0) {
           console.log('💾 Loading personal data from preprontuario cache:', cacheData.value);
           state.newPersonalData = { ...state.newPersonalData, ...cacheData.value };
+          // Recalculate age if birthday exists after merging cache data
+          if (state.newPersonalData.birthday) {
+            state.newPersonalData.age = calculateAge(state.newPersonalData.birthday);
+          }
           sendData();
         }
 
@@ -207,13 +229,16 @@ export default {
       }
     };
 
-    const changeBirthday = computed(() => {
-      const { newPersonalData } = state;
-      const birthday = newPersonalData.birthday;
-      return {
-        birthday,
-      };
-    });
+    // Sync calculated age with newPersonalData.age whenever birthday changes
+    watch(
+      () => state.newPersonalData.birthday,
+      (newBirthday) => {
+        if (newBirthday) {
+          state.newPersonalData.age = calculateAge(newBirthday);
+          sendData();
+        }
+      }
+    );
 
     watch(clientData, async () => {
       loading.value = true;
@@ -238,6 +263,10 @@ export default {
             (clientData.value.personalInfo && clientData.value.personalInfo.birthday) ||
             undefined;
           state.newPersonalData.birthday = birthday ? birthday : '';
+          // Calculate age if birthday exists
+          if (state.newPersonalData.birthday) {
+            state.newPersonalData.age = calculateAge(state.newPersonalData.birthday);
+          }
           const addressCode =
             clientData.value.userAddressCode ||
             (clientData.value.personalInfo && clientData.value.personalInfo.addressCode) ||
@@ -261,33 +290,31 @@ export default {
       loading.value = false;
     });
 
-    watch(changeBirthday, async () => {
-      if (state.newPersonalData.birthday) {
-        state.newPersonalData.age = calculateAge(state.newPersonalData.birthday);
-      }
-    });
-
     watch(patientHistoryData, async () => {
       loading.value = true;
       if (patientHistoryData.value && patientHistoryData.value.id) {
         // Use deep copy to ensure Vue reactivity works correctly
         if (patientHistoryData.value.personalData) {
           state.newPersonalData = { ...patientHistoryData.value.personalData };
+          // Recalculate age to ensure it's correct
+          if (state.newPersonalData.birthday) {
+            state.newPersonalData.age = calculateAge(state.newPersonalData.birthday);
+          }
         }
       } else {
-        if (commerce.value && commerce.value.localeInfo.country) {
-          state.newPersonalData.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
+        // Only set defaults if there's no existing birthday data
+        if (!state.newPersonalData.birthday) {
+          if (commerce.value && commerce.value.localeInfo.country) {
+            state.newPersonalData.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
+          }
+          const defaultBirthday = new Date(
+            new Date().setFullYear(new Date().getFullYear() - 18)
+          ).toISOString().slice(0, 10);
+          state.newPersonalData.birthday = defaultBirthday;
+          state.newPersonalData.age = calculateAge(defaultBirthday);
+          state.newPersonalData.font = true;
+          sendData();
         }
-        state.newPersonalData.birthday = new Date(
-          new Date().setFullYear(new Date().getFullYear() - 18)
-        )
-          .toISOString()
-          .slice(0, 10);
-        state.newPersonalData.age = calculateAge(
-          new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().slice(0, 10)
-        );
-        state.newPersonalData.font = true;
-        sendData();
       }
       loading.value = false;
     });
@@ -345,6 +372,7 @@ export default {
       sendData,
       getAddress,
       onlyNumber,
+      calculatedAge,
     };
   },
 };
@@ -452,7 +480,6 @@ export default {
                 id="patient-birthday"
                 type="date"
                 class="form-control-modern"
-                @blur="calculateAge"
                 @keyup="sendData"
                 v-bind:class="{
                   'form-control-invalid': errorsAdd.includes(
@@ -468,20 +495,18 @@ export default {
                 {{ $t('patientHistoryView.age') }}
               </label>
               <input
-                :disabled="!toggles['patient.history.edit']"
+                disabled
                 id="patient-age"
-                min="18"
-                max="100"
                 type="number"
-                @keypress="onlyNumber"
-                @keyup="sendData"
                 class="form-control-modern"
                 v-bind:class="{
                   'form-control-invalid': errorsAdd.includes(
                     'patientHistoryView.validate.personalData.age'
                   ),
                 }"
-                v-model.trim="state.newPersonalData.age"
+                :value="calculatedAge"
+                placeholder="Calculado automáticamente"
+                title="La edad se calcula automáticamente desde la fecha de nacimiento"
               />
             </div>
           </div>

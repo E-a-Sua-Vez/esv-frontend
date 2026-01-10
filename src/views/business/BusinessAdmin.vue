@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, computed, watch, nextTick } from 'vue';
+import { ref, reactive, onBeforeMount, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getBusinesses, updateBusiness, addBusiness } from '../../application/services/business';
@@ -16,6 +16,8 @@ import Toggle from '@vueform/toggle';
 import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import BusinessLogoUpload from '../../components/business/common/BusinessLogoUpload.vue';
+import BusinessFormAdd from '../../components/business/BusinessFormAdd.vue';
+import BusinessFormEdit from '../../components/business/BusinessFormEdit.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
@@ -29,6 +31,8 @@ export default {
   components: {
     CommerceLogo,
     BusinessLogoUpload,
+    BusinessFormAdd,
+    BusinessFormEdit,
     Message,
     Spinner,
     Alert,
@@ -54,7 +58,22 @@ export default {
       businesses: [],
       modules: ref({}),
       showAdd: false,
-      newBusiness: {},
+      newBusiness: {
+        localeInfo: {
+          language: 'pt',
+          timezone: 'America/Sao_Paulo',
+          zip: '',
+        },
+        contactInfo: {},
+        serviceInfo: {
+          break: false,
+          personalized: false,
+          personalizedHours: {},
+          holiday: false,
+          holidays: {},
+          attentionDays: [],
+        },
+      },
       extendedEntity: undefined,
       errorsAdd: [],
       errorsUpdate: [],
@@ -68,6 +87,7 @@ export default {
       urlUpdateError: false,
       emailError: false,
       addressAddError: false,
+      addressUpdateError: false,
       categoryAddError: false,
       countryAddError: false,
       countryUpdateError: false,
@@ -257,12 +277,30 @@ export default {
 
     const validateUpdate = business => {
       state.errorsUpdate = [];
-      if (!business.phone || business.phone.length < 10) {
+      // Phone validation should use contactInfo.phone
+      if (!business?.contactInfo?.phone || business.contactInfo.phone.length < 10) {
         state.phoneUpdateError = true;
         state.errorsUpdate.push('businessAdmin.validate.phone');
       } else {
         state.phoneUpdateError = false;
       }
+
+      // Country validation
+      if (!business?.localeInfo?.country || business.localeInfo.country.length === 0) {
+        state.countryUpdateError = true;
+        state.errorsUpdate.push('businessAdmin.validate.country');
+      } else {
+        state.countryUpdateError = false;
+      }
+
+      // Address validation
+      if (!business?.localeInfo?.address || business.localeInfo.address.length < 10) {
+        state.addressUpdateError = true;
+        state.errorsUpdate.push('businessAdmin.validate.address');
+      } else {
+        state.addressUpdateError = false;
+      }
+
       if (state.errorsUpdate.length === 0) {
         return true;
       }
@@ -272,6 +310,17 @@ export default {
     const update = async business => {
       try {
         loading.value = true;
+        // Mantener campos de nivel raíz sincronizados para backend
+        if (business?.contactInfo?.phone) {
+          business.phone = business.contactInfo.phone;
+        }
+        if (business?.contactInfo?.url) {
+          business.url = business.contactInfo.url;
+        }
+        if (business?.localeInfo?.country) {
+          business.country = business.localeInfo.country;
+        }
+        console.log('payload update/business', JSON.stringify(business));
         if (validateUpdate(business)) {
           await updateBusiness(business.id, business);
           state.businesses = await getBusinesses();
@@ -305,13 +354,40 @@ export default {
     const add = async () => {
       try {
         loading.value = true;
+        console.log("state.newBusiness", state.newBusiness)
+        // Sincronizar campos de nivel raíz con los anidados para que el backend los persista también
+        if (state.newBusiness?.contactInfo?.phone) {
+          state.newBusiness.phone = state.newBusiness.contactInfo.phone;
+        }
+        if (state.newBusiness?.contactInfo?.url) {
+          state.newBusiness.url = state.newBusiness.contactInfo.url;
+        }
+        if (state.newBusiness?.localeInfo?.country) {
+          state.newBusiness.country = state.newBusiness.localeInfo.country;
+        }
+        console.log('payload add/newBusiness', JSON.stringify(state.newBusiness));
         if (validateAdd(state.newBusiness)) {
           await addBusiness(state.newBusiness);
           state.businesses = await getBusinesses();
           state.filtered = state.businesses;
           refreshPagination();
           state.showAdd = false;
-          state.newBusiness = {};
+          state.newBusiness = {
+            localeInfo: {
+              language: 'pt',
+              timezone: 'America/Sao_Paulo',
+              zip: '',
+            },
+            contactInfo: {},
+            serviceInfo: {
+              break: false,
+              personalized: false,
+              personalizedHours: {},
+              holiday: false,
+              holidays: {},
+              attentionDays: [],
+            },
+          };
         }
         state.extendedEntity = undefined;
         alertError.value = '';
@@ -729,6 +805,98 @@ export default {
       }
     };
 
+    // Modal management functions
+    const closeAddModal = () => {
+      const modalCloseButton = document.getElementById('close-modal');
+      if (modalCloseButton) {
+        modalCloseButton.click();
+      }
+    };
+
+    const resetAddForm = () => {
+      state.newBusiness = {
+        localeInfo: {
+          language: 'pt',
+          timezone: 'America/Sao_Paulo',
+          zip: '',
+        },
+        contactInfo: {},
+        serviceInfo: {
+          break: false,
+          personalized: false,
+          personalizedHours: {},
+          holiday: false,
+          holidays: {},
+          attentionDays: [],
+        },
+      };
+      state.errorsAdd = [];
+      state.nameError = false;
+      state.keyNameError = false;
+      state.emailError = false;
+      state.categoryAddError = false;
+      state.countryAddError = false;
+      state.phoneAddError = false;
+      state.addressAddError = false;
+    };
+
+    const handleCloseButtonMousedown = e => {
+      // Remove focus immediately on mousedown (before click) to avoid aria-hidden warning
+      if (e.target && (e.target.id === 'close-modal' || e.target.closest('#close-modal'))) {
+        const button = e.target.id === 'close-modal' ? e.target : e.target.closest('#close-modal');
+        if (button) {
+          button.blur();
+          // Also blur any active element to ensure no focus remains
+          if (document.activeElement && document.activeElement !== document.body) {
+            document.activeElement.blur();
+          }
+        }
+      }
+    };
+
+    const handleModalBackdropClick = e => {
+      // Remove focus when clicking backdrop to close modal
+      if (e.target === e.currentTarget && document.activeElement) {
+        document.activeElement.blur();
+      }
+    };
+
+    // Lifecycle hooks for modal management
+    onMounted(() => {
+      const addModal = document.getElementById('add-business');
+      const closeButton = document.getElementById('close-modal');
+
+      if (addModal) {
+        addModal.addEventListener('hidden.bs.modal', resetAddForm);
+        // Remove focus when clicking backdrop
+        addModal.addEventListener('click', handleModalBackdropClick);
+      }
+
+      // Use mousedown (fires before click) to remove focus early
+      if (closeButton) {
+        closeButton.addEventListener('mousedown', handleCloseButtonMousedown, true);
+      }
+
+      // Also listen on the document for any close button clicks
+      document.addEventListener('mousedown', handleCloseButtonMousedown, true);
+    });
+
+    onUnmounted(() => {
+      const addModal = document.getElementById('add-business');
+      const closeButton = document.getElementById('close-modal');
+
+      if (addModal) {
+        addModal.removeEventListener('hidden.bs.modal', resetAddForm);
+        addModal.removeEventListener('click', handleModalBackdropClick);
+      }
+
+      if (closeButton) {
+        closeButton.removeEventListener('mousedown', handleCloseButtonMousedown, true);
+      }
+
+      document.removeEventListener('mousedown', handleCloseButtonMousedown, true);
+    });
+
     return {
       state,
       loading,
@@ -764,6 +932,7 @@ export default {
       handleLogoUploaded,
       loadBusinessLogoPreview,
       getBusinessLogoUrlForDisplay,
+      closeAddModal,
     };
   },
 };
@@ -1060,606 +1229,12 @@ export default {
                     <button
                       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
                       @click="showAdd()"
+                      data-bs-toggle="modal"
+                      data-bs-target="#add-business"
                       :disabled="!toggles['businesses.admin.add']"
                     >
                       <i class="bi bi-plus-lg"></i> {{ $t('add') }}
                     </button>
-                  </div>
-                </div>
-                <div
-                  id="add-business"
-                  class="business-card mb-4"
-                  v-if="state.showAdd && toggles['businesses.admin.add']"
-                >
-                  <div v-if="state.businesses.length < getToggleLimit('businesses.admin.limit')">
-                    <div class="row g-1">
-                      <div id="business-name-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.name') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            min="1"
-                            max="50"
-                            type="text"
-                            class="form-control"
-                            v-model="state.newBusiness.name"
-                            v-bind:class="{ 'is-invalid': state.nameError }"
-                            placeholder="brilliant-shop-1"
-                          />
-                        </div>
-                      </div>
-                      <div id="business-keyName-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.keyName') }}
-                          <Popper
-                            :class="'dark p-1'"
-                            arrow
-                            disable-click-away
-                            :content="$t('businessAdmin.keyNameHelp')"
-                          >
-                            <i class="bi bi-info-circle-fill h7"></i>
-                          </Popper>
-                        </div>
-                        <div class="col-8">
-                          <input
-                            min="1"
-                            max="50"
-                            type="text"
-                            class="form-control"
-                            v-model="state.newBusiness.keyName"
-                            v-bind:class="{ 'is-invalid': state.keyNameError }"
-                            placeholder="brilliant-shop-1"
-                          />
-                        </div>
-                      </div>
-                      <div id="business-email-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.email') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            min="10"
-                            type="email"
-                            class="form-control"
-                            v-model="state.newBusiness.email"
-                            v-bind:class="{ 'is-invalid': state.emailError }"
-                            placeholder="name@email.com"
-                          />
-                        </div>
-                      </div>
-                      <div id="business-logo-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.logo') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            min="10"
-                            type="text"
-                            class="form-control"
-                            v-model="state.newBusiness.logo"
-                            placeholder="url/image.png"
-                          />
-                        </div>
-                      </div>
-                      <div id="business-category-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.category') }}
-                        </div>
-                        <div class="col-8">
-                          <select
-                            class="btn btn-md btn-light fw-bold text-dark select"
-                            v-model="state.newBusiness.category"
-                            id="caterogies"
-                            v-bind:class="{ 'is-invalid': state.categoryAddError }"
-                          >
-                            <option v-for="cat in state.categories" :key="cat" :value="cat">
-                              {{ $t(`categories.${cat}`) }}
-                            </option>
-                          </select>
-                        </div>
-                      </div>
-                      <!-- Datos de localizacion -->
-                      <div class="row g-1">
-                        <a class="nav-link fw-bold section-toggle-button" data-bs-toggle="collapse" href="#add-location">
-                          {{ $t('businessAdmin.location') }} <i class="bi bi-chevron-down"></i>
-                        </a>
-                      </div>
-                      <div id="add-location" class="collapse row m-0">
-                        <div id="business-country-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.country') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="12"
-                              type="text"
-                              class="form-control"
-                              v-model="state.newBusiness.localeInfo.country"
-                              v-bind:class="{ 'is-invalid': state.countryAddError }"
-                              placeholder="Ex. ve, br, cl"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-language-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.language') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="3"
-                              type="text"
-                              class="form-control"
-                              v-model="state.newBusiness.localeInfo.language"
-                              placeholder="Ex.: es / en / pt"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-timezone-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.timezone') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="30"
-                              type="text"
-                              class="form-control"
-                              v-model="state.newBusiness.localeInfo.timezone"
-                              placeholder="Ex.: America/Caracas"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-address-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.address') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="80"
-                              type="text"
-                              class="form-control"
-                              v-model="state.newBusiness.localeInfo.address"
-                              v-bind:class="{ 'is-invalid': state.addressAddError }"
-                              placeholder="Street 1, Building 56, City, State"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-addressLat-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.addressLat') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="10"
-                              type="number"
-                              class="form-control"
-                              v-model="state.newBusiness.localeInfo.addressLat"
-                              placeholder="Ex.: 10.65656"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-addressLng-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.addressLng') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="10"
-                              type="number"
-                              class="form-control"
-                              v-model="state.newBusiness.localeInfo.addressLng"
-                              placeholder="Ex.: -10.65656"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <!-- Datos de Contacto -->
-                      <div class="row g-1">
-                        <a class="nav-link fw-bold section-toggle-button" data-bs-toggle="collapse" href="#add-contact">
-                          {{ $t('businessAdmin.contact') }} <i class="bi bi-chevron-down"></i>
-                        </a>
-                      </div>
-                      <div id="add-contact" class="collapse row m-0">
-                        <div id="business-contact-email-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.email') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="30"
-                              type="email"
-                              class="form-control"
-                              v-model="state.newBusiness.contactInfo.email"
-                              placeholder="Ex.: contact@business.com"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-contact-url-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.url') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="30"
-                              type="text"
-                              class="form-control"
-                              v-model="state.newBusiness.contactInfo.url"
-                              placeholder="Ex.: https://www.business.com/"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-phone-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.phone') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="10"
-                              type="tel"
-                              class="form-control"
-                              v-model="state.newBusiness.contactInfo.phone"
-                              v-bind:class="{ 'is-invalid': state.phoneAddError }"
-                              placeholder="Cod. Pais + Numero"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-contact-phone2-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.phone2') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="9"
-                              max="12"
-                              type="tel"
-                              class="form-control"
-                              v-model="state.newBusiness.contactInfo.phone2"
-                              placeholder="Ex.: 56233445533"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-contact-whatsapp-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.whatsapp') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="9"
-                              max="12"
-                              type="tel"
-                              class="form-control"
-                              v-model="state.newBusiness.contactInfo.whatsapp"
-                              placeholder="Ex.: 56233445533"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-contact-twitter-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.twitter') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="5"
-                              max="20"
-                              type="text"
-                              class="form-control"
-                              v-model="state.newBusiness.contactInfo.twitter"
-                              placeholder="Ex.: tw_business"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-contact-instagram-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.instagram') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="5"
-                              max="20"
-                              type="text"
-                              class="form-control"
-                              v-model="state.newBusiness.contactInfo.instagram"
-                              placeholder="Ex.: ig_business"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-contact-facebook-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.facebook') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="5"
-                              max="20"
-                              type="text"
-                              class="form-control"
-                              v-model="state.newBusiness.contactInfo.facebook"
-                              placeholder="Ex.: fb_business"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <!-- Datos de Servicio -->
-                      <div class="row g-1">
-                        <a class="nav-link fw-bold section-toggle-button" data-bs-toggle="collapse" href="#add-service">
-                          {{ $t('businessAdmin.service') }} <i class="bi bi-chevron-down"></i>
-                        </a>
-                      </div>
-                      <div id="add-service" class="collapse row m-0">
-                        <div id="business-serviceUrl-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.serviceUrl') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              min="1"
-                              max="12"
-                              type="text"
-                              class="form-control"
-                              v-model="state.newBusiness.serviceInfo.serviceUrl"
-                              placeholder="Ex. https://menu.business.com"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-attentionHour-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.attentionHour') }}
-                          </div>
-                          <div class="col-3">
-                            <input
-                              min="0"
-                              max="24"
-                              minlength="1"
-                              maxlength="2"
-                              type="number"
-                              class="form-control"
-                              v-model="state.newBusiness.serviceInfo.attentionHourFrom"
-                              placeholder="Ex. 8"
-                            />
-                          </div>
-                          <div class="col-2">-</div>
-                          <div class="col-3">
-                            <input
-                              min="0"
-                              max="24"
-                              minlength="1"
-                              maxlength="2"
-                              type="number"
-                              class="form-control"
-                              v-model="state.newBusiness.serviceInfo.attentionHourTo"
-                              placeholder="Ex. 16"
-                            />
-                          </div>
-                        </div>
-                        <div id="add-business-break-active-form" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.break') }}
-                          </div>
-                          <div class="col-8">
-                            <Toggle
-                              v-model="state.newBusiness.serviceInfo.break"
-                              :disabled="!toggles['businesses.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <div
-                          id="business-attentionBreak-form-add"
-                          v-if="state.newBusiness.serviceInfo.break"
-                          class="row g-1"
-                        >
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.breakHour') }}
-                          </div>
-                          <div class="col-3">
-                            <input
-                              min="0"
-                              max="24"
-                              minlength="1"
-                              maxlength="5"
-                              type="number"
-                              class="form-control"
-                              v-model="state.newBusiness.serviceInfo.breakHourFrom"
-                              placeholder="Ex. 8"
-                            />
-                          </div>
-                          <div class="col-2">-</div>
-                          <div class="col-3">
-                            <input
-                              min="0"
-                              max="24"
-                              minlength="1"
-                              maxlength="5"
-                              type="number"
-                              class="form-control"
-                              v-model="state.newBusiness.serviceInfo.breakHourTo"
-                              placeholder="Ex. 16"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-attentionDays-form-add" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.attentionDays') }}
-                          </div>
-                          <div class="col-8">
-                            <div class="form-check form-switch">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="monday"
-                                :checked="dayChecked(state.newBusiness.serviceInfo, 1)"
-                                @click="checkDay($event, state.newBusiness.serviceInfo, 1)"
-                              />
-                              <label class="form-check-label" for="monday">{{
-                                $t('days.1')
-                              }}</label>
-                            </div>
-                            <div class="form-check form-switch">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="tuesday"
-                                :checked="dayChecked(state.newBusiness.serviceInfo, 2)"
-                                @click="checkDay($event, state.newBusiness.serviceInfo, 2)"
-                              />
-                              <label class="form-check-label" for="tuesday">{{
-                                $t('days.2')
-                              }}</label>
-                            </div>
-                            <div class="form-check form-switch">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="wednesday"
-                                :checked="dayChecked(state.newBusiness.serviceInfo, 3)"
-                                @click="checkDay($event, state.newBusiness.serviceInfo, 3)"
-                              />
-                              <label class="form-check-label" for="wednesday">{{
-                                $t('days.3')
-                              }}</label>
-                            </div>
-                            <div class="form-check form-switch">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="thursday"
-                                :checked="dayChecked(state.newBusiness.serviceInfo, 4)"
-                                @click="checkDay($event, state.newBusiness.serviceInfo, 4)"
-                              />
-                              <label class="form-check-label" for="thursday">{{
-                                $t('days.4')
-                              }}</label>
-                            </div>
-                            <div class="form-check form-switch">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="friday"
-                                :checked="dayChecked(state.newBusiness.serviceInfo, 5)"
-                                @click="checkDay($event, state.newBusiness.serviceInfo, 5)"
-                              />
-                              <label class="form-check-label" for="friday">{{
-                                $t('days.5')
-                              }}</label>
-                            </div>
-                            <div class="form-check form-switch">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="sabado"
-                                :checked="dayChecked(state.newBusiness.serviceInfo, 6)"
-                                @click="checkDay($event, state.newBusiness.serviceInfo, 6)"
-                              />
-                              <label class="form-check-label" for="sabado">{{
-                                $t('days.6')
-                              }}</label>
-                            </div>
-                            <div class="form-check form-switch">
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="domingo"
-                                :checked="dayChecked(state.newBusiness.serviceInfo)"
-                                @click="checkDay($event, state.newBusiness.serviceInfo, 7)"
-                              />
-                              <label class="form-check-label" for="domingo">{{
-                                $t('days.7')
-                              }}</label>
-                            </div>
-                          </div>
-                        </div>
-                        <div id="add-business-personalized-active-form" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.personalized') }}
-                          </div>
-                          <div class="col-8">
-                            <Toggle
-                              v-model="state.newBusiness.serviceInfo.personalized"
-                              :disabled="!toggles['businesses.admin.edit']"
-                              @click="initializedParsonalizedHours(state.newBusiness.serviceInfo)"
-                            />
-                          </div>
-                        </div>
-                        <div
-                          id="business-personalized-form-add"
-                          v-if="state.newBusiness.serviceInfo.personalized"
-                          class="row g-1"
-                        >
-                          <div
-                            class="row g-1"
-                            v-for="day in state.newBusiness.serviceInfo.attentionDays"
-                            :key="day"
-                          >
-                            <div class="col-4 text-label">
-                              {{ $t(`days.${day}`) }}
-                            </div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="2"
-                                type="number"
-                                class="form-control"
-                                v-model="
-                                  state.newBusiness.serviceInfo.personalizedHours[day]
-                                    .attentionHourFrom
-                                "
-                                placeholder="Ex. 8"
-                              />
-                            </div>
-                            <div class="col-2">-</div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="2"
-                                type="number"
-                                class="form-control"
-                                v-model="
-                                  state.newBusiness.serviceInfo.personalizedHours[day]
-                                    .attentionHourTo
-                                "
-                                placeholder="Ex. 16"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col">
-                        <div class="d-flex gap-2 flex-wrap justify-content-center">
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                            @click="add(state.newBusiness)"
-                          >
-                            {{ $t('businessAdmin.add') }} <i class="bi bi-save"></i>
-                          </button>
-                        </div>
-                      </div>
-                      <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
-                        <Warning>
-                          <template v-slot:message>
-                            <li v-for="(error, index) in state.errorsAdd" :key="index">
-                              {{ $t(error) }}
-                            </li>
-                          </template>
-                        </Warning>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-else>
-                    <Message
-                      :title="$t('businessAdmin.message.3.title')"
-                      :content="$t('businessAdmin.message.3.content')"
-                    />
                   </div>
                 </div>
                 <!-- Pagination Mobile/Tablet -->
@@ -1766,1477 +1341,24 @@ export default {
                         </a>
                       </div>
                     </div>
-                    <div
+                    <BusinessFormEdit
                       v-if="toggles['businesses.admin.read']"
-                      :class="{ show: state.extendedEntity === index }"
-                      class="detailed-data transition-slow"
-                      @vue:mounted="loadBusinessLogoPreview(business.id)"
-                    >
-                      <div class="row g-1">
-                        <div id="business-name-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.name') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              :disabled="true"
-                              min="1"
-                              max="50"
-                              type="text"
-                              class="form-control"
-                              v-model="business.name"
-                              placeholder="brilliant-shop-1"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-keyName-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.keyName') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              :disabled="true"
-                              min="1"
-                              max="50"
-                              type="text"
-                              class="form-control"
-                              v-model="business.keyName"
-                              placeholder="brilliant-shop-1"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-email-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.email') }}
-                          </div>
-                          <div class="col-8">
-                            <input
-                              :disabled="true"
-                              min="10"
-                              type="email"
-                              class="form-control"
-                              v-model="business.email"
-                              placeholder="business@email.com"
-                            />
-                          </div>
-                        </div>
-                        <div id="business-logo-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.logo') }}
-                          </div>
-                          <div class="col-8">
-                            <div class="d-flex flex-column gap-2">
-                              <!-- Logo Preview -->
-                              <div
-                                v-if="state.businessLogos[business.id]"
-                                class="logo-preview-small"
-                              >
-                                <img
-                                  :src="state.businessLogos[business.id]"
-                                  :alt="$t('businessAdmin.logo')"
-                                  class="logo-preview-img"
-                                  @error="loadBusinessLogoPreview(business.id, business.logo)"
-                                />
-                              </div>
-                              <div
-                                v-else-if="
-                                  business.logo && business.logo.startsWith('/business-logos/')
-                                "
-                                class="logo-preview-small"
-                              >
-                                <div
-                                  class="logo-loading-placeholder d-flex flex-column align-items-center justify-content-center p-3"
-                                >
-                                  <i class="bi bi-hourglass-split mb-2"></i>
-                                  <span class="small text-muted">{{
-                                    $t('common.loading') || 'Cargando...'
-                                  }}</span>
-                                </div>
-                              </div>
-                              <div
-                                v-else-if="
-                                  business.logo && !business.logo.startsWith('/business-logos/')
-                                "
-                                class="logo-preview-small"
-                              >
-                                <img
-                                  :src="business.logo"
-                                  :alt="$t('businessAdmin.logo')"
-                                  class="logo-preview-img"
-                                />
-                              </div>
-                              <!-- Upload Button -->
-                              <div class="d-flex align-items-center gap-2">
-                                <button
-                                  type="button"
-                                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
-                                  @click="
-                                    openLogoUpload(business.id);
-                                    loadBusinessLogoPreview(business.id);
-                                  "
-                                  :disabled="!toggles['businesses.admin.edit']"
-                                >
-                                  <i class="bi bi-image me-1"></i>
-                                  {{
-                                    state.businessLogos[business.id] || business.logo
-                                      ? $t('businessAdmin.logoUpload.replaceLogo')
-                                      : $t('businessAdmin.logoUpload.selectLogo')
-                                  }}
-                                </button>
-                                <span
-                                  v-if="business.logo || state.businessLogos[business.id]"
-                                  class="small text-muted"
-                                >
-                                  <i class="bi bi-check-circle text-success"></i>
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div id="business-category-form-update" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessAdmin.category') }}
-                          </div>
-                          <div class="col-8">
-                            <select
-                              class="btn btn-md btn-light fw-bold text-dark select"
-                              v-model="business.category"
-                              id="caterogies"
-                            >
-                              <option v-for="cat in state.categories" :key="cat" :value="cat">
-                                {{ $t(`categories.${cat}`) }}
-                              </option>
-                            </select>
-                          </div>
-                        </div>
-                        <div id="business-active-form" class="row g-1">
-                          <div class="col-4 text-label">
-                            {{ $t('businessCommercesAdmin.active') }}
-                          </div>
-                          <div class="col-8">
-                            <Toggle
-                              v-model="business.active"
-                              :disabled="!toggles['businesses.admin.edit']"
-                            />
-                          </div>
-                        </div>
-                        <!-- Datos de localizacion -->
-                        <div class="row g-1">
-                          <a
-                            class="nav-link fw-bold section-toggle-button"
-                            data-bs-toggle="collapse"
-                            aria-expanded="true"
-                            :aria-controls="`update-location-${index}`"
-                            :href="`#update-location-${index}`"
-                          >
-                            {{ $t('businessCommercesAdmin.location') }}
-                            <i class="bi bi-chevron-down"></i>
-                          </a>
-                        </div>
-                        <div :id="`update-location-${index}`" class="collapse row m-0">
-                          <div id="business-country-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.country') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="1"
-                                max="12"
-                                type="text"
-                                class="form-control"
-                                v-model="business.localeInfo.country"
-                                v-bind:class="{ 'is-invalid': state.countryUpdateError }"
-                                placeholder="Ex. ve, br, cl"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-language-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.language') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="1"
-                                max="3"
-                                type="text"
-                                class="form-control"
-                                v-model="business.localeInfo.language"
-                                placeholder="Ex.: es / en / pt"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-timezone-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.timezone') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="1"
-                                max="30"
-                                type="text"
-                                class="form-control"
-                                v-model="business.localeInfo.timezone"
-                                placeholder="Ex.: America/Caracas"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-address-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.address') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="1"
-                                max="80"
-                                type="text"
-                                class="form-control"
-                                v-model="business.localeInfo.address"
-                                v-bind:class="{ 'is-invalid': state.addressAddError }"
-                                placeholder="Street 1, Building 56, City, State"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-addressLat-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.addressLat') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="1"
-                                max="10"
-                                type="number"
-                                class="form-control"
-                                v-model="business.localeInfo.addressLat"
-                                placeholder="Ex.: 10.65656"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-addressLng-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.addressLng') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="1"
-                                max="10"
-                                type="number"
-                                class="form-control"
-                                v-model="business.localeInfo.addressLng"
-                                placeholder="Ex.: -10.65656"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <!-- Datos de Contacto -->
-                        <div class="row g-1">
-                          <a
-                            class="nav-link fw-bold section-toggle-button"
-                            data-bs-toggle="collapse"
-                            :href="`#update-contact-${index}`"
-                          >
-                            {{ $t('businessCommercesAdmin.contact') }}
-                            <i class="bi bi-chevron-down"></i>
-                          </a>
-                        </div>
-                        <div :id="`update-contact-${index}`" class="collapse row m-0">
-                          <div id="business-contact-email-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.email') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="1"
-                                max="30"
-                                type="email"
-                                class="form-control"
-                                v-model="business.contactInfo.email"
-                                placeholder="Ex.: contact@business.com"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-contact-url-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.url') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="1"
-                                max="30"
-                                type="text"
-                                class="form-control"
-                                v-model="business.contactInfo.url"
-                                placeholder="Ex.: https://www.business.com/"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-phone-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.phone') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="10"
-                                type="tel"
-                                class="form-control"
-                                v-model="business.contactInfo.phone"
-                                v-bind:class="{ 'is-invalid': state.phoneUpdateError }"
-                                placeholder="Cod. Pais + Numero"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-contact-phone2-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.phone2') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="9"
-                                max="12"
-                                type="tel"
-                                class="form-control"
-                                v-model="business.contactInfo.phone2"
-                                placeholder="Ex.: 56233445533"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-contact-whatsapp-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.whatsapp') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="9"
-                                max="12"
-                                type="tel"
-                                class="form-control"
-                                v-model="business.contactInfo.whatsapp"
-                                placeholder="Ex.: 56233445533"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-contact-twitter-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.twitter') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="5"
-                                max="20"
-                                type="text"
-                                class="form-control"
-                                v-model="business.contactInfo.twitter"
-                                placeholder="Ex.: tw_commerce"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-contact-instagram-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.instagram') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="5"
-                                max="20"
-                                type="text"
-                                class="form-control"
-                                v-model="business.contactInfo.instagram"
-                                placeholder="Ex.: ig_commerce"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-contact-facebook-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.facebook') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="5"
-                                max="20"
-                                type="text"
-                                class="form-control"
-                                v-model="business.contactInfo.facebook"
-                                placeholder="Ex.: fb_commerce"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <!-- Datos de Servicio -->
-                        <div class="row g-1">
-                          <a
-                            class="nav-link fw-bold section-toggle-button"
-                            data-bs-toggle="collapse"
-                            :href="`#update-service-${index}`"
-                          >
-                            {{ $t('businessCommercesAdmin.service') }}
-                            <i class="bi bi-chevron-down"></i>
-                          </a>
-                        </div>
-                        <div :id="`update-service-${index}`" class="collapse row m-0">
-                          <div id="business-serviceUrl-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.serviceUrl') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                min="1"
-                                max="12"
-                                type="text"
-                                class="form-control"
-                                v-model="business.serviceInfo.serviceUrl"
-                                placeholder="Ex. https://menu.business.com"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-attentionHour-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.attentionHour') }}
-                            </div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="2"
-                                type="number"
-                                class="form-control"
-                                v-model="business.serviceInfo.attentionHourFrom"
-                                placeholder="Ex. 8"
-                              />
-                            </div>
-                            <div class="col-2">-</div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="2"
-                                type="number"
-                                class="form-control"
-                                v-model="business.serviceInfo.attentionHourTo"
-                                placeholder="Ex. 16"
-                              />
-                            </div>
-                          </div>
-                          <div id="add-business-break-active-form" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.break') }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="business.serviceInfo.break"
-                                :disabled="!toggles['businesses.admin.edit']"
-                              />
-                            </div>
-                          </div>
-                          <div
-                            id="business-attentionBreak-form-update"
-                            v-if="business.serviceInfo.break"
-                            class="row g-1"
-                          >
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.breakHour') }}
-                            </div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="5"
-                                type="number"
-                                class="form-control"
-                                v-model="business.serviceInfo.breakHourFrom"
-                                placeholder="Ex. 8"
-                              />
-                            </div>
-                            <div class="col-2">-</div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="5"
-                                type="number"
-                                class="form-control"
-                                v-model="business.serviceInfo.breakHourTo"
-                                placeholder="Ex. 16"
-                              />
-                            </div>
-                          </div>
-                          <div id="business-attentionDays-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.attentionDays') }}
-                            </div>
-                            <div class="col-8">
-                              <div class="form-check form-switch">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="monday"
-                                  :checked="dayChecked(business.serviceInfo, 1)"
-                                  @click="checkDay($event, business.serviceInfo, 1)"
-                                />
-                                <label class="form-check-label" for="monday">{{
-                                  $t('days.1')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="tuesday"
-                                  :checked="dayChecked(business.serviceInfo, 2)"
-                                  @click="checkDay($event, business.serviceInfo, 2)"
-                                />
-                                <label class="form-check-label" for="tuesday">{{
-                                  $t('days.2')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="wednesday"
-                                  :checked="dayChecked(business.serviceInfo, 3)"
-                                  @click="checkDay($event, business.serviceInfo, 3)"
-                                />
-                                <label class="form-check-label" for="wednesday">{{
-                                  $t('days.3')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="thursday"
-                                  :checked="dayChecked(business.serviceInfo, 4)"
-                                  @click="checkDay($event, business.serviceInfo, 4)"
-                                />
-                                <label class="form-check-label" for="thursday">{{
-                                  $t('days.4')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="friday"
-                                  :checked="dayChecked(business.serviceInfo, 5)"
-                                  @click="checkDay($event, business.serviceInfo, 5)"
-                                />
-                                <label class="form-check-label" for="friday">{{
-                                  $t('days.5')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="sabado"
-                                  :checked="dayChecked(business.serviceInfo, 6)"
-                                  @click="checkDay($event, business.serviceInfo, 6)"
-                                />
-                                <label class="form-check-label" for="sabado">{{
-                                  $t('days.6')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="domingo"
-                                  :checked="dayChecked(business.serviceInfo, 7)"
-                                  @click="checkDay($event, business.serviceInfo, 7)"
-                                />
-                                <label class="form-check-label" for="domingo">{{
-                                  $t('days.7')
-                                }}</label>
-                              </div>
-                            </div>
-                          </div>
-                          <div id="update-business-personalized-active-form" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessCommercesAdmin.personalized') }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="business.serviceInfo.personalized"
-                                :disabled="!toggles['businesses.admin.edit']"
-                                @click="initializedParsonalizedHours(business.serviceInfo)"
-                              />
-                            </div>
-                          </div>
-                          <div
-                            id="business-personalized-form-update"
-                            v-if="business.serviceInfo.personalized"
-                            class="row g-1"
-                          >
-                            <div
-                              class="row g-1"
-                              v-for="day in business.serviceInfo.attentionDays"
-                              :key="day"
-                            >
-                              <div class="col-4 text-label">
-                                {{ $t(`days.${day}`) }}
-                              </div>
-                              <div class="col-3">
-                                <input
-                                  min="0"
-                                  max="24"
-                                  minlength="1"
-                                  maxlength="2"
-                                  type="number"
-                                  class="form-control"
-                                  v-model="
-                                    business.serviceInfo.personalizedHours[day].attentionHourFrom
-                                  "
-                                  placeholder="Ex. 8"
-                                />
-                              </div>
-                              <div class="col-2">-</div>
-                              <div class="col-3">
-                                <input
-                                  min="0"
-                                  max="24"
-                                  minlength="1"
-                                  maxlength="2"
-                                  type="number"
-                                  class="form-control"
-                                  v-model="
-                                    business.serviceInfo.personalizedHours[day].attentionHourTo
-                                  "
-                                  placeholder="Ex. 16"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div id="business-id-form" class="row -2 mb-g3">
-                          <div class="row business-details-container">
-                            <div class="col">
-                              <span><strong>Id:</strong> {{ business.id }}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div v-if="toggles['businesses.admin.read']" class="row g-1 mt-2">
-                          <div class="col">
-                            <div class="d-flex gap-2 flex-wrap justify-content-center">
-                              <button
-                                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                                @click="update(business)"
-                                :disabled="!toggles['businesses.admin.update']"
-                              >
-                                {{ $t('businessAdmin.update') }} <i class="bi bi-save"></i>
-                              </button>
-                              <button
-                                type="button"
-                                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                                @click="selectBusiness(business)"
-                              >
-                                <i class="bi bi-eye-fill me-2"></i>
-                                {{ $t('businessAdmin.viewAsBusiness') }}
-                              </button>
-                            </div>
-                          </div>
-                          <div class="row g-1 errors" id="feedback" v-if="state.errorsUpdate.length > 0">
-                            <Warning>
-                              <template v-slot:message>
-                                <li v-for="(error, errorIndex) in state.errorsUpdate" :key="errorIndex">
-                                  {{ $t(error) }}
-                                </li>
-                              </template>
-                            </Warning>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div v-if="!toggles['businesses.admin.view'] && !loading">
-          <Message
-            :title="$t('businessAdmin.message.1.title')"
-            :content="$t('businessAdmin.message.1.content')"
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-  <!-- Desktop Layout -->
-  <!-- eslint-disable vue/no-multiple-template-root -->
-  <div class="d-none d-lg-block">
-    <div class="content text-center">
-      <div id="page-header" class="text-center mb-3">
-        <Spinner :show="loading"></Spinner>
-        <!-- Alert show prop was always false, fixed to show if alertError has value -->
-        <Alert :show="!!alertError" :stack="alertError"></Alert>
-      </div>
-      <DesktopPageHeader
-        :logo="state.business?.logo"
-        :business-id="state.business?.id"
-        :loading="loading"
-        :title="$t('businessAdmin.title')"
-        :toggles="state.toggles"
-        component-name="businessAdmin"
-        @go-back="goBack"
-      />
-      <div id="businessAdmin">
-        <div v-if="toggles['businesses.admin.view']">
-          <div v-if="!loading" id="businessAdmin-result" class="mt-4">
-            <!-- Unified Search Bar -->
-            <div id="business-searcher" class="mx-3 mb-3">
-              <SearchBar
-                :list="state.businesses"
-                :label="$t('businessAdmin.searchOrSelectBusiness')"
-                @selectItem="handleBusinessSelect"
-                @searchChange="handleSearchChange"
-              >
-              </SearchBar>
-            </div>
-
-            <!-- Business Action Modal -->
-            <div
-              v-if="state.selectedBusinessForAction"
-              class="modal fade show d-block"
-              tabindex="-1"
-              style="background-color: rgba(0, 0, 0, 0.5)"
-              @click.self="closeBusinessActionModal"
-            >
-              <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content modern-modal-container">
-                  <div class="modal-header border-0 active-name modern-modal-header">
-                    <div class="modern-modal-header-inner">
-                      <div class="modern-modal-icon-wrapper">
-                        <i class="bi bi-building"></i>
-                      </div>
-                      <div class="modern-modal-title-wrapper">
-                        <h5 class="modal-title fw-bold modern-modal-title">
-                          {{ $t('businessAdmin.selectAction') }}
-                        </h5>
-                        <p class="modern-modal-client-name">
-                          {{ state.selectedBusinessForAction?.name }}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      class="btn-close modern-modal-close-btn"
-                      @click="closeBusinessActionModal"
-                      aria-label="Close"
-                    >
-                      <i class="bi bi-x-lg"></i>
-                    </button>
-                  </div>
-                  <div class="modal-body modern-modal-body-content">
-                    <div class="d-grid gap-3">
-                      <button
-                        type="button"
-                        class="btn btn-lg btn-size fw-bold btn-outline-dark rounded-pill px-4"
-                        @click="openManageBusiness"
-                      >
-                        <i class="bi bi-pencil-square me-2"></i>
-                        {{ $t('businessAdmin.manageBusiness') }}
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
-                        @click="openViewAsBusinessUser"
-                      >
-                        <i class="bi bi-eye-fill me-2"></i>
-                        {{ $t('businessAdmin.viewAsBusiness') }}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Business View Modal -->
-            <div
-              v-if="state.selectedBusiness && state.selectedBusiness.id"
-              class="modal fade show d-block"
-              tabindex="-1"
-              style="background-color: rgba(0, 0, 0, 0.5)"
-              @click.self="clearBusinessSelection()"
-            >
-              <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content modern-modal-container">
-                  <div class="modal-header border-0 active-name modern-modal-header">
-                    <div class="modern-modal-header-inner">
-                      <div class="modern-modal-icon-wrapper">
-                        <i class="bi bi-eye-fill"></i>
-                      </div>
-                      <div class="modern-modal-title-wrapper">
-                        <h5 class="modal-title fw-bold modern-modal-title">
-                          {{ $t('businessAdmin.viewAsBusiness') }}
-                        </h5>
-                        <p class="modern-modal-client-name">
-                          {{ state.selectedBusiness.name }}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      class="btn-close modern-modal-close-btn"
-                      @click="clearBusinessSelection()"
-                      aria-label="Close"
-                    >
-                      <i class="bi bi-x-lg"></i>
-                    </button>
-                  </div>
-                  <div class="modal-body modern-modal-body-content">
-                    <!-- Business Info -->
-                    <div class="business-info-card p-3 mb-3">
-                      <div class="row d-flex align-items-center">
-                        <div class="col-3 text-center">
-                          <img
-                            :src="state.selectedBusinessLogoUrl || state.selectedBusiness.logo"
-                            class="business-view-logo img-thumbnail rounded"
-                            :alt="state.selectedBusiness.name"
-                            @error="state.selectedBusinessLogoUrl = null"
-                          />
-                        </div>
-                        <div class="col-9">
-                          <div class="fw-bold business-view-name mb-2">
-                            {{ state.selectedBusiness.name }}
-                          </div>
-                          <div class="text-muted small business-view-email">
-                            <i class="bi bi-envelope me-1"></i>
-                            {{ state.selectedBusiness.email }}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Commerce Selector -->
-                    <div class="commerce-selector-section mb-3">
-                      <label class="form-label fw-bold mb-2">
-                        <i class="bi bi-shop me-2"></i>
-                        {{ $t('businessAdmin.commerce') }}
-                      </label>
-
-                      <!-- Loading commerces -->
-                      <div v-if="state.loadingCommerces" class="text-center py-3">
-                        <Spinner :show="true"></Spinner>
-                      </div>
-
-                      <!-- Multiple commerces: Dropdown -->
-                      <div
-                        v-else-if="state.selectedCommerces && state.selectedCommerces.length > 1"
-                        class="dropdown"
-                      >
-                        <button
-                          class="btn btn-outline-dark w-100 commerce-select-btn d-flex align-items-center justify-content-between"
-                          type="button"
-                          id="commerceDropdown"
-                          data-bs-toggle="dropdown"
-                          aria-expanded="false"
-                        >
-                          <div class="d-flex align-items-center">
-                            <img
-                              v-if="state.selectedCommerce && state.selectedCommerce.logo"
-                              :src="state.selectedCommerce.logo"
-                              class="commerce-mini-logo me-2"
-                            />
-                            <div class="text-start">
-                              <div class="fw-bold">
-                                {{
-                                  state.selectedCommerce?.tag || $t('businessAdmin.selectCommerce')
-                                }}
-                              </div>
-                              <div
-                                v-if="state.selectedCommerce?.localeInfo?.address"
-                                class="small text-muted"
-                              >
-                                <i class="bi bi-geo-alt-fill"></i>
-                                {{ state.selectedCommerce.localeInfo.address }}
-                              </div>
-                            </div>
-                          </div>
-                          <i class="bi bi-chevron-down"></i>
-                        </button>
-                        <ul class="dropdown-menu w-100" aria-labelledby="commerceDropdown">
-                          <li v-for="com in state.selectedCommerces" :key="com.id">
-                            <a
-                              href="#"
-                              class="dropdown-item commerce-option d-flex align-items-center"
-                              :class="{ active: state.selectedCommerce?.id === com.id }"
-                              @click.prevent="selectCommerce(com)"
-                            >
-                              <img
-                                v-if="com.logo"
-                                :src="com.logo"
-                                class="commerce-mini-logo me-2"
-                              />
-                              <div class="flex-grow-1">
-                                <div class="fw-bold">{{ com.tag }}</div>
-                                <div v-if="com.localeInfo?.address" class="small text-muted">
-                                  <i class="bi bi-geo-alt-fill"></i>
-                                  {{ com.localeInfo.address }}
-                                </div>
-                              </div>
-                              <i
-                                v-if="state.selectedCommerce?.id === com.id"
-                                class="bi bi-check-circle-fill text-success"
-                              ></i>
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
-
-                      <!-- Single commerce: Simple display -->
-                      <div
-                        v-else-if="state.selectedCommerces && state.selectedCommerces.length === 1"
-                        class="commerce-single-display p-3 border rounded"
-                      >
-                        <div class="d-flex align-items-center">
-                          <img
-                            v-if="state.selectedCommerces[0].logo"
-                            :src="state.selectedCommerces[0].logo"
-                            class="commerce-mini-logo me-3"
-                          />
-                          <div>
-                            <div class="fw-bold">{{ state.selectedCommerces[0].tag }}</div>
-                            <div
-                              v-if="state.selectedCommerces[0].localeInfo?.address"
-                              class="small text-muted"
-                            >
-                              <i class="bi bi-geo-alt-fill"></i>
-                              {{ state.selectedCommerces[0].localeInfo.address }}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- No commerces message -->
-                      <div v-else class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        {{ $t('businessAdmin.noCommerces') }}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="modal-footer border-0 modern-modal-footer">
-                    <div class="d-flex align-items-center justify-content-between w-100 gap-3">
-                      <button
-                        type="button"
-                        class="btn btn-sm fw-bold btn-outline-secondary rounded-pill px-4"
-                        @click="clearBusinessSelection()"
-                      >
-                        {{ $t('close') || 'Cancelar' }}
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
-                        :disabled="!state.selectedCommerce || !state.selectedCommerce.id"
-                        @click="accessAsBusinessUser()"
-                      >
-                        <i class="bi bi-box-arrow-right me-2"></i>
-                        {{ $t('businessAdmin.accessAsBusiness') }}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div v-if="state.businesses.length === 0">
-                <Message
-                  :title="$t('businessAdmin.message.2.title')"
-                  :content="$t('businessAdmin.message.2.content')"
-                />
-              </div>
-              <div class="row my-2">
-                <div class="col lefted">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                    @click="showAdd()"
-                    :disabled="!toggles['businesses.admin.add']"
-                  >
-                    <i class="bi bi-plus-lg"></i> {{ $t('add') }}
-                  </button>
-                </div>
-              </div>
-              <div
-                id="add-business"
-                class="business-card mb-4"
-                v-if="state.showAdd && toggles['businesses.admin.add']"
-              >
-                <div v-if="state.businesses.length < getToggleLimit('businesses.admin.limit')">
-                  <form @submit.prevent="add(state.newBusiness)">
-                    <div class="row g-1">
-                      <div id="business-name-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.name') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            minlength="1"
-                            maxlength="50"
-                            type="text"
-                            class="form-control"
-                            v-model="state.newBusiness.name"
-                            :class="{ 'is-invalid': state.nameError }"
-                            placeholder="brilliant-shop"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div id="business-keyName-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.keyName') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            minlength="1"
-                            maxlength="50"
-                            type="text"
-                            class="form-control"
-                            v-model="state.newBusiness.keyName"
-                            :class="{ 'is-invalid': state.keyNameError }"
-                            placeholder="brilliant-shop"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div id="business-email-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.email') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            minlength="10"
-                            type="email"
-                            class="form-control"
-                            v-model="state.newBusiness.email"
-                            :class="{ 'is-invalid': state.emailError }"
-                            placeholder="name@email.com"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div id="business-tag-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.tag') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            minlength="1"
-                            maxlength="50"
-                            type="text"
-                            class="form-control"
-                            v-model="state.newBusiness.tag"
-                            :class="{ 'is-invalid': state.tagAddError }"
-                            placeholder="Brilliant Shop"
-                          />
-                        </div>
-                      </div>
-                      <div id="business-logo-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.logo') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            minlength="10"
-                            type="text"
-                            class="form-control"
-                            v-model="state.newBusiness.logo"
-                            placeholder="url/logo.png"
-                          />
-                        </div>
-                      </div>
-                      <div id="business-category-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.category') }}
-                        </div>
-                        <div class="col-8">
-                          <select
-                            class="btn btn-md btn-light fw-bold text-dark select"
-                            v-model="state.newBusiness.category"
-                            id="categories"
-                            :class="{ 'is-invalid': state.categoryAddError }"
-                            required
-                          >
-                            <option v-for="cat in state.categories" :key="cat" :value="cat">
-                              {{ $t(`categories.${cat}`) }}
-                            </option>
-                          </select>
-                        </div>
-                      </div>
-                      <div id="business-country-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.country') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            minlength="1"
-                            maxlength="12"
-                            type="text"
-                            class="form-control"
-                            v-model="state.newBusiness.country"
-                            :class="{ 'is-invalid': state.countryAddError }"
-                            placeholder="Ex. ve, br, cl"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div id="business-url-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.url') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            minlength="1"
-                            maxlength="30"
-                            type="text"
-                            class="form-control"
-                            v-model="state.newBusiness.url"
-                            :class="{ 'is-invalid': state.urlAddError }"
-                            placeholder="Ex.: https://www.business.com/"
-                          />
-                        </div>
-                      </div>
-                      <div id="business-phone-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.phone') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            minlength="10"
-                            type="tel"
-                            class="form-control"
-                            v-model="state.newBusiness.phone"
-                            :class="{ 'is-invalid': state.phoneAddError }"
-                            placeholder="Cod. Pais + Numero"
-                          />
-                        </div>
-                      </div>
-                      <div id="business-address-form-add" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.address') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            minlength="1"
-                            maxlength="80"
-                            type="text"
-                            class="form-control"
-                            v-model="state.newBusiness.address"
-                            :class="{ 'is-invalid': state.addressAddError }"
-                            placeholder="Street 1, Building 56, City, State"
-                          />
-                        </div>
-                      </div>
-                      <div class="col">
-                        <div class="d-flex gap-2 flex-wrap justify-content-center">
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                            type="submit"
-                          >
-                            {{ $t('businessAdmin.add') }} <i class="bi bi-save"></i>
-                          </button>
-                        </div>
-                      </div>
-                      <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
-                        <Warning>
-                          <template v-slot:message>
-                            <!-- index/idx fixes: be careful with duplicate key warning, want unique keys -->
-                            <li v-for="(error, idx) in state.errorsAdd" :key="error + '.' + idx">
-                              {{ $t(error) }}
-                            </li>
-                          </template>
-                        </Warning>
-                      </div>
-                    </div>
-                  </form>
-                </div>
-                <div v-else>
-                  <Message
-                    :title="$t('businessAdmin.message.3.title')"
-                    :content="$t('businessAdmin.message.3.content')"
-                  />
-                </div>
-              </div>
-              <!-- Pagination Desktop -->
-              <div v-if="state.filtered && state.filtered.length > 0" class="mt-3 mb-3">
-                <div class="d-flex justify-content-center align-items-center flex-wrap gap-2 mb-2">
-                  <span class="badge bg-secondary px-2 py-2 m-1">
-                    {{ $t('businessAdmin.listResult') }} {{ state.counter }}
-                  </span>
-                  <span class="badge bg-secondary px-2 py-2 m-1">
-                    {{ $t('page') }} {{ state.page }} {{ $t('of') }} {{ state.totalPages }}
-                  </span>
-                  <select
-                    class="btn btn-sm btn-light fw-bold text-dark select mx-1"
-                    v-model="state.limit"
-                    @change="refreshPagination()"
-                  >
-                    <option v-for="lim in state.limits" :key="lim" :value="lim">
-                      {{ lim }}
-                    </option>
-                  </select>
-                </div>
-                <div class="centered mt-2" v-if="state.filtered">
-                  <nav>
-                    <ul class="pagination pagination-ul">
-                      <li class="page-item">
-                        <button
-                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
-                          aria-label="First"
-                          @click="setPage(1)"
-                          :disabled="state.page === 1 || state.totalPages === 0"
-                        >
-                          <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
-                        </button>
-                      </li>
-                      <li class="page-item">
-                        <button
-                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
-                          aria-label="Previous"
-                          @click="setPage(state.page - 1)"
-                          :disabled="state.page === 1 || state.totalPages === 0"
-                        >
-                          <span aria-hidden="true">&laquo;</span>
-                        </button>
-                      </li>
-                      <li>
-                        <select
-                          class="btn btn-md btn-light fw-bold text-dark select mx-1 py-1"
-                          v-model="state.page"
-                          :disabled="state.totalPages === 0"
-                        >
-                          <option v-for="pag in state.totalPages" :key="pag" :value="pag">
-                            {{ pag }}
-                          </option>
-                        </select>
-                      </li>
-                      <li class="page-item">
-                        <button
-                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
-                          aria-label="Next"
-                          @click="setPage(state.page + 1)"
-                          :disabled="state.page === state.totalPages || state.totalPages === 0"
-                        >
-                          <span aria-hidden="true">&raquo;</span>
-                        </button>
-                      </li>
-                      <li class="page-item">
-                        <button
-                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
-                          aria-label="Last"
-                          @click="setPage(state.totalPages)"
-                          :disabled="state.page === state.totalPages || state.totalPages === 1"
-                        >
-                          <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
-                        </button>
-                      </li>
-                    </ul>
-                  </nav>
-                </div>
-              </div>
-              <div>
-                <!-- SearchAdminItem removed - SearchBar now handles filtering -->
-                <div
-                  v-for="(business, idx) in paginatedItems"
-                  :key="business.id || idx"
-                  class="result-card"
-                  :data-business-index="idx"
-                >
-                  <div class="row">
-                    <div class="col-10">
-                      <CommerceName
-                        :name="business.name"
-                        :tag="business.tag || business.name"
-                        :active="business.active"
-                        :key-name="business.keyName"
-                        link-type="business"
-                        :business-data="business"
-                      />
-                    </div>
-                    <div class="col-2">
-                      <a href="#" @click.prevent="showUpdateForm(idx)">
-                        <i
-                          :id="idx"
-                          :class="`bi ${
-                            state.extendedEntity === idx ? 'bi-chevron-up' : 'bi-chevron-down'
-                          }`"
-                        ></i>
-                      </a>
-                    </div>
-                  </div>
-                  <div
-                    v-if="toggles['businesses.admin.read']"
-                    :class="{ show: state.extendedEntity === idx }"
-                    class="detailed-data transition-slow"
-                  >
-                    <div class="row g-1">
-                      <!-- Desktop form fields - same structure as mobile but with simplified fields -->
-                      <div id="business-name-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.name') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            disabled
-                            minlength="1"
-                            maxlength="50"
-                            type="text"
-                            class="form-control"
-                            v-model="business.name"
-                            placeholder="brilliant-shop-1"
-                          />
-                        </div>
-                      </div>
-                      <div id="business-keyName-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.keyName') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            disabled
-                            minlength="1"
-                            maxlength="50"
-                            type="text"
-                            class="form-control"
-                            v-model="business.keyName"
-                            placeholder="brilliant-shop-1"
-                          />
-                        </div>
-                      </div>
-                      <div id="business-email-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.email') }}
-                        </div>
-                        <div class="col-8">
-                          <input
-                            disabled
-                            minlength="10"
-                            type="email"
-                            class="form-control"
-                            v-model="business.email"
-                            placeholder="business@email.com"
-                          />
-                        </div>
-                      </div>
-                      <div id="business-logo-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.logo') }}
-                        </div>
-                        <div class="col-8">
-                          <div class="d-flex flex-column gap-2">
-                            <!-- Logo Preview -->
-                            <div
-                              v-if="state.businessLogos && state.businessLogos[business.id]"
-                              class="logo-preview-small"
-                            >
-                              <img
-                                :key="`logo-desktop-${business.id}-${
-                                  state.businessLogos[business.id]
-                                }`"
-                                :src="state.businessLogos[business.id]"
-                                :alt="$t('businessAdmin.logo')"
-                                class="logo-preview-img"
-                                @error="loadBusinessLogoPreview(business.id, business.logo)"
-                              />
-                            </div>
-                            <div
-                              v-else-if="
-                                business.logo && business.logo.startsWith('/business-logos/')
-                              "
-                              class="logo-preview-small"
-                            >
-                              <div
-                                class="logo-loading-placeholder d-flex flex-column align-items-center justify-content-center p-3"
-                              >
-                                <i class="bi bi-hourglass-split mb-2"></i>
-                                <span class="small text-muted">{{
-                                  $t('common.loading') || 'Cargando...'
-                                }}</span>
-                              </div>
-                            </div>
-                            <div
-                              v-else-if="
-                                business.logo && !business.logo.startsWith('/business-logos/')
-                              "
-                              class="logo-preview-small"
-                            >
-                              <img
-                                :src="business.logo"
-                                :alt="$t('businessAdmin.logo')"
-                                class="logo-preview-img"
-                              />
-                            </div>
-                            <!-- Upload Button -->
-                            <div class="d-flex align-items-center gap-2">
-                              <button
-                                type="button"
-                                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
-                                @click="
-                                  openLogoUpload(business.id);
-                                  loadBusinessLogoPreview(business.id);
-                                "
-                                :disabled="!toggles['businesses.admin.edit']"
-                              >
-                                <i class="bi bi-image me-1"></i>
-                                {{
-                                  state.businessLogos[business.id] || business.logo
-                                    ? $t('businessAdmin.logoUpload.replaceLogo')
-                                    : $t('businessAdmin.logoUpload.selectLogo')
-                                }}
-                              </button>
-                              <span
-                                v-if="business.logo || state.businessLogos[business.id]"
-                                class="small text-muted"
-                              >
-                                <i class="bi bi-check-circle text-success"></i>
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div id="business-category-form-update" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessAdmin.category') }}
-                        </div>
-                        <div class="col-8">
-                          <select
-                            class="btn btn-md btn-light fw-bold text-dark select"
-                            v-model="business.category"
-                            id="categories"
-                          >
-                            <option v-for="cat in state.categories" :key="cat" :value="cat">
-                              {{ $t(`categories.${cat}`) }}
-                            </option>
-                          </select>
-                        </div>
-                      </div>
-                      <div id="business-active-form" class="row g-1">
-                        <div class="col-4 text-label">
-                          {{ $t('businessCommercesAdmin.active') }}
-                        </div>
-                        <div class="col-8">
-                          <Toggle
-                            v-model="business.active"
-                            :disabled="!toggles['businesses.admin.edit']"
-                          />
-                        </div>
-                      </div>
-                      <div id="business-id-form" class="row -2 mb-g3">
-                        <div class="row business-details-container">
-                          <div class="col">
-                            <span><strong>Id:</strong> {{ business.id }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    v-if="toggles['businesses.admin.read'] && state.extendedEntity === idx"
-                    class="row g-1 mt-2"
-                  >
-                    <div class="col">
+                      :business="business"
+                      :index="index"
+                      :errors="{
+                        countryUpdateError: state.countryUpdateError,
+                        phoneUpdateError: state.phoneUpdateError,
+                        addressUpdateError: state.addressUpdateError,
+                        errorsUpdate: state.errorsUpdate,
+                      }"
+                      :categories="state.categories"
+                      :toggles="toggles"
+                      :business-logos="state.businessLogos"
+                      :show="state.extendedEntity === index"
+                      @openLogoUpload="openLogoUpload"
+                      @loadLogo="loadBusinessLogoPreview"
+                    />
+                    <div class="col" v-if="state.extendedEntity === index && toggles['businesses.admin.read']">
                       <div class="d-flex gap-2 flex-wrap justify-content-center">
                         <button
                           class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
@@ -3254,15 +1376,15 @@ export default {
                           {{ $t('businessAdmin.viewAsBusiness') }}
                         </button>
                       </div>
-                    </div>
-                    <div class="row g-1 errors" id="feedback" v-if="state.errorsUpdate.length > 0">
-                      <Warning>
-                        <template v-slot:message>
-                          <li v-for="(error, eIdx) in state.errorsUpdate" :key="error + '.' + eIdx">
-                            {{ $t(error) }}
-                          </li>
-                        </template>
-                      </Warning>
+                      <div class="row g-1 errors mt-2" id="feedback" v-if="state.errorsUpdate.length > 0">
+                        <Warning>
+                          <template v-slot:message>
+                            <li v-for="(error, errorIndex) in state.errorsUpdate" :key="errorIndex">
+                              {{ $t(error) }}
+                            </li>
+                          </template>
+                        </Warning>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -3278,18 +1400,562 @@ export default {
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Business Logo Upload Modal - Using Teleport for proper modal rendering -->
-  <Teleport to="body">
-    <BusinessLogoUpload
-      v-if="state.logoUploadBusinessId"
-      :show="state.showLogoUpload"
-      :business-id="state.logoUploadBusinessId"
-      @close="closeLogoUpload"
-      @logo-uploaded="handleLogoUploaded"
-    />
-  </Teleport>
+    <!-- Desktop Layout -->
+    <div class="d-none d-lg-block">
+      <div class="content text-center">
+        <div id="page-header" class="text-center mb-3">
+          <Spinner :show="loading"></Spinner>
+          <!-- Alert show prop was always false, fixed to show if alertError has value -->
+          <Alert :show="!!alertError" :stack="alertError"></Alert>
+        </div>
+        <DesktopPageHeader
+          :logo="state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="$t('businessAdmin.title')"
+          :toggles="state.toggles"
+          component-name="businessAdmin"
+          @go-back="goBack"
+        />
+        <div id="page-header" class="text-center">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="false" :stack="alertError"></Alert>
+        </div>
+        <div id="businessAdmin">
+          <div v-if="toggles['businesses.admin.view']">
+            <div v-if="!loading" id="businessAdmin-result" class="mt-4">
+              <!-- Unified Search Bar -->
+              <div id="business-searcher" class="mx-3 mb-3">
+                <SearchBar
+                  :list="state.businesses"
+                  :label="$t('businessAdmin.searchOrSelectBusiness')"
+                  @selectItem="handleBusinessSelect"
+                  @searchChange="handleSearchChange"
+                >
+                </SearchBar>
+              </div>
+
+              <!-- Business Action Modal -->
+              <div
+                v-if="state.selectedBusinessForAction"
+                class="modal fade show d-block"
+                tabindex="-1"
+                style="background-color: rgba(0, 0, 0, 0.5)"
+                @click.self="closeBusinessActionModal"
+              >
+                <div class="modal-dialog modal-dialog-centered">
+                  <div class="modal-content modern-modal-container">
+                    <div class="modal-header border-0 active-name modern-modal-header">
+                      <div class="modern-modal-header-inner">
+                        <div class="modern-modal-icon-wrapper">
+                          <i class="bi bi-building"></i>
+                        </div>
+                        <div class="modern-modal-title-wrapper">
+                          <h5 class="modal-title fw-bold modern-modal-title">
+                            {{ $t('businessAdmin.selectAction') }}
+                          </h5>
+                          <p class="modern-modal-client-name">
+                            {{ state.selectedBusinessForAction?.name }}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        class="btn-close modern-modal-close-btn"
+                        @click="closeBusinessActionModal"
+                        aria-label="Close"
+                      >
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    </div>
+                    <div class="modal-body modern-modal-body-content">
+                      <div class="d-grid gap-3">
+                        <button
+                          type="button"
+                          class="btn btn-lg btn-size fw-bold btn-outline-dark rounded-pill px-4"
+                          @click="openManageBusiness"
+                        >
+                          <i class="bi bi-pencil-square me-2"></i>
+                          {{ $t('businessAdmin.manageBusiness') }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                          @click="openViewAsBusinessUser"
+                        >
+                          <i class="bi bi-eye-fill me-2"></i>
+                          {{ $t('businessAdmin.viewAsBusiness') }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Business View Modal -->
+              <div
+                v-if="state.selectedBusiness && state.selectedBusiness.id"
+                class="modal fade show d-block"
+                tabindex="-1"
+                style="background-color: rgba(0, 0, 0, 0.5)"
+                @click.self="clearBusinessSelection()"
+              >
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                  <div class="modal-content modern-modal-container">
+                    <div class="modal-header border-0 active-name modern-modal-header">
+                      <div class="modern-modal-header-inner">
+                        <div class="modern-modal-icon-wrapper">
+                          <i class="bi bi-eye-fill"></i>
+                        </div>
+                        <div class="modern-modal-title-wrapper">
+                          <h5 class="modal-title fw-bold modern-modal-title">
+                            {{ $t('businessAdmin.viewAsBusiness') }}
+                          </h5>
+                          <p class="modern-modal-client-name">
+                            {{ state.selectedBusiness.name }}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        class="btn-close modern-modal-close-btn"
+                        @click="clearBusinessSelection()"
+                        aria-label="Close"
+                      >
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    </div>
+                    <div class="modal-body modern-modal-body-content">
+                      <!-- Business Info -->
+                      <div class="business-info-card p-3 mb-3">
+                        <div class="row d-flex align-items-center">
+                          <div class="col-3 text-center">
+                            <img
+                              :src="state.selectedBusinessLogoUrl || state.selectedBusiness.logo"
+                              class="business-view-logo img-thumbnail rounded"
+                              :alt="state.selectedBusiness.name"
+                              @error="state.selectedBusinessLogoUrl = null"
+                            />
+                          </div>
+                          <div class="col-9">
+                            <div class="fw-bold business-view-name mb-2">
+                              {{ state.selectedBusiness.name }}
+                            </div>
+                            <div class="text-muted small business-view-email">
+                              <i class="bi bi-envelope me-1"></i>
+                              {{ state.selectedBusiness.email }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Commerce Selector -->
+                      <div class="commerce-selector-section mb-3">
+                        <label class="form-label fw-bold mb-2">
+                          <i class="bi bi-shop me-2"></i>
+                          {{ $t('businessAdmin.commerce') }}
+                        </label>
+
+                        <!-- Loading commerces -->
+                        <div v-if="state.loadingCommerces" class="text-center py-3">
+                          <Spinner :show="true"></Spinner>
+                        </div>
+
+                        <!-- Multiple commerces: Dropdown -->
+                        <div
+                          v-else-if="state.selectedCommerces && state.selectedCommerces.length > 1"
+                          class="dropdown"
+                        >
+                          <button
+                            class="btn btn-outline-dark w-100 commerce-select-btn d-flex align-items-center justify-content-between"
+                            type="button"
+                            id="commerceDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                          >
+                            <div class="d-flex align-items-center">
+                              <img
+                                v-if="state.selectedCommerce && state.selectedCommerce.logo"
+                                :src="state.selectedCommerce.logo"
+                                class="commerce-mini-logo me-2"
+                              />
+                              <div class="text-start">
+                                <div class="fw-bold">
+                                  {{
+                                    state.selectedCommerce?.tag ||
+                                    $t('businessAdmin.selectCommerce')
+                                  }}
+                                </div>
+                                <div
+                                  v-if="state.selectedCommerce?.localeInfo?.address"
+                                  class="small text-muted"
+                                >
+                                  <i class="bi bi-geo-alt-fill"></i>
+                                  {{ state.selectedCommerce.localeInfo.address }}
+                                </div>
+                              </div>
+                            </div>
+                            <i class="bi bi-chevron-down"></i>
+                          </button>
+                          <ul class="dropdown-menu w-100" aria-labelledby="commerceDropdown">
+                            <li v-for="com in state.selectedCommerces" :key="com.id">
+                              <a
+                                href="#"
+                                class="dropdown-item commerce-option d-flex align-items-center"
+                                :class="{ active: state.selectedCommerce?.id === com.id }"
+                                @click.prevent="selectCommerce(com)"
+                              >
+                                <img
+                                  v-if="com.logo"
+                                  :src="com.logo"
+                                  class="commerce-mini-logo me-2"
+                                />
+                                <div class="flex-grow-1">
+                                  <div class="fw-bold">{{ com.tag }}</div>
+                                  <div v-if="com.localeInfo?.address" class="small text-muted">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                    {{ com.localeInfo.address }}
+                                  </div>
+                                </div>
+                                <i
+                                  v-if="state.selectedCommerce?.id === com.id"
+                                  class="bi bi-check-circle-fill text-success"
+                                ></i>
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
+
+                        <!-- Single commerce: Simple display -->
+                        <div
+                          v-else-if="
+                            state.selectedCommerces && state.selectedCommerces.length === 1
+                          "
+                          class="commerce-single-display p-3 border rounded"
+                        >
+                          <div class="d-flex align-items-center">
+                            <img
+                              v-if="state.selectedCommerces[0].logo"
+                              :src="state.selectedCommerces[0].logo"
+                              class="commerce-mini-logo me-3"
+                            />
+                            <div>
+                              <div class="fw-bold">{{ state.selectedCommerces[0].tag }}</div>
+                              <div
+                                v-if="state.selectedCommerces[0].localeInfo?.address"
+                                class="small text-muted"
+                              >
+                                <i class="bi bi-geo-alt-fill"></i>
+                                {{ state.selectedCommerces[0].localeInfo.address }}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- No commerces message -->
+                        <div v-else class="alert alert-warning">
+                          <i class="bi bi-exclamation-triangle me-2"></i>
+                          {{ $t('businessAdmin.noCommerces') }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="modal-footer border-0 modern-modal-footer">
+                      <div class="d-flex align-items-center justify-content-between w-100 gap-3">
+                        <button
+                          type="button"
+                          class="btn btn-sm fw-bold btn-outline-secondary rounded-pill px-4"
+                          @click="clearBusinessSelection()"
+                        >
+                          {{ $t('close') || 'Cancelar' }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-4"
+                          :disabled="!state.selectedCommerce || !state.selectedCommerce.id"
+                          @click="accessAsBusinessUser()"
+                        >
+                          <i class="bi bi-box-arrow-right me-2"></i>
+                          {{ $t('businessAdmin.accessAsBusiness') }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div v-if="state.businesses.length === 0">
+                  <Message
+                    :title="$t('businessAdmin.message.2.title')"
+                    :content="$t('businessAdmin.message.2.content')"
+                  />
+                </div>
+                <div class="row my-2">
+                  <div class="col lefted">
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      @click="showAdd()"
+                      data-bs-toggle="modal"
+                      data-bs-target="#add-business"
+                      :disabled="!toggles['businesses.admin.add']"
+                    >
+                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                    </button>
+                  </div>
+                </div>
+                <!-- Pagination Mobile/Tablet -->
+                <div v-if="state.filtered && state.filtered.length > 0" class="mt-3 mb-3">
+                  <div
+                    class="d-flex justify-content-center align-items-center flex-wrap gap-2 mb-2"
+                  >
+                    <span class="badge bg-secondary px-2 py-2 m-1">
+                      {{ $t('businessAdmin.listResult') }} {{ state.counter }}
+                    </span>
+                    <span class="badge bg-secondary px-2 py-2 m-1">
+                      {{ $t('page') }} {{ state.page }} {{ $t('of') }} {{ state.totalPages }}
+                    </span>
+                    <select
+                      class="btn btn-sm btn-light fw-bold text-dark select mx-1"
+                      v-model="state.limit"
+                      @change="refreshPagination()"
+                    >
+                      <option v-for="lim in state.limits" :key="lim" :value="lim">
+                        {{ lim }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="centered mt-2" v-if="state.filtered">
+                    <nav>
+                      <ul class="pagination pagination-ul">
+                        <li class="page-item">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                            aria-label="First"
+                            @click="setPage(1)"
+                            :disabled="state.page === 1 || state.totalPages === 0"
+                          >
+                            <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
+                          </button>
+                        </li>
+                        <li class="page-item">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                            aria-label="Previous"
+                            @click="setPage(state.page - 1)"
+                            :disabled="state.page === 1 || state.totalPages === 0"
+                          >
+                            <span aria-hidden="true">&laquo;</span>
+                          </button>
+                        </li>
+                        <li>
+                          <select
+                            class="btn btn-md btn-light fw-bold text-dark select mx-1 py-1"
+                            v-model="state.page"
+                            :disabled="state.totalPages === 0"
+                          >
+                            <option v-for="pag in state.totalPages" :key="pag" :value="pag">
+                              {{ pag }}
+                            </option>
+                          </select>
+                        </li>
+                        <li class="page-item">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                            aria-label="Next"
+                            @click="setPage(state.page + 1)"
+                            :disabled="state.page === state.totalPages || state.totalPages === 0"
+                          >
+                            <span aria-hidden="true">&raquo;</span>
+                          </button>
+                        </li>
+                        <li class="page-item">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                            aria-label="Last"
+                            @click="setPage(state.totalPages)"
+                            :disabled="state.page === state.totalPages || state.totalPages === 1"
+                          >
+                            <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
+                          </button>
+                        </li>
+                      </ul>
+                    </nav>
+                  </div>
+                </div>
+                <div>
+                  <!-- SearchAdminItem removed - SearchBar now handles filtering -->
+                  <div v-for="(business, index) in paginatedItems" :key="index" class="result-card">
+                    <div class="row">
+                      <div class="col-10">
+                        <CommerceName
+                          :name="business.name"
+                          :tag="business.tag || business.name"
+                          :active="business.active"
+                          :key-name="business.keyName"
+                          link-type="business"
+                          :business-data="business"
+                        ></CommerceName>
+                      </div>
+                      <div class="col-2">
+                        <a href="#" @click.prevent="showUpdateForm(index)">
+                          <i
+                            :id="index"
+                            :class="`bi ${
+                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                    <BusinessFormEdit
+                      v-if="toggles['businesses.admin.read']"
+                      :business="business"
+                      :index="index"
+                      :errors="{
+                        countryUpdateError: state.countryUpdateError,
+                        phoneUpdateError: state.phoneUpdateError,
+                        addressUpdateError: state.addressUpdateError,
+                        errorsUpdate: state.errorsUpdate,
+                      }"
+                      :categories="state.categories"
+                      :toggles="toggles"
+                      :business-logos="state.businessLogos"
+                      :show="state.extendedEntity === index"
+                      @openLogoUpload="openLogoUpload"
+                      @loadLogo="loadBusinessLogoPreview"
+                    />
+                    <div class="col" v-if="state.extendedEntity === index && toggles['businesses.admin.read']">
+                      <div class="d-flex gap-2 flex-wrap justify-content-center">
+                        <button
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="update(business)"
+                          :disabled="!toggles['businesses.admin.update']"
+                        >
+                          {{ $t('businessAdmin.update') }} <i class="bi bi-save"></i>
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="selectBusiness(business)"
+                        >
+                          <i class="bi bi-eye-fill me-2"></i>
+                          {{ $t('businessAdmin.viewAsBusiness') }}
+                        </button>
+                      </div>
+                      <div class="row g-1 errors mt-2" id="feedback" v-if="state.errorsUpdate.length > 0">
+                        <Warning>
+                          <template v-slot:message>
+                            <li v-for="(error, errorIndex) in state.errorsUpdate" :key="errorIndex">
+                              {{ $t(error) }}
+                            </li>
+                          </template>
+                        </Warning>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-if="!toggles['businesses.admin.view'] && !loading">
+          <Message
+            :title="$t('businessAdmin.message.1.title')"
+            :content="$t('businessAdmin.message.1.content')"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Add Business -->
+    <div
+      class="modal fade"
+      id="add-business"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
+            <button
+              id="close-modal"
+              class="btn-close"
+              type="button"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body text-center mb-0" id="business-form-add-component">
+            <Spinner :show="loading"></Spinner>
+            <Alert :show="false" :stack="alertError"></Alert>
+            <div v-if="state.businesses.length < getToggleLimit('businesses.admin.limit')">
+              <BusinessFormAdd
+                v-model="state.newBusiness"
+                :errors="{
+                  nameError: state.nameError,
+                  keyNameError: state.keyNameError,
+                  emailError: state.emailError,
+                  categoryAddError: state.categoryAddError,
+                  countryAddError: state.countryAddError,
+                  phoneAddError: state.phoneAddError,
+                  addressAddError: state.addressAddError,
+                  errorsAdd: state.errorsAdd,
+                }"
+                :categories="state.categories"
+                :toggles="toggles"
+              />
+              <div class="col">
+                <button
+                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                  @click="add()"
+                >
+                  {{ $t('businessAdmin.add') }} <i class="bi bi-save"></i>
+                </button>
+              </div>
+              <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
+                <Warning>
+                  <template v-slot:message>
+                    <li v-for="(error, index) in state.errorsAdd" :key="index">
+                      {{ $t(error) }}
+                    </li>
+                  </template>
+                </Warning>
+              </div>
+            </div>
+            <div v-else>
+              <Message
+                :title="$t('businessAdmin.message.3.title')"
+                :content="$t('businessAdmin.message.3.content')"
+              />
+            </div>
+          </div>
+          <div class="mx-2 mb-4 text-center">
+            <a
+              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+              >{{ $t('close') }} <i class="bi bi-check-lg"></i
+            ></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Business Logo Upload Modal - Using Teleport for proper modal rendering -->
+    <Teleport to="body">
+      <BusinessLogoUpload
+        v-if="state.logoUploadBusinessId"
+        :show="state.showLogoUpload"
+        :business-id="state.logoUploadBusinessId"
+        @close="closeLogoUpload"
+        @logo-uploaded="handleLogoUploaded"
+      />
+    </Teleport>
+  </div>
 </template>
 
 <style scoped>

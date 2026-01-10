@@ -103,7 +103,17 @@ export default {
         // Inicializar con objeto vacío y campo exam vacío
         state.newPhysicalExam = { exam: '' };
 
-        if (patientHistoryData.value && patientHistoryData.value.id) {
+        // PRIORIDAD 1: Usar cacheData si existe (datos de la sesión actual)
+        if (cacheData.value && Object.keys(cacheData.value).length > 0) {
+          state.newPhysicalExam = {
+            ...cacheData.value,
+            exam: cacheData.value.exam || '',
+          };
+          state.habitsAux = state.newPhysicalExam.examDetails || {};
+          console.log('📝 Loaded physical exam from cache (session data)');
+        }
+        // PRIORIDAD 2: Si no hay cache, cargar desde patientHistoryData guardado
+        else if (patientHistoryData.value && patientHistoryData.value.id) {
           state.oldPhysicalExams = patientHistoryData.value.physicalExam || [];
           // Cargar el registro más reciente del día de hoy, o el más reciente en general
           if (state.oldPhysicalExams && state.oldPhysicalExams.length > 0) {
@@ -123,16 +133,9 @@ export default {
                 ...examToLoad,
                 exam: examToLoad.exam || '',
               };
+              console.log('📝 Loaded physical exam from saved data');
             }
           }
-        }
-        // Only use cacheData if no saved data exists in patientHistoryData
-        if (!state.newPhysicalExam.exam && cacheData.value) {
-          state.newPhysicalExam = {
-            ...cacheData.value,
-            exam: cacheData.value.exam || '',
-          };
-          state.habitsAux = state.newPhysicalExam.examDetails || {};
         }
         loading.value = false;
       } catch (error) {

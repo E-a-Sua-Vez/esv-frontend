@@ -68,20 +68,6 @@
         </div>
       </div>
 
-      <!-- Minimized Video Miniature (inside the minimized card) -->
-      <div v-if="isMinimized && showVideoMiniature" class="minimized-video-miniature">
-        <video
-          ref="miniatureVideoRef"
-          autoplay
-          playsinline
-          class="miniature-video-element"
-          muted
-        ></video>
-        <div class="miniature-video-overlay">
-          <span class="miniature-video-label">Paciente</span>
-        </div>
-      </div>
-
       <!-- Window Content -->
       <div v-if="!isMinimized" class="floating-window-content">
         <slot></slot>
@@ -128,10 +114,6 @@ export default {
       type: Object,
       default: null,
     },
-    showVideoMiniature: {
-      type: Boolean,
-      default: true,
-    },
     allowMinimize: {
       type: Boolean,
       default: true,
@@ -144,7 +126,6 @@ export default {
     const isDragging = ref(false);
     const position = ref({ ...props.initialPosition });
     const dragOffset = ref({ x: 0, y: 0 });
-    const miniatureVideoRef = ref(null);
     const savedVerticalPosition = ref(null); // Store vertical position before minimizing
 
     const connectionStatusText = computed(() => {
@@ -173,7 +154,6 @@ export default {
           height: 'auto',
           top: 'auto',
           transform: 'none',
-          minHeight: props.showVideoMiniature ? '180px' : 'auto', // Header (60px) + Video (120px)
         };
       }
       return {
@@ -284,251 +264,19 @@ export default {
       startDrag(e);
     };
 
-    // Function to sync video stream to miniature
-    const syncVideoToMiniature = async (retryCount = 0) => {
-      // Extract the actual video element from the ref (could be a computed, ref, or direct element)
-      let remoteVideoElement = null;
 
-      if (props.remoteVideoRef) {
-        // If it's a ref/computed, get its value
-        if (typeof props.remoteVideoRef === 'object' && 'value' in props.remoteVideoRef) {
-          remoteVideoElement = props.remoteVideoRef.value;
-        } else {
-          // It's already the element itself
-          remoteVideoElement = props.remoteVideoRef;
-        }
-      }
 
-      console.log('[TelemedicineFloatingWindow] syncVideoToMiniature called:', {
-        retryCount,
-        hasRemoteVideoRef: !!props.remoteVideoRef,
-        remoteVideoRefType: typeof props.remoteVideoRef,
-        remoteVideoElement: !!remoteVideoElement,
-        remoteVideoElementType: remoteVideoElement?.tagName,
-        hasSrcObject: !!remoteVideoElement?.srcObject,
-        hasMiniatureRef: !!miniatureVideoRef.value,
-        isMinimized: isMinimized.value,
-        show: props.show,
-        showVideoMiniature: props.showVideoMiniature,
-      });
 
-      if (!remoteVideoElement || !miniatureVideoRef.value) {
-        // Retry up to 15 times if refs are not available yet (increased from 10)
-        if (retryCount < 15 && props.show && isMinimized.value && props.showVideoMiniature) {
-          setTimeout(() => syncVideoToMiniature(retryCount + 1), 300);
-        } else if (retryCount >= 15) {
-          console.warn(
-            '[TelemedicineFloatingWindow] Max retries reached for syncVideoToMiniature',
-            {
-              hasRemoteVideoElement: !!remoteVideoElement,
-              hasMiniatureRef: !!miniatureVideoRef.value,
-            }
-          );
-        }
-        return;
-      }
 
-      await nextTick();
 
-      // Double-check after nextTick - re-extract in case the ref changed
-      if (!remoteVideoElement || !miniatureVideoRef.value) {
-        // Re-extract the element in case the computed ref updated
-        if (props.remoteVideoRef) {
-          if (typeof props.remoteVideoRef === 'object' && 'value' in props.remoteVideoRef) {
-            remoteVideoElement = props.remoteVideoRef.value;
-          } else {
-            remoteVideoElement = props.remoteVideoRef;
-          }
-        }
 
-        if (!remoteVideoElement || !miniatureVideoRef.value) {
-          if (retryCount < 15 && props.show && isMinimized.value && props.showVideoMiniature) {
-            setTimeout(() => syncVideoToMiniature(retryCount + 1), 300);
-          }
-          return;
-        }
-      }
 
-      console.log('[TelemedicineFloatingWindow] Remote video element found:', {
-        tagName: remoteVideoElement.tagName,
-        hasSrcObject: !!remoteVideoElement.srcObject,
-        srcObjectActive: remoteVideoElement.srcObject?.active,
-        videoWidth: remoteVideoElement.videoWidth,
-        videoHeight: remoteVideoElement.videoHeight,
-      });
 
-      // Check if the remote video has a stream
-      if (remoteVideoElement.srcObject) {
-        const remoteStream = remoteVideoElement.srcObject;
 
-        // Only update if the stream is different
-        if (miniatureVideoRef.value.srcObject !== remoteStream) {
-          console.log('[TelemedicineFloatingWindow] Syncing video stream to miniature');
 
-          // Use the stream directly - MediaStream can be shared between multiple video elements
-          miniatureVideoRef.value.srcObject = remoteStream;
 
-          try {
-            await miniatureVideoRef.value.play();
-            console.log('[TelemedicineFloatingWindow] Miniature video playing successfully');
-          } catch (err) {
-            console.warn('[TelemedicineFloatingWindow] Could not play miniature video:', err);
-            // Retry playing
-            setTimeout(async () => {
-              if (miniatureVideoRef.value && remoteStream) {
-                try {
-                  await miniatureVideoRef.value.play();
-                  console.log('[TelemedicineFloatingWindow] Miniature video playing (retry)');
-                } catch (retryErr) {
-                  console.warn(
-                    '[TelemedicineFloatingWindow] Could not play miniature video (retry):',
-                    retryErr
-                  );
-                }
-              }
-            }, 500);
-          }
-        } else {
-          // Stream is already synced, but make sure it's playing
-          if (miniatureVideoRef.value.paused) {
-            try {
-              await miniatureVideoRef.value.play();
-            } catch (err) {
-              console.warn('[TelemedicineFloatingWindow] Could not resume miniature video:', err);
-            }
-          }
-        }
-      } else {
-        // If no stream yet, wait a bit and try again
-        if (retryCount < 15) {
-          console.log(
-            '[TelemedicineFloatingWindow] Remote video has no stream, retrying...',
-            retryCount
-          );
-          setTimeout(() => syncVideoToMiniature(retryCount + 1), 300);
-        } else {
-          console.warn('[TelemedicineFloatingWindow] Remote video has no stream after retries');
-        }
-      }
-    };
 
-    // Watch for remoteVideoRef changes and sync to miniature video
-    watch(
-      () => {
-        // Extract the actual video element from the ref (could be a computed, ref, or direct element)
-        if (!props.remoteVideoRef) return null;
 
-        // If it's a ref/computed, get its value
-        if (typeof props.remoteVideoRef === 'object' && 'value' in props.remoteVideoRef) {
-          return props.remoteVideoRef.value;
-        }
-        // It's already the element itself
-        return props.remoteVideoRef;
-      },
-      async newRefValue => {
-        console.log('[TelemedicineFloatingWindow] remoteVideoRef changed:', {
-          hasNewRefValue: !!newRefValue,
-          newRefValueType: newRefValue?.tagName,
-          hasSrcObject: !!newRefValue?.srcObject,
-          isMinimized: isMinimized.value,
-          showVideoMiniature: props.showVideoMiniature,
-          hasMiniatureRef: !!miniatureVideoRef.value,
-          remoteVideoRefType: typeof props.remoteVideoRef,
-        });
-
-        // Trigger sync if we have a valid video element, or if we're minimized and waiting for it
-        if (
-          newRefValue &&
-          miniatureVideoRef.value &&
-          isMinimized.value &&
-          props.showVideoMiniature
-        ) {
-          // Add a small delay to ensure everything is ready
-          await nextTick();
-          setTimeout(async () => {
-            await syncVideoToMiniature();
-          }, 100);
-        } else if (
-          !newRefValue &&
-          isMinimized.value &&
-          props.showVideoMiniature &&
-          miniatureVideoRef.value
-        ) {
-          // If we don't have the ref yet but we're minimized, keep trying
-          // This handles the case where the computed returns null initially
-          setTimeout(async () => {
-            await syncVideoToMiniature();
-          }, 500);
-        }
-      },
-      { immediate: true, deep: true }
-    );
-
-    // Watch for miniature video ref to be available
-    watch(miniatureVideoRef, async newVal => {
-      console.log('[TelemedicineFloatingWindow] miniatureVideoRef changed:', {
-        hasNewVal: !!newVal,
-        isMinimized: isMinimized.value,
-        showVideoMiniature: props.showVideoMiniature,
-        hasRemoteVideoRef: !!props.remoteVideoRef,
-      });
-
-      if (newVal && props.remoteVideoRef && isMinimized.value && props.showVideoMiniature) {
-        await nextTick();
-        setTimeout(async () => {
-          await syncVideoToMiniature();
-        }, 100);
-      }
-    });
-
-    // Also watch for when minimized state changes to sync video
-    watch(isMinimized, async minimized => {
-      console.log('[TelemedicineFloatingWindow] isMinimized changed:', {
-        minimized,
-        hasRemoteVideoRef: !!props.remoteVideoRef,
-        hasMiniatureRef: !!miniatureVideoRef.value,
-        showVideoMiniature: props.showVideoMiniature,
-      });
-
-      if (minimized && props.showVideoMiniature) {
-        // Add a delay to ensure the DOM is updated and refs are available
-        await nextTick();
-        // Wait a bit more for the video element to be fully rendered and the computed ref to be available
-        setTimeout(async () => {
-          console.log('[TelemedicineFloatingWindow] Triggering sync after minimize');
-          await syncVideoToMiniature();
-        }, 800);
-      } else if (!minimized) {
-        // When maximizing, clear the miniature video stream to avoid conflicts
-        if (miniatureVideoRef.value) {
-          miniatureVideoRef.value.srcObject = null;
-        }
-      }
-    });
-
-    // Watch for changes in the remote video's srcObject
-    watch(
-      () => {
-        if (!props.remoteVideoRef) return null;
-
-        // Extract the actual video element
-        let remoteVideoElement = null;
-        if (typeof props.remoteVideoRef === 'object' && 'value' in props.remoteVideoRef) {
-          remoteVideoElement = props.remoteVideoRef.value;
-        } else {
-          remoteVideoElement = props.remoteVideoRef;
-        }
-
-        return remoteVideoElement?.srcObject;
-      },
-      async newStream => {
-        if (newStream && miniatureVideoRef.value && isMinimized.value && props.showVideoMiniature) {
-          await nextTick();
-          await syncVideoToMiniature();
-        }
-      },
-      { deep: true }
-    );
 
     onUnmounted(() => {
       stopDrag();
@@ -546,7 +294,6 @@ export default {
       handleHeaderMouseDown,
       toggleMinimize,
       toggleMaximize,
-      miniatureVideoRef,
       allowMinimize: props.allowMinimize,
     };
   },
@@ -735,44 +482,17 @@ export default {
 }
 
 .telemedicine-floating-window.minimized .floating-window-content {
-  display: none;
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0.01;
+  pointer-events: none;
+  z-index: -1;
 }
 
-.minimized-video-miniature {
-  width: 100%;
-  height: 120px;
-  background: #000;
-  border-radius: 0;
-  overflow: hidden;
-  position: relative;
-  margin-top: 0;
-  flex-shrink: 0;
-}
 
-.miniature-video-element {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  background: #1a1a1a;
-}
-
-.miniature-video-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
-  padding: 0.5rem;
-  display: flex;
-  align-items: flex-end;
-}
-
-.miniature-video-label {
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-}
 
 @keyframes pulse {
   0%,

@@ -52,7 +52,16 @@ export default {
         // Inicializar con objeto vacío y campo reason vacío
         state.newConsultationReason = { reason: '' };
 
-        if (patientHistoryData.value && patientHistoryData.value.id) {
+        // PRIORIDAD 1: Usar cacheData si existe (datos de la sesión actual)
+        if (cacheData.value && Object.keys(cacheData.value).length > 0) {
+          state.newConsultationReason = {
+            ...cacheData.value,
+            reason: cacheData.value.reason || '',
+          };
+          console.log('📝 Loaded consultation reason from cache (session data)');
+        }
+        // PRIORIDAD 2: Si no hay cache, cargar desde patientHistoryData guardado
+        else if (patientHistoryData.value && patientHistoryData.value.id) {
           state.oldConsultationReason = patientHistoryData.value.consultationReason || [];
           // Cargar el registro más reciente del día de hoy, o el más reciente en general
           if (state.oldConsultationReason && state.oldConsultationReason.length > 0) {
@@ -70,15 +79,9 @@ export default {
                 ...reasonToLoad,
                 reason: reasonToLoad.reason || '',
               };
+              console.log('📝 Loaded consultation reason from saved data');
             }
           }
-        }
-        // Only use cacheData if no saved data exists in patientHistoryData
-        if (!state.newConsultationReason.reason && cacheData.value) {
-          state.newConsultationReason = {
-            ...cacheData.value,
-            reason: cacheData.value.reason || '',
-          };
         }
         loading.value = false;
       } catch (error) {

@@ -621,6 +621,10 @@
       "title": "Whatsapp Satisfação",
       "description": "Mensagem para o cliente preencher o pesquisa Satisfação"
     },
+    "whatsapp-confirm-creation": {
+      "title": "Whatsapp Confirmação",
+      "description": "Mensagem automática de confirmação quando um atendimento é criado"
+    },
     "email-monthly-commerce-statistics": {
       "title": "Email Statisticas/Mês",
       "description": "Email pra enviar statisticas mensais"
@@ -768,8 +772,19 @@
     "attention-checkout-enabled": {
       "title": "Check-Out Habilitado",
       "description": "Ativa a etapa de Check-Out no fluxo de atendimento"
-    }
-    ,
+    },
+    "email-consent-request": {
+      "title": "Email Solicitação Consentimento",
+      "description": "Envia emails para solicitar consentimentos LGPD pendentes"
+    },
+    "whatsapp-consent-request": {
+      "title": "Whatsapp Solicitação Consentimento",
+      "description": "Envia mensagens WhatsApp para solicitar consentimentos LGPD pendentes"
+    },
+    "sms-consent-request": {
+      "title": "SMS Solicitação Consentimento",
+      "description": "Envia SMS para solicitar consentimentos LGPD pendentes"
+    },
     "allow-attention-without-consents": {
       "title": "Permitir atendimento sem consentimentos",
       "description": "Permite iniciar/avançar atendimento mesmo faltando consentimentos LGPD obrigatórios"
@@ -4482,6 +4497,7 @@
     "country": "Pais:",
     "language": "Linguagem:",
     "timezone": "Fuso Horário:",
+    "zip": "CEP:",
     "address": "Endereço:",
     "addressLat": "Latitude:",
     "addressLng": "Longitude:",
@@ -5095,6 +5111,7 @@
     "country": "Pais:",
     "language": "Linguagem:",
     "timezone": "Fuso Horário:",
+    "zip": "CEP:",
     "address": "Endereço:",
     "addressLat": "Latitude:",
     "addressLng": "Longitude:",

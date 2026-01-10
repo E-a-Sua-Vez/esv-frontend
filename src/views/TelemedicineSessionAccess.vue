@@ -6,6 +6,7 @@
         :commerce-id="commerce?.id"
         :business-id="commerce?.businessId"
         :loading="false"
+        :large-size="true"
       ></CommerceLogo>
 
       <div id="page-header" class="text-center mt-4" v-if="!keyValidated || !session">
@@ -1077,6 +1078,29 @@ export default {
 .login-container.reduced-margin {
   margin-top: 0.5rem;
   padding-top: 0.5rem;
+}
+
+/* Enhanced logo styles for telemedicine page */
+.content :deep(.logo.large-size) {
+  max-width: 300px !important;
+  max-height: 250px !important;
+  margin: 2rem auto !important;
+}
+
+@media (max-width: 768px) {
+  .content :deep(.logo.large-size) {
+    max-width: 220px !important;
+    max-height: 180px !important;
+    margin: 1.5rem auto !important;
+  }
+}
+
+@media (min-width: 992px) {
+  .content :deep(.logo.large-size) {
+    max-width: 350px !important;
+    max-height: 300px !important;
+    margin: 2.5rem auto !important;
+  }
 }
 
 .modern-login-card {

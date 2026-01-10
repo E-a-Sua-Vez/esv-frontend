@@ -114,20 +114,15 @@ export default {
       preselectedPackageIdForModal: null, // Package ID preselected from package
       consentStatus: null,
       loadingConsentStatus: false,
+      lgpdModalVisible: false, // Track LGPD modal visibility for lazy loading
     };
   },
   methods: {
     // Removed getAttentions() method - ClientAttentionsManagement component handles its own data fetching
     // This was querying query-stack unnecessarily when the modal opened
     async getPackages(force = false) {
-      console.log('[ClientDetailsCard] getPackages called', {
-        force,
-        packagesLoaded: this.packagesLoaded,
-        packagesLength: this.packages?.length || 0,
-      });
       // Solo cargar si no se han cargado antes, a menos que se fuerce
       if (!force && this.packagesLoaded && this.packages.length > 0) {
-        console.log('[ClientDetailsCard] Skipping getPackages - already loaded');
         return;
       }
       try {
@@ -135,19 +130,10 @@ export default {
         // Don't clear packages array immediately to avoid triggering child watcher
         // Only clear if we're about to successfully load new data
         if (!this.commerce?.id || !this.client?.id) {
-          console.error('[ClientDetailsCard] Missing commerce or client', {
-            commerceId: this.commerce?.id,
-            clientId: this.client?.id,
-          });
           this.loading = false;
           return;
         }
-        console.log('[ClientDetailsCard] Fetching packages from API', {
-          commerceId: this.commerce.id,
-          clientId: this.client.id,
-        });
         const packagesData = await getPackagesByClient(this.commerce.id, this.client.id);
-        console.log('[ClientDetailsCard] Packages data received', packagesData);
         // Flatten all packages for the component - update in one go to avoid triggering watcher with empty array
         const flattenedPackages = [
           ...(packagesData?.active || []),
@@ -156,11 +142,9 @@ export default {
           ...(packagesData?.cancelled || []),
         ];
         this.packages = flattenedPackages;
-        console.log('[ClientDetailsCard] Packages processed', { total: this.packages.length });
         this.packagesLoaded = true;
         this.loading = false;
       } catch (error) {
-        console.error('[ClientDetailsCard] Error loading packages:', error);
         this.loading = false;
       }
     },
@@ -230,10 +214,6 @@ export default {
       // If all data is missing, load client from API
       if (!hasPhone && !hasEmail && !hasIdNumber) {
         try {
-          console.log(
-            '[ClientDetailsCard] Loading client data from API, clientId:',
-            this.client.id,
-          );
           const loadedClient = await getClientById(this.client.id);
 
           if (loadedClient && loadedClient.id) {
@@ -261,12 +241,10 @@ export default {
                 return acc;
               }, {}),
             });
-            console.log('[ClientDetailsCard] Client data loaded successfully');
             // Force Vue to re-render
             this.$forceUpdate();
           }
         } catch (error) {
-          console.error('[ClientDetailsCard] Error loading client data:', error);
           // Non-critical error, continue without updating
         }
       }
@@ -330,7 +308,6 @@ export default {
         this.patientHistoryLoaded = true;
         this.loading = false;
       } catch (error) {
-        console.error('[ClientDetailsCard] Error loading patient history:', error);
         this.loading = false;
       }
     },
@@ -364,7 +341,6 @@ export default {
     },
     async openAttentionCreationModal() {
       if (!this.commerce) {
-        console.warn('Cannot open attention creation modal: commerce is not available');
         return;
       }
 
@@ -375,39 +351,26 @@ export default {
 
       // If no queues available, try to load them BEFORE opening the modal
       if (!this.queuesArray || this.queuesArray.length === 0) {
-        console.log('No queues available, loading queues from service...');
         try {
           if (this.commerce?.id) {
             const groupedQueues = await getGroupedQueueByCommerceId(this.commerce.id);
             // Convert grouped queues object to flat array
             this.loadedQueues = Object.values(groupedQueues).flat();
-            console.log('Loaded queues:', this.loadedQueues.length);
 
             // Force Vue to update by waiting for next tick
             await this.$nextTick();
 
             // Verify queues are now available
             const finalQueuesArray = this.queuesArray;
-            console.log('Queues array after load:', finalQueuesArray.length);
 
             if (!finalQueuesArray || finalQueuesArray.length === 0) {
-              console.error('Failed to load queues, modal may not work correctly');
+              // Failed to load queues
             }
           }
         } catch (error) {
-          console.error('Error loading queues:', error);
+          // Error loading queues
         }
       }
-
-      console.log('Opening attention creation modal', {
-        commerce: this.commerce?.id,
-        client: this.client?.id,
-        queues: this.queuesArray?.length,
-        queuesProp: this.queues,
-        commerceQueues: this.commerce?.queues,
-        loadedQueues: this.loadedQueues?.length,
-        queuesArray: this.queuesArray,
-      });
 
       this.showAttentionCreationModal = true;
     },
@@ -420,7 +383,6 @@ export default {
     },
     handleAttentionCreated(attention) {
       // Handle when attention is successfully created
-      console.log('Attention created:', attention);
       // Refresh ClientAttentionsManagement component to show new attention (force refresh)
       if (this.$refs.attentionsManagementRef && this.$refs.attentionsManagementRef.refresh) {
         this.$refs.attentionsManagementRef.refresh(true); // Force refresh after creating attention
@@ -435,7 +397,6 @@ export default {
     },
     handleOpenAttentionModalFromPackage(data) {
       // Open attention creation modal with package pre-selected data
-      console.log('[ClientDetailsCard] Opening attention modal from package:', data);
 
       // Find the client object
       const clientForModal = this.client;
@@ -460,17 +421,10 @@ export default {
       this.preselectedServiceIdForModal = data.serviceId || null;
       this.preselectedPackageIdForModal = data.packageId || null;
 
-      console.log('[ClientDetailsCard] Preselected data stored:', {
-        queue: this.preselectedQueueForModal?.id,
-        serviceId: this.preselectedServiceIdForModal,
-        packageId: this.preselectedPackageIdForModal,
-      });
-
       // Open the modal
       this.showAttentionCreationModal = true;
     },
     handleAttentionCreationError(errors) {
-      console.error('Error creating attention:', errors);
       // Handle errors as needed
     },
     handleExportCSV() {
@@ -866,21 +820,15 @@ export default {
     handleConsentUpdated() {
       // Handle consent update event
       console.log('[ClientDetailsCard] Consent updated');
-      this.loadConsentStatus();
+      // No llamar loadConsentStatus aquí - el componente hijo ya gestiona su propio estado
     },
-    async loadConsentStatus() {
-      if (!this.client || !this.client.id || !this.commerce || !this.commerce.id) {
-        return;
-      }
-      try {
-        this.loadingConsentStatus = true;
-        this.consentStatus = await getConsentStatus(this.commerce.id, this.client.id);
-      } catch (error) {
-        console.error('Error loading consent status:', error);
-        this.consentStatus = null;
-      } finally {
-        this.loadingConsentStatus = false;
-      }
+    handleLgpdModalShow() {
+      console.log('[ClientDetailsCard] LGPD Modal opened - enabling data loading');
+      this.lgpdModalVisible = true;
+    },
+    handleLgpdModalHide() {
+      console.log('[ClientDetailsCard] LGPD Modal closed - disabling data loading');
+      this.lgpdModalVisible = false;
     },
     hasBlockingConsents() {
       if (!this.consentStatus || !this.consentStatus.missing) {
@@ -1073,6 +1021,17 @@ export default {
           }
         });
       }
+
+      // Modal de LGPD Consent - lazy loading
+      const lgpdModal = document.getElementById(`lgpdModal-${clientId}`);
+      if (lgpdModal) {
+        lgpdModal.addEventListener('shown.bs.modal', () => {
+          this.handleLgpdModalShow();
+        });
+        lgpdModal.addEventListener('hidden.bs.modal', () => {
+          this.handleLgpdModalHide();
+        });
+      }
     },
   },
   computed: {
@@ -1184,24 +1143,6 @@ export default {
     },
   },
   watch: {
-    client: {
-      handler(newVal) {
-        if (newVal && newVal.id && this.commerce && this.commerce.id) {
-          this.loadConsentStatus();
-        }
-      },
-      immediate: true,
-      deep: true,
-    },
-    commerce: {
-      handler(newVal) {
-        if (newVal && newVal.id && this.client && this.client.id) {
-          this.loadConsentStatus();
-        }
-      },
-      immediate: true,
-      deep: true,
-    },
     detailsOpened: {
       immediate: true,
       deep: true,
@@ -2510,6 +2451,7 @@ export default {
                     <LgpdConsentManager
                       :commerce-id="commerce.id"
                       :client-id="client.id"
+                      :is-visible="lgpdModalVisible"
                       @consent-updated="handleConsentUpdated"
                     />
                   </div>

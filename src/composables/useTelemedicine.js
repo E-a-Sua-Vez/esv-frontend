@@ -18,6 +18,9 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
   // Connection status callbacks - moved outside connect() to be available immediately
   const connectionStatusCallbacks = [];
 
+  // Session completion callbacks
+  const sessionCompletedCallbacks = [];
+
   // Method to subscribe to connection status updates
   const onConnectionStatusUpdate = callback => {
     connectionStatusCallbacks.push(callback);
@@ -25,6 +28,17 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
       const index = connectionStatusCallbacks.indexOf(callback);
       if (index > -1) {
         connectionStatusCallbacks.splice(index, 1);
+      }
+    };
+  };
+
+  // Method to subscribe to session completion events
+  const onSessionCompleted = callback => {
+    sessionCompletedCallbacks.push(callback);
+    return () => {
+      const index = sessionCompletedCallbacks.indexOf(callback);
+      if (index > -1) {
+        sessionCompletedCallbacks.splice(index, 1);
       }
     };
   };
@@ -185,7 +199,8 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
       // Listen for session completion notification
       socket.value.on('session-completed', data => {
         console.log('[useTelemedicine] Session completed notification received:', data);
-        // This will be handled by the component that uses this composable
+        // Call all registered session completion callbacks
+        sessionCompletedCallbacks.forEach(callback => callback(data));
       });
 
       // Listen for room join errors

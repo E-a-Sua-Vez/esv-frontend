@@ -48,16 +48,23 @@ export default {
   computed: {
     // Check if external data (props) are provided
     hasExternalData() {
+      // Only consider we have external data if all three arrays are provided (not null)
+      // Empty arrays are still considered external data (parent manages the data)
       const hasData =
+        this.queuePendingDetails !== null &&
+        this.queueProcessingDetails !== null &&
+        this.queueTerminatedDetails !== null &&
         Array.isArray(this.queuePendingDetails) &&
         Array.isArray(this.queueProcessingDetails) &&
         Array.isArray(this.queueTerminatedDetails);
+      
       return hasData;
     },
 
     // Use Firebase listeners if queue is provided and no external data
     useFirebaseListeners() {
-      return !this.hasExternalData && this.queue?.id;
+      const result = !this.hasExternalData && this.queue?.id;
+      return result;
     },
 
     pendingList() {
@@ -199,9 +206,14 @@ export default {
 
     // Initialize Firebase listeners for real-time updates (independent mode)
     initializeFirebaseListeners() {
-      if (!this.queue?.id || this.hasExternalData) {
+      if (!this.queue?.id) {
         return;
       }
+
+      // Don't skip based on hasExternalData in modal scenarios
+      // if (this.hasExternalData) {
+      //   return;
+      // }
 
       // Clean up previous listeners if they exist
       if (this.pendingAttentionsRef && this.pendingAttentionsRef._unsubscribe) {
@@ -239,10 +251,6 @@ export default {
         // Get processing attentions from Firebase
         const processingArray = this.processingAttentionsRef?.value || [];
         const processingList = Array.isArray(processingArray) ? processingArray : [];
-        if (processingList.length > 0) {
-          processingList.forEach((att, idx) => {
-          });
-        }
         this.internalProcessing.splice(0, this.internalProcessing.length, ...processingList);
 
         // Get terminated attentions from Firebase
@@ -354,7 +362,6 @@ export default {
 
   mounted() {
     // Initialize Firebase listeners if queue is provided and no external data
-
     if (this.useFirebaseListeners) {
       this.initializeFirebaseListeners();
     } else if (!this.hasExternalData && this.queue?.id) {
@@ -364,7 +371,8 @@ export default {
       // Queue might not be available yet, try again after a delay
       this.$nextTick(() => {
         setTimeout(() => {
-          if (this.useFirebaseListeners && !this.pendingAttentionsRef) {
+          // Force Firebase listeners initialization for modal use case
+          if (this.queue?.id && !this.hasExternalData && !this.pendingAttentionsRef) {
             this.initializeFirebaseListeners();
           }
         }, 500);

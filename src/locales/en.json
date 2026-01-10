@@ -572,6 +572,22 @@
       "title": "Whatsapp CSAT",
       "description": "Message that remembers the client to complete the CSAT survey"
     },
+    "whatsapp-confirm-creation": {
+      "title": "WhatsApp Confirmation",
+      "description": "Automatic confirmation message when an attention is created"
+    },
+    "email-consent-request": {
+      "title": "Email Consent Request",
+      "description": "Sends emails to request pending LGPD consents"
+    },
+    "whatsapp-consent-request": {
+      "title": "WhatsApp Consent Request",
+      "description": "Sends WhatsApp messages to request pending LGPD consents"
+    },
+    "sms-consent-request": {
+      "title": "SMS Consent Request",
+      "description": "Sends SMS to request pending LGPD consents"
+    },
     "email-monthly-commerce-statistics": {
       "title": "Email Monthly Statistics",
       "description": "Email to notify monthly statistics"
@@ -4317,6 +4333,7 @@
     "country": "Country:",
     "language": "Language:",
     "timezone": "Timezone:",
+    "zip": "Zip Code:",
     "address": "Address:",
     "addressLat": "Latitude:",
     "addressLng": "Longitude:",
@@ -5005,6 +5022,7 @@
     "country": "Country:",
     "language": "Language:",
     "timezone": "Timezone:",
+    "zip": "Zip Code:",
     "address": "Address:",
     "addressLat": "Latitude:",
     "addressLng": "Longitude:",

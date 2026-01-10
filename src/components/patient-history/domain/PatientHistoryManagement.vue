@@ -245,16 +245,18 @@ export default {
       this.showConsultationTimeline = false;
       this.showConsultationDetail = false;
       this.showPatientJourney = false;
-      this.newPersonalData = undefined;
-      this.newConsultationReason = undefined;
-      this.newCurrentIllness = undefined;
-      this.newPatientAnamnese = undefined;
-      this.newFunctionalExam = undefined;
-      this.newPhysicalExam = undefined;
-      this.newDiagnostic = undefined;
-      this.newMedicalOrder = undefined;
-      this.newDocuments = undefined;
-      this.newControl = undefined;
+      // NO resetear los datos temporales - mantenerlos durante toda la sesión
+      // Solo se resetean al cerrar el modal o al guardar exitosamente
+      // this.newPersonalData = undefined;
+      // this.newConsultationReason = undefined;
+      // this.newCurrentIllness = undefined;
+      // this.newPatientAnamnese = undefined;
+      // this.newFunctionalExam = undefined;
+      // this.newPhysicalExam = undefined;
+      // this.newDiagnostic = undefined;
+      // this.newMedicalOrder = undefined;
+      // this.newDocuments = undefined;
+      // this.newControl = undefined;
     },
     onPersonalData() {
       this.resetButtons();
@@ -402,6 +404,8 @@ export default {
 
           await this.loadPatientHistoryData();
 
+          // NO limpiar datos temporales - el doctor puede querer seguir editando
+          // this.clearTemporaryData();
           this.dataChanged = false;
           this.lastSaved = new Date();
           this.refresh();
@@ -525,13 +529,33 @@ export default {
         }
       }
     },
+    clearTemporaryData() {
+      // Limpiar todos los datos temporales de la sesión
+      this.newPersonalData = undefined;
+      this.newConsultationReason = undefined;
+      this.newCurrentIllness = undefined;
+      this.newPatientAnamnese = undefined;
+      this.newFunctionalExam = undefined;
+      this.newPhysicalExam = undefined;
+      this.newDiagnostic = undefined;
+      this.newMedicalOrder = undefined;
+      this.newDocument = undefined;
+      this.newControl = undefined;
+      this.dataChanged = false;
+    },
     async handleCloseModal() {
+      // Limpiar datos temporales al cerrar el modal
+      this.clearTemporaryData();
       this.$emit('closeModal');
     },
     calculateDetailedAge(birthday) {
       if (!birthday) return '';
 
-      const birthDate = new Date(birthday);
+      // Parse the date string to avoid timezone issues
+      const dateParts = birthday.split('-');
+      if (dateParts.length !== 3) return '';
+
+      const birthDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
       const today = new Date();
 
       let years = today.getFullYear() - birthDate.getFullYear();
@@ -549,12 +573,12 @@ export default {
         months += 12;
       }
 
-      const parts = [];
-      if (years > 0) parts.push(`${years} año${years !== 1 ? 's' : ''}`);
-      if (months > 0) parts.push(`${months} mes${months !== 1 ? 'es' : ''}`);
-      if (days > 0) parts.push(`${days} día${days !== 1 ? 's' : ''}`);
+      const ageParts = [];
+      if (years > 0) ageParts.push(`${years} año${years !== 1 ? 's' : ''}`);
+      if (months > 0) ageParts.push(`${months} mes${months !== 1 ? 'es' : ''}`);
+      if (days > 0) ageParts.push(`${days} día${days !== 1 ? 's' : ''}`);
 
-      return parts.length > 0 ? parts.join(', ') : '0 años';
+      return ageParts.length > 0 ? ageParts.join(', ') : '0 años';
     },
     getLastConsultationDate() {
       return this.patientHistory?.lastAttentionId ? 'Hoy' : 'No disponible';
@@ -1850,7 +1874,6 @@ export default {
                       :toggles="toggles"
                       :on-load-to-personal-data="handleLoadToPersonalData"
                       :on-load-to-anamnese="handleLoadToAnamnese"
-                      @form-loaded="handleFormLoaded"
                     >
                     </PreprontuarioHistoryView>
                   </div>

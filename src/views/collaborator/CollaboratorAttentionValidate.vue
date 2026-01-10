@@ -483,19 +483,6 @@ export default {
       // Get processing attentions from Firebase listener (already filtered by date)
       const processingArray = processingAttentionsRef?.value || [];
       const processingList = Array.isArray(processingArray) ? processingArray : [];
-      console.log('🔍 [updateAttentionDetails] Processing Array from Firebase:', processingArray);
-      console.log('🔍 [updateAttentionDetails] Processing List length:', processingList.length);
-      if (processingList.length > 0) {
-        processingList.forEach((att, index) => {
-          console.log(`🔍 [updateAttentionDetails] Processing Attention ${index}:`, {
-            id: att.id,
-            number: att.number,
-            status: att.status,
-            currentStage: att.currentStage,
-            queueId: att.queueId,
-          });
-        });
-      }
       state.queueProcessingDetails.splice(
         0,
         state.queueProcessingDetails.length,
@@ -968,8 +955,11 @@ export default {
     onMounted(() => {
       // Update stats every 30 seconds for live updates
       statsInterval = setInterval(() => {
-        // Force reactivity update by incrementing trigger
-        statsUpdateTrigger.value++;
+        // Only update stats if component is still mounted
+        if (isMounted) {
+          // Force reactivity update by incrementing trigger
+          statsUpdateTrigger.value++;
+        }
       }, 30000); // Update every 30 seconds
 
       // Setup modal listener for patient history modal
@@ -1002,6 +992,7 @@ export default {
     });
 
     let isMounted = true;
+    const isMountedRef = computed(() => isMounted);
 
     onUnmounted(() => {
       isMounted = false;
@@ -1058,11 +1049,14 @@ export default {
 
     // Telemedicine functions
     const loadTelemedicineSessionDetails = async () => {
-      if (!state.attention?.telemedicineSessionId) return;
+      if (!state.attention?.telemedicineSessionId || !isMounted) return;
       try {
         state.telemedicineSession = await getTelemedicineSession(
           state.attention.telemedicineSessionId
         );
+
+        // Only proceed if component is still mounted after async call
+        if (!isMounted) return;
 
         // If session is already active, start polling but don't auto-open the window
         // The doctor will click the button to open the session when ready
@@ -1081,18 +1075,29 @@ export default {
       // Poll every 3 seconds for connection status
       if (state.connectionStatusInterval) {
         clearInterval(state.connectionStatusInterval);
+        state.connectionStatusInterval = null;
       }
+
+      if (!isMounted) {
+        return;
+      }
+
       state.connectionStatusInterval = setInterval(async () => {
-        if (!isMounted) {
+        // Double check if component is still mounted and has the necessary data
+        if (!isMounted || !state.attention?.telemedicineSessionId) {
+          stopConnectionStatusPolling();
           return;
         }
-        if (state.attention?.telemedicineSessionId) {
-          try {
-            const session = await getTelemedicineSession(state.attention.telemedicineSessionId);
-            if (!session) {
-              // If no session data is returned, skip this cycle safely
-              return;
-            }
+
+        try {
+          const session = await getTelemedicineSession(state.attention.telemedicineSessionId);
+          if (!session) {
+            // If no session data is returned, skip this cycle safely
+            return;
+          }
+
+          // Only update state if component is still mounted
+          if (isMounted) {
             state.telemedicineSession = session;
             // Check if client has validated access key (indicates they're likely connected)
             state.clientConnected = !!session.accessKeyValidated;
@@ -1102,11 +1107,14 @@ export default {
             if (status === 'completed' || status === 'cancelled') {
               stopConnectionStatusPolling();
             }
-          } catch (err) {
-            console.error('Error polling connection status:', err);
+          }
+        } catch (err) {
+          // If there are persistent errors, stop polling to prevent spam
+          if (!isMounted) {
+            stopConnectionStatusPolling();
           }
         }
-      }, 3000);
+      }, 10000);
     };
 
     const stopConnectionStatusPolling = () => {
@@ -1120,6 +1128,12 @@ export default {
       if (!state.attention?.telemedicineSessionId) {
         return;
       }
+
+      // Check if component is still mounted
+      if (!isMounted) {
+        return;
+      }
+
       try {
         loading.value = true;
 
@@ -1129,12 +1143,24 @@ export default {
           currentSession = await getTelemedicineSession(state.attention.telemedicineSessionId);
         } catch (error) {
           console.error('[CollaboratorAttentionValidate] Error fetching session:', error);
+          // Check if component is still mounted after async call
+          if (!isMounted) {
+            return;
+          }
           // Si no podemos obtener la sesión, intentar recargar los detalles
           await loadTelemedicineSessionDetails();
+          if (!isMounted) {
+            return;
+          }
           currentSession = state.telemedicineSession;
           if (!currentSession) {
             throw new Error('No se pudo obtener la información de la sesión');
           }
+        }
+
+        // Check if component is still mounted after async operations
+        if (!isMounted) {
+          return;
         }
 
         const sessionStatus = currentSession.status?.toLowerCase();
@@ -1144,11 +1170,18 @@ export default {
           try {
             await startTelemedicineSession(state.attention.telemedicineSessionId);
           } catch (error) {
+            // Check if component is still mounted after async call
+            if (!isMounted) {
+              return;
+            }
             // Si el error es 400, puede ser que la sesión ya cambió de estado
             if (error.response?.status === 400) {
               // Recargar la sesión para verificar el estado actual
               try {
                 await loadTelemedicineSessionDetails();
+                if (!isMounted) {
+                  return;
+                }
                 const updatedSession = await getTelemedicineSession(
                   state.attention.telemedicineSessionId
                 );
@@ -1159,11 +1192,22 @@ export default {
         } else {
         }
 
+        // Check if component is still mounted before state updates
+        if (!isMounted) {
+          return;
+        }
+
         // Recargar detalles de la sesión para obtener el estado actualizado
         await loadTelemedicineSessionDetails();
+        if (!isMounted) {
+          return;
+        }
 
         // Esperar un momento para asegurar que el estado se actualice
         await new Promise(resolve => setTimeout(resolve, 500));
+        if (!isMounted) {
+          return;
+        }
 
         // Open video/chat based on session type
         // Try multiple sources for the type
@@ -1172,6 +1216,7 @@ export default {
           state.telemedicineSession?.sessionType ||
           state.attention?.telemedicineConfig?.type ||
           'VIDEO'; // Default to VIDEO if not specified
+
         if (
           sessionType === 'VIDEO' ||
           sessionType === 'video' ||
@@ -1191,18 +1236,24 @@ export default {
           state.telemedicineSessionType = 'chat';
         }
 
-        // Force reactivity update
-        await nextTick();
+        // Force reactivity update only if component is still mounted
+        if (isMounted) {
+          await nextTick();
+        }
 
         // Iniciar polling de estado de conexión
-        if (isTelemedicineSessionActive()) {
+        if (isMounted && isTelemedicineSessionActive()) {
           startConnectionStatusPolling();
         }
 
-        loading.value = false;
+        if (isMounted) {
+          loading.value = false;
+        }
       } catch (error) {
-        alertError.value = error.response?.status || 500;
-        loading.value = false;
+        if (isMounted) {
+          alertError.value = error.response?.status || 500;
+          loading.value = false;
+        }
       }
     };
 
@@ -1324,15 +1375,23 @@ export default {
     };
 
     const isTelemedicineSessionActive = () => {
-      if (!state.telemedicineSession) return false;
-      const status = state.telemedicineSession.status;
-      return status === 'ACTIVE' || status === 'active';
+      try {
+        if (!state?.telemedicineSession) return false;
+        const status = state.telemedicineSession.status;
+        return status === 'ACTIVE' || status === 'active';
+      } catch (error) {
+        return false;
+      }
     };
 
     const isTelemedicineSessionEnded = () => {
-      if (!state.telemedicineSession) return false;
-      const status = state.telemedicineSession.status?.toLowerCase();
-      return status === 'completed' || status === 'cancelled';
+      try {
+        if (!state?.telemedicineSession) return false;
+        const status = state.telemedicineSession.status?.toLowerCase();
+        return status === 'completed' || status === 'cancelled';
+      } catch (error) {
+        return false;
+      }
     };
 
     const isTelemedicineAttention = computed(
@@ -1630,6 +1689,7 @@ export default {
       isTelemedicineAttention,
       remoteVideoRef,
       telemedicineVideoCallRef,
+      isMountedRef,
       // Stage management
       isStagesEnabled,
       getNextStages,
@@ -1638,6 +1698,7 @@ export default {
   },
 };
 </script>
+
 <template>
   <div>
     <!-- Mobile/Tablet Layout -->
@@ -1661,10 +1722,6 @@ export default {
           :queue="state.queue"
           :commerce="state.commerce"
           :details="true"
-          :queue-pending-details="state.queuePendingDetails"
-          :queue-processing-details="state.queueProcessingDetails"
-          :queue-terminated-details="state.queueTerminatedDetails"
-          :list-update-key="state.listUpdateKey"
         >
         </QueueName>
         <div id="page-header" class="text-center">
@@ -2075,10 +2132,6 @@ export default {
           :queue="state.queue"
           :commerce="state.commerce"
           :details="true"
-          :queue-pending-details="state.queuePendingDetails"
-          :queue-processing-details="state.queueProcessingDetails"
-          :queue-terminated-details="state.queueTerminatedDetails"
-          :list-update-key="state.listUpdateKey"
         >
         </QueueName>
         <div
@@ -2620,13 +2673,14 @@ export default {
         :is-connecting="!state.clientConnected"
         :client-connected="state.clientConnected"
         :remote-video-ref="remoteVideoRef"
-        :show-video-miniature="state.showTelemedicineVideo"
         @close="closeTelemedicineVideo"
       >
         <TelemedicineVideoCall
           v-if="
             state.showTelemedicineVideo &&
-            (state.telemedicineSession?.id || state.attention?.telemedicineSessionId)
+            (state.telemedicineSession?.id || state.attention?.telemedicineSessionId) &&
+            state.currentUser?.id &&
+            isMountedRef
           "
           ref="telemedicineVideoCallRef"
           :session-id="state.telemedicineSession?.id || state.attention?.telemedicineSessionId"

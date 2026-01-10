@@ -52,7 +52,16 @@ export default {
         // Inicializar con objeto vacío y campo illness vacío
         state.newCurrentIllness = { illness: '' };
 
-        if (patientHistoryData.value && patientHistoryData.value.id) {
+        // PRIORIDAD 1: Usar cacheData si existe (datos de la sesión actual)
+        if (cacheData.value && Object.keys(cacheData.value).length > 0) {
+          state.newCurrentIllness = {
+            ...cacheData.value,
+            illness: cacheData.value.illness || '',
+          };
+          console.log('📝 Loaded current illness from cache (session data)');
+        }
+        // PRIORIDAD 2: Si no hay cache, cargar desde patientHistoryData guardado
+        else if (patientHistoryData.value && patientHistoryData.value.id) {
           state.oldCurrentIllness = patientHistoryData.value.currentIllness || [];
           // Cargar el registro más reciente del día de hoy, o el más reciente en general
           if (state.oldCurrentIllness && state.oldCurrentIllness.length > 0) {
@@ -70,15 +79,9 @@ export default {
                 ...illnessToLoad,
                 illness: illnessToLoad.illness || '',
               };
+              console.log('📝 Loaded current illness from saved data');
             }
           }
-        }
-        // Only use cacheData if no saved data exists in patientHistoryData
-        if (!state.newCurrentIllness.illness && cacheData.value) {
-          state.newCurrentIllness = {
-            ...cacheData.value,
-            illness: cacheData.value.illness || '',
-          };
         }
         loading.value = false;
       } catch (error) {

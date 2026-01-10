@@ -73,7 +73,17 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
-        if (patientHistoryData.value && patientHistoryData.value.id) {
+
+        // PRIORIDAD 1: Usar cacheData si existe (datos de la sesión actual)
+        if (cacheData.value && Object.keys(cacheData.value).length > 0) {
+          state.newDiagnostic = {
+            ...cacheData.value,
+            diagnostic: cacheData.value.diagnostic || '',
+          };
+          console.log('📝 Loaded diagnostic from cache (session data)');
+        }
+        // PRIORIDAD 2: Si no hay cache, cargar desde patientHistoryData guardado
+        else if (patientHistoryData.value && patientHistoryData.value.id) {
           state.oldDiagnostic = patientHistoryData.value.diagnostic || [];
           // Cargar el registro más reciente del día de hoy, o el más reciente en general
           if (state.oldDiagnostic && state.oldDiagnostic.length > 0) {
@@ -91,15 +101,9 @@ export default {
                 ...diagnosticToLoad,
                 diagnostic: diagnosticToLoad.diagnostic || '',
               };
+              console.log('📝 Loaded diagnostic from saved data');
             }
           }
-        }
-        // Only use cacheData if no saved data exists in patientHistoryData
-        if (!state.newDiagnostic.diagnostic && cacheData.value) {
-          state.newDiagnostic = {
-            ...cacheData.value,
-            diagnostic: cacheData.value.diagnostic || '',
-          };
         }
         loading.value = false;
       } catch (error) {

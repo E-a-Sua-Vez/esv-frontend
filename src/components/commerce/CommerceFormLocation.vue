@@ -1,4 +1,7 @@
 <script>
+import { ref, computed } from 'vue';
+import { getAddressBR } from '../../application/services/address';
+
 export default {
   name: 'CommerceFormLocation',
   props: {
@@ -9,18 +12,55 @@ export default {
     isAdd: { type: Boolean, default: false },
   },
   emits: ['update:modelValue'],
-  computed: {
-    localeInfo: {
+  setup(props, { emit }) {
+    const loadingZip = ref(false);
+
+    const localeInfo = computed({
       get() {
-        return this.modelValue.localeInfo || {};
+        return props.modelValue.localeInfo || {};
       },
       set(value) {
-        this.$emit('update:modelValue', {
-          ...this.modelValue,
+        emit('update:modelValue', {
+          ...props.modelValue,
           localeInfo: value,
         });
       },
-    },
+    });
+
+    const handleZipBlur = async () => {
+      const zip = localeInfo.value.zip;
+      const country = localeInfo.value.country;
+
+      if (zip && country === 'br') {
+        const value = zip.replace(/\D/g, '');
+        const validcep = /^[0-9]{8}$/;
+
+        if (validcep.test(value)) {
+          try {
+            loadingZip.value = true;
+            const result = await getAddressBR(zip);
+
+            if (result && !result.erro) {
+              const address = `${result.logradouro}, ${result.bairro}, ${result.localidade} ${result.uf}`;
+              localeInfo.value = {
+                ...localeInfo.value,
+                address,
+              };
+            }
+          } catch (error) {
+            console.error('Error fetching address from CEP:', error);
+          } finally {
+            loadingZip.value = false;
+          }
+        }
+      }
+    };
+
+    return {
+      localeInfo,
+      loadingZip,
+      handleZipBlur,
+    };
   },
 };
 </script>
@@ -83,6 +123,22 @@ export default {
             :disabled="isAdd ? false : !toggles['commerces.admin.edit']"
             v-model="localeInfo.timezone"
             placeholder="Ex.: America/Caracas"
+          />
+        </div>
+        <div class="form-group-modern">
+          <label class="form-label-modern">
+            {{ $t('businessCommercesAdmin.zip') }}
+          </label>
+          <input
+            :id="`${prefix}commerce-zip-form`"
+            min="1"
+            max="20"
+            type="text"
+            class="form-control-modern"
+            :disabled="isAdd ? false : !toggles['commerces.admin.edit']"
+            v-model="localeInfo.zip"
+            @blur="handleZipBlur"
+            placeholder="Ex.: 01310-100"
           />
         </div>
         <div class="form-group-modern">
