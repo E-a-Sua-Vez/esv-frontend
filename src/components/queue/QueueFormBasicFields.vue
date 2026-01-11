@@ -183,6 +183,27 @@ export default {
         :disabled="isAdd ? false : !toggles['queues.admin.edit']"
       />
     </div>
+    <div class="form-group-modern form-group-toggle">
+      <label class="form-label-modern">
+        <i class="bi bi-person me-2"></i>
+        {{ $t('businessQueuesAdmin.presential') || 'Atención presencial' }}
+        <Popper :class="'dark p-1'" arrow disable-click-away>
+          <template #content>
+            <div>
+              {{
+                $t('businessQueuesAdmin.presentialHelp') ||
+                'Habilita la atención presencial para esta fila'
+              }}
+            </div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
+      </label>
+      <Toggle
+        v-model="queue.presentialEnabled"
+        :disabled="isAdd ? false : !toggles['queues.admin.edit']"
+      />
+    </div>
   </div>
 </template>
 

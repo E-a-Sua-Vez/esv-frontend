@@ -1,6 +1,6 @@
 <script>
 import { ref, reactive, toRefs, onBeforeMount, watch, computed } from 'vue';
-import { getActiveFeature } from '../../shared/features';
+import { getActiveFeature, isTelemedicineEnabled } from '../../shared/features';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { getServiceByCommerce, getServicesById } from '../../application/services/service';
 import Warning from '../common/Warning.vue';
@@ -314,6 +314,7 @@ export default {
       showByProfessional,
       showByService,
       showServices,
+      isTelemedicineEnabled,
     };
   },
 };
@@ -455,6 +456,8 @@ export default {
                   :selected-queue="state.queue"
                   :get-queue="getQueue"
                   :accept="accept"
+                  :telemedicine-enabled="isTelemedicineEnabled(commerce, queue)"
+                  :presential-enabled="queue.presentialEnabled !== false"
                 >
                 </QueueButton>
               </div>
@@ -481,6 +484,8 @@ export default {
                   :selected-queue="state.queue"
                   :get-queue="getQueue"
                   :accept="accept"
+                  :telemedicine-enabled="isTelemedicineEnabled(commerce, queue)"
+                  :presential-enabled="queue.presentialEnabled !== false"
                 >
                 </QueueButton>
               </div>
@@ -492,6 +497,8 @@ export default {
                   :selected-queue="state.queue"
                   :get-queue="getQueue"
                   :accept="accept"
+                  :telemedicine-enabled="isTelemedicineEnabled(commerce, queue)"
+                  :presential-enabled="queue.presentialEnabled !== false"
                 >
                 </QueueButton>
               </div>
@@ -503,6 +510,8 @@ export default {
                   :selected-queue="state.queue"
                   :get-queue="getQueue"
                   :accept="accept"
+                  :telemedicine-enabled="isTelemedicineEnabled(commerce, queue)"
+                  :presential-enabled="queue.presentialEnabled !== false"
                 >
                 </QueueButton>
               </div>
@@ -514,6 +523,8 @@ export default {
                   :selected-queue="state.queue"
                   :get-queue="getQueue"
                   :accept="accept"
+                  :telemedicine-enabled="isTelemedicineEnabled(commerce, queue)"
+                  :presential-enabled="queue.presentialEnabled !== false"
                 >
                 </QueueButton>
               </div>
@@ -536,6 +547,8 @@ export default {
                 :selected-queue="queues[0]"
                 :get-queue="getQueue"
                 :accept="accept"
+                :telemedicine-enabled="isTelemedicineEnabled(commerce, queues[0])"
+                :presential-enabled="queues[0].presentialEnabled !== false"
               >
               </QueueButton>
             </div>
@@ -550,6 +563,8 @@ export default {
                   :selected-queue="state.queue"
                   :get-queue="getQueue"
                   :accept="accept"
+                  :telemedicine-enabled="isTelemedicineEnabled(commerce, queue)"
+                  :presential-enabled="queue.presentialEnabled !== false"
                 >
                 </QueueButton>
               </div>
@@ -588,7 +603,7 @@ export default {
 }
 .data-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  padding: 2rem 1.5rem;
+  padding: 2rem .5rem;
   margin-bottom: 1.5rem;
   border-radius: 1rem;
   border: 1px solid rgba(0, 0, 0, 0.05);

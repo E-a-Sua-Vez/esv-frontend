@@ -1,19 +1,22 @@
 <script>
 import { toRefs } from 'vue';
 import { VueRecaptcha } from 'vue-recaptcha';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'QueueButton',
-  components: { VueRecaptcha },
+  components: { VueRecaptcha, Popper },
   props: {
     queue: { type: Object, default: {} },
     selectedQueue: { type: Object, default: {} },
     accept: { type: Boolean, default: false },
     getQueue: { type: Function, default: () => {} },
+    telemedicineEnabled: { type: Boolean, default: false },
+    presentialEnabled: { type: Boolean, default: true },
   },
   async setup(props) {
     const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
-    const { queue, selectedQueue, accept } = toRefs(props);
+    const { queue, selectedQueue, accept, telemedicineEnabled, presentialEnabled } = toRefs(props);
 
     const { getQueue } = props;
 
@@ -55,6 +58,8 @@ export default {
       queue,
       selectedQueue,
       accept,
+      telemedicineEnabled,
+      presentialEnabled,
       clickAction,
       queueIcon,
       queueStyle,
@@ -85,7 +90,39 @@ export default {
             </div>
             <div class="professional-info">
               <div class="professional-name">
-                {{ queue.name }}
+                <span class="professional-name-text">{{ queue.name }}</span>
+                <Popper
+                  v-if="presentialEnabled"
+                  :class="'dark'"
+                  arrow
+                  hover
+                  :content="
+                    $t('commerceQueuesView.presentialAvailable') || 'Atención presencial disponible'
+                  "
+                >
+                  <span
+                    class="telemedicine-badge"
+                    :aria-label="
+                      $t('commerceQueuesView.presentialAvailable') ||
+                      'Atención presencial disponible'
+                    "
+                  >
+                    <div class="telemedicine-avatar">
+                      <i class="bi bi-person"></i>
+                    </div>
+                  </span>
+                </Popper>
+                <Popper
+                  v-if="telemedicineEnabled"
+                  :class="'dark'"
+                  arrow
+                  hover
+                  :content="$t('commerceQueuesView.telemedicineAvailable') || 'Telemedicina disponible'"
+                >
+                  <span class="telemedicine-badge" aria-label="Telemedicina disponible">
+                    <i class="bi bi-camera-video"></i>
+                  </span>
+                </Popper>
               </div>
               <div
                 v-if="['SERVICE', 'MULTI_SERVICE', 'COLLABORATOR'].includes(queue.type)"
@@ -139,7 +176,43 @@ export default {
           </div>
           <div class="professional-info">
             <div class="professional-name">
-              {{ queue.name }}
+              <span class="professional-name-text">{{ queue.name }}</span>
+              <Popper
+                v-if="presentialEnabled"
+                :class="'dark'"
+                arrow
+                hover
+                :content="
+                  $t('commerceQueuesView.presentialAvailable') || 'Atención presencial disponible'
+                "
+              >
+                <span
+                  class="telemedicine-badge"
+                  :aria-label="
+                    $t('commerceQueuesView.presentialAvailable') || 'Atención presencial disponible'
+                  "
+                >
+                  <div class="telemedicine-avatar">
+                    <i class="bi bi-person"></i>
+                  </div>
+                </span>
+              </Popper>
+              <Popper
+                v-if="telemedicineEnabled"
+                :class="'dark'"
+                arrow
+                hover
+                :content="$t('commerceQueuesView.telemedicineAvailable') || 'Telemedicina disponible'"
+              >
+                <span
+                  class="telemedicine-badge"
+                  :aria-label="$t('commerceQueuesView.telemedicineAvailable') || 'Telemedicina disponible'"
+                >
+                  <div class="telemedicine-avatar">
+                    <i class="bi bi-camera-video"></i>
+                  </div>
+                </span>
+              </Popper>
             </div>
             <div v-if="['COLLABORATOR'].includes(queue.type)" class="professional-services">
               <i class="bi bi-tag-fill service-icon"></i>
@@ -234,9 +307,21 @@ export default {
   border-color: rgba(0, 74, 173, 0.2);
 }
 
+.telemedicine-avatar {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.telemedicine-avatar i {
+  font-size: 1.1rem;
+  color: var(--azul-turno);
+}
+
 .queue-btn.btn-primary {
   background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%) !important;
-  border-color: var(--azul-turno) !important;
   color: white !important;
   box-shadow: 0 4px 15px rgba(0, 74, 173, 0.35);
 }
@@ -302,10 +387,39 @@ export default {
   font-weight: 700;
   line-height: 1.2;
   color: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.professional-name-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .queue-btn.btn-primary .professional-name {
   color: white;
+}
+
+.telemedicine-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.9rem;
+  box-shadow: none;
+}
+
+.telemedicine-badge i {
+  line-height: 1;
 }
 
 .professional-services {

@@ -89,7 +89,28 @@ export default {
       types: [],
       showAdd: false,
       goToUnavailable: false,
-      newQueue: {},
+      newQueue: {
+        order: 1,
+        servicesId: [],
+        estimatedTime: 0,
+        blockTime: 0,
+        active: true,
+        online: true,
+        telemedicineEnabled: false,
+        presentialEnabled: true,
+        serviceInfo: {
+          blockLimit: 0,
+          sameCommeceHours: true,
+          break: false,
+          personalized: false,
+          personalizedHours: {},
+          holiday: false,
+          holidays: {},
+          walkin: false,
+          specificCalendar: false,
+          specificCalendarDays: {},
+        },
+      },
       selectedCollaborator: {},
       selectedService: {},
       selectedDate: new Date().setDate(new Date().getDate()),
@@ -342,6 +363,7 @@ export default {
         active: true,
         online: true,
         telemedicineEnabled: false, // Default to false for backward compatibility
+        presentialEnabled: true, // Default to true for backward compatibility
         serviceInfo: {
           sameCommeceHours: true,
           break: false,
@@ -366,7 +388,6 @@ export default {
           state.queues = await getQueuesByCommerceId(commerce.value.id);
           state.showAdd = false;
           closeAddModal();
-          state.newQueue = {};
           state.extendedEntity = undefined;
         }
         alertError.value = '';
@@ -725,6 +746,7 @@ export default {
         active: true,
         online: true,
         telemedicineEnabled: false, // Default to false for backward compatibility
+        presentialEnabled: true, // Default to true for backward compatibility
         serviceInfo: {
           sameCommeceHours: true,
           break: false,
@@ -1889,7 +1911,11 @@ export default {
             <div class="modal-body text-center mb-0" id="attentions-component">
               <Spinner :show="loading"></Spinner>
               <Alert :show="false" :stack="alertError"></Alert>
-              <div v-if="state.showAdd && state.toggles['queues.admin.add']">
+              <div
+                id="add-queue-card"
+                class="result-card mb-4"
+                v-if="state.showAdd && state.toggles['queues.admin.add']"
+              >
                 <div v-if="state.queues.length < state.toggles['queues.admin.limit']">
                   <QueueFormAdd
                     v-model="state.newQueue"
@@ -2067,7 +2093,7 @@ export default {
                     }}</span>
                     <i class="bi bi-chevron-down section-toggle-icon"></i>
                   </button>
-                  <div id="add-service" class="collapse row m-0">
+                  <div v-if="state.newQueue.serviceInfo" id="add-service" class="collapse row m-0">
                     <div id="add-queue-blockLimit-form" class="row g-1">
                       <div class="col-4 text-label">
                         {{ $t('businessQueuesAdmin.blockLimit') }}
@@ -2382,23 +2408,26 @@ export default {
                     </Warning>
                   </div>
                 </div>
-              </div>
-              <div v-else>
-                <Message
-                  :title="$t('businessQueuesAdmin.message.3.title')"
-                  :content="$t('businessQueuesAdmin.message.3.content')"
-                />
+                <div v-else>
+                  <Message
+                    :title="$t('businessQueuesAdmin.message.3.title')"
+                    :content="$t('businessQueuesAdmin.message.3.content')"
+                  />
+                </div>
               </div>
             </div>
+            <div class="modal-footer border-0 justify-content-center">
+              <button
+                type="button"
+                class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                {{ $t('close') }} <i class="bi bi-check-lg"></i>
+              </button>
+            </div>
           </div>
-          <div class="mx-2 mb-4 text-center">
-            <a
-              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-              >{{ $t('close') }} <i class="bi bi-check-lg"></i
-            ></a>
-          </div>
+
         </div>
       </div>
     </Teleport>

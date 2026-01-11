@@ -89,13 +89,6 @@ export default {
       const queueBlockTime = props.queue?.blockTime || 30;
       const blocksNeeded = Math.ceil(totalDuration / queueBlockTime);
 
-      console.log('📊 NextAvailableSlot - Blocks calculation:', {
-        servicesCount: props.selectedServices.length,
-        totalDuration,
-        queueBlockTime,
-        blocksNeeded,
-      });
-
       return blocksNeeded;
     };
 
@@ -105,30 +98,17 @@ export default {
 
       const startBlock = blocks[startIndex];
       if (!startBlock) {
-        console.log(`⚠️ hasConsecutiveBlocks - No start block at index ${startIndex}`);
         return false;
       }
 
       const availableNumbers = blocks.map(b => b.number);
-      console.log(
-        `🔍 hasConsecutiveBlocks - Checking ${blocksNeeded} consecutive blocks starting at ${
-          startBlock.number
-        }, available numbers: [${availableNumbers.join(',')}]`,
-      );
 
       for (let i = 0; i < blocksNeeded; i++) {
         const neededNumber = startBlock.number + i;
         if (!availableNumbers.includes(neededNumber)) {
-          console.log(
-            `❌ hasConsecutiveBlocks - Block ${neededNumber} not available (need ${blocksNeeded} blocks starting at ${startBlock.number})`,
-          );
           return false;
         }
       }
-
-      console.log(
-        `✅ hasConsecutiveBlocks - Found ${blocksNeeded} consecutive blocks starting at ${startBlock.number}`,
-      );
       return true;
     };
 
@@ -145,38 +125,18 @@ export default {
         const todayStr = today.toString();
         const blocksNeeded = calculateBlocksNeeded();
 
-        console.log(
-          `🔍 NextAvailableSlot - Starting search from today: ${todayStr}, blocksNeeded: ${blocksNeeded}`,
-        );
-
         // Get attention days from queue
         const attentionDays = props.queue.serviceInfo?.attentionDays || [];
-        console.log(
-          `📅 NextAvailableSlot - Attention days configured: [${attentionDays.join(
-            ',',
-          )}] (empty means all days)`
-        );
 
         // Get today's day of week to check if it's in attentionDays
         const todayDateObj = new Date(todayStr + 'T00:00:00');
         let todayDayOfWeek = todayDateObj.getDay();
         if (todayDayOfWeek === 0) todayDayOfWeek = 7; // Sunday becomes 7
-        const todayIsAttentionDay =
-          attentionDays.length === 0 || attentionDays.includes(todayDayOfWeek);
-        console.log(
-          `📅 NextAvailableSlot - Today is day ${todayDayOfWeek}, is attention day: ${todayIsAttentionDay}`,
-        );
 
         // Search for the next 30 days
         for (let dayOffset = 0; dayOffset < props.daysAhead; dayOffset++) {
           const searchDate = new DateModel(today.addDays(dayOffset));
           const dateStr = searchDate.toString();
-
-          console.log(
-            `🔍 NextAvailableSlot - Checking dayOffset ${dayOffset}: ${dateStr} (isToday: ${
-              dateStr === todayStr
-            })`,
-          );
 
           // Filter by attention days if configured
           if (attentionDays.length > 0) {
@@ -185,18 +145,7 @@ export default {
             if (dayOfWeek === 0) dayOfWeek = 7; // Sunday becomes 7
             // Skip if not an attention day
             if (!attentionDays.includes(dayOfWeek)) {
-              console.log(
-                `⏭️ NextAvailableSlot - Skipping ${dateStr} (day ${dayOfWeek}) - not in attentionDays: [${attentionDays.join(
-                  ',',
-                )}]`
-              );
               continue;
-            } else {
-              console.log(
-                `✅ NextAvailableSlot - ${dateStr} (day ${dayOfWeek}) is in attentionDays: [${attentionDays.join(
-                  ',',
-                )}]`
-              );
             }
           }
 
@@ -229,12 +178,6 @@ export default {
           // Get attentions for this date
           const attentions = await getAttentionByDate(props.queue.id, dateStr);
 
-          console.log(
-            `📅 NextAvailableSlot - Fetched ${bookings?.length || 0} bookings and ${
-              attentions?.length || 0
-            } attentions for ${dateStr} (queueId: ${props.queue.id})`,
-          );
-
           // Get reserved block numbers from bookings and attentions
           const reservedBlockNumbers = [];
 
@@ -248,9 +191,6 @@ export default {
                 booking.status === 'USER_CANCELED';
 
               if (isCancelled) {
-                console.log(
-                  `🚫 NextAvailableSlot - Skipping cancelled booking: ${booking.id} (status: ${booking.status}, cancelled: ${booking.cancelled})`,
-                );
                 return;
               }
 
@@ -271,9 +211,6 @@ export default {
               const isCancelled = attention.cancelled === true || attention.status === 'CANCELLED';
 
               if (isCancelled) {
-                console.log(
-                  `🚫 NextAvailableSlot - Skipping cancelled attention: ${attention.id} (status: ${attention.status}, cancelled: ${attention.cancelled})`,
-                );
                 return;
               }
 
@@ -290,14 +227,6 @@ export default {
           // Find first available block
           let availableBlocks = blocks.filter(
             block => !reservedBlockNumbers.includes(block.number)
-          );
-
-          console.log(
-            `🔍 NextAvailableSlot - Date: ${dateStr}, Blocks: ${
-              blocks.length
-            }, Reserved: [${reservedBlockNumbers.join(',')}], Available: ${
-              availableBlocks.length
-            }, BlocksNeeded: ${blocksNeeded}`,
           );
 
           // Check if it's today - compare with the todayStr we calculated at the start
@@ -320,21 +249,6 @@ export default {
               // Only include blocks that start at least 30 minutes from now (buffer time)
               return blockTimeInMinutes > currentTimeInMinutes + 30;
             });
-
-            console.log(
-              `🕐 NextAvailableSlot - Today time filtering: ${beforeTimeFiltering} → ${
-                availableBlocks.length
-              } (current time: ${currentHour}:${currentMinute
-                .toString()
-                .padStart(2, '0')}, dateStr: ${dateStr}, todayStr: ${todayStr})`,
-            );
-
-            // If we have available blocks today after filtering, prioritize them
-            if (availableBlocks.length > 0) {
-              console.log(
-                `✅ NextAvailableSlot - Found ${availableBlocks.length} available blocks TODAY (${dateStr})`,
-              );
-            }
           }
 
           if (availableBlocks.length > 0) {
@@ -344,10 +258,6 @@ export default {
               const timeB = b.hourFrom || '';
               return timeA.localeCompare(timeB);
             });
-
-            console.log(
-              `🔍 NextAvailableSlot - Checking ${sortedBlocks.length} sorted blocks for ${dateStr} (isToday: ${isToday}, blocksNeeded: ${blocksNeeded})`,
-            );
 
             // Find first block that can accommodate the service duration
             let selectedBlock = null;
@@ -362,9 +272,6 @@ export default {
                   const neededNumber = block.number + j;
                   if (reservedBlockNumbers.includes(neededNumber)) {
                     hasReservedInSequence = true;
-                    console.log(
-                      `🚫 NextAvailableSlot - Block ${neededNumber} is reserved in sequence starting at ${block.number}`,
-                    );
                     break;
                   }
                 }
@@ -390,40 +297,17 @@ export default {
                         blockNumbers: consecutiveBlocks.map(b => b.number),
                         isSuperBlock: true,
                       };
-                      console.log(
-                        `✅ NextAvailableSlot - Found ${blocksNeeded} consecutive blocks starting at ${
-                          selectedBlock.number
-                        } for ${dateStr}${isToday ? ' (TODAY)' : ''}`,
-                      );
                       break;
-                    } else {
-                      console.log(
-                        `⚠️ NextAvailableSlot - Could not find all ${blocksNeeded} consecutive blocks (found ${consecutiveBlocks.length}) starting at ${block.number} for ${dateStr}`,
-                      );
                     }
                   } else {
                     selectedBlock = block;
-                    console.log(
-                      `✅ NextAvailableSlot - Found single block ${block.number} at ${
-                        block.hourFrom
-                      } for ${dateStr}${isToday ? ' (TODAY)' : ''}`,
-                    );
                     break;
                   }
-                }
-              } else {
-                if (i === 0) {
-                  console.log(
-                    `⚠️ NextAvailableSlot - First block ${block.number} does not have ${blocksNeeded} consecutive blocks available for ${dateStr}`,
-                  );
                 }
               }
             }
 
             if (!selectedBlock) {
-              console.log(
-                `🔄 NextAvailableSlot - No suitable consecutive blocks for ${dateStr} (need ${blocksNeeded} blocks, available: ${sortedBlocks.length}), checking next date`,
-              );
               continue;
             }
 
@@ -433,10 +317,6 @@ export default {
               dateStr === props.excludeSlot.date &&
               selectedBlock.number === props.excludeSlot.block?.number
             ) {
-              console.log(
-                `🚫 NextAvailableSlot - EXCLUDING preselected slot: ${dateStr} at ${selectedBlock.hourFrom} (block ${selectedBlock.number})`,
-              );
-
               // Try to find another suitable block
               let foundAlternative = false;
               for (let i = 0; i < sortedBlocks.length; i++) {
@@ -488,22 +368,9 @@ export default {
               }
 
               if (!foundAlternative) {
-                console.log(
-                  `🔄 NextAvailableSlot - No other suitable blocks for ${dateStr}, checking next date`,
-                );
                 continue;
               }
             }
-
-            console.log(
-              `✅ NextAvailableSlot - FOUND slot: ${dateStr} at ${selectedBlock.hourFrom} (block ${
-                selectedBlock.number
-              }${
-                selectedBlock.isSuperBlock
-                  ? ` - ${selectedBlock.hourTo} (${blocksNeeded} blocks)`
-                  : ''
-              })`,
-            );
 
             nextSlot.value = {
               date: dateStr,
@@ -566,7 +433,6 @@ export default {
       () => props.refreshKey,
       () => {
         if (props.refreshKey !== null && props.refreshKey !== undefined) {
-          console.log('🔄 NextAvailableSlot - Refresh triggered by refreshKey change');
           findNextAvailableSlot();
         }
       },

@@ -1014,6 +1014,8 @@
     "time": "Hora",
     "queue": "Fila",
     "telemedicineValue": "Telemedicina",
+    "telemedicineAvailable": "Telemedicina disponible",
+    "presentialAvailable": "Atención presencial disponible",
     "creating": "Creando...",
     "selectService": "Selecciona el servicio:",
     "searchCollaboratorQueue": "🔎 Busca por nombre o servicio",
@@ -1047,6 +1049,11 @@
     },
     "noAvailableHours": "No hay horarios disponibles para esta fecha.",
     "tryAnotherDate": "Intenta con otra fecha.",
+    "timeOfDay": {
+      "morning": "Mañana",
+      "afternoon": "Tarde",
+      "night": "Noche"
+    },
     "validate": {
       "name": "Debes ingresar tu nombre",
       "lastName": "Debes ingresar tu apellido",
@@ -3464,6 +3471,8 @@
     "online": "Online:",
     "telemedicine": "Telemedicina:",
     "telemedicineHelp": "Habilita la opción de telemedicina para esta fila",
+    "presential": "Atención presencial:",
+    "presentialHelp": "Habilita la atención presencial para esta fila",
     "estimated": "Tiempo estimado (min):",
     "update": "Actualizar",
     "unavailable": "Eliminar",
@@ -6652,6 +6661,8 @@
     "preselectedQueue": "Fila Preseleccionada",
     "canChangeBelow": "Puede cambiar la selección a continuación si es necesario",
     "telemedicineConsultation": "Consulta por Telemedicina",
+    "telemedicineDisclaimer": "Cuando la telemedicina no está seleccionada, la atención será presencial.",
+    "telemedicineSelectedDisclaimer": "Esta atención se realizará por telemedicina; si desactiva esta opción, la atención será presencial.",
     "scheduledDateTime": "Fecha y Hora Programada",
     "usingSelectedBlockDateTime": "Usando la fecha y hora del bloque seleccionado",
     "selectBlockDateTimeFirst": "Por favor, seleccione primero la fecha y hora del bloque",

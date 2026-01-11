@@ -217,6 +217,55 @@ export default {
       },
     });
 
+    const groupBlocksByTimeOfDay = blocks => {
+      const groups = {
+        morning: [],
+        afternoon: [],
+        night: [],
+      };
+
+      if (!Array.isArray(blocks)) {
+        return groups;
+      }
+
+      blocks.forEach(block => {
+        if (!block || !block.hourFrom) {
+          return;
+        }
+
+        const [hourString] = String(block.hourFrom).split(':');
+        const hour = parseInt(hourString, 10);
+
+        if (Number.isNaN(hour)) {
+          groups.morning.push(block);
+        } else if (hour < 12) {
+          groups.morning.push(block);
+        } else if (hour < 19) {
+          groups.afternoon.push(block);
+        } else {
+          groups.night.push(block);
+        }
+      });
+
+      return groups;
+    };
+
+    const groupedTodayAttentionSuperBlocks = computed(() =>
+      groupBlocksByTimeOfDay(state.availableAttentionSuperBlocks || [])
+    );
+
+    const groupedTodayAttentionBlocks = computed(() =>
+      groupBlocksByTimeOfDay(state.availableAttentionBlocks || [])
+    );
+
+    const groupedBookingSuperBlocks = computed(() =>
+      groupBlocksByTimeOfDay(state.availableBookingSuperBlocks || [])
+    );
+
+    const groupedBookingBlocks = computed(() =>
+      groupBlocksByTimeOfDay(state.availableBookingBlocks || [])
+    );
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
@@ -421,6 +470,14 @@ export default {
       }
 
       getQueue(queue);
+
+      // If the selected queue only allows telemedicine (presential disabled),
+      // force telemedicine mode on and keep the toggle locked.
+      if (queue && queue.telemedicineEnabled && queue.presentialEnabled === false) {
+        state.isTelemedicine = true;
+      } else {
+        state.isTelemedicine = false;
+      }
       state.totalDurationRequested = 0;
       state.amountofBlocksNeeded = 0;
       setCanBook();
@@ -1297,19 +1354,13 @@ export default {
     };
 
     const getBlocksByDay = () => {
-      console.log('🔷 getBlocksByDay() called');
-      console.log('🔷 Current date:', state.date);
-      console.log('🔷 state.blocksByDay:', state.blocksByDay);
       if (!state.date || state.date === 'TODAY') {
         // Check if today is available before returning blocks
         if (!isTodayAvailable()) {
-          console.log('❌ getBlocksByDay - Today is not available, returning empty array');
           return [];
         }
         const day = new Date().getDay();
-        console.log('🔷 Today is day:', day);
         const blocks = state.blocksByDay[day];
-        console.log('🔷 Blocks for today:', blocks?.length || 0, blocks);
         return blocks || [];
       } else {
         // Ensure state.date is a string (handle Date objects)
@@ -1323,7 +1374,6 @@ export default {
           dayNumber = 7;
         }
         const blocks = state.blocksByDay[dayNumber];
-        console.log('🔷 Blocks for day', dayNumber, ':', blocks?.length || 0);
         return blocks || [];
       }
     };
@@ -1367,31 +1417,14 @@ export default {
     };
 
     const bookingsAvailables = () => {
-      console.log('🔍 bookingsAvailables() called');
-      console.log('🔍 state.block:', state.block);
-      console.log(
-        '🔍 state.availableBookingBlocks:',
-        state.availableBookingBlocks?.length || 0,
-        'blocks',
-      );
-      console.log(
-        '🔍 Available block numbers:',
-        state.availableBookingBlocks?.map(b => b.number) || [],
-      );
-
       const blockAvailable = state.availableBookingBlocks.filter(
         block => block.number === state.block.number
       );
 
-      console.log('🔍 Looking for block number:', state.block.number);
-      console.log('🔍 Found matching blocks:', blockAvailable.length);
-
       if (!blockAvailable || blockAvailable.length === 0) {
-        console.log('❌ Block NOT available - setting bookingAvailable = false');
         state.bookingAvailable = false;
         alertError.value = '';
       } else {
-        console.log('✅ Block IS available - setting bookingAvailable = true');
         state.bookingAvailable = true;
       }
     };
@@ -1428,7 +1461,6 @@ export default {
     };
 
     const showToday = async () => {
-      console.log('🔵 showToday() called');
       (state.attentionBlock = {}), (state.block = {});
       state.date = 'TODAY';
       state.specificCalendarDate = 'TODAY';
@@ -1438,7 +1470,6 @@ export default {
 
       // Check if today is available
       if (!isTodayAvailable()) {
-        console.log('❌ showToday() - Today is not available');
         state.availableAttentionBlocks = [];
         state.availableAttentionSuperBlocks = [];
         state.availableBookingBlocks = [];
@@ -1449,57 +1480,29 @@ export default {
 
       // Ensure hours are loaded when switching to "Hoje"
       const hasBookingBlock = getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT');
-      console.log('🔵 booking-block-active feature:', hasBookingBlock);
       if (hasBookingBlock) {
-        console.log('🔵 Starting to load hours for TODAY');
         loadingHours.value = true;
 
         // Ensure blocksByDay is loaded
         if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
-          console.log('🔵 blocksByDay is empty, loading...');
           state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
-          console.log(
-            '🔵 blocksByDay loaded:',
-            Object.keys(state.blocksByDay || {}).length,
-            'days'
-          );
         }
 
         state.blocks = getBlocksByDay();
-        console.log('🔵 Blocks loaded:', state.blocks?.length || 0);
         if (unsubscribeAttentions) {
           unsubscribeAttentions();
         }
         getAttentions();
         // Load blocks immediately if attentions are already available
-        console.log('🔵 Current attentions:', state.attentions?.length || 0);
         if (state.attentions && state.attentions.length >= 0) {
-          console.log(
-            '🔵 Calling getAvailableAttentionBlocks with attentions:',
-            state.attentions.length
-          );
           await getAvailableAttentionBlocks(state.attentions);
-          console.log(
-            '🔵 Available attention blocks:',
-            state.availableAttentionBlocks?.length || 0
-          );
           getAvailableAttentionSuperBlocks();
-          console.log(
-            '🔵 Available super blocks:',
-            state.availableAttentionSuperBlocks?.length || 0
-          );
           loadingHours.value = false;
-          console.log('🔵 Loading hours set to false');
-        } else {
-          console.log('⚠️ No attentions available yet, waiting for watcher...');
         }
-      } else {
-        console.log('⚠️ booking-block-active feature is not active');
       }
     };
 
     const selectAttentionBlock = block => {
-      console.log('🟨 selectAttentionBlock called with:', block);
       // Ensure reactivity by creating a new object
       state.attentionBlock = {
         number: block.number,
@@ -1508,7 +1511,6 @@ export default {
         ...(block.blocks && { blocks: block.blocks }),
         ...(block.blockNumbers && { blockNumbers: block.blockNumbers }),
       };
-      console.log('🟨 state.attentionBlock after assignment:', state.attentionBlock);
 
       // Update telemedicine scheduledAt if telemedicine is enabled and we have date and block
       if (
@@ -1570,19 +1572,12 @@ export default {
     };
 
     const getAvailableBookingBlocks = bookings => {
-      console.log('📊 getAvailableBookingBlocks() called');
-      console.log('📊 Received bookings:', bookings?.length || 0);
-      console.log('📊 state.blocks:', state.blocks?.length || 0);
-      console.log('📊 Queue type:', state.queue.type);
-      console.log('📊 Current date:', state.date);
-
       state.availableBookingBlocks = [];
       let availableBlocks = [];
       let queueBlocks = [];
       if (state.queue.type !== 'SELECT_SERVICE') {
         if (state.blocks) {
           queueBlocks = state.blocks;
-          console.log('📊 Queue blocks:', queueBlocks?.length || 0);
           if (queueBlocks && queueBlocks.length > 0) {
             let bookingsReserved = [];
             if (bookings && bookings.length > 0) {
@@ -1623,11 +1618,9 @@ export default {
                 }
               });
               availableBlocks = queueBlocks.filter(block => !blockedBlocks.includes(block.number));
-              console.log('📊 Blocked blocks:', blockedBlocks);
-              console.log('📊 Available blocks after filtering:', availableBlocks?.length || 0);
+
             } else {
               availableBlocks = queueBlocks;
-              console.log('📊 No bookings - all blocks available:', availableBlocks?.length || 0);
             }
 
             // Filter out past hours if the selected date is today
@@ -1641,7 +1634,6 @@ export default {
               const currentMinute = now.getMinutes();
               const currentTimeInMinutes = currentHour * 60 + currentMinute;
 
-              const beforeFiltering = availableBlocks.length;
               availableBlocks = availableBlocks.filter(block => {
                 if (!block.hourFrom) return false;
 
@@ -1652,12 +1644,6 @@ export default {
                 return blockTimeInMinutes > currentTimeInMinutes + 30;
               });
 
-              console.log(
-                '📊 Filtered past hours for today:',
-                beforeFiltering,
-                '→',
-                availableBlocks.length,
-              );
             }
           }
         }
@@ -1742,39 +1728,20 @@ export default {
         }
       }
       state.availableBookingBlocks = availableBlocks;
-      console.log('📊 Final availableBookingBlocks:', state.availableBookingBlocks?.length || 0);
-      console.log('📊 Block numbers:', state.availableBookingBlocks?.map(b => b.number) || []);
     };
 
     const getAvailableAttentionBlocks = async attentions => {
-      console.log('🟣 getAvailableAttentionBlocks() called');
-      console.log('🟣 Received attentions:', attentions?.length || 0);
-      console.log('🟣 Queue type:', state.queue.type);
-      console.log('🟣 State blocks:', state.blocks?.length || 0);
-      console.log('🟣 State date:', state.date);
-
       // If blocks are missing and date is TODAY, reload them (but only if today is available)
       if ((!state.blocks || state.blocks.length === 0) && state.date === 'TODAY') {
         if (!isTodayAvailable()) {
-          console.log(
-            '❌ getAvailableAttentionBlocks - Today is not available, NOT reloading blocks',
-          );
           state.availableAttentionBlocks = [];
           return;
         }
 
-        console.log('🟣 Blocks missing for TODAY, reloading...');
         if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
-          console.log('🟣 blocksByDay is empty, loading...');
           state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
-          console.log(
-            '🟣 blocksByDay loaded:',
-            Object.keys(state.blocksByDay || {}).length,
-            'days'
-          );
         }
         state.blocks = getBlocksByDay();
-        console.log('🟣 Blocks reloaded:', state.blocks?.length || 0);
       }
 
       let availableBlocks = [];
@@ -1917,11 +1884,6 @@ export default {
         }
       }
       state.availableAttentionBlocks = availableBlocks;
-      console.log(
-        '🟣 getAvailableAttentionBlocks() completed. Available blocks:',
-        availableBlocks.length
-      );
-      console.log('🟣 Available blocks details:', availableBlocks);
     };
 
     const updatedAttentions = () => {
@@ -2078,10 +2040,6 @@ export default {
     };
 
     const getAvailableAttentionSuperBlocks = () => {
-      console.log('🟪 getAvailableAttentionSuperBlocks() called');
-      console.log('🟪 Selected services:', state.selectedServices?.length || 0);
-      console.log('🟪 Available attention blocks:', state.availableAttentionBlocks?.length || 0);
-      console.log('🟪 Amount of blocks needed:', state.amountofBlocksNeeded);
       loadingHours.value = true;
       if (state.selectedServices && state.selectedServices.length > 0) {
         const superBlocks = [];
@@ -2129,10 +2087,6 @@ export default {
         }
       }
       loadingHours.value = false;
-      console.log(
-        '🟪 getAvailableAttentionSuperBlocks() completed. Super blocks:',
-        state.availableAttentionSuperBlocks?.length || 0
-      );
     };
 
     const getAvailableSpecificDatesByMonth = async date => {
@@ -2264,26 +2218,15 @@ export default {
 
     // Handle quick slot selection from NextAvailableSlot component
     const handleQuickSlotSelection = async slotData => {
-      console.log('🚀 Quick slot selection started:', {
-        date: slotData.date,
-        block: slotData.block,
-        blockNumber: slotData.block?.number,
-        hourFrom: slotData.block?.hourFrom,
-        hourTo: slotData.block?.hourTo,
-      });
-
       // Check if the selected date is today
       const today = new Date().toISOString().slice(0, 10);
       const isToday = slotData.date === today;
-
-      console.log('🚀 Is today?', isToday, 'Selected:', slotData.date, 'Today:', today);
 
       // Set flag to protect state during quick selection
       state.isQuickSlotSelection = true;
 
       if (isToday) {
         // For today: Set attention mode
-        console.log('🚀 Setting up for ATTENTION (today)');
         state.date = 'TODAY';
         state.specificCalendarDate = 'TODAY';
         state.attentionBlock = slotData.block;
@@ -2291,7 +2234,6 @@ export default {
         state.showReserve = false;
       } else {
         // For future dates: Set booking mode
-        console.log('🚀 Setting up for BOOKING (future date)');
         state.date = slotData.date;
         state.specificCalendarDate = slotData.date;
         state.block = slotData.block;
@@ -2303,18 +2245,15 @@ export default {
       try {
         if (isToday) {
           // For today: Load blocks for attention mode
-          console.log('🔄 Loading blocks for TODAY (attention mode)');
           if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
             state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
           }
           state.blocks = getBlocksByDay(); // This will get today's blocks
-          console.log('🔄 Today blocks loaded:', state.blocks?.length || 0);
         } else {
           // For future dates: Load blocks for booking mode
           if (state.specificCalendar) {
             // For specific calendar, ensure we have the blocks loaded
             if (!state.blocksBySpecificCalendarDate[slotData.date]) {
-              console.log('🔄 Loading specific calendar blocks for date:', slotData.date);
               state.blocksBySpecificCalendarDate =
                 await getQueueBlockDetailsBySpecificDayByCommerceId(
                   state.commerce.id,
@@ -2322,12 +2261,10 @@ export default {
                 );
             }
             const loadedBlocks = state.blocksBySpecificCalendarDate[slotData.date] || [];
-            console.log('🔄 Specific calendar blocks loaded:', loadedBlocks.length);
             state.blocks = loadedBlocks;
           } else {
             // For regular calendar, ensure we have the blocks loaded
             if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
-              console.log('🔄 Loading regular calendar blocks');
               state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
             }
             // Convert date to day of week for regular calendar
@@ -2335,32 +2272,22 @@ export default {
             let dayOfWeek = selectedDate.getDay();
             if (dayOfWeek === 0) dayOfWeek = 7; // Sunday becomes 7
             const loadedBlocks = state.blocksByDay[dayOfWeek] || [];
-            console.log('🔄 Regular calendar blocks for day', dayOfWeek, ':', loadedBlocks.length);
             state.blocks = loadedBlocks;
           }
         }
 
-        console.log('🔄 Final state.blocks after loading:', state.blocks?.length || 0);
-
         if (isToday) {
           // For today: Trigger attention availability calculations
-          console.log('📅 Processing for TODAY (attention mode)');
-
           // Wait a bit for other watchers to settle, then trigger availability calculations
           setTimeout(() => {
-            console.log(
-              '🔄 Triggering attentionsAvailables() after quick slot selection (debounced)',
-            );
             attentionsAvailables();
             // Clear the protection flag after a longer delay to ensure stability
             setTimeout(() => {
-              console.log('🔄 Clearing protection flag');
               state.isQuickSlotSelection = false;
             }, 500);
           }, 200);
         } else {
           // For future dates: Load bookings
-          console.log('📅 Loading bookings for date:', formattedDate(slotData.date));
           const { unsubscribe } = await updatedBookings(formattedDate(slotData.date));
           if (unsubscribeBookings) {
             unsubscribeBookings();
@@ -2369,13 +2296,9 @@ export default {
 
           // Wait a bit for other watchers to settle, then trigger availability calculations
           setTimeout(() => {
-            console.log(
-              '🔄 Triggering bookingsAvailables() after quick slot selection (debounced)',
-            );
             bookingsAvailables();
             // Clear the protection flag after a longer delay to ensure stability
             setTimeout(() => {
-              console.log('🔄 Clearing protection flag');
               state.isQuickSlotSelection = false;
             }, 500);
           }, 200);
@@ -2773,16 +2696,8 @@ export default {
           );
           state.blocks = getBlocksBySpecificDay();
         } else {
-          console.log('🟦 Loading blocksByDay for queue:', state.queue.id);
           state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
-          console.log(
-            '🟦 blocksByDay loaded:',
-            Object.keys(state.blocksByDay || {}).length,
-            'days'
-          );
-          console.log('🟦 blocksByDay content:', state.blocksByDay);
           state.blocks = getBlocksByDay();
-          console.log('🟦 Initial blocks:', state.blocks?.length || 0);
         }
 
         // Removed scroll behavior - it was causing weird delays
@@ -2792,7 +2707,6 @@ export default {
       if (!state.isQuickSlotSelection) {
         state.block = {};
       } else {
-        console.log('🛡️ Protected state.block from reset during quick selection');
       }
 
       let currentDate;
@@ -2821,15 +2735,11 @@ export default {
     });
 
     watch(changeAttention, async (newData, oldData) => {
-      console.log('🟡 changeAttention watcher triggered');
-      console.log('🟡 New attentions:', newData.allAttentions?.value?.length || 0);
-      console.log('🟡 Old attentions:', oldData.allAttentions?.value?.length || 0);
       alertError.value = '';
       if (newData.allAttentions !== oldData.allAttentions) {
         const newIds = newData.allAttentions.map(att => att.id);
         const oldIds = oldData.allAttentions.map(att => att.id);
         if (!newIds.every(id => oldIds.includes(id))) {
-          console.log('🟡 Attentions changed, processing...');
           if (state.allAttentions && state.allAttentions.length > 0) {
             state.groupedAttentionsByQueue = state.allAttentions.reduce((acc, att) => {
               const queueId = att.queueId;
@@ -2840,29 +2750,12 @@ export default {
               return acc;
             }, {});
             state.attentions = state.groupedAttentionsByQueue[state.queue.id];
-            console.log('🟡 Filtered attentions for queue:', state.attentions?.length || 0);
           }
         }
-        console.log(
-          '🟡 Calling getAvailableAttentionBlocks with:',
-          state.attentions?.length || 0,
-          'attentions'
-        );
         await getAvailableAttentionBlocks(state.attentions);
-        console.log(
-          '🟡 Available attention blocks after calculation:',
-          state.availableAttentionBlocks?.length || 0
-        );
         getAvailableAttentionSuperBlocks();
-        console.log(
-          '🟡 Available super blocks after calculation:',
-          state.availableAttentionSuperBlocks?.length || 0
-        );
         attentionsAvailables();
         loadingHours.value = false;
-        console.log('🟡 Loading hours set to false in watcher');
-      } else {
-        console.log('🟡 Attentions reference unchanged, skipping...');
       }
     });
 
@@ -2895,10 +2788,6 @@ export default {
         }
       }
       if (state.attentionBlock) {
-        console.log('🟦 changeAttentionBlock watcher triggered');
-        console.log('🟦 attentionBlock:', state.attentionBlock);
-        console.log('🟦 attentionBlock.hourFrom:', state.attentionBlock.hourFrom);
-        console.log('🟦 attentionBlock.hourTo:', state.attentionBlock.hourTo);
         attentionsAvailables();
         getAvailableAttentionSuperBlocks();
       }
@@ -2989,16 +2878,9 @@ export default {
     });
 
     watch(changeDate, async (newData, oldData) => {
-      console.log('🟠 changeDate watcher triggered');
-      console.log('🟠 New date:', newData.date);
-      console.log('🟠 Old date:', oldData.date);
-      console.log('🟠 State date:', state.date);
       if (state.date && state.date === 'TODAY') {
-        console.log('🟠 Date is TODAY, processing...');
-
         // Check if today is available
         if (!isTodayAvailable()) {
-          console.log('❌ changeDate watcher - Today is not available');
           state.availableAttentionBlocks = [];
           state.availableAttentionSuperBlocks = [];
           state.availableBookingBlocks = [];
@@ -3008,54 +2890,33 @@ export default {
         }
 
         if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
-          console.log('🟠 booking-block-active is enabled');
-
           // Ensure blocksByDay is loaded
           if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
-            console.log('🟠 blocksByDay is empty in watcher, loading...');
             state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
-            console.log(
-              '🟠 blocksByDay loaded in watcher:',
-              Object.keys(state.blocksByDay || {}).length,
-              'days'
-            );
           }
 
           // Don't reset blocks/block if we're in quick slot selection
           if (!state.isQuickSlotSelection) {
             state.blocks = getBlocksByDay();
-            console.log('🟠 Blocks loaded:', state.blocks?.length || 0);
             state.block = {};
           } else {
-            console.log('🛡️ Protected state.blocks/block from reset during quick selection');
           }
           if (unsubscribeAttentions) {
             unsubscribeAttentions();
           }
           getAttentions();
           // Ensure blocks are loaded if attentions are already available
-          console.log('🟠 Checking attentions:', state.attentions?.length || 0);
           if (state.attentions && state.attentions.length >= 0) {
-            console.log('🟠 Attentions available, loading blocks immediately');
             await getAvailableAttentionBlocks(state.attentions);
             getAvailableAttentionSuperBlocks();
             loadingHours.value = false;
-            console.log('🟠 Loading hours set to false in changeDate watcher');
-          } else {
-            console.log('🟠 No attentions yet, waiting for changeAttention watcher...');
           }
         } else {
-          console.log('🟠 booking-block-active is NOT enabled');
           await getAttention(undefined);
         }
       } else if (newData.date && newData.date !== oldData.date && newData.date !== 'TODAY') {
-        console.log('🟠 Date changed to non-TODAY, updating blocks');
-        console.log('🟠 Current state.block:', state.block);
-        console.log('🟠 isQuickSlotSelection:', state.isQuickSlotSelection);
-
         // Don't interfere if we're in the middle of a quick slot selection
         if (state.isQuickSlotSelection) {
-          console.log('🟠 Quick slot selection in progress, skipping block reset');
           return;
         }
 
@@ -3531,6 +3392,10 @@ export default {
       packageReminderInfo,
       loadingPackageReminder,
       checkActivePackagesForService,
+      groupedTodayAttentionSuperBlocks,
+      groupedTodayAttentionBlocks,
+      groupedBookingSuperBlocks,
+      groupedBookingBlocks,
     };
   },
 };
@@ -3667,7 +3532,7 @@ export default {
                   isQueueWalkin() &&
                   isTelemedicineEnabled(state.commerce, state.queue)
                 "
-                class="row g-1 mt-3"
+                class="row g-1 mt-2"
               >
                 <div class="col col-md-10 offset-md-1 data-card">
                   <div class="telemedicine-option mb-3">
@@ -3677,6 +3542,7 @@ export default {
                         type="checkbox"
                         :id="`telemedicine-walkin-${state.queue.id}`"
                         v-model="state.isTelemedicine"
+                        :disabled="state.queue.presentialEnabled === false"
                         @change="handleTelemedicineToggle"
                       />
                       <label
@@ -3684,9 +3550,24 @@ export default {
                         :for="`telemedicine-walkin-${state.queue.id}`"
                       >
                         <i class="bi bi-camera-video me-2"></i>
-                        <strong>Consulta por Telemedicina</strong>
+                        <strong>
+                          {{
+                            $t('attentionCreation.telemedicineConsultation') ||
+                            'Consulta por Telemedicina'
+                          }}
+                        </strong>
                       </label>
                     </div>
+                    <p
+                      class="telemedicine-disclaimer mt-2"
+                      v-html="
+                        state.isTelemedicine
+                          ? $t('attentionCreation.telemedicineSelectedDisclaimer') ||
+                            'Ao desativar a telemedicina, o atendimento será <strong>presencial</strong>.'
+                          : $t('attentionCreation.telemedicineDisclaimer') ||
+                            'Quando a telemedicina não estiver selecionada, o atendimento será <strong>presencial</strong>.'
+                      "
+                    ></p>
                   </div>
                 </div>
               </div>
@@ -3705,7 +3586,7 @@ export default {
                   v-if="isActiveCommerce(state.commerce) && !isQueueWalkin()"
                   class="choose-attention py-2 pt-3"
                 >
-                  <i class="bi bi-3-circle-fill h5"></i>
+                  <i class="bi bi-3-circle-fill h5 mx-1"></i>
                   <span class="fw-bold h6"> {{ $t('commerceQueuesView.when') }} </span>
                 </div>
 
@@ -3842,23 +3723,92 @@ export default {
                               "
                               class="mb-2"
                             >
-                              <div class="time-slot-grid">
-                                <button
-                                  v-for="block in state.availableAttentionSuperBlocks"
-                                  :key="block.number"
-                                  type="button"
-                                  class="time-slot-button"
-                                  :class="{
-                                    'time-slot-selected':
-                                      (state.attentionBlock &&
-                                        state.attentionBlock.number === block.number) ||
-                                      (state.block && state.block.number === block.number),
-                                  }"
-                                  @click="selectAttentionBlock(block)"
-                                >
-                                  <div class="time-start">{{ block.hourFrom }}</div>
-                                  <div class="time-end">{{ block.hourTo }}</div>
-                                </button>
+                              <div
+                                v-if="groupedTodayAttentionSuperBlocks.morning.length"
+                                class="mb-2"
+                              >
+                                <div class="options-connector">
+                                  <div class="connector-line"></div>
+                                  <span class="connector-text">
+                                    {{ $t('commerceQueuesView.timeOfDay.morning') }}
+                                  </span>
+                                  <div class="connector-line"></div>
+                                </div>
+                                <div class="time-slot-grid">
+                                  <button
+                                    v-for="block in groupedTodayAttentionSuperBlocks.morning"
+                                    :key="block.number"
+                                    type="button"
+                                    class="time-slot-button"
+                                    :class="{
+                                      'time-slot-selected':
+                                        (state.attentionBlock &&
+                                          state.attentionBlock.number === block.number) ||
+                                        (state.block && state.block.number === block.number),
+                                    }"
+                                    @click="selectAttentionBlock(block)"
+                                  >
+                                    <div class="time-start">{{ block.hourFrom }}</div>
+                                    <div class="time-end">{{ block.hourTo }}</div>
+                                  </button>
+                                </div>
+                              </div>
+                              <div
+                                v-if="groupedTodayAttentionSuperBlocks.afternoon.length"
+                                class="mb-2"
+                              >
+                                <div class="options-connector">
+                                  <div class="connector-line"></div>
+                                  <span class="connector-text">
+                                    {{ $t('commerceQueuesView.timeOfDay.afternoon') }}
+                                  </span>
+                                  <div class="connector-line"></div>
+                                </div>
+                                <div class="time-slot-grid">
+                                  <button
+                                    v-for="block in groupedTodayAttentionSuperBlocks.afternoon"
+                                    :key="block.number"
+                                    type="button"
+                                    class="time-slot-button"
+                                    :class="{
+                                      'time-slot-selected':
+                                        (state.attentionBlock &&
+                                          state.attentionBlock.number === block.number) ||
+                                        (state.block && state.block.number === block.number),
+                                    }"
+                                    @click="selectAttentionBlock(block)"
+                                  >
+                                    <div class="time-start">{{ block.hourFrom }}</div>
+                                    <div class="time-end">{{ block.hourTo }}</div>
+                                  </button>
+                                </div>
+                              </div>
+                              <div v-if="groupedTodayAttentionSuperBlocks.night.length">
+                                <div class="options-connector">
+                                  <div class="connector-line"></div>
+                                  <span class="connector-text">
+                                    {{ $t('commerceQueuesView.timeOfDay.night') }}
+                                  </span>
+                                  <div class="connector-line"></div>
+                                </div>
+                                <div class="time-slot-grid">
+                                  <button
+                                    v-for="block in groupedTodayAttentionSuperBlocks.night"
+                                    :key="block.number"
+                                    type="button"
+                                    class="time-slot-button"
+                                    :class="{
+                                      'time-slot-selected':
+                                        (state.attentionBlock &&
+                                          state.attentionBlock.number === block.number) ||
+                                        (state.block && state.block.number === block.number),
+                                    }"
+                                    @click="selectAttentionBlock(block)"
+                                  >
+                                    <div class="time-start">{{ block.hourFrom }}</div>
+                                    <div class="time-end">{{ block.hourTo }}</div>
+                                  </button>
+                                </div>
                               </div>
                             </div>
                             <!-- Fallback to individual blocks if no super blocks available but individual blocks exist -->
@@ -3870,23 +3820,92 @@ export default {
                               "
                               class="mb-2"
                             >
-                              <div class="time-slot-grid">
-                                <button
-                                  v-for="block in state.availableAttentionBlocks"
-                                  :key="block.number"
-                                  type="button"
-                                  class="time-slot-button"
-                                  :class="{
-                                    'time-slot-selected':
-                                      (state.attentionBlock &&
-                                        state.attentionBlock.number === block.number) ||
-                                      (state.block && state.block.number === block.number),
-                                  }"
-                                  @click="selectAttentionBlock(block)"
-                                >
-                                  <div class="time-start">{{ block.hourFrom }}</div>
-                                  <div class="time-end">{{ block.hourTo }}</div>
-                                </button>
+                              <div
+                                v-if="groupedTodayAttentionBlocks.morning.length"
+                                class="mb-2"
+                              >
+                                <div class="options-connector">
+                                  <div class="connector-line"></div>
+                                  <span class="connector-text">
+                                    {{ $t('commerceQueuesView.timeOfDay.morning') }}
+                                  </span>
+                                  <div class="connector-line"></div>
+                                </div>
+                                <div class="time-slot-grid">
+                                  <button
+                                    v-for="block in groupedTodayAttentionBlocks.morning"
+                                    :key="block.number"
+                                    type="button"
+                                    class="time-slot-button"
+                                    :class="{
+                                      'time-slot-selected':
+                                        (state.attentionBlock &&
+                                          state.attentionBlock.number === block.number) ||
+                                        (state.block && state.block.number === block.number),
+                                    }"
+                                    @click="selectAttentionBlock(block)"
+                                  >
+                                    <div class="time-start">{{ block.hourFrom }}</div>
+                                    <div class="time-end">{{ block.hourTo }}</div>
+                                  </button>
+                                </div>
+                              </div>
+                              <div
+                                v-if="groupedTodayAttentionBlocks.afternoon.length"
+                                class="mb-2"
+                              >
+                                <div class="options-connector">
+                                  <div class="connector-line"></div>
+                                  <span class="connector-text">
+                                    {{ $t('commerceQueuesView.timeOfDay.afternoon') }}
+                                  </span>
+                                  <div class="connector-line"></div>
+                                </div>
+                                <div class="time-slot-grid">
+                                  <button
+                                    v-for="block in groupedTodayAttentionBlocks.afternoon"
+                                    :key="block.number"
+                                    type="button"
+                                    class="time-slot-button"
+                                    :class="{
+                                      'time-slot-selected':
+                                        (state.attentionBlock &&
+                                          state.attentionBlock.number === block.number) ||
+                                        (state.block && state.block.number === block.number),
+                                    }"
+                                    @click="selectAttentionBlock(block)"
+                                  >
+                                    <div class="time-start">{{ block.hourFrom }}</div>
+                                    <div class="time-end">{{ block.hourTo }}</div>
+                                  </button>
+                                </div>
+                              </div>
+                              <div v-if="groupedTodayAttentionBlocks.night.length">
+                                <div class="options-connector">
+                                  <div class="connector-line"></div>
+                                  <span class="connector-text">
+                                    {{ $t('commerceQueuesView.timeOfDay.night') }}
+                                  </span>
+                                  <div class="connector-line"></div>
+                                </div>
+                                <div class="time-slot-grid">
+                                  <button
+                                    v-for="block in groupedTodayAttentionBlocks.night"
+                                    :key="block.number"
+                                    type="button"
+                                    class="time-slot-button"
+                                    :class="{
+                                      'time-slot-selected':
+                                        (state.attentionBlock &&
+                                          state.attentionBlock.number === block.number) ||
+                                        (state.block && state.block.number === block.number),
+                                    }"
+                                    @click="selectAttentionBlock(block)"
+                                  >
+                                    <div class="time-start">{{ block.hourFrom }}</div>
+                                    <div class="time-end">{{ block.hourTo }}</div>
+                                  </button>
+                                </div>
                               </div>
                             </div>
                             <div v-else>
@@ -3932,23 +3951,92 @@ export default {
                               "
                               class="mb-2"
                             >
-                              <div class="time-slot-grid">
-                                <button
-                                  v-for="block in state.availableAttentionBlocks"
-                                  :key="block.number"
-                                  type="button"
-                                  class="time-slot-button"
-                                  :class="{
-                                    'time-slot-selected':
-                                      (state.attentionBlock &&
-                                        state.attentionBlock.number === block.number) ||
-                                      (state.block && state.block.number === block.number),
-                                  }"
-                                  @click="selectAttentionBlock(block)"
-                                >
-                                  <div class="time-start">{{ block.hourFrom }}</div>
-                                  <div class="time-end">{{ block.hourTo }}</div>
-                                </button>
+                              <div
+                                v-if="groupedTodayAttentionBlocks.morning.length"
+                                class="mb-2"
+                              >
+                                <div class="options-connector">
+                                  <div class="connector-line"></div>
+                                  <span class="connector-text">
+                                    {{ $t('commerceQueuesView.timeOfDay.morning') }}
+                                  </span>
+                                  <div class="connector-line"></div>
+                                </div>
+                                <div class="time-slot-grid">
+                                  <button
+                                    v-for="block in groupedTodayAttentionBlocks.morning"
+                                    :key="block.number"
+                                    type="button"
+                                    class="time-slot-button"
+                                    :class="{
+                                      'time-slot-selected':
+                                        (state.attentionBlock &&
+                                          state.attentionBlock.number === block.number) ||
+                                        (state.block && state.block.number === block.number),
+                                    }"
+                                    @click="selectAttentionBlock(block)"
+                                  >
+                                    <div class="time-start">{{ block.hourFrom }}</div>
+                                    <div class="time-end">{{ block.hourTo }}</div>
+                                  </button>
+                                </div>
+                              </div>
+                              <div
+                                v-if="groupedTodayAttentionBlocks.afternoon.length"
+                                class="mb-2"
+                              >
+                                <div class="options-connector">
+                                  <div class="connector-line"></div>
+                                  <span class="connector-text">
+                                    {{ $t('commerceQueuesView.timeOfDay.afternoon') }}
+                                  </span>
+                                  <div class="connector-line"></div>
+                                </div>
+                                <div class="time-slot-grid">
+                                  <button
+                                    v-for="block in groupedTodayAttentionBlocks.afternoon"
+                                    :key="block.number"
+                                    type="button"
+                                    class="time-slot-button"
+                                    :class="{
+                                      'time-slot-selected':
+                                        (state.attentionBlock &&
+                                          state.attentionBlock.number === block.number) ||
+                                        (state.block && state.block.number === block.number),
+                                    }"
+                                    @click="selectAttentionBlock(block)"
+                                  >
+                                    <div class="time-start">{{ block.hourFrom }}</div>
+                                    <div class="time-end">{{ block.hourTo }}</div>
+                                  </button>
+                                </div>
+                              </div>
+                              <div v-if="groupedTodayAttentionBlocks.night.length">
+                                <div class="options-connector">
+                                  <div class="connector-line"></div>
+                                  <span class="connector-text">
+                                    {{ $t('commerceQueuesView.timeOfDay.night') }}
+                                  </span>
+                                  <div class="connector-line"></div>
+                                </div>
+                                <div class="time-slot-grid">
+                                  <button
+                                    v-for="block in groupedTodayAttentionBlocks.night"
+                                    :key="block.number"
+                                    type="button"
+                                    class="time-slot-button"
+                                    :class="{
+                                      'time-slot-selected':
+                                        (state.attentionBlock &&
+                                          state.attentionBlock.number === block.number) ||
+                                        (state.block && state.block.number === block.number),
+                                    }"
+                                    @click="selectAttentionBlock(block)"
+                                  >
+                                    <div class="time-start">{{ block.hourFrom }}</div>
+                                    <div class="time-end">{{ block.hourTo }}</div>
+                                  </button>
+                                </div>
                               </div>
                             </div>
                             <div v-else>
@@ -4186,23 +4274,92 @@ export default {
                                   "
                                   class="mb-2"
                                 >
-                                  <div class="time-slot-grid">
-                                    <button
-                                      v-for="block in state.availableBookingSuperBlocks"
-                                      :key="block.number"
-                                      type="button"
-                                      class="time-slot-button"
-                                      :class="{
-                                        'time-slot-selected':
-                                          (state.attentionBlock &&
-                                            state.attentionBlock.number === block.number) ||
-                                          (state.block && state.block.number === block.number),
-                                      }"
-                                      @click="state.block = block"
-                                    >
-                                      <div class="time-start">{{ block.hourFrom }}</div>
-                                      <div class="time-end">{{ block.hourTo }}</div>
-                                    </button>
+                                  <div
+                                    v-if="groupedBookingSuperBlocks.morning.length"
+                                    class="mb-2"
+                                  >
+                                    <div class="options-connector">
+                                      <div class="connector-line"></div>
+                                      <span class="connector-text">
+                                        {{ $t('commerceQueuesView.timeOfDay.morning') }}
+                                      </span>
+                                      <div class="connector-line"></div>
+                                    </div>
+                                    <div class="time-slot-grid">
+                                      <button
+                                        v-for="block in groupedBookingSuperBlocks.morning"
+                                        :key="block.number"
+                                        type="button"
+                                        class="time-slot-button"
+                                        :class="{
+                                          'time-slot-selected':
+                                            (state.attentionBlock &&
+                                              state.attentionBlock.number === block.number) ||
+                                            (state.block && state.block.number === block.number),
+                                        }"
+                                        @click="state.block = block"
+                                      >
+                                        <div class="time-start">{{ block.hourFrom }}</div>
+                                        <div class="time-end">{{ block.hourTo }}</div>
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <div
+                                    v-if="groupedBookingSuperBlocks.afternoon.length"
+                                    class="mb-2"
+                                  >
+                                    <div class="options-connector">
+                                      <div class="connector-line"></div>
+                                      <span class="connector-text">
+                                        {{ $t('commerceQueuesView.timeOfDay.afternoon') }}
+                                      </span>
+                                      <div class="connector-line"></div>
+                                    </div>
+                                    <div class="time-slot-grid">
+                                      <button
+                                        v-for="block in groupedBookingSuperBlocks.afternoon"
+                                        :key="block.number"
+                                        type="button"
+                                        class="time-slot-button"
+                                        :class="{
+                                          'time-slot-selected':
+                                            (state.attentionBlock &&
+                                              state.attentionBlock.number === block.number) ||
+                                            (state.block && state.block.number === block.number),
+                                        }"
+                                        @click="state.block = block"
+                                      >
+                                        <div class="time-start">{{ block.hourFrom }}</div>
+                                        <div class="time-end">{{ block.hourTo }}</div>
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <div v-if="groupedBookingSuperBlocks.night.length">
+                                    <div class="options-connector">
+                                      <div class="connector-line"></div>
+                                      <span class="connector-text">
+                                        {{ $t('commerceQueuesView.timeOfDay.night') }}
+                                      </span>
+                                      <div class="connector-line"></div>
+                                    </div>
+                                    <div class="time-slot-grid">
+                                      <button
+                                        v-for="block in groupedBookingSuperBlocks.night"
+                                        :key="block.number"
+                                        type="button"
+                                        class="time-slot-button"
+                                        :class="{
+                                          'time-slot-selected':
+                                            (state.attentionBlock &&
+                                              state.attentionBlock.number === block.number) ||
+                                            (state.block && state.block.number === block.number),
+                                        }"
+                                        @click="state.block = block"
+                                      >
+                                        <div class="time-start">{{ block.hourFrom }}</div>
+                                        <div class="time-end">{{ block.hourTo }}</div>
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                                 <!-- LISTA DE ESPERA -->
@@ -4271,23 +4428,92 @@ export default {
                                   "
                                   class="mb-2"
                                 >
-                                  <div class="time-slot-grid">
-                                    <button
-                                      v-for="block in state.availableBookingBlocks"
-                                      :key="block.number"
-                                      type="button"
-                                      class="time-slot-button"
-                                      :class="{
-                                        'time-slot-selected':
-                                          (state.attentionBlock &&
-                                            state.attentionBlock.number === block.number) ||
-                                          (state.block && state.block.number === block.number),
-                                      }"
-                                      @click="state.block = block"
-                                    >
-                                      <div class="time-start">{{ block.hourFrom }}</div>
-                                      <div class="time-end">{{ block.hourTo }}</div>
-                                    </button>
+                                  <div
+                                    v-if="groupedBookingBlocks.morning.length"
+                                    class="mb-2"
+                                  >
+                                    <div class="options-connector">
+                                      <div class="connector-line"></div>
+                                      <span class="connector-text">
+                                        {{ $t('commerceQueuesView.timeOfDay.morning') }}
+                                      </span>
+                                      <div class="connector-line"></div>
+                                    </div>
+                                    <div class="time-slot-grid">
+                                      <button
+                                        v-for="block in groupedBookingBlocks.morning"
+                                        :key="block.number"
+                                        type="button"
+                                        class="time-slot-button"
+                                        :class="{
+                                          'time-slot-selected':
+                                            (state.attentionBlock &&
+                                              state.attentionBlock.number === block.number) ||
+                                            (state.block && state.block.number === block.number),
+                                        }"
+                                        @click="state.block = block"
+                                      >
+                                        <div class="time-start">{{ block.hourFrom }}</div>
+                                        <div class="time-end">{{ block.hourTo }}</div>
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <div
+                                    v-if="groupedBookingBlocks.afternoon.length"
+                                    class="mb-2"
+                                  >
+                                    <div class="options-connector">
+                                      <div class="connector-line"></div>
+                                      <span class="connector-text">
+                                        {{ $t('commerceQueuesView.timeOfDay.afternoon') }}
+                                      </span>
+                                      <div class="connector-line"></div>
+                                    </div>
+                                    <div class="time-slot-grid">
+                                      <button
+                                        v-for="block in groupedBookingBlocks.afternoon"
+                                        :key="block.number"
+                                        type="button"
+                                        class="time-slot-button"
+                                        :class="{
+                                          'time-slot-selected':
+                                            (state.attentionBlock &&
+                                              state.attentionBlock.number === block.number) ||
+                                            (state.block && state.block.number === block.number),
+                                        }"
+                                        @click="state.block = block"
+                                      >
+                                        <div class="time-start">{{ block.hourFrom }}</div>
+                                        <div class="time-end">{{ block.hourTo }}</div>
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <div v-if="groupedBookingBlocks.night.length">
+                                    <div class="options-connector">
+                                      <div class="connector-line"></div>
+                                      <span class="connector-text">
+                                        {{ $t('commerceQueuesView.timeOfDay.night') }}
+                                      </span>
+                                      <div class="connector-line"></div>
+                                    </div>
+                                    <div class="time-slot-grid">
+                                      <button
+                                        v-for="block in groupedBookingBlocks.night"
+                                        :key="block.number"
+                                        type="button"
+                                        class="time-slot-button"
+                                        :class="{
+                                          'time-slot-selected':
+                                            (state.attentionBlock &&
+                                              state.attentionBlock.number === block.number) ||
+                                            (state.block && state.block.number === block.number),
+                                        }"
+                                        @click="state.block = block"
+                                      >
+                                        <div class="time-start">{{ block.hourFrom }}</div>
+                                        <div class="time-end">{{ block.hourTo }}</div>
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                                 <!-- LISTA DE ESPERA -->
@@ -4405,23 +4631,92 @@ export default {
                                 "
                                 class="mb-2"
                               >
-                                <div class="time-slot-grid">
-                                  <button
-                                    v-for="block in state.availableBookingSuperBlocks"
-                                    :key="block.number"
-                                    type="button"
-                                    class="time-slot-button"
-                                    :class="{
-                                      'time-slot-selected':
-                                        (state.attentionBlock &&
-                                          state.attentionBlock.number === block.number) ||
-                                        (state.block && state.block.number === block.number),
-                                    }"
-                                    @click="state.block = block"
-                                  >
-                                    <div class="time-start">{{ block.hourFrom }}</div>
-                                    <div class="time-end">{{ block.hourTo }}</div>
-                                  </button>
+                                <div
+                                  v-if="groupedBookingSuperBlocks.morning.length"
+                                  class="mb-2"
+                                >
+                                  <div class="options-connector">
+                                    <div class="connector-line"></div>
+                                    <span class="connector-text">
+                                      {{ $t('commerceQueuesView.timeOfDay.morning') }}
+                                    </span>
+                                    <div class="connector-line"></div>
+                                  </div>
+                                  <div class="time-slot-grid">
+                                    <button
+                                      v-for="block in groupedBookingSuperBlocks.morning"
+                                      :key="block.number"
+                                      type="button"
+                                      class="time-slot-button"
+                                      :class="{
+                                        'time-slot-selected':
+                                          (state.attentionBlock &&
+                                            state.attentionBlock.number === block.number) ||
+                                          (state.block && state.block.number === block.number),
+                                      }"
+                                      @click="state.block = block"
+                                    >
+                                      <div class="time-start">{{ block.hourFrom }}</div>
+                                      <div class="time-end">{{ block.hourTo }}</div>
+                                    </button>
+                                  </div>
+                                </div>
+                                <div
+                                  v-if="groupedBookingSuperBlocks.afternoon.length"
+                                  class="mb-2"
+                                >
+                                  <div class="options-connector">
+                                    <div class="connector-line"></div>
+                                    <span class="connector-text">
+                                      {{ $t('commerceQueuesView.timeOfDay.afternoon') }}
+                                    </span>
+                                    <div class="connector-line"></div>
+                                  </div>
+                                  <div class="time-slot-grid">
+                                    <button
+                                      v-for="block in groupedBookingSuperBlocks.afternoon"
+                                      :key="block.number"
+                                      type="button"
+                                      class="time-slot-button"
+                                      :class="{
+                                        'time-slot-selected':
+                                          (state.attentionBlock &&
+                                            state.attentionBlock.number === block.number) ||
+                                          (state.block && state.block.number === block.number),
+                                      }"
+                                      @click="state.block = block"
+                                    >
+                                      <div class="time-start">{{ block.hourFrom }}</div>
+                                      <div class="time-end">{{ block.hourTo }}</div>
+                                    </button>
+                                  </div>
+                                </div>
+                                <div v-if="groupedBookingSuperBlocks.night.length">
+                                  <div class="options-connector">
+                                    <div class="connector-line"></div>
+                                    <span class="connector-text">
+                                      {{ $t('commerceQueuesView.timeOfDay.night') }}
+                                    </span>
+                                    <div class="connector-line"></div>
+                                  </div>
+                                  <div class="time-slot-grid">
+                                    <button
+                                      v-for="block in groupedBookingSuperBlocks.night"
+                                      :key="block.number"
+                                      type="button"
+                                      class="time-slot-button"
+                                      :class="{
+                                        'time-slot-selected':
+                                          (state.attentionBlock &&
+                                            state.attentionBlock.number === block.number) ||
+                                          (state.block && state.block.number === block.number),
+                                      }"
+                                      @click="state.block = block"
+                                    >
+                                      <div class="time-start">{{ block.hourFrom }}</div>
+                                      <div class="time-end">{{ block.hourTo }}</div>
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                               <div
@@ -4485,23 +4780,92 @@ export default {
                                 "
                                 class="mb-2"
                               >
-                                <div class="time-slot-grid">
-                                  <button
-                                    v-for="block in state.availableBookingBlocks"
-                                    :key="block.number"
-                                    type="button"
-                                    class="time-slot-button"
-                                    :class="{
-                                      'time-slot-selected':
-                                        (state.attentionBlock &&
-                                          state.attentionBlock.number === block.number) ||
-                                        (state.block && state.block.number === block.number),
-                                    }"
-                                    @click="state.block = block"
-                                  >
-                                    <div class="time-start">{{ block.hourFrom }}</div>
-                                    <div class="time-end">{{ block.hourTo }}</div>
-                                  </button>
+                                <div
+                                  v-if="groupedBookingBlocks.morning.length"
+                                  class="mb-2"
+                                >
+                                  <div class="options-connector">
+                                    <div class="connector-line"></div>
+                                    <span class="connector-text">
+                                      {{ $t('commerceQueuesView.timeOfDay.morning') }}
+                                    </span>
+                                    <div class="connector-line"></div>
+                                  </div>
+                                  <div class="time-slot-grid">
+                                    <button
+                                      v-for="block in groupedBookingBlocks.morning"
+                                      :key="block.number"
+                                      type="button"
+                                      class="time-slot-button"
+                                      :class="{
+                                        'time-slot-selected':
+                                          (state.attentionBlock &&
+                                            state.attentionBlock.number === block.number) ||
+                                          (state.block && state.block.number === block.number),
+                                      }"
+                                      @click="state.block = block"
+                                    >
+                                      <div class="time-start">{{ block.hourFrom }}</div>
+                                      <div class="time-end">{{ block.hourTo }}</div>
+                                    </button>
+                                  </div>
+                                </div>
+                                <div
+                                  v-if="groupedBookingBlocks.afternoon.length"
+                                  class="mb-2"
+                                >
+                                  <div class="options-connector">
+                                    <div class="connector-line"></div>
+                                    <span class="connector-text">
+                                      {{ $t('commerceQueuesView.timeOfDay.afternoon') }}
+                                    </span>
+                                    <div class="connector-line"></div>
+                                  </div>
+                                  <div class="time-slot-grid">
+                                    <button
+                                      v-for="block in groupedBookingBlocks.afternoon"
+                                      :key="block.number"
+                                      type="button"
+                                      class="time-slot-button"
+                                      :class="{
+                                        'time-slot-selected':
+                                          (state.attentionBlock &&
+                                            state.attentionBlock.number === block.number) ||
+                                          (state.block && state.block.number === block.number),
+                                      }"
+                                      @click="state.block = block"
+                                    >
+                                      <div class="time-start">{{ block.hourFrom }}</div>
+                                      <div class="time-end">{{ block.hourTo }}</div>
+                                    </button>
+                                  </div>
+                                </div>
+                                <div v-if="groupedBookingBlocks.night.length">
+                                  <div class="options-connector">
+                                    <div class="connector-line"></div>
+                                    <span class="connector-text">
+                                      {{ $t('commerceQueuesView.timeOfDay.night') }}
+                                    </span>
+                                    <div class="connector-line"></div>
+                                  </div>
+                                  <div class="time-slot-grid">
+                                    <button
+                                      v-for="block in groupedBookingBlocks.night"
+                                      :key="block.number"
+                                      type="button"
+                                      class="time-slot-button"
+                                      :class="{
+                                        'time-slot-selected':
+                                          (state.attentionBlock &&
+                                            state.attentionBlock.number === block.number) ||
+                                          (state.block && state.block.number === block.number),
+                                      }"
+                                      @click="state.block = block"
+                                    >
+                                      <div class="time-start">{{ block.hourFrom }}</div>
+                                      <div class="time-end">{{ block.hourTo }}</div>
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                               <div
@@ -5722,7 +6086,7 @@ export default {
 
 /* Telemedicine Styles */
 .telemedicine-option {
-  padding: 1rem;
+  padding: .5rem;
   background: rgba(68, 111, 252, 0.05);
   border-radius: 0.5rem;
   border: 1px solid rgba(68, 111, 252, 0.2);
@@ -5751,6 +6115,11 @@ export default {
 
 .telemedicine-option .form-check-label i {
   font-size: 1.2rem;
+}
+
+.telemedicine-disclaimer {
+  font-size: 0.9rem;
+  color: #6c757d;
 }
 
 .telemedicine-config {

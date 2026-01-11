@@ -3507,13 +3507,36 @@ export default {
 /* Modern Modal Styles - Compact, beautiful, matching dashboard design */
 :deep(.modern-modal-wrapper) {
   margin: 0;
-  max-width: 90vw;
+  max-width: 100vw;
+  width: 100vw;
   height: 100vh;
   display: flex;
   align-items: stretch;
 }
 
 :deep(.modern-modal-container) {
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100vh;
+}
+
+/* LGPD & other modern modals using dialog/content classes */
+:deep(.modern-modal-dialog) {
+  margin: 0;
+  max-width: 100vw;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: stretch;
+}
+
+:deep(.modern-modal-content) {
   border: none;
   border-radius: 0;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -3725,6 +3748,7 @@ export default {
   :deep(.modern-modal-wrapper) {
     margin: 0;
     max-width: 100vw;
+    width: 100vw;
     height: 100vh;
   }
 

@@ -3476,13 +3476,13 @@ export default {
 
       <!-- Telemedicine Option (only if commerce feature is active AND queue has telemedicineEnabled) -->
       <div v-if="showTelemedicineOption" class="telemedicine-option mb-4">
-        <!-- Debug info -->
         <div class="form-check form-switch mt-2">
           <input
             class="form-check-input"
             type="checkbox"
             :id="`telemedicine-${Date.now()}`"
             v-model="state.isTelemedicine"
+            :disabled="state.queue && state.queue.presentialEnabled === false"
             @change="handleTelemedicineToggle"
           />
           <label class="form-check-label" :for="`telemedicine-${Date.now()}`">
@@ -3492,7 +3492,16 @@ export default {
             }}</strong>
           </label>
         </div>
-
+        <p
+          class="telemedicine-disclaimer mt-2"
+          v-html="
+            state.isTelemedicine
+              ? $t('attentionCreation.telemedicineSelectedDisclaimer') ||
+                'Ao desativar a telemedicina, o atendimento será <strong>presencial</strong>.'
+              : $t('attentionCreation.telemedicineDisclaimer') ||
+                'Quando a telemedicina não estiver selecionada, o atendimento será <strong>presencial</strong>.'
+          "
+        ></p>
         <!-- Telemedicine Configuration removed - not needed in modal -->
       </div>
     </div>
@@ -4674,6 +4683,11 @@ export default {
 .selected-procedure-info .alert i {
   color: #00c2cb;
   font-size: 1.2rem;
+}
+
+.telemedicine-disclaimer {
+  font-size: 0.9rem;
+  color: #6c757d;
 }
 
 /* Mobile responsive */
