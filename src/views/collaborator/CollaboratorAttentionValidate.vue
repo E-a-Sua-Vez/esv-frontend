@@ -297,7 +297,7 @@ export default {
               await trackAttentionAccess(state.attention.id, state.currentUser.id);
             } catch (error) {
               // Non-critical, just log if tracking fails
-              console.log('Could not track attention access:', error);
+              console.debug('Could not track attention access:', error);
             }
           }
 
@@ -612,15 +612,9 @@ export default {
             }
 
             // Initialize Firebase listeners for this queue
-            console.log('🔍 [Atender] Initializing Firebase listeners for queue:', queueId);
             pendingAttentionsRef = updatedAvailableAttentions(queueId);
             processingAttentionsRef = updatedProcessingAttentions(queueId);
             terminatedAttentionsRef = updatedTerminatedAttentions(queueId);
-            console.log('🔍 [Atender] Firebase listeners initialized:', {
-              pending: !!pendingAttentionsRef,
-              processing: !!processingAttentionsRef,
-              terminated: !!terminatedAttentionsRef,
-            });
 
             // Set up watchers that call updateAttentionDetails (watch the ref's value)
             pendingWatcherStop = watch(

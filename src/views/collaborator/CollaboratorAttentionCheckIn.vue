@@ -4,24 +4,47 @@
     <Alert :show="false" :stack="alertError" :error-message="errorMessage"></Alert>
 
     <div class="content text-center">
-      <CommerceLogo
-        :commerce-id="state.commerce?.id"
-        :business-id="state.business?.id"
-        :loading="loading"
-      />
-      <ComponentMenu
-        :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
-          state.currentUser?.alias || state.currentUser?.name
-        }!`"
-        :toggles="state.toggles"
-        component-name="collaboratorAttentionCheckIn"
-        @goBack="goBack"
-      />
+      <!-- Mobile/Tablet Header -->
+      <div class="d-block d-lg-none">
+        <CommerceLogo
+          :commerce-id="state.commerce?.id"
+          :business-id="state.business?.id"
+          :loading="loading"
+        />
+        <ComponentMenu
+          :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
+            state.currentUser?.alias || state.currentUser?.name
+          }!`"
+          :toggles="state.toggles"
+          component-name="collaboratorAttentionCheckIn"
+          @goBack="goBack"
+        />
+      </div>
+
+      <!-- Desktop Header -->
+      <div class="d-none d-lg-block">
+        <DesktopPageHeader
+          :commerce-id="state.commerce?.id"
+          :business-id="state.business?.id"
+          :loading="loading"
+          :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
+            state.currentUser?.alias || state.currentUser?.name
+          }!`"
+          :toggles="state.toggles"
+          component-name="collaboratorAttentionCheckIn"
+          @go-back="goBack"
+        />
+      </div>
+
       <QueueName
         v-if="state.queue"
         :queue="state.queue"
         :commerce="state.commerce"
         :details="true"
+        :queue-pending-details="state.queuePendingDetails"
+        :queue-processing-details="state.queueProcessingDetails"
+        :queue-terminated-details="state.queueTerminatedDetails"
+        :list-update-key="state.listUpdateKey"
       />
 
       <AttentionBasePage
@@ -268,6 +291,7 @@ import Alert from '../../components/common/Alert.vue';
 import Message from '../../components/common/Message.vue';
 import ConsentStatusWidget from '../../components/lgpd/ConsentStatusWidget.vue';
 import LgpdConsentManager from '../../components/lgpd/LgpdConsentManager.vue';
+import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 
 export default {
   name: 'CollaboratorAttentionCheckIn',
@@ -281,6 +305,7 @@ export default {
     Message,
     ConsentStatusWidget,
     LgpdConsentManager,
+    DesktopPageHeader,
   },
   setup() {
     const route = useRoute();

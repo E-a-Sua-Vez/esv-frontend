@@ -411,7 +411,6 @@ const onDragStart = (variable, event) => {
 // Click en variable
 const onVariableClick = variable => {
   // Seleccionar el texto para copiar fácilmente
-  console.log('Variable seleccionada:', variable.syntax);
 };
 
 // Insertar variable (botón +)

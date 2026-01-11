@@ -48,23 +48,16 @@ export default {
   computed: {
     // Check if external data (props) are provided
     hasExternalData() {
-      // Only consider we have external data if all three arrays are provided (not null)
-      // Empty arrays are still considered external data (parent manages the data)
-      const hasData =
+      // Only consider we have external data if all three arrays are provided and not null
+      const hasProvidedArrays =
         this.queuePendingDetails !== null &&
         this.queueProcessingDetails !== null &&
         this.queueTerminatedDetails !== null &&
         Array.isArray(this.queuePendingDetails) &&
         Array.isArray(this.queueProcessingDetails) &&
         Array.isArray(this.queueTerminatedDetails);
-      
-      return hasData;
-    },
 
-    // Use Firebase listeners if queue is provided and no external data
-    useFirebaseListeners() {
-      const result = !this.hasExternalData && this.queue?.id;
-      return result;
+      return hasProvidedArrays;
     },
 
     pendingList() {
@@ -210,91 +203,98 @@ export default {
         return;
       }
 
-      // Don't skip based on hasExternalData in modal scenarios
-      // if (this.hasExternalData) {
-      //   return;
-      // }
-
       // Clean up previous listeners if they exist
       if (this.pendingAttentionsRef && this.pendingAttentionsRef._unsubscribe) {
         this.pendingAttentionsRef._unsubscribe();
+        this.pendingAttentionsRef = null;
       }
       if (this.processingAttentionsRef && this.processingAttentionsRef._unsubscribe) {
         this.processingAttentionsRef._unsubscribe();
+        this.processingAttentionsRef = null;
       }
       if (this.terminatedAttentionsRef && this.terminatedAttentionsRef._unsubscribe) {
         this.terminatedAttentionsRef._unsubscribe();
+        this.terminatedAttentionsRef = null;
       }
 
-      // Initialize Firebase listeners
-      this.pendingAttentionsRef = updatedAvailableAttentions(this.queue.id);
-      this.processingAttentionsRef = updatedProcessingAttentions(this.queue.id);
-      this.terminatedAttentionsRef = updatedTerminatedAttentions(this.queue.id);
+      try {
+        // Initialize Firebase listeners
+        this.pendingAttentionsRef = updatedAvailableAttentions(this.queue.id);
+        this.processingAttentionsRef = updatedProcessingAttentions(this.queue.id);
+        this.terminatedAttentionsRef = updatedTerminatedAttentions(this.queue.id);
 
-      // Function to update internal state from Firebase listeners
-      const updateFromFirebase = () => {
-        if (!this.queue?.id) {
-          return;
-        }
+        // Function to update internal state from Firebase listeners
+        const updateFromFirebase = () => {
+          if (!this.queue?.id) {
+            return;
+          }
 
-        // Get pending attentions from Firebase
-        const pendingArray = this.pendingAttentionsRef?.value || [];
-        const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
-        const filteredPending = [...pendingList].filter(att => att && att.status === 'PENDING');
-        const sortedPending = [...filteredPending].sort((a, b) => {
-          const numA = a.number || 0;
-          const numB = b.number || 0;
-          return numA - numB;
+          // Get pending attentions from Firebase
+          const pendingArray = this.pendingAttentionsRef?.value || [];
+          const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
+          const filteredPending = [...pendingList].filter(att => att && att.status === 'PENDING');
+          const sortedPending = [...filteredPending].sort((a, b) => {
+            const numA = a.number || 0;
+            const numB = b.number || 0;
+            return numA - numB;
+          });
+
+          this.internalPending.splice(0, this.internalPending.length, ...sortedPending);
+
+          // Get processing attentions from Firebase
+          const processingArray = this.processingAttentionsRef?.value || [];
+          const processingList = Array.isArray(processingArray) ? processingArray : [];
+          this.internalProcessing.splice(0, this.internalProcessing.length, ...processingList);
+
+          // Get terminated attentions from Firebase
+          const terminatedArray = this.terminatedAttentionsRef?.value || [];
+          const terminatedList = Array.isArray(terminatedArray) ? terminatedArray : [];
+          const sortedTerminated = [...terminatedList].sort((a, b) => {
+            const numA = a.number || 0;
+            const numB = b.number || 0;
+            return numB - numA;
+          });
+          this.internalTerminated.splice(0, this.internalTerminated.length, ...sortedTerminated);
+
+          // Force Vue to react to changes
+          this.$forceUpdate();
+        };
+
+        // Watch for changes in Firebase listeners
+        this.$watch(
+          () => this.pendingAttentionsRef?.value,
+          () => {
+            updateFromFirebase();
+          },
+          { immediate: true, deep: true }
+        );
+
+        this.$watch(
+          () => this.processingAttentionsRef?.value,
+          () => {
+            updateFromFirebase();
+          },
+          { immediate: true, deep: true }
+        );
+
+        this.$watch(
+          () => this.terminatedAttentionsRef?.value,
+          () => {
+            updateFromFirebase();
+          },
+          { immediate: true, deep: true }
+        );
+
+        // Force initial update after a brief moment to ensure Firebase has initialized
+        this.$nextTick(() => {
+          setTimeout(() => {
+            updateFromFirebase();
+          }, 100);
         });
-        this.internalPending.splice(0, this.internalPending.length, ...sortedPending);
 
-        // Get processing attentions from Firebase
-        const processingArray = this.processingAttentionsRef?.value || [];
-        const processingList = Array.isArray(processingArray) ? processingArray : [];
-        this.internalProcessing.splice(0, this.internalProcessing.length, ...processingList);
-
-        // Get terminated attentions from Firebase
-        const terminatedArray = this.terminatedAttentionsRef?.value || [];
-        const terminatedList = Array.isArray(terminatedArray) ? terminatedArray : [];
-        const sortedTerminated = [...terminatedList].sort((a, b) => {
-          const numA = a.number || 0;
-          const numB = b.number || 0;
-          return numB - numA;
-        });
-        this.internalTerminated.splice(0, this.internalTerminated.length, ...sortedTerminated);
-      };
-
-      // Watch for changes in Firebase listeners
-      this.$watch(
-        () => this.pendingAttentionsRef?.value,
-        () => {
-          updateFromFirebase();
-        },
-        { immediate: true, deep: true }
-      );
-
-      this.$watch(
-        () => this.processingAttentionsRef?.value,
-        () => {
-          updateFromFirebase();
-        },
-        { immediate: true, deep: true }
-      );
-
-      this.$watch(
-        () => this.terminatedAttentionsRef?.value,
-        () => {
-          updateFromFirebase();
-        },
-        { immediate: true, deep: true }
-      );
-
-      // Force initial update after a brief moment
-      this.$nextTick(() => {
-        setTimeout(() => {
-          updateFromFirebase();
-        }, 300);
-      });
+      } catch (error) {
+        // Error initializing Firebase listeners
+      }
     },
 
     async goToAttention(attention) {
@@ -361,22 +361,10 @@ export default {
   },
 
   mounted() {
-    // Initialize Firebase listeners if queue is provided and no external data
-    if (this.useFirebaseListeners) {
+    // Inicializar listeners solo si ya tenemos queue.id;
+    // si no, los watchers de `queue` y `queuePendingDetails` se encargan luego.
+    if (this.queue?.id) {
       this.initializeFirebaseListeners();
-    } else if (!this.hasExternalData && this.queue?.id) {
-      // Fallback to API fetch if Firebase not available
-      this.fetchQueue(this.queue);
-    } else {
-      // Queue might not be available yet, try again after a delay
-      this.$nextTick(() => {
-        setTimeout(() => {
-          // Force Firebase listeners initialization for modal use case
-          if (this.queue?.id && !this.hasExternalData && !this.pendingAttentionsRef) {
-            this.initializeFirebaseListeners();
-          }
-        }, 500);
-      });
     }
   },
 
@@ -395,36 +383,19 @@ export default {
 
   watch: {
     async queue(newQ, oldQ) {
-      if (this.useFirebaseListeners && newQ?.id && newQ.id !== oldQ?.id) {
-        // Re-initialize Firebase listeners if queue changed
+      if (!this.hasExternalData && newQ?.id && newQ.id !== oldQ?.id) {
+        // Always re-initialize Firebase listeners when queue changes
         this.initializeFirebaseListeners();
-      } else if (
-        !this.hasExternalData &&
-        !this.useFirebaseListeners &&
-        newQ?.id &&
-        newQ.id !== oldQ?.id
-      ) {
-        // Fallback to API fetch
-        await this.fetchQueue(newQ);
       }
     },
     queuePendingDetails: {
       handler() {
-        // Props changed - component will reactively update
-      },
-      deep: true,
-      immediate: true,
-    },
-    queueProcessingDetails: {
-      handler() {
-        // Props changed - component will reactively update
-      },
-      deep: true,
-      immediate: true,
-    },
-    queueTerminatedDetails: {
-      handler() {
-        // Props changed - component will reactively update
+        // If props change to null/empty and we have a queue, initialize Firebase
+        if (!this.hasExternalData && this.queue?.id && !this.pendingAttentionsRef) {
+          this.$nextTick(() => {
+            this.initializeFirebaseListeners();
+          });
+        }
       },
       deep: true,
       immediate: true,

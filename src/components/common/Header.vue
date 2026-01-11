@@ -18,6 +18,7 @@ import { useI18n } from 'vue-i18n';
 import { useFirebaseListener } from '../../composables/useFirebaseListener';
 import { usePermissions } from '../../composables/usePermissions';
 import { useMessageInbox } from '../../composables/useMessageInbox';
+import { useChatConversations } from '@/composables/useChatConversations';
 import { USER_TYPES, ENVIRONMENTS } from '../../shared/constants';
 import { getPermissions } from '../../application/services/permissions';
 import { getClientPortalPermissions } from '../../application/services/client-portal-permissions';
@@ -27,7 +28,9 @@ import ModuleSelector from './ModuleSelector.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import MyUser from '../domain/MyUser.vue';
 import MessageNotificationBadge from '../messages/MessageNotificationBadge.vue';
+import ChatNotificationBadge from '../messages/ChatNotificationBadge.vue';
 import MessageInbox from '../messages/MessageInbox.vue';
+import ChatInbox from '../messages/ChatInbox.vue';
 
 export default {
   components: {
@@ -37,7 +40,9 @@ export default {
     Spinner,
     MyUser,
     MessageNotificationBadge,
+    ChatNotificationBadge,
     MessageInbox,
+    ChatInbox,
   },
   name: 'Header',
   async setup() {
@@ -61,6 +66,10 @@ export default {
 
     // Initialize message inbox for real-time count
     const { unreadCount: menuUnreadCount } = useMessageInbox();
+
+    // Inicializar chat global para badge de header
+    const { startConversationsListener } = useChatConversations();
+    const chatListenerStarted = ref(false);
 
     // Track query parameters for dynamic listener
     const messageQueryParams = ref({ collaboratorId: null, administratorId: null });
@@ -291,6 +300,23 @@ export default {
       // Reload available commerces and modules when user data changes
       await loadAvailableCommerces();
       await loadAvailableModules();
+
+      // Iniciar listener global de conversaciones de chat para el badge del header
+      try {
+        const user = state.currentUser;
+        if (user && user.id && !chatListenerStarted.value && canAccessChatComponents.value) {
+          const role = user.master
+            ? 'master'
+            : user.businessId
+            ? 'administrator'
+            : 'collaborator';
+          const commerceId = user.commerceId || user.commerce?.id || null;
+          startConversationsListener(user.id, role, commerceId);
+          chatListenerStarted.value = true;
+        }
+      } catch (_) {
+        // no-op: si falla, simplemente no se muestra el badge de chat
+      }
     };
 
     onBeforeMount(async () => {
@@ -570,6 +596,7 @@ export default {
     const mobileMenuOpen = ref(false);
     const desktopMenuOpen = ref(false);
     const inboxOpen = ref(false);
+    const chatInboxOpen = ref(false);
 
     // Template refs for CommerceSelector and ModuleSelector components
     const desktopCommerceSelectorRef = ref(null);
@@ -695,6 +722,14 @@ export default {
 
     const closeInbox = () => {
       inboxOpen.value = false;
+    };
+
+    const toggleChatInbox = () => {
+      chatInboxOpen.value = !chatInboxOpen.value;
+    };
+
+    const closeChatInbox = () => {
+      chatInboxOpen.value = false;
     };
 
     // Handle commerce change - close menus and refresh user data
@@ -973,6 +1008,9 @@ export default {
       inboxOpen,
       toggleInbox,
       closeInbox,
+      chatInboxOpen,
+      toggleChatInbox,
+      closeChatInbox,
       getMenuOptions,
       navigateToMenuOption,
       getMenuTranslationKey,
@@ -1073,11 +1111,11 @@ export default {
                 </span>
               </a>
 
-              <!-- New Message Notification Badge -->
-              <MessageNotificationBadge
-                v-if="canAccessInbox"
-                @toggle-inbox="toggleInbox"
-              />
+              <!-- Message and Chat Notification Badges -->
+              <div v-if="canAccessInbox" class="notification-badges">
+                <MessageNotificationBadge @toggle-inbox="toggleInbox" />
+                <ChatNotificationBadge @toggle-chat-inbox="toggleChatInbox" />
+              </div>
 
               <button
                 class="user-menu-trigger-icon"
@@ -1117,11 +1155,11 @@ export default {
                 </span>
               </a>
 
-              <!-- New Message Notification Badge -->
-              <MessageNotificationBadge
-                v-if="canAccessInbox"
-                @toggle-inbox="toggleInbox"
-              />
+              <!-- Message and Chat Notification Badges -->
+              <div v-if="canAccessInbox" class="notification-badges">
+                <MessageNotificationBadge @toggle-inbox="toggleInbox" />
+                <ChatNotificationBadge @toggle-chat-inbox="toggleChatInbox" />
+              </div>
 
               <button
                 class="user-menu-trigger-icon"
@@ -2069,7 +2107,7 @@ export default {
       </div>
     </Teleport>
 
-    <!-- New Internal Messages Inbox -->
+    <!-- Internal Messages and Chat Inboxes -->
     <MessageInbox
       v-if="state.currentUser && state.currentUser.name !== 'invitado' && canAccessInbox"
       :isOpen="inboxOpen"
@@ -2082,6 +2120,20 @@ export default {
         commercesId: state.currentUser?.commercesId
       }"
       @close="closeInbox"
+    />
+
+    <ChatInbox
+      v-if="state.currentUser && state.currentUser.name !== 'invitado' && canAccessInbox"
+      :isOpen="chatInboxOpen"
+      :user-role="state.currentUserType || 'collaborator'"
+      :user-data="{
+        id: state.currentUser?.id,
+        businessId: state.currentUser?.businessId,
+        commerceId: state.currentUser?.commerceId,
+        commerceIds: state.currentUser?.commerceIds,
+        commercesId: state.currentUser?.commercesId
+      }"
+      @close="closeChatInbox"
     />
 
   </div>
@@ -3036,5 +3088,20 @@ export default {
   object-fit: cover;
   margin-right: 0.375rem;
   vertical-align: middle;
+}
+
+/* Notification badges container */
+.notification-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .notification-badges {
+    gap: 0.5rem;
+    margin-right: 0.25rem;
+  }
 }
 </style>

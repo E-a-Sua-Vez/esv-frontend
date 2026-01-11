@@ -11,6 +11,14 @@
           <span class="participant-type">{{ participantType }}</span>
         </div>
       </div>
+      <button
+        class="close-thread-button"
+        type="button"
+        :aria-label="$t('common.close')"
+        @click="emit('close')"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
 
     <!-- Messages Container -->
@@ -32,6 +40,7 @@
             :key="message.id"
             class="message-wrapper"
             :class="{ 'sent': isSentByMe(message), 'received': !isSentByMe(message) }"
+            :data-debug="`sent: ${isSentByMe(message)}, sender: ${message.senderId}, current: ${currentUserId}`"
           >
             <div class="message-bubble">
               <p class="message-content">{{ message.content }}</p>
@@ -87,12 +96,18 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  myUserIds: {
+    type: Array,
+    default: () => [],
+  },
 });
 
-const emit = defineEmits(['send', 'markRead']);
+const emit = defineEmits(['send', 'markRead', 'close']);
 
 const { t } = useI18n();
 const messagesContainer = ref(null);
+
+const looksLikeId = (s) => typeof s === 'string' && /^[A-Za-z0-9_-]{16,}$/.test(s);
 
 const participantName = computed(() => {
   console.log('[ChatMessageThread] participantName debug:', {
@@ -107,10 +122,11 @@ const participantName = computed(() => {
     const sender = props.conversation.lastMessageSenderId;
     console.log('[ChatMessageThread] Processing sender:', sender);
     if (typeof sender === 'object' && sender !== null) {
-      const senderId = sender.id || sender.userId || sender.uid;
-      const name = sender.email || sender.name || sender.displayName;
+      const senderId = normalizeId(sender);
+      const name = sender.email || sender.name || sender.displayName || sender.userName;
       // Usar lastMessageSender solo si es el otro usuario
-      if (name && senderId && senderId !== props.currentUserId) {
+      const meIds = buildMyIds();
+      if (name && senderId && !meIds.includes(senderId) && !looksLikeId(name)) {
         return name;
       }
     }
@@ -118,19 +134,36 @@ const participantName = computed(() => {
 
   // Fallback: usar participants array
   if (props.conversation?.participants?.length > 0) {
-    const other = props.conversation.participants.find(
-      p => (p.userId || p.id) !== props.currentUserId
-    );
+    const meIds = buildMyIds();
+    const other = props.conversation.participants.find(p => {
+      const pid = normalizeId(p);
+      return !meIds.includes(pid);
+    });
     console.log('[ChatMessageThread] Found other participant:', other);
-    return (
-      other?.userName ||
-      other?.name ||
-      other?.email ||
-      other?.displayName ||
-      other?.userId ||
-      other?.id ||
-      t('chat.unknownUser')
-    );
+
+    // Extraer nombre usando múltiples estrategias
+    let candidate = null;
+    if (other) {
+      candidate = (
+        other.userName ||
+        other.name ||
+        other.email ||
+        other.displayName ||
+        (typeof other === 'object' && other.id && typeof other.id === 'object' ?
+          (other.id.name || other.id.email || other.id.userName) : null) ||
+        null
+      );
+    }
+
+    // Si el candidato parece un ID crudo, crear una representación más amigable
+    if (!candidate || looksLikeId(candidate)) {
+      const rawId = candidate || normalizeId(other);
+      if (rawId && looksLikeId(rawId)) {
+        return `Usuario ${rawId.substring(0, 6)}...`;
+      }
+    }
+
+    return candidate || normalizeId(other) || t('chat.unknownUser');
   }
 
   return t('chat.unknownUser');
@@ -138,10 +171,11 @@ const participantName = computed(() => {
 
 const participantType = computed(() => {
   if (!props.conversation?.participants) return '';
-
-  const other = props.conversation.participants.find(
-    p => (p.userId || p.id) !== props.currentUserId
-  );
+  const meIds = buildMyIds();
+  const other = props.conversation.participants.find(p => {
+    const pid = p.userId || p.id;
+    return pid && !meIds.includes(String(pid));
+  });
 
   const typeMap = {
     master: t('chat.userType.master'),
@@ -154,6 +188,11 @@ const participantType = computed(() => {
 });
 
 const groupedMessages = computed(() => {
+  console.log('[DEBUG ChatMessageThread] Grouping messages:', {
+    totalMessages: props.messages.length,
+    messages: props.messages.map(m => ({ id: m.id, content: m.content?.substring(0, 30), senderId: m.senderId }))
+  });
+
   const groups = {};
 
   props.messages.forEach((message) => {
@@ -170,23 +209,59 @@ const groupedMessages = computed(() => {
   return groups;
 });
 
-const isSentByMe = (message) => {
-  let senderId;
+const normalizeId = (id) => {
+  if (!id) return null;
+  if (typeof id === 'object') {
+    // Intentar todas las propiedades comunes para IDs
+    return id.id || id.userId || id.uid || id._id || id.objectId || id.docId || String(id.valueOf()) || null;
+  }
+  return String(id);
+};
 
-  // Si senderId es objeto, extraer id
-  if (typeof message.senderId === 'object' && message.senderId !== null) {
-    senderId = message.senderId.id;
-  } else {
-    senderId = message.senderId;
+const buildMyIds = () => {
+  const base = [];
+  if (props.currentUserId) base.push(props.currentUserId);
+  if (Array.isArray(props.myUserIds)) base.push(...props.myUserIds);
+  // Normalizar y deduplicar
+  const normalized = base
+    .map(v => normalizeId(v))
+    .filter(v => !!v);
+  return Array.from(new Set(normalized));
+};
+
+const isSentByMe = (message) => {
+  const meIds = buildMyIds();
+  if (!meIds.length) {
+    console.log('[ChatMessageThread] ERROR: No myUserIds/currentUserId available:', {
+      currentUserId: props.currentUserId,
+      myUserIds: props.myUserIds,
+    });
+    return false;
+  }
+  // Extraer senderId del mensaje
+  const senderId = normalizeId(message.senderId);
+
+  // Verificación de seguridad para senderId
+  if (!senderId) {
+    console.log('[ChatMessageThread] ERROR: No senderId in message:', message);
+    return false;
   }
 
-  const result = senderId === props.currentUserId;
+  const result = meIds.includes(senderId);
 
   // Log para debug (remover después)
-  console.log('[ChatMessageThread] isSentByMe:', {
+  console.log('[ChatMessageThread] isSentByMe DETAILED:', {
     senderId,
     currentUserId: props.currentUserId,
+    myUserIds: props.myUserIds,
+    meIds,
+    messageId: message.id,
+    content: message.content?.substring(0, 20),
     result,
+    originalSender: message.senderId,
+    senderType: typeof message.senderId,
+    senderKeys: typeof message.senderId === 'object' ? Object.keys(message.senderId) : 'not object',
+    originalCurrentUser: props.currentUserId
   });
 
   return result;
@@ -258,6 +333,9 @@ watch(() => props.conversation?.id, () => {
   background: white;
   border-bottom: 1px solid #e9ecef;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .header-info {
@@ -288,6 +366,21 @@ watch(() => props.conversation?.id, () => {
 .participant-type {
   font-size: 0.75rem;
   color: #6c757d;
+}
+
+.close-thread-button {
+  border: none;
+  background: transparent;
+  color: #6c757d;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+}
+
+.close-thread-button:hover {
+  color: #343a40;
 }
 
 .chat-messages-container {

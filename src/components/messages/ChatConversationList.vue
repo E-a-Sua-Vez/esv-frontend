@@ -25,6 +25,15 @@
 
         <!-- Name -->
         <div class="conversation-name">{{ getParticipantName(conversation) }}</div>
+
+        <!-- Archive Button -->
+        <button
+          class="archive-button"
+          @click.stop="$emit('archive', conversation.id)"
+          :title="$t('chat.archive')"
+        >
+          <i class="bi bi-archive"></i>
+        </button>
       </div>
     </div>
 
@@ -66,6 +75,12 @@ const { t } = useI18n();
 const looksLikeId = (s) => typeof s === 'string' && /^[A-Za-z0-9_-]{16,}$/.test(s);
 
 const getParticipantName = (conversation) => {
+  console.log('[DEBUG ChatConversationList] getParticipantName called with:', {
+    conversation: conversation,
+    participants: conversation.participants,
+    currentUserId: props.currentUserId
+  });
+
   if (!conversation.participants || conversation.participants.length < 2) {
     return t('chat.unknownUser');
   }
@@ -109,12 +124,13 @@ const getParticipantName = (conversation) => {
     }
   }
 
-  return (
-    candidate ||
-    otherParticipant?.userId ||
-    otherParticipant?.id ||
-    t('chat.unknownUser')
-  );
+  // Si aún tenemos un ID crudo, crear una representación más amigable
+  const finalCandidate = candidate || otherParticipant?.userId || otherParticipant?.id;
+  if (finalCandidate && looksLikeId(finalCandidate)) {
+    return `Usuario ${finalCandidate.substring(0, 6)}...`;
+  }
+
+  return finalCandidate || t('chat.unknownUser');
 };
 
 // Eliminado el indicador por actividad reciente para evitar confusión.
@@ -146,7 +162,8 @@ const formatTime = (timestamp) => {
   display: flex;
   flex-direction: column;
   background: white;
-  border-bottom: 1px solid #e9ecef;
+  height: 100%;
+  max-height: 180px;
 }
 
 .loading-state {
@@ -154,9 +171,10 @@ const formatTime = (timestamp) => {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  gap: 0.75rem;
+  padding: 0.75rem;
+  gap: 0.5rem;
   color: #6c757d;
+  font-size: 0.875rem;
 }
 
 .spinner {
@@ -178,22 +196,26 @@ const formatTime = (timestamp) => {
   overflow-x: auto;
   overflow-y: hidden;
   gap: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.5rem 0.75rem;
   scrollbar-width: thin;
   scrollbar-color: #cbd5e0 #f7fafc;
+  white-space: nowrap;
+  min-height: 100px;
+  max-height: 120px;
 }
 
 .conversations::-webkit-scrollbar {
-  height: 6px;
+  height: 8px;
 }
 
 .conversations::-webkit-scrollbar-track {
   background: #f7fafc;
+  border-radius: 4px;
 }
 
 .conversations::-webkit-scrollbar-thumb {
   background: #cbd5e0;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .conversations::-webkit-scrollbar-thumb:hover {
@@ -204,14 +226,14 @@ const formatTime = (timestamp) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.375rem;
+  gap: 0.25rem;
   min-width: 60px;
-  max-width: 70px;
+  flex-shrink: 0;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
   padding: 0.375rem;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
 }
 
 .conversation-item:hover {
@@ -225,15 +247,15 @@ const formatTime = (timestamp) => {
 .conversation-avatar {
   position: relative;
   flex-shrink: 0;
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 50%;
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -269,7 +291,7 @@ const formatTime = (timestamp) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 100%;
+  max-width: 60px;
 }
 
 .conversation-item.active .conversation-name {
@@ -282,13 +304,14 @@ const formatTime = (timestamp) => {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem 1rem;
-  gap: 0.75rem;
+  padding: 1rem;
+  gap: 0.5rem;
   color: #6c757d;
+  font-size: 0.875rem;
 }
 
 .empty-state i {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   opacity: 0.3;
 }
 
@@ -318,5 +341,37 @@ const formatTime = (timestamp) => {
   .conversation-name {
     font-size: 0.625rem;
   }
+}
+
+/* Archive Button */
+.archive-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: rgba(220, 53, 69, 0.9);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  transition: all 0.2s ease;
+}
+
+.conversation-item:hover .archive-button {
+  display: flex;
+}
+
+.archive-button:hover {
+  background: #dc3545;
+  transform: scale(1.1);
+}
+
+.archive-button i {
+  font-size: 0.65rem;
 }
 </style>

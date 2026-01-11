@@ -320,7 +320,6 @@ export default {
         if (business?.localeInfo?.country) {
           business.country = business.localeInfo.country;
         }
-        console.log('payload update/business', JSON.stringify(business));
         if (validateUpdate(business)) {
           await updateBusiness(business.id, business);
           state.businesses = await getBusinesses();
@@ -354,7 +353,6 @@ export default {
     const add = async () => {
       try {
         loading.value = true;
-        console.log("state.newBusiness", state.newBusiness)
         // Sincronizar campos de nivel raíz con los anidados para que el backend los persista también
         if (state.newBusiness?.contactInfo?.phone) {
           state.newBusiness.phone = state.newBusiness.contactInfo.phone;
@@ -365,7 +363,6 @@ export default {
         if (state.newBusiness?.localeInfo?.country) {
           state.newBusiness.country = state.newBusiness.localeInfo.country;
         }
-        console.log('payload add/newBusiness', JSON.stringify(state.newBusiness));
         if (validateAdd(state.newBusiness)) {
           await addBusiness(state.newBusiness);
           state.businesses = await getBusinesses();
@@ -2326,3 +2323,4 @@ export default {
 }
 
 </style>
+

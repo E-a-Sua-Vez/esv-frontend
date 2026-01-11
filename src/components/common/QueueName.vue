@@ -260,9 +260,9 @@ export default {
               <QueueAttentionDetails
                 :key="`queue-modal-${queue?.id}-${listUpdateKey || 0}`"
                 :queue="queue"
-                :queue-pending-details="finalPendingDetails"
-                :queue-processing-details="finalProcessingDetails"
-                :queue-terminated-details="finalTerminatedDetails"
+                :queue-pending-details="Array.isArray(queuePendingDetails) ? queuePendingDetails : []"
+                :queue-processing-details="Array.isArray(queueProcessingDetails) ? queueProcessingDetails : []"
+                :queue-terminated-details="Array.isArray(queueTerminatedDetails) ? queueTerminatedDetails : []"
                 :commerce="commerce"
               ></QueueAttentionDetails>
             </div>

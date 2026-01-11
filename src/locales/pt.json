@@ -44,6 +44,7 @@
   },
   "common": {
     "loading": "Carregando...",
+    "loadingData": "Carregando dados...",
     "close": "Fechar",
     "cancel": "Cancelar",
     "sending": "Enviando...",
@@ -1043,7 +1044,7 @@
     "youllReceive": "Você receberá seu número de atendimento em seu telefone.",
     "request": "Se você não conseguir escanear o código QR, clique no botão a seguir:",
     "action": "Clique Aqui",
-    "wantToBeAttended": "Quero ser atendido",
+    "wantToBeAttended": "Agende aqui",
     "commerce": "Selecione uma unidade:",
     "services": "Serviços",
     "contact": "Contato",
@@ -1063,6 +1064,11 @@
     "commerceSelected": "Unidade ",
     "questions": "Tem dúvidas ou perguntas?",
     "whatsapp": "Chat Direto no Whatsapp",
+    "useMyLocation": "Usar minha localização para sugerir a unidade mais próxima",
+    "nearestUnitPrefix": "Unidade selecionada pela sua localização:",
+    "away": "de você",
+    "useSuggestedUnit": "Usar unidade sugerida como atual",
+    "nearestBadge": "Mais próxima",
     "message1": {
       "title": "Muitas pessoas? Não se preocupe!, Você não tem que esperar aqui!",
       "content": "Deixe-nos o seu whatsapp, e iremos avisá-lo quando for a sua vez de ser atendido."
@@ -1177,6 +1183,10 @@
     "preAttention": "Formulário Pre Atendimento",
     "fillPreAttention": "Para ser atendido, você deverá preencher o seguinte formulário:",
     "advice": "* LEMBRE-SE: As pessoas à sua frente e o tempo estimado podem variar. Recomendamos que consulte esta página antes e no dia da sua reserva.",
+    "whatsappReminder": {
+      "title": "Você será lembrado pelo WhatsApp",
+      "description": "Enviaremos lembretes da sua reserva para o número informado."
+    },
     "message": {
       "1": {
         "title": "Cancelado!",
@@ -7435,6 +7445,8 @@
   },
   "chat": {
     "title": "Chat",
+    "inbox": "Caixa de Chat",
+    "openInbox": "Abrir caixa de chat",
     "newChat": "Novo Chat",
     "selectConversation": "Selecione uma conversa para começar",
     "noConversations": "Você não tem conversas",

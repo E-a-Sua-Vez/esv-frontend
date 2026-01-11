@@ -11,6 +11,7 @@ import {
   getDoc,
   updateDoc,
   Timestamp,
+  arrayUnion,
 } from 'firebase/firestore';
 import { db } from '@/application/firebase';
 import { requestBackend } from '@/application/api';
@@ -27,28 +28,49 @@ const verifiedConversations = ref(new Set());
 // Caché simple para info de participantes por ID
 const participantCache = new Map();
 
-export function useChatConversations() {
-  const currentUser = ref(null);
-  const currentCommerceId = ref(null);
-  const myUserIds = ref([]);
-  const totalUnreadChats = computed(() => {
-    try {
-      const ids =
-        myUserIds.value && myUserIds.value.length
-          ? myUserIds.value
-          : [currentUser.value?.id].filter(Boolean);
-      if (!ids.length) return 0;
-      return conversations.value.reduce((sum, c) => {
-        const byUser = c.unreadCountByUser || {};
-        // Buscar la primera clave coincidente; si no hay, usar c.unreadCount como fallback
-        const matchKey = ids.find(id => byUser[id] !== null && byUser[id] !== undefined);
-        if (matchKey) return sum + (byUser[matchKey] || 0);
-        return sum + (c.unreadCount || 0);
-      }, 0);
-    } catch {
-      return 0;
+// Estado global de chat (compartido entre todos los componentes que usan el composable)
+const currentUser = ref(null);
+const currentCommerceId = ref(null);
+const myUserIds = ref([]);
+const totalUnreadChats = computed(() => {
+  try {
+    const ids =
+      myUserIds.value && myUserIds.value.length
+        ? myUserIds.value
+        : [currentUser.value?.id].filter(Boolean);
+    if (!ids.length) return 0;
+
+    const total = conversations.value.reduce((sum, c) => {
+      const byUser = c.unreadCountByUser || {};
+      // Buscar la primera clave coincidente; si no hay, usar c.unreadCount como fallback
+      const matchKey = ids.find(id => byUser[id] !== null && byUser[id] !== undefined);
+      if (matchKey) return sum + (byUser[matchKey] || 0);
+      return sum + (c.unreadCount || 0);
+    }, 0);
+
+    if (import.meta.env && import.meta.env.DEV) {
+      try {
+        // Log ligero para depurar badges de chat por rol
+        const sample = conversations.value.slice(0, 5).map(c => ({
+          id: c.id,
+          unreadCountByUser: c.unreadCountByUser,
+          unreadCount: c.unreadCount,
+        }));
+        console.log('[Chat] totalUnreadChats recomputed', {
+          ids,
+          total,
+          conversations: sample,
+        });
+      } catch (_) {}
     }
-  });
+
+    return total;
+  } catch {
+    return 0;
+  }
+});
+
+export function useChatConversations() {
 
   /**
    * Inicializar listener de conversaciones del usuario
@@ -56,13 +78,62 @@ export function useChatConversations() {
   const startConversationsListener = async (userId, userType, commerceId) => {
     // Construir lista de posibles IDs del usuario en participantIds
     const possibleIds = [];
-    const { getAuth } = await import('firebase/auth');
+    const { getAuth, onAuthStateChanged } = await import('firebase/auth');
     const auth = getAuth();
-    const authUser = auth.currentUser;
+    let authUser = auth.currentUser;
+
+    // En un refresh rápido, auth.currentUser puede venir vacío al principio.
+    // Esperamos brevemente a que Firebase restaure la sesión antes de seguir,
+    // para asegurarnos de incluir siempre el UID real en possibleIds.
+    if (!authUser) {
+      try {
+        await new Promise(resolve => {
+          let settled = false;
+          const unsub = onAuthStateChanged(auth, user => {
+            if (settled) return;
+            settled = true;
+            try {
+              unsub();
+            } catch (_) {}
+            resolve(true);
+          });
+          // Fallback de seguridad por si nunca se dispara el listener
+          setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            try {
+              unsub();
+            } catch (_) {}
+            resolve(false);
+          }, 3000);
+        });
+        authUser = auth.currentUser;
+      } catch (_) {
+        // si falla, seguimos sin UID
+      }
+    }
+
+    // Siempre priorizar: UID de auth + ID de usuario del store
     if (authUser?.uid) possibleIds.push(authUser.uid);
     if (userId) possibleIds.push(userId);
 
-    // Intentar obtener IDs de documentos (collaborator/administrator/business) enlazados por userId
+    // Fallback adicional: si currentUser ya fue resuelto antes, incorporar sus IDs
+    try {
+      if (currentUser.value?.id && !possibleIds.includes(currentUser.value.id)) {
+        possibleIds.push(currentUser.value.id);
+      }
+      if (Array.isArray(myUserIds.value) && myUserIds.value.length) {
+        myUserIds.value.forEach(id => {
+          if (id && !possibleIds.includes(id)) {
+            possibleIds.push(id);
+          }
+        });
+      }
+    } catch (_) {
+      // no-op
+    }
+
+    // Intentar obtener IDs de documentos (collaborator/administrator/business) enlazados por userId/uid
     try {
       const {
         collection: fcol,
@@ -73,8 +144,14 @@ export function useChatConversations() {
         doc: fdoc,
         getDoc: fgetDoc,
       } = await import('firebase/firestore');
-      const candidateUid = userId || authUser?.uid;
-      const candidateEmail = authUser?.email;
+
+      // Separar claramente el ID del store (documentId/collaboratorId/etc.)
+      // del UID de autenticación de Firebase. Antes usábamos un solo
+      // "candidateUid" y, si venía userId, nunca llegábamos a consultar por
+      // authUser.uid en los campos userId/uid de collaborator/administrator/business.
+      const candidateDocId = userId || null;
+      const candidateAuthUid = authUser?.uid || null;
+      const candidateEmail = authUser?.email || null;
 
       // Helper: push id if query finds a doc
       const tryPushByField = async (colName, field, value) => {
@@ -83,7 +160,12 @@ export function useChatConversations() {
           const q = fquery(fcol(db, colName), fwhere(field, '==', value), flimit(1));
           const snap = await fgetDocs(q);
           if (!snap.empty) {
+            const data = snap.docs[0].data() || {};
+            // ID del documento (ej: collaborator/administrator/business)
             possibleIds.push(snap.docs[0].id);
+            // También agregar posibles campos extra de UID/autenticación
+            if (data.userId) possibleIds.push(String(data.userId));
+            if (data.uid) possibleIds.push(String(data.uid));
             return true;
           }
         } catch (_e) {
@@ -99,7 +181,12 @@ export function useChatConversations() {
           const ref = fdoc(db, colName, id);
           const snap = await fgetDoc(ref);
           if (snap.exists()) {
+            const data = snap.data() || {};
+            // ID del documento (ej: collaborator/administrator/business)
             possibleIds.push(snap.id);
+            // También agregar posibles campos de UID/autenticación para cubrir conversaciones
+            if (data.userId) possibleIds.push(String(data.userId));
+            if (data.uid) possibleIds.push(String(data.uid));
             return true;
           }
         } catch (_e) {
@@ -108,26 +195,29 @@ export function useChatConversations() {
         return false;
       };
 
-      // Collaborator: userId, uid, email, direct doc
-      await tryPushByField('collaborator', 'userId', candidateUid);
-      await tryPushByField('collaborator', 'uid', candidateUid);
+      // Para cada colección, intentamos primero por UID de auth (campos userId/uid),
+      // luego por email, y finalmente por ID de documento (store.user.id).
+
+      // Collaborator: buscar por UID, luego email, luego docId/uid como documentId
+      await tryPushByField('collaborator', 'userId', candidateAuthUid);
+      await tryPushByField('collaborator', 'uid', candidateAuthUid);
       await tryPushByField('collaborator', 'email', candidateEmail);
-      await tryPushByDocId('collaborator', candidateUid);
-      await tryPushByDocId('collaborator', authUser?.uid);
+      await tryPushByDocId('collaborator', candidateDocId);
+      await tryPushByDocId('collaborator', candidateAuthUid);
 
-      // Administrator: userId, uid, email, direct doc
-      await tryPushByField('administrator', 'userId', candidateUid);
-      await tryPushByField('administrator', 'uid', candidateUid);
+      // Administrator
+      await tryPushByField('administrator', 'userId', candidateAuthUid);
+      await tryPushByField('administrator', 'uid', candidateAuthUid);
       await tryPushByField('administrator', 'email', candidateEmail);
-      await tryPushByDocId('administrator', candidateUid);
-      await tryPushByDocId('administrator', authUser?.uid);
+      await tryPushByDocId('administrator', candidateDocId);
+      await tryPushByDocId('administrator', candidateAuthUid);
 
-      // Business: userId, uid, email, direct doc
-      await tryPushByField('business', 'userId', candidateUid);
-      await tryPushByField('business', 'uid', candidateUid);
+      // Business
+      await tryPushByField('business', 'userId', candidateAuthUid);
+      await tryPushByField('business', 'uid', candidateAuthUid);
       await tryPushByField('business', 'email', candidateEmail);
-      await tryPushByDocId('business', candidateUid);
-      await tryPushByDocId('business', authUser?.uid);
+      await tryPushByDocId('business', candidateDocId);
+      await tryPushByDocId('business', candidateAuthUid);
     } catch (_) {
       // Silencio si falla
     }
@@ -159,10 +249,23 @@ export function useChatConversations() {
 
     function includesAnyId(data, ids) {
       const arr = data.participantIds || [];
-      return arr.some(pid => {
+      const parts = data.participants || [];
+
+      // Revisar participantIds
+      const inParticipantIds = arr.some(pid => {
         const id = typeof pid === 'object' ? pid.id || pid.userId : pid;
-        return ids.includes(id);
+        return id && ids.includes(id);
       });
+
+      if (inParticipantIds) return true;
+
+      // Fallback: revisar metadata de participantes (por si el backend sólo llenó `participants`)
+      const inParticipants = parts.some(p => {
+        const id = p && (p.userId || p.id);
+        return id && ids.includes(id);
+      });
+
+      return inParticipants;
     }
 
     async function verifyConversationByMessages(conversationId, ids) {
@@ -204,9 +307,32 @@ export function useChatConversations() {
 
     function buildConversationDoc(doc) {
       const data = doc.data();
-      // Construir participantes básicos desde participantIds
+
+      // Preferir metadata de participantes que ya viene del backend
       let participants = [];
-      if (data.participantIds && Array.isArray(data.participantIds)) {
+      if (Array.isArray(data.participants) && data.participants.length > 0) {
+        participants = data.participants.map(p => {
+          const baseId = p.userId || p.id;
+          const name =
+            p.userName ||
+            p.name ||
+            p.email ||
+            baseId;
+          const email = p.email || null;
+          const type = p.userType || p.type || 'unknown';
+
+          return {
+            userId: baseId,
+            id: baseId,
+            userName: name,
+            name,
+            email,
+            userType: type,
+            type,
+          };
+        });
+      } else if (data.participantIds && Array.isArray(data.participantIds)) {
+        // Fallback: construir participantes básicos desde participantIds
         participants = data.participantIds.map(participantId => {
           const id =
             typeof participantId === 'object'
@@ -214,20 +340,30 @@ export function useChatConversations() {
               : participantId;
           const email = typeof participantId === 'object' ? participantId.email : null;
           const name = typeof participantId === 'object' ? participantId.name || email : null;
+
           if (data.lastMessageSenderId && typeof data.lastMessageSenderId === 'object') {
-            if (data.lastMessageSenderId.id === id) {
+            const senderId = data.lastMessageSenderId.id || data.lastMessageSenderId.userId;
+            if (senderId === id) {
               return {
                 userId: id,
                 id,
                 userName:
-                  data.lastMessageSenderId.name || data.lastMessageSenderId.email || name || id,
-                name: data.lastMessageSenderId.name || data.lastMessageSenderId.email || name || id,
+                  data.lastMessageSenderId.name ||
+                  data.lastMessageSenderId.email ||
+                  name ||
+                  id,
+                name:
+                  data.lastMessageSenderId.name ||
+                  data.lastMessageSenderId.email ||
+                  name ||
+                  id,
                 email: data.lastMessageSenderId.email || email,
                 userType: 'unknown',
                 type: 'unknown',
               };
             }
           }
+
           return {
             userId: id,
             id,
@@ -239,18 +375,43 @@ export function useChatConversations() {
           };
         });
       }
+
+      // Calcular unreadCount para la conversación actual considerando todas las variantes de ID
+      let unreadCount = 0;
+      try {
+        const ids =
+          myUserIds.value && myUserIds.value.length
+            ? myUserIds.value
+            : [currentUser.value?.id].filter(Boolean);
+        if (ids.length && data.unreadCountByUser) {
+          const byUser = data.unreadCountByUser || {};
+          const matchKey = ids.find(id => byUser[id] !== null && byUser[id] !== undefined);
+          if (matchKey) {
+            unreadCount = byUser[matchKey] || 0;
+          }
+        }
+        if (!unreadCount && data.unreadCount) {
+          unreadCount = data.unreadCount;
+        }
+      } catch (_) {
+        unreadCount = 0;
+      }
+
       return {
         id: doc.id,
         ...data,
         participants,
-        // Usar el ID del usuario actual almacenado en currentUser
-        unreadCount: data.unreadCountByUser?.[currentUser.value?.id] || 0,
+        unreadCount,
       };
     }
 
     async function resolveParticipantInfo(id) {
+      console.log('[DEBUG] resolveParticipantInfo called with id:', id);
       if (!id) return null;
-      if (participantCache.has(id)) return participantCache.get(id);
+      if (participantCache.has(id)) {
+        console.log('[DEBUG] Found in cache:', participantCache.get(id));
+        return participantCache.get(id);
+      }
       try {
         const {
           doc: fdoc,
@@ -315,6 +476,7 @@ export function useChatConversations() {
                       ? 'collaborator'
                       : 'business'),
                 };
+                console.log('[DEBUG] Found user in', colName, 'collection:', info);
                 participantCache.set(id, info);
                 return info;
               }
@@ -322,21 +484,28 @@ export function useChatConversations() {
           }
         }
       } catch (_) {}
+      console.log('[DEBUG] No participant info found for id:', id);
       participantCache.set(id, null);
       return null;
     }
 
     async function enrichConversationParticipants(list) {
+      console.log('[DEBUG] enrichConversationParticipants called with', list.length, 'conversations');
       const updates = [];
       for (const conv of list) {
+        console.log('[DEBUG] Processing conversation:', conv.id, 'with participants:', conv.participants);
         if (!conv.participants) continue;
         for (const p of conv.participants) {
+          console.log('[DEBUG] Processing participant:', p);
           // Si parece un ID crudo, intentar resolver nombre/email
           const looksLikeId = !p.name || /^[A-Za-z0-9_-]{16,}$/.test(p.name);
+          console.log('[DEBUG] Participant looksLikeId:', looksLikeId, 'name:', p.name);
           if (looksLikeId) {
             updates.push(
               (async () => {
+                console.log('[DEBUG] Resolving participant info for ID:', p.userId || p.id);
                 const info = await resolveParticipantInfo(p.userId || p.id);
+                console.log('[DEBUG] Resolved info:', info);
                 if (info) {
                   const target = conversations.value.find(c => c.id === conv.id);
                   if (target && target.participants) {
@@ -344,6 +513,7 @@ export function useChatConversations() {
                       x => (x.userId || x.id) === (p.userId || p.id)
                     );
                     if (tp) {
+                      console.log('[DEBUG] Updating participant:', tp, 'with info:', info);
                       tp.userName = info.name || tp.userName;
                       tp.name = info.name || tp.name;
                       tp.email = info.email || tp.email;
@@ -358,8 +528,10 @@ export function useChatConversations() {
         }
       }
       if (updates.length) {
+        console.log('[DEBUG] Waiting for', updates.length, 'participant updates');
         try {
           await Promise.allSettled(updates);
+          console.log('[DEBUG] Participant updates completed');
         } catch (_) {}
       }
     }
@@ -367,15 +539,58 @@ export function useChatConversations() {
     function mergeAndSet() {
       // Combinar y filtrar por includesAny
       const map = new Map();
+      console.log('[DEBUG useChatConversations] mergeAndSet called:', {
+        primaryListCount: primaryList.length,
+        altListCount: altList.length,
+        possibleIds: Array.from(new Set(possibleIds))
+      });
+
+      // IDs efectivos del usuario actual para filtros por usuario (incluye todas las variantes)
+      const myIdsSet = (() => {
+        try {
+          const base = [];
+          if (currentUser.value?.id) base.push(String(currentUser.value.id));
+          if (Array.isArray(myUserIds.value)) {
+            myUserIds.value.forEach(id => {
+              if (id) base.push(String(id));
+            });
+          }
+          return new Set(base);
+        } catch (_) {
+          return currentUser.value?.id ? new Set([String(currentUser.value.id)]) : new Set();
+        }
+      })();
+
       [...primaryList, ...altList].forEach(item => {
         // Filtrar localmente conversaciones activas y que incluyan el usuario
         const isActive = item.active !== false; // default true si no está presente
         const isVerified = verifiedConversations.value.has(item.id);
-        if (isActive && (includesAnyId(item, possibleIds) || isVerified)) {
+        const includesUser = includesAnyId(item, possibleIds);
+
+        const archivedFor = item.archivedForUserIds || item.hiddenForUserIds || [];
+        const archivedForMe = Array.isArray(archivedFor)
+          ? archivedFor.some(id => id && myIdsSet.has(String(id)))
+          : false;
+
+        console.log('[DEBUG useChatConversations] Processing conversation:', {
+          id: item.id,
+          isActive,
+          isVerified,
+          includesUser,
+          archivedFor,
+          archivedForMe,
+          participantIds: item.participantIds,
+          willAdd: isActive && !archivedForMe && (includesUser || isVerified)
+        });
+
+        if (isActive && !archivedForMe && (includesUser || isVerified)) {
           map.set(item.id, item);
         }
       });
-      conversations.value = Array.from(map.values());
+
+      const finalConversations = Array.from(map.values());
+      console.log('[DEBUG useChatConversations] Final conversations:', finalConversations.length);
+      conversations.value = finalConversations;
       loading.value = false;
     }
 
@@ -471,8 +686,19 @@ export function useChatConversations() {
    * Inicializar listener de mensajes de una conversación
    */
   const startMessagesListener = conversationId => {
+    // Siempre limpiar cualquier listener previo
     if (unsubscribeMessages.value) {
-      unsubscribeMessages.value();
+      try {
+        unsubscribeMessages.value();
+      } catch (_) {}
+      unsubscribeMessages.value = null;
+    }
+
+    // Si no hay conversación (por ejemplo, al cerrar el hilo), solo limpiar estado local
+    if (!conversationId) {
+      activeConversationId.value = null;
+      messages.value = [];
+      return;
     }
 
     activeConversationId.value = conversationId;
@@ -576,6 +802,17 @@ export function useChatConversations() {
               (async () => {
                 try {
                   const res = await internalMessageService.bulkMarkAsRead(toMark);
+                  // Si el backend responde "skipped" (por ejemplo 404/idempotente),
+                  // no volvemos a intentar por mensaje para evitar spam de errores.
+                  if (res && res.skipped) {
+                    if (import.meta.env && import.meta.env.DEV) {
+                      console.warn('[Chat] bulkMarkAsRead skipped by backend, no per-message retries', {
+                        count: toMark.length,
+                      });
+                    }
+                    return;
+                  }
+
                   const updatedIds = Array.isArray(res?.messageIds) ? res.messageIds : [];
                   const remaining = updatedIds.length
                     ? toMark.filter(id => !updatedIds.includes(id))
@@ -594,7 +831,20 @@ export function useChatConversations() {
                   }
                 } catch (_) {
                   if (import.meta.env && import.meta.env.DEV) {
-                    console.warn('[Chat] Bulk failed; marking individually', {
+                    console.warn('[Chat] Bulk failed; checking error before individual retries');
+                  }
+                  try {
+                    // Si el fallo viene del propio servicio con status 404/skipped,
+                    // no hacemos intentos individuales.
+                    const testRes = await internalMessageService.bulkMarkAsRead([]);
+                    if (testRes && testRes.skipped) {
+                      return;
+                    }
+                  } catch (_) {
+                    // Ignorar errores de prueba
+                  }
+                  if (import.meta.env && import.meta.env.DEV) {
+                    console.warn('[Chat] Bulk truly failed; marking individually', {
                       count: toMark.length,
                       sample: toMark.slice(0, 5),
                     });
@@ -634,13 +884,6 @@ export function useChatConversations() {
         participantId: otherUserId,
         commerceId: finalCommerceId,
       });
-
-      // Verificar si la conversación existe en Firestore
-      const { doc: firestoreDoc, getDoc } = await import('firebase/firestore');
-      const conversationRef = firestoreDoc(db, 'message-conversation', response.data.id);
-      const _conversationSnap = await getDoc(conversationRef);
-
-      // Conversation verification completed
 
       return response.data;
     } catch (error) {
@@ -723,8 +966,29 @@ export function useChatConversations() {
   const archiveConversation = async conversationId => {
     try {
       const conversationRef = doc(db, 'message-conversation', conversationId);
+      // Resolver todos los IDs que representan al usuario actual
+      const ids = (() => {
+        try {
+          const base = [];
+          if (currentUser.value?.id) base.push(String(currentUser.value.id));
+          if (Array.isArray(myUserIds.value)) {
+            myUserIds.value.forEach(id => {
+              if (id) base.push(String(id));
+            });
+          }
+          return Array.from(new Set(base));
+        } catch (_) {
+          return currentUser.value?.id ? [String(currentUser.value.id)] : [];
+        }
+      })();
+
+      if (!ids.length) {
+        // Sin IDs confiables no tocamos Firestore para no romper a otros usuarios
+        return;
+      }
+
       await updateDoc(conversationRef, {
-        active: false,
+        archivedForUserIds: arrayUnion(...ids),
         updatedAt: Timestamp.now(),
       });
 
@@ -762,12 +1026,31 @@ export function useChatConversations() {
       return null;
     }
 
+    // Construir lista completa de IDs que representan al usuario actual
+    const myIds = (() => {
+      try {
+        const base = [];
+        if (currentUser.value?.id) base.push(String(currentUser.value.id));
+        if (Array.isArray(myUserIds.value)) {
+          myUserIds.value.forEach(id => {
+            if (id) base.push(String(id));
+          });
+        }
+        return Array.from(new Set(base));
+      } catch (_) {
+        return currentUser.value?.id ? [String(currentUser.value.id)] : [];
+      }
+    })();
+
     // Buscar en el array de participantIds
     if (conversation.participantIds && conversation.participantIds.length > 0) {
       // Determinar el otro participante considerando posibles objetos en participantIds
       const otherEntry = conversation.participantIds.find(entry => {
         const entryId = typeof entry === 'object' ? entry.id || entry.userId : entry;
-        return entryId !== currentUser.value.id;
+        if (!entryId) return false;
+        const normalized = String(entryId);
+        // Es "otro" solo si NO coincide con ninguno de mis IDs conocidos
+        return !myIds.includes(normalized);
       });
       const otherUserId =
         typeof otherEntry === 'object' ? otherEntry.id || otherEntry.userId : otherEntry;
@@ -779,7 +1062,7 @@ export function useChatConversations() {
       // Si hay array de participants con info completa, usarlo
       if (conversation.participants && conversation.participants.length > 0) {
         const participant = conversation.participants.find(
-          p => p.userId === otherUserId || p.id === otherUserId
+          p => String(p.userId || p.id) === String(otherUserId)
         );
         if (participant) {
           return {

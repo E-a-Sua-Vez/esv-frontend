@@ -43,6 +43,7 @@
   },
   "common": {
     "loading": "Loading...",
+    "loadingData": "Loading data...",
     "close": "Close",
     "cancel": "Cancel",
     "sending": "Sending...",
@@ -985,7 +986,7 @@
     "youllReceive": "You'll receive your turn number on your phone.",
     "request": "If you cannot scan the QR code, click on the following button:",
     "action": "Click Here",
-    "wantToBeAttended": "I want to be attended",
+    "wantToBeAttended": "Get your attention here",
     "commerce": "Select a commerce:",
     "services": "Services",
     "contact": "Contact",
@@ -1005,6 +1006,11 @@
     "commerceSelected": "Commerce ",
     "questions": "Do you have doubts or consults?",
     "whatsapp": "Whatsapp Direct Chat",
+    "useMyLocation": "Use my location to suggest the nearest unit",
+    "nearestUnitPrefix": "Unit selected based on your location:",
+    "away": "away",
+    "useSuggestedUnit": "Use suggested unit as current",
+    "nearestBadge": "Closest",
     "message1": {
       "title": "Too much people? Don't worry!, You don't have to wait here.",
       "content": "Leave us your number or your email, and we will notify you when it is your turn to be attended."
@@ -1119,6 +1125,10 @@
     "preAttention": "Pre Attention Form",
     "fillPreAttention": "To be attended, you nedd to fill this form:",
     "advice": "* REMEMBER: The people in front of you and the estimated time may vary since people in front of you can cancel their reservation. We recommend that you consult this page before and on the day of your reservation.",
+    "whatsappReminder": {
+      "title": "You will be reminded via WhatsApp",
+      "description": "We will send booking reminders to the phone number you provided."
+    },
     "message": {
       "1": {
         "title": "Cancelled!",
@@ -7372,6 +7382,8 @@
   },
   "chat": {
     "title": "Chat",
+    "inbox": "Chat Inbox",
+    "openInbox": "Open chat inbox",
     "newChat": "New Chat",
     "selectConversation": "Select a conversation to start",
     "noConversations": "You have no conversations",

@@ -116,7 +116,6 @@ export default {
     // Use global commerce from store and ensure it has features loaded
     const commerce = computed(() => {
       const currentCommerce = store.getCurrentCommerce;
-      console.log('🔍 BusinessQueuesAdmin: Commerce computed:', currentCommerce);
       return currentCommerce;
     });
 
@@ -196,24 +195,19 @@ export default {
         state.types = getQueueTypes();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
-        console.log('🔍 BusinessQueuesAdmin: Business loaded:', state.business);
         state.toggles = await getPermissions('queues', 'admin');
 
         // Initialize commerce in store if not set
         const currentCommerce = store.getCurrentCommerce;
-        console.log('🔍 BusinessQueuesAdmin: Current commerce from store:', currentCommerce);
         if (!currentCommerce || !currentCommerce.id) {
           const availableCommerces = await store.getAvailableCommerces(state.business.commerces);
-          console.log('🔍 BusinessQueuesAdmin: Available commerces:', availableCommerces);
           if (availableCommerces && availableCommerces.length > 0) {
             await store.setCurrentCommerce(availableCommerces[0]);
-            console.log('🔍 BusinessQueuesAdmin: Set commerce to:', availableCommerces[0]);
           }
         }
 
         // Load data for current commerce
         const commerceToUse = store.getCurrentCommerce;
-        console.log('🔍 BusinessQueuesAdmin: Commerce to use:', commerceToUse);
         if (commerceToUse && commerceToUse.id) {
           // Load features for commerce
           await loadCommerceFeatures(commerceToUse);

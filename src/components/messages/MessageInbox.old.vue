@@ -7,20 +7,41 @@
         <h3>{{ $t('messages.inbox') }}</h3>
         <div class="header-actions">
 
-          <!-- Botón 'Nuevo mensaje' para business y collaborator (todos salvo master) -->
+          <!-- Botón ‘Nuevo mensaje’ para no-master (toma label según pestaña) -->
+
           <button
-            v-if="activeTab !== 'sent' && userRole !== 'master'"
+            v-if="(canSendMessages || canStartChats) && activeTab !== 'sent' && currentUserType.value !== 'master'"
             @click="openComposer"
             class="compose-button"
-            :title="$t('messages.compose.newMessage')"
+            :title="activeTab === 'chat' ? $t('chat.newChat') : $t('messages.compose.newMessage')"
           >
             <i class="bi bi-plus-circle"></i>
-            <span>{{ $t('messages.compose.newMessage') }}</span>
+            <span v-if="activeTab === 'chat'">{{ $t('chat.newChat') }}</span>
+            <span v-else>{{ $t('messages.compose.newMessage') }}</span>
           </button>
 
-          <!-- Botón 'Mensaje masivo' solo para master -->
+          <!-- Botón de Nuevo chat para master (visible en cualquier pestaña) -->
           <button
-            v-if="canSendMassMessages && userRole === 'master'"
+            v-if="canStartChats && userRole.value === 'master' && activeTab === 'chat'"
+            @click="openChatComposer"
+            class="compose-button"
+            :title="$t('chat.newChat')"
+          >
+            <i class="bi bi-plus-circle"></i>
+            <span>{{ $t('chat.newChat') }}</span>
+          </button>
+
+          <!-- Botón: Marcar chats como leídos (icono en header, estilo igual) -->
+          <button
+            v-if="activeTab === 'chat' && chatUnreadCount > 0"
+            @click="handleMarkAllChatsAsRead"
+            class="mark-all-button"
+            :title="$t('messages.markAllAsRead')"
+          >
+            <i class="bi bi-check2-all"></i>
+          </button>
+          <button
+            v-if="canSendMassMessages && activeTab !== 'chat'"
             @click="openMassMessageComposer"
             class="mass-message-button"
             :title="$t('messages.compose.massMessage')"
@@ -91,8 +112,36 @@
       </div>
 
       <div class="inbox-content">
-        <!-- Regular messages view -->
-        <div v-if="loading" class="loading-state">
+        <!-- Chat View (when chat tab is active) -->
+        <div v-if="activeTab === 'chat'" class="chat-view-container">
+          <div class="chat-layout">
+            <ChatConversationList
+              :conversations="conversations"
+              :activeId="activeConversationId"
+              :loading="chatLoading"
+              :currentUserId="currentUserId"
+              @select="handleSelectConversation"
+              @archive="handleArchiveConversation"
+            />
+            <div class="chat-messages-panel">
+              <ChatMessageThread
+                v-if="activeConversationId"
+                :conversation="activeConversation"
+                :messages="chatMessages"
+                :currentUserId="currentUserId"
+                @send="handleSendChatMessage"
+                @markRead="markChatMessageAsRead"
+              />
+              <div v-else class="chat-empty-state">
+                <i class="bi bi-chat-dots" style="font-size: 3.5rem; color: #adb5bd"></i>
+                <p>{{ $t('chat.selectConversation') }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Regular messages view (for other tabs) -->
+        <div v-else-if="loading" class="loading-state">
           <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #004aad;"></div>
           <p>{{ $t('messages.loading') }}</p>
         </div>
@@ -133,7 +182,7 @@
     <!-- Composer Modal -->
     <MessageComposer
       :is-open="composerOpen"
-      :chat-mode="false"
+      :chat-mode="activeTab === 'chat' && userRole === 'master'"
       :mass-mode="composerMode === 'mass'"
       :user-role="userRole"
       :user-data="userData"
@@ -144,13 +193,17 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { getAuth } from 'firebase/auth';
 import { globalStore } from '@/stores';
 import { useMessageInbox } from '@/composables/useMessageInbox';
+import { useChatConversations } from '@/composables/useChatConversations';
 import { usePermissions } from '@/composables/usePermissions';
 import NotificationItem from './NotificationItem.vue';
 import MessageComposer from './MessageComposer.vue';
+import ChatConversationList from './ChatConversationList.vue';
+import ChatMessageThread from './ChatMessageThread.vue';
 
 const props = defineProps({
   isOpen: {
@@ -184,13 +237,38 @@ const {
   archiveAll,
   bulkArchive,
   loadMessages,
+  markAllChatAsRead,
+  chatUnreadCount,
 } = useMessageInbox();
+
+// Chat composable
+const {
+  conversations,
+  messages: chatMessages,
+  activeConversationId,
+  loading: chatLoading,
+  currentUser: chatCurrentUser,
+  startConversationsListener,
+  startMessagesListener,
+  getOrCreateConversation,
+  sendMessage: sendChatMessage,
+  markConversationAsRead,
+  archiveConversation,
+  markMessageAsRead: markChatMessageAsRead,
+  getOtherParticipant,
+  cleanup: cleanupChat,
+} = useChatConversations();
+// chatUnreadCount ya proviene del composable anterior
 
 // Permissions composable
 const {
   canSendMessages,
   canSendMassMessages,
+  canSendCrossBusinessMessages,
+  canStartChats,
+  canStartCrossBusinessChats,
   isMasterUser,
+  isAdminUser,
   loadPermissions,
 } = usePermissions();
 
@@ -203,13 +281,14 @@ const currentPage = ref(1);
 const composerOpen = ref(false);
 const composerMode = ref('single'); // 'single' or 'mass'
 
-// Categorías disponibles (sin chat)
+// Categorías disponibles
 const categories = [
   'stock',
   'booking',
   'payment',
   'attention',
   'system',
+  'chat',
   'queue',
   'client',
   'collaborator',
@@ -240,7 +319,7 @@ const baseCountMessages = computed(() => {
   return msgs;
 });
 
-// Tabs (sin chat)
+// Tabs
 const tabs = computed(() => {
   if (userRole.value === 'master') {
     const massCount = filteredMessages.value.filter(m => m.mass === true || m.metadata?.mass === true).length;
@@ -250,6 +329,11 @@ const tabs = computed(() => {
         label: 'sent',
         display: 'Enviadas',
         count: massCount,
+      },
+      {
+        value: 'chat',
+        label: 'chat',
+        count: chatUnreadCount?.value || 0,
       },
     ];
   }
@@ -269,10 +353,15 @@ const tabs = computed(() => {
       label: 'notifications',
       count: baseCountMessages.value.filter(m => m.type === 'notification' && !m.read).length,
     },
+    {
+      value: 'chat',
+      label: 'chat',
+      count: chatUnreadCount?.value || 0,
+    },
   ];
 });
 
-// Mensajes filtrados por tab activo (sin chat)
+// Mensajes filtrados por tab activo
 const tabFilteredMessages = computed(() => {
   let messages = filteredMessages.value;
   const uid = store.getCurrentUser?.id;
@@ -296,8 +385,11 @@ const tabFilteredMessages = computed(() => {
     case 'notifications':
       messages = messages.filter(m => m.type === 'notification');
       break;
+    case 'chat':
+      messages = messages.filter(m => m.type === 'chat');
+      break;
     case 'sent':
-      // Para master, mostrar solo envíos masivos
+      // Para master, mostrar solo envíos masivos (sin exigir sender match por compatibilidad)
       if (isMasterUser?.value) {
         messages = messages.filter(m => m.mass === true || m.metadata?.mass === true);
       }
@@ -317,29 +409,9 @@ const hasMore = computed(() => {
   return displayedMessages.value.length < tabFilteredMessages.value.length;
 });
 
-const currentUserType = computed(() => store.getCurrentUserType);
-
-const userRole = computed(() => {
-  const user = store.getCurrentUser;
-  if (!user) return 'collaborator';
-
-  let role = 'collaborator';
-  if (user.master) role = 'master';
-  else if (user.businessId) role = 'administrator';
-
-  console.log('[DEBUG MessageInbox] userRole computed:', {
-    user: user,
-    role: role,
-    master: user.master,
-    businessId: user.businessId,
-    commerceId: user.commerceId
-  });
-
-  return role;
-});
-
 // Mass message composer functions
 function openMassMessageComposer() {
+  // Abrir composer en modo masivo
   composerOpen.value = true;
   composerMode.value = 'mass';
 }
@@ -348,6 +420,10 @@ function openMassMessageComposer() {
 onMounted(() => {
   loadPermissions();
 });
+
+function handleMarkAllChatsAsRead() {
+  markAllChatAsRead();
+}
 
 // Watchers
 watch(activeTab, () => {
@@ -377,6 +453,8 @@ function close() {
 function reload() {
   currentPage.value = 1;
   // Los mensajes ya se cargan en tiempo real desde Firestore
+  // No necesitamos llamar al endpoint HTTP que está fallando
+  // loadMessages();
 }
 
 function loadMore() {
@@ -432,18 +510,139 @@ function handleMessageClick(message) {
 
 function openComposer() {
   composerOpen.value = true;
-  // Para administrator (business), usar modo 'mass' con filtros avanzados de destinatarios
-  if (userRole.value === 'administrator' || userRole.value === 'business') {
-    composerMode.value = 'mass';
+  composerMode.value = 'single';
+}
+
+function openChatComposer() {
+  // Garantizar modo chat y visibilidad del botón en cualquier pestaña
+  activeTab.value = 'chat';
+  composerMode.value = 'single';
+  composerOpen.value = true;
+}
+
+function handleMessageSent(data) {
+  if (data?.conversationId) {
+    // Si es un mensaje de chat, cambiar a la tab de chat y seleccionar la conversación
+    activeTab.value = 'chat';
+
+    // Intentar seleccionar la conversación, con reintentos si no está cargada aún
+    let attempts = 0;
+    const maxAttempts = 5;
+    const trySelectConversation = () => {
+      const conv = conversations.value.find(c => c.id === data.conversationId);
+      if (conv) {
+        handleSelectConversation(data.conversationId);
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        setTimeout(trySelectConversation, 500);
+      } else {
+        console.error('[MessageInbox] Failed to find conversation after', maxAttempts, 'attempts');
+      }
+    };
+
+    setTimeout(trySelectConversation, 300);
   } else {
-    composerMode.value = 'single';
+    // Recargar mensajes después de enviar notificación
+    reload();
   }
 }
 
-function handleMessageSent() {
-  // Recargar mensajes después de enviar
-  reload();
+// Chat computed
+const currentUserId = computed(() => {
+  // Para Chat, usar el ID que el listener determinó (participantId efectivo)
+  return chatCurrentUser?.value?.id || getAuth().currentUser?.uid || store.getCurrentUser?.id;
+});
+const userRole = computed(() => {
+  const user = store.getCurrentUser;
+  if (!user) return 'collaborator';
+  if (user.master) return 'master';
+  if (user.businessId) return 'administrator';
+  return 'collaborator';
+});
+
+const activeConversation = computed(() => {
+  return conversations.value.find(c => c.id === activeConversationId.value);
+});
+
+const currentUserType = computed(() => store.getCurrentUserType);
+
+// Chat handlers
+async function handleSelectConversation(conversationId) {
+  await startMessagesListener(conversationId);
+  // Auto-mark as read after 1 second
+  setTimeout(() => {
+    const user = store.getCurrentUser;
+    if (user?.id) {
+      markConversationAsRead(conversationId, user.id);
+    }
+  }, 1000);
 }
+
+async function handleSendChatMessage(content) {
+  if (!activeConversation.value) {
+    console.error('[MessageInbox] No active conversation');
+    return;
+  }
+
+  const otherParticipant = getOtherParticipant(activeConversation.value);
+  if (!otherParticipant) {
+    console.error('[MessageInbox] No other participant found');
+    return;
+  }
+
+  // Obtener commerceId de la conversación activa (no del usuario)
+  const commerceId = activeConversation.value.commerceId;
+
+  try {
+    await sendChatMessage(
+      activeConversationId.value,
+      content,
+      otherParticipant.id,
+      otherParticipant.type,
+      commerceId
+    );
+  } catch (error) {
+    console.error('[MessageInbox] Error sending chat message:', error);
+  }
+}
+
+async function handleArchiveConversation(conversationId) {
+  if (!confirm(t('chat.confirmArchive') || '¿Archivar conversación?')) {
+    return;
+  }
+
+  try {
+    await archiveConversation(conversationId);
+  } catch (error) {
+    console.error('[MessageInbox] Error archiving conversation:', error);
+  }
+}
+
+// Lifecycle - Start chat listener when modal opens
+watch(() => props.isOpen, (newVal) => {
+  if (newVal) {
+    const user = store.getCurrentUser;
+    if (user?.id) {
+      const commerceId = user.commerceId || user.commerce?.id;
+      startConversationsListener(user.id, userRole.value, commerceId);
+    }
+  }
+});
+
+// Start chat listener when switching to chat tab
+watch(activeTab, (newTab) => {
+  if (newTab === 'chat' && props.isOpen) {
+    const user = store.getCurrentUser;
+    if (user?.id && conversations.value.length === 0) {
+      const commerceId = user.commerceId || user.commerce?.id;
+      startConversationsListener(user.id, userRole.value, commerceId);
+    }
+  }
+});
+
+onUnmounted(() => {
+  cleanupChat();
+});
 </script>
 
 <style scoped>
@@ -581,11 +780,16 @@ function handleMessageSent() {
 }
 
 .compose-button:hover,
+.mass-message-button:hover,
 .mark-all-button:hover,
 .archive-all-button:hover,
 .close-button:hover {
   background: rgba(255, 255, 255, 0.25);
   transform: scale(1.05);
+}
+
+.mass-message-button:hover {
+  background: linear-gradient(135deg, #e07600 0%, #e0552a 100%);
 }
 
 .compose-button i,
@@ -838,10 +1042,59 @@ function handleMessageSent() {
   .inbox-header h3 {
     font-size: 1.1rem;
   }
+}
 
-  .compose-button span,
-  .mass-message-button span {
-    display: none;
+/* Chat view styles */
+.chat-view-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-layout {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.chat-messages-panel {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #e9ecef;
+  background: white;
+  overflow: hidden;
+}
+
+.chat-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+  color: #6c757d;
+}
+
+.chat-empty-state p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .chat-layout {
+    grid-template-rows: auto 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .chat-layout {
+    grid-template-rows: auto 1fr;
+  }
+
+  .chat-messages-panel {
+    border-top: 1px solid #e9ecef;
   }
 }
 </style>

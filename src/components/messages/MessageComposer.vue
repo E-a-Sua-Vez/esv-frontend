@@ -6,7 +6,11 @@
       <div class="modal-header">
         <h3>
           <i class="bi bi-chat-left-text"></i>
-          {{ massMode ? $t('messages.compose.massMessage') : (chatMode ? $t('chat.newChat') : $t('messages.compose.newMessage')) }}
+          {{
+            massMode && userRole !== 'administrator' && userRole !== 'business'
+              ? $t('messages.compose.massMessage')
+              : (chatMode ? $t('chat.newChat') : $t('messages.compose.newMessage'))
+          }}
         </h3>
         <button @click="close" class="close-btn">
           <i class="bi bi-x-lg"></i>
@@ -14,12 +18,12 @@
       </div>
 
       <div class="modal-body">
-        <!-- Pickers jerárquicos para iniciar Chat (solo master) -->
-        <div v-if="chatMode && userRole === 'master'" class="mass-filters-section compact" style="margin-bottom: 10px;">
+        <!-- Pickers jerárquicos para iniciar Chat -->
+        <div v-if="chatMode" class="mass-filters-section compact" style="margin-bottom: 10px;">
           <h4><i class="bi bi-funnel"></i> Selección de destinatario (Chat)</h4>
           <div class="compact-pickers chat-pickers">
-            <!-- Business (single) -->
-            <div class="picker" :class="{ open: showBusinessPicker }" ref="businessPickerRef">
+            <!-- Business (single) - solo para master -->
+            <div v-if="userRole === 'master'" class="picker" :class="{ open: showBusinessPicker }" ref="businessPickerRef">
               <button type="button" class="picker-button" @click="toggleBusinessPicker">
                 <i class="bi bi-building"></i>
                 Negocio
@@ -42,8 +46,8 @@
               </transition>
             </div>
 
-            <!-- Commerce (single) -->
-            <div class="picker" :class="{ disabled: !chatCanPickCommerces, open: showCommercesPicker }" ref="commercesPickerRef">
+            <!-- Commerce (single) - solo para master -->
+            <div v-if="userRole === 'master'" class="picker" :class="{ disabled: !chatCanPickCommerces, open: showCommercesPicker }" ref="commercesPickerRef">
               <button type="button" class="picker-button" :disabled="!chatCanPickCommerces" @click="toggleCommercesPicker">
                 <i class="bi bi-shop"></i>
                 Comercio
@@ -136,8 +140,8 @@
         <div v-if="massMode" class="mass-filters-section compact">
           <h4><i class="bi bi-funnel"></i> Filtros de Destinatarios</h4>
           <div class="compact-pickers">
-            <!-- Picker: Business -->
-            <div class="picker" :class="{ open: showBusinessPicker }" ref="businessPickerRef">
+            <!-- Picker: Business (solo master; para business/admin se usa implícitamente su próprio business) -->
+            <div v-if="userRole === 'master'" class="picker" :class="{ open: showBusinessPicker }" ref="businessPickerRef">
               <button type="button" class="picker-button" @click="toggleBusinessPicker">
                 <i class="bi bi-building"></i>
                 Negocios
@@ -247,7 +251,8 @@
           </div>
         </div>
 
-        <div class="form-field" v-if="form.recipientType && !massMode && userRole !== 'master'">
+        <!-- Selector de destinatario para mensajes normales -->
+        <div class="form-field" v-if="form.recipientType && !massMode && !chatMode && userRole !== 'master'">
           <label for="recipient-id"><i class="bi bi-people"></i> {{ $t('messages.compose.selectRecipient') }} *</label>
           <select id="recipient-id" v-model="form.recipientId" class="form-select" :disabled="loadingRecipients">
             <option value="">{{ loadingRecipients ? $t('common.loading') : $t('messages.compose.chooseRecipient') }}</option>
@@ -317,6 +322,7 @@
           </div>
         </div>
       </div>
+      <!-- Cierre del modal-body -->
 
       <div class="modal-footer">
         <button @click="close" class="btn-cancel">
@@ -452,17 +458,23 @@ const chatFilteredCommercesBySearch = computed(() => {
 });
 
 const chatFilteredRecipients = computed(() => {
-  // Misma lógica que masivo: requiere tipo y filtra por comercio
-  if (!chatRecipientType.value || !chatSelectedCommerce.value) return [];
-  const selectedId = String(chatSelectedCommerce.value);
-  return allRecipients.value.filter(r => {
-    if (r.type !== chatRecipientType.value) return false;
-    const cid = r?.commerceId || r?.commerce?.id;
-    if (cid && String(cid) === selectedId) return true;
-    const cids = r?.commercesId;
-    if (Array.isArray(cids) && cids.map(x => String(x)).includes(selectedId)) return true;
-    return false;
-  });
+  // Para master: requiere tipo y commerce
+  if (props.userRole === 'master') {
+    if (!chatRecipientType.value || !chatSelectedCommerce.value) return [];
+    const selectedId = String(chatSelectedCommerce.value);
+    return allRecipients.value.filter(r => {
+      if (r.type !== chatRecipientType.value) return false;
+      const cid = r?.commerceId || r?.commerce?.id;
+      if (cid && String(cid) === selectedId) return true;
+      const cids = r?.commercesId;
+      if (Array.isArray(cids) && cids.map(x => String(x)).includes(selectedId)) return true;
+      return false;
+    });
+  }
+
+  // Para no-master: usar recipients ya filtrados por loadRecipients
+  if (!chatRecipientType.value) return [];
+  return recipients.value.filter(r => r.type === chatRecipientType.value);
 });
 
 const chatFilteredRecipientsBySearch = computed(() => {
@@ -473,7 +485,26 @@ const chatFilteredRecipientsBySearch = computed(() => {
 });
 
 const chatCanPickCommerces = computed(() => !!chatSelectedBusiness.value);
-const chatCanPickRecipients = computed(() => !!chatSelectedCommerce.value && !!chatRecipientType.value);
+const chatCanPickRecipients = computed(() => {
+  // Para master: requiere commerce y tipo seleccionados
+  if (props.userRole === 'master') {
+    const result = !!chatSelectedCommerce.value && !!chatRecipientType.value;
+    console.log('[DEBUG MessageComposer] chatCanPickRecipients (master):', {
+      chatSelectedCommerce: chatSelectedCommerce.value,
+      chatRecipientType: chatRecipientType.value,
+      result
+    });
+    return result;
+  }
+  // Para no-master: solo requiere tipo seleccionado
+  const result = !!chatRecipientType.value;
+  console.log('[DEBUG MessageComposer] chatCanPickRecipients (no-master):', {
+    chatRecipientType: chatRecipientType.value,
+    userRole: props.userRole,
+    result
+  });
+  return result;
+});
 
 function selectChatBusiness(biz) {
   chatSelectedBusiness.value = biz.id;
@@ -499,18 +530,34 @@ function selectChatCommerce(com) {
 function clearChatCommerce() { selectChatCommerce({ id: '' }); }
 
 function selectChatRecipientType(type) {
+  console.log('[DEBUG MessageComposer] selectChatRecipientType called:', {
+    type,
+    userRole: props.userRole,
+    currentChatRecipientType: chatRecipientType.value
+  });
+
   chatRecipientType.value = type;
   chatSelectedRecipient.value = '';
-  // Si ya hay comercio, abrir el picker de personas
-  if (chatSelectedCommerce.value) {
-    showRecipientsPicker.value = true;
+
+  // Para master: requiere commerce seleccionado
+  // Para no-master: cargar recipients inmediatamente
+  if (props.userRole === 'master') {
+    if (chatSelectedCommerce.value) {
+      showRecipientsPicker.value = true;
+    }
+  } else {
+    // Para no-master, cargar recipients del tipo seleccionado
+    console.log('[DEBUG MessageComposer] Loading recipients for no-master user, type:', type);
+    form.value.recipientType = type;
+    loadRecipients().then(() => {
+      console.log('[DEBUG MessageComposer] Recipients loaded, count:', recipients.value.length);
+      showRecipientsPicker.value = true;
+    });
   }
 }
 
 function selectChatRecipient(r) {
   chatSelectedRecipient.value = r.id;
-  form.value.recipientType = r.type;
-  form.value.recipientId = r.id;
   showRecipientsPicker.value = false;
 }
 function clearChatRecipient() {
@@ -525,6 +572,12 @@ const recipientsPickerRef = ref(null);
 
 // Computed para comercios filtrados por business seleccionados
 const filteredCommerces = computed(() => {
+  // Para usuarios business/administrator, los comercios ya vienen filtrados por su business:
+  // no hace falta seleccionar business manualmente.
+  if (props.userRole === 'business' || props.userRole === 'administrator') {
+    return availableCommerces.value;
+  }
+
   if (massFilters.value.selectAllBusiness) {
     return availableCommerces.value;
   }
@@ -543,14 +596,25 @@ const filteredRecipients = computed(() => {
 
   // Filtrar por comercios si no es "todos"
   if (!massFilters.value.selectAllCommerces && massFilters.value.selectedCommerces.length > 0) {
+    const selectedCommerces = massFilters.value.selectedCommerces.map(id => String(id));
     filtered = filtered.filter(recipient => {
-      if (recipient.commerceId && massFilters.value.selectedCommerces.includes(recipient.commerceId)) {
+      const singleCid = recipient.commerceId || recipient.commerce?.id;
+      if (singleCid && selectedCommerces.includes(String(singleCid))) {
         return true;
       }
       if (recipient.commercesId && Array.isArray(recipient.commercesId)) {
-        return recipient.commercesId.some(id => massFilters.value.selectedCommerces.includes(id));
+        return recipient.commercesId.some(id => selectedCommerces.includes(String(id)));
       }
       return false;
+    });
+  }
+
+  // Para usuarios business/administrator, asegurar que los administradores pertenezcan a su business
+  if ((props.userRole === 'business' || props.userRole === 'administrator') && props.userData.businessId) {
+    const currentBizId = String(props.userData.businessId);
+    filtered = filtered.filter(recipient => {
+      if (recipient.type !== 'administrator') return true; // colaboradores ya están restringidos por comercios
+      return recipient.businessId && String(recipient.businessId) === currentBizId;
     });
   }
 
@@ -579,7 +643,14 @@ const filteredRecipientsBySearch = computed(() => {
 });
 
 // Habilitaciones y resumen
-const canPickCommerces = computed(() => massFilters.value.selectAllBusiness || massFilters.value.selectedBusiness.length > 0);
+const canPickCommerces = computed(() => {
+  // Para business/administrator, los comercios ya vienen filtrados por su business
+  // así que el picker de comercios debe estar siempre habilitado.
+  if (props.userRole === 'business' || props.userRole === 'administrator') {
+    return availableCommerces.value.length > 0;
+  }
+  return massFilters.value.selectAllBusiness || massFilters.value.selectedBusiness.length > 0;
+});
 const canPickRecipients = computed(() => (massFilters.value.selectAllCommerces || massFilters.value.selectedCommerces.length > 0) && massFilters.value.recipientTypes.length > 0);
 const hasAnySelection = computed(() => (
   massFilters.value.selectAllBusiness ||
@@ -615,9 +686,11 @@ const canSendNotifications = computed(() => {
 const canSend = computed(() => {
   // En chat mode no se requiere title
   if (props.chatMode) {
+    const hasRecipient = props.userRole === 'master'
+      ? chatSelectedRecipient.value  // Para master se usa el selector completo
+      : chatSelectedRecipient.value; // Para no-master se usa el selector simple
     return (
-      form.value.recipientId &&
-      form.value.recipientType &&
+      hasRecipient &&
       form.value.content.trim()
     );
   }
@@ -645,7 +718,7 @@ const canSend = computed(() => {
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
     resetForm();
-    // En chat mode, preconfigurar valores
+    // En chat mode, preconfigurar valores DESPUÉS del reset
     if (props.chatMode) {
       form.value.type = 'chat';
       form.value.category = 'direct_message';
@@ -654,6 +727,12 @@ watch(() => props.isOpen, (newVal) => {
         loadAvailableBusiness();
         loadAvailableCommerces();
         loadAllRecipients();
+      } else {
+        // Para usuarios no-master en chat mode, configurar tipo por defecto y cargar recipients
+        chatRecipientType.value = 'collaborator';
+        form.value.recipientType = 'collaborator';
+        console.log('[DEBUG MessageComposer] Configured chatRecipientType for no-master:', chatRecipientType.value);
+        loadRecipients();
       }
     }
     // En modo masivo, cargar datos iniciales
@@ -1121,14 +1200,24 @@ async function send() {
         userType: props.userData?.userType,
         commerceId: props.userData?.commerceId || props.userData?.commerce?.id,
       });
+
+      // Determinar el recipiente según el rol del usuario
+      const recipientId = props.userRole === 'master' ? chatSelectedRecipient.value : chatSelectedRecipient.value;
+      const selectedRecipient = allRecipients.value.find(r => r.id === recipientId);
+      const recipientType = selectedRecipient?.type || 'collaborator';
+
       console.log('[MessageComposer] Recipient:', {
-        id: form.value.recipientId,
-        type: form.value.recipientType,
+        id: recipientId,
+        type: recipientType,
+        selectedRecipient: selectedRecipient,
       });
       console.log('[MessageComposer] ========================================');
 
+      if (!recipientId) {
+        throw new Error('No recipient selected for chat');
+      }
+
       // Obtener commerceId: priorizar comercio seleccionado en pickers; si no, usar del destinatario o del usuario
-      const selectedRecipient = recipients.value.find(r => r.id === form.value.recipientId);
       const commerceId = chatSelectedCommerce.value
         || selectedRecipient?.commerceId
         || props.userData.commerceId
@@ -1140,8 +1229,8 @@ async function send() {
 
       // Crear o obtener conversación
       const conversation = await getOrCreateConversation(
-        form.value.recipientId,
-        form.value.recipientType,
+        recipientId,
+        recipientType,
         commerceId
       );
 
@@ -1149,8 +1238,8 @@ async function send() {
       await sendChatMessage(
         conversation.id,
         form.value.content,
-        form.value.recipientId,
-        form.value.recipientType,
+        recipientId,
+        recipientType,
         commerceId
       );
 
@@ -1379,6 +1468,12 @@ function close() {
   showBusinessPicker.value = false;
   showCommercesPicker.value = false;
   showRecipientsPicker.value = false;
+
+  // Reset variables de chat
+  chatSelectedBusiness.value = '';
+  chatSelectedCommerce.value = '';
+  chatRecipientType.value = '';
+  chatSelectedRecipient.value = '';
 
   // Reset filtros masivos
   massFilters.value = {
@@ -1755,9 +1850,9 @@ async function ensureCommercesForBusiness(businessId) {
 }
 
 .mass-filters-section h4 {
-  margin: 0 0 16px 0;
+  margin: 0 0 12px 0;
   color: #374151;
-  font-size: 1.1rem;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -1855,14 +1950,14 @@ async function ensureCommercesForBusiness(businessId) {
 .mass-filters-section.compact {
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 14px;
+  border-radius: 6px;
+  padding: 10px;
 }
 
 .compact-pickers {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* Chat pickers: for long names, stack vertically to avoid overflow */
@@ -1879,13 +1974,14 @@ async function ensureCommercesForBusiness(businessId) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 6px;
+  padding: 8px 10px;
   background: #f8fafc;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 6px;
   color: #1f2937;
   font-weight: 500;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.15s ease-in-out;
 }
@@ -1988,16 +2084,17 @@ async function ensureCommercesForBusiness(businessId) {
   display: inline-flex;
   background: #f3f4f6;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
 .picker.types .segmented button {
-  padding: 8px 12px;
+  padding: 6px 10px;
   background: transparent;
   border: none;
   color: #4b5563;
-  font-weight: 600;
+  font-weight: 500;
+  font-size: 0.875rem;
   cursor: pointer;
 }
 

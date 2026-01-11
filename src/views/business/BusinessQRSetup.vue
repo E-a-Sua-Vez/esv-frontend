@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, computed, onBeforeMount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getBusinessByKeyName } from '../../application/services/business';
 import { VueRecaptcha } from 'vue-recaptcha';
@@ -49,8 +49,17 @@ export default {
       try {
         loading.value = true;
         state.business = await getBusinessByKeyName(id);
+        // Mantener exactamente el mismo comportamiento que tenías antes:
+        // el backend ya entrega los comercios en el formato adecuado.
         state.commerces = await state.business.commerces;
-        state.commerce = state.commerces && state.commerces.length >= 0 ? state.commerces[0] : {};
+        // Log para entender qué forma real tiene commerces en este minisite
+        // y cuántas unidades llegan.
+        // eslint-disable-next-line no-console
+        console.debug('[BusinessQRSetup] commerces loaded', {
+          type: Array.isArray(state.commerces) ? 'array' : typeof state.commerces,
+          length: state.commerces && state.commerces.length,
+        });
+        state.commerce = state.commerces && state.commerces.length > 0 ? state.commerces[0] : {};
         selectCommerce(state.commerce);
         store.setCurrentBusiness(state.business);
         loading.value = false;
@@ -89,8 +98,15 @@ export default {
       captcha = false;
     };
 
+    const showDropdown = ref(false);
+
     const selectCommerce = async commerce => {
       state.commerce = commerce;
+      showDropdown.value = false;
+    };
+
+    const toggleDropdown = () => {
+      showDropdown.value = !showDropdown.value;
     };
 
     const getFeature = (commerce, name) => {
@@ -178,6 +194,131 @@ export default {
       return commerceLogo || businessLogo;
     };
 
+    // ---- Geolocalización del cliente (NO modifica la lista de comercios) ----
+
+    const supportsGeolocation = typeof navigator !== 'undefined' && !!navigator.geolocation;
+    const clientLocation = ref(null);
+    const distanceByCommerceId = reactive({});
+    const nearestCommerceId = ref(null);
+
+    const nearestCommerce = computed(() => {
+      if (!nearestCommerceId.value || !state.commerces || !state.commerces.length) {
+        return null;
+      }
+      return state.commerces.find(com => com.id === nearestCommerceId.value) || null;
+    });
+
+    const computeDistanceKm = (lat1, lon1, lat2, lon2) => {
+      const toRad = value => (value * Math.PI) / 180;
+      const R = 6371; // km
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) *
+          Math.cos(toRad(lat2)) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    const updateDistances = () => {
+      // limpiar distancias anteriores
+      Object.keys(distanceByCommerceId).forEach(key => {
+        delete distanceByCommerceId[key];
+      });
+      nearestCommerceId.value = null;
+
+      if (!state.commerces || !state.commerces.length || !clientLocation.value) {
+        return;
+      }
+
+      let bestId = null;
+      let bestDistance = Infinity;
+
+      state.commerces.forEach(com => {
+        const loc = com.localeInfo || {};
+        const lat = loc.addressLat;
+        const lng = loc.addressLng;
+
+        if (typeof lat === 'number' && typeof lng === 'number') {
+          const dist = computeDistanceKm(
+            clientLocation.value.latitude,
+            clientLocation.value.longitude,
+            lat,
+            lng,
+          );
+          distanceByCommerceId[com.id] = dist;
+          if (dist < bestDistance) {
+            bestDistance = dist;
+            bestId = com.id;
+          }
+        }
+      });
+
+      if (bestId) {
+        nearestCommerceId.value = bestId;
+      }
+    };
+
+    const requestClientLocation = () => {
+      if (!supportsGeolocation) {
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          clientLocation.value = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+          updateDistances();
+
+          // Importante: solo preselecciona, NO filtra la lista
+          if (nearestCommerce.value) {
+            selectCommerce(nearestCommerce.value);
+          }
+        },
+        () => {
+          // en error no hacemos nada, la UI sigue igual
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 8000,
+          maximumAge: 60000,
+        },
+      );
+    };
+
+    const getDistanceLabel = commerceId => {
+      const distance = distanceByCommerceId[commerceId];
+      if (distance == null) {
+        return '';
+      }
+
+      if (distance < 1) {
+        const meters = Math.round(distance * 1000);
+        return `${meters} m`;
+      }
+
+      if (distance < 10) {
+        return `${distance.toFixed(1)} km`;
+      }
+
+      return `${Math.round(distance)} km`;
+    };
+
+    const hasDistance = commerceId => distanceByCommerceId[commerceId] != null;
+
+    // Lista usada por el dropdown; solo reenvía state.commerces y loguea la longitud
+    const visibleCommerces = computed(() => {
+      const list = state.commerces || [];
+      // eslint-disable-next-line no-console
+      console.debug('[BusinessQRSetup] visibleCommerces length', list.length);
+      return list;
+    });
+
     return {
       state,
       id,
@@ -200,6 +341,16 @@ export default {
       getCommerceLogo,
       getBusinessLogo,
       hasValidLogo,
+      // geolocalización
+      supportsGeolocation,
+      clientLocation,
+      nearestCommerce,
+      requestClientLocation,
+      getDistanceLabel,
+      hasDistance,
+      visibleCommerces,
+      showDropdown,
+      toggleDropdown,
     };
   },
 };
@@ -239,14 +390,33 @@ export default {
             <i class="bi bi-shop unit-selector-icon"></i>
             <h2 class="unit-selector-title">{{ $t('commerceQRSetup.commerce') }}</h2>
           </div>
+          <!-- Sugerencia de unidad por geolocalización (NO altera la lista) -->
+          <div
+            v-if="hasMultipleCommerces() && supportsGeolocation"
+            class="location-suggestion mb-2"
+          >
+            <button type="button" class="location-btn" @click="requestClientLocation">
+              <i class="bi bi-geo-alt-fill me-2"></i>
+              <span>{{ $t('commerceQRSetup.useMyLocation') }}</span>
+            </button>
+
+            <p v-if="clientLocation && nearestCommerce" class="nearest-info">
+              {{ $t('commerceQRSetup.nearestUnitPrefix') }}
+              <strong>{{ nearestCommerce.tag }}</strong>
+              <span class="distance-inline-badge">
+                {{ getDistanceLabel(nearestCommerce.id) }}
+                {{ $t('commerceQRSetup.away') }}
+              </span>
+            </p>
+          </div>
           <!-- Dropdown when multiple units -->
-          <div v-if="hasMultipleCommerces()" class="dropdown unit-dropdown-wrapper">
+          <div v-if="hasMultipleCommerces()" class="unit-dropdown-wrapper">
             <button
               class="unit-select-btn"
               type="button"
               id="select-commerce"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
+              :aria-expanded="showDropdown ? 'true' : 'false'"
+              @click="toggleDropdown"
             >
               <div class="unit-select-content">
                 <div class="unit-select-logo">
@@ -269,8 +439,12 @@ export default {
               </div>
               <i class="bi bi-chevron-down unit-select-arrow"></i>
             </button>
-            <ul class="dropdown-menu unit-dropdown" aria-labelledby="select-commerce">
-              <li v-for="com in state.commerces" :key="com.id" :value="com" class="list-item">
+            <ul
+              v-if="showDropdown"
+              class="unit-dropdown"
+              aria-labelledby="select-commerce"
+            >
+              <li v-for="com in visibleCommerces" :key="com.id" :value="com" class="list-item">
                 <div class="unit-option" @click="selectCommerce(com)">
                   <div class="unit-option-logo">
                     <CommerceLogo
@@ -280,7 +454,21 @@ export default {
                     />
                   </div>
                   <div class="unit-option-info">
-                    <div class="unit-option-name">{{ com.tag }}</div>
+                    <div class="unit-option-header-row">
+                      <div class="unit-option-name">{{ com.tag }}</div>
+                      <div
+                        v-if="clientLocation && hasDistance(com.id)"
+                        class="unit-option-badges"
+                      >
+                        <span class="distance-badge">{{ getDistanceLabel(com.id) }}</span>
+                        <span
+                          v-if="nearestCommerce && nearestCommerce.id === com.id"
+                          class="nearest-badge"
+                        >
+                          {{ $t('commerceQRSetup.nearestBadge') }}
+                        </span>
+                      </div>
+                    </div>
                     <div v-if="com.localeInfo !== undefined" class="unit-option-address">
                       <i class="bi bi-geo-alt-fill"></i>
                       {{ com.localeInfo.address }}
@@ -963,6 +1151,98 @@ export default {
 
 .list-item {
   list-style: none;
+}
+
+/* Línea divisoria entre items (excepto el último) */
+.unit-dropdown .list-item:not(:last-child) .unit-option {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.unit-dropdown .list-item:not(:last-child) .unit-option {
+  margin-bottom: 0.125rem;
+  padding-bottom: 0.625rem;
+}
+
+/* Geolocalización: sugerencias y badges */
+.location-suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.location-btn {
+  width: 100%;
+  border-radius: 999px;
+  border: 1px dashed var(--azul-turno);
+  background: rgba(0, 74, 173, 0.04);
+  color: var(--azul-turno);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1rem;
+}
+
+.location-btn:hover {
+  background: rgba(0, 74, 173, 0.08);
+}
+
+.nearest-info {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.7);
+  text-align: left;
+  margin: 0;
+}
+
+.distance-inline-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.05rem 0.4rem;
+  margin-left: 0.35rem;
+  border-radius: 999px;
+  background: rgba(0, 74, 173, 0.06);
+  color: var(--azul-turno);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.unit-option-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.unit-option-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.distance-badge {
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(0, 74, 173, 0.06);
+  color: var(--azul-turno);
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: .8rem;
+}
+
+.nearest-badge {
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(0, 194, 203, 0.12);
+  color: var(--azul-es);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: .8rem;
 }
 
 /* Animations */

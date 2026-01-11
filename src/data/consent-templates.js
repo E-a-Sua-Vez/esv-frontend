@@ -922,3 +922,4 @@ export const getTemplateByType = (consentType, variables = {}) => {
 };
 
 
+

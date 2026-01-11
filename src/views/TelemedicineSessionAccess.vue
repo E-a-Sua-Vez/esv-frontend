@@ -691,8 +691,6 @@ export default {
       try {
         // Load attention details to get commerce and surveyId
         attention.value = await getAttentionDetails(session.value.attentionId);
-        console.log('Attention loaded:', attention.value); // Debug: check attention structure
-        console.log('User data:', attention.value?.user); // Debug: check user object
         if (attention.value?.commerce) {
           commerce.value = attention.value.commerce;
         }

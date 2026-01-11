@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   getBookingDetails,
@@ -80,6 +80,11 @@ export default {
         state.formsPersonalized = await getFormPersonalizedByCommerceId(state.commerce.id);
         await getFormCompleted();
         state.toggles = await getPermissions('user');
+        console.log('[UserQueueBooking] Loaded booking/commerce/toggles', {
+          commerceId: state.commerce?.id,
+          features: state.commerce?.features,
+          toggles: state.toggles,
+        });
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -87,6 +92,22 @@ export default {
     });
 
     const getEstimatedTime = () => state.estimatedTime;
+
+    const hasWhatsappReminderFeature = computed(() => {
+      const whatsappFeatureActive = getActiveFeature(
+        state.commerce,
+        'booking-whatsapp-confirm',
+        'WHATSAPP',
+      );
+
+      console.log('[UserQueueBooking] hasWhatsappReminderFeature', {
+        commerceId: state.commerce?.id,
+        whatsappFeatureActive,
+        toggles: state.toggles,
+      });
+
+      return !!whatsappFeatureActive;
+    });
 
     const getBeforeYou = () => {
       const beforeYou = state.booking.beforeYou;
@@ -146,13 +167,6 @@ export default {
         state.commerce = bookingData.commerce;
 
         // Debug: Log booking block structure
-        console.log('[UserQueueBooking] Booking data:', bookingData);
-        console.log(
-          '[UserQueueBooking] Booking block:',
-          JSON.stringify(bookingData.block, null, 2),
-        );
-        console.log('[UserQueueBooking] Has booking block:', hasBookingBlock());
-        console.log('[UserQueueBooking] Block display:', getBookingBlockDisplay());
 
         // Calculate estimated time using intelligent estimation
         await calculateEstimatedTime();
@@ -404,6 +418,7 @@ export default {
       goToForm,
       showTelemedicineInstructions,
       toggleTelemedicineInstructions,
+      hasWhatsappReminderFeature,
     };
   },
 };
@@ -474,7 +489,7 @@ export default {
                 ></AttentionNumber>
                 <div id="booking-data" class="to-goal">
                   <div class="row g-2 booking-details-container">
-                    <div v-if="state.booking.date" class="col-6 booking-details-card">
+                    <div v-if="state.booking.date" class="col-12 col-md-6 booking-details-card">
                       <div class="booking-card-content">
                         <span class="booking-details-title">
                           {{ $t('userQueueBooking.shouldCome') }}</span
@@ -482,7 +497,7 @@ export default {
                         <strong>{{ getDate(state.booking.date) }}</strong>
                       </div>
                     </div>
-                    <div v-if="hasBookingBlock()" class="col-6 booking-details-card">
+                    <div v-if="hasBookingBlock()" class="col-12 col-md-6 booking-details-card">
                       <div class="booking-card-content">
                         <span class="booking-details-title">
                           {{ $t('userQueueBooking.blockInfo') }}</span
@@ -495,7 +510,7 @@ export default {
                     </div>
                     <div
                       v-else-if="!hasBookingBlock() && state.beforeYou >= 0 && state.booking.date"
-                      class="col-6 booking-details-card"
+                      class="col-12 col-md-6 booking-details-card"
                     >
                       <div class="booking-card-content">
                         <span class="booking-details-title">
@@ -538,6 +553,19 @@ export default {
                       <span class="booking-details-content">
                         <i class="bi bi-stopwatch"></i> {{ getEstimatedTime() }}
                       </span>
+                    </div>
+                  </div>
+                  <div v-if="hasWhatsappReminderFeature" class="row g-2 mt-1">
+                    <div class="col-12 booking-details-card booking-whatsapp-card">
+                      <div class="booking-card-content">
+                        <span class="booking-details-title booking-whatsapp-title">
+                          <i class="bi bi-whatsapp whatsapp-icon me-1"></i>
+                          {{ $t('userQueueBooking.whatsappReminder.title') }}
+                        </span>
+                        <span class="booking-details-message booking-whatsapp-message">
+                          {{ $t('userQueueBooking.whatsappReminder.description') }}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -796,7 +824,7 @@ export default {
                         </button>
                         <hr />
                       </div>
-                      <div class="container-commerce centered">
+                      <div class="container-commerce d-flex justify-content-center">
                         <div class="col-10 mb-2">
                           <CommerceContactInfo :commerce="state.commerce"></CommerceContactInfo>
                         </div>
@@ -937,12 +965,12 @@ export default {
   }
 }
 .booking-details-content {
-  font-size: 1.5rem;
+  font-size: clamp(1.1rem, 2.8vw, 1.5rem);
   line-height: 1.4rem;
   font-weight: 700;
 }
 .booking-details-card strong {
-  font-size: 1.5rem;
+  font-size: clamp(1.1rem, 2.8vw, 1.5rem);
   line-height: 1.4rem;
   font-weight: 700;
 }
@@ -979,6 +1007,41 @@ export default {
   color: var(--rojo-warning);
 }
 
+.booking-whatsapp-card {
+  border-color: var(--whatsapp);
+}
+
+.booking-whatsapp-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  line-height: 1.4rem;
+}
+
+.booking-whatsapp-message {
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.booking-whatsapp-title .whatsapp-icon {
+  font-size: 1.3rem;
+}
+
+@media (max-width: 576px) {
+  .booking-details-card {
+    min-height: 4.5rem;
+  }
+
+  .booking-details-content,
+  .booking-details-card strong {
+    font-size: 1.2rem;
+    line-height: 1.3rem;
+  }
+}
+
 /* Style for CommerceContactInfo component text */
 :deep(.whatsapp-question) {
   font-size: 1.1rem;
@@ -1013,8 +1076,8 @@ export default {
   --bs-gutter-x: 1.5rem;
   --bs-gutter-y: 0;
   margin-top: calc(-1 * var(--bs-gutter-y));
-  margin-left: calc(-1 * var(--bs-gutter-x));
-  margin-right: calc(0 var(--bs-gutter-x));
+  margin-left: auto;
+  margin-right: auto;
 }
 @-moz-keyframes parpadeo {
   0% {

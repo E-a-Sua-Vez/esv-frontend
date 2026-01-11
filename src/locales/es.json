@@ -45,6 +45,7 @@
   },
   "common": {
     "loading": "Cargando...",
+    "loadingData": "Cargando datos...",
     "close": "Cerrar",
     "cancel": "Cancelar",
     "sending": "Enviando...",
@@ -1098,7 +1099,7 @@
     "youllReceive": "Recibirás en tu teléfono el número de tu turno.",
     "request": "Si no puedes escanear el código QR, haz click en el siguiente botón:",
     "action": "Haz clic aquí",
-    "wantToBeAttended": "Quiero ser atendido",
+    "wantToBeAttended": "Agenda aquí",
     "commerce": "Selecciona el comercio:",
     "services": "Servicios",
     "contact": "Contacto",
@@ -1118,6 +1119,11 @@
     "commerceSelected": "Unidad ",
     "questions": "¿Tienes dudas o consultas?",
     "whatsapp": "Chat Directo Vía Whatsapp",
+    "useMyLocation": "Usar mi ubicación para sugerir la unidad más cercana",
+    "nearestUnitPrefix": "Unidad seleccionada según tu ubicación:",
+    "away": "de ti",
+    "useSuggestedUnit": "Usar unidad sugerida como actual",
+    "nearestBadge": "Más cercana",
     "message1": {
       "title": "¿Falta mucho? ¡No te preocupes!, no tienes que esperar aquí",
       "content": "Déjanos tu whatsapp y te notificaremos cuando sea tu turno para ser atendido."
@@ -1231,6 +1237,10 @@
     "preAttention": "Formulario Pre Atención",
     "fillPreAttention": "Para ser atendido, deberás llenar el siguiente formulario:",
     "advice": "* RECUERDA: Las personas que tienes por delante y el tiempo estimado pueden variar ya que personas delante de ti pueden cancelar su reserva. Te recomendamos consultar esta página antes y el día de tu reserva.",
+    "whatsappReminder": {
+      "title": "Te recordaremos por WhatsApp",
+      "description": "Te enviaremos recordatorios de tu reserva al número informado."
+    },
     "message": {
       "1": {
         "title": "¡Cancelado!",
@@ -7477,6 +7487,8 @@
   },
   "chat": {
     "title": "Chat",
+    "inbox": "Bandeja de Chat",
+    "openInbox": "Abrir bandeja de chat",
     "newChat": "Nuevo Chat",
     "selectConversation": "Selecciona una conversación para comenzar",
     "noConversations": "No tienes conversaciones",

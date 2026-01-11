@@ -61,6 +61,86 @@ export default {
     };
   },
   methods: {
+    buildPersonalizedScheduleSummary() {
+      const result = [];
+      const hours = this.commerce?.serviceInfo?.personalizedHours;
+      if (!hours) {
+        return result;
+      }
+
+      const dayOrder = ['1', '2', '3', '4', '5', '6', '7'];
+      const dayKeyToCode = {
+        '1': 'Seg',
+        '2': 'Ter',
+        '3': 'Qua',
+        '4': 'Qui',
+        '5': 'Sex',
+        '6': 'Sab',
+        '7': 'Dom',
+      };
+
+      const orderedDays = dayOrder.filter(d => hours[d]);
+      if (orderedDays.length === 0) {
+        return result;
+      }
+
+      const ranges = [];
+      let current = null;
+
+      const buildKey = d => {
+        const from = hours[d].attentionHourFrom;
+        const to = hours[d].attentionHourTo;
+        return `${from}-${to}`;
+      };
+
+      orderedDays.forEach(d => {
+        const key = buildKey(d);
+        if (!current) {
+          current = { start: d, end: d, key };
+          return;
+        }
+
+        const prevIndex = dayOrder.indexOf(current.end);
+        const thisIndex = dayOrder.indexOf(d);
+        const isConsecutive = thisIndex === prevIndex + 1;
+
+        if (isConsecutive && current.key === key) {
+          current.end = d;
+        } else {
+          ranges.push(current);
+          current = { start: d, end: d, key };
+        }
+      });
+
+      if (current) {
+        ranges.push(current);
+      }
+
+      ranges.forEach(range => {
+        const from = hours[range.start].attentionHourFrom;
+        const to = hours[range.start].attentionHourTo;
+        const fromLabel = this.timeConvert(from);
+        const toLabel = this.timeConvert(to);
+
+        const startCode = dayKeyToCode[range.start] || range.start;
+        const endCode = dayKeyToCode[range.end] || range.end;
+
+        let daysLabel = '';
+        if (range.start === range.end) {
+          daysLabel = startCode;
+        } else {
+          daysLabel = `${startCode} a ${endCode}`;
+        }
+
+        result.push({
+          daysLabel,
+          fromLabel,
+          toLabel,
+        });
+      });
+
+      return result;
+    },
     attentionDays() {
       const dayList = [];
       const days = this.commerce.serviceInfo.attentionDays;
@@ -230,23 +310,16 @@ export default {
               <span class="detail-label">{{ $t('commerceQRSetup.attentionHours') }}</span>
               <div class="detail-value">
                 <div
-                  v-for="day in Object.keys(commerce.serviceInfo.personalizedHours || {})"
-                  :key="day"
+                  v-for="(range, index) in buildPersonalizedScheduleSummary()"
+                  :key="index"
                   class="schedule-clean"
                 >
-                  <span class="schedule-day">{{ $t(`days.${day}`) }}</span>
+                  <span class="schedule-day">{{ range.daysLabel }}</span>
                   <span class="schedule-time">
                     {{ $t('commerceQRSetup.from') }}
-                    <strong
-                      >{{
-                        timeConvert(commerce.serviceInfo.personalizedHours[day].attentionHourFrom)
-                      }}
-                      {{ $t('commerceQRSetup.hrs') }}</strong
-                    >
+                    <strong>{{ range.fromLabel }} {{ $t('commerceQRSetup.hrs') }}</strong>
                     {{ $t('commerceQRSetup.to') }}
-                    <strong>{{
-                      timeConvert(commerce.serviceInfo.personalizedHours[day].attentionHourTo)
-                    }}</strong>
+                    <strong>{{ range.toLabel }}</strong>
                     {{ $t('commerceQRSetup.hrs') }}
                   </span>
                 </div>
@@ -322,7 +395,6 @@ export default {
                 </button>
               </div>
               <div class="copyable-item" v-if="commerce.contactInfo.phone2">
-                <span v-if="commerce.contactInfo.phone" class="separator"> / </span>
                 <a :href="'tel:+' + commerce.contactInfo.phone2" class="contact-link-clean">
                   +{{ commerce.contactInfo.phone2 }}
                 </a>
@@ -430,7 +502,7 @@ export default {
           <div v-if="commerce.localeInfo.address" class="detail-row">
             <span class="detail-label">{{ $t('commerceQRSetup.address') }}</span>
             <div class="detail-value">
-              <div class="copyable-item">
+              <div class="copyable-item address-row">
                 <span class="address-clean">{{ commerce.localeInfo.address }}</span>
                 <button
                   class="copy-btn"
@@ -484,6 +556,7 @@ export default {
   color: rgba(0, 0, 0, 0.8);
   text-align: center;
   margin-top: 0.5rem;
+  line-height: 1.2;
 }
 
 .whatsapp-button-modern {
@@ -519,40 +592,42 @@ export default {
 }
 
 .action-btn-clean {
-  width: 100%;
-  padding: 0.625rem 0.5rem;
-  border-radius: 10px;
-  border: 1px solid rgba(169, 169, 169, 0.2);
-  background: rgba(255, 255, 255, 0.95);
-  color: rgba(0, 0, 0, 0.7);
-  font-weight: 500;
-  font-size: 0.75rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.375rem;
-  transition: all 0.2s ease;
+  gap: 0.1875rem;
+  padding: 0.25rem 0.375rem;
+  min-height: 40px;
+  width: 100%;
+  border: 1.5px solid rgba(0, 74, 173, 0.2);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.7rem;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  position: relative;
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.1) 0%, rgba(0, 194, 203, 0.05) 100%);
+  color: #004aad;
+  box-shadow: 0 2px 6px rgba(0, 74, 173, 0.12);
 }
 
 .action-btn-clean:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  border-color: rgba(0, 74, 173, 0.3);
-  background: rgba(255, 255, 255, 1);
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.2) 0%, rgba(0, 194, 203, 0.1) 100%);
+  border-color: rgba(0, 74, 173, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.15);
 }
 
 .action-btn-clean.active {
-  background: linear-gradient(135deg, rgba(0, 74, 173, 0.1) 0%, rgba(0, 194, 203, 0.1) 100%);
-  color: var(--azul-turno);
-  border-color: var(--azul-turno);
-  box-shadow: 0 2px 6px rgba(0, 74, 173, 0.15);
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.25) 0%, rgba(0, 194, 203, 0.15) 100%);
+  border-color: rgba(0, 74, 173, 0.6);
+  color: #004aad;
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.2);
 }
 
 .action-btn-clean i {
-  font-size: 1.1rem;
+  font-size: 0.9375rem;
   color: inherit;
 }
 
@@ -560,6 +635,10 @@ export default {
   font-size: 0.7rem;
   line-height: 1.2;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* Detail Cards - Clean Style (like dashboard) */
@@ -696,10 +775,13 @@ export default {
 }
 
 .copyable-item {
-  display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+.address-row {
+  justify-content: center;
 }
 
 .copyable-item:last-child {
@@ -827,6 +909,7 @@ export default {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  justify-content: center;
   margin-top: 0.25rem;
 }
 
@@ -899,6 +982,7 @@ export default {
   display: inline-block;
   font-weight: 500;
   flex: 1;
+  text-align: center;
 }
 
 .map-container-clean {

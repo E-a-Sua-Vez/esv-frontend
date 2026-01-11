@@ -51,9 +51,7 @@ export default {
       const msg = error?.response?.data?.message || '';
       // Tratar 404 como idempotente: ya no existe o ya está leído
       if (status === 404 || /not found/i.test(msg)) {
-        if (import.meta.env?.DEV) {
-          console.warn('[InternalMessage] markAsRead 404 ignorado:', messageId);
-        }
+        // Silenciar 404 para evitar spam en consola
         return { skipped: true };
       }
       throw error;

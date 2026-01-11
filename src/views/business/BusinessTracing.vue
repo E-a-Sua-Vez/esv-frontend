@@ -668,7 +668,6 @@ export default {
     };
 
     const refreshBookingsContent = (filterPropsOverride = null) => {
-      console.log('[refreshBookingsContent] Called with filterPropsOverride:', filterPropsOverride);
       // Use nextTick to ensure filter instance values are updated
       nextTick(() => {
         nextTick(() => {
@@ -806,25 +805,13 @@ export default {
             // Sync survey filter - prioritize override, then filterInstance, then undefined
             if (filterPropsOverride !== null && filterPropsOverride !== undefined) {
               if (Object.prototype.hasOwnProperty.call(filterPropsOverride, 'survey')) {
-                console.log(
-                  '[refreshBookingsContent] Setting contentInstance.survey from override:',
-                  filterPropsOverride.survey,
-                );
                 contentInstance.survey = filterPropsOverride.survey;
               } else if (filterInstance) {
-                console.log(
-                  '[refreshBookingsContent] Setting contentInstance.survey from filterInstance:',
-                  filterInstance.survey,
-                );
                 contentInstance.survey = filterInstance.survey;
               } else {
                 contentInstance.survey = undefined;
               }
             } else if (filterInstance) {
-              console.log(
-                '[refreshBookingsContent] Setting contentInstance.survey from filterInstance (no override):',
-                filterInstance.survey,
-              );
               contentInstance.survey = filterInstance.survey;
             } else {
               contentInstance.survey = undefined;
@@ -848,21 +835,10 @@ export default {
                 contentInstance.asc = true;
               }
             } else if (filterInstance && filterInstance.asc !== undefined) {
-              console.log(
-                '[refreshBookingsContent] Setting contentInstance.asc from filterInstance (no override):',
-                filterInstance.asc,
-              );
               contentInstance.asc = filterInstance.asc;
             } else {
               contentInstance.asc = true;
             }
-
-            console.log(
-              '[refreshBookingsContent] Final values - survey:',
-              contentInstance.survey,
-              'asc:',
-              contentInstance.asc,
-            );
 
             // Normalize searchText - empty string becomes undefined (matching mobile behavior)
             const searchTextValue = getValue('searchText');
@@ -3249,14 +3225,6 @@ export default {
                                 @change="
                                   e => {
                                     const newValue = e.target.checked;
-                                    console.log(
-                                      '[SURVEY TOGGLE] Clicked, target:',
-                                      e.target,
-                                      'checked:',
-                                      e.target.checked,
-                                      'newValue:',
-                                      newValue
-                                    );
                                     setBookingsSkipWatch(true);
                                     if (filterProps.setSurvey) {
                                       filterProps.setSurvey(newValue);
@@ -3284,18 +3252,10 @@ export default {
                                         );
                                         if (filterInstance) {
                                           filterInstance.survey = newValue;
-                                          console.log(
-                                            '[SURVEY TOGGLE] Updated filterInstance.survey to:',
-                                            newValue
-                                          );
                                         }
                                       }
                                     }
                                     if (filterProps.filterType === 'bookings') {
-                                      console.log(
-                                        '[SURVEY TOGGLE] Calling refreshBookingsContentDelayed with:',
-                                        { survey: newValue }
-                                      );
                                       refreshBookingsContentDelayed({ survey: newValue });
                                     }
                                   }
@@ -3314,14 +3274,6 @@ export default {
                                 @change="
                                   e => {
                                     const newValue = e.target.checked;
-                                    console.log(
-                                      '[ASC TOGGLE] Clicked, target:',
-                                      e.target,
-                                      'checked:',
-                                      e.target.checked,
-                                      'newValue:',
-                                      newValue
-                                    );
                                     setBookingsSkipWatch(true);
                                     if (filterProps.setAsc) {
                                       filterProps.setAsc(newValue);

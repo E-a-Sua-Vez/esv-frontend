@@ -22,6 +22,7 @@
           :conversations="conversations"
           :activeId="activeConversationId"
           :loading="loading"
+          :currentUserId="currentUserId"
           @select="handleSelectConversation"
           @archive="handleArchiveConversation"
         />
@@ -29,11 +30,18 @@
 
       <!-- Messages Thread (Right) -->
       <div class="messages-panel">
+        <!-- Estado de carga global del chat -->
+        <div v-if="loading || !currentUserId" class="empty-state">
+          <i class="bi bi-arrow-repeat"></i>
+          <p>{{ $t('chat.loadingConversations') }}</p>
+        </div>
+
         <ChatMessageThread
-          v-if="activeConversationId"
+          v-else-if="activeConversationId"
           :conversation="activeConversation"
           :messages="messages"
           :currentUserId="currentUserId"
+          :myUserIds="myUserIds"
           @send="handleSendMessage"
           @markRead="markMessageAsRead"
         />
@@ -72,6 +80,8 @@ const {
   messages,
   activeConversationId,
   loading,
+  currentUser,
+  myUserIds,
   startConversationsListener,
   startMessagesListener,
   getOrCreateConversation,
@@ -85,8 +95,15 @@ const {
 
 const showNewChatModal = ref(false);
 
-const currentUser = computed(() => store.getCurrentUser || {});
-const currentUserId = computed(() => store.getCurrentUser?.id);
+const currentUserComputed = computed(() => store.getCurrentUser || {});
+const currentUserId = computed(() => {
+  const canonicalId = (myUserIds?.value && myUserIds.value.length) ? myUserIds.value[0] : null;
+  return (
+    canonicalId ||
+    currentUser.value?.id ||
+    currentUserComputed.value?.id
+  );
+});
 const userRole = computed(() => {
   const user = store.getCurrentUser;
   if (!user) return 'collaborator';
@@ -111,7 +128,9 @@ const activeConversation = computed(() => {
 onMounted(() => {
   const user = store.getCurrentUser;
   if (user?.id) {
-    startConversationsListener(user.id, userRole.value);
+    const role = userRole.value;
+    const commerceId = user.commerceId || user.commerce?.id;
+    startConversationsListener(user.id, role, commerceId);
   }
 });
 
@@ -134,12 +153,23 @@ const handleSendMessage = async (content) => {
   const otherParticipant = getOtherParticipant(activeConversation.value);
   if (!otherParticipant) return;
 
+  const user = store.getCurrentUser;
+  const commerceId =
+    activeConversation.value.commerceId ||
+    activeConversation.value.commerce?.id ||
+    user?.commerceId ||
+    user?.commerce?.id ||
+    null;
+
+  const recipientType = otherParticipant.type || otherParticipant.userType || 'collaborator';
+
   try {
     await sendMessage(
       activeConversationId.value,
       content,
-      otherParticipant.userId,
-      otherParticipant.userType
+      otherParticipant.id,
+      recipientType,
+      commerceId
     );
   } catch (error) {
     console.error('[ChatView] Error sending message:', error);
