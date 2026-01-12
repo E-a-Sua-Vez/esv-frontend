@@ -54,6 +54,7 @@ export default {
       :errors="{
         shortDescriptionError: errors.shortDescriptionAddError,
         estimatedTimeError: errors.estimatedTimeAddError,
+        blockTimeError: errors.blockTimeAddError,
       }"
       prefix="add-"
     />

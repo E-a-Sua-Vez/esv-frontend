@@ -51,6 +51,23 @@ export default {
     const loading = ref(false);
     const alertError = ref('');
 
+    const createInitialNewBusiness = () => ({
+      localeInfo: {
+        language: 'pt',
+        timezone: 'America/Sao_Paulo',
+        zip: '',
+      },
+      contactInfo: {},
+      serviceInfo: {
+        break: false,
+        personalized: false,
+        personalizedHours: {},
+        holiday: false,
+        holidays: {},
+        attentionDays: [],
+      },
+    });
+
     const state = reactive({
       currentUser: {},
       business: {},
@@ -58,22 +75,7 @@ export default {
       businesses: [],
       modules: ref({}),
       showAdd: false,
-      newBusiness: {
-        localeInfo: {
-          language: 'pt',
-          timezone: 'America/Sao_Paulo',
-          zip: '',
-        },
-        contactInfo: {},
-        serviceInfo: {
-          break: false,
-          personalized: false,
-          personalizedHours: {},
-          holiday: false,
-          holidays: {},
-          attentionDays: [],
-        },
-      },
+      newBusiness: createInitialNewBusiness(),
       extendedEntity: undefined,
       errorsAdd: [],
       errorsUpdate: [],
@@ -337,17 +339,9 @@ export default {
 
     const showAdd = () => {
       state.showAdd = !state.showAdd;
-      state.newBusiness = {
-        localeInfo: {},
-        contactInfo: {},
-        serviceInfo: {
-          break: false,
-          personalized: false,
-          personalizedHours: {},
-          holiday: false,
-          holidays: {},
-        },
-      };
+      if (state.showAdd) {
+        state.newBusiness = createInitialNewBusiness();
+      }
     };
 
     const add = async () => {
@@ -363,28 +357,25 @@ export default {
         if (state.newBusiness?.localeInfo?.country) {
           state.newBusiness.country = state.newBusiness.localeInfo.country;
         }
+
+        // Garantir defaults de linguagem e timezone se o usuário não tocar nos selects
+        if (!state.newBusiness.localeInfo) {
+          state.newBusiness.localeInfo = {};
+        }
+        if (!state.newBusiness.localeInfo.language) {
+          state.newBusiness.localeInfo.language = 'pt';
+        }
+        if (!state.newBusiness.localeInfo.timezone) {
+          state.newBusiness.localeInfo.timezone = 'America/Sao_Paulo';
+        }
         if (validateAdd(state.newBusiness)) {
           await addBusiness(state.newBusiness);
           state.businesses = await getBusinesses();
           state.filtered = state.businesses;
           refreshPagination();
+          closeAddModal();
           state.showAdd = false;
-          state.newBusiness = {
-            localeInfo: {
-              language: 'pt',
-              timezone: 'America/Sao_Paulo',
-              zip: '',
-            },
-            contactInfo: {},
-            serviceInfo: {
-              break: false,
-              personalized: false,
-              personalizedHours: {},
-              holiday: false,
-              holidays: {},
-              attentionDays: [],
-            },
-          };
+          state.newBusiness = createInitialNewBusiness();
         }
         state.extendedEntity = undefined;
         alertError.value = '';
@@ -811,22 +802,7 @@ export default {
     };
 
     const resetAddForm = () => {
-      state.newBusiness = {
-        localeInfo: {
-          language: 'pt',
-          timezone: 'America/Sao_Paulo',
-          zip: '',
-        },
-        contactInfo: {},
-        serviceInfo: {
-          break: false,
-          personalized: false,
-          personalizedHours: {},
-          holiday: false,
-          holidays: {},
-          attentionDays: [],
-        },
-      };
+      state.newBusiness = createInitialNewBusiness();
       state.errorsAdd = [];
       state.nameError = false;
       state.keyNameError = false;

@@ -1430,7 +1430,7 @@
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
-          "manage": "Reservas Visão 360°",
+          "manage": "Agendas e Reservas",
           "confirm": "Confirmar Reservas",
           "transfer": "Transferir Reserva",
           "edit": "Editar Reservas",
@@ -1443,7 +1443,7 @@
           "dashboard": "Ver Performance Hub",
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
-          "booking-manage": "Reservas Visão 360°",
+          "booking-manage": "Agendas e Reservas",
           "product-stock": "Controle de Estoque"
         }
       }
@@ -1809,7 +1809,7 @@
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
-          "manage": "Reservas Visão 360°",
+          "manage": "Agendas e Reservas",
           "confirm": "Confirmar Reservas",
           "transfer": "Transferir Reserva",
           "admin": "Gerenciar Reservas",
@@ -1819,14 +1819,14 @@
           "dashboard": "Ver Performance Hub",
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
-          "booking-manage": "Reservas Visão 360°",
+          "booking-manage": "Agendas e Reservas",
           "product-stock": "Controle de Estoque"
         }
       }
     }
   },
   "collaboratorBookingsView": {
-    "welcome": "Reservas Visão 360°",
+    "welcome": "Agendas e Reservas",
     "commerce": "Comércio:",
     "queue": "Selecione Fila ou Serviço:",
     "date": "Selecione a Data:",
@@ -1973,12 +1973,12 @@
           "dashboard": "Ver Performance Hub",
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
-          "booking-manage": "Reservas Visão 360°",
+          "booking-manage": "Agendas e Reservas",
           "product-stock": "Controle de Estoque"
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
-          "manage": "Reservas Visão 360°",
+          "manage": "Agendas e Reservas",
           "confirm": "Confirmar Reservas",
           "transfer": "Transferir Reserva",
           "admin": "Gerenciar Reservas",
@@ -2053,7 +2053,7 @@
         },
         "bookings": {
           "cancel": "Cancelar Reserva",
-          "manage": "Reservas Visão 360°",
+          "manage": "Agendas e Reservas",
           "confirm": "Confirmar Reservas",
           "transfer": "Transferir Reserva",
           "edit": "Editar Reservas",
@@ -2063,7 +2063,7 @@
           "dashboard": "Ver Performance Hub",
           "tracing": "Ver Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
-          "booking-manage": "Reservas Visão 360°",
+          "booking-manage": "Agendas e Reservas",
           "product-stock": "Controle de Estoque"
         }
       }
@@ -3207,7 +3207,7 @@
     "queues-admin": "Filas",
     "configuration": "Configurações",
     "documents": "Documentos",
-    "reports": "Central de Dados",
+    "reports": "Download de Dados",
     "your-plan": "Seu Plano",
     "collaborators-admin": "Colaboradores",
     "permissions-admin": "Permissões",
@@ -3218,12 +3218,12 @@
     "seeMenu": "Menu",
     "business-resume": "Estado do Sistema",
     "surveys-admin": "Pesquisas",
-    "manage-admin": "Cadastro",
+    "manage-admin": "Perfil Empresa",
     "control-admin": "Gestão",
     "go-minisite": "Minisite",
     "client-portal": "Portal do Cliente",
     "outcome-types-admin": "Tipos de Despesa",
-    "booking-manage": "Reservas Visão 360°",
+    "booking-manage": "Agendas e Reservas",
     "company-admin": "Empresas",
     "patient-history-item-admin": "Itens Prontuario",
     "medical-management": "Gestão Médica",
@@ -3245,7 +3245,7 @@
           "dashboard": "Performance Hub",
           "tracing": "Gestão de Clientes",
           "product-stock": "Controle de Estoque",
-          "reports": "Central de Dados",
+          "reports": "Download de Dados",
           "commerce-admin": "Gerenciar Comércios/Unidades",
           "service-admin": "Gerenciar Serviços",
           "modules-admin": "Gerenciar Módulos",
@@ -3258,14 +3258,14 @@
           "documents": "Documentos",
           "your-plan": "Seu Plano",
           "surveys-admin": "Gerenciar Pesquisas",
-          "manage-admin": "Cadastrar Artefatos",
+          "manage-admin": "Perfil Empresa",
           "control-admin": "Gerenciamento Transacional",
           "product-admin": "Gerenciar Produtos",
           "financial": "Gestão Financeira",
           "marketing": "Marketing",
           "patients": "Gestão de Pacientes",
           "outcome-types-admin": "Gestão de Tipos de Despesa",
-          "booking-manage": "Reservas Visão 360°",
+          "booking-manage": "Agendas e Reservas",
           "company-admin": "Empresas",
           "patient-history-item-admin": "Itens Prontuario",
           "medical-management": "Gestão Médica",
@@ -3284,7 +3284,7 @@
     "welcome-user": "Bem-vindo",
     "choose": "O que você quer fazer hoje?",
     "business": "Selecione um negócio:",
-    "business-master-admin": "Gerenciar Negócios",
+    "business-master-admin": "Configurar Negócios",
     "business-master-resume": "Estado do Sistema",
     "dashboard": "Performance Hub",
     "tracing": "Clientes",
@@ -3299,7 +3299,7 @@
     "configuration": "Configurações",
     "forms-admin": "Administrar Formulários",
     "documents": "Documentos",
-    "reports": "Central de Dados",
+    "reports": "Download de Dados",
     "your-plan": "Seu Plano",
     "plans-master-admin": "Gerenciar Planos",
     "collaborators-master-admin": "Colaboradores",
@@ -3316,7 +3316,7 @@
     "outcome-types-master-admin": "Tipos de Despesa",
     "company-master-admin": "Empresas",
     "patient-history-item-admin": "Itens Prontuario",
-    "bookings-master-admin": "Reservas Visão 360°",
+    "bookings-master-admin": "Agendas e Reservas",
     "forms-master-admin": "Formulários",
     "permissions-master-admin": "Permissões"
   },
@@ -3328,7 +3328,7 @@
     "tracing": "Gestão de Clientes",
     "product-stock": "Controle de Estoque",
     "queue-manage": "Atender Filas do Dia",
-    "booking-manage": "Reservas Visão 360°",
+    "booking-manage": "Agendas e Reservas",
     "go-minisite": "Minisite",
     "client-portal": "Portal do Cliente",
     "message": {
@@ -3345,7 +3345,7 @@
           "dashboard": "Gerenciar Performance Hub",
           "tracing": "Gerenciar Gestão de Clientes",
           "queue-manage": "Atender Filas do Dia",
-          "booking-manage": "Reservas Visão 360°",
+          "booking-manage": "Agendas e Reservas",
           "product-stock": "Controle de Estoque"
         }
       }
@@ -3435,6 +3435,9 @@
     "walkinHelp": "Filas admitem atendimentos hoje sem horários.",
     "sameCommeceHelp": "Essa fila atende no mesmo horário do comércio.",
     "personalizedHelp": "Personalize horários de atendimento diferentes para cada dia.",
+    "nameHelp": "Nome da fila como será exibida para os usuários no minisite e canais digitais.",
+    "activeHelp": "Indica se a fila está disponível para ser utilizada.",
+    "onlineHelp": "Indica se a fila pode ser tomada por canais digitais (site, minisite, etc.).",
     "specificCalendar": "Calendário Específico:",
     "selectSpecificDate": "Selecione data no calendário e indique as horas disponíveis:",
     "addDate": "Adicionar Data",
@@ -3475,6 +3478,7 @@
       "limit": "Você deve digitar o límite",
       "order": "Você deve digitar o ordem",
       "estimatedTime": "Você deve digitar o tempo estimado",
+      "blockTime": "Você deve digitar o bloco (min)",
       "type": "Você deve selecionar o tipo",
       "collaborator": "Você deve selecionar o colaborador",
       "service": "Você deve selecionar o serviço"
@@ -3518,6 +3522,14 @@
     "otherOpenQuestionHelp": "Opcão 'Outro' é aberta, editable pelo usuário.",
     "type": "Tipo:",
     "typeHelp": "Tipo de Serviço. Selecionável para serviços em queue selecionaveis",
+    "nameHelp": "Nome do serviço como será exibido para os usuários no minisite e canais digitais.",
+    "activeHelp": "Indica se o serviço está disponível para ser agendado ou exibido.",
+    "shortDescriptionHelp": "Frase curta exibida em listas e cartões do serviço.",
+    "longDescriptionHelp": "Descrição detalhada do serviço. Você pode incluir benefícios, condições, etc.",
+    "priceHelp": "Preço presencial ou base do serviço na moeda configurada.",
+    "onlinePriceHelp": "Preço quando o serviço é reservado/comprado online.",
+    "savingHelp": "Percentual de desconto em relação ao preço normal.",
+    "onlineSavingHelp": "Percentual de desconto oferecido apenas para reservas online.",
     "message": {
       "1": {
         "title": "Oh não!",
@@ -3555,7 +3567,8 @@
       "tag": "Você deve digitar o tipo de serviço",
       "order": "Você deve digitar o ordem",
       "estimatedTime": "Você deve digitar o tempo estimado",
-      "shortDescription": "Você deve digitar a descrição curta"
+      "shortDescription": "Você deve digitar a descrição curta",
+      "blockTime": "Você deve digitar o tempo de bloqueio em minutos"
     }
   },
   "businessCompaniesAdmin": {
@@ -4528,8 +4541,9 @@
     "service": "Serviço",
     "logo": "Logo",
     "serviceUrl": "URL:",
-    "attentionHour": "Horas Atenção:",
-    "attentionDays": "Dias Atenção:",
+    "attentionHour": "Horário Funcionamento:",
+    "attentionDays": "Dias Funcionamento:",
+    "hourSeparator": "às",
     "category": "Categoria:",
     "add": "Adicionar",
     "link": "URL Web:",
@@ -4981,7 +4995,7 @@
     }
   },
   "businessReports": {
-    "title": "Central de Dados",
+    "title": "Download de Dados",
     "commerce": "Selecione uma unidade:",
     "return": "Voltar",
     "listResult": "Registros:",
@@ -5143,10 +5157,37 @@
     "serviceUrl": "URL:",
     "category": "Categoria: ",
     "logo": "Logo:",
-    "attentionHour": "Horas Atenção:",
-    "attentionDays": "Dias Atenção:",
+    "attentionHour": "Horário Funcionamento:",
+    "attentionDays": "Dias Funcionamento:",
+    "hourSeparator": "às",
     "add": "Adicionar",
     "keyNameHelp": "Identificador usado para a URL do minisite.",
+    "nameHelp": "Nome oficial do negócio, exibido para clientes e no painel.",
+    "emailHelp": "Email principal de contato do negócio.",
+    "categoryHelp": "Categoria principal do negócio, usada para relatórios e filtros.",
+    "countryHelp": "Código do país em duas letras, por exemplo BR, CL, MX.",
+    "languageHelp": "Idioma padrão para comunicações e interface do negócio.",
+    "timezoneHelp": "Fuso horário principal onde o negócio opera.",
+    "zipHelp": "CEP ou código postal oficial do endereço.",
+    "addressHelp": "Endereço físico completo do negócio.",
+    "addressLatHelp": "Latitude da localização. Você pode copiá-la da URL do Google Maps.",
+    "addressLngHelp": "Longitude da localização. Você pode copiá-la da URL do Google Maps.",
+    "contactEmailHelp": "Email de contato que será usado para comunicação com clientes.",
+    "contactUrlHelp": "Site ou página principal do negócio.",
+    "contactPhoneHelp": "Telefone principal de contato com código do país.",
+    "phone2Help": "Telefone alternativo do negócio.",
+    "whatsappHelp": "Número de WhatsApp usado para contato com clientes.",
+    "twitterHelp": "Usuário do Twitter do negócio, sem o símbolo arroba.",
+    "instagramHelp": "Usuário do Instagram do negócio, sem o símbolo arroba.",
+    "facebookHelp": "Página ou usuário do Facebook do negócio.",
+    "serviceUrlHelp": "Endereço web onde o cliente acessa o serviço ou cardápio.",
+    "attentionHourHelp": "Horário padrão em que o negócio atende clientes todos os dias selecionados.",
+    "attentionDaysHelp": "Dias da semana em que o negócio está aberto ao público.",
+    "personalizedHelp": "Defina horários de funcionamento diferentes para cada dia selecionado.",
+    "breakHelp": "Indica se há intervalo de almoço ou pausa no atendimento.",
+    "breakHourHelp": "Horário em que começa e termina o intervalo de atendimento.",
+    "logoHelp": "Logo que será exibido no minisite e no painel.",
+    "activeHelp": "Controle se o negócio está ativo para receber atendimentos.",
     "tagHelp": "Identificador abreviado do comércio utilizada no produto digital.",
     "listResult": "Registros:",
     "searchOrSelectBusiness": "Buscar ou selecionar negócio",
@@ -5995,12 +6036,12 @@
     },
     "businesses": {
       "admin": {
-        "view": "Acessar Seção - Gerenciar Negócios",
-        "read": "Ver dados - Seção Gerenciar Negócios",
-        "edit": "Editar dados - Seção Gerenciar Negócios",
-        "update": "Atualizar dados - Seção Gerenciar Negócios",
-        "add": "Adicionar dados - Seção Gerenciar Negócios",
-        "limit": "Límite de dados - Seção Gerenciar Negócios"
+        "view": "Acessar Seção - Configurar Negócios",
+        "read": "Ver dados - Seção Configurar Negócios",
+        "edit": "Editar dados - Seção Configurar Negócios",
+        "update": "Atualizar dados - Seção Configurar Negócios",
+        "add": "Adicionar dados - Seção Configurar Negócios",
+        "limit": "Límite de dados - Seção Configurar Negócios"
       }
     },
     "business": {
@@ -6021,10 +6062,10 @@
         "surveys-admin": "Habilitar Pesquisas - Menú Principal Negócio",
         "forms-admin": "Habilitar Gerenciar Formulários - Menú Principal Negócio",
         "lgpd-consent-admin": "Habilitar Gerenciar Consentimentos LGPD - Menú Principal Negócio",
-        "manage-admin": "Habilitar Cadastrar Artefatos - Menú Principal Negócio",
+        "manage-admin": "Habilitar Perfil Empresa - Menú Principal Negócio",
         "control-admin": "Habilitar Gerenciamento Transacional - Menú Principal Negócio",
         "outcome-types-admin": "Habilitar Gerenciamento Tipos de Despesa - Menú Principal Negócio",
-        "booking-manage": "Habilitar Reservas Visão 360° - Menú Principal Negócio",
+        "booking-manage": "Habilitar Agendas e Reservas - Menú Principal Negócio",
         "company-admin": "Habilitar Gerenciar Empresas - Menú Principal Negócio",
         "marketing": "Habilitar Marketing - Menú Principal Negócio",
         "patient-history-item-admin": "Habilitar Gerenciar Itens de Histórico Médico - Menú Principal Negócio",
@@ -6041,7 +6082,7 @@
         "audit-log": "Habilitar Auditoria e Conformidade - Menú Principal Negócio"
       },
       "bookings": {
-        "manage": "Reservas Visão 360°"
+        "manage": "Agendas e Reservas"
       }
     },
     "collaborators": {
@@ -6058,7 +6099,7 @@
         "dashboard": "Habilitar Performance Hub - Menú Principal Colaborador",
         "tracing": "Habilitar Gestão de Clientes - Menú Principal Colaborador",
         "queue-manage": "Habilitar Atender Filas do Dia - Menú Principal Colaborador",
-        "booking-manage": "Habilitar Reservas Visão 360° - Menú Principal Colaborador",
+        "booking-manage": "Habilitar Agendas e Reservas - Menú Principal Colaborador",
         "product-stock": "Habilitar Controle de Estoque - Menú Principal Colaborador"
       }
     },

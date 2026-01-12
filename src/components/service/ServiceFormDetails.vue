@@ -46,6 +46,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessServicesAdmin.shortDescription') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessServicesAdmin.shortDescriptionHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}service-short-description-form`"
@@ -62,6 +68,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessServicesAdmin.longDescription') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessServicesAdmin.longDescriptionHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <textarea
             :id="`${prefix}service-description-form`"
@@ -77,7 +89,7 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessServicesAdmin.estimatedTime') }}
-            <Popper :class="'dark p-1'" arrow disable-click-away>
+            <Popper :class="'dark p-1'" arrow>
               <template #content>
                 <div>{{ $t('businessServicesAdmin.estimatedTimeHelp') }}</div>
               </template>
@@ -98,7 +110,7 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessServicesAdmin.blockTime') }}
-            <Popper :class="'dark p-1'" arrow disable-click-away>
+            <Popper :class="'dark p-1'" arrow>
               <template #content>
                 <div>{{ $t('businessServicesAdmin.blockTimeHelp') }}</div>
               </template>
@@ -111,6 +123,7 @@ export default {
             min="1"
             type="number"
             class="form-control-modern"
+            :class="{ 'is-invalid': errors.blockTimeError }"
             v-model="serviceInfo.blockTime"
             placeholder="1"
           />
@@ -118,7 +131,7 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessServicesAdmin.procedures') }}
-            <Popper :class="'dark p-1'" arrow disable-click-away>
+            <Popper :class="'dark p-1'" arrow>
               <template #content>
                 <div>{{ $t('businessServicesAdmin.proceduresHelp') }}</div>
               </template>
@@ -138,7 +151,7 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessServicesAdmin.proceduresList') || 'Lista de Procedimientos' }}
-            <Popper :class="'dark p-1'" arrow disable-click-away>
+            <Popper :class="'dark p-1'" arrow>
               <template #content>
                 <div>
                   {{
@@ -162,7 +175,7 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessServicesAdmin.daysBetweenProcedures') || 'Días entre Procedimientos' }}
-            <Popper :class="'dark p-1'" arrow disable-click-away>
+            <Popper :class="'dark p-1'" arrow>
               <template #content>
                 <div>
                   {{
@@ -187,6 +200,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessServicesAdmin.price') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessServicesAdmin.priceHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}service-price-form`"
@@ -201,6 +220,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessServicesAdmin.onlinePrice') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessServicesAdmin.onlinePriceHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}service-onlinePrice-form`"
@@ -215,6 +240,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessServicesAdmin.saving') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessServicesAdmin.savingHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}service-saving-form`"
@@ -229,6 +260,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessServicesAdmin.onlineSaving') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessServicesAdmin.onlineSavingHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}service-onlineSaving-form`"

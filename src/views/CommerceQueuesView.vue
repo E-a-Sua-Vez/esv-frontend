@@ -3923,23 +3923,29 @@ export default {
                                   ) && state.queue.id
                                 "
                               >
-                                <div class="choose-attention py-1 pt-2">
-                                  <span> {{ $t('commerceQueuesView.walkin') }} </span>
+                                <div class="options-connector">
+                                  <div class="connector-line"></div>
+                                  <span class="connector-text">
+                                    {{ $t('commerceQueuesView.walkin') }}
+                                  </span>
+                                  <div class="connector-line"></div>
                                 </div>
-                                <button
-                                  type="button"
-                                  class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
-                                  @click="getAttention(undefined)"
-                                  :disabled="
-                                    !state.accept ||
-                                    !state.queue.id ||
-                                    !isProcedureAmountSelectionValid ||
-                                    loadingService
-                                  "
-                                >
-                                  {{ $t('commerceQueuesView.confirm') }}
-                                  <i class="bi bi-check-lg"></i>
-                                </button>
+                                <div class="mt-2 mb-2">
+                                  <button
+                                    type="button"
+                                    class="btn btn-lg btn-size fw-bold btn-confirm-sticky rounded-pill px-5 py-3 w-100"
+                                    @click="getAttention(undefined)"
+                                    :disabled="
+                                      !state.accept ||
+                                      !state.queue.id ||
+                                      !isProcedureAmountSelectionValid ||
+                                      loadingService
+                                    "
+                                  >
+                                    {{ $t('commerceQueuesView.confirm') }}
+                                    <i class="bi bi-check-circle-fill ms-2"></i>
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -4054,23 +4060,29 @@ export default {
                                   ) && state.queue.id
                                 "
                               >
-                                <div class="choose-attention py-1 pt-2">
-                                  <span> {{ $t('commerceQueuesView.walkin') }} </span>
+                                <div class="options-connector">
+                                  <div class="connector-line"></div>
+                                  <span class="connector-text">
+                                    {{ $t('commerceQueuesView.walkin') }}
+                                  </span>
+                                  <div class="connector-line"></div>
                                 </div>
-                                <button
-                                  type="button"
-                                  class="btn-size btn btn-lg btn-block col-9 fw-bold btn-dark rounded-pill mb-2 mt-2"
-                                  @click="getAttention(undefined)"
-                                  :disabled="
-                                    !state.accept ||
-                                    !state.queue.id ||
-                                    !isProcedureAmountSelectionValid ||
-                                    loadingService
-                                  "
-                                >
-                                  {{ $t('commerceQueuesView.confirm') }}
-                                  <i class="bi bi-check-lg"></i>
-                                </button>
+                                <div class="mt-2 mb-2">
+                                  <button
+                                    type="button"
+                                    class="btn btn-lg btn-size fw-bold btn-confirm-sticky rounded-pill px-5 py-3 w-100"
+                                    @click="getAttention(undefined)"
+                                    :disabled="
+                                      !state.accept ||
+                                      !state.queue.id ||
+                                      !isProcedureAmountSelectionValid ||
+                                      loadingService
+                                    "
+                                  >
+                                    {{ $t('commerceQueuesView.confirm') }}
+                                    <i class="bi bi-check-circle-fill ms-2"></i>
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>

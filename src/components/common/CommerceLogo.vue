@@ -18,6 +18,9 @@ export default {
     desktopSize: { type: Boolean, default: false },
     largeSize: { type: Boolean, default: false },
     fallbackSrc: { type: String, default: undefined },
+    // Cuando es true y no hay logo de commerce/empresa,
+    // se usa un ícono genérico en vez del logo Hub por defecto
+    useGenericFallback: { type: Boolean, default: false },
   },
   setup(props) {
     const store = globalStore();
@@ -275,7 +278,7 @@ export default {
   <div id="commerce-logo" style="cursor: pointer;" @click="$emit('click', $event)">
     <LogoSkeleton v-if="(loading || logoLoading) && src === undefined && !logoUrl"></LogoSkeleton>
     <img
-      v-else
+      v-else-if="logoUrl"
       :class="[
         'rounded',
         'img-fluid',
@@ -284,11 +287,37 @@ export default {
         $attrs.class
       ]"
       :alt="this.$t('logoAlt')"
-      :src="logoUrl || this.$t('logo')"
+      :src="logoUrl"
       loading="lazy"
       width="250"
       height="230"
     />
+    <img
+      v-else-if="!useGenericFallback"
+      :class="[
+        'rounded',
+        'img-fluid',
+        'logo',
+        { 'desktop-size': desktopSize, 'large-size': largeSize, 'mx-auto': !desktopSize },
+        $attrs.class
+      ]"
+      :alt="this.$t('logoAlt')"
+      :src="fallbackSrc || this.$t('logo')"
+      loading="lazy"
+      width="250"
+      height="230"
+    />
+    <div
+      v-else
+      :class="[
+        'logo',
+        'logo-fallback',
+        { 'desktop-size': desktopSize, 'large-size': largeSize, 'mx-auto': !desktopSize },
+        $attrs.class
+      ]"
+    >
+      <i class="bi bi-shop"></i>
+    </div>
   </div>
 </template>
 <style scoped>
@@ -300,6 +329,14 @@ export default {
   background-size: 100%;
   margin-bottom: 0.3rem;
   cursor: pointer;
+}
+
+.logo-fallback {
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.1) 0%, rgba(0, 194, 203, 0.1) 100%);
+  color: var(--azul-turno);
+  font-size: 2rem;
 }
 @media (min-width: 992px) {
   .logo {

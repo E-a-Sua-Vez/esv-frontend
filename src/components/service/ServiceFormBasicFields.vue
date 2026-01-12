@@ -32,6 +32,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessServicesAdmin.name') }}
+        <Popper :class="'dark p-1'" arrow>
+          <template #content>
+            <div>{{ $t('businessServicesAdmin.nameHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}service-name-form`"
@@ -48,7 +54,7 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessServicesAdmin.tag') }}
-        <Popper v-if="prefix === 'add-'" :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow>
           <template #content>
             <div>{{ $t('businessServicesAdmin.tagHelp') }}</div>
           </template>
@@ -70,7 +76,7 @@ export default {
     <div class="form-group-modern" v-if="prefix === 'add-'">
       <label class="form-label-modern">
         {{ $t('businessServicesAdmin.type') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow>
           <template #content>
             <div>{{ $t('businessServicesAdmin.typeHelp') }}</div>
           </template>
@@ -91,6 +97,12 @@ export default {
     <div class="form-group-modern" v-else>
       <label class="form-label-modern">
         {{ $t('businessServicesAdmin.type') }}
+        <Popper :class="'dark p-1'" arrow>
+          <template #content>
+            <div>{{ $t('businessServicesAdmin.typeHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}service-type-form`"
@@ -101,10 +113,10 @@ export default {
         placeholder="Type"
       />
     </div>
-    <div class="form-group-modern form-group-toggle">
+    <div class="form-group-modern form-group-toggle" v-if="!isAdd">
       <label class="form-label-modern">
         {{ $t('businessServicesAdmin.online') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow>
           <template #content>
             <div>{{ $t('businessServicesAdmin.onlineHelp') }}</div>
           </template>
@@ -113,22 +125,28 @@ export default {
       </label>
       <Toggle
         v-model="service.online"
-        :disabled="isAdd ? false : !toggles['services.admin.edit']"
+        :disabled="!toggles['services.admin.edit']"
       />
     </div>
-    <div class="form-group-modern form-group-toggle">
+    <div class="form-group-modern form-group-toggle" v-if="!isAdd">
       <label class="form-label-modern">
         {{ $t('businessServicesAdmin.active') }}
+        <Popper :class="'dark p-1'" arrow>
+          <template #content>
+            <div>{{ $t('businessServicesAdmin.activeHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <Toggle
         v-model="service.active"
-        :disabled="isAdd ? false : !toggles['services.admin.edit']"
+        :disabled="!toggles['services.admin.edit']"
       />
     </div>
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessServicesAdmin.order') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow>
           <template #content>
             <div>{{ $t('businessServicesAdmin.orderHelp') }}</div>
           </template>

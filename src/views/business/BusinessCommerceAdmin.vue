@@ -235,6 +235,15 @@ export default {
       try {
         loading.value = true;
         if (validateAdd(state.newCommerce)) {
+          if (!state.newCommerce.localeInfo) {
+            state.newCommerce.localeInfo = {};
+          }
+          if (!state.newCommerce.localeInfo.language) {
+            state.newCommerce.localeInfo.language = 'pt';
+          }
+          if (!state.newCommerce.localeInfo.timezone) {
+            state.newCommerce.localeInfo.timezone = 'America/Sao_Paulo';
+          }
           if (state.selectedDates && state.commerces.serviceInfo) {
             state.commerces.serviceInfo.selectedDates = state.selectedDates;
           }

@@ -1,12 +1,13 @@
 <script>
 import Toggle from '@vueform/toggle';
+import Popper from 'vue3-popper';
 import CommerceLogoUpload from '../common/CommerceLogoUpload.vue';
 import { uploadCommerceLogo, getCommerceLogoUrl } from '../../application/services/commerce-logo';
 import { getBusinessLogo, getBusinessLogoUrl } from '../../application/services/business-logo';
 
 export default {
   name: 'CommerceFormBasicFields',
-  components: { Toggle, CommerceLogoUpload },
+  components: { Toggle, Popper, CommerceLogoUpload },
   props: {
     modelValue: { type: Object, required: true },
     categories: { type: Array, default: () => [] },
@@ -87,6 +88,24 @@ export default {
     },
   },
   methods: {
+    slugifyName(text) {
+      if (!text) return '';
+      return text
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s]/g, '')
+        .trim()
+        .replace(/\s+/g, '_');
+    },
+    onNameInput(value) {
+      const keyName = this.slugifyName(value);
+      this.commerce = {
+        ...this.commerce,
+        name: value,
+        keyName,
+      };
+    },
     openLogoUpload() {
       this.showLogoUploadModal = true;
     },
@@ -109,7 +128,7 @@ export default {
             const commerceId = parts[2];
             const logoId = parts[3];
             console.log('🏪 Loading commerce logo:', { commerceId, logoId });
-            
+
             const url = await getCommerceLogoUrl(commerceId, logoId);
             if (url) {
               this.logoPreviewUrl = url;
@@ -159,7 +178,7 @@ export default {
             const pathBusinessId = parts[2];
             const logoId = parts[3];
             console.log('🔍 Extracted from path:', { pathBusinessId, logoId });
-            
+
             const url = await getBusinessLogoUrl(pathBusinessId, logoId);
             console.log('🔍 Got signed URL:', url);
             if (url) {
@@ -229,6 +248,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessCommercesAdmin.name') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessAdmin.nameHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}commerce-name-form`"
@@ -238,29 +263,42 @@ export default {
         type="text"
         class="form-control-modern"
         :class="{ 'is-invalid': errors.nameError }"
-        v-model="commerce.name"
+        :value="commerce.name"
+        @input="onNameInput($event.target.value)"
         placeholder="brilliant-shop-1"
       />
     </div>
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessCommercesAdmin.keyName') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessCommercesAdmin.keyNameHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}commerce-keyName-form`"
-        :disabled="isAdd ? false : !toggles['commerces.admin.edit']"
+        :disabled="true"
         min="1"
         max="50"
         type="text"
         class="form-control-modern"
         :class="{ 'is-invalid': errors.keyNameError }"
-        v-model="commerce.keyName"
+        :value="commerce.keyName"
         placeholder="brilliant-shop-1"
       />
     </div>
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessCommercesAdmin.email') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessAdmin.emailHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}commerce-email-form`"
@@ -276,6 +314,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessCommercesAdmin.tag') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessCommercesAdmin.tagHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}commerce-tag-form`"
@@ -289,9 +333,15 @@ export default {
         placeholder="brilliant-1"
       />
     </div>
-    <div class="form-group-modern">
+    <div class="form-group-modern" v-if="!isAdd">
       <label class="form-label-modern">
         {{ $t('businessCommercesAdmin.logo') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessAdmin.logoHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <div class="logo-section">
         <div class="d-flex flex-column gap-2">
@@ -352,6 +402,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessCommercesAdmin.category') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessAdmin.categoryHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <select
         :id="`${prefix}commerce-category-form`"
@@ -365,9 +421,15 @@ export default {
         </option>
       </select>
     </div>
-    <div class="form-group-modern form-group-toggle">
+    <div class="form-group-modern form-group-toggle" v-if="!isAdd">
       <label class="form-label-modern">
         {{ $t('businessCommercesAdmin.active') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessAdmin.activeHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <Toggle
         v-model="commerce.active"

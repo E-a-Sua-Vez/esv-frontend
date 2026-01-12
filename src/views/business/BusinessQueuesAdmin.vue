@@ -125,6 +125,8 @@ export default {
       nameUpdateError: false,
       limitAddError: false,
       limitUpdateError: false,
+      blockAddError: false,
+      blockUpdateError: false,
       orderAddError: false,
       orderUpdateError: false,
       timeAddError: false,
@@ -292,6 +294,12 @@ export default {
       } else {
         state.limitAddError = false;
       }
+      if (!queue.blockTime || queue.blockTime.length === 0) {
+        state.blockAddError = true;
+        state.errorsAdd.push('businessQueuesAdmin.validate.blockTime');
+      } else {
+        state.blockAddError = false;
+      }
       if (!queue.order || queue.order.length === 0) {
         state.orderAddError = true;
         state.errorsAdd.push('businessQueuesAdmin.validate.order');
@@ -327,6 +335,12 @@ export default {
         state.errorsUpdate.push('businessQueuesAdmin.validate.limit');
       } else {
         state.limitUpdateError = false;
+      }
+      if (!queue.blockTime || queue.blockTime.length === 0) {
+        state.blockUpdateError = true;
+        state.errorsUpdate.push('businessQueuesAdmin.validate.blockTime');
+      } else {
+        state.blockUpdateError = false;
       }
       if (!queue.type || queue.type.length === 0) {
         state.typeError = true;
@@ -380,20 +394,24 @@ export default {
     };
 
     const add = async () => {
+      let created = false;
       try {
         loading.value = true;
         if (validateAdd(state.newQueue)) {
           state.newQueue.commerceId = commerce.value.id;
           await addQueue(state.newQueue);
+          created = true;
           state.queues = await getQueuesByCommerceId(commerce.value.id);
-          state.showAdd = false;
-          closeAddModal();
           state.extendedEntity = undefined;
         }
         alertError.value = '';
-        loading.value = false;
       } catch (error) {
         alertError.value = error.response.status || 500;
+      } finally {
+        if (created) {
+          state.showAdd = false;
+          closeAddModal();
+        }
         loading.value = false;
       }
     };
@@ -764,6 +782,7 @@ export default {
       state.errorsDateAdd = [];
       state.nameAddError = false;
       state.limitAddError = false;
+      state.blockAddError = false;
       state.orderAddError = false;
       state.timeAddError = false;
       state.typeError = false;
@@ -965,6 +984,7 @@ export default {
                       :errors="{
                         nameError: state.nameUpdateError,
                         limitError: state.limitUpdateError,
+                        blockError: state.blockUpdateError,
                         orderError: state.orderUpdateError,
                         timeError: state.timeUpdateError,
                         errorsUpdate: state.errorsUpdate,
@@ -1926,6 +1946,7 @@ export default {
                       nameError: state.nameAddError,
                       typeError: state.typeError,
                       limitError: state.limitAddError,
+                      blockError: state.blockAddError,
                       orderError: state.orderAddError,
                       timeError: state.timeAddError,
                       errorsAdd: state.errorsAdd,
@@ -1938,7 +1959,7 @@ export default {
                         <Popper
                           :class="'dark p-1'"
                           arrow
-                          disable-click-away
+                          :disable-click-away="false"
                           :content="$t('businessQueuesAdmin.collaboratorHelp')"
                         >
                           <i class="bi bi-info-circle-fill h7"></i>
@@ -1990,7 +2011,7 @@ export default {
                         <Popper
                           :class="'dark p-1'"
                           arrow
-                          disable-click-away
+                          :disable-click-away="false"
                           :content="$t('businessQueuesAdmin.serviceHelp')"
                         >
                           <i class="bi bi-info-circle-fill h7"></i>
@@ -2115,7 +2136,7 @@ export default {
                         <Popper
                           :class="'dark p-1'"
                           arrow
-                          disable-click-away
+                          :disable-click-away="false"
                           :content="$t('businessQueuesAdmin.walkinHelp')"
                         >
                           <i class="bi bi-info-circle-fill h7"></i>
@@ -2134,7 +2155,7 @@ export default {
                         <Popper
                           :class="'dark p-1'"
                           arrow
-                          disable-click-away
+                          :disable-click-away="false"
                           :content="$t('businessQueuesAdmin.sameCommeceHelp')"
                         >
                           <i class="bi bi-info-circle-fill h7"></i>
@@ -2306,7 +2327,7 @@ export default {
                         <Popper
                           :class="'dark p-1'"
                           arrow
-                          disable-click-away
+                          :disable-click-away="false"
                           :content="$t('businessQueuesAdmin.personalizedHelp')"
                         >
                           <i class="bi bi-info-circle-fill h7"></i>

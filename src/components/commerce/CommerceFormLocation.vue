@@ -1,9 +1,11 @@
 <script>
 import { ref, computed } from 'vue';
+import Popper from 'vue3-popper';
 import { getAddressBR } from '../../application/services/address';
 
 export default {
   name: 'CommerceFormLocation',
+  components: { Popper },
   props: {
     modelValue: { type: Object, required: true },
     errors: { type: Object, default: () => ({}) },
@@ -83,6 +85,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.country') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.countryHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-country-form`"
@@ -98,36 +106,71 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.language') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.languageHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
-          <input
+          <select
             :id="`${prefix}commerce-language-form`"
-            min="1"
-            max="3"
-            type="text"
-            class="form-control-modern"
+            class="form-control-modern form-select-modern"
             :disabled="isAdd ? false : !toggles['commerces.admin.edit']"
-            v-model="localeInfo.language"
-            placeholder="Ex.: es / en / pt"
-          />
+            :value="localeInfo.language || 'pt'"
+            @change="
+              localeInfo = {
+                ...localeInfo,
+                language: $event.target.value,
+              }
+            "
+          >
+            <option value="pt">Português</option>
+            <option value="es">Español</option>
+            <option value="en">English</option>
+          </select>
         </div>
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.timezone') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.timezoneHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
-          <input
+          <select
             :id="`${prefix}commerce-timezone-form`"
-            min="1"
-            max="30"
-            type="text"
-            class="form-control-modern"
+            class="form-control-modern form-select-modern"
             :disabled="isAdd ? false : !toggles['commerces.admin.edit']"
-            v-model="localeInfo.timezone"
-            placeholder="Ex.: America/Caracas"
-          />
+            :value="localeInfo.timezone || 'America/Sao_Paulo'"
+            @change="
+              localeInfo = {
+                ...localeInfo,
+                timezone: $event.target.value,
+              }
+            "
+          >
+            <option value="America/Sao_Paulo">São Paulo (UTC-3)</option>
+            <option value="America/Caracas">Caracas (UTC-4)</option>
+            <option value="America/Santiago">Santiago (UTC-3/UTC-4)</option>
+            <option value="America/Buenos_Aires">Buenos Aires (UTC-3)</option>
+            <option value="America/Bogota">Bogotá (UTC-5)</option>
+            <option value="America/Lima">Lima (UTC-5)</option>
+            <option value="America/Mexico_City">Ciudad de México (UTC-6)</option>
+            <option value="America/Montevideo">Montevideo (UTC-3)</option>
+          </select>
         </div>
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.zip') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.zipHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-zip-form`"
@@ -144,6 +187,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.address') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.addressHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-address-form`"
@@ -160,6 +209,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.addressLat') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.addressLatHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-addressLat-form`"
@@ -175,6 +230,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.addressLng') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.addressLngHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-addressLng-form`"

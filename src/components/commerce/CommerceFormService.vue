@@ -1,10 +1,11 @@
 <script>
 import Toggle from '@vueform/toggle';
+import Popper from 'vue3-popper';
 import SpecificCalendarForm from '../domain/SpecificCalendarForm.vue';
 
 export default {
   name: 'CommerceFormService',
-  components: { Toggle, SpecificCalendarForm },
+  components: { Toggle, Popper, SpecificCalendarForm },
   props: {
     modelValue: { type: Object, required: true },
     toggles: { type: Object, default: () => ({}) },
@@ -99,6 +100,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.serviceUrl') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.serviceUrlHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-serviceUrl-form`"
@@ -144,6 +151,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.attentionHour') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.attentionHourHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <div style="display: flex; gap: 0.5rem; align-items: center">
             <input
@@ -159,7 +172,7 @@ export default {
               v-model="serviceInfo.attentionHourFrom"
               placeholder="Ex. 8"
             />
-            <span>-</span>
+            <span>{{ $t('businessCommercesAdmin.hourSeparator') }}</span>
             <input
               :id="`${prefix}commerce-attentionHourTo-form`"
               :disabled="isAdd ? false : !toggles['commerces.admin.edit']"
@@ -178,6 +191,12 @@ export default {
         <div class="form-group-modern form-group-toggle">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.break') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.breakHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <Toggle
             v-model="serviceInfo.break"
@@ -187,6 +206,12 @@ export default {
         <div v-if="serviceInfo.break" class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.breakHour') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.breakHourHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <div style="display: flex; gap: 0.5rem; align-items: center">
             <input
@@ -202,7 +227,7 @@ export default {
               v-model="serviceInfo.breakHourFrom"
               placeholder="Ex. 12"
             />
-            <span>-</span>
+            <span>{{ $t('businessCommercesAdmin.hourSeparator') }}</span>
             <input
               :id="`${prefix}commerce-breakHourTo-form`"
               :disabled="isAdd ? false : !toggles['commerces.admin.edit']"
@@ -224,6 +249,12 @@ export default {
         >
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.attentionDays') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.attentionDaysHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <div
             class="form-fields-container days-container"
@@ -249,6 +280,12 @@ export default {
         <div class="form-group-modern form-group-toggle">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.personalized') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.personalizedHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <Toggle
             v-model="serviceInfo.personalized"
@@ -279,7 +316,7 @@ export default {
                   v-model="serviceInfo.personalizedHours[day].attentionHourFrom"
                   placeholder="Ex. 8"
                 />
-                <span>-</span>
+                <span>{{ $t('businessCommercesAdmin.hourSeparator') }}</span>
                 <input
                   :id="`${prefix}personalized-hour-to-${day}`"
                   :disabled="isAdd ? false : !toggles['commerces.admin.edit']"
@@ -300,6 +337,12 @@ export default {
         <div class="form-group-modern form-group-toggle">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.specificCalendar') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessCommercesAdmin.selectSpecificDate') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <Toggle
             v-model="serviceInfo.specificCalendar"

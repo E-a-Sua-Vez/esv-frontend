@@ -66,6 +66,10 @@ export default {
       orderUpdateError: false,
       estimatedTimeAddError: false,
       estimatedTimeUpdateError: false,
+      blockTimeAddError: false,
+      blockTimeUpdateError: false,
+      shortDescriptionAddError: false,
+      shortDescriptionUpdateError: false,
       types: [],
       toggles: {},
       filtered: [],
@@ -168,20 +172,26 @@ export default {
       } else {
         state.orderAddError = false;
       }
-      if (!service.serviceInfo.estimatedTime || service.serviceInfo.estimatedTime.length === 0) {
-        state.timeAddError = true;
+      if (!service.serviceInfo || !service.serviceInfo.estimatedTime) {
+        state.estimatedTimeAddError = true;
         state.errorsAdd.push('businessServicesAdmin.validate.estimatedTime');
       } else {
-        state.timeAddError = false;
+        state.estimatedTimeAddError = false;
+      }
+      if (!service.serviceInfo || !service.serviceInfo.blockTime) {
+        state.blockTimeAddError = true;
+        state.errorsAdd.push('businessServicesAdmin.validate.blockTime');
+      } else {
+        state.blockTimeAddError = false;
       }
       if (
         !service.serviceInfo.shortDescription ||
         service.serviceInfo.shortDescription.length === 0
       ) {
-        state.timeAddError = true;
+        state.shortDescriptionAddError = true;
         state.errorsAdd.push('businessServicesAdmin.validate.shortDescription');
       } else {
-        state.timeAddError = false;
+        state.shortDescriptionAddError = false;
       }
       if (state.errorsAdd.length === 0) {
         return true;
@@ -197,6 +207,28 @@ export default {
       } else {
         state.orderUpdateError = false;
       }
+      if (!service.serviceInfo || !service.serviceInfo.estimatedTime) {
+        state.estimatedTimeUpdateError = true;
+        state.errorsUpdate.push('businessServicesAdmin.validate.estimatedTime');
+      } else {
+        state.estimatedTimeUpdateError = false;
+      }
+      if (!service.serviceInfo || !service.serviceInfo.blockTime) {
+        state.blockTimeUpdateError = true;
+        state.errorsUpdate.push('businessServicesAdmin.validate.blockTime');
+      } else {
+        state.blockTimeUpdateError = false;
+      }
+      if (
+        !service.serviceInfo ||
+        !service.serviceInfo.shortDescription ||
+        service.serviceInfo.shortDescription.length === 0
+      ) {
+        state.shortDescriptionUpdateError = true;
+        state.errorsUpdate.push('businessServicesAdmin.validate.shortDescription');
+      } else {
+        state.shortDescriptionUpdateError = false;
+      }
       if (state.errorsUpdate.length === 0) {
         return true;
       }
@@ -208,6 +240,7 @@ export default {
       state.newService = {
         order: state.services.length + 1,
         online: true,
+        active: true,
         serviceInfo: {},
       };
     };
@@ -284,14 +317,27 @@ export default {
     };
 
     const closeAddModal = () => {
+      const modalElement = document.getElementById('add-service');
       const modalCloseButton = document.getElementById('close-modal');
-      modalCloseButton.click();
+
+      // Intentar cerrar usando el botón de cierre del modal
+      if (modalCloseButton) {
+        modalCloseButton.click();
+      }
+
+      // Refuerzo: si Bootstrap está disponible, forzar el cierre del modal
+      if (modalElement && window.bootstrap && window.bootstrap.Modal) {
+        const existingInstance = window.bootstrap.Modal.getInstance(modalElement);
+        const modalInstance = existingInstance || new window.bootstrap.Modal(modalElement);
+        modalInstance.hide();
+      }
     };
 
     const resetAddForm = () => {
       state.newService = {
         order: state.services.length + 1,
         online: true,
+        active: true,
         serviceInfo: {},
       };
       state.errorsAdd = [];
@@ -300,6 +346,7 @@ export default {
       state.orderAddError = false;
       state.estimatedTimeAddError = false;
       state.shortDescriptionAddError = false;
+      state.blockTimeAddError = false;
     };
 
     const handleCloseButtonMousedown = e => {
@@ -464,6 +511,7 @@ export default {
                         orderUpdateError: state.orderUpdateError,
                         shortDescriptionUpdateError: state.shortDescriptionUpdateError,
                         estimatedTimeUpdateError: state.estimatedTimeUpdateError,
+                        blockTimeUpdateError: state.blockTimeUpdateError,
                         errorsUpdate: state.errorsUpdate,
                       }"
                       :services-length="state.services.length"
@@ -601,6 +649,7 @@ export default {
                         orderUpdateError: state.orderUpdateError,
                         shortDescriptionUpdateError: state.shortDescriptionUpdateError,
                         estimatedTimeUpdateError: state.estimatedTimeUpdateError,
+                        blockTimeUpdateError: state.blockTimeUpdateError,
                         errorsUpdate: state.errorsUpdate,
                       }"
                       :services-length="state.services.length"
@@ -693,6 +742,7 @@ export default {
                   orderAddError: state.orderAddError,
                   shortDescriptionAddError: state.shortDescriptionAddError,
                   estimatedTimeAddError: state.estimatedTimeAddError,
+                  blockTimeAddError: state.blockTimeAddError,
                   errorsAdd: state.errorsAdd,
                 }"
               />

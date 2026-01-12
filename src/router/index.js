@@ -258,6 +258,14 @@ router.beforeEach(async (to, from, next) => {
   if (publicCommerceViews.includes(to.name) || privateUserViews.includes(to.name)) {
     const environment = import.meta.env.VITE_NODE_ENV || 'local';
     const currentUserType = store.getCurrentUserType;
+
+    // Para el minisite de negocio (business-qr-setup) no forzamos
+    // "logout + sesión invitado" aunque el usuario sea BUSINESS,
+    // para evitar redirecciones extrañas al root en el primer acceso.
+    if (to.name === 'business-qr-setup') {
+      next();
+      return;
+    }
     if (
       environment !== 'local' &&
       (currentUserType !== USER_TYPES.INVITED ||

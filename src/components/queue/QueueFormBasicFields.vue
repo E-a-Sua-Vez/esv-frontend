@@ -43,6 +43,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern" :for="`${prefix}queue-name-form`">
         {{ $t('businessQueuesAdmin.name') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessQueuesAdmin.nameHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}queue-name-form`"
@@ -59,7 +65,7 @@ export default {
     <div class="form-group-modern" v-if="prefix === 'add-'">
       <label class="form-label-modern" :for="`${prefix}queue-type-form`">
         {{ $t('businessQueuesAdmin.type') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessQueuesAdmin.typeHelp') }}</div>
           </template>
@@ -80,6 +86,12 @@ export default {
     <div class="form-group-modern" v-else>
       <label class="form-label-modern" :for="`${prefix}queue-type-form`">
         {{ $t('businessQueuesAdmin.type') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessQueuesAdmin.typeHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}queue-type-form`"
@@ -93,6 +105,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern" :for="`${prefix}queue-limit-form`">
         {{ $t('businessQueuesAdmin.limit') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessQueuesAdmin.limitHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}queue-limit-form`"
@@ -109,6 +127,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern" :for="`${prefix}queue-order-form`">
         {{ $t('businessQueuesAdmin.order') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessQueuesAdmin.orderHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}queue-order-form`"
@@ -124,6 +148,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern" :for="`${prefix}queue-estimated-form`">
         {{ $t('businessQueuesAdmin.estimated') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessQueuesAdmin.estimatedHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}queue-estimated-form`"
@@ -139,6 +169,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern" :for="`${prefix}queue-block-form`">
         {{ $t('businessQueuesAdmin.blockTime') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessQueuesAdmin.blockTimeHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}queue-block-form`"
@@ -146,6 +182,7 @@ export default {
         min="1"
         type="number"
         class="form-control-modern"
+        :class="{ 'is-invalid': errors.blockError }"
         v-model="queue.blockTime"
         placeholder="1"
       />
@@ -153,12 +190,24 @@ export default {
     <div class="form-group-modern form-group-toggle">
       <label class="form-label-modern">
         {{ $t('businessQueuesAdmin.active') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessQueuesAdmin.activeHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <Toggle v-model="queue.active" :disabled="isAdd ? false : !toggles['queues.admin.edit']" />
     </div>
     <div class="form-group-modern form-group-toggle">
       <label class="form-label-modern">
         {{ $t('businessQueuesAdmin.online') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessQueuesAdmin.onlineHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <Toggle v-model="queue.online" :disabled="isAdd ? false : !toggles['queues.admin.edit']" />
     </div>
@@ -166,7 +215,7 @@ export default {
       <label class="form-label-modern">
         <i class="bi bi-camera-video me-2"></i>
         {{ $t('businessQueuesAdmin.telemedicine') || 'Telemedicina' }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>
               {{
@@ -187,7 +236,7 @@ export default {
       <label class="form-label-modern">
         <i class="bi bi-person me-2"></i>
         {{ $t('businessQueuesAdmin.presential') || 'Atención presencial' }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>
               {{

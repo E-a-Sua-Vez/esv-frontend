@@ -42,6 +42,9 @@ export default {
       limit: 5,
     });
 
+    const isServiceSelectionQueue = queue =>
+      queue && ['SERVICE', 'MULTI_SERVICE', 'SELECT_SERVICE'].includes(queue.type);
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
@@ -127,6 +130,18 @@ export default {
             state.filteredCollaboratorQueues = groupedQueues.value['COLLABORATOR'];
             refresh(state.filteredCollaboratorQueues);
           }
+        }
+
+        // Auto-selección sólo cuando hay una única fila de tipo
+        // orientado a servicios y NO se está usando agrupación por tipo.
+        if (
+          queues.value &&
+          queues.value.length === 1 &&
+          (!queueId.value || queueId.value === 'undefined') &&
+          !getActiveFeature(commerce.value, 'attention-queue-typegrouped', 'PRODUCT') &&
+          isServiceSelectionQueue(queues.value[0])
+        ) {
+          await getQueue(queues.value[0]);
         }
         loading.value = false;
       } catch (error) {
@@ -329,14 +344,15 @@ export default {
         }}</span>
       </div>
       <div class="row g-1" v-if="isActiveQueues()">
-        <!-- Selection Buttons Card -->
-        <div class="col col-md-10 offset-md-1 data-card">
-          <div
-            v-if="
-              (!queueId || queueId === 'undefined') &&
-              getActiveFeature(commerce, 'attention-queue-typegrouped', 'PRODUCT')
-            "
-          >
+        <!-- Selection Buttons Card (only when queues are grouped by type and no preselected queue) -->
+        <div
+          class="col col-md-10 offset-md-1 data-card"
+          v-if="
+            (!queueId || queueId === 'undefined') &&
+            getActiveFeature(commerce, 'attention-queue-typegrouped', 'PRODUCT')
+          "
+        >
+          <div>
             <div class="row">
               <div class="col-6">
                 <button
@@ -544,7 +560,7 @@ export default {
             <div v-if="queues && queues.length === 1">
               <QueueButton
                 :queue="queues[0]"
-                :selected-queue="queues[0]"
+                :selected-queue="state.queue"
                 :get-queue="getQueue"
                 :accept="accept"
                 :telemedicine-enabled="isTelemedicineEnabled(commerce, queues[0])"

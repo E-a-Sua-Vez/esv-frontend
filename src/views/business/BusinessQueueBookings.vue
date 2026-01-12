@@ -76,7 +76,7 @@ export default {
     const isActiveCommerce = () => commerce.value && commerce.value.active === true;
 
     const goBack = () => {
-      router.push({ path: '/interno/business/menu' });
+      router.push({ path: '/interno/negocio/menu' });
     };
 
     // Load queues when commerce changes

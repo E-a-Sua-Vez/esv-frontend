@@ -1,6 +1,9 @@
 <script>
+import Popper from 'vue3-popper';
+
 export default {
   name: 'CommerceFormContact',
+  components: { Popper },
   props: {
     modelValue: { type: Object, required: true },
     errors: { type: Object, default: () => ({}) },
@@ -43,6 +46,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.email') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.contactEmailHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-contact-email-form`"
@@ -58,6 +67,12 @@ export default {
         <div class="form-group-modern" v-if="isAdd">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.url') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.contactUrlHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-contact-url-form`"
@@ -73,6 +88,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.phone') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.contactPhoneHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-phone-form`"
@@ -87,6 +108,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.phone2') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.phone2Help') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-contact-phone2-form`"
@@ -102,6 +129,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.whatsapp') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.whatsappHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-contact-whatsapp-form`"
@@ -117,6 +150,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.twitter') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.twitterHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-contact-twitter-form`"
@@ -132,6 +171,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.instagram') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.instagramHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-contact-instagram-form`"
@@ -147,6 +192,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessCommercesAdmin.facebook') }}
+            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+              <template #content>
+                <div>{{ $t('businessAdmin.facebookHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}commerce-contact-facebook-form`"

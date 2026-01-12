@@ -423,6 +423,7 @@ export default {
                   <CommerceLogo
                     :commerce-id="state.commerce?.id"
                     :business-id="state.business?.id"
+                    :use-generic-fallback="true"
                     class="unit-logo-img"
                   />
                 </div>
@@ -450,6 +451,7 @@ export default {
                     <CommerceLogo
                       :commerce-id="com?.id"
                       :business-id="state.business?.id"
+                      :use-generic-fallback="true"
                       class="unit-logo-img"
                     />
                   </div>
@@ -489,6 +491,7 @@ export default {
                 <CommerceLogo
                   :commerce-id="state.commerce?.id"
                   :business-id="state.business?.id"
+                  :use-generic-fallback="true"
                   class="unit-logo-img"
                 />
               </div>
@@ -503,6 +506,7 @@ export default {
                 </span>
               </div>
             </div>
+            <i class="bi bi-check-circle-fill unit-option-check"></i>
           </div>
         </div>
       </div>
@@ -758,8 +762,12 @@ export default {
   width: 100%;
   padding: 1rem;
   border-radius: 12px;
-  border: 2px solid rgba(169, 169, 169, 0.2);
-  background: rgba(255, 255, 255, 0.5);
+  border: 2px solid var(--azul-turno);
+  background: rgba(0, 74, 173, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .unit-select-content {

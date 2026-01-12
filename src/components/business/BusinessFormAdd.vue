@@ -4,6 +4,12 @@
       <div id="business-name-form-add" class="row">
         <div class="col-4 text-label">
           {{ $t('businessAdmin.name') }}
+          <Popper :class="'dark p-1'" arrow>
+            <template #content>
+              <div>{{ $t('businessAdmin.nameHelp') }}</div>
+            </template>
+            <i class="bi bi-info-circle-fill h7"></i>
+          </Popper>
         </div>
         <div class="col-8">
           <input
@@ -24,20 +30,21 @@
           <Popper
             :class="'dark p-1'"
             arrow
-            disable-click-away
-            :content="$t('businessAdmin.keyNameHelp')"
           >
+            <template #content>
+              <div>{{ $t('businessAdmin.keyNameHelp') }}</div>
+            </template>
             <i class="bi bi-info-circle-fill h7"></i>
           </Popper>
         </div>
         <div class="col-8">
           <input
+            :disabled="true"
             min="1"
             max="50"
             type="text"
             class="form-control"
             :value="modelValue.keyName"
-            @input="updateField('keyName', $event.target.value)"
             :class="{ 'is-invalid': errors.keyNameError }"
             placeholder="brilliant-shop-1"
           />
@@ -46,6 +53,12 @@
       <div id="business-email-form-add" class="row g-1">
         <div class="col-4 text-label">
           {{ $t('businessAdmin.email') }}
+          <Popper :class="'dark p-1'" arrow>
+            <template #content>
+              <div>{{ $t('businessAdmin.emailHelp') }}</div>
+            </template>
+            <i class="bi bi-info-circle-fill h7"></i>
+          </Popper>
         </div>
         <div class="col-8">
           <input
@@ -62,6 +75,12 @@
       <div id="business-category-form-add" class="row g-1">
         <div class="col-4 text-label">
           {{ $t('businessAdmin.category') }}
+          <Popper :class="'dark p-1'" arrow>
+            <template #content>
+              <div>{{ $t('businessAdmin.categoryHelp') }}</div>
+            </template>
+            <i class="bi bi-info-circle-fill h7"></i>
+          </Popper>
         </div>
         <div class="col-8">
           <select
@@ -87,6 +106,12 @@
         <div id="business-country-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.country') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.countryHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -104,6 +129,12 @@
         <div id="business-language-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.language') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.languageHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <select
@@ -120,6 +151,12 @@
         <div id="business-timezone-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.timezone') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.timezoneHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <select
@@ -141,6 +178,12 @@
         <div id="business-zip-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.zip') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.zipHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -158,6 +201,12 @@
         <div id="business-address-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.address') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.addressHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -175,6 +224,12 @@
         <div id="business-addressLat-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.addressLat') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.addressLatHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -191,6 +246,12 @@
         <div id="business-addressLng-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.addressLng') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.addressLngHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -216,6 +277,12 @@
         <div id="business-contact-email-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.email') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.contactEmailHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -232,6 +299,12 @@
         <div id="business-contact-url-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.url') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.contactUrlHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -248,6 +321,12 @@
         <div id="business-phone-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.phone') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.contactPhoneHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -264,6 +343,12 @@
         <div id="business-contact-phone2-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.phone2') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.phone2Help') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -280,6 +365,12 @@
         <div id="business-contact-whatsapp-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.whatsapp') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.whatsappHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -296,6 +387,12 @@
         <div id="business-contact-twitter-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.twitter') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.twitterHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -312,6 +409,12 @@
         <div id="business-contact-instagram-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.instagram') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.instagramHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -328,6 +431,12 @@
         <div id="business-contact-facebook-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.facebook') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.facebookHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -353,6 +462,12 @@
         <div id="business-serviceUrl-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.serviceUrl') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.serviceUrlHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <input
@@ -369,6 +484,12 @@
         <div id="business-attentionHour-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.attentionHour') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.attentionHourHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-3">
             <input
@@ -383,7 +504,7 @@
               placeholder="Ex. 8"
             />
           </div>
-          <div class="col-2">-</div>
+          <div class="col-2">{{ $t('businessAdmin.hourSeparator') }}</div>
           <div class="col-3">
             <input
               min="0"
@@ -401,6 +522,12 @@
         <div id="add-business-break-active-form" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.break') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.breakHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <Toggle
@@ -417,6 +544,12 @@
         >
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.breakHour') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.breakHourHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-3">
             <input
@@ -431,7 +564,7 @@
               placeholder="Ex. 8"
             />
           </div>
-          <div class="col-2">-</div>
+          <div class="col-2">{{ $t('businessAdmin.hourSeparator') }}</div>
           <div class="col-3">
             <input
               min="0"
@@ -449,6 +582,12 @@
         <div id="business-attentionDays-form-add" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessAdmin.attentionDays') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.attentionDaysHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <div class="form-check form-switch" v-for="day in [1, 2, 3, 4, 5, 6, 7]" :key="day">
@@ -468,6 +607,12 @@
         <div id="add-business-personalized-active-form" class="row g-1">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.personalized') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessAdmin.personalizedHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </div>
           <div class="col-8">
             <Toggle
@@ -503,7 +648,7 @@
                 placeholder="Ex. 8"
               />
             </div>
-            <div class="col-2">-</div>
+            <div class="col-2">{{ $t('businessAdmin.hourSeparator') }}</div>
             <div class="col-3">
               <input
                 min="0"
@@ -585,6 +730,27 @@ export default {
     };
 
     const updateField = (field, value) => {
+      const slugifyName = text => {
+        if (!text) return '';
+        return text
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9\s]/g, '')
+          .trim()
+          .replace(/\s+/g, '_');
+      };
+
+      if (field === 'name') {
+        const keyName = slugifyName(value);
+        emit('update:modelValue', {
+          ...props.modelValue,
+          name: value,
+          keyName,
+        });
+        return;
+      }
+
       emit('update:modelValue', {
         ...props.modelValue,
         [field]: value,
