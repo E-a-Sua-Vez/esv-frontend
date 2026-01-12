@@ -1,7 +1,7 @@
 <script>
 import Popper from 'vue3-popper';
 import Toggle from '@vueform/toggle';
-import { updateFeatureToggle } from '../../../application/services/feature-toggle';
+import { updateFeatureToggle, addFeatureToggle } from '../../../application/services/feature-toggle';
 
 export default {
   name: 'SimpleConfigurationCard',
@@ -10,6 +10,7 @@ export default {
     show: { type: Boolean, default: true },
     canUpdate: { type: Boolean, default: true },
     configuration: { type: Object, default: {} },
+    commerceId: { type: String, default: undefined },
     showTooltip: { type: Boolean, default: false },
     icon: { type: String, default: '' },
     iconStyleClass: { type: String, default: '' },
@@ -20,7 +21,20 @@ export default {
   methods: {
     async update(configuration) {
       try {
-        await updateFeatureToggle(configuration.id, configuration);
+        // Si ya existe el feature-toggle para el comercio, solo actualizamos "active"
+        if (configuration.id) {
+          await updateFeatureToggle(configuration.id, { active: configuration.active });
+        } else if (this.commerceId) {
+          // Si aún no existe, lo creamos. El backend lo crea siempre como active=true,
+          // y luego el padre refresca el estado real desde el backend.
+          const payload = {
+            name: configuration.name,
+            type: configuration.type,
+            commerceId: this.commerceId,
+          };
+          await addFeatureToggle(payload);
+        }
+        this.$emit('updated');
       } catch (error) {}
     },
   },
@@ -40,7 +54,11 @@ export default {
             :class="'dark'"
             arrow
             disable-click-away
-            :content="$t(`configuration.${configuration.name}.description`)"
+            :content="
+              `${$t('configuration.' + configuration.name + '.description')} (key: ${
+                configuration.name
+              }, type: ${configuration.type})`
+            "
           >
             <i class="bi bi-info-circle-fill config-info-icon"></i>
           </Popper>
@@ -55,7 +73,8 @@ export default {
       </div>
       <div class="config-card-details">
         <span class="config-badge config-badge-type">{{ configuration.type }}</span>
-        <span class="config-badge config-badge-id">{{ configuration.id }}</span>
+        <span class="config-badge config-badge-id">{{ configuration.id || 'N/A' }}</span>
+        <span class="config-badge config-badge-key">{{ configuration.name || 'N/A' }}</span>
       </div>
     </div>
   </div>
@@ -148,6 +167,12 @@ export default {
 .config-badge-id {
   background: rgba(0, 0, 0, 0.06);
   color: rgba(0, 0, 0, 0.7);
+  font-family: 'Courier New', monospace;
+}
+
+.config-badge-key {
+  background: rgba(59, 130, 246, 0.12);
+  color: rgba(37, 99, 235, 0.9);
   font-family: 'Courier New', monospace;
 }
 </style>

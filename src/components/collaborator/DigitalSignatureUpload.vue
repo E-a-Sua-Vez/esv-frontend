@@ -1,7 +1,20 @@
 <template>
   <div class="digital-signature-upload">
     <div v-if="currentSignature" class="form-group-modern mb-3">
-      <label class="form-label-modern">{{ $t('digitalSignature.current') }}</label>
+      <label class="form-label-modern">
+        {{ $t('digitalSignature.current') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>
+              {{
+                $t('digitalSignature.currentHelp') ||
+                  'Imagen de la firma digital actualmente asociada al colaborador y usada para firmar documentos.'
+              }}
+            </div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
+      </label>
       <div class="signature-preview">
         <img
           :src="currentSignature"
@@ -13,7 +26,20 @@
     </div>
 
     <div class="form-group-modern mb-3">
-      <label class="form-label-modern">{{ $t('digitalSignature.upload') }}</label>
+      <label class="form-label-modern">
+        {{ $t('digitalSignature.upload') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>
+              {{
+                $t('digitalSignature.uploadHelp') ||
+                  'Selecciona una imagen clara de la firma del profesional (por ejemplo, foto escaneada o firmada en tablet).'
+              }}
+            </div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
+      </label>
       <input
         type="file"
         accept="image/*"
@@ -28,11 +54,37 @@
 
     <div class="row g-3 mb-3">
       <div class="col-md-6">
-        <label class="form-label-modern">{{ $t('digitalSignature.crm') }}</label>
+        <label class="form-label-modern">
+          {{ $t('digitalSignature.crm') }}
+          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+            <template #content>
+              <div>
+                {{
+                  $t('digitalSignature.crmHelp') ||
+                    'Número de registro profesional (CRM u organismo equivalente) ligado a la firma digital.'
+                }}
+              </div>
+            </template>
+            <i class="bi bi-info-circle-fill h7"></i>
+          </Popper>
+        </label>
         <input v-model="crm" type="text" class="form-control-modern" placeholder="123456" />
       </div>
       <div class="col-md-6">
-        <label class="form-label-modern">{{ $t('digitalSignature.crmState') }}</label>
+        <label class="form-label-modern">
+          {{ $t('digitalSignature.crmState') }}
+          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+            <template #content>
+              <div>
+                {{
+                  $t('digitalSignature.crmStateHelp') ||
+                    'Estado o provincia asociado al registro profesional (por ejemplo, SP, RJ, BA).'
+                }}
+              </div>
+            </template>
+            <i class="bi bi-info-circle-fill h7"></i>
+          </Popper>
+        </label>
         <input v-model="crmState" type="text" class="form-control-modern" placeholder="SP" />
       </div>
     </div>
@@ -48,6 +100,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue';
+import Popper from 'vue3-popper';
 import { getDigitalSignatureUrl } from '@/application/services/collaborator';
 
 const props = defineProps({

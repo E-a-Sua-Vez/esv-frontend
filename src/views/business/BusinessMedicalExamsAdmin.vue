@@ -19,6 +19,7 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import MedicalExamSimpleName from '../../components/common/MedicalExamSimpleName.vue';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'BusinessMedicalExamsAdmin',
@@ -33,6 +34,7 @@ export default {
     DesktopPageHeader,
     SearchAdminItem,
     MedicalExamSimpleName,
+    Popper,
   },
   async setup() {
     const router = useRouter();
@@ -182,6 +184,13 @@ export default {
       };
     };
 
+    const closeAddModal = () => {
+      const closeButton = document.getElementById('close-modal');
+      if (closeButton) {
+        closeButton.click();
+      }
+    };
+
     const add = async () => {
       try {
         loading.value = true;
@@ -192,6 +201,7 @@ export default {
           await createMedicalExam(state.newExam);
           await loadExams(commerce.value?.id); // ✅ Recargar con commerceId
           state.showAdd = false;
+          closeAddModal();
           state.newExam = {};
           state.extendedEntity = undefined;
         }
@@ -246,6 +256,26 @@ export default {
       state.goToUnavailable = false;
     };
 
+    const copyIdToClipboard = async id => {
+      if (!id) return;
+      try {
+        if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(id);
+        } else {
+          const textarea = document.createElement('textarea');
+          textarea.value = id;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+        }
+      } catch (e) {
+        // silent fallback
+      }
+    };
+
     const showUpdateForm = index => {
       state.extendedEntity = state.extendedEntity !== index ? index : undefined;
     };
@@ -269,6 +299,7 @@ export default {
       goToUnavailable,
       unavailableCancel,
       receiveFilteredItems,
+      copyIdToClipboard,
     };
   },
 };
@@ -343,11 +374,30 @@ export default {
                       </div>
                     </div>
                     <div v-if="state.extendedEntity === index" class="mt-3">
+                      <div id="medical-exam-id-form" class="row mb-1">
+                        <div class="col">
+                          <span><strong>Id:</strong> {{ exam.id }}</span>
+                          <button
+                            type="button"
+                            class="btn btn-link btn-sm p-0 ms-2 align-baseline"
+                            @click="copyIdToClipboard(exam.id)"
+                            :title="$t('copy') || 'Copiar Id'"
+                          >
+                            <i class="bi bi-clipboard"></i>
+                          </button>
+                        </div>
+                      </div>
                       <div class="form-fields-container">
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalExamsAdmin.name')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalExamsAdmin.name') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalExamsAdmin.nameHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <input
                             v-model="exam.name"
                             type="text"
@@ -357,9 +407,15 @@ export default {
                           />
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalExamsAdmin.type')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalExamsAdmin.type') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalExamsAdmin.typeHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <select
                             v-model="exam.type"
                             class="form-control-modern"
@@ -372,9 +428,15 @@ export default {
                           </select>
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalExamsAdmin.description')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalExamsAdmin.description') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalExamsAdmin.descriptionHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <textarea
                             v-model="exam.description"
                             class="form-control-modern"
@@ -384,9 +446,15 @@ export default {
                           ></textarea>
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalExamsAdmin.preparation')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalExamsAdmin.preparation') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalExamsAdmin.preparationHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <textarea
                             v-model="exam.preparation"
                             class="form-control-modern"
@@ -511,9 +579,15 @@ export default {
                     <div v-if="state.extendedEntity === index" class="mt-3">
                       <div class="form-fields-container">
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalExamsAdmin.name')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalExamsAdmin.name') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalExamsAdmin.nameHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <input
                             v-model="exam.name"
                             type="text"
@@ -523,9 +597,15 @@ export default {
                           />
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalExamsAdmin.type')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalExamsAdmin.type') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalExamsAdmin.typeHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <select
                             v-model="exam.type"
                             class="form-control-modern"
@@ -538,9 +618,15 @@ export default {
                           </select>
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalExamsAdmin.description')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalExamsAdmin.description') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalExamsAdmin.descriptionHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <textarea
                             v-model="exam.description"
                             class="form-control-modern"
@@ -550,9 +636,15 @@ export default {
                           ></textarea>
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalExamsAdmin.preparation')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalExamsAdmin.preparation') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalExamsAdmin.preparationHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <textarea
                             v-model="exam.preparation"
                             class="form-control-modern"
@@ -768,6 +860,12 @@ export default {
   background-color: rgba(245, 246, 247, 0.8);
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.form-help-icon {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.4);
+  cursor: help;
 }
 
 .form-control-modern.is-invalid {

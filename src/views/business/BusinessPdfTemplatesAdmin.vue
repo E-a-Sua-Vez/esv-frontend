@@ -15,6 +15,7 @@ import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import PdfTemplateCanvasEditor from '../../components/pdf-templates/PdfTemplateCanvasEditor.vue';
 import PdfTemplateSimpleName from '../../components/common/PdfTemplateSimpleName.vue';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'BusinessPdfTemplatesAdmin',
@@ -30,6 +31,7 @@ export default {
     SearchAdminItem,
     PdfTemplateCanvasEditor,
     PdfTemplateSimpleName,
+    Popper,
   },
   async setup() {
     const router = useRouter();
@@ -191,6 +193,13 @@ export default {
       router.back();
     };
 
+    const closeAddModal = () => {
+      const closeButton = document.getElementById('close-modal');
+      if (closeButton) {
+        closeButton.click();
+      }
+    };
+
     const addTemplate = async () => {
       try {
         state.errorsAdd = [];
@@ -212,6 +221,7 @@ export default {
         await pdfTemplateService.createTemplate(templateData);
         await loadTemplates(commerce.value.id);
         state.showAdd = false;
+        closeAddModal();
         state.newTemplate = {
           name: '',
           description: '',
@@ -351,6 +361,26 @@ export default {
       state.goToUnavailable = false;
     };
 
+    const copyIdToClipboard = async id => {
+      if (!id) return;
+      try {
+        if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(id);
+        } else {
+          const textarea = document.createElement('textarea');
+          textarea.value = id;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+        }
+      } catch (e) {
+        // silent fallback
+      }
+    };
+
     const saveCanvasTemplate = async templateData => {
       try {
         loading.value = true;
@@ -472,6 +502,7 @@ export default {
       generatePreview,
       storePrevPageSize,
       handlePageSizeChange,
+      copyIdToClipboard,
     };
   },
 };
@@ -553,9 +584,30 @@ export default {
                       </div>
                     </div>
                     <div v-if="state.extendedEntity === index" class="mt-3">
+                      <div id="pdf-template-id-form" class="row mb-1">
+                        <div class="col">
+                          <span><strong>Id:</strong> {{ template.id }}</span>
+                          <button
+                            type="button"
+                            class="btn btn-link btn-sm p-0 ms-2 align-baseline"
+                            @click="copyIdToClipboard(template.id)"
+                            :title="$t('copy') || 'Copiar Id'"
+                          >
+                            <i class="bi bi-clipboard"></i>
+                          </button>
+                        </div>
+                      </div>
                       <div class="form-fields-container">
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{ $t('pdfTemplates.name') }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('pdfTemplates.name') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('pdfTemplates.nameHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <input
                             v-model="template.name"
                             type="text"
@@ -565,9 +617,15 @@ export default {
                           />
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('pdfTemplates.description')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('pdfTemplates.description') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('pdfTemplates.descriptionHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <textarea
                             v-model="template.description"
                             class="form-control-modern"
@@ -576,9 +634,15 @@ export default {
                           ></textarea>
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('pdfTemplates.documentType')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('pdfTemplates.documentType') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('pdfTemplates.documentTypeHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <select
                             v-model="template.documentType"
                             class="form-control-modern"
@@ -594,7 +658,15 @@ export default {
                           </select>
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{ $t('pdfTemplates.scope') }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('pdfTemplates.scope') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('pdfTemplates.scopeHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <select
                             v-model="template.scope"
                             class="form-control-modern"
@@ -610,7 +682,15 @@ export default {
                           </select>
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{ $t('pdfTemplates.pageSize') }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('pdfTemplates.pageSize') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('pdfTemplates.pageSizeHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <select
                             v-model="template.pageSize"
                             @focus="storePrevPageSize(template)"
@@ -978,7 +1058,15 @@ export default {
             <div id="add-template-form" class="result-card mb-4" v-if="state.showAdd">
               <div class="form-fields-container">
                 <div class="form-group-modern">
-                  <label class="form-label-modern"> {{ $t('pdfTemplates.name') }} * </label>
+                  <label class="form-label-modern">
+                    {{ $t('pdfTemplates.name') }} *
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('pdfTemplates.nameHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
+                  </label>
                   <input
                     v-model="state.newTemplate.name"
                     type="text"
@@ -990,6 +1078,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('pdfTemplates.description') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('pdfTemplates.descriptionHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <textarea
                     v-model="state.newTemplate.description"
@@ -1001,6 +1095,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('pdfTemplates.documentType') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('pdfTemplates.documentTypeHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <select v-model="state.newTemplate.documentType" class="form-control-modern">
                     <option
@@ -1015,6 +1115,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('pdfTemplates.scope') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('pdfTemplates.scopeHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <select v-model="state.newTemplate.scope" class="form-control-modern">
                     <option v-for="scope in state.scopes" :key="scope.value" :value="scope.value">
@@ -1025,6 +1131,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('pdfTemplates.pageSize') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('pdfTemplates.pageSizeHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <select v-model="state.newTemplate.pageSize" class="form-control-modern">
                     <option value="A4">A4</option>
@@ -1250,6 +1362,12 @@ export default {
 .form-control-modern.is-invalid {
   border-color: rgba(220, 53, 69, 0.5);
   box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
+}
+
+.form-help-icon {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.4);
+  cursor: help;
 }
 
 /* Desktop Layout Styles */

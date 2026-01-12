@@ -30,6 +30,13 @@ const BusinessQueueBookings = () => import('@/views/business/BusinessQueueBookin
 const BusinessFormAdmin = () => import('@/views/business/BusinessFormAdmin.vue');
 const BusinessPermissionsAdmin = () => import('@/views/business/BusinessPermissionsAdmin.vue');
 const MasterLeadPipeline = () => import('@/views/master/MasterLeadPipeline.vue');
+const BusinessProductStockAdmin = () => import('@/views/business/BusinessProductStockAdmin.vue');
+const BusinessMedicationsAdmin = () => import('@/views/business/BusinessMedicationsAdmin.vue');
+const BusinessMedicalExamsAdmin = () => import('@/views/business/BusinessMedicalExamsAdmin.vue');
+const BusinessMedicalTemplatesAdmin = () =>
+  import('@/views/business/BusinessMedicalTemplatesAdmin.vue');
+const BusinessPdfTemplatesAdmin = () => import('@/views/business/BusinessPdfTemplatesAdmin.vue');
+const BusinessAuditLog = () => import('@/views/business/BusinessAuditLog.vue');
 
 const PrivateMasterRoutes = [
   {
@@ -61,6 +68,11 @@ const PrivateMasterRoutes = [
     path: '/interno/master/tracing',
     name: 'business-master-tracing',
     component: BusinessTracing,
+  },
+  {
+    path: '/interno/master/product-stock',
+    name: 'business-product-stock-master-admin',
+    component: BusinessProductStockAdmin,
   },
   {
     path: '/interno/master/financial',
@@ -156,6 +168,31 @@ const PrivateMasterRoutes = [
     path: '/interno/master/patient-history-item-master-admin',
     name: 'patient-history-item-master-admin',
     component: BusinessPatientHistoryItemAdmin,
+  },
+  {
+    path: '/interno/master/medications-admin',
+    name: 'business-medications-master-admin',
+    component: BusinessMedicationsAdmin,
+  },
+  {
+    path: '/interno/master/medical-exams-admin',
+    name: 'business-medical-exams-master-admin',
+    component: BusinessMedicalExamsAdmin,
+  },
+  {
+    path: '/interno/master/medical-templates-admin',
+    name: 'business-medical-templates-master-admin',
+    component: BusinessMedicalTemplatesAdmin,
+  },
+  {
+    path: '/interno/master/pdf-templates-admin',
+    name: 'business-pdf-templates-master-admin',
+    component: BusinessPdfTemplatesAdmin,
+  },
+  {
+    path: '/interno/master/audit-log',
+    name: 'business-audit-log-master-admin',
+    component: BusinessAuditLog,
   },
   {
     path: '/interno/master/bookings-master-admin',

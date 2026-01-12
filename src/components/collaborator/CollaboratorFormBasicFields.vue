@@ -34,6 +34,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.name') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessCollaboratorsAdmin.nameHelp') || 'Nombre completo del colaborador tal como se mostrará en el producto y en reportes.' }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}collaborator-name-form`"
@@ -50,6 +56,12 @@ export default {
     <div class="form-group-modern" v-if="prefix === 'add-'">
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.email') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessCollaboratorsAdmin.emailHelp') || 'Correo que usará el colaborador para ingresar y recibir notificaciones.' }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}collaborator-email-form`"
@@ -64,6 +76,12 @@ export default {
     <div class="form-group-modern" v-else>
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.email') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessCollaboratorsAdmin.emailHelp') || 'Correo registrado del colaborador; no puede editarse desde aquí.' }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}collaborator-email-form`"
@@ -78,7 +96,7 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.alias') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessCollaboratorsAdmin.aliasHelp') }}</div>
           </template>
@@ -99,6 +117,17 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.type') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>
+              {{
+                $t('businessCollaboratorsAdmin.typeHelp') ||
+                  'Define el tipo de colaborador y su nivel de acceso: STANDARD (funciones básicas), ASSISTANT (apoyo operativo) y FULL (acceso completo).'
+              }}
+            </div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <select
         :id="`${prefix}collaborator-type-form`"
@@ -118,6 +147,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.phone') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessCollaboratorsAdmin.phoneHelp') || 'Teléfono de contacto del colaborador en formato internacional (código de país + número).' }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}collaborator-phone-form`"
@@ -133,6 +168,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.module') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessCollaboratorsAdmin.moduleHelp') || 'Módulo principal donde opera el colaborador (p. ej. agendas, colas, encuestas). Define en qué parte del producto aparece.' }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <select
         :id="`${prefix}collaborator-module-form`"
@@ -154,6 +195,17 @@ export default {
     <div class="form-group-modern" v-if="showRole">
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.role') || 'Rol Específico' }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>
+              {{
+                $t('businessCollaboratorsAdmin.roleHelp') ||
+                  'Rol profesional o administrativo del colaborador. Algunos roles habilitan funciones adicionales como firma de documentos.'
+              }}
+            </div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <select
         :id="`${prefix}collaborator-role-form`"
@@ -182,9 +234,15 @@ export default {
       </select>
     </div>
 
-    <div class="form-group-modern form-group-toggle">
+    <div class="form-group-modern form-group-toggle" v-if="!isAdd">
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.active') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessCollaboratorsAdmin.activeHelp') || 'Si está activo, el colaborador puede usar la plataforma y aparecerá en las listas de selección.' }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <Toggle
         v-model="collaborator.active"
@@ -194,6 +252,12 @@ export default {
     <div class="form-group-modern form-group-toggle">
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.bot') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessCollaboratorsAdmin.botHelp') || 'Marca este colaborador como bot cuando representa una automatización o integración y no una persona.' }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <Toggle
         v-model="collaborator.bot"

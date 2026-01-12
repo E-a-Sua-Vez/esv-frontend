@@ -749,6 +749,14 @@
         <div class="row business-details-container">
           <div class="col">
             <span><strong>Id:</strong> {{ business.id }}</span>
+            <button
+              type="button"
+              class="btn btn-link btn-copy-id p-0 ms-2 align-baseline"
+              @click="copyIdToClipboard(business.id)"
+              :title="$t('copy') || 'Copiar Id'"
+            >
+              <i class="bi bi-clipboard"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -799,6 +807,27 @@ export default {
     },
   },
   emits: ['openLogoUpload', 'loadLogo'],
+  methods: {
+    async copyIdToClipboard(id) {
+      if (!id) return;
+      try {
+        if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(id);
+        } else {
+          const textarea = document.createElement('textarea');
+          textarea.value = id;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+        }
+      } catch (e) {
+        // silent fallback
+      }
+    },
+  },
   setup(props, { emit }) {
     const loadingZip = ref(false);
 

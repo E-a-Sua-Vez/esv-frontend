@@ -3,33 +3,24 @@ import { ref } from 'vue';
 import Popper from 'vue3-popper';
 
 export default {
-  name: 'CollaboratorFormRelations',
+  name: 'AdministratorFormRelations',
   components: { Popper },
   props: {
     modelValue: { type: Object, required: true },
     commerces: { type: Array, default: () => [] },
-    services: { type: Array, default: () => [] },
-    toggles: { type: Object, default: () => ({}) },
     prefix: { type: String, default: '' },
     isAdd: { type: Boolean, default: false },
     onSelectCommerce: { type: Function, default: null },
-    onSelectService: { type: Function, default: null },
     onDeleteCommerce: { type: Function, default: null },
-    onDeleteService: { type: Function, default: null },
     showCommerce: { type: Function, default: null },
-    showService: { type: Function, default: null },
   },
   emits: ['update:modelValue'],
   setup() {
     const selectedCommerce = ref(null);
-    const selectedService = ref(null);
-    return {
-      selectedCommerce,
-      selectedService,
-    };
+    return { selectedCommerce };
   },
   computed: {
-    collaborator: {
+    administrator: {
       get() {
         return this.modelValue;
       },
@@ -41,24 +32,13 @@ export default {
   methods: {
     handleSelectCommerce(commerce) {
       if (commerce && this.onSelectCommerce) {
-        this.onSelectCommerce(this.collaborator, commerce);
+        this.onSelectCommerce(this.administrator, commerce);
         this.selectedCommerce = null;
-      }
-    },
-    handleSelectService(service) {
-      if (service && this.onSelectService) {
-        this.onSelectService(this.collaborator, service);
-        this.selectedService = null;
       }
     },
     handleDeleteCommerce(commerceId) {
       if (this.onDeleteCommerce) {
-        this.onDeleteCommerce(this.collaborator, commerceId);
-      }
-    },
-    handleDeleteService(serviceId) {
-      if (this.onDeleteService) {
-        this.onDeleteService(this.collaborator, serviceId);
+        this.onDeleteCommerce(this.administrator, commerceId);
       }
     },
   },
@@ -67,16 +47,15 @@ export default {
 
 <template>
   <div class="form-fields-container">
-    <!-- Commerces Section -->
     <div class="form-group-modern">
       <label class="form-label-modern">
-        {{ $t('businessCollaboratorsAdmin.commerces') }}
+        {{ $t('businessAdministratorAdmin.commerces') }}
         <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>
               {{
-                $t('businessCollaboratorsAdmin.commercesHelp') ||
-                  'Lista de comercios/unidades donde el colaborador puede atender. Selecciona uno o varios para asignar cobertura.'
+                $t('businessAdministratorAdmin.commercesHelp') ||
+                  'Lista de comercios a los que este administrador tiene acceso. Selecciona uno o varios y usa la X para removerlos.'
               }}
             </div>
           </template>
@@ -85,23 +64,23 @@ export default {
       </label>
       <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem">
         <select
-          :id="`${prefix}collaborator-commerces-form`"
+          :id="`${prefix}administrator-commerces-form`"
           class="form-control-modern form-select-modern"
           v-model="selectedCommerce"
           @change="handleSelectCommerce(selectedCommerce)"
         >
           <option :value="null">
-            {{ $t('businessCollaboratorsAdmin.selectCommerce') || 'Seleccionar comercio' }}
+            {{ $t('businessAdministratorAdmin.selectCommerce') || 'Seleccionar comercio' }}
           </option>
           <option v-for="com in commerces" :key="com.id" :value="com">
             {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
           </option>
         </select>
         <div
-          v-if="collaborator.commercesId && collaborator.commercesId.length > 0"
+          v-if="administrator.commercesId && administrator.commercesId.length > 0"
           class="badges-container"
         >
-          <span class="badge-modern" v-for="comId in collaborator.commercesId" :key="comId">
+          <span class="badge-modern" v-for="comId in administrator.commercesId" :key="comId">
             {{ showCommerce ? showCommerce(comId) : comId }}
             <button
               type="button"
@@ -115,60 +94,10 @@ export default {
         </div>
       </div>
     </div>
-
-    <!-- Services Section -->
-    <div class="form-group-modern">
-      <label class="form-label-modern">
-        {{ $t('businessCollaboratorsAdmin.services') }}
-        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-          <template #content>
-            <div>
-              {{
-                $t('businessCollaboratorsAdmin.servicesHelp') ||
-                  'Servicios específicos que este colaborador puede prestar. Usa los íconos para agregar o quitar servicios asignados.'
-              }}
-            </div>
-          </template>
-          <i class="bi bi-info-circle-fill h7"></i>
-        </Popper>
-      </label>
-      <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem">
-        <select
-          :id="`${prefix}collaborator-services-form`"
-          class="form-control-modern form-select-modern"
-          v-model="selectedService"
-          @change="handleSelectService(selectedService)"
-        >
-          <option :value="null">
-            {{ $t('businessCollaboratorsAdmin.selectService') || 'Seleccionar servicio' }}
-          </option>
-          <option v-for="serv in services" :key="serv.id" :value="serv">
-            {{ serv.active ? `🟢  ${serv.tag}` : `🔴  ${serv.tag}` }}
-          </option>
-        </select>
-        <div
-          v-if="collaborator.servicesId && collaborator.servicesId.length > 0"
-          class="badges-container"
-        >
-          <span class="badge-modern" v-for="servId in collaborator.servicesId" :key="servId">
-            {{ showService ? showService(servId) : servId }}
-            <button
-              type="button"
-              class="badge-close"
-              aria-label="Close"
-              @click="handleDeleteService(servId)"
-            >
-              <i class="bi bi-x"></i>
-            </button>
-          </span>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <style scoped>
-/* Form Fields Container */
 .form-fields-container {
   display: flex;
   flex-direction: column;
@@ -176,7 +105,6 @@ export default {
   padding: 0.5rem;
 }
 
-/* Form Group Modern */
 .form-group-modern {
   display: flex;
   flex-direction: row;
@@ -185,7 +113,6 @@ export default {
   width: 100%;
 }
 
-/* Form Label Modern */
 .form-label-modern {
   min-width: 120px;
   font-size: 0.8125rem;
@@ -199,7 +126,6 @@ export default {
   padding-top: 0.4rem;
 }
 
-/* Form Control Modern */
 .form-control-modern,
 .form-select-modern {
   flex: 1;
@@ -229,7 +155,6 @@ export default {
   appearance: none;
 }
 
-/* Badges Container */
 .badges-container {
   display: flex;
   flex-wrap: wrap;
@@ -258,33 +183,5 @@ export default {
   margin-left: 0.25rem;
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-}
-
-.badge-close:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: #212529;
-}
-
-.badge-close i {
-  font-size: 0.75rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .form-group-modern {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .form-label-modern {
-    min-width: auto;
-    width: 100%;
-    padding-top: 0;
-  }
 }
 </style>

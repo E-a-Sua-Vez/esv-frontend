@@ -31,6 +31,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern" :for="`${prefix}module-name-form`">
         {{ $t('businessModulesAdmin.name') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessModulesAdmin.nameHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill form-help-icon"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}module-name-form`"
@@ -44,9 +50,15 @@ export default {
         placeholder="Module A"
       />
     </div>
-    <div class="form-group-modern form-group-toggle">
+    <div class="form-group-modern form-group-toggle" v-if="!isAdd">
       <label class="form-label-modern">
         {{ $t('businessModulesAdmin.active') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessModulesAdmin.activeHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill form-help-icon"></i>
+        </Popper>
       </label>
       <Toggle v-model="module.active" :disabled="isAdd ? false : !toggles['modules.admin.edit']" />
     </div>
@@ -75,6 +87,12 @@ export default {
   color: #495057;
   text-transform: capitalize;
   flex-shrink: 0;
+}
+
+.form-help-icon {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.4);
+  cursor: help;
 }
 
 .form-control-modern {

@@ -58,6 +58,12 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessSurveysAdmin.question') }}
+            <Popper :class="'dark p-1'" arrow>
+              <template #content>
+                <div>{{ $t('businessSurveysAdmin.questionHelp') }}</div>
+              </template>
+              <i class="bi bi-info-circle-fill h7"></i>
+            </Popper>
           </label>
           <input
             :id="`${prefix}question-title-${ind}`"
@@ -71,7 +77,7 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessSurveysAdmin.type') }}
-            <Popper v-if="prefix === 'add-'" :class="'dark p-1'" arrow disable-click-away>
+            <Popper :class="'dark p-1'" arrow>
               <template #content>
                 <div>{{ $t('businessSurveysAdmin.typeQuestionHelp') }}</div>
               </template>
@@ -95,7 +101,7 @@ export default {
         >
           <label class="form-label-modern">
             {{ $t('businessSurveysAdmin.otherOption') }}
-            <Popper v-if="prefix === 'add-'" :class="'dark p-1'" arrow disable-click-away>
+            <Popper :class="'dark p-1'" arrow>
               <template #content>
                 <div>{{ $t('businessSurveysAdmin.otherOptionQuestionHelp') }}</div>
               </template>
@@ -113,7 +119,7 @@ export default {
         >
           <label class="form-label-modern">
             {{ $t('businessSurveysAdmin.otherOpen') }}
-            <Popper v-if="prefix === 'add-'" :class="'dark p-1'" arrow disable-click-away>
+            <Popper :class="'dark p-1'" arrow>
               <template #content>
                 <div>{{ $t('businessSurveysAdmin.otherOpenQuestionHelp') }}</div>
               </template>
@@ -125,7 +131,7 @@ export default {
         <div v-if="question.type === 'OPEN_WRITING'" class="form-group-modern form-group-toggle">
           <label class="form-label-modern">
             {{ $t('businessSurveysAdmin.analize') }}
-            <Popper v-if="prefix === 'add-'" :class="'dark p-1'" arrow disable-click-away>
+            <Popper :class="'dark p-1'" arrow>
               <template #content>
                 <div>{{ $t('businessSurveysAdmin.analizeIAQuestionHelp') }}</div>
               </template>
@@ -137,7 +143,7 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('businessSurveysAdmin.order') }}
-            <Popper v-if="prefix === 'add-'" :class="'dark p-1'" arrow disable-click-away>
+            <Popper :class="'dark p-1'" arrow>
               <template #content>
                 <div>{{ $t('businessSurveysAdmin.orderQuestionHelp') }}</div>
               </template>
@@ -161,7 +167,7 @@ export default {
         >
           <label class="form-label-modern">
             {{ $t('businessSurveysAdmin.options') }}
-            <Popper :class="'dark p-1'" arrow disable-click-away>
+            <Popper :class="'dark p-1'" arrow>
               <template #content>
                 <div>{{ $t('businessSurveysAdmin.optionsHelp') }}</div>
               </template>
@@ -182,7 +188,7 @@ export default {
             <i class="bi bi-trash3-fill"></i>
             {{ $t('businessSurveysAdmin.deleteQuestion') }}
           </button>
-          <Popper v-if="prefix === 'add-'" :class="'dark p-1'" arrow disable-click-away>
+          <Popper :class="'dark p-1'" arrow>
             <template #content>
               <div>{{ $t('businessSurveysAdmin.deleteQuestionHelp') }}</div>
             </template>
@@ -198,7 +204,7 @@ export default {
         <i class="bi bi-plus-circle"></i>
         {{ $t('businessSurveysAdmin.addQuestion') }}
       </button>
-      <Popper :class="'dark p-1'" arrow disable-click-away>
+      <Popper :class="'dark p-1'" arrow>
         <template #content>
           <div>{{ $t('businessSurveysAdmin.addQuestionHelp') }}</div>
         </template>

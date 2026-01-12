@@ -1,31 +1,44 @@
 <script>
-import ServiceFormBasicFields from './ServiceFormBasicFields.vue';
-import ServiceFormDetails from './ServiceFormDetails.vue';
+import AdministratorFormBasicFields from './AdministratorFormBasicFields.vue';
+import AdministratorFormRelations from './AdministratorFormRelations.vue';
 import Warning from '../common/Warning.vue';
 
 export default {
-  name: 'ServiceFormEdit',
+  name: 'AdministratorFormEdit',
   components: {
-    ServiceFormBasicFields,
-    ServiceFormDetails,
+    AdministratorFormBasicFields,
+    AdministratorFormRelations,
     Warning,
   },
   props: {
-    service: { type: Object, required: true },
-    types: { type: Array, default: () => [] },
+    administrator: { type: Object, required: true },
+    commerces: { type: Array, default: () => [] },
     toggles: { type: Object, default: () => ({}) },
     errors: { type: Object, default: () => ({}) },
-    servicesLength: { type: Number, default: 0 },
+    onSelectCommerce: { type: Function, default: null },
+    onDeleteCommerce: { type: Function, default: null },
+    showCommerce: { type: Function, default: null },
+  },
+  emits: ['update:administrator'],
+  computed: {
+    localAdministrator: {
+      get() {
+        return this.administrator;
+      },
+      set(value) {
+        this.$emit('update:administrator', value);
+      },
+    },
   },
   methods: {
-    async copyIdToClipboard(id) {
-      if (!id) return;
+    async copyIdToClipboard() {
+      if (!this.localAdministrator || !this.localAdministrator.id) return;
       try {
         if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(id);
+          await navigator.clipboard.writeText(this.localAdministrator.id);
         } else {
           const textarea = document.createElement('textarea');
-          textarea.value = id;
+          textarea.value = this.localAdministrator.id;
           textarea.style.position = 'fixed';
           textarea.style.opacity = '0';
           document.body.appendChild(textarea);
@@ -34,7 +47,7 @@ export default {
           document.body.removeChild(textarea);
         }
       } catch (e) {
-        // silent fallback
+        // no-op: evitar romper la UI si falla el portapapeles
       }
     },
   },
@@ -43,38 +56,37 @@ export default {
 
 <template>
   <div class="detailed-data transition-slow">
-    <ServiceFormBasicFields
-      :model-value="service"
-      :types="types"
+    <AdministratorFormBasicFields
+      v-model="localAdministrator"
       :toggles="toggles"
-      :is-add="false"
-      :errors="{
-        nameError: false,
-        tagError: false,
-        typeError: false,
-        orderError: errors.orderUpdateError,
-      }"
+      :errors="{ nameError: false, emailError: false }"
       prefix="update-"
-    />
-    <ServiceFormDetails
-      :model-value="service"
-      :toggles="toggles"
       :is-add="false"
-      :errors="{
-        shortDescriptionError: errors.shortDescriptionUpdateError,
-        estimatedTimeError: errors.estimatedTimeUpdateError,
-        blockTimeError: errors.blockTimeUpdateError,
-      }"
-      prefix="update-"
     />
-    <div id="service-id-form" class="row -2 mb-g3" v-if="service && service.id">
-      <div class="row service-details-container">
+    <AdministratorFormRelations
+      v-model="localAdministrator"
+      :commerces="commerces"
+      prefix="update-"
+      :is-add="false"
+      :on-select-commerce="onSelectCommerce"
+      :on-delete-commerce="onDeleteCommerce"
+      :show-commerce="showCommerce"
+    />
+    <div
+      v-if="localAdministrator && localAdministrator.id"
+      id="administrator-id-form"
+      class="row mt-2 mb-3"
+    >
+      <div class="row administrator-details-container">
         <div class="col">
-          <span><strong>Id:</strong> {{ service.id }}</span>
+          <span>
+            <strong>Id:</strong>
+            {{ localAdministrator.id }}
+          </span>
           <button
             type="button"
             class="btn btn-link btn-copy-id p-0 ms-2 align-baseline"
-            @click="copyIdToClipboard(service.id)"
+            @click="copyIdToClipboard"
             :title="$t('copy') || 'Copiar Id'"
           >
             <i class="bi bi-clipboard"></i>
@@ -88,7 +100,7 @@ export default {
       v-if="errors.errorsUpdate && errors.errorsUpdate.length > 0"
     >
       <Warning>
-        <template v-slot:message>
+        <template #message>
           <li v-for="(error, index) in errors.errorsUpdate" :key="index">
             {{ $t(error) }}
           </li>
@@ -99,12 +111,23 @@ export default {
 </template>
 
 <style scoped>
-.service-details-container {
+.administrator-details-container {
   font-size: 0.8rem;
   margin-left: 0.5rem;
   margin-right: 0.5rem;
   margin-top: 0.5rem;
   margin-bottom: 0;
+}
+
+.btn-copy-id {
+  font-size: 0.8rem;
+  color: var(--gris-default);
+  text-decoration: none;
+}
+
+.btn-copy-id:hover {
+  color: var(--primary-color, #000);
+  text-decoration: none;
 }
 
 .errors {
@@ -126,16 +149,5 @@ export default {
   padding: 10px;
   max-height: 2000px !important;
   overflow-y: visible;
-}
-
-.btn-copy-id {
-  font-size: 0.8rem;
-  color: var(--gris-default);
-  text-decoration: none;
-}
-
-.btn-copy-id:hover {
-  color: var(--primary-color, #000);
-  text-decoration: none;
 }
 </style>

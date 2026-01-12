@@ -233,6 +233,7 @@ export default {
       state.showAdd = true;
       state.newCollaborator = {
         businessId: state.business.id,
+        active: true,
         bot: false,
         servicesId,
         commercesId,
@@ -480,7 +481,9 @@ export default {
 
     const closeAddModal = () => {
       const modalCloseButton = document.getElementById('close-modal');
-      modalCloseButton.click();
+      if (modalCloseButton) {
+        modalCloseButton.click();
+      }
     };
 
     const resetAddForm = () => {

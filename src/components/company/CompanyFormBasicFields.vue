@@ -49,7 +49,7 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessCompaniesAdmin.tag') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessCompaniesAdmin.tagHelp') }}</div>
           </template>
@@ -71,7 +71,7 @@ export default {
     <div class="form-group-modern" v-if="isAdd">
       <label class="form-label-modern">
         {{ $t('businessCompaniesAdmin.type') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessCompaniesAdmin.typeHelp') }}</div>
           </template>
@@ -105,7 +105,7 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessCompaniesAdmin.order') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessCompaniesAdmin.orderHelp') }}</div>
           </template>
@@ -127,7 +127,7 @@ export default {
     <div class="form-group-modern form-group-toggle">
       <label class="form-label-modern">
         {{ $t('businessCompaniesAdmin.online') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessCompaniesAdmin.onlineHelp') }}</div>
           </template>
@@ -139,7 +139,7 @@ export default {
         :disabled="isAdd ? false : !toggles['companies.admin.edit']"
       />
     </div>
-    <div class="form-group-modern form-group-toggle">
+    <div class="form-group-modern form-group-toggle" v-if="!isAdd">
       <label class="form-label-modern">
         {{ $t('businessCompaniesAdmin.active') }}
       </label>

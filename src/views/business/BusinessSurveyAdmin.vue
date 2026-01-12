@@ -190,6 +190,7 @@ export default {
         hasCSAT: false,
         hasNPS: false,
         hasMessage: false,
+        active: true,
       };
     };
 
@@ -365,6 +366,7 @@ export default {
         hasCSAT: false,
         hasNPS: false,
         hasMessage: false,
+        active: true,
       };
       state.questions = [];
       state.showAddQuestions = false;

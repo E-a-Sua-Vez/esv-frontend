@@ -49,7 +49,7 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessProductsAdmin.tag') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessProductsAdmin.tagHelp') }}</div>
           </template>
@@ -71,7 +71,7 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessProductsAdmin.code') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessProductsAdmin.codeHelp') }}</div>
           </template>
@@ -108,7 +108,7 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessProductsAdmin.measureType') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessProductsAdmin.measureTypeHelp') }}</div>
           </template>
@@ -130,7 +130,7 @@ export default {
     <div class="form-group-modern form-group-toggle">
       <label class="form-label-modern">
         {{ $t('businessProductsAdmin.online') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessProductsAdmin.onlineHelp') }}</div>
           </template>
@@ -142,7 +142,7 @@ export default {
         :disabled="isAdd ? false : !toggles['products.admin.edit']"
       />
     </div>
-    <div class="form-group-modern form-group-toggle">
+    <div class="form-group-modern form-group-toggle" v-if="!isAdd">
       <label class="form-label-modern">
         {{ $t('businessProductsAdmin.active') }}
       </label>

@@ -113,6 +113,18 @@ export default {
       :show-service="showService"
     />
 
+    <div
+      v-if="localCollaborator && localCollaborator.id"
+      id="collaborator-id-form"
+      class="row -2 mb-g3 mt-2"
+    >
+      <div class="row collaborator-details-container">
+        <div class="col">
+          <span><strong>Id:</strong> {{ localCollaborator.id }}</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Foto de Perfil (siempre visible) -->
     <div class="mt-3">
       <div class="form-section-header">
@@ -159,6 +171,14 @@ export default {
 <style scoped>
 .collaborator-form-edit {
   width: 100%;
+}
+
+.collaborator-details-container {
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
 }
 
 .form-section-header {

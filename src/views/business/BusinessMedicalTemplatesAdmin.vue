@@ -21,6 +21,7 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import MedicalTemplateSimpleName from '../../components/common/MedicalTemplateSimpleName.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'BusinessMedicalTemplatesAdmin',
@@ -35,6 +36,7 @@ export default {
     SearchAdminItem,
     MedicalTemplateSimpleName,
     DesktopPageHeader,
+    Popper,
   },
   async setup() {
     const router = useRouter();
@@ -281,6 +283,26 @@ export default {
       state.goToUnavailable = false;
     };
 
+    const copyIdToClipboard = async id => {
+      if (!id) return;
+      try {
+        if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(id);
+        } else {
+          const textarea = document.createElement('textarea');
+          textarea.value = id;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+        }
+      } catch (e) {
+        // silent fallback
+      }
+    };
+
     const showUpdateForm = index => {
       state.extendedEntity = state.extendedEntity !== index ? index : undefined;
     };
@@ -314,6 +336,7 @@ export default {
       goToUnavailable,
       unavailableCancel,
       receiveFilteredItems,
+      copyIdToClipboard,
       getTypeLabel,
       getScopeLabel,
     };
@@ -394,11 +417,30 @@ export default {
                       </div>
                     </div>
                     <div v-if="state.extendedEntity === index" class="mt-3">
+                      <div id="medical-template-id-form" class="row mb-1">
+                        <div class="col">
+                          <span><strong>Id:</strong> {{ template.id }}</span>
+                          <button
+                            type="button"
+                            class="btn btn-link btn-sm p-0 ms-2 align-baseline"
+                            @click="copyIdToClipboard(template.id)"
+                            :title="$t('copy') || 'Copiar Id'"
+                          >
+                            <i class="bi bi-clipboard"></i>
+                          </button>
+                        </div>
+                      </div>
                       <div class="form-fields-container">
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalTemplatesAdmin.name')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalTemplatesAdmin.name') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalTemplatesAdmin.nameHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <input
                             v-model="template.name"
                             type="text"
@@ -408,9 +450,15 @@ export default {
                           />
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalTemplatesAdmin.type')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalTemplatesAdmin.type') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalTemplatesAdmin.typeHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <select
                             v-model="template.type"
                             class="form-control-modern"
@@ -426,9 +474,15 @@ export default {
                           </select>
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalTemplatesAdmin.description')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalTemplatesAdmin.description') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalTemplatesAdmin.descriptionHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <input
                             v-model="template.description"
                             type="text"
@@ -438,9 +492,15 @@ export default {
                           />
                         </div>
                         <div class="form-field-full-width">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalTemplatesAdmin.content')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalTemplatesAdmin.content') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalTemplatesAdmin.contentHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <textarea
                             v-model="template.content"
                             class="form-control-modern form-control-full-width"
@@ -450,9 +510,15 @@ export default {
                           ></textarea>
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalTemplatesAdmin.scope')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalTemplatesAdmin.scope') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalTemplatesAdmin.scopeHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <select
                             v-model="template.scope"
                             class="form-control-modern"
@@ -468,9 +534,15 @@ export default {
                           </select>
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">{{
-                            $t('businessMedicalTemplatesAdmin.category')
-                          }}</label>
+                          <label class="form-label-modern">
+                            {{ $t('businessMedicalTemplatesAdmin.category') }}
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalTemplatesAdmin.categoryHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <input
                             v-model="template.category"
                             type="text"
@@ -686,7 +758,15 @@ export default {
                           />
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">Tags:</label>
+                          <label class="form-label-modern">
+                            Tags:
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalTemplatesAdmin.tagsHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <input
                             v-model="template.tags"
                             type="text"
@@ -696,7 +776,15 @@ export default {
                           />
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">Variables:</label>
+                          <label class="form-label-modern">
+                            Variables:
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalTemplatesAdmin.variablesHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <input
                             v-model="template.variables"
                             type="text"
@@ -706,7 +794,15 @@ export default {
                           />
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">Favorito:</label>
+                          <label class="form-label-modern">
+                            Favorito:
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalTemplatesAdmin.isFavoriteHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <input
                             v-model="template.isFavorite"
                             type="checkbox"
@@ -715,7 +811,15 @@ export default {
                           />
                         </div>
                         <div class="form-group-modern">
-                          <label class="form-label-modern">Activo:</label>
+                          <label class="form-label-modern">
+                            Activo:
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicalTemplatesAdmin.activeHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
+                          </label>
                           <input
                             v-model="template.active"
                             type="checkbox"
@@ -1022,6 +1126,12 @@ export default {
 .form-control-modern.is-invalid {
   border-color: rgba(220, 53, 69, 0.5);
   box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
+}
+
+.form-help-icon {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.4);
+  cursor: help;
 }
 
 /* Full-width field (label above, input below) */

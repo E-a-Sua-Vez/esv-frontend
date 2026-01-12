@@ -5,7 +5,6 @@ import { globalStore } from '../../../stores';
 import {
   getFeatureToggleByCommerceId,
   getFeatureToggleOptions,
-  addFeatureToggle,
 } from '../../../application/services/feature-toggle';
 import { getPermissions } from '../../../application/services/permissions';
 import Message from '../../../components/common/Message.vue';
@@ -15,7 +14,6 @@ import Alert from '../../../components/common/Alert.vue';
 import Warning from '../../../components/common/Warning.vue';
 import SimpleConfigurationCard from '../../../components/configuration/common/SimpleConfigurationCard.vue';
 import ComponentMenu from '../../../components/common/ComponentMenu.vue';
-import { getConfigurationTypes } from '../../../shared/utils/data';
 
 export default {
   name: 'ConfigurationFeaturesManagement',
@@ -48,17 +46,8 @@ export default {
       commerces: ref([]),
       configurations: ref([]),
       groupedConfigurations: {},
-      types: [],
-      typeSelected: undefined,
-      options: [],
       allOptions: [],
-      optionSelected: undefined,
       commerce: {},
-      showAdd: false,
-      newConfiguration: {},
-      extendedEntity: undefined,
-      configurationError: false,
-      errorsAdd: [],
       toggles: {},
     });
 
@@ -71,11 +60,10 @@ export default {
         // Seleccionar el primer comercio disponible solo si existe
         state.commerce =
           state.commerces && state.commerces.length > 0 ? state.commerces[0] : undefined;
-        if (state.commerce) {
-          selectCommerce(state.commerce);
-        }
-        state.types = getConfigurationTypes();
         state.allOptions = await getFeatureToggleOptions();
+        if (state.commerce) {
+          await selectCommerce(state.commerce);
+        }
         state.toggles = await getPermissions('configuration', 'admin');
         alertError.value = '';
         loading.value = false;
@@ -91,122 +79,76 @@ export default {
       router.back();
     };
 
+    const buildGroupedConfigurations = () => {
+      if (!state.allOptions || state.allOptions.length === 0) {
+        state.groupedConfigurations = {};
+        return;
+      }
+
+      const configurationsByName = new Map(
+        (state.configurations || []).map(conf => [conf.name, conf])
+      );
+
+      const grouped = {};
+
+      state.allOptions.forEach(option => {
+        const existing = configurationsByName.get(option.name);
+        const merged = existing
+          ? { ...existing }
+          : {
+              id: undefined,
+              name: option.name,
+              type: option.type,
+              commerceId: state.commerce?.id,
+              active: false,
+            };
+
+        const type = option.type;
+        if (!grouped[type]) {
+          grouped[type] = [];
+        }
+        grouped[type].push(merged);
+      });
+
+      state.groupedConfigurations = grouped;
+    };
+
     const selectCommerce = async commerce => {
       try {
         loading.value = true;
         state.commerce = commerce;
         state.configurations = await getFeatureToggleByCommerceId(state.commerce.id);
-        if (state.configurations && state.configurations.length > 0) {
-          state.groupedConfigurations = state.configurations.reduce((acc, conf) => {
-            const type = conf.type;
-            if (!acc[type]) {
-              acc[type] = [];
-            }
-            acc[type].push(conf);
-            return acc;
-          }, {});
-        }
+        buildGroupedConfigurations();
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     };
 
-    const showAdd = () => {
-      state.showAdd = true;
-      state.newConfiguration = {
-        commerceId: state.commerce?.id || '',
-      };
-      // Inicializar tipo y opciones por defecto si existen
-      state.typeSelected = state.types && state.types.length > 0 ? state.types[0].id : undefined;
-      state.options = state.allOptions && state.allOptions.length > 0 ? state.allOptions.filter(opt => opt.type === state.typeSelected) : [];
-      state.optionSelected = state.options && state.options.length > 0 ? state.options[0] : undefined;
+    const refreshConfigurations = async () => {
+      if (!state.commerce) return;
+      await selectCommerce(state.commerce);
     };
 
-    const validateAdd = () => {
-      state.errorsAdd = [];
-      // Validar comercio seleccionado
-      if (!state.newConfiguration.commerceId) {
-        state.errorsAdd.push('businessConfiguration.validate.commerce');
-      }
-      if (state.optionSelected) {
-        state.newConfiguration.type = state.optionSelected.type;
-        state.newConfiguration.name = state.optionSelected.name;
-        state.optionSelected = undefined;
-      } else {
-        state.errorsAdd.push('businessConfiguration.validate.feature');
-      }
-      if (state.errorsAdd.length === 0) {
-        return true;
-      }
-      return false;
-    };
-
-    const add = async () => {
-      try {
-        loading.value = true;
-        // Asegurar que el commerceId esté seteado con el comercio activo actual
-        state.newConfiguration.commerceId = state.commerce?.id || state.newConfiguration.commerceId || '';
-        if (validateAdd()) {
-          await addFeatureToggle(state.newConfiguration);
-          const configurations = await getFeatureToggleByCommerceId(state.commerce.id);
-          state.configurations = configurations;
-          if (state.configurations && state.configurations.length > 0) {
-            state.groupedConfigurations = state.configurations.reduce((acc, conf) => {
-              const type = conf.type;
-              if (!acc[type]) {
-                acc[type] = [];
-              }
-              acc[type].push(conf);
-              return acc;
-            }, {});
-          }
-          state.showAdd = false;
-          closeAddModal();
-          state.newConfiguration = {};
-        }
-        alertError.value = '';
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response.status || 500;
-        loading.value = false;
-      }
-    };
-
-    const closeAddModal = () => {
-      const modalCloseButton = document.getElementById('close-modal-config');
-      modalCloseButton.click();
-    };
-
-    const selectType = () => {
-      if (state.typeSelected) {
-        // Get names of already configured features for this commerce
-        const existingFeatureNames = state.configurations.map(conf => conf.name);
-        // Filter options by type and exclude already added features
-        state.options = state.allOptions.filter(
-          element =>
-            element.type === state.typeSelected && !existingFeatureNames.includes(element.name)
-        );
-        // Reset selected option when type changes
-        state.optionSelected = undefined;
-      } else {
-        state.options = [];
-        state.optionSelected = undefined;
-      }
+    const getTypeStats = type => {
+      const list = state.groupedConfigurations[type] || [];
+      const total = list.length;
+      const active = list.filter(conf => conf.active).length;
+      const inactive = total - active;
+      return { total, active, inactive };
     };
 
     return {
       state,
       loading,
       alertError,
-      selectType,
       goBack,
       isActiveBusiness,
       selectCommerce,
-      showAdd,
-      add,
+      refreshConfigurations,
+      getTypeStats,
     };
   },
 };
@@ -226,28 +168,9 @@ export default {
             <div v-if="isActiveBusiness && state.toggles['configuration.admin.view']">
               <div v-if="!loading" id="businessConfiguration-result" class="mt-4">
                 <div>
-                  <div v-if="state.commerce" class="row mb-2">
-                    <div class="col lefted">
-                      <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                        @click="showAdd()"
-                        data-bs-toggle="modal"
-                        :data-bs-target="`#add-configuration`"
-                        :disabled="!state.toggles['configuration.admin.add']"
-                      >
-                        <i class="bi bi-plus-lg"></i> {{ $t('add') }}
-                      </button>
-                    </div>
-                  </div>
-                  <div v-if="state.configurations.length === 0">
-                    <Message
-                      :title="$t('businessConfiguration.message.2.title')"
-                      :content="$t('businessConfiguration.message.2.content')"
-                    />
-                  </div>
-                  <div v-if="state.configurations.length > 0" class="mt-1 text-center d-md-block">
+                  <div v-if="state.allOptions.length > 0" class="mt-1 text-center d-md-block">
                     <span class="badge bg-secondary px-2 py-2 m-1"
-                      >{{ $t('businessAdmin.listResult') }} {{ state.configurations.length }}
+                      >{{ $t('businessAdmin.listResult') }} {{ state.allOptions.length }}
                     </span>
                   </div>
                   <div
@@ -268,12 +191,11 @@ export default {
                           <span class="config-tree-title">{{
                             $t('configuration.types.email')
                           }}</span>
-                          <span class="config-tree-badge"
-                            >{{
-                              state.groupedConfigurations['EMAIL']
-                                ? state.groupedConfigurations['EMAIL'].length
-                                : 0
-                            }}
+                          <span class="config-tree-badge">
+                            {{ getTypeStats('EMAIL').total }}
+                            ({{ getTypeStats('EMAIL').active }}/{{
+                              getTypeStats('EMAIL').inactive
+                            }})
                           </span>
                         </div>
                         <i class="bi bi-chevron-down config-tree-chevron"></i>
@@ -297,6 +219,8 @@ export default {
                               "
                               :configuration="configuration"
                               :show-tooltip="true"
+                              :commerce-id="state.commerce?.id"
+                              @updated="refreshConfigurations"
                             >
                             </SimpleConfigurationCard>
                           </div>
@@ -321,11 +245,12 @@ export default {
                           <span class="config-tree-title">{{
                             $t('configuration.types.product')
                           }}</span>
-                          <span class="config-tree-badge">{{
-                            state.groupedConfigurations['PRODUCT']
-                              ? state.groupedConfigurations['PRODUCT'].length
-                              : 0
-                          }}</span>
+                          <span class="config-tree-badge">
+                            {{ getTypeStats('PRODUCT').total }}
+                            ({{ getTypeStats('PRODUCT').active }}/{{
+                              getTypeStats('PRODUCT').inactive
+                            }})
+                          </span>
                         </div>
                         <i class="bi bi-chevron-down config-tree-chevron"></i>
                       </a>
@@ -348,6 +273,8 @@ export default {
                               "
                               :configuration="configuration"
                               :show-tooltip="true"
+                              :commerce-id="state.commerce?.id"
+                              @updated="refreshConfigurations"
                             >
                             </SimpleConfigurationCard>
                           </div>
@@ -372,12 +299,11 @@ export default {
                           <span class="config-tree-title">{{
                             $t('configuration.types.user')
                           }}</span>
-                          <span class="config-tree-badge"
-                            >{{
-                              state.groupedConfigurations['USER']
-                                ? state.groupedConfigurations['USER'].length
-                                : 0
-                            }}
+                          <span class="config-tree-badge">
+                            {{ getTypeStats('USER').total }}
+                            ({{ getTypeStats('USER').active }}/{{
+                              getTypeStats('USER').inactive
+                            }})
                           </span>
                         </div>
                         <i class="bi bi-chevron-down config-tree-chevron"></i>
@@ -401,6 +327,8 @@ export default {
                               "
                               :configuration="configuration"
                               :show-tooltip="true"
+                              :commerce-id="state.commerce?.id"
+                              @updated="refreshConfigurations"
                             >
                             </SimpleConfigurationCard>
                           </div>
@@ -425,12 +353,11 @@ export default {
                           <span class="config-tree-title">{{
                             $t('configuration.types.whatsapp')
                           }}</span>
-                          <span class="config-tree-badge"
-                            >{{
-                              state.groupedConfigurations['WHATSAPP']
-                                ? state.groupedConfigurations['WHATSAPP'].length
-                                : 0
-                            }}
+                          <span class="config-tree-badge">
+                            {{ getTypeStats('WHATSAPP').total }}
+                            ({{ getTypeStats('WHATSAPP').active }}/{{
+                              getTypeStats('WHATSAPP').inactive
+                            }})
                           </span>
                         </div>
                         <i class="bi bi-chevron-down config-tree-chevron"></i>
@@ -456,6 +383,8 @@ export default {
                               "
                               :configuration="configuration"
                               :show-tooltip="true"
+                              :commerce-id="state.commerce?.id"
+                              @updated="refreshConfigurations"
                             >
                             </SimpleConfigurationCard>
                           </div>
@@ -480,12 +409,11 @@ export default {
                           <span class="config-tree-title">{{
                             $t('configuration.types.message')
                           }}</span>
-                          <span class="config-tree-badge"
-                            >{{
-                              state.groupedConfigurations['MESSAGE']
-                                ? state.groupedConfigurations['MESSAGE'].length
-                                : 0
-                            }}
+                          <span class="config-tree-badge">
+                            {{ getTypeStats('MESSAGE').total }}
+                            ({{ getTypeStats('MESSAGE').active }}/{{
+                              getTypeStats('MESSAGE').inactive
+                            }})
                           </span>
                         </div>
                         <i class="bi bi-chevron-down config-tree-chevron"></i>
@@ -509,6 +437,8 @@ export default {
                               "
                               :configuration="configuration"
                               :show-tooltip="true"
+                              :commerce-id="state.commerce?.id"
+                              @updated="refreshConfigurations"
                             >
                             </SimpleConfigurationCard>
                           </div>
@@ -544,103 +474,6 @@ export default {
         :content="$t('dashboard.message.1.content')"
       />
     </div>
-    <!-- Modal Add -->
-    <Teleport to="body">
-      <div
-        class="modal fade"
-        :id="`add-configuration`"
-        data-bs-keyboard="false"
-        tabindex="-1"
-        aria-labelledby="staticBackdropLabel"
-        aria-hidden="true"
-      >
-        <div class="modal-dialog modal-xl">
-          <div class="modal-content">
-            <div class="modal-header border-0 centered active-name">
-              <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
-              <button
-                id="close-modal-config"
-                class="btn-close"
-                type="button"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div class="modal-body text-center mb-0" id="attentions-component">
-              <Spinner :show="loading"></Spinner>
-              <Alert :show="loading" :stack="alertError"></Alert>
-              <div
-                id="add-configuration"
-                class="configuration-card mb-4"
-                v-if="state.toggles['configuration.admin.add']"
-              >
-                <div class="row g-1">
-                  <div id="configuration-feature-form-add" class="row g-1">
-                    <div class="col text-label">
-                      {{ $t('businessConfiguration.types') }}
-                    </div>
-                    <div class="col">
-                      <select
-                        class="btn btn-md btn-light fw-bold text-dark select mx-2"
-                        v-model="state.typeSelected"
-                        @change="selectType()"
-                        id="types"
-                      >
-                        <option v-for="typ in state.types" :key="typ.id" :value="typ.id">
-                          {{ $t(`configuration.types.${typ.name}`) }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  <div id="configuration-feature-form-add" class="row g-1">
-                    <div class="col text-label">
-                      {{ $t('businessConfiguration.feature') }}
-                    </div>
-                    <div class="col">
-                      <select
-                        class="btn btn-md btn-light fw-bold text-dark select mx-2"
-                        v-model="state.optionSelected"
-                        id="features"
-                        v-bind:class="{ 'is-invalid': state.moduleError }"
-                      >
-                        <option v-for="opt in state.options" :key="opt.name" :value="opt">
-                          {{ $t(`configuration.${opt.name}.title`) }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="col">
-                    <button
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(state.newConfiguration)"
-                    >
-                      {{ $t('businessConfiguration.add') }} <i class="bi bi-save"></i>
-                    </button>
-                  </div>
-                  <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
-                    <Warning>
-                      <template v-slot:message>
-                        <li v-for="(error, index) in state.errorsAdd" :key="index">
-                          {{ $t(error) }}
-                        </li>
-                      </template>
-                    </Warning>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="mx-2 mb-4 text-center">
-              <a
-                class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-                >{{ $t('close') }} <i class="bi bi-check-lg"></i
-              ></a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
 

@@ -189,6 +189,7 @@ export default {
       state.showAdd = true;
       state.newOutcomeType = {
         order: state.outcomeTypes.length + 1,
+        active: true,
       };
     };
 

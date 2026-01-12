@@ -4,21 +4,7 @@ import Popper from 'vue3-popper';
 
 export default {
   name: 'FormFormBasicFields',
-  components: { Toggle, Popper },
-  props: {
-    modelValue: { type: Object, required: true },
-    types: { type: Array, default: () => [] },
-    queues: { type: Array, default: () => [] },
-    services: { type: Array, default: () => [] },
-    toggles: { type: Object, default: () => ({}) },
-    errors: { type: Object, default: () => ({}) },
-    prefix: { type: String, default: '' },
-    isAdd: { type: Boolean, default: false },
-    showService: { type: Function, default: () => {} },
-    selectService: { type: Function, default: () => {} },
-    deleteService: { type: Function, default: () => {} },
-  },
-  emits: ['update:modelValue'],
+    components: { Toggle, Popper },
   props: {
     modelValue: { type: Object, required: true },
     types: { type: Array, default: () => [] },
@@ -65,7 +51,7 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessFormsAdmin.type') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessFormsAdmin.typeHelp') }}</div>
           </template>
@@ -87,7 +73,7 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessFormsAdmin.queue') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessFormsAdmin.queueHelp') }}</div>
           </template>
@@ -134,7 +120,7 @@ export default {
         </div>
       </div>
     </div>
-    <div class="form-group-modern form-group-toggle">
+    <div class="form-group-modern form-group-toggle" v-if="!isAdd">
       <label class="form-label-modern">
         {{ $t('businessFormsAdmin.active') }}
       </label>

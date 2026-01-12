@@ -31,16 +31,16 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessProductsAdmin.actualLevel') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessProductsAdmin.actualLevelHelp') }}</div>
           </template>
           <i class="bi bi-info-circle-fill form-help-icon"></i>
         </Popper>
       </label>
-      <input
-        :id="`${prefix}product-actuallevel-form`"
-        :disabled="isAdd ? false : !toggles['products.admin.edit']"
+        <input
+          :id="`${prefix}product-actuallevel-form`"
+          :disabled="isAdd ? false : !toggles['products.admin.edit']"
         :min="0"
         type="number"
         class="form-control-modern"
@@ -52,16 +52,16 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessProductsAdmin.optimumLevel') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessProductsAdmin.optimumLevelHelp') }}</div>
           </template>
           <i class="bi bi-info-circle-fill form-help-icon"></i>
         </Popper>
       </label>
-      <input
-        :id="`${prefix}product-optimumLevel-form`"
-        :disabled="isAdd ? false : !toggles['products.admin.edit']"
+        <input
+          :id="`${prefix}product-optimumLevel-form`"
+          :disabled="isAdd ? false : !toggles['products.admin.edit']"
         :min="0"
         type="number"
         class="form-control-modern"
@@ -73,16 +73,16 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessProductsAdmin.replacementLevel') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessProductsAdmin.replacementLevelHelp') }}</div>
           </template>
           <i class="bi bi-info-circle-fill form-help-icon"></i>
         </Popper>
       </label>
-      <input
-        :id="`${prefix}product-replacementLevel-form`"
-        :disabled="isAdd ? false : !toggles['products.admin.edit']"
+        <input
+          :id="`${prefix}product-replacementLevel-form`"
+          :disabled="isAdd ? false : !toggles['products.admin.edit']"
         :min="0"
         type="number"
         class="form-control-modern"
@@ -94,16 +94,16 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessProductsAdmin.maximumLevel') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessProductsAdmin.maximumLevelHelp') }}</div>
           </template>
           <i class="bi bi-info-circle-fill form-help-icon"></i>
         </Popper>
       </label>
-      <input
-        :id="`${prefix}product-maximumLevel-form`"
-        :disabled="isAdd ? false : !toggles['products.admin.edit']"
+        <input
+          :id="`${prefix}product-maximumLevel-form`"
+          :disabled="isAdd ? false : !toggles['products.admin.edit']"
         :min="0"
         type="number"
         class="form-control-modern"
@@ -115,7 +115,7 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessProductsAdmin.order') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessProductsAdmin.orderHelp') }}</div>
           </template>

@@ -41,7 +41,7 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessSurveysAdmin.type') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow>
           <template #content>
             <div>{{ $t('businessSurveysAdmin.typeHelp') }}</div>
           </template>
@@ -63,7 +63,7 @@ export default {
     <div class="form-group-modern form-group-toggle">
       <label class="form-label-modern">
         {{ $t('businessSurveysAdmin.attentionDefault') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow>
           <template #content>
             <div>{{ $t('businessSurveysAdmin.attentionDefaultHelp') }}</div>
           </template>
@@ -79,7 +79,7 @@ export default {
     <div v-if="!survey.attentionDefault" class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessSurveysAdmin.queue') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow>
           <template #content>
             <div>{{ $t('businessSurveysAdmin.queueHelp') }}</div>
           </template>
@@ -100,6 +100,12 @@ export default {
     <div class="form-group-modern form-group-toggle">
       <label class="form-label-modern">
         {{ $t('businessSurveysAdmin.csat') }}
+        <Popper :class="'dark p-1'" arrow>
+          <template #content>
+            <div>{{ $t('businessSurveysAdmin.csatHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <Toggle
         :id="`${prefix}survey-csat-form`"
@@ -110,6 +116,12 @@ export default {
     <div class="form-group-modern form-group-toggle">
       <label class="form-label-modern">
         {{ $t('businessSurveysAdmin.nps') }}
+        <Popper :class="'dark p-1'" arrow>
+          <template #content>
+            <div>{{ $t('businessSurveysAdmin.npsHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <Toggle
         :id="`${prefix}survey-nps-form`"
@@ -120,6 +132,12 @@ export default {
     <div class="form-group-modern form-group-toggle">
       <label class="form-label-modern">
         {{ $t('businessSurveysAdmin.comment') }}
+        <Popper :class="'dark p-1'" arrow>
+          <template #content>
+            <div>{{ $t('businessSurveysAdmin.commentHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <Toggle
         :id="`${prefix}survey-comment-form`"
@@ -127,14 +145,20 @@ export default {
         :disabled="isAdd ? false : !toggles['surveys.admin.edit']"
       />
     </div>
-    <div class="form-group-modern form-group-toggle">
+    <div v-if="!isAdd" class="form-group-modern form-group-toggle">
       <label class="form-label-modern">
         {{ $t('businessSurveysAdmin.active') }}
+        <Popper :class="'dark p-1'" arrow>
+          <template #content>
+            <div>{{ $t('businessSurveysAdmin.activeHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
       </label>
       <Toggle
         :id="`${prefix}survey-active-form`"
         v-model="survey.active"
-        :disabled="isAdd ? false : !toggles['surveys.admin.edit']"
+        :disabled="!toggles['surveys.admin.edit']"
       />
     </div>
   </div>

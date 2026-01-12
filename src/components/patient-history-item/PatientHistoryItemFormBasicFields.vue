@@ -48,7 +48,7 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessPatientHistoryItemAdmin.tag') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessPatientHistoryItemAdmin.tagHelp') }}</div>
           </template>
@@ -70,7 +70,7 @@ export default {
     <div class="form-group-modern" v-if="isAdd">
       <label class="form-label-modern">
         {{ $t('businessPatientHistoryItemAdmin.type') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessPatientHistoryItemAdmin.typeHelp') }}</div>
           </template>
@@ -104,7 +104,7 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessPatientHistoryItemAdmin.order') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessPatientHistoryItemAdmin.orderHelp') }}</div>
           </template>
@@ -126,7 +126,7 @@ export default {
     <div class="form-group-modern form-group-toggle">
       <label class="form-label-modern">
         {{ $t('businessPatientHistoryItemAdmin.online') }}
-        <Popper :class="'dark p-1'" arrow disable-click-away>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
             <div>{{ $t('businessPatientHistoryItemAdmin.onlineHelp') }}</div>
           </template>
@@ -138,7 +138,7 @@ export default {
         :disabled="isAdd ? false : !toggles['patient-history-item.admin.edit']"
       />
     </div>
-    <div class="form-group-modern form-group-toggle">
+    <div class="form-group-modern form-group-toggle" v-if="!isAdd">
       <label class="form-label-modern">
         {{ $t('businessPatientHistoryItemAdmin.active') }}
       </label>

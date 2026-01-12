@@ -206,6 +206,7 @@ export default {
       state.newCompany = {
         order: state.companies.length + 1,
         online: true,
+        active: true,
         serviceInfo: {},
       };
     };

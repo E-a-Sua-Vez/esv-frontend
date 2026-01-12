@@ -32,6 +32,12 @@ export default {
     <div class="form-group-modern" v-if="isAdd">
       <label class="form-label-modern">
         {{ $t('businessOutcomeTypesAdmin.name') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessOutcomeTypesAdmin.nameHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill form-help-icon"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}outcome-type-name-form`"
@@ -48,6 +54,12 @@ export default {
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessOutcomeTypesAdmin.tag') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessOutcomeTypesAdmin.tagHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill form-help-icon"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}outcome-type-tag-form`"
@@ -64,6 +76,12 @@ export default {
     <div class="form-group-modern" v-if="isAdd">
       <label class="form-label-modern">
         {{ $t('businessOutcomeTypesAdmin.type') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessOutcomeTypesAdmin.typeHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill form-help-icon"></i>
+        </Popper>
       </label>
       <select
         :id="`${prefix}outcome-type-type-form`"
@@ -79,6 +97,12 @@ export default {
     <div class="form-group-modern" v-if="!isAdd">
       <label class="form-label-modern">
         {{ $t('businessOutcomeTypesAdmin.type') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessOutcomeTypesAdmin.typeHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill form-help-icon"></i>
+        </Popper>
       </label>
       <input
         :id="`${prefix}outcome-type-type-form`"
@@ -89,9 +113,15 @@ export default {
         placeholder="Type"
       />
     </div>
-    <div class="form-group-modern form-group-toggle">
+    <div class="form-group-modern form-group-toggle" v-if="!isAdd">
       <label class="form-label-modern">
         {{ $t('businessOutcomeTypesAdmin.active') }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('businessOutcomeTypesAdmin.activeHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill form-help-icon"></i>
+        </Popper>
       </label>
       <Toggle
         v-model="outcomeType.active"

@@ -221,6 +221,7 @@ export default {
       state.showAdd = true;
       state.newForm = {
         servicesId,
+        active: true,
       };
     };
 
@@ -575,7 +576,7 @@ export default {
                               <Popper
                                 :class="'dark p-1'"
                                 arrow
-                                disable-click-away
+                                :disable-click-away="false"
                                 :content="$t('businessFormsAdmin.typeQuestionHelp')"
                               >
                                 <i class="bi bi-info-circle-fill h7"></i>
@@ -667,7 +668,7 @@ export default {
                               <Popper
                                 :class="'dark p-1'"
                                 arrow
-                                disable-click-away
+                                :disable-click-away="false"
                                 :content="$t('businessFormsAdmin.optionsHelp')"
                               >
                                 <i class="bi bi-info-circle-fill h7"></i>

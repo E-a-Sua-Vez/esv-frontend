@@ -291,6 +291,7 @@ export default {
       state.newProduct = {
         order: state.products.length + 1,
         online: true,
+        active: true,
         productInfo: {},
       };
     };

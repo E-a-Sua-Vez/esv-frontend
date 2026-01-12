@@ -29,12 +29,14 @@ export default {
       showCommerceModal: false,
       manageSubMenuOption: false,
       manageControlSubMenuOption: false,
+      medicalManagementSubMenuOption: false,
       businessMenuOptions: [
         'dashboard',
         'reports',
         'bookings-master-admin',
-        'manage-master-admin',
         'control-master-admin',
+        'manage-master-admin',
+        'medical-management',
         'configuration',
         'documents',
         'your-plan',
@@ -59,9 +61,16 @@ export default {
         'forms-master-admin',
         'outcome-types-master-admin',
         'company-master-admin',
-        'patient-history-item-master-admin',
         'product-master-admin',
         'permissions-master-admin',
+      ],
+      medicalManagementSubMenuOptions: [
+        'patient-history-item-master-admin',
+        'medications-admin',
+        'medical-exams-admin',
+        'medical-templates-admin',
+        'pdf-templates-admin',
+        'audit-log',
       ],
       businessLogoUrl: null,
     });
@@ -163,9 +172,18 @@ export default {
         if (option) {
           if (option === 'manage-master-admin') {
             state.manageSubMenuOption = !state.manageSubMenuOption;
+            state.manageControlSubMenuOption = false;
+            state.medicalManagementSubMenuOption = false;
             loading.value = false;
           } else if (option === 'control-master-admin') {
             state.manageControlSubMenuOption = !state.manageControlSubMenuOption;
+            state.manageSubMenuOption = false;
+            state.medicalManagementSubMenuOption = false;
+            loading.value = false;
+          } else if (option === 'medical-management') {
+            state.medicalManagementSubMenuOption = !state.medicalManagementSubMenuOption;
+            state.manageSubMenuOption = false;
+            state.manageControlSubMenuOption = false;
             loading.value = false;
           } else {
             router.push({ path: `/interno/master/${option}` });
@@ -328,6 +346,14 @@ export default {
                             : 'bi-chevron-down'
                         }`"
                       ></i>
+                      <i
+                        v-if="option === 'medical-management'"
+                        :class="`bi ${
+                          state.medicalManagementSubMenuOption === true
+                            ? 'bi-chevron-up'
+                            : 'bi-chevron-down'
+                        }`"
+                      ></i>
                     </button>
                     <div
                       v-if="option === 'manage-master-admin' && state.manageSubMenuOption === true"
@@ -356,6 +382,27 @@ export default {
                     >
                       <div
                         v-for="opt in state.manageControlSubMenuOptions"
+                        :key="opt"
+                        class="centered mx-3"
+                      >
+                        <button
+                          type="button"
+                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
+                          @click="goToOption(opt)"
+                        >
+                          {{ $t(`masterMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div
+                      v-if="
+                        option === 'medical-management' &&
+                        state.medicalManagementSubMenuOption === true
+                      "
+                      class="mb-1"
+                    >
+                      <div
+                        v-for="opt in state.medicalManagementSubMenuOptions"
                         :key="opt"
                         class="centered mx-3"
                       >
