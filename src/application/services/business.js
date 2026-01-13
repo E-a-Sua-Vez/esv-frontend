@@ -9,8 +9,15 @@ export const getBusinessById = async id =>
 export const getBusinesses = async id =>
   (await requestBackend.get(`/${entity}/`, await getHeaders())).data;
 
-export const getBusinessByKeyName = async keyName =>
-  (await requestBackend.get(`/${entity}/keyName/${keyName}`, await getHeaders())).data;
+export const getBusinessByKeyName = async (keyName, config = {}) => {
+  const headersConfig = await getHeaders();
+  return (
+    await requestBackend.get(`/${entity}/keyName/${keyName}`, {
+      ...headersConfig,
+      ...config,
+    })
+  ).data;
+};
 
 export const updateBusiness = async (id, business) =>
   (await requestBackend.patch(`/${entity}/${id}`, business, await getHeaders())).data;

@@ -258,27 +258,57 @@ router.beforeEach(async (to, from, next) => {
   if (publicCommerceViews.includes(to.name) || privateUserViews.includes(to.name)) {
     const environment = import.meta.env.VITE_NODE_ENV || 'local';
     const currentUserType = store.getCurrentUserType;
+    const isBusinessQR = to.name === 'business-qr-setup';
 
-    // Para el minisite de negocio (business-qr-setup) no forzamos
-    // "logout + sesión invitado" aunque el usuario sea BUSINESS,
-    // para evitar redirecciones extrañas al root en el primer acceso.
-    if (to.name === 'business-qr-setup') {
-      next();
-      return;
-    }
-    if (
-      environment !== 'local' &&
-      (currentUserType !== USER_TYPES.INVITED ||
+    if (environment !== 'local') {
+      const invitedExpired =
+        currentUserType === USER_TYPES.INVITED &&
+        (userNotExists || getInvitedSessionAlive(currentUser.time));
+
+      if (isBusinessQR) {
+        // Minisite de negocio:
+        // - Si ya hay sesión BUSINESS válida, la mantenemos (usa su token).
+        // - Si no hay sesión o es de otro tipo/EXPIRADA, forzamos sesión INVITED.
+        if (userNotExists) {
+          if (currentUserType !== USER_TYPES.INVITED || invitedExpired) {
+            await signOut(undefined, currentUserType);
+            await store.resetSession();
+            store.setCurrentUserType(USER_TYPES.INVITED);
+            const user = await signInInvited();
+            store.setCurrentUser(user);
+          }
+        } else if (currentUserType === USER_TYPES.BUSINESS) {
+          // Usuario BUSINESS logueado: no tocamos la sesión.
+        } else if (currentUserType === USER_TYPES.INVITED) {
+          if (invitedExpired) {
+            await signOut(undefined, currentUserType);
+            await store.resetSession();
+            store.setCurrentUserType(USER_TYPES.INVITED);
+            const user = await signInInvited();
+            store.setCurrentUser(user);
+          }
+        } else {
+          // Cualquier otro tipo (COLLABORATOR, MASTER, etc.): pasar a INVITED.
+          await signOut(undefined, currentUserType);
+          await store.resetSession();
+          store.setCurrentUserType(USER_TYPES.INVITED);
+          const user = await signInInvited();
+          store.setCurrentUser(user);
+        }
+      } else if (
+        currentUserType !== USER_TYPES.INVITED ||
         (currentUserType === USER_TYPES.INVITED && userNotExists) ||
-        (currentUserType === USER_TYPES.INVITED && getInvitedSessionAlive(currentUser.time)))
-    ) {
-      await signOut(undefined, currentUserType);
-
-      await store.resetSession();
-      store.setCurrentUserType(USER_TYPES.INVITED);
-      const user = await signInInvited();
-      store.setCurrentUser(user);
+        invitedExpired
+      ) {
+        // Resto de rutas públicas de comercio/usuario: siempre forzamos sesión INVITED.
+        await signOut(undefined, currentUserType);
+        await store.resetSession();
+        store.setCurrentUserType(USER_TYPES.INVITED);
+        const user = await signInInvited();
+        store.setCurrentUser(user);
+      }
     }
+
     next();
     return;
   }

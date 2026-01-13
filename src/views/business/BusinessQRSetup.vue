@@ -48,7 +48,10 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
-        state.business = await getBusinessByKeyName(id);
+        // Marcar esta carga como "pública" para evitar que un 401 dispare
+        // el flujo global de logout/redirección (minisite debe ser estable
+        // incluso sin sesión previa).
+        state.business = await getBusinessByKeyName(id, { _skipAuthLogout: true });
         // Mantener exactamente el mismo comportamiento que tenías antes:
         // el backend ya entrega los comercios en el formato adecuado.
         state.commerces = await state.business.commerces;
