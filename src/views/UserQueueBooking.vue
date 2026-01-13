@@ -843,8 +843,8 @@ export default {
                   </button>
                   <AreYouSure
                     :show="state.goToCancel"
-                    :yes-disabled="!bookingCancelled()"
-                    :no-disabled="!bookingCancelled()"
+                    :yes-disabled="bookingCancelled()"
+                    :no-disabled="bookingCancelled()"
                     @actionYes="cancellingBooking()"
                     @actionNo="cancelCancel()"
                   >

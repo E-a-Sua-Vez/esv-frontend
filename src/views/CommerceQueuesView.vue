@@ -2316,13 +2316,24 @@ export default {
       }, 300);
     };
 
-    // Handle show manual selection
+    // Handle show manual selection (from NextAvailableSlot)
     const handleShowManualSelection = () => {
-      // Just scroll to the manual selection area
+      // Open the reserve/calendar section
+      showReserve();
+
       setTimeout(() => {
-        const manualSelection = document.querySelector('#booking .data-card');
-        if (manualSelection) {
-          manualSelection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Move focus to the "Selecione sua data" button
+        const reserveButton = document.querySelector('#booking-reserve-button');
+        if (reserveButton) {
+          reserveButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          reserveButton.focus();
+          return;
+        }
+
+        // Fallback: scroll to the booking date section
+        const bookingDateSection = document.querySelector('#booking-date');
+        if (bookingDateSection) {
+          bookingDateSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 100);
     };
@@ -2968,6 +2979,11 @@ export default {
             const timeCard = document.querySelector('.time-slot-grid');
             if (timeCard) {
               timeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+              const firstTimeButton = timeCard.querySelector('.time-slot-button');
+              if (firstTimeButton) {
+                firstTimeButton.focus();
+              }
             }
           }, 600);
         });
@@ -3019,6 +3035,11 @@ export default {
             const timeCard = document.querySelector('.time-slot-grid');
             if (timeCard) {
               timeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+              const firstTimeButton = timeCard.querySelector('.time-slot-button');
+              if (firstTimeButton) {
+                firstTimeButton.focus();
+              }
             }
           }, 600);
         });
@@ -3691,6 +3712,7 @@ export default {
                         <!-- BOOKING -->
                         <div class="col">
                           <button
+                            id="booking-reserve-button"
                             class="btn-size btn btn-md btn-block col-12 fw-bold btn-step-action rounded-pill mt-1 mb-1 px-3 py-2"
                             v-if="!isQueueWalkin()"
                             @click="showReserve()"

@@ -945,7 +945,7 @@
     "email": "Email",
     "today": "Hoje",
     "when": "Quando você quer ser atendido?",
-    "booking": "Reservar",
+    "booking": "Selecione sua data",
     "selectDay": "Seleciona o día:",
     "selectBlock": "Seleciona um horário:",
     "timeOfDay": {
@@ -1036,7 +1036,7 @@
     }
   },
   "nextAvailableSlot": {
-    "title": "Próxima cita disponível",
+    "title": "Próximo horário disponível",
     "bookNow": "Reservar agora",
     "seeMoreTimes": "Ver mais horários",
     "loading": "Carregando...",

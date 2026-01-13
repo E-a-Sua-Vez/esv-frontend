@@ -1584,8 +1584,8 @@ export default {
                 </button>
                 <AreYouSure
                   :show="state.goToCancel"
-                  :yes-disabled="!attentionCancelled()"
-                  :no-disabled="!attentionCancelled()"
+                  :yes-disabled="attentionCancelled()"
+                  :no-disabled="attentionCancelled()"
                   @actionYes="cancellingAttention()"
                   @actionNo="cancelCancel()"
                 >

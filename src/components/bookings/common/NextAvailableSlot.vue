@@ -479,7 +479,7 @@ export default {
     </div>
 
     <!-- Next Available Slot -->
-    <div v-else-if="nextSlot" class="next-slot-card">
+    <div v-else-if="nextSlot" class="next-slot-card mt-2">
       <div class="next-slot-header">
         <i class="bi bi-clock-fill h5"></i>
         <span class="next-slot-title fw-bold h6">
@@ -492,8 +492,10 @@ export default {
           <div class="next-slot-datetime">
             <i class="bi bi-calendar-event me-2"></i>
             <span class="datetime-text">
-              {{ nextSlot.formattedDate }} • {{ nextSlot.block.hourFrom }} -
-              {{ nextSlot.block.hourTo }}
+              <span class="datetime-separator"></span>
+              <span class="datetime-time">
+              {{ nextSlot.formattedDate }}, {{ nextSlot.block.hourFrom }} - {{ nextSlot.block.hourTo }}
+              </span>
             </span>
             <!-- Distance indicator for far dates -->
             <span v-if="getDaysAway(nextSlot.date) > 7" class="days-away-badge">
@@ -509,7 +511,7 @@ export default {
           </div>
         </div>
 
-        <div class="next-slot-actions">
+        <div class="next-slot-actions mt-1">
           <button type="button" class="btn btn-primary btn-quick-book" @click="selectSlot">
             <i class="bi bi-lightning-fill me-2"></i>
             {{ t('nextAvailableSlot.bookNow') || 'Reservar Agora' }}
@@ -564,8 +566,8 @@ export default {
   padding: 1rem;
   margin-bottom: 1rem;
   border-radius: 1rem;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1.5px solid rgba(19, 10, 191, 0.508);
+  box-shadow: 0 1px 8px rgba(169, 169, 169, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   align-items: left;
 }
@@ -635,6 +637,31 @@ export default {
   font-size: 1.1rem;
 }
 
+.datetime-text {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.datetime-date {
+  margin-right: 0.25rem;
+}
+
+.datetime-separator {
+  margin: 0 0.25rem;
+  opacity: 0.8;
+}
+
+.datetime-time {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  line-height: 1rem;
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.08) 0%, rgba(0, 194, 203, 0.12) 100%);
+  color: var(--azul-turno, #004aad);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px rgba(0, 74, 173, 0.12);
+}
+
 .days-away-badge {
   display: inline-flex;
   align-items: center;
@@ -653,6 +680,8 @@ export default {
   align-items: center;
   font-size: 0.875rem;
   color: #666;
+  line-height: 1rem;
+  margin-top: .5rem;
 }
 
 .next-slot-service i {
@@ -777,18 +806,34 @@ export default {
   }
 }
 
-/* Pulse animation for the quick book button */
-.btn-quick-book:not(:hover) {
-  animation: gentlePulse 2s ease-in-out infinite;
+/* Use same pulse/arrow animation as main "Próximo" button */
+.btn-quick-book:not(:disabled) {
+  animation: pulseGlow 2s ease-in-out infinite;
 }
 
-@keyframes gentlePulse {
+.btn-quick-book:hover:not(:disabled) i {
+  transform: translateX(5px);
+  animation: arrowBounce 0.6s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
   0%,
   100% {
-    box-shadow: 0 4px 15px rgba(0, 74, 173, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 74, 173, 0.4);
   }
   50% {
-    box-shadow: 0 4px 20px rgba(0, 74, 173, 0.5), 0 0 15px rgba(0, 194, 203, 0.2);
+    box-shadow: 0 4px 25px rgba(0, 74, 173, 0.6), 0 0 20px rgba(0, 194, 203, 0.3);
   }
 }
+
+@keyframes arrowBounce {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+}
+
 </style>
