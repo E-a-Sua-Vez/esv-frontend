@@ -38,6 +38,8 @@ export default {
     business: { type: Object, default: undefined },
     whatsappStatus: { type: Object, default: {} },
     getWhatsappStatusFromContainer: { type: Function, default: () => {} },
+    // ID del modal para evitar colisiones entre instancias (mobile/desktop)
+    modalId: { type: String, default: 'add-whatsapp' },
   },
   async setup(props) {
     const router = useRouter();
@@ -48,7 +50,7 @@ export default {
 
     const { business } = toRefs(props);
 
-    const { getWhatsappStatusFromContainer } = props;
+    const { getWhatsappStatusFromContainer, modalId } = props;
 
     const state = reactive({
       currentUser: {},
@@ -270,6 +272,7 @@ export default {
       disconnectWhatsapp,
       goDisconnect,
       confirmCancel,
+      modalId,
     };
   },
 };
@@ -297,7 +300,7 @@ export default {
                       "
                       @click="showAdd()"
                       data-bs-toggle="modal"
-                      :data-bs-target="`#add-whatsapp`"
+                      :data-bs-target="`#${modalId}`"
                       :disabled="!state.toggles['configuration.admin.whatsapps-connect']"
                     >
                       <i class="bi bi-plugin"></i> {{ $t('businessConfiguration.connect') }}
@@ -395,17 +398,18 @@ export default {
         :content="$t('dashboard.message.1.content')"
       />
     </div>
-    <!-- Modal Add -->
-    <div
-      class="modal fade"
-      :id="`add-whatsapp`"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby=""
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content">
+    <!-- Modal Add - Use Teleport to render outside component to avoid overflow/position issues -->
+    <Teleport to="body">
+      <div
+        class="modal fade"
+        :id="modalId"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby=""
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
             <h5 class="modal-title fw-bold">
               <i class="bi bi-plugin"></i> {{ $t('businessConfiguration.connect') }}
@@ -418,15 +422,14 @@ export default {
               aria-label="Close"
             ></button>
           </div>
-          <div class="modal-body text-center mb-0" id="attentions-component">
-            <Spinner :show="loading"></Spinner>
-            <Alert :show="loading" :stack="alertError"></Alert>
-            <div
-              id="add-whatsapp"
-              class="configuration-card mb-4"
-              v-if="state.showAdd && state.toggles['configuration.admin.whatsapps']"
-            >
-              <div class="row g-1">
+            <div class="modal-body text-center mb-0" id="attentions-component">
+              <Spinner :show="loading"></Spinner>
+              <Alert :show="loading" :stack="alertError"></Alert>
+              <div
+                class="configuration-card mb-4"
+                v-if="state.showAdd && state.toggles['configuration.admin.whatsapps']"
+              >
+                <div class="row g-1">
                 <div id="attention-phone-form-add" class="row g-1">
                   <div class="col-3 form-floating">
                     <select
@@ -463,104 +466,105 @@ export default {
                     {{ $t(`clientNotifyData.validate.cellphone.examples.${state.phoneCode}`) }}
                   </label>
                 </div>
-                <div class="col">
-                  <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                    @click="getWhatsappConnection()"
-                    :disabled="!toggles['configuration.admin.whatsapps-connect']"
+                  <div class="col">
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      @click="getWhatsappConnection()"
+                      :disabled="!toggles['configuration.admin.whatsapps-connect']"
+                    >
+                      {{ $t('businessConfiguration.request') }} <i class="bi bi-qr-code"></i>
+                    </button>
+                  </div>
+                  <div v-if="state.whatsappRequested && !state.whatsappRequestError">
+                    <Message
+                      :title="$t('businessConfiguration.message.5.title')"
+                      :content="$t('businessConfiguration.message.5.content')"
+                    />
+                  </div>
+                  <div v-if="state.whatsappRequestError">
+                    <Message
+                      :title="$t('businessConfiguration.message.6.title')"
+                      :content="$t('businessConfiguration.message.6.content')"
+                    />
+                  </div>
+                  <div
+                    v-if="
+                      !state.whatsappRequestError &&
+                      state.whatsappRequestResult &&
+                      state.whatsappRequestResult.payload
+                    "
                   >
-                    {{ $t('businessConfiguration.request') }} <i class="bi bi-qr-code"></i>
-                  </button>
-                </div>
-                <div v-if="state.whatsappRequested && !state.whatsappRequestError">
-                  <Message
-                    :title="$t('businessConfiguration.message.5.title')"
-                    :content="$t('businessConfiguration.message.5.content')"
-                  />
-                </div>
-                <div v-if="state.whatsappRequestError">
-                  <Message
-                    :title="$t('businessConfiguration.message.6.title')"
-                    :content="$t('businessConfiguration.message.6.content')"
-                  />
-                </div>
-                <div
-                  v-if="
-                    !state.whatsappRequestError &&
-                    state.whatsappRequestResult &&
-                    state.whatsappRequestResult.payload
-                  "
-                >
-                  <div v-if="state.whatsappRequestResult.payload.qrcode">
-                    <div class="centered mx-3 mt-3">
-                      <div class="configuration-card">
-                        <div class="row instructions">
-                          <span class="fw-bold mb-2">
-                            {{ $t('businessConfiguration.instructions.title') }}
-                          </span>
-                          <span class="mb-1">
-                            {{ $t('businessConfiguration.instructions.1') }}
-                          </span>
-                          <span class="mb-1">
-                            {{ $t('businessConfiguration.instructions.2') }}
-                          </span>
-                          <span class="mb-1">
-                            {{ $t('businessConfiguration.instructions.3') }}
-                          </span>
-                          <span class="mb-1">
-                            {{ $t('businessConfiguration.instructions.4') }}
-                          </span>
-                          <span class="mb-1">
-                            {{ $t('businessConfiguration.instructions.5') }}
-                          </span>
+                    <div v-if="state.whatsappRequestResult.payload.qrcode">
+                      <div class="centered mx-3 mt-3">
+                        <div class="configuration-card">
+                          <div class="row instructions">
+                            <span class="fw-bold mb-2">
+                              {{ $t('businessConfiguration.instructions.title') }}
+                            </span>
+                            <span class="mb-1">
+                              {{ $t('businessConfiguration.instructions.1') }}
+                            </span>
+                            <span class="mb-1">
+                              {{ $t('businessConfiguration.instructions.2') }}
+                            </span>
+                            <span class="mb-1">
+                              {{ $t('businessConfiguration.instructions.3') }}
+                            </span>
+                            <span class="mb-1">
+                              {{ $t('businessConfiguration.instructions.4') }}
+                            </span>
+                            <span class="mb-1">
+                              {{ $t('businessConfiguration.instructions.5') }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row centered">
+                        <img
+                          v-bind:src="state.whatsappRequestResult.payload.qrcode"
+                          class="image-qr"
+                        />
+                      </div>
+                      <div class="row centered">
+                        <div class="col">
+                          <button
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            @click="getWhatsappStatus()"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                          >
+                            {{ $t('businessConfiguration.confirm') }} <i class="bi bi-plugin"></i>
+                          </button>
                         </div>
                       </div>
                     </div>
-                    <div class="row centered">
-                      <img
-                        v-bind:src="state.whatsappRequestResult.payload.qrcode"
-                        class="image-qr"
-                      />
-                    </div>
-                    <div class="row centered">
-                      <div class="col">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="getWhatsappStatus()"
-                          data-bs-dismiss="modal"
-                          aria-label="Close"
-                        >
-                          {{ $t('businessConfiguration.confirm') }} <i class="bi bi-plugin"></i>
-                        </button>
-                      </div>
-                    </div>
                   </div>
-                </div>
-                <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
-                  <Warning>
-                    <template v-slot:message>
-                      <li v-for="(error, index) in state.errorsAdd" :key="index">
-                        {{ $t(error) }}
-                      </li>
-                    </template>
-                  </Warning>
+                  <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
+                    <Warning>
+                      <template v-slot:message>
+                        <li v-for="(error, index) in state.errorsAdd" :key="index">
+                          {{ $t(error) }}
+                        </li>
+                      </template>
+                    </Warning>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="mx-2 mb-4 righted">
-            <button
-              id="btn-close-2"
-              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            >
-              {{ $t('close') }} <i class="bi bi-check-lg"></i>
-            </button>
+            <div class="mx-2 mb-4 righted">
+              <button
+                id="btn-close-2"
+                class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                {{ $t('close') }} <i class="bi bi-check-lg"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 

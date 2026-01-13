@@ -1391,9 +1391,10 @@ export default {
         // Calculate new width based on initial width + delta
         const newWidth = initialCalendarWidth + deltaPercentage;
 
-        // Constrain between min (58.33% = col-7) and max (75% = col-9)
-        const minWidth = 58.33;
-        const maxWidth = 75;
+        // Constrain between min and max percentages for calendar area
+        // Smaller calendar => larger management area
+        const minWidth = 25; // allow calendar to shrink up to 25%
+        const maxWidth = 75; // and grow up to 75%
         state.calendarWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
       };
 
@@ -2115,7 +2116,7 @@ export default {
       <!-- CALENDAR AREA -->
       <div
         class="calendar-section"
-        :style="{ width: state.calendarWidth + '%', minWidth: '58.33%', maxWidth: '75%' }"
+        :style="{ width: state.calendarWidth + '%', minWidth: '25%', maxWidth: '75%' }"
       >
         <Spinner :show="loading"> </Spinner>
         <div v-if="queues && queues.length > 0" class="queue-selector-section">
@@ -2331,7 +2332,7 @@ export default {
       <!-- MANAGEMENT AREA -->
       <div
         class="management-area-column d-flex flex-column h-100"
-        :style="{ width: 100 - state.calendarWidth + '%', minWidth: '25%', maxWidth: '41.67%' }"
+        :style="{ width: 100 - state.calendarWidth + '%', minWidth: '25%', maxWidth: '75%' }"
       >
         <div class="blocks-section">
           <div class="management-header">
@@ -2792,19 +2793,6 @@ export default {
             </div>
           </div>
         </div>
-      </div>
-    </div>
-    <div v-if="hasActiveState" class="modal-footer modal-footer-fixed">
-      <div class="w-100 d-flex justify-content-center">
-        <button
-          class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-          @click="close"
-        >
-          {{ $t('close') }}
-          <i class="bi bi-check-lg"></i>
-        </button>
       </div>
     </div>
 

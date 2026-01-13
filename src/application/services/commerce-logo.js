@@ -42,7 +42,10 @@ export const getCommerceLogo = async commerceId => {
   try {
     const headers = await getHeaders();
 
-    const response = await requestBackend.get(`/commerce-logos/${commerceId}`);
+    const response = await requestBackend.get(`/commerce-logos/${commerceId}`, {
+      _skipAuthLogout: true,
+      ...headers,
+    });
     const relativePath = response.data;
 
     // If backend returns a relative path, construct full URL
@@ -76,6 +79,7 @@ export const getCommerceLogoUrl = async (commerceId, logoId) => {
     // Make an authenticated request to get the logo blob
     const response = await requestBackend.get(`/commerce-logos/${commerceId}/${logoId}`, {
       responseType: 'blob',
+      _skipAuthLogout: true,
     });
 
     // Create a blob URL that can be used in img src
@@ -107,6 +111,7 @@ export const getCommerceLogoThumbnailUrl = async (commerceId, logoId) => {
     // Make an authenticated request to get the thumbnail blob
     const response = await requestBackend.get(`/commerce-logos/${commerceId}/${logoId}/thumbnail`, {
       responseType: 'blob',
+      _skipAuthLogout: true,
     });
 
     // Create a blob URL that can be used in img src

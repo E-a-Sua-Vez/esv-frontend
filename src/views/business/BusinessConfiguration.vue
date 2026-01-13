@@ -183,6 +183,7 @@ export default {
                   :business="state.business"
                   :whatsapp-status="state.whatsappStatus"
                   :get-whatsapp-status-from-container="getWhatsappStatus"
+                  modal-id="add-whatsapp-mobile"
                 >
                 </ConfigurationWhatsappManagement>
               </div>
@@ -261,6 +262,7 @@ export default {
                   :business="state.business"
                   :whatsapp-status="state.whatsappStatus"
                   :get-whatsapp-status-from-container="getWhatsappStatus"
+                  modal-id="add-whatsapp-desktop"
                 >
                 </ConfigurationWhatsappManagement>
               </div>
@@ -274,30 +276,6 @@ export default {
           </div>
         </div>
       </div>
-    </div>
-    <!-- Render WhatsApp component once outside responsive sections for the modal -->
-    <!-- This ensures single modal ID - buttons in both mobile and desktop will target this modal -->
-    <!-- Bootstrap modals are appended to body when opened, so this hidden instance will work -->
-    <div
-      v-if="state.showWhatsapp && state.toggles['configuration.admin.whatsapps']"
-      style="
-        position: absolute;
-        left: -9999px;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        visibility: hidden;
-        pointer-events: none;
-      "
-    >
-      <ConfigurationWhatsappManagement
-        :show-configurations="true"
-        :toggles="state.toggles"
-        :business="state.business"
-        :whatsapp-status="state.whatsappStatus"
-        :get-whatsapp-status-from-container="getWhatsappStatus"
-      >
-      </ConfigurationWhatsappManagement>
     </div>
   </div>
 </template>

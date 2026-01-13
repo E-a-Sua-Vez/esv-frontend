@@ -1,4 +1,5 @@
 import { requestBackend, getHeaders } from '../api';
+import { signUp } from './auth';
 import { globalStore } from '../../stores/index';
 
 const entity = 'collaborator';
@@ -46,8 +47,17 @@ export const getCollaboratorDetailsById = async id =>
 export const updateCollaborator = async (id, collaborator) =>
   (await requestBackend.patch(`/${entity}/${id}`, collaborator, await getHeaders())).data;
 
-export const addCollaborator = async collaborator =>
-  (await requestBackend.post(`/${entity}`, collaborator, await getHeaders())).data;
+export const addCollaborator = async collaborator => {
+  const created = (await requestBackend.post(`/${entity}`, collaborator, await getHeaders())).data;
+
+  // Replicar comportamiento de alta de negocio: crear usuario de autenticación
+  // Solo crear cuenta en Firebase para colaboradores no bots y con email válido
+  if (created && created.email && created.bot !== true) {
+    await signUp(created.email, created.email);
+  }
+
+  return created;
+};
 
 export const getCollaboratorByCommerceIdEmail = async (commerceId, email) =>
   (await requestBackend.get(`/${entity}/commerceId/${commerceId}/email/${email}`, await getHeaders()))
