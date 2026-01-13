@@ -214,7 +214,66 @@ export default {
           component-name="businessConfiguration"
           @go-back="goBack"
         />
+         <div id="dashboard">
+          <div v-if="isActiveBusiness()">
+            <div v-if="!commerce" class="control-box">
+              <Message
+                :title="$t('businessConfiguration.message.3.title')"
+                :content="$t('businessConfiguration.message.3.content')"
+              />
+            </div>
+            <div v-if="!loading" id="dashboard-result" class="mt-2">
+              <div class="row col mx-1 mt-3 mb-1 tabs-header-divider">
+                <div class="col-6 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showConfigurations ? 'btn-selected' : ''"
+                    @click="showConfigurations()"
+                    :disabled="!state.toggles['configuration.admin.features']"
+                  >
+                    {{ $t('businessConfiguration.features') }} <br />
+                    <i class="bi bi-toggles"></i>
+                  </button>
+                </div>
+                <div class="col-6 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showWhatsapp ? 'btn-selected' : ''"
+                    @click="showWhatsapp()"
+                    :disabled="!state.toggles['configuration.admin.whatsapps']"
+                  >
+                    {{ $t('businessConfiguration.whatsapps') }} <br />
+                    <i class="bi bi-whatsapp"></i>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <ConfigurationFeaturesManagement
+                  :show-configurations="state.showConfigurations"
+                  :toggles="state.toggles"
+                  :commerce="commerce"
+                  :business="state.business"
+                >
+                </ConfigurationFeaturesManagement>
+                <ConfigurationWhatsappManagement
+                  :show-configurations="state.showWhatsapp"
+                  :toggles="state.toggles"
+                  :business="state.business"
+                  :whatsapp-status="state.whatsappStatus"
+                  :get-whatsapp-status-from-container="getWhatsappStatus"
+                >
+                </ConfigurationWhatsappManagement>
+              </div>
+            </div>
           </div>
+          <div v-if="!isActiveBusiness() && !loading">
+            <Message
+              :title="$t('dashboard.message.1.title')"
+              :content="$t('dashboard.message.1.content')"
+            />
+          </div>
+        </div>
+      </div>
     </div>
     <!-- Render WhatsApp component once outside responsive sections for the modal -->
     <!-- This ensures single modal ID - buttons in both mobile and desktop will target this modal -->
