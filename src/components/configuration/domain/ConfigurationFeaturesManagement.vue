@@ -5,6 +5,8 @@ import { globalStore } from '../../../stores';
 import {
   getFeatureToggleByCommerceId,
   getFeatureToggleOptions,
+  updateFeatureToggle,
+  addFeatureToggle,
 } from '../../../application/services/feature-toggle';
 import { getPermissions } from '../../../application/services/permissions';
 import Message from '../../../components/common/Message.vue';
@@ -49,11 +51,40 @@ export default {
       allOptions: [],
       commerce: {},
       toggles: {},
+      openGroups: {},
     });
+
+    const STORAGE_KEY = 'configurationFeaturesOpenGroups';
+
+    const loadOpenGroups = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state.openGroups = { ...state.openGroups, ...parsed };
+        }
+      } catch (error) {}
+    };
+
+    const persistOpenGroups = () => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.openGroups));
+      } catch (error) {}
+    };
+
+    const ensureTypesInOpenGroups = () => {
+      const types = ['EMAIL', 'PRODUCT', 'USER', 'WHATSAPP', 'MESSAGE'];
+      types.forEach(type => {
+        if (!(type in state.openGroups)) {
+          state.openGroups[type] = false;
+        }
+      });
+    };
 
     onBeforeMount(async () => {
       try {
         loading.value = true;
+        loadOpenGroups();
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.commerces = await store.getAvailableCommerces(state.business.commerces);
@@ -65,6 +96,7 @@ export default {
           await selectCommerce(state.commerce);
         }
         state.toggles = await getPermissions('configuration', 'admin');
+        ensureTypesInOpenGroups();
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -140,6 +172,50 @@ export default {
       return { total, active, inactive };
     };
 
+    const isGroupOpen = type => !!state.openGroups[type];
+
+    const toggleGroupOpen = type => {
+      state.openGroups[type] = !state.openGroups[type];
+      persistOpenGroups();
+    };
+
+    const isGroupFullyActive = type => {
+      const list = state.groupedConfigurations[type] || [];
+      if (list.length === 0) return false;
+      return list.every(conf => conf.active);
+    };
+
+    const setGroupActive = async (type, active) => {
+      const list = state.groupedConfigurations[type] || [];
+      if (list.length === 0) return;
+
+      try {
+        loading.value = true;
+        for (const configuration of list) {
+          if (configuration.id) {
+            await updateFeatureToggle(configuration.id, { active });
+          } else if (active && state.commerce?.id) {
+            const payload = {
+              name: configuration.name,
+              type: configuration.type,
+              commerceId: state.commerce.id,
+            };
+            await addFeatureToggle(payload);
+          }
+        }
+      } catch (error) {
+        alertError.value = error.response?.status || 500;
+      } finally {
+        await refreshConfigurations();
+        loading.value = false;
+      }
+    };
+
+    const toggleGroupActive = async type => {
+      const nextState = !isGroupFullyActive(type);
+      await setGroupActive(type, nextState);
+    };
+
     return {
       state,
       loading,
@@ -149,6 +225,10 @@ export default {
       selectCommerce,
       refreshConfigurations,
       getTypeStats,
+      isGroupOpen,
+      toggleGroupOpen,
+      isGroupFullyActive,
+      toggleGroupActive,
     };
   },
 };
@@ -182,9 +262,8 @@ export default {
                     <div class="config-tree-section">
                       <a
                         class="config-tree-header"
-                        data-bs-toggle="collapse"
-                        href="#email"
-                        aria-expanded="false"
+                        :aria-expanded="isGroupOpen('EMAIL') ? 'true' : 'false'"
+                        @click.prevent="toggleGroupOpen('EMAIL')"
                       >
                         <div class="config-tree-header-content">
                           <i class="bi bi-envelope-fill config-tree-icon"></i>
@@ -198,9 +277,22 @@ export default {
                             }})
                           </span>
                         </div>
-                        <i class="bi bi-chevron-down config-tree-chevron"></i>
+                        <div class="config-tree-right-controls">
+                          <i class="bi bi-chevron-down config-tree-chevron"></i>
+                          <input
+                            type="checkbox"
+                            class="toggle-checkbox group-toggle-checkbox"
+                            :checked="isGroupFullyActive('EMAIL')"
+                            @click.stop="toggleGroupActive('EMAIL')"
+                            :title="isGroupFullyActive('EMAIL') ? 'Desactivar todas' : 'Activar todas'"
+                          />
+                        </div>
                       </a>
-                      <div id="email" class="collapse config-tree-content">
+                      <div
+                        id="email"
+                        class="collapse config-tree-content"
+                        :class="{ show: isGroupOpen('EMAIL') }"
+                      >
                         <div
                           v-if="
                             state.groupedConfigurations['EMAIL'] &&
@@ -236,9 +328,8 @@ export default {
                     <div class="config-tree-section">
                       <a
                         class="config-tree-header"
-                        data-bs-toggle="collapse"
-                        href="#product"
-                        aria-expanded="false"
+                        :aria-expanded="isGroupOpen('PRODUCT') ? 'true' : 'false'"
+                        @click.prevent="toggleGroupOpen('PRODUCT')"
                       >
                         <div class="config-tree-header-content">
                           <i class="bi bi-box-seam-fill config-tree-icon"></i>
@@ -252,9 +343,22 @@ export default {
                             }})
                           </span>
                         </div>
-                        <i class="bi bi-chevron-down config-tree-chevron"></i>
+                        <div class="config-tree-right-controls">
+                          <i class="bi bi-chevron-down config-tree-chevron"></i>
+                          <input
+                            type="checkbox"
+                            class="toggle-checkbox group-toggle-checkbox"
+                            :checked="isGroupFullyActive('PRODUCT')"
+                            @click.stop="toggleGroupActive('PRODUCT')"
+                            :title="isGroupFullyActive('PRODUCT') ? 'Desactivar todas' : 'Activar todas'"
+                          />
+                        </div>
                       </a>
-                      <div id="product" class="collapse config-tree-content">
+                      <div
+                        id="product"
+                        class="collapse config-tree-content"
+                        :class="{ show: isGroupOpen('PRODUCT') }"
+                      >
                         <div
                           v-if="
                             state.groupedConfigurations['PRODUCT'] &&
@@ -290,9 +394,8 @@ export default {
                     <div class="config-tree-section">
                       <a
                         class="config-tree-header"
-                        data-bs-toggle="collapse"
-                        href="#user"
-                        aria-expanded="false"
+                        :aria-expanded="isGroupOpen('USER') ? 'true' : 'false'"
+                        @click.prevent="toggleGroupOpen('USER')"
                       >
                         <div class="config-tree-header-content">
                           <i class="bi bi-person-fill config-tree-icon"></i>
@@ -306,9 +409,22 @@ export default {
                             }})
                           </span>
                         </div>
-                        <i class="bi bi-chevron-down config-tree-chevron"></i>
+                        <div class="config-tree-right-controls">
+                          <i class="bi bi-chevron-down config-tree-chevron"></i>
+                          <input
+                            type="checkbox"
+                            class="toggle-checkbox group-toggle-checkbox"
+                            :checked="isGroupFullyActive('USER')"
+                            @click.stop="toggleGroupActive('USER')"
+                            :title="isGroupFullyActive('USER') ? 'Desactivar todas' : 'Activar todas'"
+                          />
+                        </div>
                       </a>
-                      <div id="user" class="collapse config-tree-content">
+                      <div
+                        id="user"
+                        class="collapse config-tree-content"
+                        :class="{ show: isGroupOpen('USER') }"
+                      >
                         <div
                           v-if="
                             state.groupedConfigurations['USER'] &&
@@ -344,9 +460,8 @@ export default {
                     <div class="config-tree-section">
                       <a
                         class="config-tree-header"
-                        data-bs-toggle="collapse"
-                        href="#whatsapp"
-                        aria-expanded="false"
+                        :aria-expanded="isGroupOpen('WHATSAPP') ? 'true' : 'false'"
+                        @click.prevent="toggleGroupOpen('WHATSAPP')"
                       >
                         <div class="config-tree-header-content">
                           <i class="bi bi-whatsapp config-tree-icon"></i>
@@ -360,9 +475,22 @@ export default {
                             }})
                           </span>
                         </div>
-                        <i class="bi bi-chevron-down config-tree-chevron"></i>
+                        <div class="config-tree-right-controls">
+                          <i class="bi bi-chevron-down config-tree-chevron"></i>
+                          <input
+                            type="checkbox"
+                            class="toggle-checkbox group-toggle-checkbox"
+                            :checked="isGroupFullyActive('WHATSAPP')"
+                            @click.stop="toggleGroupActive('WHATSAPP')"
+                            :title="isGroupFullyActive('WHATSAPP') ? 'Desactivar todas' : 'Activar todas'"
+                          />
+                        </div>
                       </a>
-                      <div id="whatsapp" class="collapse config-tree-content">
+                      <div
+                        id="whatsapp"
+                        class="collapse config-tree-content"
+                        :class="{ show: isGroupOpen('WHATSAPP') }"
+                      >
                         <div
                           v-if="
                             state.groupedConfigurations['WHATSAPP'] &&
@@ -400,9 +528,8 @@ export default {
                     <div class="config-tree-section">
                       <a
                         class="config-tree-header"
-                        data-bs-toggle="collapse"
-                        href="#message"
-                        aria-expanded="false"
+                        :aria-expanded="isGroupOpen('MESSAGE') ? 'true' : 'false'"
+                        @click.prevent="toggleGroupOpen('MESSAGE')"
                       >
                         <div class="config-tree-header-content">
                           <i class="bi bi-chat-dots-fill config-tree-icon"></i>
@@ -416,9 +543,22 @@ export default {
                             }})
                           </span>
                         </div>
-                        <i class="bi bi-chevron-down config-tree-chevron"></i>
+                        <div class="config-tree-right-controls">
+                          <i class="bi bi-chevron-down config-tree-chevron"></i>
+                          <input
+                            type="checkbox"
+                            class="toggle-checkbox group-toggle-checkbox"
+                            :checked="isGroupFullyActive('MESSAGE')"
+                            @click.stop="toggleGroupActive('MESSAGE')"
+                            :title="isGroupFullyActive('MESSAGE') ? 'Desactivar todas' : 'Activar todas'"
+                          />
+                        </div>
                       </a>
-                      <div id="message" class="collapse config-tree-content">
+                      <div
+                        id="message"
+                        class="collapse config-tree-content"
+                        :class="{ show: isGroupOpen('MESSAGE') }"
+                      >
                         <div
                           v-if="
                             state.groupedConfigurations['MESSAGE'] &&
@@ -580,6 +720,17 @@ export default {
   color: rgba(0, 0, 0, 0.5);
   transition: transform 0.2s ease;
   flex-shrink: 0;
+}
+
+.config-tree-right-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.group-toggle-checkbox {
+  width: 40px;
+  height: 20px;
 }
 
 .config-tree-content {
