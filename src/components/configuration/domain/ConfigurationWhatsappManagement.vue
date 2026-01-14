@@ -79,6 +79,9 @@ export default {
         state.currentUser = await store.getCurrentUser;
         state.business = await store.getActualBusiness();
         state.toggles = await getPermissions('configuration', 'admin');
+        // Inicializar estado de conexión a partir del negocio o del prop, si existen
+        state.whatsappConnectionStatus =
+          props.whatsappStatus || state.business?.whatsappConnection || {};
         alertError.value = '';
         loading.value = false;
       } catch (error) {
@@ -193,8 +196,8 @@ export default {
           );
           setTimeout(async () => {
             const result = await statusWhatsappConnectionById(state.business.id);
-            if (result && result.whatsappConnection) {
-              state.whatsappConnectionStatus = result.whatsappConnection;
+            if (result) {
+              state.whatsappConnectionStatus = result.whatsappConnection || result;
             }
             loading.value = false;
           }, 5000);
@@ -319,38 +322,61 @@ export default {
                     state.whatsappConnectionStatus &&
                     state.whatsappConnectionStatus.connected !== undefined
                   "
+                  class="mb-4"
                 >
-                  <div class="configuration-card">
-                    <div class="row">
-                      <div class="col-2 centered">
-                        <span> {{ state.whatsappConnectionStatus.connected ? '🟢' : '🔴' }}</span>
+                  <!-- Mismo layout visual que BusinessExecutiveReport WhatsApp card -->
+                  <div class="system-health-card status-integration">
+                    <div class="health-card-header">
+                      <div class="health-icon-container">
+                        <i class="bi bi-whatsapp"></i>
                       </div>
-                      <div class="col-10">
-                        <div class="col">
-                          <i class="bi bi-whatsapp"></i>
-                          <span class="fw-bold mx-2">
-                            {{ state.whatsappConnectionStatus.whatsapp }}
-                          </span>
-                        </div>
-                        <div class="colm mt-2">
-                          <span class="badge detail-data-badge mx-2">
-                            <span class="fw-bold detail-data-badge-title">
-                              {{ $t('businessConfiguration.id') }}
-                            </span>
-                            {{ state.whatsappConnectionStatus.idConnection }}
-                          </span>
-                          <span class="badge detail-data-badge mx-2">
-                            <span class="fw-bold detail-data-badge-title">
-                              {{ $t('businessConfiguration.lastConnection') }}
-                            </span>
-                            {{ getDate(state.whatsappConnectionStatus.lastConection) }}
-                          </span>
-                        </div>
+                      <div
+                        class="health-status-badge"
+                        :style="{
+                          backgroundColor: state.whatsappConnectionStatus.connected
+                            ? '#00c2cb'
+                            : '#a52a2a',
+                        }"
+                      >
+                        <i
+                          :class="
+                            state.whatsappConnectionStatus.connected
+                              ? 'bi-check-circle-fill'
+                              : 'bi-x-circle-fill'
+                          "
+                        ></i>
                       </div>
                     </div>
-                    <div class="row">
-                      <div v-if="state.whatsappConnectionStatus.connected === true">
-                        <hr />
+                    <div class="health-card-body">
+                      <h4 class="health-card-title">
+                        {{ $t('businessConfiguration.whatsapps') }}
+                      </h4>
+                      <div class="health-metric-details mb-2">
+                        <span class="fw-bold">{{ state.whatsappConnectionStatus.whatsapp }}</span>
+                        <span class="health-separator mx-2">•</span>
+                        <span
+                          :class="
+                            state.whatsappConnectionStatus.connected
+                              ? 'health-active'
+                              : 'health-inactive'
+                          "
+                        >
+                          {{ state.whatsappConnectionStatus.connected ? 'Connected' : 'Disconnected' }}
+                        </span>
+                      </div>
+                      <div class="health-metric-details mb-2">
+                        <span class="badge bg-secondary me-2">
+                          {{ $t('businessConfiguration.id') }}:
+                          {{ state.whatsappConnectionStatus.idConnection }}
+                        </span>
+                        <span class="badge bg-light text-dark">
+                          {{ $t('businessConfiguration.lastConnection') }}:
+                          {{ getDate(state.whatsappConnectionStatus.lastConection) }}
+                        </span>
+                      </div>
+
+                      <!-- Acción extra solo en configuración: desconectar -->
+                      <div v-if="state.whatsappConnectionStatus.connected === true" class="mt-2">
                         <button
                           class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-4"
                           @click="goDisconnect()"
@@ -361,8 +387,8 @@ export default {
                         </button>
                         <AreYouSure
                           :show="state.goToDisconnect"
-                          :yes-disabled="toggles['configuration.admin.whatsapps-disconnect']"
-                          :no-disabled="toggles['configuration.admin.whatsapps-disconnect']"
+                          :yes-disabled="!toggles['configuration.admin.whatsapps-disconnect']"
+                          :no-disabled="!toggles['configuration.admin.whatsapps-disconnect']"
                           @actionYes="disconnectWhatsapp()"
                           @actionNo="confirmCancel()"
                         >
@@ -629,5 +655,108 @@ export default {
 .image-qr {
   height: 250px;
   width: 250px;
+}
+
+/* Estilos compartidos con BusinessExecutiveReport para system-health-card */
+.system-health-card {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+.system-health-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.system-health-card.status-healthy {
+  border-left: 4px solid #00c2cb;
+}
+
+.system-health-card.status-warning {
+  border-left: 4px solid #f9c322;
+}
+
+.system-health-card.status-critical {
+  border-left: 4px solid #a52a2a;
+}
+
+.health-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.health-icon-container {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(0, 74, 173, 0.1) 0%, rgba(0, 194, 203, 0.1) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--azul-turno);
+}
+
+.health-status-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1rem;
+}
+
+.health-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.health-card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+  margin: 0;
+}
+
+.health-metric-large {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.health-metric-details {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.health-active {
+  color: #00c2cb;
+  font-weight: 600;
+}
+
+.health-inactive {
+  color: #a52a2a;
+  font-weight: 500;
+}
+
+.health-separator {
+  color: rgba(0, 0, 0, 0.3);
 }
 </style>

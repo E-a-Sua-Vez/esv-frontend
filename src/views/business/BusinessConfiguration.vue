@@ -90,8 +90,9 @@ export default {
       try {
         loading.value = true;
         const result = await statusWhatsappConnectionById(state.business.id);
-        if (result && result.id && result.whatsappConnection) {
-          state.whatsappStatus = result.whatsappConnection;
+        if (result) {
+          // Backend puede devolver solo el objeto de conexión o envuelto en whatsappConnection
+          state.whatsappStatus = result.whatsappConnection || result;
         }
         loading.value = false;
       } catch (error) {

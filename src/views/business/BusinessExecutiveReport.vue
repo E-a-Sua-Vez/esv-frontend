@@ -112,8 +112,8 @@ export default {
       try {
         loading.value = true;
         const result = await statusWhatsappConnectionById(state.business.id);
-        if (result && result.whatsappConnection) {
-          state.whatsappConnectionStatus = result.whatsappConnection;
+        if (result) {
+          state.whatsappConnectionStatus = result.whatsappConnection || result;
         }
         loading.value = false;
       } catch (error) {
