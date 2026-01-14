@@ -2174,11 +2174,13 @@
   },
   "businessLogin": {
     "welcome": "¡Bienvenido Administrador!",
-    "login": "Ingresa tu usuario y contraseña"
+    "login": "Ingresa tu usuario y contraseña",
+    "notBusiness": "No eres administrador?"
   },
   "collaboratorLogin": {
     "welcome": "¡Bienvenido Colaborador!",
-    "login": "Ingresa tu usuario y contraseña"
+    "login": "Ingresa tu usuario y contraseña",
+    "notCollaborator": "No eres colaborador?"
   },
   "loginData": {
     "email": {

@@ -543,7 +543,7 @@ export default {
 
 @media (min-width: 768px) {
   .login-container {
-    padding: 1.5rem;
+    padding: 0 1.5rem 1.5rem 1.5rem;
   }
 
   .login-card-content {

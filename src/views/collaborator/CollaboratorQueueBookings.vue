@@ -245,32 +245,49 @@ export default {
     });
 
     const initQueues = async () => {
+      const currentQueues = state.queues || [];
+
       if (
         commerce.value &&
         getActiveFeature(commerce.value, 'attention-queue-typegrouped', 'PRODUCT')
       ) {
         state.groupedQueues = await getGroupedQueueByCommerceId(commerce.value.id);
-        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
-          const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(
+
+        const hasGroupedCollaboratorQueues =
+          state.groupedQueues &&
+          Array.isArray(state.groupedQueues['COLLABORATOR']) &&
+          state.groupedQueues['COLLABORATOR'].length > 0;
+
+        if (hasGroupedCollaboratorQueues && state.collaborator.type === 'STANDARD') {
+          const collaboratorGroup = state.groupedQueues['COLLABORATOR'] || [];
+          const collaboratorQueues = collaboratorGroup.filter(
             queue => queue.collaboratorId === state.collaborator.id
           );
+
           state.collaboratorQueues = collaboratorQueues;
-          const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
+
+          const otherQueues = currentQueues.filter(queue => queue.type !== 'COLLABORATOR');
           const queues = [...collaboratorQueues, ...otherQueues];
           state.queues = queues;
+          return;
         }
-        if (
-          Object.keys(state.groupedQueues).length > 0 &&
-          state.collaborator.type === 'ASSISTANT'
-        ) {
-          const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
+
+        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'ASSISTANT') {
+          const otherQueues = currentQueues.filter(queue => queue.type !== 'COLLABORATOR');
           const queues = [...otherQueues];
           state.queues = queues;
           state.collaboratorQueues = [];
+          return;
         }
+
+        // Fallback: even with grouped queues enabled, if there is no
+        // explicit COLLABORATOR group, derive collaborator queues from all queues
+        state.collaboratorQueues = currentQueues.filter(
+          queue => queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator.id
+        );
       } else {
         // If not using grouped queues, filter collaborator queues from all queues
-        state.collaboratorQueues = state.queues.filter(
+        state.collaboratorQueues = currentQueues.filter(
           queue => queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator.id
         );
       }
@@ -389,8 +406,26 @@ export default {
 
     // Load dashboard stats filtered by collaborator queues
     const loadDashboardStats = async () => {
-      if (!commerce.value || !commerce.value.id) return;
       if (!state.collaborator || !state.collaborator.id) return;
+
+      // Build commerceIds list from collaborator relations (all commerces where
+      // this collaborator attends), defaulting to current commerce when needed.
+      let commerceIds = [];
+      if (state.collaborator.commercesId && state.collaborator.commercesId.length > 0) {
+        commerceIds = [...state.collaborator.commercesId];
+      } else if (state.collaborator.commerceId) {
+        commerceIds = [state.collaborator.commerceId];
+      } else if (commerce.value && commerce.value.id) {
+        commerceIds = [commerce.value.id];
+      }
+
+      if (!commerce.value || !commerce.value.id) {
+        // Even if commerce in store is not set, without at least one commerceId
+        // we cannot query stats.
+        if (!commerceIds || commerceIds.length === 0) {
+          return;
+        }
+      }
 
       const collaboratorQueueIds = getCollaboratorQueueIds();
       if (collaboratorQueueIds.length === 0) {
@@ -416,13 +451,13 @@ export default {
         // Note: todayCount is now updated by Firebase subscription, so we don't need to fetch it here
         // But we still fetch other stats
 
-        // Get pending bookings for all collaborator queues
+        // Get pending bookings for all collaborator queues across collaborator commerces
         const pendingBookingsPromises = collaboratorQueueIds.map(queueId =>
           getBookingsDetails(
-            commerce.value.id,
+            commerce.value?.id || commerceIds[0],
             today,
             endOfMonth,
-            [commerce.value.id],
+            commerceIds,
             1,
             100,
             undefined,
@@ -436,13 +471,13 @@ export default {
         const allPendingBookings = pendingBookingsArrays.flat().filter(Boolean);
         state.stats.pendingCount = allPendingBookings.length;
 
-        // Get upcoming week bookings for all collaborator queues
+        // Get upcoming week bookings for all collaborator queues across collaborator commerces
         const upcomingBookingsPromises = collaboratorQueueIds.map(queueId =>
           getBookingsDetails(
-            commerce.value.id,
+            commerce.value?.id || commerceIds[0],
             today,
             endOfWeek,
-            [commerce.value.id],
+            commerceIds,
             1,
             100,
             undefined,
@@ -454,13 +489,13 @@ export default {
         const allUpcomingBookings = upcomingBookingsArrays.flat().filter(Boolean);
         state.stats.upcomingWeekCount = allUpcomingBookings.length;
 
-        // Get confirmed bookings for all collaborator queues
+        // Get confirmed bookings for all collaborator queues across collaborator commerces
         const confirmedBookingsPromises = collaboratorQueueIds.map(queueId =>
           getBookingsDetails(
-            commerce.value.id,
+            commerce.value?.id || commerceIds[0],
             today,
             endOfMonth,
-            [commerce.value.id],
+            commerceIds,
             1,
             100,
             undefined,
@@ -474,13 +509,13 @@ export default {
         const allConfirmedBookings = confirmedBookingsArrays.flat().filter(Boolean);
         state.stats.totalActiveCount = allPendingBookings.length + allConfirmedBookings.length;
 
-        // Get recent bookings (last 5) from all collaborator queues
+        // Get recent bookings (last 5) from all collaborator queues across collaborator commerces
         const recentBookingsPromises = collaboratorQueueIds.map(queueId =>
           getBookingsDetails(
-            commerce.value.id,
+            commerce.value?.id || commerceIds[0],
             new DateModel().substractDays(7).toString(),
             endOfMonth,
-            [commerce.value.id],
+            commerceIds,
             1,
             5,
             undefined,

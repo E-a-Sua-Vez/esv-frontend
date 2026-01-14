@@ -2010,11 +2010,13 @@
   },
   "businessLogin": {
     "welcome": "Welcome Administrator!",
-    "login": "Enter your user and password"
+    "login": "Enter your user and password",
+    "notBusiness": "Not an administrator?"
   },
   "collaboratorLogin": {
     "welcome": "Welcome Collaborator!",
-    "login": "Enter your user and password"
+    "login": "Enter your user and password",
+    "notCollaborator": "Not a collaborator?"
   },
   "masterLogin": {
     "welcome": "Welcome Master!",

@@ -72,6 +72,12 @@ export default {
         <div class="login-message">
           <span>{{ $t('businessLogin.login') }}</span>
         </div>
+        <div class="mt-2">
+          <a class="actions-link" @click="goSite">
+            {{ $t('businessLogin.notBusiness') }}
+            <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
       </div>
       <div>
         <Login :user-type="'business'" :url-ok-redirect="bussinesUrl"></Login>
@@ -88,5 +94,31 @@ export default {
 .get-attention {
   padding-bottom: 1rem;
   font-size: 1rem;
+}
+
+.actions-link {
+  color: var(--azul-turno);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+}
+
+.actions-link:hover {
+  color: var(--verde-tu);
+  transform: translateX(4px);
+}
+
+.actions-link i {
+  transition: transform 0.3s ease;
+}
+
+.actions-link:hover i {
+  transform: translateX(4px);
 }
 </style>

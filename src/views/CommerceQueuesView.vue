@@ -1537,10 +1537,29 @@ export default {
 
     const showReserve = () => {
       state.block = {};
-      (state.attentionBlock = {}), (state.date = undefined);
+      state.attentionBlock = {};
+      state.date = undefined;
       state.specificCalendarDate = undefined;
       state.showToday = false;
       state.showReserve = true;
+
+      // Después de abrir la sección de reserva, desplazar y enfocar el selector de fecha
+      nextTick(() => {
+        setTimeout(() => {
+          const bookingDateSection = document.querySelector('#booking-date');
+          if (bookingDateSection) {
+            bookingDateSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Intentar enfocar el primer día habilitado del calendario
+            const firstAvailableDay = bookingDateSection.querySelector(
+              '.vc-day-content[aria-disabled="false"]'
+            );
+            if (firstAvailableDay) {
+              firstAvailableDay.focus();
+            }
+          }
+        }, 200);
+      });
     };
 
     const validateCaptchaOk = async response => {
@@ -2318,24 +2337,8 @@ export default {
 
     // Handle show manual selection (from NextAvailableSlot)
     const handleShowManualSelection = () => {
-      // Open the reserve/calendar section
+      // Abrir la sección de reserva; showReserve se encarga de hacer scroll/enfocar el calendario
       showReserve();
-
-      setTimeout(() => {
-        // Move focus to the "Selecione sua data" button
-        const reserveButton = document.querySelector('#booking-reserve-button');
-        if (reserveButton) {
-          reserveButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          reserveButton.focus();
-          return;
-        }
-
-        // Fallback: scroll to the booking date section
-        const bookingDateSection = document.querySelector('#booking-date');
-        if (bookingDateSection) {
-          bookingDateSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
     };
 
     const showFormStep = () => {

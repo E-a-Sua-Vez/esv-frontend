@@ -2105,11 +2105,13 @@
   },
   "businessLogin": {
     "welcome": "Bem-vindo Administrador!",
-    "login": "Digite seu usuário e password"
+    "login": "Digite seu usuário e password",
+    "notBusiness": "Não é administrador?"
   },
   "collaboratorLogin": {
     "welcome": "Bem-vindo Colaborador!",
-    "login": "Digite seu usuário e password"
+    "login": "Digite seu usuário e password",
+    "notCollaborator": "Não é colaborador?"
   },
   "masterLogin": {
     "welcome": "Bem-vindo Master!",
