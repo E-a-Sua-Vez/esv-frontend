@@ -1138,7 +1138,10 @@ export default {
               <!-- Action Buttons -->
               <div class="attention-actions-tabs">
                 <button
-                  v-if="getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')"
+                  v-if="
+                    getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT') &&
+                    !attention.paid
+                  "
                   class="attention-action-tab"
                   :class="{ 'attention-action-tab-active': extendedPaymentEntity }"
                   @click.prevent="showPaymentDetails()"
@@ -1235,8 +1238,8 @@ export default {
                       </div>
                       <AreYouSure
                         :show="goToConfirm"
-                        :yes-disabled="toggles && toggles['collaborator.attentions.confirm']"
-                        :no-disabled="toggles && toggles['collaborator.attentions.confirm']"
+                        :yes-disabled="!toggles || !toggles['collaborator.attentions.confirm']"
+                        :no-disabled="!toggles || !toggles['collaborator.attentions.confirm']"
                         @actionYes="confirm()"
                         @actionNo="confirmCancel()"
                       >
@@ -1311,8 +1314,8 @@ export default {
                       </div>
                       <AreYouSure
                         :show="goToTransfer"
-                        :yes-disabled="toggles && toggles['collaborator.attentions.transfer']"
-                        :no-disabled="toggles && toggles['collaborator.attentions.transfer']"
+                        :yes-disabled="!toggles || !toggles['collaborator.attentions.transfer']"
+                        :no-disabled="!toggles || !toggles['collaborator.attentions.transfer']"
                         @actionYes="transfer()"
                         @actionNo="cancelTransfer()"
                       >
@@ -1461,8 +1464,8 @@ export default {
                 <div class="attention-actions-confirmations">
                   <AreYouSure
                     :show="goToCancel"
-                    :yes-disabled="toggles && toggles['collaborator.attentions.cancel']"
-                    :no-disabled="toggles && toggles['collaborator.attentions.cancel']"
+                      :yes-disabled="!toggles || !toggles['collaborator.attentions.cancel']"
+                      :no-disabled="!toggles || !toggles['collaborator.attentions.cancel']"
                     @actionYes="cancel()"
                     @actionNo="cancelCancel()"
                   >

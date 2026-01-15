@@ -1396,6 +1396,10 @@
         "action": "Estoque"
       }
     },
+    "paymentConfirm": "Confirmar / Pagamento",
+    "paymentActions": "Ações de Atendimento",
+    "paymentActionsSubtitle": "Confirmar pagamento, transferir ou cancelar",
+    "manage": "Gerenciar",
     "comment": {
       "label": "Algum comentário no atendimento? (Opcional):",
       "placeholder": "O usuário foi gentil."
@@ -2062,6 +2066,7 @@
       "noNextAttention": "Não há mais próximas atenções pendentes"
     },
     "clientManagement": "Gestão do Cliente:",
+    "attentionManagement": "Gestão da Atenção:",
     "capacitiesList": {
       "collaborator": {
         "attention": {

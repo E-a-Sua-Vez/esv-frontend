@@ -1331,6 +1331,10 @@
         "action": "Register Stock"
       }
     },
+    "paymentConfirm": "Confirm / Payment",
+    "paymentActions": "Attention Actions",
+    "paymentActionsSubtitle": "Confirm payment, transfer or cancel",
+    "manage": "Manage",
     "comment": {
       "label": "Any comments on the attention? (Optional):",
       "placeholder": "User was nice. Left a tip."
@@ -1956,6 +1960,8 @@
       },
       "noNextAttention": "No more next pending attentions"
     },
+    "clientManagement": "Client Management:",
+    "attentionManagement": "Attention Management:",
     "capacitiesList": {
       "collaborator": {
         "attention": {

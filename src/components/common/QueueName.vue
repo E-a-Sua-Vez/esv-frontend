@@ -38,24 +38,32 @@ export default {
   computed: {
     // Use external props if provided, otherwise use internal Firebase data
     finalPendingDetails() {
-      return Array.isArray(this.queuePendingDetails) && this.queuePendingDetails.length > 0
+      // If parent passed an array (including empty), trust it
+      return this.queuePendingDetails !== null
         ? this.queuePendingDetails
         : this.internalPendingDetails;
     },
     finalProcessingDetails() {
-      return Array.isArray(this.queueProcessingDetails) && this.queueProcessingDetails.length > 0
+      return this.queueProcessingDetails !== null
         ? this.queueProcessingDetails
         : this.internalProcessingDetails;
     },
     finalTerminatedDetails() {
-      return Array.isArray(this.queueTerminatedDetails) && this.queueTerminatedDetails.length > 0
+      return this.queueTerminatedDetails !== null
         ? this.queueTerminatedDetails
         : this.internalTerminatedDetails;
     },
   },
   mounted() {
-    // Initialize Firebase listeners when details is true and we have a queue
-    if (this.details && this.queue?.id) {
+    // Initialize Firebase listeners only when QueueName manages its own data
+    // (i.e. parent did NOT pass queue*Details props, they stay null)
+    if (
+      this.details &&
+      this.queue?.id &&
+      this.queuePendingDetails === null &&
+      this.queueProcessingDetails === null &&
+      this.queueTerminatedDetails === null
+    ) {
       this.initializeFirebaseListeners();
     }
 
@@ -71,6 +79,18 @@ export default {
         () => {
           // Remove aria-hidden immediately and synchronously
           modalElement.removeAttribute('aria-hidden');
+
+          // Reinitialize Firebase listeners every time the modal is shown
+          // ONLY when QueueName is responsible for fetching data itself
+          if (
+            this.details &&
+            this.queue?.id &&
+            this.queuePendingDetails === null &&
+            this.queueProcessingDetails === null &&
+            this.queueTerminatedDetails === null
+          ) {
+            this.initializeFirebaseListeners();
+          }
         },
         { capture: true, once: false }
       );
@@ -138,6 +158,10 @@ export default {
       this.$watch(
         () => this.pendingAttentionsRef?.value,
         newVal => {
+          console.debug('[QueueName] pending updated', {
+            queueId: this.queue?.id,
+            count: Array.isArray(newVal) ? newVal.length : 0,
+          });
           if (Array.isArray(newVal)) {
             this.internalPendingDetails.splice(0, this.internalPendingDetails.length, ...newVal);
           }

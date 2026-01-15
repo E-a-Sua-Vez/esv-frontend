@@ -1446,6 +1446,10 @@
         "action": "Registrar Stock"
       }
     },
+    "paymentConfirm": "Confirmar / Pago",
+    "paymentActions": "Acciones de Atención",
+    "paymentActionsSubtitle": "Confirmar pago, transferir o cancelar",
+    "manage": "Gestionar",
     "comment": {
       "label": "Algún comentario de la atención? (Opcional):",
       "placeholder": "El usuario fue muy amable. Dejó una propina."
@@ -2115,6 +2119,7 @@
       "noNextAttention": "No hay más próximas atenciones pendientes"
     },
     "clientManagement": "Gestión del Cliente:",
+    "attentionManagement": "Gestión de la Atención:",
     "capacitiesList": {
       "collaborator": {
         "attention": {

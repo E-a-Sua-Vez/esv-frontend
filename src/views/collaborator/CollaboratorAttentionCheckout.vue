@@ -40,6 +40,10 @@
         :queue="state.queue"
         :commerce="state.commerce || commerce"
         :details="true"
+        :queue-pending-details="state.queuePendingDetails"
+        :queue-processing-details="state.queueProcessingDetails"
+        :queue-terminated-details="state.queueTerminatedDetails"
+        :list-update-key="state.listUpdateKey"
       />
 
       <AttentionBasePage

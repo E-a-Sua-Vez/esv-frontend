@@ -61,141 +61,167 @@
         <template #content>
           <!-- Client Requirements Cards & Check-In Call -->
           <div v-if="state.user?.id" class="client-requirements-section mt-3">
-            <!-- WhatsApp Call to Client for Check-In -->
-            <div class="call-client-banner" v-if="state.attention && state.attention.id">
-              <div class="call-client-text">
-                <i class="bi bi-whatsapp me-2"></i>
-                <span>
-                  {{
-                    $t('collaboratorAttentionCheckIn.callClient') ||
-                      'Enviar mensaje de WhatsApp al cliente para hacer el check-in'
-                  }}
-                </span>
-                <Popper :class="'dark p-1'" arrow placement="top">
-                  <template #content>
-                    <div>
-                      {{
-                        $t('collaboratorAttentionCheckIn.callClientHelp') ||
-                          'Se enviará un mensaje de WhatsApp al número del cliente indicándole que se acerque a tu módulo para realizar su check-in. Solo se enviará una vez por atención.'
-                      }}
-                    </div>
-                  </template>
-                  <i class="bi bi-info-circle ms-2 call-client-help-icon"></i>
-                </Popper>
-              </div>
-              <button
-                class="requirement-action-btn-compact whatsapp-btn"
-                :disabled="
-                  loading ||
-                  state.loadingCheckInCall ||
-                  state.attention?.notificationCheckInSent ||
-                  state.checkInCallSent
-                "
-                @click="sendCheckInCall"
-              >
-                <i class="bi bi-whatsapp"></i>
-                <span v-if="state.loadingCheckInCall">
-                  {{ $t('dashboard.sending') || 'Enviando...' }}
-                </span>
-                <span
-                  v-else-if="state.attention?.notificationCheckInSent || state.checkInCallSent"
-                >
-                  {{
-                    $t('collaboratorAttentionCheckIn.callAlreadySent') || 'Llamado ya enviado'
-                  }}
-                </span>
-                <span v-else>
-                  {{
-                    $t('collaboratorAttentionCheckIn.callClientAction') ||
-                      'Enviar mensaje de WhatsApp'
-                  }}
-                </span>
-              </button>
-            </div>
+            <!-- Gestión de la Atención -->
+            <div
+              v-if="state.attention && state.attention.id"
+              class="client-management-section my-3"
+            >
+              <h5 class="client-management-title">
+                {{ $t('collaboratorQueueAttentions.attentionManagement') || 'Gestión de la Atención:' }}
+              </h5>
 
-            <!-- Consent Status Widget -->
-            <ConsentStatusWidget
-              v-if="state.clientConsentsLoaded && state.commerce?.id && state.client?.id"
-              :commerce-id="state.commerce.id"
-              :client-id="state.client.id"
-              :consents="state.clientConsents"
-              :requirements="state.consentRequirements"
-              @refresh="loadConsentStatus"
-              @open-manager="openConsentManager"
-            />
-
-            <!-- Preprontuario Status Card -->
-            <div v-if="isPreprontuarioActive()">
-              <div class="requirement-card requirement-card-compact">
-                <div class="requirement-card-header">
-                  <div class="requirement-icon">
-                    <i class="bi bi-clipboard2-pulse-fill"></i>
-                  </div>
-                  <div class="requirement-info">
-                    <div class="requirement-title">
-                      {{ $t('dashboard.preprontuario') || 'Pré-Prontuário' }}
-                      <a
-                        href="#"
-                        @click.prevent="checkPreprontuarioCompletion(true)"
-                        :class="{ loading: state.loadingPreprontuario }"
-                        class="refresh-link"
-                        :title="$t('dashboard.refreshStatus') || 'Atualizar status'"
-                      >
-                        <i
-                          class="bi bi-arrow-clockwise"
-                          :class="{ spinning: state.loadingPreprontuario }"
-                        ></i>
-                      </a>
-                    </div>
-                    <div
-                      class="requirement-status"
-                      :class="
-                        state.preprontuarioStatus?.completed ? 'status-completed' : 'status-pending'
-                      "
-                    >
-                      <i
-                        class="bi"
-                        :class="
-                          state.preprontuarioStatus?.completed
-                            ? 'bi-check-circle-fill'
-                            : 'bi-exclamation-circle-fill'
-                        "
-                      ></i>
-                      <span>
+              <!-- WhatsApp Call to Client for Check-In -->
+              <div class="call-client-banner" v-if="state.attention && state.attention.id">
+                <div class="call-client-text">
+                  <i class="bi bi-whatsapp me-2"></i>
+                  <span>
+                    {{
+                      $t('collaboratorAttentionCheckIn.callClient') ||
+                        'Enviar mensaje de WhatsApp al cliente para hacer el check-in'
+                    }}
+                  </span>
+                  <Popper :class="'dark p-1'" arrow placement="top">
+                    <template #content>
+                      <div>
                         {{
-                          state.preprontuarioStatus?.completed
-                            ? $t('dashboard.preprontuarioDetails.completed') ||
-                              $t('dashboard.completed') ||
-                              'Concluído'
-                            : $t('dashboard.preprontuarioDetails.pending') ||
-                              $t('dashboard.pending') ||
-                              'Pendente'
+                          $t('collaboratorAttentionCheckIn.callClientHelp') ||
+                            'Se enviará un mensaje de WhatsApp al número del cliente indicándole que se acerque a tu módulo para realizar su check-in. Solo se enviará una vez por atención.'
                         }}
-                      </span>
-                    </div>
-                  </div>
+                      </div>
+                    </template>
+                    <i class="bi bi-info-circle ms-2 call-client-help-icon"></i>
+                  </Popper>
                 </div>
                 <button
-                  v-if="!state.preprontuarioStatus?.completed"
-                  @click="sendPreprontuarioReminder()"
-                  :disabled="state.loadingPreprontuario || state.preprontuarioMessageSent"
                   class="requirement-action-btn-compact whatsapp-btn"
-                  :class="{ disabled: state.preprontuarioMessageSent }"
+                  :disabled="
+                    loading ||
+                    state.loadingCheckInCall ||
+                    state.attention?.notificationCheckInSent ||
+                    state.checkInCallSent
+                  "
+                  @click="sendCheckInCall"
                 >
-                  <i
-                    class="bi"
-                    :class="state.preprontuarioMessageSent ? 'bi-check-circle-fill' : 'bi-whatsapp'"
-                  ></i>
-                  <span v-if="state.loadingPreprontuario">{{
-                    $t('dashboard.sending') || 'Enviando...'
-                  }}</span>
-                  <span v-else-if="state.preprontuarioMessageSent">{{
-                    $t('dashboard.messageAlreadySent') || 'Mensaje ya enviado'
-                  }}</span>
-                  <span v-else>{{ $t('dashboard.sendReminder') || 'Enviar Lembrete' }}</span>
+                  <i class="bi bi-whatsapp"></i>
+                  <span v-if="state.loadingCheckInCall">
+                    {{ $t('dashboard.sending') || 'Enviando...' }}
+                  </span>
+                  <span
+                    v-else-if="state.attention?.notificationCheckInSent || state.checkInCallSent"
+                  >
+                    {{
+                      $t('collaboratorAttentionCheckIn.callAlreadySent') || 'Llamado ya enviado'
+                    }}
+                  </span>
+                  <span v-else>
+                    {{
+                      $t('collaboratorAttentionCheckIn.callClientAction') ||
+                        'Enviar mensaje de WhatsApp'
+                    }}
+                  </span>
                 </button>
               </div>
+
+              <!-- Payment / Transfer Actions (reusable component) -->
+              <div class="col-12" v-if="state.attention && state.attention.id">
+                <AttentionPaymentActionsCard
+                  class="my-2"
+                  :loading="loading"
+                  :disabled="!state.attention || !state.attention.id"
+                  @open="openAttentionModal()"
+                />
+              </div>
+
+              <!-- Consent Status Widget -->
+              <ConsentStatusWidget
+                v-if="state.clientConsentsLoaded && state.commerce?.id && state.client?.id"
+                :commerce-id="state.commerce.id"
+                :client-id="state.client.id"
+                :consents="state.clientConsents"
+                :requirements="state.consentRequirements"
+                @refresh="loadConsentStatus"
+                @open-manager="openConsentManager"
+              />
+
+              <!-- Preprontuario Status Card -->
+              <div v-if="isPreprontuarioActive()">
+                <div class="requirement-card requirement-card-compact">
+                  <div class="requirement-card-header">
+                    <div class="requirement-icon">
+                      <i class="bi bi-clipboard2-pulse-fill"></i>
+                    </div>
+                    <div class="requirement-info">
+                      <div class="requirement-title">
+                        {{ $t('dashboard.preprontuario') || 'Pré-Prontuário' }}
+                        <a
+                          href="#"
+                          @click.prevent="checkPreprontuarioCompletion(true)"
+                          :class="{ loading: state.loadingPreprontuario }"
+                          class="refresh-link"
+                          :title="$t('dashboard.refreshStatus') || 'Atualizar status'"
+                        >
+                          <i
+                            class="bi bi-arrow-clockwise"
+                            :class="{ spinning: state.loadingPreprontuario }"
+                          ></i>
+                        </a>
+                      </div>
+                      <div
+                        class="requirement-status"
+                        :class="
+                          state.preprontuarioStatus?.completed ? 'status-completed' : 'status-pending'
+                        "
+                      >
+                        <i
+                          class="bi"
+                          :class="
+                            state.preprontuarioStatus?.completed
+                              ? 'bi-check-circle-fill'
+                              : 'bi-exclamation-circle-fill'
+                          "
+                        ></i>
+                        <span>
+                          {{
+                            state.preprontuarioStatus?.completed
+                              ? $t('dashboard.preprontuarioDetails.completed') ||
+                                $t('dashboard.completed') ||
+                                'Concluído'
+                              : $t('dashboard.preprontuarioDetails.pending') ||
+                                $t('dashboard.pending') ||
+                                'Pendente'
+                          }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    v-if="!state.preprontuarioStatus?.completed"
+                    @click="sendPreprontuarioReminder()"
+                    :disabled="state.loadingPreprontuario || state.preprontuarioMessageSent"
+                    class="requirement-action-btn-compact whatsapp-btn"
+                    :class="{ disabled: state.preprontuarioMessageSent }"
+                  >
+                    <i
+                      class="bi"
+                      :class="state.preprontuarioMessageSent ? 'bi-check-circle-fill' : 'bi-whatsapp'"
+                    ></i>
+                    <span v-if="state.loadingPreprontuario">{{
+                      $t('dashboard.sending') || 'Enviando...'
+                    }}</span>
+                    <span v-else-if="state.preprontuarioMessageSent">{{
+                      $t('dashboard.messageAlreadySent') || 'Mensaje ya enviado'
+                    }}</span>
+                    <span v-else>{{ $t('dashboard.sendReminder') || 'Enviar Lembrete' }}</span>
+                  </button>
+                </div>
+              </div>
+
+
             </div>
+
+
+
+
           </div>
 
           <!-- Check-In Specific Content -->
@@ -242,6 +268,17 @@
         :icon="'bi bi-emoji-expressionless'"
       />
     </div>
+
+    <!-- Attention Details Modal (Payment / Transfer) -->
+    <AttentionDetailsModal
+      :show="state.showAttentionModal"
+      :attention="state.selectedAttention || state.attention"
+      :commerce="state.commerce"
+      :queues="state.commerce?.queues || (state.queue ? [state.queue] : [])"
+      :toggles="state.toggles"
+      @close="closeAttentionModal"
+      @attention-updated="handleAttentionUpdatedFromModal"
+    />
 
     <!-- Modal LGPD Consent Manager -->
     <Teleport to="body">
@@ -336,6 +373,8 @@ import {
 import { getFormPersonalizedByCommerceId } from '../../application/services/form-personalized';
 import { getConsentStatus } from '../../application/services/consent';
 import AttentionBasePage from '../../components/attentions/common/AttentionBasePage.vue';
+import AttentionPaymentActionsCard from '../../components/attentions/common/AttentionPaymentActionsCard.vue';
+import AttentionDetailsModal from '../../components/attentions/common/AttentionDetailsModal.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import QueueName from '../../components/common/QueueName.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
@@ -361,6 +400,8 @@ export default {
     LgpdConsentManager,
     DesktopPageHeader,
     Popper,
+    AttentionDetailsModal,
+    AttentionPaymentActionsCard,
   },
   setup() {
     const route = useRoute();
@@ -404,6 +445,8 @@ export default {
       clientConsents: [],
       consentRequirements: [],
       clientConsentsLoaded: false,
+      showAttentionModal: false,
+      selectedAttention: undefined,
     });
 
     // Live update interval for stats
@@ -506,6 +549,11 @@ export default {
     let pendingAttentionsRef = null;
     let processingAttentionsRef = null;
     let terminatedAttentionsRef = null;
+
+    // Store watcher stop functions for cleanup (same pattern as CollaboratorQueueAttentions)
+    let pendingWatcherStop = null;
+    let processingWatcherStop = null;
+    let terminatedWatcherStop = null;
 
     // Helper function to validate attention status/stage and redirect if needed
     const validateAndRedirect = (attention, commerceOverride = null) => {
@@ -621,139 +669,199 @@ export default {
       { immediate: true, deep: true }
     );
 
+    // Function to update attention details from Firebase listeners (same as CollaboratorQueueAttentions)
+    const updateAttentionDetails = () => {
+      if (!state.queue || !state.queue.id) {
+        return;
+      }
+
+      console.debug('[CheckIn] updateAttentionDetails', {
+        queueId: state.queue?.id,
+        pendingCount: pendingAttentionsRef?.value?.length || 0,
+        processingCount: processingAttentionsRef?.value?.length || 0,
+        terminatedCount: terminatedAttentionsRef?.value?.length || 0,
+      });
+
+      // Get pending attentions from Firebase listener (already filtered by date and status)
+      const pendingArray = pendingAttentionsRef?.value || [];
+      const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
+
+      // Firebase already filters by today and PENDING status, just sort by number
+      const filteredPending = [...pendingList].filter(att => att && att.status === 'PENDING');
+      const sortedPending = [...filteredPending].sort((a, b) => {
+        const numA = a.number || 0;
+        const numB = b.number || 0;
+        return numA - numB;
+      });
+
+      // CRITICAL: Replace the entire array reference to force Vue reactivity
+      state.queuePendingDetails.splice(0, state.queuePendingDetails.length, ...sortedPending);
+
+      // Get processing attentions from Firebase listener (already filtered by date)
+      const processingArray = processingAttentionsRef?.value || [];
+      const processingList = Array.isArray(processingArray) ? processingArray : [];
+      state.queueProcessingDetails.splice(
+        0,
+        state.queueProcessingDetails.length,
+        ...processingList,
+      );
+
+      // Get terminated attentions from Firebase listener (already filtered by date)
+      const terminatedArray = terminatedAttentionsRef?.value || [];
+      const terminatedList = Array.isArray(terminatedArray) ? terminatedArray : [];
+      const sortedTerminated = [...terminatedList].sort((a, b) => {
+        const numA = a.number || 0;
+        const numB = b.number || 0;
+        return numB - numA;
+      });
+      state.queueTerminatedDetails.splice(
+        0,
+        state.queueTerminatedDetails.length,
+        ...sortedTerminated,
+      );
+
+      // Force component re-render by updating key
+      state.listUpdateKey++;
+    };
+
+    const openAttentionModal = () => {
+      state.selectedAttention = state.attention;
+      state.showAttentionModal = true;
+    };
+
+    const closeAttentionModal = () => {
+      state.showAttentionModal = false;
+      state.selectedAttention = undefined;
+    };
+
+    const handleAttentionUpdatedFromModal = async () => {
+      if (!state.attention?.id) return;
+
+      try {
+        const updatedAttention = await getAttentionDetails(state.attention.id, state.currentUser?.id);
+
+        if (updatedAttention.queue) {
+          state.queue = updatedAttention.queue;
+        }
+        if (updatedAttention.user) {
+          state.user = updatedAttention.user;
+        }
+        if (updatedAttention.commerce) {
+          state.commerce = updatedAttention.commerce;
+          if (
+            state.commerce &&
+            state.commerce.id &&
+            (!state.commerce.features || !Array.isArray(state.commerce.features))
+          ) {
+            try {
+              const fullCommerce = await getCommerceById(state.commerce.id);
+              if (fullCommerce && fullCommerce.features) {
+                state.commerce = fullCommerce;
+                await store.setCurrentCommerce(fullCommerce);
+              }
+            } catch (error) {
+              console.warn('Could not fetch full commerce with features (modal update):', error);
+            }
+          }
+        }
+
+        state.attention = updatedAttention;
+      } finally {
+        closeAttentionModal();
+      }
+    };
+
     // Watch for queue ID to initialize Firebase listeners
     watch(
       () => state.queue?.id,
-      queueId => {
-        if (queueId) {
-          // Initialize queue listener if not already set
-          if (!firebaseQueueRef.value) {
-            firebaseQueueRef.value = updatedQueues(queueId);
-            // Watch Firebase queue updates
-            watch(
-              firebaseQueueRef,
-              newQueues => {
-                if (newQueues && newQueues.length > 0) {
-                  const firebaseQueueData = newQueues[0];
-                  if (firebaseQueueData && firebaseQueueData.id) {
-                    state.queue = {
-                      ...state.queue,
-                      ...firebaseQueueData,
-                    };
-                    // Force stats update
-                    statsUpdateTrigger.value++;
-                  }
+      async queueId => {
+        if (!queueId) return;
+
+        console.debug('[CheckIn] queue watcher triggered', { queueId });
+
+        // Initialize queue listener if not already set
+        if (!firebaseQueueRef.value) {
+          firebaseQueueRef.value = updatedQueues(queueId);
+          // Watch Firebase queue updates
+          watch(
+            firebaseQueueRef,
+            newQueues => {
+              if (newQueues && newQueues.length > 0) {
+                const firebaseQueueData = newQueues[0];
+                if (firebaseQueueData && firebaseQueueData.id) {
+                  state.queue = {
+                    ...state.queue,
+                    ...firebaseQueueData,
+                  };
+                  // Force stats update
+                  statsUpdateTrigger.value++;
                 }
-              },
-              { immediate: false }
-            );
-          }
-
-          // Initialize attention listeners for modal (real-time updates)
-          if (!pendingAttentionsRef) {
-            // Clean up previous listeners if exist (shouldn't happen, but safety check)
-            if (pendingAttentionsRef && pendingAttentionsRef._unsubscribe) {
-              pendingAttentionsRef._unsubscribe();
-            }
-            if (processingAttentionsRef && processingAttentionsRef._unsubscribe) {
-              processingAttentionsRef._unsubscribe();
-            }
-            if (terminatedAttentionsRef && terminatedAttentionsRef._unsubscribe) {
-              terminatedAttentionsRef._unsubscribe();
-            }
-
-            // Initialize Firebase listeners for this queue
-            pendingAttentionsRef = updatedAvailableAttentions(queueId);
-            processingAttentionsRef = updatedProcessingAttentions(queueId);
-            terminatedAttentionsRef = updatedTerminatedAttentions(queueId);
-
-            // Function to update attention details from Firebase listeners (same as CollaboratorQueueAttentions)
-            const updateAttentionDetails = () => {
-              if (!state.queue || !state.queue.id) {
-                return;
               }
-
-              // Get pending attentions from Firebase listener (already filtered by date and status)
-              const pendingArray = pendingAttentionsRef?.value || [];
-              const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
-
-              // Firebase already filters by today and PENDING status, just sort by number
-              const filteredPending = [...pendingList].filter(
-                att => att && att.status === 'PENDING',
-              );
-              const sortedPending = [...filteredPending].sort((a, b) => {
-                const numA = a.number || 0;
-                const numB = b.number || 0;
-                return numA - numB;
-              });
-
-              // CRITICAL: Replace the entire array reference to force Vue reactivity
-              state.queuePendingDetails.splice(
-                0,
-                state.queuePendingDetails.length,
-                ...sortedPending,
-              );
-
-              // Get processing attentions from Firebase listener (already filtered by date)
-              const processingArray = processingAttentionsRef?.value || [];
-              const processingList = Array.isArray(processingArray) ? processingArray : [];
-              state.queueProcessingDetails.splice(
-                0,
-                state.queueProcessingDetails.length,
-                ...processingList,
-              );
-
-              // Get terminated attentions from Firebase listener (already filtered by date)
-              const terminatedArray = terminatedAttentionsRef?.value || [];
-              const terminatedList = Array.isArray(terminatedArray) ? terminatedArray : [];
-              const sortedTerminated = [...terminatedList].sort((a, b) => {
-                const numA = a.number || 0;
-                const numB = b.number || 0;
-                return numB - numA;
-              });
-              state.queueTerminatedDetails.splice(
-                0,
-                state.queueTerminatedDetails.length,
-                ...sortedTerminated,
-              );
-
-              // Force component re-render by updating key
-              state.listUpdateKey++;
-            };
-
-            // Watch for changes in Firebase listeners - watch directly the ref value
-            watch(
-              () => pendingAttentionsRef?.value,
-              () => {
-                updateAttentionDetails();
-              },
-              { immediate: true, deep: true }
-            );
-
-            watch(
-              () => processingAttentionsRef?.value,
-              () => {
-                updateAttentionDetails();
-              },
-              { immediate: true, deep: true }
-            );
-
-            watch(
-              () => terminatedAttentionsRef?.value,
-              () => {
-                updateAttentionDetails();
-              },
-              { immediate: true, deep: true }
-            );
-
-            // Force initial update after a brief moment to ensure Firebase has initialized
-            nextTick(() => {
-              setTimeout(() => {
-                updateAttentionDetails();
-              }, 300);
-            });
-          }
+            },
+            { immediate: false }
+          );
         }
+
+        // Clean up previous listeners if exist
+        if (pendingAttentionsRef && pendingAttentionsRef._unsubscribe) {
+          pendingAttentionsRef._unsubscribe();
+        }
+        if (processingAttentionsRef && processingAttentionsRef._unsubscribe) {
+          processingAttentionsRef._unsubscribe();
+        }
+        if (terminatedAttentionsRef && terminatedAttentionsRef._unsubscribe) {
+          terminatedAttentionsRef._unsubscribe();
+        }
+
+        // Initialize Firebase listeners for this queue
+        pendingAttentionsRef = updatedAvailableAttentions(queueId);
+        processingAttentionsRef = updatedProcessingAttentions(queueId);
+        terminatedAttentionsRef = updatedTerminatedAttentions(queueId);
+
+        // Clean up previous watchers if they exist
+        if (pendingWatcherStop) {
+          pendingWatcherStop();
+          pendingWatcherStop = null;
+        }
+        if (processingWatcherStop) {
+          processingWatcherStop();
+          processingWatcherStop = null;
+        }
+        if (terminatedWatcherStop) {
+          terminatedWatcherStop();
+          terminatedWatcherStop = null;
+        }
+
+        // Watch for changes in Firebase listeners - watch directly the ref value
+        pendingWatcherStop = watch(
+          () => pendingAttentionsRef?.value,
+          () => {
+            updateAttentionDetails();
+          },
+          { immediate: true, deep: true }
+        );
+
+        processingWatcherStop = watch(
+          () => processingAttentionsRef?.value,
+          () => {
+            updateAttentionDetails();
+          },
+          { immediate: true, deep: true }
+        );
+
+        terminatedWatcherStop = watch(
+          () => terminatedAttentionsRef?.value,
+          () => {
+            updateAttentionDetails();
+          },
+          { immediate: true, deep: true }
+        );
+
+        // Force initial update after a brief moment to ensure Firebase has initialized
+        await nextTick();
+        setTimeout(() => {
+          updateAttentionDetails();
+        }, 300);
       },
       { immediate: true }
     );
@@ -960,7 +1068,7 @@ export default {
       }
     });
 
-    // Cleanup Firebase listeners on unmount
+    // Cleanup Firebase listeners and watchers on unmount
     onUnmounted(() => {
       if (pendingAttentionsRef && pendingAttentionsRef._unsubscribe) {
         pendingAttentionsRef._unsubscribe();
@@ -970,6 +1078,19 @@ export default {
       }
       if (terminatedAttentionsRef && terminatedAttentionsRef._unsubscribe) {
         terminatedAttentionsRef._unsubscribe();
+      }
+
+      if (pendingWatcherStop) {
+        pendingWatcherStop();
+        pendingWatcherStop = null;
+      }
+      if (processingWatcherStop) {
+        processingWatcherStop();
+        processingWatcherStop = null;
+      }
+      if (terminatedWatcherStop) {
+        terminatedWatcherStop();
+        terminatedWatcherStop = null;
       }
     });
 
@@ -1280,6 +1401,9 @@ export default {
       loadConsentStatus,
       openConsentManager,
       sendCheckInCall,
+      openAttentionModal,
+      closeAttentionModal,
+      handleAttentionUpdatedFromModal,
     };
   },
 };
@@ -1564,5 +1688,20 @@ export default {
 .back-button {
   width: 100% !important;
   box-sizing: border-box;
+}
+
+.client-management-section {
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.client-management-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.8);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(0, 74, 173, 0.2);
 }
 </style>

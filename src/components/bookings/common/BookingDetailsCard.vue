@@ -892,6 +892,16 @@ export default {
           <div class="booking-confirmation-header">
             <i class="bi bi-check-circle-fill"></i>
             <span>{{ $t('collaboratorBookingsView.confirmData') }}</span>
+            <span
+              v-if="booking.confirmationData.paid === true"
+              class="booking-badge-modern booking-badge-secondary ms-2"
+            >
+              <i class="bi bi-cash-coin"></i>
+              {{
+                $t('collaboratorBookingsView.message.7.title') ||
+                  $t('collaboratorBookingsView.paymentConfirm')
+              }}
+            </span>
           </div>
           <div class="booking-confirmation-tags" v-if="booking.confirmationData">
             <span
@@ -944,7 +954,10 @@ export default {
         <!-- Action Buttons -->
         <div class="attention-actions-tabs">
           <button
-            v-if="getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')"
+            v-if="
+              getActiveFeature(commerce, 'booking-confirm', 'PRODUCT') &&
+              toggles && toggles['collaborator.bookings.confirm']
+            "
             class="attention-action-tab"
             :class="{ 'booking-action-tab-active': extendedPaymentEntity }"
             @click.prevent="showPaymentDetails()"
@@ -977,7 +990,12 @@ export default {
         <!-- PAYMENT -->
         <Transition name="slide-fade">
           <div
-            v-if="extendedPaymentEntity && getActiveFeature(commerce, 'booking-confirm', 'PRODUCT')"
+            v-if="
+              extendedPaymentEntity &&
+              getActiveFeature(commerce, 'booking-confirm', 'PRODUCT') &&
+              toggles &&
+              toggles['collaborator.bookings.confirm']
+            "
             class="attention-action-section"
           >
             <div class="attention-action-content">
@@ -1018,8 +1036,8 @@ export default {
                 </div>
                 <AreYouSure
                   :show="goToConfirm2"
-                  :yes-disabled="toggles['collaborator.bookings.confirm']"
-                  :no-disabled="toggles['collaborator.bookings.confirm']"
+                  :yes-disabled="!toggles['collaborator.bookings.confirm']"
+                  :no-disabled="!toggles['collaborator.bookings.confirm']"
                   @actionYes="confirm()"
                   @actionNo="confirmCancel2()"
                 >
@@ -1200,7 +1218,8 @@ export default {
             <button
               v-if="
                 getActiveFeature(commerce, 'booking-confirm', 'PRODUCT') &&
-                !getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')
+                !getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT') &&
+                toggles && toggles['collaborator.bookings.confirm']
               "
               class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
               @click="goConfirm1()"
@@ -1216,16 +1235,16 @@ export default {
           <div class="attention-actions-confirmations">
             <AreYouSure
               :show="goToCancel"
-              :yes-disabled="toggles['collaborator.bookings.cancel']"
-              :no-disabled="toggles['collaborator.bookings.cancel']"
+              :yes-disabled="!toggles['collaborator.bookings.cancel']"
+              :no-disabled="!toggles['collaborator.bookings.cancel']"
               @actionYes="cancel()"
               @actionNo="cancelCancel()"
             >
             </AreYouSure>
             <AreYouSure
               :show="goToConfirm1"
-              :yes-disabled="toggles['collaborator.bookings.confirm']"
-              :no-disabled="toggles['collaborator.bookings.confirm']"
+              :yes-disabled="!toggles['collaborator.bookings.confirm']"
+              :no-disabled="!toggles['collaborator.bookings.confirm']"
               @actionYes="confirm()"
               @actionNo="confirmCancel1()"
             >
