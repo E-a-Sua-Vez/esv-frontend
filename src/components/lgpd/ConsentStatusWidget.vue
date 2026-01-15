@@ -1,5 +1,5 @@
 <template>
-  <div class="requirement-card requirement-card-compact">
+  <div v-if="total > 0" class="requirement-card requirement-card-compact">
     <div class="requirement-card-header">
       <div class="requirement-icon" :class="statusClass">
         <i :class="statusIcon"></i>
@@ -200,6 +200,7 @@ export default {
     return {
       requesting,
       allConsents,
+      total,
       hasPending,
       hasBlockingConsents,
       blockingConsentsCount,

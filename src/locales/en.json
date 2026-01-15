@@ -30,6 +30,12 @@
   "close": "Close",
   "language": "Language",
   "menu": "Menu",
+  "collaboratorAttentionCheckIn": {
+    "callClient": "Send a WhatsApp message to the client to come for check-in",
+    "callAlreadySent": "WhatsApp message already sent",
+    "callClientHelp": "A WhatsApp message will be sent to the client's number asking them to come to your module to perform their check-in. It will only be sent once per attention.",
+    "callClientAction": "Send WhatsApp message"
+  },
   "commerceSelector": {
     "commerce": "Commerce",
     "select": "Select Commerce"
@@ -849,7 +855,15 @@
   },
   "attention": {
     "lgpd": {
-      "blockingConsents": "Missing {count} blocking consent(s)"
+      "blockingConsents": "Missing {count} blocking consent(s)",
+      "clickToRequest": "Click to request consents",
+      "blocking": "Blocking",
+      "missingConsents": "Missing {count} pending consent(s)",
+      "missing": "Pending",
+      "allConsentsGranted": "All required consents have been granted",
+      "compliant": "LGPD compliant",
+      "cannotAdvanceStage": "Cannot advance stage: missing {count} blocking consent(s): {types}",
+      "cannotAttend": "Cannot attend: missing {count} blocking consent(s): {types}"
     }
   },
   "contactTypes": {
@@ -1924,9 +1938,9 @@
       },
       "2": {
         "title": {
-          "1": "Didn't?"
+          "1": "Didn't attend?"
         },
-        "action": "Skip"
+        "action": "Skip attention"
       },
       "3": {
         "action": "Back to queues"

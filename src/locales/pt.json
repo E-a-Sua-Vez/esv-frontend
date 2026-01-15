@@ -31,6 +31,12 @@
   "close": "Fechar",
   "language": "Idioma",
   "menu": "Menu",
+  "collaboratorAttentionCheckIn": {
+    "callClient": "Enviar mensagem de WhatsApp para o cliente fazer o check-in",
+    "callAlreadySent": "Mensagem de WhatsApp já enviada",
+    "callClientHelp": "Será enviada uma mensagem de WhatsApp para o número do cliente pedindo que ele se aproxime do seu módulo para realizar o check-in. Ela será enviada apenas uma vez por atendimento.",
+    "callClientAction": "Enviar mensagem de WhatsApp"
+  },
   "commerceSelector": {
     "commerce": "Comércio",
     "select": "Selecionar Comércio"
@@ -903,7 +909,15 @@
   },
   "attention": {
     "lgpd": {
-      "blockingConsents": "Faltam {count} consentimento(s) bloqueante(s)"
+      "blockingConsents": "Faltam {count} consentimento(s) bloqueante(s)",
+      "clickToRequest": "Clique para solicitar consentimentos",
+      "blocking": "Bloqueante",
+      "missingConsents": "Faltam {count} consentimento(s) pendente(s)",
+      "missing": "Pendente",
+      "allConsentsGranted": "Todos os consentimentos obrigatórios foram concedidos",
+      "compliant": "Em conformidade com a LGPD",
+      "cannotAdvanceStage": "Não é possível avançar de etapa: faltam {count} consentimento(s) bloqueante(s): {types}",
+      "cannotAttend": "Não é possível atender: faltam {count} consentimento(s) bloqueante(s): {types}"
     }
   },
   "contactTypes": {
@@ -2031,7 +2045,7 @@
         "title": {
           "1": "Não?"
         },
-        "action": "Pular"
+        "action": "Pular Atendimento"
       },
       "3": {
         "action": "Voltar as Filas"

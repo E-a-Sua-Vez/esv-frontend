@@ -58,83 +58,7 @@ export default {
     if (this.details && this.queue?.id) {
       this.initializeFirebaseListeners();
     }
-  },
-  beforeUnmount() {
-    this.cleanupFirebaseListeners();
-  },
-  watch: {
-    queue(newQueue, oldQueue) {
-      if (this.details && newQueue?.id && newQueue.id !== oldQueue?.id) {
-        this.initializeFirebaseListeners();
-      }
-    },
-  },
-  methods: {
-    showDetails() {
-      this.extendedEntity = !this.extendedEntity;
-    },
-    openDrawer() {
-      if (this.useDrawer) {
-        this.$emit('open-drawer');
-      }
-    },
 
-    initializeFirebaseListeners() {
-      if (!this.queue?.id) return;
-
-      // Clean up previous listeners
-      this.cleanupFirebaseListeners();
-
-      // Initialize Firebase listeners
-      this.pendingAttentionsRef = updatedAvailableAttentions(this.queue.id);
-      this.processingAttentionsRef = updatedProcessingAttentions(this.queue.id);
-      this.terminatedAttentionsRef = updatedTerminatedAttentions(this.queue.id);
-
-      // Watch for changes and update internal data
-      this.$watch(
-        () => this.pendingAttentionsRef?.value,
-        (newVal) => {
-          if (Array.isArray(newVal)) {
-            this.internalPendingDetails.splice(0, this.internalPendingDetails.length, ...newVal);
-          }
-        },
-        { immediate: true, deep: true }
-      );
-
-      this.$watch(
-        () => this.processingAttentionsRef?.value,
-        (newVal) => {
-          if (Array.isArray(newVal)) {
-            this.internalProcessingDetails.splice(0, this.internalProcessingDetails.length, ...newVal);
-          }
-        },
-        { immediate: true, deep: true }
-      );
-
-      this.$watch(
-        () => this.terminatedAttentionsRef?.value,
-        (newVal) => {
-          if (Array.isArray(newVal)) {
-            this.internalTerminatedDetails.splice(0, this.internalTerminatedDetails.length, ...newVal);
-          }
-        },
-        { immediate: true, deep: true }
-      );
-    },
-
-    cleanupFirebaseListeners() {
-      if (this.pendingAttentionsRef && this.pendingAttentionsRef._unsubscribe) {
-        this.pendingAttentionsRef._unsubscribe();
-      }
-      if (this.processingAttentionsRef && this.processingAttentionsRef._unsubscribe) {
-        this.processingAttentionsRef._unsubscribe();
-      }
-      if (this.terminatedAttentionsRef && this.terminatedAttentionsRef._unsubscribe) {
-        this.terminatedAttentionsRef._unsubscribe();
-      }
-    },
-  },
-  mounted() {
     // Fix accessibility issue: ensure aria-hidden is properly managed during Bootstrap modal transitions
     // Bootstrap automatically manages aria-hidden, but we need to ensure it's removed before focus moves
     const modalElement = document.getElementById('queueModal');
@@ -178,6 +102,81 @@ export default {
         modalElement.setAttribute('aria-hidden', 'true');
       });
     }
+  },
+  beforeUnmount() {
+    this.cleanupFirebaseListeners();
+  },
+  watch: {
+    queue(newQueue, oldQueue) {
+      if (this.details && newQueue?.id && newQueue.id !== oldQueue?.id) {
+        this.initializeFirebaseListeners();
+      }
+    },
+  },
+  methods: {
+    showDetails() {
+      this.extendedEntity = !this.extendedEntity;
+    },
+    openDrawer() {
+      if (this.useDrawer) {
+        this.$emit('open-drawer');
+      }
+    },
+
+    initializeFirebaseListeners() {
+      if (!this.queue?.id) return;
+
+      // Clean up previous listeners
+      this.cleanupFirebaseListeners();
+
+      // Initialize Firebase listeners
+      this.pendingAttentionsRef = updatedAvailableAttentions(this.queue.id);
+      this.processingAttentionsRef = updatedProcessingAttentions(this.queue.id);
+      this.terminatedAttentionsRef = updatedTerminatedAttentions(this.queue.id);
+
+      // Watch for changes and update internal data
+      this.$watch(
+        () => this.pendingAttentionsRef?.value,
+        newVal => {
+          if (Array.isArray(newVal)) {
+            this.internalPendingDetails.splice(0, this.internalPendingDetails.length, ...newVal);
+          }
+        },
+        { immediate: true, deep: true }
+      );
+
+      this.$watch(
+        () => this.processingAttentionsRef?.value,
+        newVal => {
+          if (Array.isArray(newVal)) {
+            this.internalProcessingDetails.splice(0, this.internalProcessingDetails.length, ...newVal);
+          }
+        },
+        { immediate: true, deep: true }
+      );
+
+      this.$watch(
+        () => this.terminatedAttentionsRef?.value,
+        newVal => {
+          if (Array.isArray(newVal)) {
+            this.internalTerminatedDetails.splice(0, this.internalTerminatedDetails.length, ...newVal);
+          }
+        },
+        { immediate: true, deep: true }
+      );
+    },
+
+    cleanupFirebaseListeners() {
+      if (this.pendingAttentionsRef && this.pendingAttentionsRef._unsubscribe) {
+        this.pendingAttentionsRef._unsubscribe();
+      }
+      if (this.processingAttentionsRef && this.processingAttentionsRef._unsubscribe) {
+        this.processingAttentionsRef._unsubscribe();
+      }
+      if (this.terminatedAttentionsRef && this.terminatedAttentionsRef._unsubscribe) {
+        this.terminatedAttentionsRef._unsubscribe();
+      }
+    },
   },
 };
 </script>
@@ -260,9 +259,9 @@ export default {
               <QueueAttentionDetails
                 :key="`queue-modal-${queue?.id}-${listUpdateKey || 0}`"
                 :queue="queue"
-                :queue-pending-details="Array.isArray(queuePendingDetails) ? queuePendingDetails : []"
-                :queue-processing-details="Array.isArray(queueProcessingDetails) ? queueProcessingDetails : []"
-                :queue-terminated-details="Array.isArray(queueTerminatedDetails) ? queueTerminatedDetails : []"
+                :queue-pending-details="finalPendingDetails"
+                :queue-processing-details="finalProcessingDetails"
+                :queue-terminated-details="finalTerminatedDetails"
                 :commerce="commerce"
               ></QueueAttentionDetails>
             </div>

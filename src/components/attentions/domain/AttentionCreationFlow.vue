@@ -346,6 +346,40 @@ export default {
       );
     };
 
+    // Agrupar bloques por franja horaria (misma lógica que CommerceQueuesView.groupBlocksByTimeOfDay)
+    const groupBlocksByTimeOfDay = blocks => {
+      const groups = {
+        morning: [],
+        afternoon: [],
+        night: [],
+      };
+
+      if (!Array.isArray(blocks)) {
+        return groups;
+      }
+
+      blocks.forEach(block => {
+        if (!block || !block.hourFrom) {
+          return;
+        }
+
+        const [hourString] = String(block.hourFrom).split(':');
+        const hour = parseInt(hourString, 10);
+
+        if (Number.isNaN(hour)) {
+          groups.morning.push(block);
+        } else if (hour < 12) {
+          groups.morning.push(block);
+        } else if (hour < 19) {
+          groups.afternoon.push(block);
+        } else {
+          groups.night.push(block);
+        }
+      });
+
+      return groups;
+    };
+
     // Helper function to validate if preselected queue is valid for continuing the flow
     const isPreselectedQueueValid = () => {
       if (!props.preselectedQueue || !props.preselectedQueue.id) return false;
@@ -1453,6 +1487,33 @@ export default {
       }
     };
 
+    const handleCalendarDayClick = day => {
+      try {
+        let value = day;
+
+        // v-calendar suele enviar un objeto con .date; si existe, úsalo
+        if (day && day.date instanceof Date) {
+          value = day.date;
+        }
+
+        let iso = '';
+        if (value instanceof Date) {
+          const year = value.getFullYear();
+          const month = String(value.getMonth() + 1).padStart(2, '0');
+          const dayOfMonth = String(value.getDate()).padStart(2, '0');
+          iso = `${year}-${month}-${dayOfMonth}`;
+        } else if (typeof value === 'string') {
+          iso = value.slice(0, 10);
+        }
+
+        if (iso) {
+          handleDateSelection(iso);
+        }
+      } catch (error) {
+        console.error('📅 Error in handleCalendarDayClick:', error);
+      }
+    };
+
     const handleDateSelection = async date => {
       console.log('📅 AttentionCreationFlow - Date selection changed:', {
         oldDate: state.date,
@@ -1677,12 +1738,13 @@ export default {
     const loadBookingsForDate = async dateStr => {
       try {
         console.log('📅 Loading bookings for date:', dateStr);
-        const bookings = await getPendingBookingsBetweenDates(
-          props.commerce.id,
-          dateStr,
-          dateStr,
-          state.queue.id
-        );
+
+        // Alinear con CommerceQueuesView / BookingCalendar:
+        // getPendingBookingsBetweenDates(queueId, dateFrom, dateTo)
+        const dateFrom = new Date(dateStr + 'T00:00:00');
+        const dateTo = new Date(dateStr + 'T23:59:59');
+
+        const bookings = await getPendingBookingsBetweenDates(state.queue.id, dateFrom, dateTo);
         state.bookings = bookings || [];
         console.log('📅 Loaded bookings:', state.bookings.length);
         calculateAvailableBlocks();
@@ -1720,41 +1782,135 @@ export default {
       }
     };
 
-    // Same logic as CommerceQueuesView for booking blocks
+    // Agrupaciones por franja horaria para usar en el template (mismo patrón que CommerceQueuesView)
+    const groupedAttentionBlocks = computed(() =>
+      groupBlocksByTimeOfDay(state.availableAttentionBlocks || [])
+    );
+
+    const groupedBookingBlocks = computed(() =>
+      groupBlocksByTimeOfDay(state.availableBookingBlocks || [])
+    );
+
+    // Same logic as CommerceQueuesView for booking blocks (incluyendo blockLimit y filtro de hoy)
     const getAvailableBookingBlocks = () => {
       console.log('📊 AttentionCreationFlow - getAvailableBookingBlocks() called');
       state.availableBookingBlocks = [];
       let availableBlocks = [];
       let queueBlocks = [];
 
-      if (state.blocks) {
-        queueBlocks = state.blocks;
-        console.log('📊 Queue blocks:', queueBlocks?.length || 0);
+      // Copia simplificada del flujo principal: sólo manejamos el caso "normal" (no SELECT_SERVICE)
+      if (state.queue?.type !== 'SELECT_SERVICE') {
+        if (state.blocks) {
+          queueBlocks = state.blocks;
+          console.log('📊 Queue blocks:', queueBlocks?.length || 0);
 
-        if (queueBlocks && queueBlocks.length > 0) {
-          let bookingsReserved = [];
+          if (queueBlocks && queueBlocks.length > 0) {
+            let bookingsReserved = [];
 
-          if (state.bookings && state.bookings.length > 0) {
-            bookingsReserved = state.bookings
-              .map(booking => {
-                if (
-                  booking.block &&
-                  booking.block.blockNumbers &&
-                  booking.block.blockNumbers.length > 0
-                ) {
-                  return booking.block.blockNumbers;
-                } else if (booking.block && booking.block.number) {
-                  return [booking.block.number];
+            if (state.bookings && state.bookings.length > 0) {
+              bookingsReserved = state.bookings
+                .map(booking => {
+                  if (
+                    booking.block &&
+                    booking.block.blockNumbers &&
+                    booking.block.blockNumbers.length > 0
+                  ) {
+                    return [...booking.block.blockNumbers];
+                  } else if (
+                    booking.block &&
+                    booking.block.number !== undefined &&
+                    booking.block.number !== null
+                  ) {
+                    return booking.block.number;
+                  }
+                  return null;
+                })
+                .filter(item => item !== null);
+
+              let limit = 0;
+              if (
+                state.queue.serviceInfo !== undefined &&
+                state.queue.serviceInfo.blockLimit !== undefined &&
+                state.queue.serviceInfo.blockLimit > 0
+              ) {
+                limit = state.queue.serviceInfo.blockLimit;
+              }
+
+              const totalBlocksReserved = bookingsReserved.flat(Infinity).sort();
+              const uniqueBlocksReserved = [...new Set(totalBlocksReserved)];
+              const blockedBlocks = [];
+
+              uniqueBlocksReserved.forEach(block => {
+                const times = totalBlocksReserved.filter(reserved => reserved === block).length;
+                // Usar ">=" para coincidir con la validación del backend
+                if (times >= limit) {
+                  blockedBlocks.push(block);
                 }
-                return [];
-              })
-              .flat();
-          }
+              });
 
-          console.log('📊 Reserved blocks from bookings:', bookingsReserved);
-          availableBlocks = queueBlocks.filter(block => !bookingsReserved.includes(block.number));
-        } else {
-          availableBlocks = queueBlocks;
+              availableBlocks = queueBlocks.filter(
+                block => !blockedBlocks.includes(block.number)
+              );
+            } else {
+              availableBlocks = queueBlocks;
+            }
+
+            // Filtrar horas pasadas si la fecha seleccionada es hoy
+            const isToday =
+              state.date === 'TODAY' ||
+              (state.date && state.date === new Date().toISOString().slice(0, 10));
+
+            if (isToday) {
+              const now = new Date();
+              const currentHour = now.getHours();
+              const currentMinute = now.getMinutes();
+              const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+              availableBlocks = availableBlocks.filter(block => {
+                if (!block.hourFrom) return false;
+
+                const [blockHour, blockMinute] = block.hourFrom.split(':').map(Number);
+                const blockTimeInMinutes = blockHour * 60 + (blockMinute || 0);
+
+                // Sólo incluir bloques que empiezan al menos 30 minutos a partir de ahora
+                return blockTimeInMinutes > currentTimeInMinutes + 30;
+              });
+            }
+          }
+        }
+      } else {
+        // Para SELECT_SERVICE mantenemos el comportamiento simplificado original
+        if (state.blocks) {
+          queueBlocks = state.blocks;
+          console.log('📊 Queue blocks (SELECT_SERVICE):', queueBlocks?.length || 0);
+
+          if (queueBlocks && queueBlocks.length > 0) {
+            let bookingsReserved = [];
+
+            if (state.bookings && state.bookings.length > 0) {
+              bookingsReserved = state.bookings
+                .map(booking => {
+                  if (
+                    booking.block &&
+                    booking.block.blockNumbers &&
+                    booking.block.blockNumbers.length > 0
+                  ) {
+                    return booking.block.blockNumbers;
+                  } else if (booking.block && booking.block.number) {
+                    return [booking.block.number];
+                  }
+                  return [];
+                })
+                .flat();
+            }
+
+            console.log('📊 Reserved blocks from bookings (SELECT_SERVICE):', bookingsReserved);
+            availableBlocks = queueBlocks.filter(
+              block => !bookingsReserved.includes(block.number)
+            );
+          } else {
+            availableBlocks = queueBlocks;
+          }
         }
       }
 
@@ -3117,6 +3273,225 @@ export default {
     const minDate = computed(() => new DateModel().toString());
     const maxDate = computed(() => new DateModel().addDays(90).toString());
 
+    // Disabled weekdays for calendar based on queue.serviceInfo.attentionDays (same lógica que BookingCalendar)
+    const calendarDisabledDates = computed(() => {
+      const attentionDays = state.queue?.serviceInfo?.attentionDays;
+      if (!attentionDays || !Array.isArray(attentionDays) || attentionDays.length === 0) {
+        return null;
+      }
+      // Si todos los días están habilitados, no deshabilitar nada
+      if (attentionDays.length === 7) {
+        return null;
+      }
+
+      let disabled = [1, 2, 3, 4, 5, 6, 7];
+      const forDeletion = [];
+      attentionDays.forEach(day => {
+        if (day === 7) {
+          forDeletion.push(1);
+        } else {
+          forDeletion.push(day + 1);
+        }
+      });
+      disabled = disabled.filter(item => !forDeletion.includes(item));
+
+      return [{ repeat: { weekdays: disabled } }];
+    });
+
+    // Atributos del calendario (días verdes/azules/rojos según disponibilidad)
+    const calendarAttributes = ref([
+      {
+        key: 'Available',
+        highlight: {
+          color: 'green',
+          fillMode: 'light',
+        },
+        dates: [],
+      },
+      {
+        key: 'Unavailable',
+        highlight: {
+          color: 'red',
+          fillMode: 'light',
+        },
+        dates: [],
+      },
+      {
+        key: 'Reserves',
+        highlight: {
+          color: 'blue',
+          fillMode: 'light',
+        },
+        dates: [],
+      },
+    ]);
+
+    const updateCalendarAttributesForMonth = async (year, month) => {
+      try {
+        if (!state.queue || !state.queue.id) {
+          return;
+        }
+
+        // Lógica copiada de BookingCalendar.getAvailableDatesByMonth, pero para una sola fila
+        const baseDate = new Date(year, month - 1, 1);
+        const [yearStr, monthStr] = new DateModel(baseDate).toString().split('-');
+        const thisMonth = +monthStr - 1;
+        const nextMonth = +monthStr;
+        const dateFrom = new Date(+yearStr, thisMonth, 1);
+        const dateTo = new Date(+yearStr, nextMonth, 0);
+
+        // Reiniciar arrays de fechas
+        calendarAttributes.value[0].dates = [];
+        calendarAttributes.value[1].dates = [];
+        calendarAttributes.value[2].dates = [];
+
+        // Cargar reservas del mes para esta fila (mismo signature que BookingCalendar/CommerceQueuesView)
+        const monthBookings =
+          (await getPendingBookingsBetweenDates(state.queue.id, dateFrom, dateTo)) || [];
+
+        const bookingsGroupedByDate = monthBookings.reduce((acc, booking) => {
+          const date = booking.date;
+          if (!date) return acc;
+          if (!acc[date]) {
+            acc[date] = [];
+          }
+          acc[date].push(booking);
+          return acc;
+        }, {});
+
+        // Bloques por día de la semana para esta fila
+        const blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
+        const attentionDays = state.queue.serviceInfo?.attentionDays || [];
+
+        let availableDates = [];
+        const forDeletion = [];
+        const forReserves = [];
+
+        // Construir lista de fechas candidatas (futuras y que respetan attentionDays)
+        for (let i = 1; i <= dateTo.getDate(); i++) {
+          const key = new Date(dateFrom.setDate(i)).toISOString().slice(0, 10);
+          if (new Date(key) <= new Date()) {
+            continue; // sólo futuro
+          }
+
+          if (attentionDays.length > 0) {
+            const [y, m, d] = key.split('-');
+            let dayNumber = new Date(+y, +m - 1, +d).getDay();
+            if (dayNumber === 0) {
+              dayNumber = 7;
+            }
+            if (!attentionDays.includes(dayNumber)) {
+              continue;
+            }
+          }
+
+          availableDates.push(key);
+        }
+
+        const dates = Object.keys(bookingsGroupedByDate);
+        if (dates && dates.length > 0) {
+          dates.forEach(date => {
+            const bookings = bookingsGroupedByDate[date];
+            const [y, m, d] = date.split('-');
+            let dayNumber = new Date(+y, +m - 1, +d).getDay();
+            if (dayNumber === 0) {
+              dayNumber = 7;
+            }
+            const blocks = (blocksByDay && blocksByDay[dayNumber]) || [];
+
+            // Check block limit, not just total blocks
+            const blockLimit = state.queue.serviceInfo?.blockLimit || 1;
+            const blockBookingsCount = {};
+
+            bookings.forEach(booking => {
+              if (booking.block) {
+                const blockNum =
+                  booking.block.number ||
+                  (booking.block.blockNumbers && booking.block.blockNumbers[0]);
+                if (blockNum) {
+                  blockBookingsCount[blockNum] = (blockBookingsCount[blockNum] || 0) + 1;
+                }
+              }
+            });
+
+            const hasBlockAtLimit = Object.values(blockBookingsCount).some(
+              count => count >= blockLimit,
+            );
+
+            const allBlocksAtLimit =
+              blocks.length > 0 &&
+              blocks.every(block => (blockBookingsCount[block.number] || 0) >= blockLimit);
+
+            if (allBlocksAtLimit || bookings.length >= blocks.length) {
+              forDeletion.push(date);
+            } else if (hasBlockAtLimit || bookings.length >= 1) {
+              forReserves.push(date);
+            }
+          });
+
+          availableDates = availableDates.filter(item => !forDeletion.includes(item));
+        }
+
+        const mapToDateObjects = dates =>
+          dates.map(date => {
+            const [y, m, d] = date.split('-');
+            return new Date(+y, +m - 1, +d);
+          });
+
+        calendarAttributes.value[0].dates.push(...mapToDateObjects(availableDates));
+        calendarAttributes.value[1].dates.push(...mapToDateObjects(forDeletion));
+        calendarAttributes.value[2].dates.push(...mapToDateObjects(forReserves));
+      } catch (error) {
+        console.error('📅 Error calculando atributos del calendario:', error);
+      }
+    };
+
+    // Calcular atributos del calendario inicialmente y cuando cambien fila/fecha
+    watch(
+      () => [state.queue?.id, state.date || props.preselectedDate],
+      async ([queueId, currentDate]) => {
+        try {
+          if (!queueId) return;
+
+          const base =
+            currentDate && currentDate !== 'TODAY'
+              ? new Date(currentDate)
+              : new Date();
+          const year = base.getFullYear();
+          const month = base.getMonth() + 1;
+
+          await updateCalendarAttributesForMonth(year, month);
+        } catch (error) {
+          console.error('📅 Error actualizando atributos iniciales del calendario:', error);
+        }
+      },
+      { immediate: true }
+    );
+
+    const getAvailableDatesByCalendarMonth = async pages => {
+      try {
+        if (!pages || pages.length === 0) {
+          return;
+        }
+
+        const pageId = pages[0].id || '';
+        const parts = pageId.split('-');
+        if (parts.length < 2) {
+          return;
+        }
+
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10);
+        if (Number.isNaN(year) || Number.isNaN(month)) {
+          return;
+        }
+
+        await updateCalendarAttributesForMonth(year, month);
+      } catch (error) {
+        console.error('📅 Error en getAvailableDatesByCalendarMonth:', error);
+      }
+    };
+
     // Computed property to check if telemedicine option should be shown
     // Only shows when: commerce has telemedicine-active feature enabled AND queue has telemedicineEnabled = true
     const showTelemedicineOption = computed(() => {
@@ -3160,6 +3535,7 @@ export default {
       receiveSelectedServices,
       setCanBook,
       handleServiceSelection,
+      handleCalendarDayClick,
       handleDateSelection,
       handleBlockSelection,
       nextStep,
@@ -3174,6 +3550,8 @@ export default {
       selectedBlockNumber,
       getAllAvailableBlocks,
       getAvailableSuperBlocks,
+      groupedAttentionBlocks,
+      groupedBookingBlocks,
       isBlockSelected,
       isTelemedicineEnabled,
       handleQuickSlotSelection,
@@ -3189,6 +3567,9 @@ export default {
       formatDateForDisplay,
       minDate,
       maxDate,
+      calendarDisabledDates,
+      calendarAttributes,
+      getAvailableDatesByCalendarMonth,
       showTelemedicineOption,
       packageInfo,
       loadingPackageInfo,
@@ -3210,31 +3591,32 @@ export default {
 
 <template>
   <div :class="['attention-creation-flow', `mode-${mode}`]">
-    <Spinner :show="loading || creatingAttention"></Spinner>
-    <Alert :show="!!alertError" :stack="alertError"></Alert>
+    <div class="flow-content">
+      <Spinner :show="loading || creatingAttention"></Spinner>
+      <Alert :show="!!alertError" :stack="alertError"></Alert>
 
-    <!-- Clinical Alerts Banner -->
-    <ClinicalAlertsBanner
-      v-if="state.clinicalAlerts && state.clinicalAlerts.length > 0"
-      :alerts="state.clinicalAlerts"
-      @acknowledge="handleAcknowledgeAlert"
-      class="mb-3"
-    />
-
-    <!-- Step 1: Client Form -->
-    <div v-if="state.currentStep === 1 && needsClientForm" class="step-container">
-      <ClientForm
-        :show="true"
-        :commerce="commerce"
-        :receive-data="handleClientData"
-        :client="undefined"
-        :errors-add="state.errorsAdd"
-        :client-front="true"
+      <!-- Clinical Alerts Banner -->
+      <ClinicalAlertsBanner
+        v-if="state.clinicalAlerts && state.clinicalAlerts.length > 0"
+        :alerts="state.clinicalAlerts"
+        @acknowledge="handleAcknowledgeAlert"
+        class="mb-3"
       />
-    </div>
 
-    <!-- Step 2: Queue and Service Selection -->
-    <div v-if="state.currentStep === 2" class="step-container">
+      <!-- Step 1: Client Form -->
+      <div v-if="state.currentStep === 1 && needsClientForm" class="step-container">
+        <ClientForm
+          :show="true"
+          :commerce="commerce"
+          :receive-data="handleClientData"
+          :client="undefined"
+          :errors-add="state.errorsAdd"
+          :client-front="true"
+        />
+      </div>
+
+      <!-- Step 2: Queue and Service Selection -->
+      <div v-if="state.currentStep === 2" class="step-container">
       <!-- Show preselected queue info if exists and is valid -->
       <div
         v-if="preselectedQueue && isPreselectedQueueValid()"
@@ -3395,21 +3777,28 @@ export default {
       <!-- Manual date/block selector -->
       <div class="date-block-selector">
         <!-- Always show date selection -->
-        <div class="date-selection mb-4">
-          <div class="choose-attention py-2 mb-3">
+        <div class="date-selection mb-4 text-center">
+          <div class="choose-attention py-2 mb-3 d-inline-flex align-items-center">
             <i class="bi bi-calendar3 h5 m-1"></i>
             <span class="fw-bold h6">{{
               $t('commerceQueuesView.selectDay') || 'Selecionar Data'
             }}</span>
           </div>
-          <input
-            type="date"
-            :value="state.date || preselectedDate || ''"
-            @input="handleDateSelection($event.target.value)"
-            :min="minDate"
-            :max="maxDate"
-            class="form-control date-input"
-          />
+          <div class="d-flex justify-content-center">
+            <div class="d-inline-block">
+              <VDatePicker
+                :locale="commerce?.localeInfo?.language || 'pt'"
+                :view="'monthly'"
+                :model-value="state.date || preselectedDate || null"
+                :min-date="minDate"
+                :max-date="maxDate"
+                :disabled-dates="calendarDisabledDates"
+                :attributes="calendarAttributes"
+                @dayclick="handleCalendarDayClick"
+                @did-move="getAvailableDatesByCalendarMonth"
+              />
+            </div>
+          </div>
           <div v-if="state.date || preselectedDate" class="selected-date-info mt-2">
             <small class="text-muted">
               <i class="bi bi-calendar-check me-1"></i>
@@ -3421,7 +3810,7 @@ export default {
 
         <!-- Always show block selection when we have a date -->
         <div v-if="state.date || preselectedDate" class="block-selection">
-          <div class="choose-attention py-2 mb-3">
+          <div class="choose-attention py-2 mb-3 text-center">
             <i class="bi bi-clock-fill h5 m-1"></i>
             <span class="fw-bold h6">{{
               $t('commerceQueuesView.selectBlock') || 'Selecione o Horário'
@@ -3437,37 +3826,180 @@ export default {
             </p>
           </div>
 
-          <!-- Show all available blocks - exact template structure as CommerceQueuesView -->
-          <div v-else-if="getAllAvailableBlocks.length > 0" class="mb-2">
-            <div class="time-slot-grid">
-              <button
-                v-for="block in getAllAvailableBlocks"
-                :key="block.number"
-                type="button"
-                class="time-slot-button"
-                :class="{
-                  'time-slot-selected': isBlockSelected(block),
-                  'time-slot-preselected': isBlockPreselected(block),
-                }"
-                @click="handleBlockSelection(block)"
-              >
-                <div class="time-start">{{ block.hourFrom }}</div>
-                <div class="time-end">{{ block.hourTo }}</div>
-              </button>
-            </div>
-          </div>
+          <!-- Misma organización visual que CommerceQueuesView: mañana / tarde / noche -->
+          <div v-else>
+            <template v-if="getAllAvailableBlocks.length > 0">
+              <!-- Decidir fuente de bloques según TODAY vs futuro -->
+              <template v-if="(state.date || preselectedDate) === 'TODAY' || (state.date || preselectedDate) === new Date().toISOString().slice(0, 10)">
+                <!-- Hoy: usar groupedAttentionBlocks -->
+                <div v-if="groupedAttentionBlocks.morning.length" class="mb-2">
+                  <div class="options-connector">
+                    <div class="connector-line"></div>
+                    <span class="connector-text fw-bold">
+                      {{ $t('commerceQueuesView.timeOfDay.morning') }}
+                    </span>
+                    <div class="connector-line"></div>
+                  </div>
+                  <div class="time-slot-grid">
+                    <button
+                      v-for="block in groupedAttentionBlocks.morning"
+                      :key="block.number"
+                      type="button"
+                      class="time-slot-button"
+                      :class="{
+                        'time-slot-selected': isBlockSelected(block),
+                        'time-slot-preselected': isBlockPreselected(block),
+                      }"
+                      @click="handleBlockSelection(block)"
+                    >
+                      <div class="time-start">{{ block.hourFrom }}</div>
+                      <div class="time-end">{{ block.hourTo }}</div>
+                    </button>
+                  </div>
+                </div>
+                <div v-if="groupedAttentionBlocks.afternoon.length" class="mb-2">
+                  <div class="options-connector">
+                    <div class="connector-line"></div>
+                    <span class="connector-text fw-bold">
+                      {{ $t('commerceQueuesView.timeOfDay.afternoon') }}
+                    </span>
+                    <div class="connector-line"></div>
+                  </div>
+                  <div class="time-slot-grid">
+                    <button
+                      v-for="block in groupedAttentionBlocks.afternoon"
+                      :key="block.number"
+                      type="button"
+                      class="time-slot-button"
+                      :class="{
+                        'time-slot-selected': isBlockSelected(block),
+                        'time-slot-preselected': isBlockPreselected(block),
+                      }"
+                      @click="handleBlockSelection(block)"
+                    >
+                      <div class="time-start">{{ block.hourFrom }}</div>
+                      <div class="time-end">{{ block.hourTo }}</div>
+                    </button>
+                  </div>
+                </div>
+                <div v-if="groupedAttentionBlocks.night.length" class="mb-2">
+                  <div class="options-connector">
+                    <div class="connector-line"></div>
+                    <span class="connector-text fw-bold">
+                      {{ $t('commerceQueuesView.timeOfDay.night') }}
+                    </span>
+                    <div class="connector-line"></div>
+                  </div>
+                  <div class="time-slot-grid">
+                    <button
+                      v-for="block in groupedAttentionBlocks.night"
+                      :key="block.number"
+                      type="button"
+                      class="time-slot-button"
+                      :class="{
+                        'time-slot-selected': isBlockSelected(block),
+                        'time-slot-preselected': isBlockPreselected(block),
+                      }"
+                      @click="handleBlockSelection(block)"
+                    >
+                      <div class="time-start">{{ block.hourFrom }}</div>
+                      <div class="time-end">{{ block.hourTo }}</div>
+                    </button>
+                  </div>
+                </div>
+              </template>
+              <template v-else>
+                <!-- Futuro: usar groupedBookingBlocks -->
+                <div v-if="groupedBookingBlocks.morning.length" class="mb-2">
+                  <div class="options-connector">
+                    <div class="connector-line"></div>
+                    <span class="connector-text fw-bold">
+                      {{ $t('commerceQueuesView.timeOfDay.morning') }}
+                    </span>
+                    <div class="connector-line"></div>
+                  </div>
+                  <div class="time-slot-grid">
+                    <button
+                      v-for="block in groupedBookingBlocks.morning"
+                      :key="block.number"
+                      type="button"
+                      class="time-slot-button"
+                      :class="{
+                        'time-slot-selected': isBlockSelected(block),
+                        'time-slot-preselected': isBlockPreselected(block),
+                      }"
+                      @click="handleBlockSelection(block)"
+                    >
+                      <div class="time-start">{{ block.hourFrom }}</div>
+                      <div class="time-end">{{ block.hourTo }}</div>
+                    </button>
+                  </div>
+                </div>
+                <div v-if="groupedBookingBlocks.afternoon.length" class="mb-2">
+                  <div class="options-connector">
+                    <div class="connector-line"></div>
+                    <span class="connector-text fw-bold">
+                      {{ $t('commerceQueuesView.timeOfDay.afternoon') }}
+                    </span>
+                    <div class="connector-line"></div>
+                  </div>
+                  <div class="time-slot-grid">
+                    <button
+                      v-for="block in groupedBookingBlocks.afternoon"
+                      :key="block.number"
+                      type="button"
+                      class="time-slot-button"
+                      :class="{
+                        'time-slot-selected': isBlockSelected(block),
+                        'time-slot-preselected': isBlockPreselected(block),
+                      }"
+                      @click="handleBlockSelection(block)"
+                    >
+                      <div class="time-start">{{ block.hourFrom }}</div>
+                      <div class="time-end">{{ block.hourTo }}</div>
+                    </button>
+                  </div>
+                </div>
+                <div v-if="groupedBookingBlocks.night.length" class="mb-2">
+                  <div class="options-connector">
+                    <div class="connector-line"></div>
+                    <span class="connector-text fw-bold">
+                      {{ $t('commerceQueuesView.timeOfDay.night') }}
+                    </span>
+                    <div class="connector-line"></div>
+                  </div>
+                  <div class="time-slot-grid">
+                    <button
+                      v-for="block in groupedBookingBlocks.night"
+                      :key="block.number"
+                      type="button"
+                      class="time-slot-button"
+                      :class="{
+                        'time-slot-selected': isBlockSelected(block),
+                        'time-slot-preselected': isBlockPreselected(block),
+                      }"
+                      @click="handleBlockSelection(block)"
+                    >
+                      <div class="time-start">{{ block.hourFrom }}</div>
+                      <div class="time-end">{{ block.hourTo }}</div>
+                    </button>
+                  </div>
+                </div>
+              </template>
+            </template>
 
-          <div v-else class="no-blocks-available">
-            <div class="alert alert-warning d-flex align-items-center">
-              <i class="bi bi-exclamation-triangle me-2"></i>
-              <div>
-                <strong>{{
-                  t('commerceQueuesView.noAvailableHours') || 'Nenhum horário disponível'
-                }}</strong
-                ><br />
-                <small>{{
-                  t('commerceQueuesView.tryAnotherDate') || 'Tente selecionar outra data'
-                }}</small>
+            <div v-else class="no-blocks-available">
+              <div class="alert alert-warning d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <div>
+                  <strong>{{
+                    t('commerceQueuesView.noAvailableHours') || 'Nenhum horário disponível'
+                  }}</strong
+                  ><br />
+                  <small>{{
+                    t('commerceQueuesView.tryAnotherDate') || 'Tente selecionar outra data'
+                  }}</small>
+                </div>
               </div>
             </div>
           </div>
@@ -3504,6 +4036,7 @@ export default {
         ></p>
         <!-- Telemedicine Configuration removed - not needed in modal -->
       </div>
+    </div>
     </div>
 
     <!-- NotificationConditions Checkbox - if required (before buttons) -->
@@ -4566,7 +5099,19 @@ export default {
 
 .mode-modal {
   max-height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
+}
+
+.mode-modal .flow-content {
+  flex: 1;
   overflow-y: auto;
+}
+
+/* Fixed-style footer bar for modal mode */
+.mode-modal .button-navigation-container {
+  margin-top: auto;
+  background: rgba(248, 249, 250, 0.97);
 }
 
 .choose-attention {

@@ -82,6 +82,9 @@ export const reactivate = async (number, body) =>
 export const notify = async (id, body) =>
   (await requestBackend.patch(`/${entity}/notification/${id}`, body, await getHeaders())).data;
 
+export const sendCheckInWhatsappCall = async (id, body) =>
+  (await requestBackend.patch(`/${entity}/check-in-call/${id}`, body, await getHeaders())).data;
+
 export const cancelAttention = async id =>
   (await requestBackend.patch(`/${entity}/cancel/${id}`, {}, await getHeaders())).data;
 

@@ -130,14 +130,31 @@ export default {
         : 'color-secondary-reverse';
     },
     identifier() {
-      // Return name if available, otherwise return lastName or full name combination
-      if (this.data.name) return this.data.name;
-      if (this.data.lastName) return this.data.lastName;
+      // Prefer explicit user data when available
+      if (this.data && this.data.name) return this.data.name;
+      if (this.data && this.data.lastName) return this.data.lastName;
+
+      // Then use userName from attention if present
+      if (this.attention && this.attention.userName) {
+        return this.attention.userName;
+      }
+
+      // Then prefer flattened clientName from attention (used in collaborator views / spy)
+      if (this.attention && this.attention.clientName && this.attention.clientName !== 'N/A') {
+        return this.attention.clientName;
+      }
+
+      // Fallback to nested client object on attention
       if (this.attention && this.attention.client) {
         if (this.attention.client.name) return this.attention.client.name;
         if (this.attention.client.lastName) return this.attention.client.lastName;
       }
-      return this.data.idNumber || undefined;
+
+      // Last resort identifiers
+      if (this.data && this.data.idNumber) return this.data.idNumber;
+      if (this.attention && this.attention.clientId) return this.attention.clientId;
+
+      return undefined;
     },
     getCardTypeClass() {
       if (this.type === 'primary') return 'attention-card-primary';

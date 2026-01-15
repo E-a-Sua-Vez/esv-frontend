@@ -59,8 +59,60 @@
         :estimated-time="estimatedTime"
       >
         <template #content>
-          <!-- Client Requirements Cards -->
+          <!-- Client Requirements Cards & Check-In Call -->
           <div v-if="state.user?.id" class="client-requirements-section mt-3">
+            <!-- WhatsApp Call to Client for Check-In -->
+            <div class="call-client-banner" v-if="state.attention && state.attention.id">
+              <div class="call-client-text">
+                <i class="bi bi-whatsapp me-2"></i>
+                <span>
+                  {{
+                    $t('collaboratorAttentionCheckIn.callClient') ||
+                      'Enviar mensaje de WhatsApp al cliente para hacer el check-in'
+                  }}
+                </span>
+                <Popper :class="'dark p-1'" arrow placement="top">
+                  <template #content>
+                    <div>
+                      {{
+                        $t('collaboratorAttentionCheckIn.callClientHelp') ||
+                          'Se enviará un mensaje de WhatsApp al número del cliente indicándole que se acerque a tu módulo para realizar su check-in. Solo se enviará una vez por atención.'
+                      }}
+                    </div>
+                  </template>
+                  <i class="bi bi-info-circle ms-2 call-client-help-icon"></i>
+                </Popper>
+              </div>
+              <button
+                class="requirement-action-btn-compact whatsapp-btn"
+                :disabled="
+                  loading ||
+                  state.loadingCheckInCall ||
+                  state.attention?.notificationCheckInSent ||
+                  state.checkInCallSent
+                "
+                @click="sendCheckInCall"
+              >
+                <i class="bi bi-whatsapp"></i>
+                <span v-if="state.loadingCheckInCall">
+                  {{ $t('dashboard.sending') || 'Enviando...' }}
+                </span>
+                <span
+                  v-else-if="state.attention?.notificationCheckInSent || state.checkInCallSent"
+                >
+                  {{
+                    $t('collaboratorAttentionCheckIn.callAlreadySent') || 'Llamado ya enviado'
+                  }}
+                </span>
+                <span v-else>
+                  {{
+                    $t('collaboratorAttentionCheckIn.callClientAction') ||
+                      'Enviar mensaje de WhatsApp'
+                  }}
+                </span>
+              </button>
+            </div>
+
             <!-- Consent Status Widget -->
             <ConsentStatusWidget
               v-if="state.clientConsentsLoaded && state.commerce?.id && state.client?.id"
@@ -258,6 +310,7 @@ import {
   trackAttentionAccess,
   advanceStage,
   attend,
+  sendCheckInWhatsappCall,
 } from '../../application/services/attention';
 import { getClientById } from '../../application/services/client';
 import {
@@ -292,6 +345,7 @@ import Message from '../../components/common/Message.vue';
 import ConsentStatusWidget from '../../components/lgpd/ConsentStatusWidget.vue';
 import LgpdConsentManager from '../../components/lgpd/LgpdConsentManager.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'CollaboratorAttentionCheckIn',
@@ -306,6 +360,7 @@ export default {
     ConsentStatusWidget,
     LgpdConsentManager,
     DesktopPageHeader,
+    Popper,
   },
   setup() {
     const route = useRoute();
@@ -342,6 +397,8 @@ export default {
       preprontuarioMessageSent: false,
       preprontuarioStatusLoaded: false,
       preprontuarioActiveForContext: false,
+      loadingCheckInCall: false,
+      checkInCallSent: false,
       formsPersonalized: [],
       listUpdateKey: 0, // Key to force component re-render
       clientConsents: [],
@@ -735,6 +792,11 @@ export default {
             state.queue = attentionDetails.queue;
           }
 
+          // Inicializar flag de llamada de check-in según backend
+          if (attentionDetails.notificationCheckInSent) {
+            state.checkInCallSent = true;
+          }
+
           // Load commerce first to ensure it's available for validation
           if (attentionDetails.commerce) {
             // Update store commerce - load features lazily if needed
@@ -956,6 +1018,32 @@ export default {
         errorMessage.value = Array.isArray(msg) ? msg[0] : msg;
         alertError.value = error?.response?.status || 500;
         loading.value = false;
+      }
+    };
+
+    const sendCheckInCall = async () => {
+      if (!state.attention?.id || !state.queue?.id || !state.currentUser?.id) {
+        return;
+      }
+
+      try {
+        state.loadingCheckInCall = true;
+        const commerceLanguage =
+          state.commerce?.localeInfo?.language || state.commerce?.language || 'es';
+
+        await sendCheckInWhatsappCall(state.attention.id, {
+          collaboratorId: state.currentUser.id,
+          commerceLanguage,
+        });
+
+        state.checkInCallSent = true;
+        if (state.attention) {
+          state.attention.notificationCheckInSent = true;
+        }
+      } catch (error) {
+        console.error('Error sending check-in WhatsApp call:', error);
+      } finally {
+        state.loadingCheckInCall = false;
       }
     };
 
@@ -1191,6 +1279,7 @@ export default {
       loadPreprontuarioData,
       loadConsentStatus,
       openConsentManager,
+      sendCheckInCall,
     };
   },
 };
@@ -1225,6 +1314,25 @@ export default {
   flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+.call-client-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(37, 211, 102, 0.08), rgba(37, 211, 102, 0.02));
+  border: 1px dashed rgba(37, 211, 102, 0.4);
+}
+
+.call-client-text {
+  display: flex;
+  align-items: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.8);
 }
 
 .requirement-card {

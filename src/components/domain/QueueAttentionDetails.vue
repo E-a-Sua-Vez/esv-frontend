@@ -792,7 +792,7 @@ export default {
   }
 
   .attention-pipeline-column {
-    min-height: 500px; /* Slightly smaller on mobile */
+    min-height: 250px; /* Slightly smaller on mobile */
   }
 
   .attentions-card {
@@ -875,8 +875,8 @@ export default {
 
 .attention-pipeline-column {
   flex: 0 0 calc(33.333% - 0.67rem);
-  min-width: 300px;
-  max-width: 400px;
+  min-width: 250px;
+  max-width: 300px;
   display: flex;
   flex-direction: column;
   min-height: 600px; /* Approximately 5 cards height (each card ~120px) */

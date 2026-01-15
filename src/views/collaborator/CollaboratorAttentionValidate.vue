@@ -1999,30 +1999,29 @@ export default {
                 <i class="bi bi-check-all"></i>
               </button>
             </div>
-            <div class="actions">
-              <span
-                ><strong>{{ $t('collaboratorQueueAttentions.actions.2.title.1') }}</strong></span
-              >
-            </div>
-            <button
-              class="btn btn-lg btn-block btn-size fw-bold btn-danger rounded-pill mb-1"
-              :disabled="
-                !state.toggles['collaborator.attention.skip'] || isReactivated() || loading
-              "
-              @click="skipAttention()"
-            >
-              {{ $t('collaboratorQueueAttentions.actions.2.action') }}
-              <i class="bi bi-skip-forward"></i>
-            </button>
-            <div class="d-grid gap-2 my-1">
-              <button
-                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-                @click="queueAttentions()"
-                :disabled="loading"
-              >
-                {{ $t('collaboratorAttentionValidate.actions.2.action') }}
-                <i class="bi bi-arrow-left-circle"></i>
-              </button>
+            <div class="row mx-1 my-1 g-2">
+              <div class="col-12 col-md-6">
+                <button
+                  class="btn btn-lg btn-block w-100 btn-size fw-bold btn-dark rounded-pill mb-2"
+                  @click="queueAttentions()"
+                  :disabled="loading"
+                >
+                  {{ $t('collaboratorAttentionValidate.actions.2.action') }}
+                  <i class="bi bi-arrow-left-circle"></i>
+                </button>
+              </div>
+              <div class="col-12 col-md-6">
+                <button
+                  class="btn btn-lg btn-block w-100 btn-size fw-bold btn-outline-dark rounded-pill mb-1"
+                  :disabled="
+                    !state.toggles['collaborator.attention.skip'] || isReactivated() || loading
+                  "
+                  @click="skipAttention()"
+                >
+                  {{ $t('collaboratorQueueAttentions.actions.2.action') }}
+                  <i class="bi bi-skip-forward"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -2546,30 +2545,29 @@ export default {
                 <i class="bi bi-check-all"></i>
               </button>
             </div>
-            <div class="actions">
-              <span
-                ><strong>{{ $t('collaboratorQueueAttentions.actions.2.title.1') }}</strong></span
-              >
-            </div>
-            <button
-              class="btn btn-lg btn-block btn-size fw-bold btn-danger rounded-pill mb-1"
-              :disabled="
-                !state.toggles['collaborator.attention.skip'] || isReactivated() || loading
-              "
-              @click="skipAttention()"
-            >
-              {{ $t('collaboratorQueueAttentions.actions.2.action') }}
-              <i class="bi bi-skip-forward"></i>
-            </button>
-            <div class="d-grid gap-2 my-1">
-              <button
-                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
-                @click="queueAttentions()"
-                :disabled="loading"
-              >
-                {{ $t('collaboratorAttentionValidate.actions.2.action') }}
-                <i class="bi bi-arrow-left-circle"></i>
-              </button>
+            <div class="row mx-1 my-1 g-2">
+              <div class="col-12 col-md-6">
+                <button
+                  class="btn btn-lg btn-block w-100 btn-size fw-bold btn-dark rounded-pill mb-2"
+                  @click="queueAttentions()"
+                  :disabled="loading"
+                >
+                  {{ $t('collaboratorAttentionValidate.actions.2.action') }}
+                  <i class="bi bi-arrow-left-circle"></i>
+                </button>
+              </div>
+              <div class="col-12 col-md-6">
+                <button
+                  class="btn btn-lg btn-block w-100 btn-size fw-bold btn-outline-dark rounded-pill mb-1"
+                  :disabled="
+                    !state.toggles['collaborator.attention.skip'] || isReactivated() || loading
+                  "
+                  @click="skipAttention()"
+                >
+                  {{ $t('collaboratorQueueAttentions.actions.2.action') }}
+                  <i class="bi bi-skip-forward"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
