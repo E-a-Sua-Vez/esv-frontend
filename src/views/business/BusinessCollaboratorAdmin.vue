@@ -6,14 +6,7 @@ import { getActiveModulesByCommerceId } from '../../application/services/module'
 import {
   getCollaboratorsByCommerceId,
   updateCollaborator,
-  updateCollaboratorExtended,
   addCollaborator,
-  updateProfilePhoto,
-  uploadProfilePhoto,
-  updateMedicalData,
-  updateDigitalSignature,
-  uploadDigitalSignature,
-  updateCollaboratorRole,
 } from '../../application/services/collaborator';
 import { getPermissions } from '../../application/services/permissions';
 import { getServiceByCommerce } from '../../application/services/service';
@@ -29,7 +22,7 @@ import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
-import { getCollaboratorTypes } from '../../shared/utils/data';
+import { getCollaboratorTypes } from '../../shared/utils/data.ts';
 import CollaboratorFormEdit from '../../components/collaborator/CollaboratorFormEdit.vue';
 import CollaboratorFormAdd from '../../components/collaborator/CollaboratorFormAdd.vue';
 
@@ -57,6 +50,7 @@ export default {
 
     const loading = ref(false);
     const alertError = ref('');
+    const collaboratorFormRefs = ref([]);
 
     const state = reactive({
       currentUser: {},
@@ -64,7 +58,7 @@ export default {
       activeBusiness: false,
       allCommerces: ref([]),
       services: ref([]),
-      modules: ref({}),
+      modules: ref([]),
       collaborators: ref([]),
       types: [],
       commercesSelected: {},
@@ -81,6 +75,8 @@ export default {
       moduleError: false,
       emailError: false,
       typeError: false,
+      roleError: false,
+      idNumberError: false,
       toggles: {},
       filtered: [],
     });
@@ -92,7 +88,7 @@ export default {
     const loadCommerceData = async commerceId => {
       if (!commerceId) {
         state.collaborators = [];
-        state.modules = {};
+        state.modules = [];
         state.services = [];
         state.filtered = [];
         return;
@@ -108,7 +104,7 @@ export default {
         }
       } catch (error) {
         state.collaborators = [];
-        state.modules = {};
+        state.modules = [];
         state.services = [];
         state.filtered = [];
       }
@@ -124,7 +120,7 @@ export default {
             // Immediately clear data to prevent showing old results
             state.collaborators = [];
             state.filtered = [];
-            state.modules = {};
+            state.modules = [];
             state.services = [];
             await loadCommerceData(newCommerce.id);
             loading.value = false;
@@ -213,6 +209,18 @@ export default {
         } else {
           state.moduleError = false;
         }
+        if (!collaborator.role || collaborator.role.length === 0) {
+          state.roleError = true;
+          state.errorsAdd.push('businessCollaboratorsAdmin.validate.role');
+        } else {
+          state.roleError = false;
+        }
+        if (!collaborator.idNumber || collaborator.idNumber.length === 0) {
+          state.idNumberError = true;
+          state.errorsAdd.push('businessCollaboratorsAdmin.validate.idNumber');
+        } else {
+          state.idNumberError = false;
+        }
       }
       if (state.errorsAdd.length === 0) {
         return true;
@@ -265,86 +273,15 @@ export default {
     const update = async collaborator => {
       try {
         loading.value = true;
-        // 0) Actualizar rol explícitamente si está definido (independiente de validación general)
-        if (collaborator.role) {
-          try {
-            await updateCollaboratorRole(collaborator.id, collaborator.role);
-          } catch (e) {
-            console.warn('Role update failed', e);
-          }
-        }
-        // 1) Procesar sub-actualizaciones independientes (no bloquear por validación general)
-        // Guardar foto de perfil si está presente
-        if (collaborator.profilePhoto) {
-          try {
-            if (collaborator.profilePhoto.file) {
-              const res = await uploadProfilePhoto(collaborator.id, collaborator.profilePhoto.file);
-              if (res && res.photoUrl) {
-                collaborator.profilePhoto = res.photoUrl;
-              }
-            } else if (collaborator.profilePhoto.url) {
-              await updateProfilePhoto(collaborator.id, collaborator.profilePhoto.url);
-              collaborator.profilePhoto = collaborator.profilePhoto.url;
-            }
-          } catch (e) {
-            console.warn('Profile photo update failed', e);
-          }
-        }
 
-        // Guardar datos médicos si existen
-        if (collaborator.medicalData && Object.keys(collaborator.medicalData).length > 0) {
-          try {
-            await updateMedicalData(collaborator.id, collaborator.medicalData);
-          } catch (e) {
-            console.warn('Medical data update failed', e);
-          }
-        }
-
-        // Guardar firma digital si está presente
-        if (
-          collaborator.digitalSignature ||
-          collaborator.digitalSignatureFile ||
-          collaborator.crm ||
-          collaborator.crmState
-        ) {
-          try {
-            if (collaborator.digitalSignatureFile) {
-              const res = await uploadDigitalSignature(
-                collaborator.id,
-                collaborator.digitalSignatureFile
-              );
-              if (res && res.signatureUrl) {
-                collaborator.digitalSignature = res.signatureUrl;
-                collaborator.digitalSignatureFile = null;
-              }
-            } else {
-              await updateDigitalSignature(
-                collaborator.id,
-                collaborator.digitalSignature || null,
-                collaborator.crm || null,
-                collaborator.crmState || null
-              );
-            }
-          } catch (e) {
-            console.warn('Digital signature update failed', e);
-          }
-        }
-
-        // 2) Validar y guardar cambios generales solo si pasa validación
+        // Validar antes de actualizar
         if (validateUpdate(collaborator)) {
-          try {
-            await updateCollaboratorExtended(collaborator.id, collaborator);
-          } catch (e) {
-            console.warn('General collaborator extended update failed', e);
-          }
-        }
+          await updateCollaborator(collaborator.id, collaborator);
 
-        // 3) Refrescar listado
-        try {
+          // Refrescar listado
           const collaborators = await getCollaboratorsByCommerceId(commerce.value.id);
           state.collaborators = collaborators;
-        } catch (e) {
-          console.warn('Refresh collaborators failed', e);
+          state.filtered = collaborators;
         }
 
         state.extendedEntity = undefined;
@@ -492,6 +429,7 @@ export default {
       state.newCollaborator = {
         businessId: state.business.id,
         bot: false,
+        isProfessional: false,
         servicesId,
         commercesId,
       };
@@ -501,6 +439,7 @@ export default {
       state.moduleError = false;
       state.emailError = false;
       state.typeError = false;
+      state.roleError = false;
     };
 
     const handleModalHide = () => {
@@ -531,6 +470,36 @@ export default {
       }
     });
 
+    const handleProfessionalCreated = async result => {
+      // Refrescar la lista de colaboradores para mostrar el estado actualizado
+      try {
+        loading.value = true;
+        const collaborators = await getCollaboratorsByCommerceId(commerce.value.id);
+        state.collaborators = collaborators;
+        state.filtered = collaborators;
+        loading.value = false;
+
+        // Mostrar mensaje de éxito (opcional)
+        console.log('Professional created successfully:', result.professional);
+      } catch (error) {
+        console.error('Error refreshing collaborators after professional creation:', error);
+        loading.value = false;
+      }
+    };
+
+    const setCollaboratorFormRef = (el, index) => {
+      if (el) {
+        collaboratorFormRefs.value[index] = el;
+      }
+    };
+
+    const openCreateProfessionalModal = (index) => {
+      const formRef = collaboratorFormRefs.value[index];
+      if (formRef && typeof formRef.openCreateProfessionalModal === 'function') {
+        formRef.openCreateProfessionalModal();
+      }
+    };
+
     return {
       state,
       loading,
@@ -554,6 +523,9 @@ export default {
       goToUnavailable,
       unavailableCancel,
       receiveFilteredItems,
+      handleProfessionalCreated,
+      setCollaboratorFormRef,
+      openCreateProfessionalModal,
     };
   },
 };
@@ -582,7 +554,7 @@ export default {
         </div>
         <div id="businessCollaboratorsAdmin">
           <div v-if="isActiveBusiness && state.toggles['collaborators.admin.view']">
-            <div id="businessCollaboratorsAdmin-controls" class="control-box">
+            <div id="businessCollaboratorsAdmin-controls" class="control-box my-4">
               <div class="row">
                 <div v-if="!commerce">
                   <Message
@@ -603,7 +575,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd(collaborator)"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-collaborator`"
@@ -631,6 +603,8 @@ export default {
                           :name="collaborator.name"
                           :email="collaborator.email"
                           :active="collaborator.active"
+                          :id-number="collaborator.idNumber"
+                          :is-professional="collaborator.isProfessional"
                         ></CollaboratorName>
                       </div>
                       <div class="col-2">
@@ -650,6 +624,7 @@ export default {
                       class="detailed-data transition-slow"
                     >
                       <CollaboratorFormEdit
+                        :ref="el => setCollaboratorFormRef(el, index)"
                         :collaborator="collaborator"
                         :commerce-id="commerce?.id"
                         :types="state.types"
@@ -676,14 +651,24 @@ export default {
                         :show-commerce="showCommerce"
                         :show-service="showService"
                         @update:collaborator="collaborator = $event"
+                        @professional-created="handleProfessionalCreated"
                       />
                       <div class="col centered d-flex justify-content-center gap-3">
                         <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                           @click="update(collaborator)"
                           :disabled="!state.toggles['collaborators.admin.update']"
                         >
                           {{ $t('businessCollaboratorsAdmin.update') }} <i class="bi bi-save"></i>
+                        </button>
+                        <button
+                          v-if="!collaborator.isProfessional"
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="openCreateProfessionalModal(index)"
+                          :disabled="!state.toggles['collaborators.admin.edit']"
+                        >
+                          {{ $t('collaborator.createProfessionalProfile') || 'Criar Perfil Profissional' }}
+                          <i class="bi bi-person-plus me-2"></i>
                         </button>
                         <button
                           class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
@@ -783,7 +768,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd(collaborator)"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-collaborator`"
@@ -811,6 +796,8 @@ export default {
                           :name="collaborator.name"
                           :email="collaborator.email"
                           :active="collaborator.active"
+                          :id-number="collaborator.idNumber"
+                          :is-professional="collaborator.isProfessional"
                         ></CollaboratorName>
                       </div>
                       <div class="col-2">
@@ -830,6 +817,7 @@ export default {
                       class="detailed-data transition-slow"
                     >
                       <CollaboratorFormEdit
+                        :ref="el => setCollaboratorFormRef(el, index)"
                         :collaborator="collaborator"
                         :commerce-id="commerce?.id"
                         :types="state.types"
@@ -856,14 +844,24 @@ export default {
                         :show-commerce="showCommerce"
                         :show-service="showService"
                         @update:collaborator="collaborator = $event"
+                        @professional-created="handleProfessionalCreated"
                       />
                       <div class="col d-flex justify-content-center gap-3">
                         <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                           @click="update(collaborator)"
                           :disabled="!state.toggles['collaborators.admin.update']"
                         >
                           {{ $t('businessCollaboratorsAdmin.update') }} <i class="bi bi-save"></i>
+                        </button>
+                        <button
+                          v-if="!collaborator.isProfessional"
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          @click="openCreateProfessionalModal(index)"
+                          :disabled="!state.toggles['collaborators.admin.edit']"
+                        >
+                          {{ $t('collaborator.createProfessionalProfile') || 'Criar Perfil Profissional' }}
+                          <i class="bi bi-person-plus me-2"></i>
                         </button>
                         <button
                           class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
@@ -969,6 +967,8 @@ export default {
                     phoneAddError: state.phoneAddError,
                     phoneUpdateError: false,
                     moduleError: state.moduleError,
+                    roleError: state.roleError,
+                    idNumberError: state.idNumberError,
                   }"
                   :on-select-commerce="selectCommerceSelected"
                   :on-select-service="selectService"
@@ -979,7 +979,7 @@ export default {
                 />
                 <div class="col">
                   <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                     @click="add(state.newCollaborator)"
                   >
                     {{ $t('businessCollaboratorsAdmin.add') }} <i class="bi bi-save"></i>

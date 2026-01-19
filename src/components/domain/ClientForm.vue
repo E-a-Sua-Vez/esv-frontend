@@ -2,7 +2,7 @@
 /* eslint-disable no-useless-escape, vue/no-dupe-keys, no-empty */
 import { ref, reactive, onBeforeMount, watch, toRefs } from 'vue';
 import { getActiveFeature } from '../../shared/features';
-import { getPhoneCodes, getUserOrigin } from '../../shared/utils/data';
+import { getPhoneCodes, getUserOrigin } from '../../shared/utils/data.ts';
 import { getAddressBR } from '../../application/services/address';
 import { searchClientByIdNumber } from '../../application/services/client';
 import { getActiveCompaniesByCommerceIdAnyType } from '../../application/services/company';

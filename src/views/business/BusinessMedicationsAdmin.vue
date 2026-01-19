@@ -331,6 +331,7 @@ export default {
         </div>
         <div id="businessMedicationsAdmin">
           <div v-if="isActiveBusiness && state.toggles['medications.admin.view']">
+            <div class="control-box my-4"></div>
             <div v-if="!loading" id="businessMedicationsAdmin-result" class="mt-4">
               <div>
                 <div v-if="!commerce">
@@ -348,7 +349,7 @@ export default {
                 <div class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd()"
                       data-bs-toggle="modal"
                       data-bs-target="#add-medication"
@@ -555,7 +556,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd()"
                       data-bs-toggle="modal"
                       data-bs-target="#add-medication"

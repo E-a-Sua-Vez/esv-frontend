@@ -44,8 +44,51 @@ export const getCollaboratorById = async id =>
 export const getCollaboratorDetailsById = async id =>
   (await requestBackend.get(`/${entity}/details/${id}`, await getHeaders())).data;
 
-export const updateCollaborator = async (id, collaborator) =>
-  (await requestBackend.patch(`/${entity}/${id}`, collaborator, await getHeaders())).data;
+export const updateCollaborator = async (id, collaborator) => {
+  // Si hay profilePhoto con File, primero hacer upload separado
+  if (collaborator.profilePhoto && collaborator.profilePhoto.file instanceof File) {
+    try {
+      const photoUrl = await uploadProfilePhoto(id, collaborator.profilePhoto.file);
+      // Reemplazar profilePhoto con solo la URL
+      collaborator.profilePhoto = photoUrl;
+    } catch (error) {
+      console.error('Error uploading profile photo:', error);
+      // Continuar sin foto si falla el upload
+      delete collaborator.profilePhoto;
+    }
+  }
+  
+  return (await requestBackend.patch(`/${entity}/${id}`, collaborator, await getHeaders())).data;
+};
+
+export const uploadProfilePhoto = async (id, photoFile) => {
+  const formData = new FormData();
+  formData.append('photo', photoFile);
+  
+  const response = await requestBackend.post(
+    `/${entity}/${id}/profile-photo`,
+    formData,
+    {
+      ...await getHeaders(),
+      'Content-Type': 'multipart/form-data'
+    }
+  );
+  
+  return response.data.photoUrl;
+};
+
+export const getProfilePhotoSignedUrl = async (id) => {
+  try {
+    const response = await requestBackend.get(
+      `/${entity}/${id}/profile-photo`,
+      await getHeaders()
+    );
+    return response.data.photoUrl;
+  } catch (error) {
+    console.error('Error getting signed photo URL:', error);
+    return null;
+  }
+};
 
 export const addCollaborator = async collaborator => {
   const created = (await requestBackend.post(`/${entity}`, collaborator, await getHeaders())).data;
@@ -82,130 +125,16 @@ export const updateModule = async (id, body) =>
   ).data;
 
 /**
- * Actualizar firma digital del colaborador
+ * Crear perfil profesional asociado a un colaborador
+ * @param {string} collaboratorId - ID del colaborador
+ * @param {Object} professionalData - Datos del profesional a crear
+ * @returns {Promise<{collaborator: Object, professional: Object}>}
  */
-export const updateDigitalSignature = async (collaboratorId, digitalSignature, crm, crmState) =>
+export const createAssociatedProfessional = async (collaboratorId, professionalData) =>
   (
     await requestBackend.post(
-      `/${entity}/${collaboratorId}/digital-signature`,
-      {
-        digitalSignature,
-        crm,
-        crmState,
-      },
-      await getHeaders()
-    )
-  ).data;
-
-export const uploadDigitalSignature = async (collaboratorId, file) => {
-  const form = new FormData();
-  form.append('signature', file);
-  return (
-    await requestBackend.post(`/${entity}/${collaboratorId}/digital-signature/upload`, form, {
-      ...(await getHeaders()),
-      headers: { ...(await (await getHeaders()).headers), 'Content-Type': 'multipart/form-data' },
-    })
-  ).data;
-};
-
-/**
- * Obtener URL firmada de la firma digital
- */
-export const getDigitalSignatureUrl = async (collaboratorId) => {
-  const res = await requestBackend.get(`/${entity}/${collaboratorId}/digital-signature`, await getHeaders());
-  return res.data?.signatureUrl || null;
-};
-
-// ========== NUEVOS SERVICIOS PARA GESTIÓN MÉDICA ==========
-
-/**
- * Actualizar datos médicos del colaborador
- */
-export const updateMedicalData = async (collaboratorId, medicalData) =>
-  (
-    await requestBackend.post(
-      `/${entity}/${collaboratorId}/medical-data`,
-      medicalData,
-      await getHeaders()
-    )
-  ).data;
-
-/**
- * Actualizar foto de perfil del colaborador
- */
-export const updateProfilePhoto = async (collaboratorId, photoUrl) =>
-  (
-    await requestBackend.post(
-      `/${entity}/${collaboratorId}/profile-photo`,
-      { photoUrl },
-      await getHeaders()
-    )
-  ).data;
-
-/**
- * Subir foto de perfil con archivo (multipart/form-data)
- */
-export const uploadProfilePhoto = async (collaboratorId, file) => {
-  const form = new FormData();
-  form.append('photo', file);
-  return (
-    await requestBackend.post(`/${entity}/${collaboratorId}/profile-photo`, form, {
-      ...(await getHeaders()),
-      headers: { ...(await (await getHeaders()).headers), 'Content-Type': 'multipart/form-data' },
-    })
-  ).data;
-};
-
-/**
- * Obtener URL firmada de la foto de perfil
- */
-export const getProfilePhotoUrl = async (collaboratorId) => {
-  const res = await requestBackend.get(`/${entity}/${collaboratorId}/profile-photo`, await getHeaders());
-  return res.data?.photoUrl || null;
-};
-
-/**
- * Actualizar rol del colaborador
- */
-export const updateCollaboratorRole = async (collaboratorId, role) =>
-  (
-    await requestBackend.patch(
-      `/${entity}/${collaboratorId}/role`,
-      { role },
-      await getHeaders()
-    )
-  ).data;
-
-/**
- * Obtener colaboradores médicos de un commerce
- */
-export const getMedicalCollaboratorsByCommerceId = async (commerceId) =>
-  (
-    await requestBackend.get(
-      `/${entity}/medical/commerce/${commerceId}`,
-      await getHeaders()
-    )
-  ).data;
-
-/**
- * Obtener colaborador para documentos médicos
- */
-export const getCollaboratorForMedicalDocuments = async (collaboratorId) =>
-  (
-    await requestBackend.get(
-      `/${entity}/${collaboratorId}/for-documents`,
-      await getHeaders()
-    )
-  ).data;
-
-/**
- * Actualización extendida del colaborador
- */
-export const updateCollaboratorExtended = async (collaboratorId, updateData) =>
-  (
-    await requestBackend.patch(
-      `/${entity}/${collaboratorId}/extended`,
-      updateData,
+      `/${entity}/${collaboratorId}/create-associated-professional`,
+      professionalData,
       await getHeaders()
     )
   ).data;

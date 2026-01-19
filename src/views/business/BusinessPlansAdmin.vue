@@ -11,7 +11,7 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
-import { getCountries, getPeriodicities, getProductTypes } from '../../shared/utils/data';
+import { getCountries, getPeriodicities, getProductTypes } from '../../shared/utils/data.ts';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import { USER_TYPES } from '../../shared/constants';
@@ -664,7 +664,7 @@ export default {
                     </div>
                     <div class="col">
                       <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                         @click="add(state.newPlan)"
                       >
                         {{ $t('businessPlansAdmin.add') }} <i class="bi bi-save"></i>

@@ -1,5 +1,5 @@
 <script>
-import { getContactResultTypes } from '../../../../shared/utils/data';
+import { getContactResultTypes } from '../../../../shared/utils/data.ts';
 import { getDate } from '../../../../shared/utils/date';
 import Popper from 'vue3-popper';
 import jsonToCsv from '../../../../shared/utils/jsonToCsv';

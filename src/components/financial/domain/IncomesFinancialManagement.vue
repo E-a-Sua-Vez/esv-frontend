@@ -11,9 +11,10 @@ import { getIncomesDetails } from '../../../application/services/query-stack';
 import { getDate } from '../../../shared/utils/date';
 import IncomeDetailsCard from './common/IncomeDetailsCard.vue';
 import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
-import { getIncomeTypesToIncrease } from '../../../shared/utils/data';
+import { getIncomeTypesToIncrease } from '../../../shared/utils/data.ts';
 import { createIncome } from '../../../application/services/income';
 import { DateModel } from '../../../shared/utils/date.model';
+import { getProfessionalsByCommerce } from '../../../application/services/professional';
 
 export default {
   name: 'IncomesFinancialManagement',
@@ -78,6 +79,8 @@ export default {
       maxAmount: undefined,
       incomeTypeFilter: undefined,
       paymentMethodFilter: undefined,
+      professionalFilter: undefined,
+      professionals: [],
     };
   },
   async beforeMount() {
@@ -104,6 +107,7 @@ export default {
       this.maxAmount = undefined;
       this.incomeTypeFilter = undefined;
       this.paymentMethodFilter = undefined;
+      this.professionalFilter = undefined;
       await this.refresh();
     },
     async checkAsc(event) {
@@ -170,9 +174,26 @@ export default {
           if (this.paymentMethodFilter !== undefined && this.paymentMethodFilter !== null) {
             incomes = incomes.filter(income => income.paymentMethod === this.paymentMethodFilter);
           }
+          // Filter by professional
+          if (this.professionalFilter !== undefined && this.professionalFilter !== null) {
+            incomes = incomes.filter(income => income.professionalId === this.professionalFilter);
+          }
         }
 
         this.financialIncomes = incomes;
+        
+        // Load professionals if there are incomes with professionalId
+        const professionalIds = [...new Set(incomes.filter(i => i.professionalId).map(i => i.professionalId))];
+        if (professionalIds.length > 0 && this.commerce?.id) {
+          try {
+            const professionals = await getProfessionalsByCommerce(this.commerce.id);
+            this.professionals = professionals || [];
+          } catch (error) {
+            console.error('Error loading professionals:', error);
+            this.professionals = [];
+          }
+        }
+        
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
@@ -718,6 +739,25 @@ export default {
                         </select>
                       </div>
                     </div>
+                    <div class="row mt-2" v-if="professionals && professionals.length > 0">
+                      <div class="col-12">
+                        <label class="form-label metric-card-subtitle fw-bold">
+                          {{ $t('businessFinancial.filters.professional') }}
+                        </label>
+                        <select
+                          class="form-control metric-controls"
+                          v-model="professionalFilter"
+                          @change="refresh()"
+                        >
+                          <option :value="undefined">
+                            {{ $t('businessFinancial.filters.all') }}
+                          </option>
+                          <option v-for="professional in professionals" :key="professional.id" :value="professional.id">
+                            {{ professional.name }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -803,6 +843,7 @@ export default {
                     :commerce="commerce"
                     :commerces="commerces"
                     :toggles="toggles"
+                    :professionals="professionals"
                     @refresh="refresh"
                   >
                   </IncomeDetailsCard>

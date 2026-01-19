@@ -25,6 +25,7 @@ const BusinessPatientHistoryItemAdmin = () =>
   import('@/views/business/BusinessPatientHistoryItemAdmin.vue');
 const BusinessFormAdmin = () => import('@/views/business/BusinessFormAdmin.vue');
 const BusinessLgpdConsentAdmin = () => import('@/views/business/BusinessLgpdConsentAdmin.vue');
+const BusinessProfessionalsAdmin = () => import('@/views/business/BusinessProfessionalsAdmin.vue');
 
 const PrivateCommerceRoutes = [
   {
@@ -151,6 +152,11 @@ const PrivateCommerceRoutes = [
     path: '/interno/negocio/lgpd-consent-admin',
     name: 'lgpd-consent-admin',
     component: BusinessLgpdConsentAdmin,
+  },
+  {
+    path: '/interno/negocio/professionals-admin',
+    name: 'business-professionals-admin',
+    component: BusinessProfessionalsAdmin,
   },
   {
     path: '/interno/negocio/medications-admin',

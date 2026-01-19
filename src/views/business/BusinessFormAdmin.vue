@@ -21,7 +21,7 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import { getQueueByCommerce } from '../../application/services/queue';
-import { getQuestionFormTypes, getFormTypes } from '../../shared/utils/data';
+import { getQuestionFormTypes, getFormTypes } from '../../shared/utils/data.ts';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
@@ -455,6 +455,7 @@ export default {
         </div>
         <div id="businessFormsAdmin">
           <div v-if="isActiveBusiness && state.toggles['forms.admin.view']">
+            <div class="control-box my-4"></div>
             <div v-if="!loading" id="businessFormsAdmin-result" class="mt-4">
               <div>
                 <div v-if="state.forms.length === 0">
@@ -466,7 +467,7 @@ export default {
                 <div v-if="commerce && commerce.id" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd(form)"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-form`"
@@ -766,6 +767,7 @@ export default {
         />
         <div id="businessFormsAdmin">
           <div v-if="isActiveBusiness && state.toggles['forms.admin.view']">
+            <div class="control-box my-4"></div>
             <div v-if="!loading" id="businessFormsAdmin-result" class="mt-4">
               <div>
                 <div v-if="state.forms.length === 0">
@@ -777,7 +779,7 @@ export default {
                 <div v-if="commerce && commerce.id" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd(form)"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-form`"
@@ -1331,7 +1333,7 @@ export default {
                 </div>
                 <div class="col mt-3">
                   <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                     @click="add(state.newForm)"
                   >
                     {{ $t('businessFormsAdmin.add') }} <i class="bi bi-save"></i>

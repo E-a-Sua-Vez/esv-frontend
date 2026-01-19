@@ -350,7 +350,7 @@ export default {
         </div>
         <div id="businessModulesAdmin">
           <div v-if="isActiveBusiness() && state.toggles['modules.admin.view']">
-            <div id="businessModulesAdmin-controls" class="control-box">
+            <div id="businessModulesAdmin-controls" class="control-box my-4">
               <div class="row">
                 <div v-if="!commerce">
                   <Message
@@ -371,7 +371,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd(module)"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-module`"
@@ -411,7 +411,7 @@ export default {
                       <ModuleFormEdit :module="module" :toggles="state.toggles" :errors="{}" />
                       <div class="col">
                         <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                           @click="update(module)"
                           v-if="state.toggles['modules.admin.update']"
                         >
@@ -499,7 +499,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd(module)"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-module`"
@@ -539,7 +539,7 @@ export default {
                       <ModuleFormEdit :module="module" :toggles="state.toggles" :errors="{}" />
                       <div class="col">
                         <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                           @click="update(module)"
                           v-if="state.toggles['modules.admin.update']"
                         >
@@ -608,7 +608,7 @@ export default {
                   />
                   <div class="col">
                     <button
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                       @click="add(state.newQueue)"
                     >
                       {{ $t('businessModulesAdmin.add') }} <i class="bi bi-save"></i>

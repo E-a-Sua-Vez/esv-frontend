@@ -1,5 +1,6 @@
 <script>
 import Popper from 'vue3-popper';
+import { formatIdNumberBr } from '../../shared/utils/idNumber';
 
 export default {
   name: 'CollaboratorName',
@@ -8,6 +9,13 @@ export default {
     name: { type: String, default: '' },
     email: { type: String, default: '' },
     active: { type: Boolean, default: true },
+    idNumber: { type: String, default: '' },
+    isProfessional: { type: Boolean, default: false },
+  },
+  methods: {
+    formatIdNumber(idNumber) {
+      return formatIdNumberBr(`br`, idNumber);
+    },
   },
   computed: {
     statusClass() {
@@ -37,9 +45,20 @@ export default {
       </div>
     </Popper>
 
-    <!-- Collaborator Name -->
-    <span class="collaborator-name-text" :class="statusClass">
-      {{ name || $t('dashboard.clientCard.label.noCollaborator') || 'N/I' }}
+    <!-- Collaborator Name and ID Number -->
+    <div class="collaborator-info">
+      <span class="collaborator-name-text" :class="statusClass">
+        {{ name || $t('dashboard.clientCard.label.noCollaborator') || 'N/I' }}
+      </span>
+      <span v-if="idNumber" class="collaborator-id-number">
+        <i class="bi bi-person-vcard"></i>
+        {{ formatIdNumber(idNumber) || 'N/I' }}
+      </span>
+    </div>
+
+    <!-- Professional Tag -->
+    <span v-if="isProfessional" class="professional-tag">
+      <i class="bi bi-briefcase-fill"></i>
     </span>
 
     <!-- Collaborator Email -->
@@ -124,6 +143,49 @@ export default {
 
 .collaborator-name-text.collaborator-inactive {
   color: rgba(0, 0, 0, 0.5);
+}
+
+/* Collaborator Info */
+.collaborator-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Collaborator ID Number */
+.collaborator-id-number {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* Professional Tag */
+.professional-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+  border-radius: 9999px;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  line-height: 1.3;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.professional-tag i {
+  font-size: 0.65rem;
+  flex-shrink: 0;
 }
 
 /* Collaborator Email */

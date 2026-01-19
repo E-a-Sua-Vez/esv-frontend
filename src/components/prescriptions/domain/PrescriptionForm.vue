@@ -55,6 +55,8 @@ export default {
         attentionId: '',
         doctorId: '',
         doctorName: '',
+        collaboratorId: '', // DEPRECATED: usar professionalId
+        professionalId: '', // ID del profesional que emite
         medications: [],
         instructions: '',
         diagnosis: '',
@@ -177,10 +179,25 @@ export default {
       }
 
       // Set doctor info from attention if available
-      if (attentionDetails?.collaboratorId) {
-        state.prescription.doctorId = attentionDetails.collaboratorId;
+      if (attentionDetails?.collaboratorId || attentionDetails?.professionalId) {
+        // PRIORIDAD: usar professionalId si está disponible
+        if (attentionDetails.professionalId) {
+          state.prescription.professionalId = attentionDetails.professionalId;
+          state.prescription.doctorId = attentionDetails.professionalId;
+        }
+        // FALLBACK: collaboratorId para compatibilidad
+        if (attentionDetails.collaboratorId) {
+          state.prescription.collaboratorId = attentionDetails.collaboratorId;
+          // Si no hay professionalId, usar collaboratorId como doctorId
+          if (!attentionDetails.professionalId) {
+            state.prescription.doctorId = attentionDetails.collaboratorId;
+          }
+        }
         state.prescription.doctorName =
-          attentionDetails?.collaborator?.name || attentionDetails?.collaborator?.alias || '';
+          attentionDetails?.collaborator?.name || 
+          attentionDetails?.professional?.name ||
+          attentionDetails?.collaborator?.alias || 
+          '';
       } else {
         // Fallback: Get current user from store (should be the collaborator creating the prescription)
         try {

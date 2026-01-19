@@ -51,6 +51,8 @@ export default {
         clientId: '',
         attentionId: '',
         doctorId: '',
+        collaboratorId: '', // DEPRECATED: mantener por compatibilidad
+        professionalId: '', // PREFERRED: usar este para nuevos documentos
         exams: [],
         clinicalIndication: '',
         diagnosis: '',
@@ -155,16 +157,29 @@ export default {
         console.warn('⚠️ No attention ID found in prop');
       }
 
+      // Priorizar professionalId sobre collaboratorId (nuevo patrón)
+      if (attentionDetails?.professionalId) {
+        state.examOrder.professionalId = attentionDetails.professionalId;
+        state.examOrder.doctorId = attentionDetails.professionalId;
+        console.log('👨‍⚕️ Doctor ID set from professional:', state.examOrder.doctorId);
+      }
       if (attentionDetails?.collaboratorId) {
-        state.examOrder.doctorId = attentionDetails.collaboratorId;
-        console.log('👨‍⚕️ Doctor ID set from attention:', state.examOrder.doctorId);
-      } else {
-        // Fallback: Get current user from store (should be the collaborator creating the exam order)
-        console.warn('⚠️ No collaborator ID found in attention, using current user from store');
+        state.examOrder.collaboratorId = attentionDetails.collaboratorId;
+        // Solo usar collaboratorId como doctorId si no hay professionalId
+        if (!attentionDetails.professionalId) {
+          state.examOrder.doctorId = attentionDetails.collaboratorId;
+          console.log('👨‍⚕️ Doctor ID set from collaborator (fallback):', state.examOrder.doctorId);
+        }
+      }
+      
+      // Fallback final: usar usuario actual del store
+      if (!state.examOrder.doctorId) {
+        console.warn('⚠️ No professional/collaborator ID found in attention, using current user from store');
         try {
           const currentUser = await store.getCurrentUser;
           if (currentUser && currentUser.id) {
             state.examOrder.doctorId = currentUser.id;
+            state.examOrder.collaboratorId = currentUser.id; // Asumir que es collaborator
             console.log('👨‍⚕️ Doctor ID set from current user:', state.examOrder.doctorId);
           } else {
             console.error('❌ No current user found in store');

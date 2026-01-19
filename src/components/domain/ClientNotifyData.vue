@@ -6,7 +6,7 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import { notify } from '../../application/services/attention';
 import { VueRecaptcha } from 'vue-recaptcha';
-import { getPhoneCodes } from '../../shared/utils/data';
+import { getPhoneCodes } from '../../shared/utils/data.ts';
 
 export default {
   name: 'ClientNotifyData',

@@ -1037,7 +1037,7 @@ export default {
               </div>
               <div class="col">
                 <button
-                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                   @click="add()"
                 >
                   {{ $t('businessMedicalTemplatesAdmin.add') }} <i class="bi bi-save"></i>

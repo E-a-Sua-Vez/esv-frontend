@@ -6,7 +6,7 @@ import { getDocumentsDetails } from '../../../application/services/query-stack';
 import { addDocument } from '../../../application/services/document';
 import SimpleDocumentCard from '../common/SimpleDocumentCard.vue';
 import { DateModel } from '../../../shared/utils/date.model';
-import { getDocumentCommerceTypes, getDocumentTypes } from '../../../shared/utils/data';
+import { getDocumentCommerceTypes, getDocumentTypes } from '../../../shared/utils/data.ts';
 import Warning from '../../common/Warning.vue';
 import Alert from '../../common/Alert.vue';
 
@@ -251,31 +251,32 @@ export default {
 </script>
 
 <template>
-  <!-- Expose filters slot for desktop - rendered outside main content conditional -->
-  <slot
-    v-if="filtersLocation === 'slot'"
-    name="filters-exposed"
-    :clear="clear"
-    :get-today="getToday"
-    :get-current-month="getCurrentMonth"
-    :get-last-month="getLastMonth"
-    :get-last-three-months="getLastThreeMonths"
-    :refresh="refresh"
-    :start-date="startDate"
-    :end-date="endDate"
-    :search-text="searchText"
-    :type="type"
-    :asc="asc"
-    :types="types"
-    :loading="loading"
-    :check-asc="checkAsc"
-  ></slot>
+  <div>
+    <!-- Expose filters slot for desktop - rendered outside main content conditional -->
+    <slot
+      v-if="filtersLocation === 'slot'"
+      name="filters-exposed"
+      :clear="clear"
+      :get-today="getToday"
+      :get-current-month="getCurrentMonth"
+      :get-last-month="getLastMonth"
+      :get-last-three-months="getLastThreeMonths"
+      :refresh="refresh"
+      :start-date="startDate"
+      :end-date="endDate"
+      :search-text="searchText"
+      :type="type"
+      :asc="asc"
+      :types="types"
+      :loading="loading"
+      :check-asc="checkAsc"
+    ></slot>
 
-  <div
-    id="documents-management"
-    class="row"
-    v-if="showClientManagement === true && toggles['document-commerce.admin.view']"
-  >
+    <div
+      id="documents-management"
+      class="row"
+      v-if="showClientManagement === true && toggles['document-commerce.admin.view']"
+    >
     <div class="col">
       <div id="attention-management-component">
         <Spinner :show="loading"></Spinner>
@@ -696,13 +697,14 @@ export default {
         </div>
       </div>
     </div>
-  </div>
-  <div v-if="showClientManagement === true && !toggles['document-commerce.admin.view']">
-    <Message
-      :icon="'bi-graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
-    />
+    <div v-if="showClientManagement === true && !toggles['document-commerce.admin.view']">
+      <Message
+        :icon="'bi-graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
+    </div>
+    </div>
   </div>
 </template>
 

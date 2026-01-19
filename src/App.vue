@@ -72,3 +72,21 @@ export default {
 </template>
 
 <style src="@vueform/toggle/themes/default.css"></style>
+
+<style>
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(31, 63, 146, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(31, 63, 146, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(31, 63, 146, 0);
+  }
+}
+
+.pulse-btn {
+  animation: pulse 2s infinite;
+}
+</style>

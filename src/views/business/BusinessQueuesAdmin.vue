@@ -13,7 +13,7 @@ import {
   getActiveServicesByCommerceId,
   getServiceByCommerce,
 } from '../../application/services/service';
-import { getCollaboratorsByCommerceId } from '../../application/services/collaborator';
+import { getProfessionalsByCommerce } from '../../application/services/professional';
 import { getPermissions } from '../../application/services/permissions';
 import { getDate, dateYYYYMMDD } from '../../shared/utils/date';
 import Popper from 'vue3-popper';
@@ -27,7 +27,7 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
-import { getQueueTypes } from '../../shared/utils/data';
+import { getQueueTypes } from '../../shared/utils/data.ts';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
@@ -85,7 +85,7 @@ export default {
       activeBusiness: false,
       queues: ref([]),
       services: ref({}),
-      collaborators: ref({}),
+      professionals: ref({}),
       types: [],
       showAdd: false,
       goToUnavailable: false,
@@ -111,7 +111,7 @@ export default {
           specificCalendarDays: {},
         },
       },
-      selectedCollaborator: {},
+      selectedProfessional: {},
       selectedService: {},
       selectedDate: new Date().setDate(new Date().getDate()),
       selectedHourFrom: undefined,
@@ -171,19 +171,19 @@ export default {
       if (!commerceId) {
         state.queues = [];
         state.services = {};
-        state.collaborators = {};
+        state.professionals = {};
         state.filtered = [];
         return;
       }
       try {
         state.queues = await getQueuesByCommerceId(commerceId);
         state.services = await getActiveServicesByCommerceId(commerceId);
-        state.collaborators = await getCollaboratorsByCommerceId(commerceId);
+        state.professionals = await getProfessionalsByCommerce(commerceId);
         state.filtered = state.queues;
       } catch (error) {
         state.queues = [];
         state.services = {};
-        state.collaborators = {};
+        state.professionals = {};
         state.filtered = [];
       }
     };
@@ -199,7 +199,7 @@ export default {
             state.queues = [];
             state.filtered = [];
             state.services = {};
-            state.collaborators = {};
+            state.professionals = {};
             // Load features for commerce
             await loadCommerceFeatures(newCommerce);
             await loadCommerceData(newCommerce.id);
@@ -266,8 +266,8 @@ export default {
         state.typeError = false;
       }
       if (queue.type) {
-        if (queue.type === 'COLLABORATOR' && !queue.collaboratorId) {
-          state.errorsAdd.push('businessQueuesAdmin.validate.collaborator');
+        if (queue.type === 'COLLABORATOR' && !queue.professionalId) {
+          state.errorsAdd.push('businessQueuesAdmin.validate.professional');
         }
         if (queue.type === 'SERVICE' && (!queue.servicesId || queue.servicesId.length === 0)) {
           state.errorsAdd.push('businessQueuesAdmin.validate.service');
@@ -556,11 +556,11 @@ export default {
       }
     };
 
-    const selectCollaborator = (queue, collaborator) => {
-      if (queue !== undefined && collaborator !== undefined && collaborator.id !== undefined) {
-        queue.collaboratorId = collaborator.id;
-        queue.tag = `${collaborator.email}`;
-        state.selectedCollaborator = collaborator;
+    const selectProfessional = (queue, professional) => {
+      if (queue !== undefined && professional !== undefined && professional.id !== undefined) {
+        queue.professionalId = professional.id;
+        queue.tag = `${professional.email || professional.name}`;
+        state.selectedProfessional = professional;
       }
     };
 
@@ -576,16 +576,16 @@ export default {
 
     const selectType = (queue, type) => {
       if (queue) {
-        if (typ === 'COLLABORATOR') {
+        if (type === 'COLLABORATOR') {
           queue.servicesId = undefined;
           queue.type = type.name;
         }
-        if (typ === 'SERVICE') {
-          queue.collaboratorId = undefined;
+        if (type === 'SERVICE') {
+          queue.professionalId = undefined;
           queue.type = type.name;
         }
-        if (typ === 'MULTILPLE_SERVICE') {
-          queue.collaboratorId = undefined;
+        if (type === 'MULTILPLE_SERVICE') {
+          queue.professionalId = undefined;
           queue.type = type.name;
         }
       }
@@ -786,7 +786,7 @@ export default {
       state.orderAddError = false;
       state.timeAddError = false;
       state.typeError = false;
-      state.selectedCollaborator = {};
+      state.selectedProfessional = {};
       state.selectedService = {};
       state.selectedDate = new Date().setDate(new Date().getDate());
       state.selectedHourFrom = undefined;
@@ -872,7 +872,7 @@ export default {
       copyLink,
       initializedParsonalizedHours,
       initializedSameCommerceHours,
-      selectCollaborator,
+      selectProfessional,
       selectService,
       selectType,
       unavailable,
@@ -918,7 +918,7 @@ export default {
         </div>
         <div id="businessQueuesAdmin">
           <div v-if="isActiveBusiness() && state.toggles['queues.admin.view']">
-            <div id="businessQueuesAdmin-controls" class="control-box">
+            <div id="businessQueuesAdmin-controls" class="control-box my-4">
               <div class="row">
                 <div v-if="!commerce">
                   <Message
@@ -939,7 +939,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd(queue)"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-queue`"
@@ -1443,7 +1443,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd(queue)"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-queue`"
@@ -1955,12 +1955,12 @@ export default {
                   <div class="form-fields-container">
                     <div v-if="state.newQueue.type === 'COLLABORATOR'" class="form-group-modern">
                       <label class="form-label-modern">
-                        {{ $t('businessQueuesAdmin.selectCollaborator') }}
+                        {{ $t('businessQueuesAdmin.selectProfessional') }}
                         <Popper
                           :class="'dark p-1'"
                           arrow
                           :disable-click-away="false"
-                          :content="$t('businessQueuesAdmin.collaboratorHelp')"
+                          :content="$t('businessQueuesAdmin.professionalHelp') || $t('businessQueuesAdmin.collaboratorHelp')"
                         >
                           <i class="bi bi-info-circle-fill h7"></i>
                         </Popper>
@@ -1970,33 +1970,33 @@ export default {
                           <button
                             class="form-control-modern form-select-modern dropdown-toggle"
                             type="button"
-                            id="select-collaborator-add"
+                            id="select-professional-add"
                             data-bs-toggle="dropdown"
                             aria-expanded="false"
                             style="text-align: left; cursor: pointer"
                           >
                             {{
-                              state.selectedCollaborator.name ||
-                              $t('businessQueuesAdmin.selectCollaborator')
+                              state.selectedProfessional.name ||
+                              $t('businessQueuesAdmin.selectProfessional')
                             }}
                           </button>
-                          <ul class="dropdown-menu" aria-labelledby="select-collaborator-add">
+                          <ul class="dropdown-menu" aria-labelledby="select-professional-add">
                             <li
-                              v-for="col in state.collaborators"
-                              :key="col.id"
-                              :value="col"
+                              v-for="prof in state.professionals"
+                              :key="prof.id"
+                              :value="prof"
                               class="list-item"
                             >
                               <div
                                 class="row d-flex m-1 searcher"
-                                @click="selectCollaborator(state.newQueue, col)"
+                                @click="selectProfessional(state.newQueue, prof)"
                               >
                                 <div class="col-12">
                                   <div>
-                                    <span class="item-title fw-bold"> {{ col.name }} </span>
+                                    <span class="item-title fw-bold"> {{ prof.name }} </span>
                                   </div>
-                                  <div v-if="col !== undefined">
-                                    <span class="item-subtitle text-break"> {{ col.email }} </span>
+                                  <div v-if="prof !== undefined">
+                                    <span class="item-subtitle text-break"> {{ prof.email }} </span>
                                   </div>
                                 </div>
                               </div>

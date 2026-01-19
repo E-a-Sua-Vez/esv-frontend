@@ -11,7 +11,7 @@ import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { globalStore } from '../../../stores';
 import { getClientContactsDetailsByClientId } from '../../../application/services/query-stack';
 import { contactClient, searchClientByIdNumber } from '../../../application/services/client';
-import { getContactResultTypes, getContactTypes } from '../../../shared/utils/data';
+import { getContactResultTypes, getContactTypes } from '../../../shared/utils/data.ts';
 import { DateModel } from '../../../shared/utils/date.model';
 import { getGroupedQueueByCommerceId } from '../../../application/services/queue';
 

@@ -101,7 +101,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue';
 import Popper from 'vue3-popper';
-import { getDigitalSignatureUrl } from '@/application/services/collaborator';
+// NOTA: getDigitalSignatureUrl deprecado - la firma ahora está en Professional
 
 const props = defineProps({
   collaboratorId: {
@@ -130,28 +130,24 @@ const selectedFile = ref(null);
 const crm = ref(props.currentCrm || '');
 const crmState = ref(props.currentCrmState || '');
 
-// Carga firma actual con URL firmada si está en S3 privado
+// Carga firma actual (ya viene desde Professional si existe)
 const loadCurrentSignature = async () => {
   try {
-    if (!preview.value && props.currentSignature && props.collaboratorId) {
-      const signed = await getDigitalSignatureUrl(props.collaboratorId);
-      if (signed) {
-        // Mostrar firmada
-        preview.value = null; // asegurar que priorizamos la actual
-        // Emitir estado actual para mantener sincronía de CRM
-        emit('change', {
-          field: 'digitalSignature',
-          value: {
-            digitalSignature: signed,
-            file: null,
-            crm: crm.value,
-            crmState: crmState.value,
-          }
-        });
-      }
+    if (!preview.value && props.currentSignature) {
+      // La firma ya viene correctamente desde el componente padre
+      // No necesitamos hacer requests adicionales
+      emit('change', {
+        field: 'digitalSignature',
+        value: {
+          digitalSignature: props.currentSignature,
+          file: null,
+          crm: crm.value,
+          crmState: crmState.value,
+        }
+      });
     }
   } catch (e) {
-    // Silencioso: si falla, se mostrará currentSignature directa
+    console.warn('Error loading signature:', e);
   }
 };
 

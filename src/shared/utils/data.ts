@@ -260,3 +260,18 @@ export const getConfigurationTypes = () => {
     { id: 'MESSAGE', name: 'message' },
   ];
 };
+export const getProfessionalTypes = () => {
+  return [
+    { id: 'DOCTOR', name: 'DOCTOR' },
+    { id: 'SPECIALIST', name: 'SPECIALIST' },
+    { id: 'NURSE', name: 'NURSE' },
+    { id: 'MEDICAL_ASSISTANT', name: 'MEDICAL_ASSISTANT' },
+    { id: 'SECRETARY', name: 'SECRETARY' },
+    { id: 'RECEPTIONIST', name: 'RECEPTIONIST' },
+    { id: 'STYLIST', name: 'STYLIST' },
+    { id: 'BARBER', name: 'BARBER' },
+    { id: 'STANDARD', name: 'STANDARD' },
+    { id: 'ASSISTANT', name: 'ASSISTANT' },
+    { id: 'FULL', name: 'FULL' },
+  ];
+};

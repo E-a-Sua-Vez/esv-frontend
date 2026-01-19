@@ -18,7 +18,7 @@ import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
-import { getServiceTypes } from '../../shared/utils/data';
+import { getServiceTypes } from '../../shared/utils/data.ts';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import ServiceFormEdit from '../../components/service/ServiceFormEdit.vue';
 import ServiceFormAdd from '../../components/service/ServiceFormAdd.vue';
@@ -448,7 +448,7 @@ export default {
         </div>
         <div id="businessServicesAdmin">
           <div v-if="isActiveBusiness && state.toggles['services.admin.view']">
-            <div id="businessServicesAdmin-controls" class="control-box">
+            <div id="businessServicesAdmin-controls" class="control-box my-4">
               <div class="row">
                 <div v-if="!commerce">
                   <Message
@@ -469,7 +469,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd(service)"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-service`"
@@ -520,7 +520,7 @@ export default {
                     />
                     <div class="col" v-if="state.extendedEntity === index">
                       <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                         @click="update(service)"
                         :disabled="!state.toggles['services.admin.update']"
                       >
@@ -607,7 +607,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd(service)"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-service`"
@@ -658,7 +658,7 @@ export default {
                     />
                     <div class="col" v-if="state.extendedEntity === index">
                       <button
-                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                         @click="update(service)"
                         :disabled="!state.toggles['services.admin.update']"
                       >
@@ -748,7 +748,7 @@ export default {
               />
               <div class="col">
                 <button
-                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                   @click="add(state.newService)"
                 >
                   {{ $t('businessServicesAdmin.add') }} <i class="bi bi-save"></i>

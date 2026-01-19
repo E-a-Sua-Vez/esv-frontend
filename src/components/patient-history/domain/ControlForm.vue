@@ -5,7 +5,7 @@ import Warning from '../../common/Warning.vue';
 import Spinner from '../../common/Spinner.vue';
 import Toggle from '@vueform/toggle';
 import Message from '../../common/Message.vue';
-import { getControlReasonsTypes, getControlStatusTypes } from '../../../shared/utils/data';
+import { getControlReasonsTypes, getControlStatusTypes } from '../../../shared/utils/data.ts';
 import HistoryControlDetailsCard from '../common/HistoryControlDetailsCard.vue';
 
 export default {

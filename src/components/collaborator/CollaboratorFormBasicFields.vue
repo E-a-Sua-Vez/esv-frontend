@@ -53,6 +53,46 @@ export default {
         placeholder="Jhon Pérez"
       />
     </div>
+    <div class="form-group-modern">
+      <label class="form-label-modern">
+        {{ $t('collaborator.lastName') || 'Apellido' }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('collaborator.lastNameHelp') || 'Apellido del colaborador' }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
+      </label>
+      <input
+        :id="`${prefix}collaborator-lastName-form`"
+        :disabled="isAdd ? false : !toggles['collaborators.admin.edit']"
+        type="text"
+        class="form-control-modern"
+        v-model="collaborator.lastName"
+        placeholder="García"
+      />
+    </div>
+    <div class="form-group-modern">
+      <label class="form-label-modern">
+        {{ $t('collaborator.idNumber') || 'Documento de Identidad' }}
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('collaborator.idNumberHelp') || 'Número de documento de identidad del colaborador' }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
+      </label>
+      <input
+        :id="`${prefix}collaborator-idNumber-form`"
+        :disabled="isAdd ? false : !toggles['collaborators.admin.edit']"
+        type="text"
+        class="form-control-modern"
+        :class="{ 'is-invalid': errors.idNumberError }"
+        v-model="collaborator.idNumber"
+        placeholder="12345678-9"
+        required
+      />
+    </div>
     <div class="form-group-modern" v-if="prefix === 'add-'">
       <label class="form-label-modern">
         {{ $t('businessCollaboratorsAdmin.email') }}
@@ -210,6 +250,7 @@ export default {
       <select
         :id="`${prefix}collaborator-role-form`"
         class="form-control-modern form-select-modern"
+        :class="{ 'is-invalid': errors.roleError }"
         v-model="collaborator.role"
         :disabled="isAdd ? false : !toggles['collaborators.admin.edit']"
       >

@@ -1,4 +1,4 @@
-export const formatIdNumber = (commerce, idNumber) => {
+export const formatIdNumber = (commerce: any | undefined, idNumber: string) => {
   if (idNumber) {
     if (commerce.localeInfo.country === 'br') {
       return idNumber.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
@@ -12,7 +12,21 @@ export const formatIdNumber = (commerce, idNumber) => {
   }
 };
 
-export const validateIdNumber = (commerce, idNumber) => {
+export const formatIdNumberBr = (country: string, idNumber: string) => {
+  if (idNumber) {
+    if (country === 'br') {
+      return idNumber.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    } else if (country === 'cl') {
+      return idNumber.replace(/^(\d{2})(\d{3})(\d{3})(\w{1})$/, '$1.$2.$3-$4');
+    } else {
+      return idNumber;
+    }
+  } else {
+    return idNumber;
+  }
+};
+
+export const validateIdNumber = (commerce: { localeInfo?: any; }, idNumber: string) => {
   if (idNumber) {
     if (commerce.localeInfo.country === 'br') {
       if (/(\d{3})(\d{3})(\d{3})(\d{2})/.test(idNumber)) {

@@ -324,6 +324,7 @@ export default {
         </div>
         <div id="businessMedicalExamsAdmin">
           <div v-if="isActiveBusiness && state.toggles['medical-exams.admin.view']">
+            <div class="control-box my-4"></div>
             <div v-if="!loading" id="businessMedicalExamsAdmin-result" class="mt-4">
               <div>
                 <div v-if="!commerce">
@@ -341,7 +342,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd()"
                       data-bs-toggle="modal"
                       data-bs-target="#add-exam"
@@ -466,7 +467,7 @@ export default {
                       </div>
                       <div class="col">
                         <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                           @click="update(exam)"
                           :disabled="!state.toggles['medical-exams.admin.update']"
                         >
@@ -544,7 +545,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd()"
                       data-bs-toggle="modal"
                       data-bs-target="#add-exam"
@@ -656,7 +657,7 @@ export default {
                       </div>
                       <div class="col">
                         <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                           @click="update(exam)"
                           :disabled="!state.toggles['medical-exams.admin.update']"
                         >
@@ -776,7 +777,7 @@ export default {
               </div>
               <div class="col">
                 <button
-                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                   @click="add()"
                 >
                   {{ $t('businessMedicalExamsAdmin.add') }} <i class="bi bi-save"></i>

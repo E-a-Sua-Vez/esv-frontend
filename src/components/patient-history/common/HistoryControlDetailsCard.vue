@@ -1,6 +1,6 @@
 <script>
 import { getDate } from '../../../shared/utils/date';
-import { getControlStatusTypes } from '../../../shared/utils/data';
+import { getControlStatusTypes } from '../../../shared/utils/data.ts';
 import { globalStore } from '../../../stores';
 
 export default {

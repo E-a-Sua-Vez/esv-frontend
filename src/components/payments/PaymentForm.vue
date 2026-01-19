@@ -1,11 +1,11 @@
 <script>
-import { ref, reactive, onBeforeMount, toRefs } from 'vue';
+import { ref, reactive, onBeforeMount, toRefs, watch } from 'vue';
 import Warning from '../../components/common/Warning.vue';
 import {
   getPaymentFiscalNoteTypes,
   getPaymentMethods,
   getPaymentTypes,
-} from '../../shared/utils/data';
+} from '../../shared/utils/data.ts';
 import {
   getAvailablePackagesForService,
   getActivePackagesByClient,
@@ -24,11 +24,15 @@ export default {
     confirmPayment: { type: Boolean, default: false },
     errorsAdd: { type: Array, default: [] },
     receiveData: { type: Function, default: () => {} },
+    // NEW: Professional commission props
+    professionalName: { type: String, default: undefined },
+    professionalCommission: { type: [Number, String], default: undefined },
+    suggestedCommissionAmount: { type: Number, default: undefined },
   },
   async setup(props) {
     const loading = ref(false);
 
-    const { id, commerce, clientId, serviceId, errorsAdd, confirmPayment } = toRefs(props);
+    const { id, commerce, clientId, serviceId, errorsAdd, confirmPayment, professionalName, professionalCommission, suggestedCommissionAmount } = toRefs(props);
 
     const { receiveData } = props;
 
@@ -76,6 +80,24 @@ export default {
         loading.value = false;
       }
     });
+
+    // AUTO-CALCULATE COMMISSION based on professional data
+    const calculateSuggestedCommission = () => {
+      if (!suggestedCommissionAmount.value || !state.newConfirmationData.paymentAmount) {
+        return 0;
+      }
+      return Number(suggestedCommissionAmount.value);
+    };
+
+    // WATCHER for professional commission auto-calculation
+    watch([professionalCommission, suggestedCommissionAmount, () => state.newConfirmationData.paymentAmount], () => {
+      if (professionalName.value && state.newConfirmationData.paymentAmount > 0) {
+        const suggested = calculateSuggestedCommission();
+        if (suggested > 0 && !state.newConfirmationData.paymentCommission) {
+          state.newConfirmationData.paymentCommission = suggested;
+        }
+      }
+    }, { immediate: true });
 
     const sendData = () => {
       receiveData(state.newConfirmationData);
@@ -472,6 +494,27 @@ export default {
                 @keyup="sendData"
               />
             </div>
+            <!-- PROFESSIONAL COMMISSION SECTION -->
+            <div v-if="professionalName" class="payment-form-field payment-commission-section">
+              <div class="professional-commission-header">
+                <label class="payment-form-label">
+                  <i class="bi bi-person-badge"></i>
+                  {{ $t('professionals.assignedProfessional') || 'Profesional Asignado' }}
+                </label>
+                <div class="professional-commission-info">
+                  <span class="professional-name">{{ professionalName }}</span>
+                  <span v-if="professionalCommission" class="suggested-commission">
+                    {{ $t('professionals.suggestedCommission') || 'Comisión Sugerida' }}: 
+                    <strong>{{ professionalCommission }}</strong>
+                  </span>
+                  <span v-if="suggestedCommissionAmount && state.newConfirmationData.paymentAmount" 
+                        class="calculated-commission">
+                    {{ $t('professionals.calculatedAmount') || 'Monto Calculado' }}: 
+                    <strong>{{ suggestedCommissionAmount }} {{ commerce?.currency || 'CLP' }}</strong>
+                  </span>
+                </div>
+              </div>
+            </div>
             <div class="payment-form-field">
               <label class="payment-form-label">
                 {{ $t('collaboratorBookingsView.paymentCommission') }}
@@ -742,5 +785,52 @@ export default {
 .payment-form-label i {
   margin-right: 0.375rem;
   color: rgba(0, 0, 0, 0.6);
+}
+
+/* PROFESSIONAL COMMISSION STYLES */
+.payment-commission-section {
+  background: rgba(74, 144, 226, 0.08);
+  border: 1px solid rgba(74, 144, 226, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.professional-commission-header .payment-form-label {
+  color: #4a90e2;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.professional-commission-header .payment-form-label i {
+  color: #4a90e2;
+  margin-right: 0.5rem;
+}
+
+.professional-commission-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.professional-name {
+  font-weight: 700;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.suggested-commission,
+.calculated-commission {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.suggested-commission strong,
+.calculated-commission strong {
+  color: #4a90e2;
+  font-weight: 600;
 }
 </style>

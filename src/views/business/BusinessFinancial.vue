@@ -13,6 +13,7 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import ResumeFinancialManagement from '../../components/financial/domain/ResumeFinancialManagement.vue';
 import IncomesFinancialManagement from '../../components/financial/domain/IncomesFinancialManagement.vue';
 import OutcomesFinancialManagement from '../../components/financial/domain/OutcomesFinancialManagement.vue';
+import CommissionPaymentsManagement from '../../components/financial/domain/CommissionPaymentsManagement.vue';
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
 import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
@@ -30,6 +31,7 @@ export default {
     ResumeFinancialManagement,
     IncomesFinancialManagement,
     OutcomesFinancialManagement,
+    CommissionPaymentsManagement,
     DesktopContentLayout,
     DesktopPageHeader,
     DesktopFiltersPanel,
@@ -66,6 +68,7 @@ export default {
       dateType: 'month',
       showResume: true,
       showIncomes: false,
+      showCommissionPayments: false,
       showOutcomes: false,
       toggles: {},
       allCommerces: ref([]),
@@ -165,17 +168,30 @@ export default {
 
     const showResume = () => {
       state.showResume = true;
-      (state.showIncomes = false), (state.showOutcomes = false);
+      state.showIncomes = false;
+      state.showOutcomes = false;
+      state.showCommissionPayments = false;
     };
 
     const showIncomes = () => {
       state.showResume = false;
-      (state.showIncomes = true), (state.showOutcomes = false);
+      state.showIncomes = true;
+      state.showOutcomes = false;
+      state.showCommissionPayments = false;
     };
 
     const showOutcomes = () => {
       state.showResume = false;
-      (state.showIncomes = false), (state.showOutcomes = true);
+      state.showIncomes = false;
+      state.showOutcomes = true;
+      state.showCommissionPayments = false;
+    };
+
+    const showCommissionPayments = () => {
+      state.showResume = false;
+      state.showIncomes = false;
+      state.showOutcomes = false;
+      state.showCommissionPayments = true;
     };
 
     const handleFiltersToggle = () => {
@@ -200,6 +216,7 @@ export default {
       showResume,
       showIncomes,
       showOutcomes,
+      showCommissionPayments,
       getLocalHour,
       handleFiltersToggle,
       handleCommerceChanged,
@@ -254,7 +271,7 @@ export default {
                     <i class="bi bi-graph-up"></i>
                   </button>
                 </div>
-                <div class="col-5 centered">
+                <div class="col-3 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showIncomes ? 'btn-selected' : ''"
@@ -265,7 +282,7 @@ export default {
                     <i class="bi bi-arrow-down-circle-fill"></i>
                   </button>
                 </div>
-                <div class="col-4 centered">
+                <div class="col-3 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showOutcomes ? 'btn-selected' : ''"
@@ -274,6 +291,17 @@ export default {
                   >
                     {{ $t('businessFinancial.outcomes') }} <br />
                     <i class="bi bi-arrow-up-circle-fill"></i>
+                  </button>
+                </div>
+                <div class="col-3 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showCommissionPayments ? 'btn-selected' : ''"
+                    @click="showCommissionPayments()"
+                    :disabled="!state.toggles['financial.incomes.view']"
+                  >
+                    {{ $t('commissionPayments.title') }} <br />
+                    <i class="bi bi-cash-coin"></i>
                   </button>
                 </div>
               </div>
@@ -308,6 +336,13 @@ export default {
                   filters-location="component"
                 >
                 </OutcomesFinancialManagement>
+                <CommissionPaymentsManagement
+                  v-if="state.showCommissionPayments"
+                  :commerce="commerce"
+                  :business="state.business"
+                  :toggles="state.toggles"
+                >
+                </CommissionPaymentsManagement>
               </div>
             </div>
           </div>

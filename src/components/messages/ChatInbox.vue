@@ -154,13 +154,6 @@ const currentUserId = computed(() => {
     chatCurrentUser?.value?.id ||
     getAuth().currentUser?.uid ||
     store.getCurrentUser?.id;
-  console.log('[DEBUG ChatInbox] currentUserId computed:', {
-    result,
-    chatCurrentUser: chatCurrentUser?.value,
-    authUser: getAuth().currentUser?.uid,
-    storeUser: store.getCurrentUser?.id,
-    myUserIds: myUserIds?.value,
-  });
   return result;
 });
 
@@ -173,11 +166,6 @@ const userRole = computed(() => {
 });
 
 const activeConversation = computed(() => {
-  console.log('[DEBUG ChatInbox] activeConversation computed:', {
-    totalConversations: conversations.value.length,
-    activeId: activeConversationId.value,
-    conversationsList: conversations.value.map(c => ({ id: c.id, participants: c.participants?.length }))
-  });
   return conversations.value.find(c => c.id === activeConversationId.value);
 });
 
@@ -190,17 +178,8 @@ onMounted(() => {
   if (user?.id && !conversationsListenerStarted.value) {
     const role = user.master ? 'master' : (user.businessId ? 'administrator' : 'collaborator');
     const commerceId = user.commerceId || user.commerce?.id;
-    console.log('[DEBUG ChatInbox] onMounted startConversationsListener:', {
-      userId: user.id,
-      role,
-      commerceId,
-      isMaster: user.master,
-      user: user
-    });
     startConversationsListener(user.id, role, commerceId);
     conversationsListenerStarted.value = true;
-  } else if (!user?.id) {
-    console.warn('[DEBUG ChatInbox] onMounted - No user found:', store.getCurrentUser);
   }
 });
 
@@ -211,24 +190,13 @@ onUnmounted(() => {
 // Watchers
 watch(
   () => conversations.value,
-  (newConversations) => {
-    console.log('[DEBUG ChatInbox] conversations changed:', {
-      count: newConversations.length,
-      conversations: newConversations.map(c => ({
-        id: c.id,
-        participants: c.participants?.length,
-        lastMessage: c.lastMessage ? c.lastMessage.substring(0, 30) + '...' : 'No message'
-      }))
-    });
-  },
+  (newConversations) => {},
   { immediate: true }
 );
 
 watch(
   () => currentUserId.value,
-  (newValue, oldValue) => {
-    console.log('[DEBUG ChatInbox] currentUserId changed:', { oldValue, newValue });
-  }
+  (newValue, oldValue) => {}
 );
 
 watch(
@@ -285,10 +253,7 @@ function handleMessageSent(data) {
 
 // Chat handlers
 async function handleSelectConversation(conversationId) {
-  console.log('[DEBUG ChatInbox] Selecting conversation:', conversationId);
-  console.log('[DEBUG ChatInbox] Current messages:', chatMessages.value.length);
   await startMessagesListener(conversationId);
-  console.log('[DEBUG ChatInbox] Messages after startListener:', chatMessages.value.length);
   // Auto-mark as read after 1 second
   setTimeout(() => {
     const user = store.getCurrentUser;

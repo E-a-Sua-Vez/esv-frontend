@@ -5,6 +5,8 @@ import DigitalSignatureUpload from './DigitalSignatureUpload.vue';
 import MedicalDataForm from './MedicalDataForm.vue';
 import ProfilePhotoUpload from './ProfilePhotoUpload.vue';
 import RoleSelector from './RoleSelector.vue';
+import CreateAssociatedProfessionalModal from './CreateAssociatedProfessionalModal.vue';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'CollaboratorFormEdit',
@@ -15,6 +17,8 @@ export default {
     MedicalDataForm,
     ProfilePhotoUpload,
     RoleSelector,
+    CreateAssociatedProfessionalModal,
+    Popper,
   },
   props: {
     collaborator: { type: Object, required: true },
@@ -32,7 +36,12 @@ export default {
     showCommerce: { type: Function, default: null },
     showService: { type: Function, default: null },
   },
-  emits: ['update:collaborator'],
+  emits: ['update:collaborator', 'professional-created'],
+  data() {
+    return {
+      showCreateProfessionalModal: false,
+    };
+  },
   computed: {
     localCollaborator: {
       get() {
@@ -50,17 +59,24 @@ export default {
     },
   },
   methods: {
+    openCreateProfessionalModal() {
+      this.showCreateProfessionalModal = true;
+    },
     handleChildChange({ field, value }) {
       const updated = { ...this.collaborator };
       if (field === 'medicalData') {
+        // NOTA: medicalData ahora está en Professional, no en Collaborator
+        // Mantener por compatibilidad temporal pero advertir
+        console.warn('medicalData should be managed in Professional entity, not Collaborator');
         updated.medicalData = { ...(updated.medicalData || {}), ...value };
       } else if (field === 'digitalSignature') {
-        updated.digitalSignature = value.digitalSignature;
-        if (value.file) {
-          updated.digitalSignatureFile = value.file;
+        // NOTA: digitalSignature ahora está en Professional, no en Collaborator
+        console.warn('digitalSignature should be managed in Professional entity, not Collaborator');
+        // No actualizar collaborator con estos campos deprecados
+        if (updated.isProfessional) {
+          // Si tiene Professional asociado, mostrar mensaje
+          console.info('Collaborator has associated Professional. Update signature in Professional profile.');
         }
-        updated.crm = value.crm;
-        updated.crmState = value.crmState;
       } else if (field === 'profilePhoto') {
         updated.profilePhoto = value;
       }
@@ -78,6 +94,17 @@ export default {
         role: roleData.role,
         canSignDocuments: roleData.permissions.some(p => p.key === 'canSignDocuments' && p.value),
       });
+    },
+    handleProfessionalCreated(result) {
+      // Actualizar el colaborador local con los datos actualizados
+      const updated = {
+        ...this.collaborator,
+        isProfessional: true,
+        professionalId: result.professional.id
+      };
+      this.$emit('update:collaborator', updated);
+      this.$emit('professional-created', result);
+      this.showCreateProfessionalModal = false;
     },
   },
 };
@@ -113,23 +140,8 @@ export default {
       :show-service="showService"
     />
 
-    <div
-      v-if="localCollaborator && localCollaborator.id"
-      id="collaborator-id-form"
-      class="row -2 mb-g3 mt-2"
-    >
-      <div class="row collaborator-details-container">
-        <div class="col">
-          <span><strong>Id:</strong> {{ localCollaborator.id }}</span>
-        </div>
-      </div>
-    </div>
-
     <!-- Foto de Perfil (siempre visible) -->
     <div class="mt-3">
-      <div class="form-section-header">
-        <h6 class="form-section-title">{{ $t('collaborator.profilePhoto.title') || 'Foto de Perfil' }}</h6>
-      </div>
       <ProfilePhotoUpload
         :collaborator-id="collaborator.id"
         :commerce-id="commerceId"
@@ -140,30 +152,26 @@ export default {
       />
     </div>
 
-    <!-- Datos Médicos (solo para roles médicos) -->
-    <div v-if="isMedicalRole" class="mt-3">
-      <div class="form-section-header">
-        <h6 class="form-section-title">{{ $t('collaborator.medicalData.title') || 'Datos Médicos' }}</h6>
-      </div>
-      <MedicalDataForm
-        :collaborator-id="collaborator.id"
-        :current-medical-data="collaborator.medicalData || {}"
-        @change="handleChildChange"
-      />
-    </div>
 
-    <!-- Firma Digital (solo para roles que pueden firmar documentos) -->
-    <div v-if="canSignDocuments" class="mt-3">
-      <div class="form-section-header">
-        <h6 class="form-section-title">{{ $t('digitalSignature.title') || 'Firma Digital' }}</h6>
+    <!-- Modal para crear perfil profesional -->
+    <CreateAssociatedProfessionalModal
+      v-if="showCreateProfessionalModal"
+      :collaborator="localCollaborator"
+      :services="services"
+      @created="handleProfessionalCreated"
+      @close="showCreateProfessionalModal = false"
+    />
+
+     <div
+      v-if="localCollaborator && localCollaborator.id"
+      id="collaborator-id-form"
+      class="row -2 mb-g3 mt-2"
+    >
+      <div class="row collaborator-details-container">
+        <div class="col">
+          <span><strong>Id:</strong> {{ localCollaborator.id }}</span>
+        </div>
       </div>
-      <DigitalSignatureUpload
-        :collaborator-id="collaborator.id"
-        :current-signature="collaborator.digitalSignature"
-        :current-crm="collaborator.crm"
-        :current-crm-state="collaborator.crmState"
-        @change="handleChildChange"
-      />
     </div>
   </div>
 </template>

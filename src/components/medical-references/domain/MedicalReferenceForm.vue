@@ -48,6 +48,8 @@ export default {
         clientId: '',
         attentionId: '',
         referringDoctorId: '',
+        collaboratorId: '', // DEPRECATED: mantener por compatibilidad
+        professionalId: '', // PREFERRED: usar este para nuevos documentos
         referredToSpecialty: '',
         referredToDoctor: '',
         referredToInstitution: '',
@@ -159,16 +161,29 @@ export default {
         console.warn('⚠️ No attention ID found in prop');
       }
 
+      // Priorizar professionalId sobre collaboratorId (nuevo patrón)
+      if (attentionDetails?.professionalId) {
+        state.reference.professionalId = attentionDetails.professionalId;
+        state.reference.referringDoctorId = attentionDetails.professionalId;
+        console.log('👨‍⚕️ Doctor ID set from professional:', state.reference.referringDoctorId);
+      }
       if (attentionDetails?.collaboratorId) {
-        state.reference.referringDoctorId = attentionDetails.collaboratorId;
-        console.log('👨‍⚕️ Doctor ID set from attention:', state.reference.referringDoctorId);
-      } else {
-        // Fallback: Get current user from store (should be the collaborator creating the reference)
-        console.warn('⚠️ No collaborator ID found in attention, using current user from store');
+        state.reference.collaboratorId = attentionDetails.collaboratorId;
+        // Solo usar collaboratorId como referringDoctorId si no hay professionalId
+        if (!attentionDetails.professionalId) {
+          state.reference.referringDoctorId = attentionDetails.collaboratorId;
+          console.log('👨‍⚕️ Doctor ID set from collaborator (fallback):', state.reference.referringDoctorId);
+        }
+      }
+      
+      // Fallback final: usar usuario actual del store
+      if (!state.reference.referringDoctorId) {
+        console.warn('⚠️ No professional/collaborator ID found in attention, using current user from store');
         try {
           const currentUser = await store.getCurrentUser;
           if (currentUser && currentUser.id) {
             state.reference.referringDoctorId = currentUser.id;
+            state.reference.collaboratorId = currentUser.id; // Asumir que es collaborator
             console.log('👨‍⚕️ Doctor ID set from current user:', state.reference.referringDoctorId);
           } else {
             console.error('❌ No current user found in store');

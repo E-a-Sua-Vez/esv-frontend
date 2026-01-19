@@ -11,7 +11,7 @@ import {
   advanceStage,
 } from '../../../application/services/attention';
 import { getActiveFeature } from '../../../shared/features';
-import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data';
+import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data.ts';
 import { getDate } from '../../../shared/utils/date';
 import { getQueueById } from '../../../application/services/queue';
 import { ATTENTION_STATUS } from '../../../shared/constants';

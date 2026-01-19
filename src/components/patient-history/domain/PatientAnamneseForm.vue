@@ -7,7 +7,7 @@ import Toggle from '@vueform/toggle';
 import Message from '../../common/Message.vue';
 import HistoryDetailsCard from '../common/HistoryDetailsCard.vue';
 import TemplatePicker from '../../medical-templates/domain/TemplatePicker.vue';
-import { getPatientHistoryItemFrequenciesTypes } from '../../../shared/utils/data';
+import { getPatientHistoryItemFrequenciesTypes } from '../../../shared/utils/data.ts';
 import { useSpeechRecognition } from '../composables/useSpeechRecognition';
 import { useI18n } from 'vue-i18n';
 import { globalStore } from '../../../stores';

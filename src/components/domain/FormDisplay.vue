@@ -8,7 +8,7 @@ import {
   getCivilStatuses,
   getPatientHistoryItemFrequenciesTypes,
   getSexs,
-} from '../../shared/utils/data';
+} from '../../shared/utils/data.ts';
 import { useI18n } from 'vue-i18n';
 import Warning from '../common/Warning.vue';
 

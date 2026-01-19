@@ -580,7 +580,7 @@ export default {
                 />
                 <div class="col">
                   <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                     @click="add(state.newAdministrator)"
                   >
                     {{ $t('businessAdministratorAdmin.add') }} <i class="bi bi-save"></i>

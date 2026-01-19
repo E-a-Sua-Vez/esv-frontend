@@ -67,6 +67,7 @@ export default {
         'modules-admin',
         'queues-admin',
         'collaborators-admin',
+        'professionals-admin',
         'surveys-admin',
         'product-admin',
         'outcome-types-admin',

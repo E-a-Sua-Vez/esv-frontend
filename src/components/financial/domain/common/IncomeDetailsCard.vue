@@ -1,5 +1,5 @@
 <script>
-import { getContactResultTypes } from '../../../../shared/utils/data';
+import { getContactResultTypes } from '../../../../shared/utils/data.ts';
 import { getDate } from '../../../../shared/utils/date';
 import Popper from 'vue3-popper';
 import jsonToCsv from '../../../../shared/utils/jsonToCsv';
@@ -17,6 +17,7 @@ export default {
     income: { type: Object, default: undefined },
     detailsOpened: { type: Boolean, default: false },
     commerce: { type: Object, default: undefined },
+    professionals: { type: Array, default: () => [] },
   },
   data() {
     return {
@@ -81,6 +82,13 @@ export default {
     },
     manualIncome() {
       return ['STANDARD', 'FUND_INCREASE'].includes(this.income.type);
+    },
+    getProfessionalName(professionalId) {
+      if (!professionalId || !this.professionals || this.professionals.length === 0) {
+        return professionalId;
+      }
+      const professional = this.professionals.find(p => p.id === professionalId);
+      return professional ? professional.name : professionalId;
     },
   },
   watch: {
@@ -287,6 +295,20 @@ export default {
                     {{ $t('paymentData.paymentCommission') }}
                   </span>
                   <i class="bi bi-coin mx-1"> </i> {{ income.paymentCommission }}
+                </span>
+                <span v-if="income.professionalId" class="badge mx-1 detail-data-badge bg-info">
+                  <span class="fw-bold detail-data-badge-title">
+                    <i class="bi bi-person-badge"></i>
+                    {{ $t('professionals.professional') }}
+                  </span>
+                  {{ getProfessionalName(income.professionalId) }}
+                </span>
+                <span v-if="income.professionalCommission" class="badge mx-1 detail-data-badge bg-info">
+                  <span class="fw-bold detail-data-badge-title">
+                    <i class="bi bi-cash-coin"></i>
+                    {{ $t('professionals.commission') }}
+                  </span>
+                  {{ Number(parseFloat(income.professionalCommission).toFixed(2)).toLocaleString('de-DE') }}
                 </span>
                 <span v-if="income.createdBy" class="badge mx-1 detail-data-badge">
                   <span class="fw-bold detail-data-badge-title">

@@ -54,6 +54,7 @@
     "loadingData": "Cargando datos...",
     "close": "Cerrar",
     "cancel": "Cancelar",
+    "create": "Crear",
     "sending": "Enviando...",
     "filterByType": "Filtrar por tipo:",
     "all": "Todos",
@@ -263,6 +264,95 @@
     "null": "N/I",
     "OTHER": "Otro"
   },
+  "commissionPayments": {
+    "title": "Pagos de Comisiones",
+    "createPayment": "Crear Pago de Comisiones",
+    "editPayment": "Editar Pago",
+    "confirmPayment": "Confirmar Pago",
+    "cancelPayment": "Cancelar Pago",
+    "professionalCommissions": "Comisiones Profesionales",
+    "selectProfessional": "Seleccionar Profesional",
+    "selectPeriod": "Seleccionar Período",
+    "dateFrom": "Fecha Desde",
+    "dateTo": "Fecha Hasta",
+    "search": "Buscar Ingresos",
+    "unpaidIncomes": "Ingresos sin Comisión Pagada",
+    "selectAll": "Seleccionar Todos",
+    "deselectAll": "Deseleccionar Todos",
+    "date": "Fecha",
+    "type": "Tipo",
+    "amount": "Monto",
+    "commission": "Comisión",
+    "totalAmount": "Monto Total",
+    "totalCommission": "Total Comisiones",
+    "incomes": "Ingresos",
+    "notes": "Notas",
+    "notesPlaceholder": "Agregar notas o comentarios sobre este pago...",
+    "create": "Crear Pago",
+    "created": "Creados",
+    "paid": "Pagados",
+    "cancelled": "Cancelados",
+    "status": "Estado",
+    "professional": "Profesional",
+    "period": "Período",
+    "createdAt": "Fecha de Creación",
+    "paidAt": "Fecha de Pago",
+    "cancelledAt": "Fecha de Cancelación",
+    "actions": "Acciones",
+    "showDetails": "Mostrar Detalles",
+    "hideDetails": "Ocultar Detalles",
+    "edit": "Editar",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "back": "Volver",
+    "saveChanges": "Guardar Cambios",
+    "confirmPaymentAction": "Confirmar Pago",
+    "confirmCancel": "Confirmar Cancelación",
+    "paymentMethod": "Método de Pago",
+    "paymentNotes": "Notas del Pago",
+    "paymentNotesPlaceholder": "Agregar detalles sobre el pago realizado...",
+    "cancellationReason": "Razón de Cancelación",
+    "cancellationReasonPlaceholder": "Explique por qué se cancela este pago...",
+    "paymentSummary": "Resumen del Pago",
+    "incomeId": "ID Ingreso",
+    "currentIncomes": "Ingresos Actuales",
+    "availableIncomes": "Ingresos Disponibles para Agregar",
+    "changesSummary": "Resumen de Cambios",
+    "toRemove": "A Remover",
+    "toAdd": "A Agregar",
+    "finalTotal": "Total Final",
+    "paymentDetails": "Detalles del Pago",
+    "cancellationDetails": "Detalles de Cancelación",
+    "commissionPaymentStatus": {
+      "CREATED": "Creado",
+      "PAID": "Pagado",
+      "CANCELLED": "Cancelado"
+    },
+    "tabs": {
+      "create": "Crear Nuevo Pago",
+      "created": "Pagos Creados",
+      "paid": "Pagos Confirmados",
+      "cancelled": "Pagos Cancelados"
+    },
+    "messages": {
+      "selectProfessional": "Seleccione un profesional para comenzar",
+      "noUnpaidIncomes": "No hay ingresos sin comisión pagada",
+      "noUnpaidIncomesContent": "El profesional seleccionado no tiene ingresos pendientes de pago de comisión en el período especificado.",
+      "selectIncomes": "Debe seleccionar al menos un ingreso",
+      "paymentCreated": "Pago de comisión creado exitosamente",
+      "paymentUpdated": "Pago actualizado exitosamente",
+      "paymentConfirmed": "Pago confirmado exitosamente",
+      "paymentCancelled": "Pago cancelado exitosamente",
+      "noCreatedPayments": "No hay pagos creados",
+      "noCreatedPaymentsContent": "Aún no hay pagos de comisiones en estado CREADO.",
+      "noPaidPayments": "No hay pagos confirmados",
+      "noPaidPaymentsContent": "Aún no hay pagos de comisiones confirmados.",
+      "noCancelledPayments": "No hay pagos cancelados",
+      "noCancelledPaymentsContent": "No hay pagos de comisiones cancelados.",
+      "confirmPaymentWarning": "Al confirmar el pago se creará automáticamente un egreso y no se podrá revertir.",
+      "cancelWarning": "Al cancelar el pago, todos los ingresos asociados volverán a estar disponibles para futuros pagos de comisión."
+    }
+  },
   "audit-log": {
     "title": "Registro de Auditoría",
     "refresh": "Actualizar",
@@ -433,6 +523,9 @@
       "update": "Cambiar Foto",
       "remove": "Remover Foto",
       "error": "Error al procesar la foto",
+      "invalidFormat": "Formato no válido",
+      "fileTooLarge": "Archivo muy grande",
+      "uploadError": "Error al leer el archivo",
       "maxSize": "Tamaño máximo: 5MB",
       "supportedFormats": "Formatos: JPG, PNG, JPEG",
       "takePhoto": "Tomar Foto",
@@ -469,11 +562,83 @@
       "saveFailed": "Error al guardar la foto"
     }
   },
+  "professional": {
+    "selectRole": "Seleccionar función",
+    "specialties": "Especialidades",
+    "specialtiesPlaceholder": "Ej: Cardiología, Dermatología", 
+    "specialtiesHelp": "Separar múltiples especialidades con comas",
+    "services": "Servicios",
+    "servicesHelp": "Mantén Ctrl/Cmd presionado para seleccionar múltiples",
+    "crm": "Registro Profesional (CRM)",
+    "crmState": "Estado del CRM",
+    "professionalTitle": "Título Profesional",
+    "department": "Departamento", 
+    "canSignDocuments": "Puede firmar documentos médicos",
+    "role": {
+      "label": "Función Profesional", 
+      "categories": {
+        "beauty": "Belleza",
+        "medical": "Médico",
+        "general": "General"
+      },
+      "types": {
+        "STYLIST": "Peluquero(a)",
+        "BARBER": "Barbero(a)", 
+        "DOCTOR": "Médico General",
+        "SPECIALIST": "Especialista",
+        "NURSE": "Enfermero(a)",
+        "MEDICAL_ASSISTANT": "Asistente Médico",
+        "STANDARD": "Estándar",
+        "ASSISTANT": "Asistente",
+        "RECEPTIONIST": "Recepcionista"
+      }
+    },
+    "medicalData": {
+      "title": "Datos Médicos"
+    }
+  },
+  "common": {
+    "create": "Crear",
+    "cancel": "Cancelar"
+  },
   "collaborator": {
+    "name": "Nombre",
+    "lastName": "Apellido",
+    "lastNameHelp": "Apellido del colaborador",
+    "idNumber": "Documento de Identidad",
+    "idNumberHelp": "Número de documento de identidad del colaborador",
+    "email": "Correo Electrónico",
+    "isProfessional": "Profesional",
+    "hasProfessionalProfile": "Este colaborador tiene un perfil profesional asociado",
+    "viewProfessional": "Ver Perfil Profesional",
+    "createProfessionalProfile": "Crear Perfil Profesional",
+    "createProfessionalHint": "Crea un perfil profesional para que este colaborador pueda ejecutar servicios",
+    "createProfessional": {
+      "title": "Crear Perfil Profesional",
+      "description": "Crea un perfil profesional para que este colaborador pueda ejecutar servicios."
+    },
+    "professional": {
+      "role": "Función Profesional",
+      "selectRole": "Seleccionar función",
+      "specialties": "Especialidades",
+      "specialtiesPlaceholder": "Ej: Cardiología, Dermatología",
+      "specialtiesHelp": "Separar múltiples especialidades con comas",
+      "services": "Servicios",
+      "servicesHelp": "Mantén Ctrl/Cmd presionado para seleccionar múltiples",
+      "crm": "Registro Profesional (CRM)",
+      "crmState": "Estado del CRM",
+      "professionalTitle": "Título Profesional",
+      "department": "Departamento",
+      "canSignDocuments": "Puede firmar documentos médicos",
+      "medicalData": {
+        "title": "Datos Médicos"
+      }
+    },
     "role": {
       "categories": {
         "medical": "Personal Médico",
         "administrative": "Personal Administrativo",
+        "beauty": "Belleza y Estética",
         "general": "Roles Generales"
       },
       "types": {
@@ -483,6 +648,8 @@
         "MEDICAL_ASSISTANT": "Asistente Médico",
         "SECRETARY": "Secretaria",
         "RECEPTIONIST": "Recepcionista",
+        "STYLIST": "Estilista",
+        "BARBER": "Barbero",
         "STANDARD": "Estándar",
         "ASSISTANT": "Asistente",
         "FULL": "Completo"
@@ -866,6 +1033,70 @@
     "allow-attention-without-consents": {
       "title": "Permitir atención sin consentimientos",
       "description": "Permite iniciar/avanzar atención aunque falten consentimientos LGPD requeridos"
+    },
+    "professional-assignment-enabled": {
+      "title": "Asignación de Profesional Habilitada",
+      "description": "Permite asignar un profesional específico a las atenciones y reservas para llevar el registro de quién ejecuta cada servicio"
+    },
+    "professional-commission-enabled": {
+      "title": "Comisiones de Profesional Habilitadas",
+      "description": "Permite calcular y registrar automáticamente las comisiones para los profesionales asignados según su configuración (porcentaje o valor fijo)"
+    },
+    "attention-first-form": {
+      "title": "Form Primera Atención",
+      "description": "Permite al cliente llenar un formulario antes de su primera atención en el comercio."
+    },
+    "attention-pre-form": {
+      "title": "Form Pre Atención",
+      "description": "Permite al cliente llenar un formulario antes de su atención en el comercio."
+    },
+    "email-bookings-terms-conditions": {
+      "title": "Email Acepta Terminos",
+      "description": "Permite al cliente aceptar las condiciones y terminos de serivicio."
+    },
+    "attention-user-health-agreement": {
+      "title": "Form Convenio Salud",
+      "description": "Solicita el Convenio de Salud para obtener número de atención."
+    },
+    "email-post-attention": {
+      "title": "Email Post Atención",
+      "description": "Permite al cliente recibir un email con un documento post atención."
+    },
+    "stock-product-recharge": {
+      "title": "Recarga Stock",
+      "description": "Mensaje Admin para Recarga de Producto en Nivel Bajo."
+    },
+    "attention-stages-enabled": {
+      "title": "Etapas de Atención Habilitadas",
+      "description": "Activa el sistema de etapas para las atenciones (Check-In, Pre-Consulta, Consulta, Post-Consulta, Check-Out)"
+    },
+    "attention-checkout-enabled": {
+      "title": "Check-Out Habilitado",
+      "description": "Activa la etapa de Check-Out en el flujo de atención"
+    },
+    "email-consent-request": {
+      "title": "Email Solicitud Consentimiento",
+      "description": "Envía emails para solicitar consentimientos LGPD pendientes"
+    },
+    "whatsapp-consent-request": {
+      "title": "Whatsapp Solicitud Consentimiento",
+      "description": "Envía mensajes WhatsApp para solicitar consentimientos LGPD pendientes"
+    },
+    "sms-consent-request": {
+      "title": "SMS Solicitud Consentimiento",
+      "description": "Envía SMS para solicitar consentimientos LGPD pendientes"
+    },
+    "allow-attention-without-consents": {
+      "title": "Permitir atención sin consentimientos",
+      "description": "Permite iniciar/avanzar atención aunque falten consentimientos LGPD requeridos"
+    },
+    "professional-assignment-enabled": {
+      "title": "Asignación de Profesional Habilitada",
+      "description": "Permite asignar un profesional específico a las atenciones y reservas para llevar el registro de quién ejecuta cada servicio"
+    },
+    "professional-commission-enabled": {
+      "title": "Comisiones de Profesional Habilitadas",
+      "description": "Permite calcular y registrar automáticamente las comisiones para los profesionales asignados según su configuración (porcentaje o valor fijo)"
     }
   },
   "document": {
@@ -3316,6 +3547,7 @@
     "reports": "Central de Datos",
     "your-plan": "Tu Plan",
     "collaborators-admin": "Colaboradores",
+    "professionals-admin": "Profesionales",
     "permissions-admin": "Permisos",
     "modules-admin": "Módulos",
     "outcome-types-admin": "Tipos de Egreso",
@@ -3357,6 +3589,7 @@
           "modules-admin": "Administrar Módulos",
           "queues-admin": "Administrar Filas",
           "collaborators-admin": "Administrar Colaboradores",
+          "professionals-admin": "Administrar Profesionales",
           "permissions-admin": "Administrar Permisos",
           "administrators-admin": "Administrar Administradores",
           "configuration": "Configuraciones",
@@ -3411,6 +3644,7 @@
     "forms-admin": "Administrar Formularios",
     "plans-master-admin": "Administrar Planes",
     "collaborators-master-admin": "Colaboradores",
+    "professionals-master-admin": "Profesionales",
     "administrators-master-admin": "Administradores",
     "surveys-master-admin": "Encuestas",
     "features-master-admin": "Administrar Permisos",
@@ -3524,9 +3758,12 @@
     "add": "Agregar",
     "service": "Servicio:",
     "services": "Servicios:",
-    "selectCollaborator": "Selecciona Colaborador",
+    "selectCollaborator": "Selecciona Colaborador (Deprecated)",
     "selectService": "Selecciona Servicio",
-    "collaborator": "Colaborador:",
+    "selectProfessional": "Selecciona Profesional",
+    "collaborator": "Colaborador (Deprecated):",
+    "professional": "Profesional:",
+    "professionalRequired": "Debe seleccionar un profesional para esta cola",
     "attentionHour": "Horario de Atención:",
     "attentionDays": "Días de Funcionamiento:",
     "listResult": "Registros:",
@@ -3540,7 +3777,8 @@
     "holidays": "Feriados:",
     "walkin": "Fila sin Reserva (Hoy):",
     "typeHelp": "Tipo de Fila. Seleccione Standard para filas no asociadas ni a Servicios o Colaboradores específicos.",
-    "collaboratorHelp": "Seleccione el colaborador dueño de esta fila. Sólo este puede atenderla.",
+    "collaboratorHelp": "Seleccione el colaborador dueño de esta fila. Sólo este puede atenderla (Deprecated - usar Professional).",
+    "professionalHelp": "Seleccione el profesional dueño de esta fila. Sólo este puede atenderla.",
     "serviceHelp": "Seleccione el servicio de esta fila. Sólo este servicio puede ser atendido en esta fila.",
     "limitHelp": "Límite diario de usuarios para esta fila.",
     "orderHelp": "Esta fila será listada a los usuários en esta posición.",
@@ -3595,6 +3833,7 @@
       "blockTime": "Debes ingresar el bloque (min)",
       "type": "Debe seleccionar el tipo",
       "collaborator": "Debe seleccionar el colaborador",
+      "professional": "Debe seleccionar el profesional",
       "service": "Debe seleccionar el servicio"
     }
   },
@@ -4097,6 +4336,7 @@
       "maxAmount": "Monto Máximo",
       "incomeType": "Tipo de Ingreso",
       "paymentMethod": "Método de Pago",
+      "professional": "Profesional",
       "all": "Todos"
     },
     "projectedCashFlow": "Flujo de Caja Proyectado",
@@ -4643,7 +4883,9 @@
       "phone": "Debes ingresar el teléfono",
       "email": "Debes ingresar el email",
       "module": "Debes seleccionar un módulo",
-      "type": "Debe seleccionar el tipo"
+      "type": "Debe seleccionar el tipo",
+      "role": "Debe seleccionar el rol",
+      "idNumber": "Debes ingresar el documento de identidad"
     }
   },
   "commerceAdmin": {
@@ -7681,6 +7923,218 @@
         "participate": "Participar en chats",
         "start": "Iniciar chats",
         "view": "Ver chats"
+      }
+    }
+  },
+  "professionals": {
+    "title": "Profesionales",
+    "addNew": "Agregar Profesional",
+    "addTitle": "Nuevo Profesional",
+    "editTitle": "Editar Profesional",
+    "name": "Nombre Completo",
+    "nameHelp": "Nombre completo del profesional",
+    "namePlaceholder": "Juan Pérez",
+    "idNumber": "Documento",
+    "idNumberHelp": "Número de documento de identidad",
+    "idNumberPlaceholder": "12345678",
+    "email": "Correo Electrónico",
+    "emailHelp": "Correo electrónico profesional de contacto",
+    "emailPlaceholder": "juan{'@'}example.com",
+    "phone": "Teléfono",
+    "phoneHelp": "Número de teléfono de contacto",
+    "phonePlaceholder": "+521234567890",
+    "type": "Tipo de Profesional",
+    "typeHelp": "Categoría o especialidad profesional",
+    "selectType": "Seleccionar tipo",
+    "license": "Licencia Profesional",
+    "licenseHelp": "Número de colegiado o licencia profesional",
+    "licensePlaceholder": "CRM, CRO, etc.",
+    "services": "Servicios que puede realizar",
+    "servicesHelp": "Selecciona los servicios que este profesional puede ejecutar",
+    "selectService": "Seleccionar servicio",
+    "professional": "Profesional",
+    "isCollaborator": "Usuario del Sistema",
+    "linkedToCollaborator": "Este profesional está vinculado a un colaborador",
+    "viewCollaborator": "Ver Colaborador",
+    "role": "Rol Profesional",
+    "selectRole": "Seleccionar rol",
+    "specialties": "Especialidades",
+    "specialtiesPlaceholder": "Ej: Cardiología, Dermatología",
+    "specialtiesHelp": "Separar múltiples especialidades con comas",
+    "services": "Servicios que puede ejecutar",
+    "servicesHelp": "Mantén presionado Ctrl/Cmd para seleccionar múltiples",
+    "crm": "Registro Profesional (CRM)",
+    "crmState": "Estado del CRM",
+    "professionalTitle": "Título Profesional",
+    "department": "Departamento",
+    "canSignDocuments": "Puede firmar documentos médicos",
+    "digitalSignature": "Firma Digital",
+    "medicalProfessionalInfo": "Información Profesional Médica",
+    "medicalLicense": "Permiso/Colegiatura Médica",
+    "medicalLicenseHelp": "Número de permiso médico o colegiatura",
+    "medicalLicensePlaceholder": "Ej: CRM 123456",
+    "medicalLicenseState": "Estado del Permiso",
+    "medicalLicenseStateHelp": "Estado o provincia donde se emitió el permiso",
+    "medicalLicenseStatePlaceholder": "Ej: Madrid, Barcelona",
+    "specialization": "Especialización",
+    "specializationHelp": "Especialización médica principal",
+    "specializationPlaceholder": "Ej: Cardiología",
+    "subspecialization": "Sub-especialización",
+    "subspecializationHelp": "Sub-especialización adicional",
+    "subspecializationPlaceholder": "Ej: Ecocardiografía",
+    "medicalSchool": "Universidad de Medicina",
+    "medicalSchoolHelp": "Institución donde se graduó",
+    "medicalSchoolPlaceholder": "Ej: Universidad Autónoma de Madrid",
+    "graduationYear": "Año de Graduación",
+    "graduationYearHelp": "Año en que finalizó los estudios de medicina",
+    "graduationYearPlaceholder": "2010",
+    "professionalContact": "Datos de Contacto Profesional",
+    "professionalAddress": "Dirección Profesional",
+    "professionalAddressHelp": "Dirección del consultorio o clínica",
+    "professionalAddressPlaceholder": "Calle ejemplo, 123",
+    "professionalPhone": "Teléfono Profesional",
+    "professionalPhoneHelp": "Teléfono del consultorio o clínica",
+    "professionalPhonePlaceholder": "+34 91 1234567",
+    "professionalMobile": "Móvil Profesional",
+    "professionalMobileHelp": "Teléfono móvil para contacto profesional",
+    "professionalMobilePlaceholder": "+34 600 123456",
+    "professionalEmail": "Correo Profesional",
+    "professionalEmailHelp": "Correo para contacto profesional",
+    "professionalEmailPlaceholder": "contacto{'@'}clinica.com",
+    "emergencyPhone": "Teléfono de Emergencia",
+    "emergencyPhoneHelp": "Teléfono para emergencias médicas",
+    "emergencyPhonePlaceholder": "+34 91 1234567",
+    "clinicData": "Datos de la Clínica",
+    "clinicName": "Nombre de la Clínica",
+    "clinicNameHelp": "Nombre de la clínica u hospital donde trabaja",
+    "clinicNamePlaceholder": "Clínica ejemplo",
+    "clinicAddress": "Dirección de la Clínica",
+    "clinicAddressHelp": "Dirección completa de la clínica",
+    "clinicAddressPlaceholder": "Av. ejemplo, 456",
+    "clinicPhone": "Teléfono de la Clínica",
+    "clinicPhoneHelp": "Teléfono de contacto de la clínica",
+    "clinicPhonePlaceholder": "+34 91 3333333",
+    "practiceConfig": "Configuración de Práctica",
+    "workingHours": "Horarios de Atención",
+    "workingHoursHelp": "Horarios en que atiende el profesional",
+    "workingHoursPlaceholder": "Ej: Lun-Vie 09:00-18:00",
+    "consultationDuration": "Duración de Consulta (min)",
+    "consultationDurationHelp": "Duración promedio de una consulta en minutos",
+    "consultationDurationPlaceholder": "30",
+    "acceptsEmergencies": "Acepta Emergencias",
+    "acceptsEmergenciesHelp": "Si el profesional atiende emergencias",
+    "homeVisits": "Realiza Visitas Domiciliarias",
+    "homeVisitsHelp": "Si el profesional hace atención a domicilio",
+    "telemedicine": "Ofrece Telemedicina",
+    "telemedicineHelp": "Si el profesional ofrece consultas online",
+    "languages": "Idiomas",
+    "languagesHelp": "Idiomas que habla (separar por comas)",
+    "languagesPlaceholder": "Español, Inglés, Francés",
+    "insuranceProviders": "Planes de Salud Aceptados",
+    "insuranceProvidersHelp": "Planes de salud que acepta (separar por comas)",
+    "insuranceProvidersPlaceholder": "Axa, Quirónsalud, Mapfre",
+    "documentConfig": "Configuración de Documentos",
+    "commission": "Comisión",
+    "commissionType": "Tipo de Comisión",
+    "commissionTypeHelp": "Seleccione si la comisión es un porcentaje o valor fijo",
+    "commissionValue": "Valor",
+    "commissionValueHelp": "Valor de la comisión (porcentaje o fijo)",
+    "commissionValuePlaceholder": "0.00",
+    "paymentAccount": "Cuenta de Pago",
+    "paymentAccountHelp": "Número de cuenta bancaria para pagos",
+    "paymentAccountPlaceholder": "Número de cuenta",
+    "selectCommissionType": "Seleccionar tipo",
+    "percentage": "Porcentaje",
+    "fixed": "Fijo",
+    "active": "Activo",
+    "activeHelp": "Profesional activo en el sistema",
+    "available": "Disponible",
+    "availableHelp": "Profesional disponible para citas",
+    "selectProfessional": "Seleccionar profesional",
+    "commissionWillBe": "Comisión sugerida",
+    "noAvailableForService": "No hay profesionales disponibles para este servicio",
+    "searchPlaceholder": "Buscar por nombre o email",
+    "allTypes": "Todos los tipos",
+    "allStatus": "Todos los estados",
+    "activeOnly": "Solo activos",
+    "inactiveOnly": "Solo inactivos",
+    "noResults": "No se encontraron profesionales",
+    "personalInfo": "Información Personal",
+    "professionalInfo": "Información Profesional",
+    "financialInfo": "Información Financiera",
+    "specialties": "Especialidades",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "unavailable": "No disponible"
+    },
+    "types": {
+      "STYLIST": "Estilista",
+      "BARBER": "Barbero",
+      "DOCTOR": "Médico",
+      "DENTIST": "Dentista",
+      "NURSE": "Enfermero/a",
+      "THERAPIST": "Terapeuta",
+      "NUTRITIONIST": "Nutricionista",
+      "VETERINARIAN": "Veterinario/a",
+      "PSYCHOLOGIST": "Psicólogo/a",
+      "OTHER": "Otro"
+    },
+    "commissionTypes": {
+      "PERCENTAGE": "Porcentaje",
+      "FIXED": "Fijo"
+    },
+    "errors": {
+      "nameRequired": "El nombre es requerido",
+      "typeRequired": "El tipo de profesional es requerido",
+      "invalidEmail": "Email inválido",
+      "saveFailed": "Error al guardar el profesional"
+    },
+    "assignProfessional": "Asignar Profesional",
+    "assignedProfessional": "Profesional Asignado",
+    "suggestedCommission": "Comisión sugerida",
+    "calculatedAmount": "Monto Calculado",
+    "commissionWithoutProfessional": "⚠️ Has ingresado una comisión sin asignar un profesional",
+    "professional": "Profesional",
+    "alreadyAssigned": "Profesional ya asignado",
+    "canReplace": "Puede reemplazarlo seleccionando otro"
+  },
+  "businessProfessionalsAdmin": {
+    "title": "Gestión de Profesionales",
+    "professional": "Profesional",
+    "update": "Actualizar",
+    "noProfessional": "N/I",
+    "tooltip": {
+      "professionalActive": "Profesional activo",
+      "professionalInactive": "Profesional inactivo",
+      "professionalEmail": "Email del profesional"
+    },
+    "validate": {
+      "name": "El nombre es requerido",
+      "email": "El email es requerido",
+      "type": "El tipo de profesional es requerido"
+    },
+    "message": {
+      "1": {
+        "title": "Sin permisos",
+        "content": "No tienes permisos para gestionar profesionales"
+      },
+      "2": {
+        "title": "Sin comercio",
+        "content": "Debes seleccionar un comercio para gestionar profesionales"
+      }
+    },
+    "capacitiesList": {
+      "professionals": {
+        "admin": {
+          "view": "Acceder a esta sección",
+          "read": "Ver los Profesionales",
+          "edit": "Editar los Profesionales",
+          "update": "Actualizar los Profesionales",
+          "add": "Adicionar Profesionales",
+          "limit": "Número límite de Profesionales",
+          "unavailable": "Eliminar Profesionales"
+        }
       }
     }
   }

@@ -45,6 +45,7 @@ export default {
       :modules="modules"
       :toggles="toggles"
       :errors="errors"
+      :show-role="true"
       prefix="add-"
       :is-add="true"
     />

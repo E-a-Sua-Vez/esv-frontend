@@ -649,6 +649,7 @@ export default {
         <div id="businessCommercesAdmin">
           <div v-if="isActiveBusiness() && state.toggles['commerces.admin.view']">
             <div v-if="!loading" id="businessCommercesAdmin-result" class="mt-4">
+              <div class="control-box my-4"></div>
               <div>
                 <div v-if="state.commerces.length === 0" class="control-box">
                   <Message
@@ -659,7 +660,7 @@ export default {
                 <div class="row my-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd()"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-commerce`"
@@ -793,6 +794,7 @@ export default {
         </div>
         <div id="businessCommercesAdmin">
           <div v-if="isActiveBusiness() && state.toggles['commerces.admin.view']">
+            <div class="control-box my-4"></div>
             <div v-if="!loading" id="businessCommercesAdmin-result" class="mt-4">
               <div>
                 <div v-if="state.commerces.length === 0" class="control-box">
@@ -804,7 +806,7 @@ export default {
                 <div class="row my-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd()"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-commerce`"
@@ -969,7 +971,7 @@ export default {
                 />
                 <div class="col">
                   <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                     @click="add(state.newCommerce)"
                   >
                     {{ $t('businessCommercesAdmin.add') }} <i class="bi bi-save"></i>

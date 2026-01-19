@@ -1,6 +1,6 @@
 <script>
 import { ref, reactive, onBeforeMount, toRefs, computed, watch } from 'vue';
-import { getPhoneCodes, getCivilStatuses, getSexs } from '../../../shared/utils/data';
+import { getPhoneCodes, getCivilStatuses, getSexs } from '../../../shared/utils/data.ts';
 import { getAddressBR } from '../../../application/services/address';
 import { VueRecaptcha } from 'vue-recaptcha';
 import Warning from '../../../components/common/Warning.vue';

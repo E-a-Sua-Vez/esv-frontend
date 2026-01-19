@@ -19,7 +19,7 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
 import { getQueueByCommerce } from '../../application/services/queue';
-import { getQuestionTypes, getSurveyTypes } from '../../shared/utils/data';
+import { getQuestionTypes, getSurveyTypes } from '../../shared/utils/data.ts';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
@@ -458,7 +458,7 @@ export default {
         </div>
         <div id="businessSurveysAdmin">
           <div v-if="isActiveBusiness && state.toggles['surveys.admin.view']">
-            <div id="businessSurveysAdmin-controls" class="control-box">
+            <div id="businessSurveysAdmin-controls" class="control-box my-4">
               <div class="row">
                 <div v-if="!commerce">
                   <Message
@@ -479,7 +479,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd(survey)"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-survey`"
@@ -663,7 +663,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd(survey)"
                       data-bs-toggle="modal"
                       :data-bs-target="`#add-survey`"
@@ -858,7 +858,7 @@ export default {
                 />
                 <div class="col mt-3">
                   <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                     @click="add(state.newSurvey)"
                   >
                     {{ $t('businessSurveysAdmin.add') }} <i class="bi bi-save"></i>

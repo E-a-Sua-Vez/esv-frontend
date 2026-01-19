@@ -1,7 +1,7 @@
 <script>
 import { ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { getProfilePhotoUrl } from '@/application/services/collaborator';
+import { getProfilePhotoSignedUrl } from '../../application/services/collaborator';
 
 export default {
   name: 'ProfilePhotoUpload',
@@ -16,6 +16,7 @@ export default {
     const fileInputRef = ref(null);
     const uploadedPhoto = ref(null);
     const resolvedPhotoUrl = ref(null);
+    const uploading = ref(false);
 
     const supportedFormats = ['image/jpeg', 'image/png', 'image/webp'];
     const maxFileSize = 5 * 1024 * 1024; // 5MB
@@ -34,32 +35,47 @@ export default {
 
       // Validate file type
       if (!supportedFormats.includes(file.type)) {
-        alert('Formato no válido');
+        alert(t('collaborator.profilePhoto.invalidFormat') || 'Formato no válido');
         return;
       }
 
       // Validate file size
       if (file.size > maxFileSize) {
-        alert('Archivo muy grande');
+        alert(t('collaborator.profilePhoto.fileTooLarge') || 'Archivo muy grande');
         return;
       }
+
+      uploading.value = true;
 
       // Create preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
         uploadedPhoto.value = e.target.result;
 
-        // Emit updated event immediately
+        // Create FormData to send file to backend
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('collaboratorId', props.collaboratorId);
+        formData.append('commerceId', props.commerceId);
+
+        // Emit updated event with FormData
         const updatedCollaborator = {
           id: props.collaboratorId,
           profilePhoto: {
-            file: file,
-            url: e.target.result,
-            filename: file.name
+            file: file, // Keep file reference for validation
+            url: e.target.result, // Preview URL (base64)
+            filename: file.name,
+            formData: formData // Send FormData separately
           }
         };
 
         emit('updated', updatedCollaborator);
+        uploading.value = false;
+      };
+
+      reader.onerror = () => {
+        alert(t('collaborator.profilePhoto.uploadError') || 'Error al leer el archivo');
+        uploading.value = false;
       };
 
       reader.readAsDataURL(file);
@@ -70,17 +86,20 @@ export default {
         // Si ya hay una subida nueva en memoria, no sobreescribir
         if (uploadedPhoto.value) return;
 
-        // Si existe foto previa, intentar obtener URL firmada desde backend
-        const url = await getProfilePhotoUrl(props.collaboratorId);
-        if (url) {
-          resolvedPhotoUrl.value = url;
-        } else {
-          // Mantener posible string/url que venga por props
-          const maybe = props.existingPhoto?.url || props.existingPhoto || null;
-          resolvedPhotoUrl.value = maybe;
+        // Si existe URL de foto, obtener la URL firmada
+        if (props.existingPhoto) {
+          const signedUrl = await getProfilePhotoSignedUrl(props.collaboratorId);
+          if (signedUrl) {
+            resolvedPhotoUrl.value = signedUrl;
+            return;
+          }
         }
+        
+        // Fallback a la prop tal cual
+        const photoUrl = props.existingPhoto?.url || props.existingPhoto || null;
+        resolvedPhotoUrl.value = photoUrl;
       } catch (e) {
-        // fallback a la prop tal cual
+        console.error('Error resolving existing photo:', e);
         resolvedPhotoUrl.value = props.existingPhoto?.url || props.existingPhoto || null;
       }
     };
@@ -93,6 +112,7 @@ export default {
       fileInputRef,
       uploadedPhoto,
       resolvedPhotoUrl,
+      uploading,
       triggerFileSelect,
       handleFileUpload,
     };
@@ -123,12 +143,18 @@ export default {
             type="button"
             class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
             @click="triggerFileSelect"
+            :disabled="uploading"
           >
-            <i class="bi bi-camera me-1"></i>
-            {{ existingPhoto || uploadedPhoto ? $t('collaborator.profilePhoto.update') : $t('collaborator.profilePhoto.upload') }}
+            <i v-if="uploading" class="bi bi-hourglass-split me-1"></i>
+            <i v-else class="bi bi-camera me-1"></i>
+            <span v-if="uploading">{{ $t('collaborator.profilePhoto.uploading') || 'Cargando...' }}</span>
+            <span v-else>{{ existingPhoto || uploadedPhoto ? $t('collaborator.profilePhoto.update') : $t('collaborator.profilePhoto.upload') }}</span>
           </button>
-          <span v-if="uploadedPhoto" class="small text-muted">
+          <span v-if="uploadedPhoto && !uploading" class="small text-muted">
             <i class="bi bi-check-circle text-success"></i>
+          </span>
+          <span v-if="uploading" class="small text-muted">
+            <i class="bi bi-arrow-repeat text-primary"></i>
           </span>
         </div>
         <small class="text-muted">{{ $t('collaborator.profilePhoto.fileFormats') }}</small>

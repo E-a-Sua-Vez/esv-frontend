@@ -115,6 +115,9 @@ export const getAttentionsByStage = async (queueId, stage, commerceId, date) => 
 export const advanceStage = async (id, body) =>
   (await requestBackend.patch(`/${entity}/stage/${id}/advance`, body, await getHeaders())).data;
 
+export const assignProfessional = async (id, professionalId, professionalName) =>
+  (await requestBackend.patch(`/${entity}/${id}/assign-professional`, { professionalId, professionalName }, await getHeaders())).data;
+
 // Track that a collaborator is accessing/managing an attention (optional tracking)
 export const trackAttentionAccess = async (id, collaboratorId) =>
   (

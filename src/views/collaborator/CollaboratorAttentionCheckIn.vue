@@ -139,6 +139,7 @@
                 :client-id="state.client.id"
                 :consents="state.clientConsents"
                 :requirements="state.consentRequirements"
+                :auto-refresh="false"
                 @refresh="loadConsentStatus"
                 @open-manager="openConsentManager"
               />

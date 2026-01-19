@@ -527,6 +527,7 @@ export default {
         </div>
         <div id="businessPdfTemplatesAdmin">
           <div v-if="isActiveBusiness() && state.toggles['pdf-templates.admin.view']">
+            <div class="control-box my-4"></div>
             <div v-if="!loading" id="businessPdfTemplatesAdmin-result" class="mt-4">
               <div>
                 <div v-if="!commerce">
@@ -544,7 +545,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd()"
                       data-bs-toggle="modal"
                       data-bs-target="#add-template"
@@ -831,7 +832,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
                       @click="showAdd()"
                       data-bs-toggle="modal"
                       data-bs-target="#add-template"
@@ -1179,7 +1180,7 @@ export default {
               </div>
               <div class="col mt-3">
                 <button
-                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                   @click="addTemplate"
                 >
                   {{ $t('save') }} <i class="bi bi-save"></i>

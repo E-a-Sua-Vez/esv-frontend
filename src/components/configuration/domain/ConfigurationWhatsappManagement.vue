@@ -17,7 +17,7 @@ import Alert from '../../common/Alert.vue';
 import Warning from '../../common/Warning.vue';
 import SimpleConfigurationCard from '../common/SimpleConfigurationCard.vue';
 import ComponentMenu from '../../common/ComponentMenu.vue';
-import { getPhoneCodes } from '../../../shared/utils/data';
+import { getPhoneCodes } from '../../../shared/utils/data.ts';
 import AreYouSure from '../../common/AreYouSure.vue';
 
 export default {

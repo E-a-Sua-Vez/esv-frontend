@@ -10,7 +10,7 @@ import {
 } from '../../application/services/patient-history-item';
 
 import { getPermissions } from '../../application/services/permissions';
-import { getPatientHistoryItemTypes } from '../../shared/utils/data';
+import { getPatientHistoryItemTypes } from '../../shared/utils/data.ts';
 
 import PatientHistoryItemName from '../../components/common/PatientHistoryItemName.vue';
 import PatientHistoryItemFormEdit from '../../components/patient-history-item/PatientHistoryItemFormEdit.vue';
@@ -398,7 +398,7 @@ function goBack() {
               />
               <div class="col">
                 <button
-                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                   @click="addItem"
                 >
                   {{ $t('businessPatientHistoryItemAdmin.add') }} <i class="bi bi-save"></i>
