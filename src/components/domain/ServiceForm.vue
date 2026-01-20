@@ -76,7 +76,7 @@ export default {
     const isActiveCommerce = () => commerce.value.active === true;
 
     const isActiveQueues = () =>
-      ['COLLABORATOR', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.value.type) &&
+      ['PROFESSIONAL', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.value.type) &&
       queue.value.services;
 
     const checkService = (event, service) => {
@@ -243,6 +243,7 @@ export default {
   },
 };
 </script>
+
 <template>
   <div>
     <div id="queues" v-if="isActiveCommerce() && isActiveQueues() && !loading" class="mb-2">
@@ -412,6 +413,7 @@ export default {
     </div>
   </div>
 </template>
+
 <style scoped>
 .choose-attention {
   padding-bottom: 1rem;

@@ -57,7 +57,8 @@ export default {
       queue: {},
       queues: [],
       groupedQueues: [],
-      collaborator: {},
+      collaborator: {}, // Keep for backward compatibility, but use professional for filtering
+      professional: {}, // Professional data for queue filtering
       activeCommerce: false,
       captcha: false,
       locale: 'es',
@@ -84,7 +85,7 @@ export default {
       recentAttentions: [],
       showAttentions: false,
       loadingStats: false,
-      collaboratorQueues: [], // Queues specific to this collaborator
+      professionalQueues: [], // Queues specific to this professional (was collaboratorQueues)
       todayAttentionsSubscription: null, // Firebase subscription for today's attentions
       todayAttentionsWatcher: null, // Watcher stop function for today's attentions
     });
@@ -111,9 +112,27 @@ export default {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
         state.collaborator = state.currentUser;
+
+        // Load professional data if exists (collaborator with isProfessional = true)
         if (!state.collaborator || !state.collaborator.id) {
           state.collaborator = await getCollaboratorById(state.currentUser.id);
         }
+
+        // If collaborator has a professional association, load professional data
+        if (state.collaborator && state.collaborator.professionalId) {
+          try {
+            const { getProfessionalById } = await import('../../application/services/professional');
+            state.professional = await getProfessionalById(state.collaborator.professionalId);
+          } catch (error) {
+            console.warn('Could not load professional data, falling back to collaborator', error);
+            // Fallback: use collaborator for filtering if professional load fails
+            state.professional = state.collaborator;
+          }
+        } else {
+          // Fallback: use collaborator for filtering
+          state.professional = state.collaborator;
+        }
+
         // Set initial commerce if not set - check both commerceId and commercesId
         if (!commerce.value || !commerce.value.id) {
           // First try commerceId (single commerce)
@@ -146,7 +165,7 @@ export default {
         // Set up Firebase subscription for today's attentions
         setupTodayAttentionsSubscription();
         // Load dashboard stats after queues are loaded
-        if (commerce.value && commerce.value.id && state.collaborator && state.collaborator.id) {
+        if (commerce.value && commerce.value.id && state.professional && state.professional.id) {
           await loadDashboardStats();
         }
         alertError.value = '';
@@ -187,7 +206,7 @@ export default {
           // Set up Firebase subscription for today's attentions
           setupTodayAttentionsSubscription();
           // Reload dashboard stats after queues are loaded
-          if (newCommerce && newCommerce.id && state.collaborator && state.collaborator.id) {
+          if (newCommerce && newCommerce.id && state.professional && state.professional.id) {
             await loadDashboardStats();
           }
           alertError.value = '';
@@ -216,8 +235,8 @@ export default {
             if (
               commerce.value &&
               commerce.value.id &&
-              state.collaborator &&
-              state.collaborator.id
+              state.professional &&
+              state.professional.id
             ) {
               await loadDashboardStats();
             }
@@ -253,21 +272,23 @@ export default {
       ) {
         state.groupedQueues = await getGroupedQueueByCommerceId(commerce.value.id);
 
-        const hasGroupedCollaboratorQueues =
+        // Check for COLLABORATOR type group (queues assigned to collaborators/professionals)
+        const hasGroupedProfessionalQueues =
           state.groupedQueues &&
           Array.isArray(state.groupedQueues['COLLABORATOR']) &&
           state.groupedQueues['COLLABORATOR'].length > 0;
 
-        if (hasGroupedCollaboratorQueues && state.collaborator.type === 'STANDARD') {
-          const collaboratorGroup = state.groupedQueues['COLLABORATOR'] || [];
-          const collaboratorQueues = collaboratorGroup.filter(
-            queue => queue.collaboratorId === state.collaborator.id
+        if (hasGroupedProfessionalQueues && state.collaborator.type === 'STANDARD') {
+          const professionalGroup = state.groupedQueues['COLLABORATOR'] || [];
+          // Filter queues assigned to this professional by professionalId
+          const professionalQueues = professionalGroup.filter(
+            queue => queue.professionalId === state.professional.id
           );
 
-          state.collaboratorQueues = collaboratorQueues;
+          state.professionalQueues = professionalQueues;
 
           const otherQueues = currentQueues.filter(queue => queue.type !== 'COLLABORATOR');
-          const queues = [...collaboratorQueues, ...otherQueues];
+          const queues = [...professionalQueues, ...otherQueues];
           state.queues = queues;
           return;
         }
@@ -276,27 +297,27 @@ export default {
           const otherQueues = currentQueues.filter(queue => queue.type !== 'COLLABORATOR');
           const queues = [...otherQueues];
           state.queues = queues;
-          state.collaboratorQueues = [];
+          state.professionalQueues = [];
           return;
         }
 
         // Fallback: even with grouped queues enabled, if there is no
-        // explicit COLLABORATOR group, derive collaborator queues from all queues
-        state.collaboratorQueues = currentQueues.filter(
-          queue => queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator.id
+        // explicit PROFESSIONAL group, derive professional queues from all queues
+        state.professionalQueues = currentQueues.filter(
+          queue => queue.type === 'PROFESSIONAL' && queue.professionalId === state.professional.id
         );
       } else {
-        // If not using grouped queues, filter collaborator queues from all queues
-        state.collaboratorQueues = currentQueues.filter(
-          queue => queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator.id
+        // If not using grouped queues, filter professional queues from all queues
+        state.professionalQueues = currentQueues.filter(
+          queue => queue.type === 'PROFESSIONAL' && queue.professionalId === state.professional.id
         );
       }
     };
 
-    // Get collaborator queue IDs for filtering bookings
-    const getCollaboratorQueueIds = () => {
-      if (state.collaboratorQueues && state.collaboratorQueues.length > 0) {
-        return state.collaboratorQueues.map(queue => queue.id);
+    // Get professional queue IDs for filtering bookings
+    const getProfessionalQueueIds = () => {
+      if (state.professionalQueues && state.professionalQueues.length > 0) {
+        return state.professionalQueues.map(queue => queue.id);
       }
       return [];
     };
@@ -326,8 +347,8 @@ export default {
         return;
       }
 
-      const collaboratorQueueIds = getCollaboratorQueueIds();
-      if (collaboratorQueueIds.length === 0) {
+      const professionalQueueIds = getProfessionalQueueIds();
+      if (professionalQueueIds.length === 0) {
         state.stats.todayCount = 0;
         return;
       }
@@ -345,14 +366,14 @@ export default {
             return;
           }
 
-          // Filter by collaborator queue IDs and today's date
+          // Filter by professional queue IDs and today's date
           const today = new Date();
           today.setHours(0, 0, 0, 0);
           const todayStr = new DateModel().toString(); // Format: YYYY-MM-DD
 
           const filteredAttentions = attentions.filter(attention => {
             // Filter by queue ID
-            if (!collaboratorQueueIds.includes(attention.queueId)) {
+            if (!professionalQueueIds.includes(attention.queueId)) {
               return false;
             }
 
@@ -404,12 +425,12 @@ export default {
       );
     };
 
-    // Load dashboard stats filtered by collaborator queues
+    // Load dashboard stats filtered by professional queues
     const loadDashboardStats = async () => {
-      if (!state.collaborator || !state.collaborator.id) return;
+      if (!state.professional || !state.professional.id) return;
 
       // Build commerceIds list from collaborator relations (all commerces where
-      // this collaborator attends), defaulting to current commerce when needed.
+      // this professional attends), defaulting to current commerce when needed.
       let commerceIds = [];
       if (state.collaborator.commercesId && state.collaborator.commercesId.length > 0) {
         commerceIds = [...state.collaborator.commercesId];
@@ -427,9 +448,9 @@ export default {
         }
       }
 
-      const collaboratorQueueIds = getCollaboratorQueueIds();
-      if (collaboratorQueueIds.length === 0) {
-        // If no collaborator queues, reset stats
+      const professionalQueueIds = getProfessionalQueueIds();
+      if (professionalQueueIds.length === 0) {
+        // If no professional queues, reset stats
         state.stats = {
           todayCount: 0,
           pendingCount: 0,
@@ -451,8 +472,8 @@ export default {
         // Note: todayCount is now updated by Firebase subscription, so we don't need to fetch it here
         // But we still fetch other stats
 
-        // Get pending bookings for all collaborator queues across collaborator commerces
-        const pendingBookingsPromises = collaboratorQueueIds.map(queueId =>
+        // Get pending bookings for all professional queues across collaborator commerces
+        const pendingBookingsPromises = professionalQueueIds.map(queueId =>
           getBookingsDetails(
             commerce.value?.id || commerceIds[0],
             today,
@@ -471,8 +492,8 @@ export default {
         const allPendingBookings = pendingBookingsArrays.flat().filter(Boolean);
         state.stats.pendingCount = allPendingBookings.length;
 
-        // Get upcoming week bookings for all collaborator queues across collaborator commerces
-        const upcomingBookingsPromises = collaboratorQueueIds.map(queueId =>
+        // Get upcoming week bookings for all professional queues across collaborator commerces
+        const upcomingBookingsPromises = professionalQueueIds.map(queueId =>
           getBookingsDetails(
             commerce.value?.id || commerceIds[0],
             today,
@@ -489,8 +510,8 @@ export default {
         const allUpcomingBookings = upcomingBookingsArrays.flat().filter(Boolean);
         state.stats.upcomingWeekCount = allUpcomingBookings.length;
 
-        // Get confirmed bookings for all collaborator queues across collaborator commerces
-        const confirmedBookingsPromises = collaboratorQueueIds.map(queueId =>
+        // Get confirmed bookings for all professional queues across collaborator commerces
+        const confirmedBookingsPromises = professionalQueueIds.map(queueId =>
           getBookingsDetails(
             commerce.value?.id || commerceIds[0],
             today,
@@ -509,8 +530,8 @@ export default {
         const allConfirmedBookings = confirmedBookingsArrays.flat().filter(Boolean);
         state.stats.totalActiveCount = allPendingBookings.length + allConfirmedBookings.length;
 
-        // Get recent bookings (last 5) from all collaborator queues across collaborator commerces
-        const recentBookingsPromises = collaboratorQueueIds.map(queueId =>
+        // Get recent bookings (last 5) from all professional queues across collaborator commerces
+        const recentBookingsPromises = professionalQueueIds.map(queueId =>
           getBookingsDetails(
             commerce.value?.id || commerceIds[0],
             new DateModel().substractDays(7).toString(),
@@ -541,8 +562,8 @@ export default {
 
     const viewTodayBookings = async () => {
       if (!commerce.value || !commerce.value.id) return;
-      const collaboratorQueueIds = getCollaboratorQueueIds();
-      if (collaboratorQueueIds.length === 0) {
+      const professionalQueueIds = getProfessionalQueueIds();
+      if (professionalQueueIds.length === 0) {
         state.recentAttentions = [];
         state.recentBookings = [];
         state.showAttentions = true;
@@ -553,9 +574,9 @@ export default {
         loading.value = true;
         const today = new DateModel().toString();
 
-        // Get today's attentions for all collaborator queues (not bookings)
+        // Get today's attentions for all professional queues (not bookings)
         // Use getAttentionsDetails to get all attentions (not just pending) for today
-        const todayAttentionsPromises = collaboratorQueueIds.map(async queueId => {
+        const todayAttentionsPromises = professionalQueueIds.map(async queueId => {
           try {
             const attentions = await getAttentionsDetails(
               commerce.value.id,
@@ -715,8 +736,8 @@ export default {
 
     const viewPendingBookings = async () => {
       if (!commerce.value || !commerce.value.id) return;
-      const collaboratorQueueIds = getCollaboratorQueueIds();
-      if (collaboratorQueueIds.length === 0) return;
+      const professionalQueueIds = getProfessionalQueueIds();
+      if (professionalQueueIds.length === 0) return;
 
       try {
         loading.value = true;
@@ -727,8 +748,8 @@ export default {
         const endOfMonth = new DateModel().endOfMonth().toString();
         const allPendingBookings = [];
 
-        // Get pending bookings for all collaborator queues
-        const pendingBookingsPromises = collaboratorQueueIds.map(queueId =>
+        // Get pending bookings for all professional queues
+        const pendingBookingsPromises = professionalQueueIds.map(queueId =>
           getBookingsDetails(
             commerce.value.id,
             today,

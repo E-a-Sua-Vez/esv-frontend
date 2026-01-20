@@ -124,7 +124,7 @@ export const getPaymentMethods = () => {
 export const getQueueTypes = () => {
   return [
     { id: 'STANDARD', name: 'STANDARD' },
-    { id: 'COLLABORATOR', name: 'COLLABORATOR' },
+    { id: 'PROFESSIONAL', name: 'PROFESSIONAL' },
     { id: 'SERVICE', name: 'SERVICE' },
     { id: 'MULTI_SERVICE', name: 'MULTI_SERVICE' },
     { id: 'SELECT_SERVICE', name: 'SELECT_SERVICE' },

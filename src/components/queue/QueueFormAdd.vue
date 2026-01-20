@@ -13,7 +13,7 @@ export default {
     errors: { type: Object, default: () => ({}) },
     commerce: { type: Object, default: null },
   },
-  emits: ['update:modelValue'],
+  emits: ['update:modelValue', 'type-changed'],
   computed: {
     newQueue: {
       get() {
@@ -43,6 +43,7 @@ export default {
         timeError: errors.timeError,
       }"
       prefix="add-"
+      @type-changed="$emit('type-changed', $event)"
     />
   </div>
 </template>

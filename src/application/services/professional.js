@@ -133,3 +133,14 @@ export const getProfessionalForMedicalDocuments = async (professionalId) =>
       await getHeaders()
     )
   ).data;
+
+/**
+ * Obtener profesional por collaborador ID
+ */
+export const getProfessionalByCollaboratorId = async (collaboratorId) =>
+  (
+    await requestBackend.get(
+      `/${entity}/by-collaborator/${collaboratorId}`,
+      await getHeaders()
+    )
+  ).data;

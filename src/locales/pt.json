@@ -96,6 +96,7 @@
     "user": "Usuário:",
     "lastSignIn": "Última Coneção:",
     "markAsRead": "Marcar tudo como lido",
+    "professionalProfile": "Perfil Profissional",
     "message": {
       "1": {
         "title": "Caixa Vazia",
@@ -154,7 +155,7 @@
   "queues": {
     "types": {
       "STANDARD": "Standard",
-      "COLLABORATOR": "Colaborador",
+      "PROFESSIONAL": "Profissional",
       "SERVICE": "Serviço",
       "MULTI_SERVICE": "Múltiples Serviços",
       "SELECT_SERVICE": "Selecionar Serviço"
@@ -529,28 +530,48 @@
   },
   "professional": {
     "selectRole": "Selecionar função",
-    "specialties": "Especialidades", 
+    "specialties": "Especialidades",
     "specialtiesPlaceholder": "Ex: Cardiologia, Dermatologia",
     "specialtiesHelp": "Separar múltiplas especialidades com vírgulas",
     "services": "Serviços",
     "servicesHelp": "Mantenha Ctrl/Cmd pressionado para selecionar múltiplos",
     "crm": "Registro Profissional (CRM)",
     "crmState": "Estado do CRM",
-    "professionalTitle": "Título Profissional", 
+    "professionalTitle": "Título Profissional",
     "department": "Departamento",
     "canSignDocuments": "Pode assinar documentos médicos",
+    "profile": {
+      "title": "Perfil Profissional",
+      "personalInfo": "Informações Pessoais",
+      "name": "Nome",
+      "email": "Email",
+      "phone": "Telefone",
+      "document": "Documento",
+      "professionalInfo": "Informações Profissionais",
+      "crm": "CRM",
+      "specialties": "Especialidades",
+      "role": "Função",
+      "medicalData": "Dados Médicos",
+      "acceptsEmergencies": "Aceita Emergências",
+      "homeVisits": "Realiza Visitas Domiciliares",
+      "telemedicine": "Atendimento Telemedicina",
+      "canSignDocuments": "Pode Assinar Documentos",
+      "noProfessional": "Nenhum perfil profissional disponível",
+      "notFound": "Perfil profissional não encontrado. Entre em contato com o suporte se você achar que isso é um erro.",
+      "loadError": "Erro ao carregar o perfil profissional. Por favor tente novamente."
+    },
     "role": {
       "label": "Função Profissional",
       "categories": {
         "beauty": "Beleza",
-        "medical": "Médico", 
+        "medical": "Médico",
         "general": "Geral"
       },
       "types": {
         "STYLIST": "Cabeleireiro(a)",
         "BARBER": "Barbeiro(a)",
         "DOCTOR": "Médico Geral",
-        "SPECIALIST": "Especialista", 
+        "SPECIALIST": "Especialista",
         "NURSE": "Enfermeiro(a)",
         "MEDICAL_ASSISTANT": "Assistente Médico",
         "STANDARD": "Padrão",
@@ -2067,7 +2088,7 @@
     "selectQueue": "Selecione a fila e a data no calendário",
     "manageAll": "Monitore todas as Agendas:",
     "queues": "Filas Gerais/Serviços",
-    "collaboratorQueues": "Filas Colaborador",
+    "collaboratorQueues": "Filas Profissional",
     "allQueues": "Todas",
     "or": "Ou",
     "searchClient": "Pesquisar Cliente",

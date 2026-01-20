@@ -326,15 +326,6 @@ const userRole = computed(() => {
   let role = 'collaborator';
   if (user.master) role = 'master';
   else if (user.businessId) role = 'administrator';
-
-  console.log('[DEBUG MessageInbox] userRole computed:', {
-    user: user,
-    role: role,
-    master: user.master,
-    businessId: user.businessId,
-    commerceId: user.commerceId
-  });
-
   return role;
 });
 

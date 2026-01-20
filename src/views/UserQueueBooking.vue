@@ -80,11 +80,6 @@ export default {
         state.formsPersonalized = await getFormPersonalizedByCommerceId(state.commerce.id);
         await getFormCompleted();
         state.toggles = await getPermissions('user');
-        console.log('[UserQueueBooking] Loaded booking/commerce/toggles', {
-          commerceId: state.commerce?.id,
-          features: state.commerce?.features,
-          toggles: state.toggles,
-        });
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -99,12 +94,6 @@ export default {
         'booking-whatsapp-confirm',
         'WHATSAPP',
       );
-
-      console.log('[UserQueueBooking] hasWhatsappReminderFeature', {
-        commerceId: state.commerce?.id,
-        whatsappFeatureActive,
-        toggles: state.toggles,
-      });
 
       return !!whatsappFeatureActive;
     });

@@ -85,7 +85,7 @@ export default {
       activeBusiness: false,
       queues: ref([]),
       services: ref({}),
-      professionals: ref({}),
+      professionals: ref([]),
       types: [],
       showAdd: false,
       goToUnavailable: false,
@@ -96,6 +96,7 @@ export default {
         blockTime: 0,
         active: true,
         online: true,
+        tag: '',
         telemedicineEnabled: false,
         presentialEnabled: true,
         serviceInfo: {
@@ -166,24 +167,29 @@ export default {
       }
     };
 
-    // Load queues, services, and collaborators when commerce changes
+    // Load queues, services, and professionals when commerce changes
     const loadCommerceData = async commerceId => {
       if (!commerceId) {
         state.queues = [];
         state.services = {};
-        state.professionals = {};
+        state.professionals = [];
         state.filtered = [];
         return;
       }
       try {
+        console.log('[BusinessQueuesAdmin] Loading commerce data for commerceId:', commerceId);
         state.queues = await getQueuesByCommerceId(commerceId);
+        console.log('[BusinessQueuesAdmin] Loaded queues:', state.queues);
         state.services = await getActiveServicesByCommerceId(commerceId);
+        console.log('[BusinessQueuesAdmin] Loaded services:', state.services);
         state.professionals = await getProfessionalsByCommerce(commerceId);
+        console.log('[BusinessQueuesAdmin] Loaded professionals:', state.professionals);
         state.filtered = state.queues;
       } catch (error) {
+        console.error('[BusinessQueuesAdmin] Error loading commerce data:', error);
         state.queues = [];
         state.services = {};
-        state.professionals = {};
+        state.professionals = [];
         state.filtered = [];
       }
     };
@@ -199,7 +205,7 @@ export default {
             state.queues = [];
             state.filtered = [];
             state.services = {};
-            state.professionals = {};
+            state.professionals = [];
             // Load features for commerce
             await loadCommerceFeatures(newCommerce);
             await loadCommerceData(newCommerce.id);
@@ -266,7 +272,7 @@ export default {
         state.typeError = false;
       }
       if (queue.type) {
-        if (queue.type === 'COLLABORATOR' && !queue.professionalId) {
+        if (queue.type === 'PROFESSIONAL' && !queue.professionalId) {
           state.errorsAdd.push('businessQueuesAdmin.validate.professional');
         }
         if (queue.type === 'SERVICE' && (!queue.servicesId || queue.servicesId.length === 0)) {
@@ -559,7 +565,7 @@ export default {
     const selectProfessional = (queue, professional) => {
       if (queue !== undefined && professional !== undefined && professional.id !== undefined) {
         queue.professionalId = professional.id;
-        queue.tag = `${professional.email || professional.name}`;
+        queue.tag = `${professional.personalInfo?.email || professional.personalInfo?.name}`;
         state.selectedProfessional = professional;
       }
     };
@@ -576,18 +582,30 @@ export default {
 
     const selectType = (queue, type) => {
       if (queue) {
-        if (type === 'COLLABORATOR') {
+        console.log('[BusinessQueuesAdmin] selectType called with type:', type);
+        const typeId = typeof type === 'string' ? type : type.id;
+        console.log('[BusinessQueuesAdmin] typeId:', typeId);
+
+        if (typeId === 'PROFESSIONAL') {
           queue.servicesId = undefined;
-          queue.type = type.name;
+          queue.type = typeId;
         }
-        if (type === 'SERVICE') {
+        if (typeId === 'SERVICE') {
           queue.professionalId = undefined;
-          queue.type = type.name;
+          queue.type = typeId;
         }
-        if (type === 'MULTILPLE_SERVICE') {
+        if (typeId === 'MULTI_SERVICE') {
           queue.professionalId = undefined;
-          queue.type = type.name;
+          queue.type = typeId;
         }
+        console.log('[BusinessQueuesAdmin] queue.type after selectType:', queue.type);
+      }
+    };
+
+    const onAddQueueTypeChanged = (event) => {
+      console.log('[BusinessQueuesAdmin] onAddQueueTypeChanged called with event:', event);
+      if (event && event.queue) {
+        selectType(event.queue, event.type);
       }
     };
 
@@ -763,6 +781,7 @@ export default {
         blockTime: 0,
         active: true,
         online: true,
+        tag: '',
         telemedicineEnabled: false, // Default to false for backward compatibility
         presentialEnabled: true, // Default to true for backward compatibility
         serviceInfo: {
@@ -875,6 +894,7 @@ export default {
       selectProfessional,
       selectService,
       selectType,
+      onAddQueueTypeChanged,
       unavailable,
       goToUnavailable,
       unavailableCancel,
@@ -1951,9 +1971,10 @@ export default {
                       timeError: state.timeAddError,
                       errorsAdd: state.errorsAdd,
                     }"
+                    @type-changed="onAddQueueTypeChanged"
                   />
                   <div class="form-fields-container">
-                    <div v-if="state.newQueue.type === 'COLLABORATOR'" class="form-group-modern">
+                    <div v-if="state.newQueue.type === 'PROFESSIONAL'" class="form-group-modern">
                       <label class="form-label-modern">
                         {{ $t('businessQueuesAdmin.selectProfessional') }}
                         <Popper
@@ -1976,7 +1997,7 @@ export default {
                             style="text-align: left; cursor: pointer"
                           >
                             {{
-                              state.selectedProfessional.name ||
+                              state.selectedProfessional.personalInfo?.name ||
                               $t('businessQueuesAdmin.selectProfessional')
                             }}
                           </button>
@@ -1993,10 +2014,10 @@ export default {
                               >
                                 <div class="col-12">
                                   <div>
-                                    <span class="item-title fw-bold"> {{ prof.name }} </span>
+                                    <span class="item-title fw-bold"> {{ prof.personalInfo?.name }} </span>
                                   </div>
                                   <div v-if="prof !== undefined">
-                                    <span class="item-subtitle text-break"> {{ prof.email }} </span>
+                                    <span class="item-subtitle text-break"> {{ prof.personalInfo?.email }} </span>
                                   </div>
                                 </div>
                               </div>

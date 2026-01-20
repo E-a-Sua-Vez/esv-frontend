@@ -21,8 +21,8 @@ import {
   bookingBlockNumberUsedCollection,
 } from '../application/firebase';
 import { ATTENTION_STATUS, BOOKING_STATUS } from '../shared/constants';
+import { getProfessionalsByCommerce } from '../application/services/professional';
 import {
-  getDetailsCollaboratorsByCommerceId,
   getCollaboratorDetailsById,
 } from '../application/services/collaborator';
 import Message from '../components/common/Message.vue';
@@ -287,7 +287,7 @@ export default {
             }
           }
           const [collaborators, groupedQueues] = await Promise.all([
-            getDetailsCollaboratorsByCommerceId(state.commerce.id),
+            getProfessionalsByCommerce(state.commerce.id),
             getGroupedQueueByCommerceId(state.commerce.id),
           ]);
           if ((queueId && queueId !== 'undefined') || (queue && queue !== undefined)) {

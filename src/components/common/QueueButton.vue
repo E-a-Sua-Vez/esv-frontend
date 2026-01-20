@@ -125,7 +125,7 @@ export default {
                 </Popper>
               </div>
               <div
-                v-if="['SERVICE', 'MULTI_SERVICE', 'COLLABORATOR'].includes(queue.type)"
+                v-if="['SERVICE', 'MULTI_SERVICE', 'PROFESSIONAL'].includes(queue.type)"
                 class="professional-services"
               >
                 <i class="bi bi-tag-fill service-icon"></i>
@@ -140,7 +140,7 @@ export default {
               <div
                 class="professional-duration"
                 v-if="
-                  !['COLLABORATOR', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.type) &&
+                  !['PROFESSIONAL', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.type) &&
                   (queue.blockTime || queue.estimatedTime)
                 "
               >

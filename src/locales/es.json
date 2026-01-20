@@ -97,6 +97,7 @@
     "user": "Usuario:",
     "lastSignIn": "Última Conexión:",
     "markAsRead": "Marcar todos como leídos",
+    "professionalProfile": "Perfil Profesional",
     "message": {
       "1": {
         "title": "Buzón Vacío",
@@ -155,7 +156,7 @@
   "queues": {
     "types": {
       "STANDARD": "Standard",
-      "COLLABORATOR": "Colaborador",
+      "PROFESSIONAL": "Profesional",
       "SERVICE": "Servicio",
       "MULTI_SERVICE": "Múltiples Servicios",
       "SELECT_SERVICE": "Seleccionar Servicio"
@@ -565,25 +566,59 @@
   "professional": {
     "selectRole": "Seleccionar función",
     "specialties": "Especialidades",
-    "specialtiesPlaceholder": "Ej: Cardiología, Dermatología", 
+    "specialtiesPlaceholder": "Ej: Cardiología, Dermatología",
     "specialtiesHelp": "Separar múltiples especialidades con comas",
     "services": "Servicios",
     "servicesHelp": "Mantén Ctrl/Cmd presionado para seleccionar múltiples",
     "crm": "Registro Profesional (CRM)",
     "crmState": "Estado del CRM",
     "professionalTitle": "Título Profesional",
-    "department": "Departamento", 
+    "department": "Departamento",
     "canSignDocuments": "Puede firmar documentos médicos",
-    "role": {
-      "label": "Función Profesional", 
-      "categories": {
+    "profile": {
+      "title": "Perfil Profesional",
+      "personalInfo": "Información Personal",
+      "name": "Nombre",
+      "email": "Email",
+      "phone": "Teléfono",
+      "document": "Documento",
+      "professionalInfo": "Información Profesional",
+      "crm": "CRM",
+      "specialties": "Especialidades",
+      "role": "Función",
+      "medicalData": "Datos Médicos",
+      "acceptsEmergencies": "Acepta Emergencias",
+      "homeVisits": "Realiza Visitas a Domicilio",
+      "telemedicine": "Atención Telemedicina",
+      "canSignDocuments": "Puede Firmar Documentos",
+      "noProfessional": "No hay perfil profesional disponible",
+      "notFound": "Perfil profesional no encontrado. Por favor contacta a soporte si crees que esto es un error.",
+      "loadError": "Error al cargar el perfil profesional. Por favor intenta de nuevo."
+    },
+    "professional": {
+      "role": "Función Profesional",
+      "selectRole": "Seleccionar función",
+      "specialties": "Especialidades",
+      "specialtiesPlaceholder": "Ej: Cardiología, Dermatología",
+      "specialtiesHelp": "Separar múltiples especialidades con comas",
+      "services": "Servicios",
+      "servicesHelp": "Mantén Ctrl/Cmd presionado para seleccionar múltiples",
+      "crm": "Registro Profesional (CRM)",
+      "crmState": "Estado del CRM",
+      "professionalTitle": "Título Profesional",
+      "department": "Departamento",
+      "canSignDocuments": "Puede firmar documentos médicos",
+      "medicalData": {
+        "title": "Datos Médicos"
+      },
+      "roleName": {
         "beauty": "Belleza",
         "medical": "Médico",
         "general": "General"
       },
       "types": {
         "STYLIST": "Peluquero(a)",
-        "BARBER": "Barbero(a)", 
+        "BARBER": "Barbero(a)",
         "DOCTOR": "Médico General",
         "SPECIALIST": "Especialista",
         "NURSE": "Enfermero(a)",
@@ -592,9 +627,6 @@
         "ASSISTANT": "Asistente",
         "RECEPTIONIST": "Recepcionista"
       }
-    },
-    "medicalData": {
-      "title": "Datos Médicos"
     }
   },
   "common": {
@@ -1842,7 +1874,7 @@
     "bookings": "Reservas",
     "waitlists": "Lista de Espera",
     "queues": "Filas Generales/Servicios",
-    "collaboratorQueues": "Filas Colaborador",
+    "collaboratorQueues": "Filas Profesional",
     "allQueues": "Todas",
     "hours": "Horas",
     "selectQueue": "Seleccione una fila y fecha en el calendario",

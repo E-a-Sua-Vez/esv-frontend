@@ -197,21 +197,6 @@ export function useMessageInbox() {
 
           inboxMessages.value = updated;
           chatUnreadCount.value = chatUnreads;
-          try {
-            if (import.meta.env && import.meta.env.DEV) {
-              console.groupCollapsed('[Inbox] Chat snapshot (recipient)');
-              console.log('recipientId listener:', recipientId);
-              console.log('chatUnreadCount:', chatUnreadCount.value);
-              console.table(chatDebug.map(m => ({
-                id: m.id,
-                conversationId: m.conversationId,
-                read: m.read,
-                status: m.status,
-                createdAt: m.createdAt,
-              })));
-              console.groupEnd();
-            }
-          } catch (_) {}
           mergeMessages();
         },
         _err => {

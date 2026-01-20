@@ -15,7 +15,7 @@ export default {
     isAdd: { type: Boolean, default: false },
     commerce: { type: Object, default: null },
   },
-  emits: ['update:modelValue'],
+  emits: ['update:modelValue', 'type-changed'],
   computed: {
     queue: {
       get() {
@@ -77,6 +77,7 @@ export default {
         class="form-control-modern form-select-modern"
         :class="{ 'is-invalid': errors.typeError }"
         v-model="queue.type"
+        @change="$emit('type-changed', { queue, type: queue.type })"
       >
         <option v-for="typ in types" :key="typ.id" :value="typ.id">
           {{ $t(`queues.types.${typ.id}`) }}

@@ -98,6 +98,7 @@
     "user": "User:",
     "lastSignIn": "Last Connection:",
     "markAsRead": "Mark all as read",
+    "professionalProfile": "Professional Profile",
     "message": {
       "1": {
         "title": "Empty Mailbox",
@@ -152,7 +153,7 @@
   "queues": {
     "types": {
       "STANDARD": "Standard",
-      "COLLABORATOR": "Collaborator",
+      "PROFESSIONAL": "Professional",
       "SERVICE": "Service",
       "MULTI_SERVICE": "Multiple Services",
       "SELECT_SERVICE": "Select Service"
@@ -598,6 +599,26 @@
         "insurancePlaceholder": "List accepted insurances",
         "insuranceHelp": "Separate insurances with commas"
       }
+    },
+    "profile": {
+      "title": "Professional Profile",
+      "personalInfo": "Personal Information",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "document": "Document",
+      "professionalInfo": "Professional Information",
+      "crm": "CRM",
+      "specialties": "Specialties",
+      "role": "Role",
+      "medicalData": "Medical Data",
+      "acceptsEmergencies": "Accepts Emergencies",
+      "homeVisits": "Home Visits",
+      "telemedicine": "Telemedicine",
+      "canSignDocuments": "Can Sign Documents",
+      "noProfessional": "No professional profile available",
+      "notFound": "Professional profile not found. Please contact support if you believe this is an error.",
+      "loadError": "Error loading professional profile. Please try again."
     }
   },
   "documents": {
@@ -1838,7 +1859,7 @@
     "bookings": "Bookings",
     "waitlists": "Waitlist",
     "queues": "General Queues/Services",
-    "collaboratorQueues": "Collaborator Queues",
+    "collaboratorQueues": "Professional Queues",
     "allQueues": "All",
     "hours": "Hours",
     "attentions": "Attentions (Today)",

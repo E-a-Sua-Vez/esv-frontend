@@ -49,85 +49,96 @@ export default {
       try {
         loading.value = true;
         if (queues.value && queues.value.length > 0) {
-          const collaboratorQueues = queues.value.filter(queue => queue.type === 'COLLABORATOR');
+          const collaboratorQueues = queues.value.filter(queue => queue.type === 'PROFESSIONAL');
           if (collaboratorQueues && collaboratorQueues.length > 0) {
             if (getActiveFeature(commerce.value, 'attention-queue-typegrouped', 'PRODUCT')) {
-              const queues = groupedQueues.value['COLLABORATOR'];
+              const queues = groupedQueues.value['PROFESSIONAL'];
               const queueAux = [];
-              queues.forEach(queue => {
-                if (queue.type === 'COLLABORATOR') {
+              for (const queue of queues) {
+                if (queue.type === 'PROFESSIONAL') {
                   const collaboratorsAux = collaborators.value.filter(collaborator => {
                     // If preselectedServiceId is provided, filter collaborators that have this service
                     if (props.preselectedServiceId) {
                       const hasService =
-                        collaborator.services &&
-                        collaborator.services.some(
-                          service => service.id === props.preselectedServiceId
+                        queue.servicesId &&
+                        queue.servicesId.some(
+                          serviceId => serviceId === props.preselectedServiceId
                         );
-                      return collaborator.id === queue.collaboratorId && hasService;
+                      return collaborator.id === queue.professionalId && hasService;
                     }
-                    return collaborator.id === queue.collaboratorId;
+                    return collaborator.id === queue.professionalId;
                   });
                   if (collaboratorsAux && collaboratorsAux.length > 0) {
                     queue.collaborator = collaboratorsAux[0];
-                    // If preselectedServiceId is provided, filter services to show only that service
-                    if (props.preselectedServiceId && collaboratorsAux[0].services) {
-                      const filteredServices = collaboratorsAux[0].services.filter(
-                        service => service.id === props.preselectedServiceId
-                      );
-                      queue.services = filteredServices;
-                      queue.servicesName =
-                        filteredServices.length > 0 ? filteredServices.map(serv => serv.name) : [];
-                    } else {
-                      queue.services = collaboratorsAux[0].services || [];
-                      queue.servicesName =
-                        collaboratorsAux[0].services && collaboratorsAux[0].services.length > 0
-                          ? collaboratorsAux[0].services.map(serv => serv.name)
-                          : [];
+                    // Fix tag if it's undefined - regenerate from professional info
+                    if (queue.tag === 'undefined' || !queue.tag) {
+                      queue.tag = collaboratorsAux[0].personalInfo?.email || collaboratorsAux[0].personalInfo?.name || 'Profesional';
                     }
+                    // For PROFESSIONAL queues, get services from queue.servicesId
+                    if (queue.servicesId && queue.servicesId.length > 0) {
+                      try {
+                        queue.services = await getServicesById(queue.servicesId);
+                      } catch (error) {
+                        console.error('Error loading professional services:', error);
+                        queue.services = [];
+                      }
+                    } else {
+                      queue.services = [];
+                    }
+                    queue.servicesName =
+                      queue.services && queue.services.length > 0
+                        ? queue.services.map(serv => serv.name)
+                        : [];
                   }
                   queueAux.push(queue);
                 }
-              });
-              groupedQueues.value['COLLABORATOR'] = queueAux;
-              state.filteredCollaboratorQueues = groupedQueues.value['COLLABORATOR'];
+              }
+              groupedQueues.value['PROFESSIONAL'] = queueAux;
+              state.filteredCollaboratorQueues = groupedQueues.value['PROFESSIONAL'];
             } else {
-              queues.value.forEach(queue => {
-                if (queue.type === 'COLLABORATOR') {
+              const queueAux = [];
+              for (const queue of queues.value) {
+                if (queue.type === 'PROFESSIONAL') {
                   const collaboratorsAux = collaborators.value.filter(collaborator => {
                     // If preselectedServiceId is provided, filter collaborators that have this service
                     if (props.preselectedServiceId) {
                       const hasService =
-                        collaborator.services &&
-                        collaborator.services.some(
-                          service => service.id === props.preselectedServiceId
+                        queue.servicesId &&
+                        queue.servicesId.some(
+                          serviceId => serviceId === props.preselectedServiceId
                         );
-                      return collaborator.id === queue.collaboratorId && hasService;
+                      return collaborator.id === queue.professionalId && hasService;
                     }
-                    return collaborator.id === queue.collaboratorId;
+                    return collaborator.id === queue.professionalId;
                   });
                   if (collaboratorsAux && collaboratorsAux.length > 0) {
                     queue.collaborator = collaboratorsAux[0];
-                    // If preselectedServiceId is provided, filter services to show only that service
-                    if (props.preselectedServiceId && collaboratorsAux[0].services) {
-                      const filteredServices = collaboratorsAux[0].services.filter(
-                        service => service.id === props.preselectedServiceId
-                      );
-                      queue.services = filteredServices;
-                      queue.servicesName =
-                        filteredServices.length > 0 ? filteredServices.map(serv => serv.name) : [];
-                    } else {
-                      queue.services = collaboratorsAux[0].services || [];
-                      queue.servicesName =
-                        collaboratorsAux[0].services && collaboratorsAux[0].services.length > 0
-                          ? collaboratorsAux[0].services.map(serv => serv.name)
-                          : [];
+                    // Fix tag if it's undefined - regenerate from professional info
+                    if (queue.tag === 'undefined' || !queue.tag) {
+                      queue.tag = collaboratorsAux[0].personalInfo?.email || collaboratorsAux[0].personalInfo?.name || 'Profesional';
                     }
+                    // For PROFESSIONAL queues, get services from queue.servicesId
+                    if (queue.servicesId && queue.servicesId.length > 0) {
+                      try {
+                        queue.services = await getServicesById(queue.servicesId);
+                      } catch (error) {
+                        console.error('Error loading professional services:', error);
+                        queue.services = [];
+                      }
+                    } else {
+                      queue.services = [];
+                    }
+                    queue.servicesName =
+                      queue.services && queue.services.length > 0
+                        ? queue.services.map(serv => serv.name)
+                        : [];
                   }
+                  queueAux.push(queue);
                 }
-              });
+              }
+              groupedQueues.value['PROFESSIONAL'] = queueAux;
             }
-            state.filteredCollaboratorQueues = groupedQueues.value['COLLABORATOR'];
+            state.filteredCollaboratorQueues = groupedQueues.value['PROFESSIONAL'];
             refresh(state.filteredCollaboratorQueues);
           }
         }
@@ -191,14 +202,14 @@ export default {
         }
         receiveServices(state.queue.services);
       }
-      // For COLLABORATOR queues, filter services if preselectedServiceId is provided
-      if (queueIn.type === 'COLLABORATOR' && props.preselectedServiceId && queueIn.services) {
+      // For PROFESSIONAL queues, filter services if preselectedServiceId is provided
+      if (queueIn.type === 'PROFESSIONAL' && props.preselectedServiceId && queueIn.services) {
         const filteredServices = queueIn.services.filter(
           service => service.id === props.preselectedServiceId
         );
         state.queue.services = filteredServices;
         receiveServices(filteredServices);
-      } else if (queueIn.type === 'COLLABORATOR') {
+      } else if (queueIn.type === 'PROFESSIONAL') {
         receiveServices(queueIn.services || []);
       }
       receiveQueue(state.queue);

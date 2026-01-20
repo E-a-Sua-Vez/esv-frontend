@@ -8,10 +8,8 @@
  * @returns {Object} - Personal data object ready for PatientPersonalDataForm
  */
 export const extractPersonalDataFromForm = form => {
-  console.log('🔍 Extracting personal data from form:', form);
 
   if (!form || !form.answers || form.answers.length === 0) {
-    console.log('❌ No form or answers found');
     return null;
   }
 
@@ -25,7 +23,6 @@ export const extractPersonalDataFromForm = form => {
       occupation = occupation[0] || '';
     }
     personalData.occupation = occupation || '';
-    console.log('✅ Found occupation:', occupation);
   }
 
   // Extract sex
@@ -37,7 +34,6 @@ export const extractPersonalDataFromForm = form => {
     }
     sex = sex[0] || undefined;
     personalData.sex = sex || '';
-    console.log('✅ Found sex:', sex);
   }
 
   // Extract civil status
@@ -49,11 +45,9 @@ export const extractPersonalDataFromForm = form => {
     }
     civilStatus = civilStatus[0] || undefined;
     personalData.civilStatus = civilStatus || '';
-    console.log('✅ Found civil status:', civilStatus);
   }
 
   const result = Object.keys(personalData).length > 0 ? personalData : null;
-  console.log('📤 Personal data extraction result:', result);
   return result;
 };
 
@@ -63,28 +57,23 @@ export const extractPersonalDataFromForm = form => {
  * @returns {Object} - Habits aux object ready for PatientAnamneseForm
  */
 export const extractAnamneseDataFromForm = form => {
-  console.log('🔍 Extracting anamnese data from form:', form);
 
   if (!form || !form.answers || form.answers.length === 0) {
-    console.log('❌ No form or answers found');
     return {};
   }
 
   const habitsAux = {};
 
   const personalHistoryAnswers = form.answers.filter(answer => answer.type === 'PERSONAL_HISTORY');
-  console.log('📋 Found personal history answers:', personalHistoryAnswers.length);
 
   if (personalHistoryAnswers && personalHistoryAnswers.length > 0) {
     personalHistoryAnswers.forEach(element => {
       if (element.id) {
         habitsAux[element.id] = { ...element.answer, ...element };
-        console.log('✅ Added habit:', element.id, habitsAux[element.id]);
       }
     });
   }
 
-  console.log('📤 Anamnese data extraction result:', habitsAux);
   return habitsAux;
 };
 

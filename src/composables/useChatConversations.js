@@ -539,11 +539,6 @@ export function useChatConversations() {
     function mergeAndSet() {
       // Combinar y filtrar por includesAny
       const map = new Map();
-      console.log('[DEBUG useChatConversations] mergeAndSet called:', {
-        primaryListCount: primaryList.length,
-        altListCount: altList.length,
-        possibleIds: Array.from(new Set(possibleIds))
-      });
 
       // IDs efectivos del usuario actual para filtros por usuario (incluye todas las variantes)
       const myIdsSet = (() => {
@@ -572,24 +567,12 @@ export function useChatConversations() {
           ? archivedFor.some(id => id && myIdsSet.has(String(id)))
           : false;
 
-        console.log('[DEBUG useChatConversations] Processing conversation:', {
-          id: item.id,
-          isActive,
-          isVerified,
-          includesUser,
-          archivedFor,
-          archivedForMe,
-          participantIds: item.participantIds,
-          willAdd: isActive && !archivedForMe && (includesUser || isVerified)
-        });
-
         if (isActive && !archivedForMe && (includesUser || isVerified)) {
           map.set(item.id, item);
         }
       });
 
       const finalConversations = Array.from(map.values());
-      console.log('[DEBUG useChatConversations] Final conversations:', finalConversations.length);
       conversations.value = finalConversations;
       loading.value = false;
     }
