@@ -122,9 +122,7 @@ export const updateModule = async (id, body) =>
       { moduleId: body.module || body.moduleId },
       await getHeaders()
     )
-  ).data;
-
-/**
+  ).data;/**
  * Crear perfil profesional asociado a un colaborador
  * @param {string} collaboratorId - ID del colaborador
  * @param {Object} professionalData - Datos del profesional a crear
