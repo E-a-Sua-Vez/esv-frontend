@@ -8,8 +8,6 @@ import Spinner from '../../components/common/Spinner.vue';
 import Message from '../../components/common/Message.vue';
 import Warning from '../../components/common/Warning.vue';
 import AccessAdmin from '../../components/domain/AccessAdmin.vue';
-import { useProfessionalProfileStore } from '../../stores/professional-profile';
-import { getProfessionalByCollaboratorId } from '../../application/services/professional';
 
 export default {
   name: 'Login',
@@ -58,19 +56,6 @@ export default {
             if (this.userType !== undefined) {
               this.store.setCurrentUserType(this.userType);
             }
-
-            // Load professional profile if it's a collaborator with professionalId
-            if (this.userType === 'collaborator' && this.user.id) {
-              try {
-                const professionalStore = useProfessionalProfileStore();
-                const professionalData = await getProfessionalByCollaboratorId(this.user.id);
-                professionalStore.setProfessional(professionalData);
-              } catch (error) {
-                console.warn('Could not load professional profile:', error);
-                // Continue with login even if professional profile fails
-              }
-            }
-
             let path = this.urlOkRedirect;
             if (this.userType === 'collaborator') {
               path = path.replace(':id', this.user.commerceId);
@@ -558,7 +543,7 @@ export default {
 
 @media (min-width: 768px) {
   .login-container {
-    padding: 0 1.5rem 1.5rem 1.5rem;
+    padding: 1.5rem;
   }
 
   .login-card-content {

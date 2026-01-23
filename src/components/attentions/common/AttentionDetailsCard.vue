@@ -813,21 +813,21 @@ export default {
 <template>
   <div v-if="show && attention">
     <div
-      class="row booking-row-card"
+      class="row metric-card"
       :class="disableClick ? '' : 'attention-link'"
       :href="disableClick ? undefined : `#data-attention-${attention.number}`"
       @click.prevent="disableClick ? null : showDetails()"
     >
-      <div v-if="attention.servicesDetails" class="idNumber-title lefted service-badges-inline">
+      <div v-if="attention.servicesDetails" class="idNumber-title lefted">
         <span
           v-for="serv in attention.servicesDetails"
           :key="serv.id"
-          class="badge-mini service-tag-mini"
+          class="badge service-badge bg-primary p-1"
         >
           {{ serv.name }}
         </span>
-        <span v-if="attention.packageId" class="badge-mini service-tag-mini bg-secondary">
-          <i class="bi bi-box-fill"></i> {{ attention.packageProcedureNumber }}
+        <span v-if="attention.packageId" class="badge bg-secondary service-badge">
+          <i class="bi bi-box-fill"></i> <span> {{ attention.packageProcedureNumber }} </span>
         </span>
       </div>
       <div class="col-1 lefted">
@@ -844,79 +844,66 @@ export default {
         >
           {{ $t(`attention.stage.${attention.currentStage}`) }}
         </span>
-      </div>
-      <div class="col lefted fw-bold d-flex align-items-center flex-wrap" v-if="attention.user && attention.user.name">
-        <span class="me-1">
-          {{ attention.user.name.split(' ')[0].toUpperCase() || 'N/I' }}
-        </span>
-        <!-- Status de la atención, con mismo estilo redondeado que LGPD/Bookings -->
-        <div class="status-badge-inline ms-1">
-          <i
-            v-if="
-              attention.status === ATTENTION_STATUS.PENDING &&
-              (!attention.paid || attention.paid === false)
-            "
-            class="bi bi-clock-fill yellow-icon"
-          ></i>
-          <i
-            v-else-if="
-              attention.status === ATTENTION_STATUS.PENDING &&
-              (attention.paid || attention.paid === true)
-            "
-            class="bi bi-check-circle-fill green-icon"
-          ></i>
-          <i
-            v-else-if="
-              attention.paymentConfirmationData !== undefined &&
-              attention.paymentConfirmationData.paid === true
-            "
-            class="bi bi-coin blue-icon"
-          ></i>
-          <i
-            v-else
-            class="bi bi-info-circle gray-icon"
-          ></i>
-        </div>
-        <div v-if="attention.productCounter > 0" class="status-badge-inline ms-1">
-          <i class="bi bi-eyedropper gray-icon"></i>
-        </div>
-        <div v-if="attention.termsConditionsAcceptedCode" class="status-badge-inline ms-1">
-          <i class="bi bi-person-fill-check green-icon"></i>
-        </div>
-        <!-- LGPD Consent Indicator - compacto, alineado después del ícono de estado -->
-        <Popper
-          v-if="commerce && consentStatus"
-          :class="'dark'"
-          arrow
-          disable-click-away
-          hover
+        <!-- LGPD Consent Indicator -->
+        <span
+          v-if="hasBlockingConsents()"
+          class="badge rounded-pill bg-danger mx-1 fw-bold cursor-pointer"
+          :title="
+            $t('attention.lgpd.blockingConsents', { count: getBlockingConsentsCount() }) +
+            ' - ' +
+            $t('attention.lgpd.clickToRequest')
+          "
+          @click.stop="openLgpdModal()"
+          style="cursor: pointer"
         >
-          <template #content>
-            <div>
-              <span v-if="hasBlockingConsents()">
-                {{
-                  $t('attention.lgpd.blockingConsents', { count: getBlockingConsentsCount() })
-                }}
-              </span>
-              <span v-else-if="getMissingConsentsCount() > 0">
-                {{
-                  $t('attention.lgpd.missingConsents', { count: getMissingConsentsCount() })
-                }}
-              </span>
-              <span v-else>
-                {{ $t('attention.lgpd.allConsentsGranted') }}
-              </span>
-            </div>
-          </template>
-          <div class="status-badge-inline ms-2" @click.stop="openLgpdModal()">
-            <i v-if="hasBlockingConsents()" class="bi bi-shield-exclamation red-icon"></i>
-            <i
-              v-else-if="getMissingConsentsCount() > 0"
-              class="bi bi-shield-check yellow-icon"
-            ></i>
-            <i v-else class="bi bi-shield-check green-icon"></i>
-          </div>
-        </Popper>
+          <i class="bi bi-shield-exclamation"></i>
+          {{ $t('attention.lgpd.blocking') }}
+        </span>
+        <span
+          v-else-if="getMissingConsentsCount() > 0"
+          class="badge rounded-pill bg-warning mx-1 fw-bold"
+          :title="$t('attention.lgpd.missingConsents', { count: getMissingConsentsCount() })"
+        >
+          <i class="bi bi-shield-check"></i>
+          {{ $t('attention.lgpd.missing') }}
+        </span>
+        <span
+          v-else-if="consentStatus && consentStatus.summary"
+          class="badge rounded-pill bg-success mx-1 fw-bold"
+          :title="$t('attention.lgpd.allConsentsGranted')"
+        >
+          <i class="bi bi-shield-check"></i>
+          {{ $t('attention.lgpd.compliant') }}
+        </span>
+      </div>
+      <div class="col lefted fw-bold" v-if="attention.user && attention.user.name">
+        {{ attention.user.name.split(' ')[0].toUpperCase() || 'N/I' }}
+        <i
+          v-if="
+            attention.status === ATTENTION_STATUS.PENDING &&
+            (!attention.paid || attention.paid === false)
+          "
+          class="bi bi-clock-fill icon yellow-icon"
+        >
+        </i>
+        <i
+          v-if="
+            attention.status === ATTENTION_STATUS.PENDING &&
+            (attention.paid || attention.paid === true)
+          "
+          class="bi bi-check-circle-fill icon green-icon"
+        >
+        </i>
+        <i
+          v-if="
+            attention.paymentConfirmationData !== undefined &&
+            attention.paymentConfirmationData.paid === true
+          "
+          class="bi bi-coin icon blue-icon"
+        >
+        </i>
+        <i v-if="attention.productCounter > 0" class="bi bi-eyedropper"> </i>
+        <i v-if="attention.termsConditionsAcceptedCode" class="bi bi-person-fill-check mx-1"></i>
       </div>
       <div class="col centered hour-title" v-if="attention.block && attention.block.hourFrom">
         <span> {{ attention.block.hourFrom }} - {{ attention.block.hourTo }} </span>
@@ -1046,53 +1033,47 @@ export default {
 </template>
 
 <style scoped>
-/* Estilo de tarjeta alineado con BookingDetailsCard */
-.booking-row-card {
-  background-color: #ffffff;
-  padding: 0.15rem 0.35rem;
-  margin: 0.25rem 0;
-  border-radius: 0.4rem;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-  transition: all 0.2s ease;
+.metric-card {
+  background-color: var(--color-background);
+  margin: 0.5rem;
+  margin-bottom: 0;
+  border-radius: 0.5rem;
+  border: 0.5px solid var(--gris-default);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: 0;
+  line-height: 1.2rem;
+}
+.details-arrow {
+  margin: 0.5rem;
+  margin-top: 0;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  line-height: 1.1rem;
+  border: 0.5px solid var(--gris-default);
+  border-top: 0;
+}
+.show {
+  padding: 1px;
+  max-height: 600px !important;
+  overflow-y: auto;
+}
+.details-title {
+  text-decoration: underline;
+  font-size: 0.8rem;
+  color: var(--color-text);
   cursor: pointer;
 }
-
-.booking-row-card:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
-  border-color: rgba(0, 194, 203, 0.2);
+.metric-card-title {
+  margin: 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
-
-/* Badges de servicios, alineados con reservas */
-.service-badges-inline {
-  display: flex;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.badge-mini {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.2rem 0.5rem;
-  font-size: 0.65rem;
+.metric-card-detail-title {
+  font-size: 1rem;
   font-weight: 600;
-  border-radius: 0.35rem;
-  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
-  color: #ffffff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  line-height: 0.7rem;
 }
-
-.badge-mini.bg-secondary {
-  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-}
-
-.service-tag-mini {
-  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
-}
-
 .stage-badge {
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
@@ -1137,27 +1118,6 @@ export default {
 .icon {
   margin-left: 0.1rem;
   margin-right: 0.15rem;
-}
-
-.status-badge-inline {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.1875rem 0.4375rem;
-  background: rgba(169, 169, 169, 0.08);
-  border-radius: 9999px;
-  cursor: help;
-  transition: all 0.2s ease;
-  border: 1px solid rgba(169, 169, 169, 0.1);
-}
-
-.status-badge-inline:hover {
-  background: rgba(169, 169, 169, 0.15);
-  border-color: rgba(169, 169, 169, 0.2);
-}
-
-.status-badge-inline i {
-  font-size: 0.75rem;
 }
 .index {
   background-color: var(--azul-qr);

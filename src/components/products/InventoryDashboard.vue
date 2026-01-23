@@ -998,7 +998,7 @@ export default {
 
       <div v-if="!loading && !kpis" class="no-data">
         <Message
-          :icon="'bi-inbox'"
+          :icon="'inbox'"
           :title="$t('inventoryDashboard.noData') || 'Sin datos'"
           :content="$t('inventoryDashboard.noDataDesc') || 'No hay datos de inventario disponibles'"
         />

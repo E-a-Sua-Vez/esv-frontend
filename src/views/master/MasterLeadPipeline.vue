@@ -3355,7 +3355,7 @@ export default {
                     </div>
                     <div v-if="filteredLeads.NEW.length === 0" class="empty-state">
                       <Message
-                        :icon="'bi-inbox'"
+                        :icon="'inbox'"
                         :title="$t('leadPipeline.noLeads') || 'No new leads'"
                         :content="$t('leadPipeline.noLeadsDesc') || 'No leads in this stage'"
                       />
@@ -3523,7 +3523,7 @@ export default {
                     </div>
                     <div v-if="filteredLeads.IN_CONTACT.length === 0" class="empty-state">
                       <Message
-                        :icon="'bi-chat-dots'"
+                        :icon="'chat-dots'"
                         :title="$t('leadPipeline.noLeads') || 'No leads in contact'"
                         :content="$t('leadPipeline.noLeadsDesc') || 'No leads in this stage'"
                       />
@@ -3648,7 +3648,7 @@ export default {
                     </div>
                     <div v-if="filteredLeads.WAITLIST.length === 0" class="empty-state">
                       <Message
-                        :icon="'bi-pause-circle'"
+                        :icon="'pause-circle'"
                         :title="$t('leadPipeline.noLeads') || 'No leads in waitlist'"
                         :content="$t('leadPipeline.noLeadsDesc') || 'No leads in this stage'"
                       />
@@ -3793,7 +3793,7 @@ export default {
                     </div>
                     <div v-if="filteredLeads.IN_DEAL.length === 0" class="empty-state">
                       <Message
-                        :icon="'bi-hand-thumbs-up'"
+                        :icon="'hand-thumbs-up'"
                         :title="$t('leadPipeline.noLeads') || 'No leads in deal'"
                         :content="$t('leadPipeline.noLeadsDesc') || 'No leads in this stage'"
                       />
@@ -3933,7 +3933,7 @@ export default {
                     </div>
                     <div v-if="filteredLeads.CLOSED.length === 0" class="empty-state">
                       <Message
-                        :icon="'bi-check-circle'"
+                        :icon="'check-circle'"
                         :title="$t('leadPipeline.noLeads') || 'No closed leads'"
                         :content="$t('leadPipeline.noLeadsDesc') || 'No leads in this stage'"
                       />
@@ -4424,7 +4424,7 @@ export default {
                   </div>
                   <div v-if="!filteredLeads.NEW || filteredLeads.NEW.length === 0" class="empty-state">
                     <Message
-                      :icon="'bi-inbox'"
+                      :icon="'inbox'"
                       :title="$t('leadPipeline.noLeads') || 'No new leads'"
                       :content="$t('leadPipeline.noLeadsDesc') || 'No leads in this stage'"
                     />
@@ -4593,7 +4593,7 @@ export default {
                     class="empty-state"
                   >
                     <Message
-                      :icon="'bi-chat-dots'"
+                      :icon="'chat-dots'"
                       :title="$t('leadPipeline.noLeads') || 'No leads in contact'"
                       :content="$t('leadPipeline.noLeadsDesc') || 'No leads in this stage'"
                     />
@@ -4741,7 +4741,7 @@ export default {
                   </div>
                   <div v-if="!leads.WAITLIST || leads.WAITLIST.length === 0" class="empty-state">
                     <Message
-                      :icon="'bi-pause-circle'"
+                      :icon="'pause-circle'"
                       :title="$t('leadPipeline.noLeads') || 'No leads in waitlist'"
                       :content="$t('leadPipeline.noLeadsDesc') || 'No leads in this stage'"
                     />
@@ -4907,7 +4907,7 @@ export default {
                   </div>
                   <div v-if="!leads.IN_DEAL || leads.IN_DEAL.length === 0" class="empty-state">
                     <Message
-                      :icon="'bi-hand-thumbs-up'"
+                      :icon="'hand-thumbs-up'"
                       :title="$t('leadPipeline.noLeads') || 'No leads in deal'"
                       :content="$t('leadPipeline.noLeadsDesc') || 'No leads in this stage'"
                     />
@@ -5040,7 +5040,7 @@ export default {
                   </div>
                   <div v-if="!leads.CLOSED || leads.CLOSED.length === 0" class="empty-state">
                     <Message
-                      :icon="'bi-check-circle'"
+                      :icon="'check-circle'"
                       :title="$t('leadPipeline.noLeads') || 'No closed leads'"
                       :content="$t('leadPipeline.noLeadsDesc') || 'No leads in this stage'"
                     />
@@ -5559,7 +5559,7 @@ export default {
                   </div>
                   <div v-else class="text-center py-3">
                     <Message
-                      :icon="'bi-chat-left'"
+                      :icon="'chat-left'"
                       :title="$t('leadPipeline.noContacts') || 'No contacts'"
                       :content="$t('leadPipeline.noContactsDesc') || 'No contacts recorded yet.'"
                     />
@@ -5672,7 +5672,7 @@ export default {
                   </div>
                   <div v-else class="text-center py-4">
                     <Message
-                      :icon="'bi-clock-history'"
+                      :icon="'clock-history'"
                       :title="$t('leadPipeline.noTransitions') || 'No transitions'"
                       :content="
                         $t('leadPipeline.noTransitionsDesc') ||

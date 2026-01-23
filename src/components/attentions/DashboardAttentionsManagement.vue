@@ -937,7 +937,7 @@ export default {
               </div>
               <div v-else>
                 <Message
-                  :icon="'bi-graph-up-arrow'"
+                  :icon="'graph-up-arrow'"
                   :title="$t('dashboard.message.2.title')"
                   :content="$t('dashboard.message.2.content')"
                 />
@@ -951,7 +951,7 @@ export default {
       v-if="showAttentionManagement === true && !toggles['dashboard.attentions-management.view']"
     >
       <Message
-        :icon="'bi-graph-up-arrow'"
+        :icon="'graph-up-arrow'"
         :title="$t('dashboard.message.1.title')"
         :content="$t('dashboard.message.1.content')"
       />

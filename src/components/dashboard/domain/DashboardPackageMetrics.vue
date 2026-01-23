@@ -139,7 +139,7 @@ export default {
   <div v-if="show && commerceId">
     <Spinner :show="loading"></Spinner>
     <div v-if="error" class="error-message">
-      <Message :icon="'bi-exclamation-triangle'" :title="'Error'" :content="error" />
+      <Message :icon="'exclamation-triangle'" :title="'Error'" :content="error" />
     </div>
     <div v-if="hasMetrics" class="package-metrics-section">
       <!-- Summary Cards Section -->

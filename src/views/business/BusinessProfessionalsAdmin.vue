@@ -217,12 +217,31 @@ export default {
           state.newProfessional.businessId = state.business.id;
           state.newProfessional.commerceId = commerce.value.id;
 
-          // Limpiar paymentAccount si está vacío
-          if (state.newProfessional.financialInfo?.paymentAccount) {
-            const pa = state.newProfessional.financialInfo.paymentAccount;
-            const isEmpty = !pa.bank && !pa.accountNumber && !pa.accountType && !pa.pixKey && !pa.holder;
-            if (isEmpty) {
-              delete state.newProfessional.financialInfo.paymentAccount;
+          // Limpiar financialInfo si está incompleto o vacío
+          if (state.newProfessional.financialInfo) {
+            // Limpiar commission si está incompleto
+            const hasCommissionType = state.newProfessional.financialInfo.commissionType && state.newProfessional.financialInfo.commissionType.trim() !== '';
+            const hasCommissionValue = state.newProfessional.financialInfo.commissionValue !== null && state.newProfessional.financialInfo.commissionValue !== undefined && state.newProfessional.financialInfo.commissionValue !== '';
+
+            // Si no tiene ambos o solo tiene uno, limpiar ambos
+            if (!hasCommissionType || !hasCommissionValue) {
+              state.newProfessional.financialInfo.commissionType = null;
+              state.newProfessional.financialInfo.commissionValue = null;
+            }
+
+            // Limpiar paymentAccount si está vacío
+            if (state.newProfessional.financialInfo?.paymentAccount) {
+              const pa = state.newProfessional.financialInfo.paymentAccount;
+              const isEmpty = !pa.bank && !pa.accountNumber && !pa.accountType && !pa.pixKey && !pa.holder;
+              if (isEmpty) {
+                delete state.newProfessional.financialInfo.paymentAccount;
+              }
+            }
+
+            // Si financialInfo está completamente vacío, eliminarlo
+            const fi = state.newProfessional.financialInfo;
+            if (!fi.commissionType && !fi.commissionValue && !fi.paymentAccount) {
+              delete state.newProfessional.financialInfo;
             }
           }
 
@@ -241,29 +260,48 @@ export default {
       try {
         loading.value = true;
         if (validateUpdate(professional)) {
-          // Limpiar paymentAccount si está vacío
-          if (professional.financialInfo?.paymentAccount) {
-            const pa = professional.financialInfo.paymentAccount;
-            // Si es string, convertir a objeto vacío o eliminar
-            if (typeof pa === 'string') {
-              if (pa.trim() === '') {
-                delete professional.financialInfo.paymentAccount;
+          // Limpiar financialInfo si está incompleto o vacío
+          if (professional.financialInfo) {
+            // Limpiar commission si está incompleto
+            const hasCommissionType = professional.financialInfo.commissionType && professional.financialInfo.commissionType.trim() !== '';
+            const hasCommissionValue = professional.financialInfo.commissionValue !== null && professional.financialInfo.commissionValue !== undefined && professional.financialInfo.commissionValue !== '';
+
+            // Si no tiene ambos o solo tiene uno, limpiar ambos
+            if (!hasCommissionType || !hasCommissionValue) {
+              professional.financialInfo.commissionType = null;
+              professional.financialInfo.commissionValue = null;
+            }
+
+            // Limpiar paymentAccount si está vacío
+            if (professional.financialInfo?.paymentAccount) {
+              const pa = professional.financialInfo.paymentAccount;
+              // Si es string, convertir a objeto vacío o eliminar
+              if (typeof pa === 'string') {
+                if (pa.trim() === '') {
+                  delete professional.financialInfo.paymentAccount;
+                } else {
+                  // Convertir string a objeto con accountNumber
+                  professional.financialInfo.paymentAccount = {
+                    accountNumber: pa,
+                    bank: '',
+                    accountType: '',
+                    pixKey: '',
+                    holder: '',
+                  };
+                }
               } else {
-                // Convertir string a objeto con accountNumber
-                professional.financialInfo.paymentAccount = {
-                  accountNumber: pa,
-                  bank: '',
-                  accountType: '',
-                  pixKey: '',
-                  holder: '',
-                };
+                // Si es objeto y está vacío, eliminar
+                const isEmpty = !pa.bank && !pa.accountNumber && !pa.accountType && !pa.pixKey && !pa.holder;
+                if (isEmpty) {
+                  delete professional.financialInfo.paymentAccount;
+                }
               }
-            } else {
-              // Si es objeto y está vacío, eliminar
-              const isEmpty = !pa.bank && !pa.accountNumber && !pa.accountType && !pa.pixKey && !pa.holder;
-              if (isEmpty) {
-                delete professional.financialInfo.paymentAccount;
-              }
+            }
+
+            // Si financialInfo está completamente vacío, eliminarlo
+            const fi = professional.financialInfo;
+            if (!fi.commissionType && !fi.commissionValue && !fi.paymentAccount) {
+              delete professional.financialInfo;
             }
           }
 

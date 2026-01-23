@@ -20,7 +20,6 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import MedicationSimpleName from '../../components/common/MedicationSimpleName.vue';
-import Popper from 'vue3-popper';
 
 export default {
   name: 'BusinessMedicationsAdmin',
@@ -35,7 +34,6 @@ export default {
     DesktopPageHeader,
     SearchAdminItem,
     MedicationSimpleName,
-    Popper,
   },
   async setup() {
     const router = useRouter();
@@ -191,13 +189,6 @@ export default {
       };
     };
 
-    const closeAddModal = () => {
-      const closeButton = document.getElementById('close-modal');
-      if (closeButton) {
-        closeButton.click();
-      }
-    };
-
     const add = async () => {
       try {
         loading.value = true;
@@ -208,7 +199,6 @@ export default {
           await createMedication(state.newMedication);
           await loadMedications(commerce.value?.id);
           state.showAdd = false;
-          closeAddModal();
           state.newMedication = {};
           state.extendedEntity = undefined;
         }
@@ -263,26 +253,6 @@ export default {
       state.goToUnavailable = false;
     };
 
-    const copyIdToClipboard = async id => {
-      if (!id) return;
-      try {
-        if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(id);
-        } else {
-          const textarea = document.createElement('textarea');
-          textarea.value = id;
-          textarea.style.position = 'fixed';
-          textarea.style.opacity = '0';
-          document.body.appendChild(textarea);
-          textarea.select();
-          document.execCommand('copy');
-          document.body.removeChild(textarea);
-        }
-      } catch (e) {
-        // silent fallback
-      }
-    };
-
     const showUpdateForm = index => {
       state.extendedEntity = state.extendedEntity !== index ? index : undefined;
     };
@@ -306,7 +276,6 @@ export default {
       goToUnavailable,
       unavailableCancel,
       receiveFilteredItems,
-      copyIdToClipboard,
     };
   },
 };
@@ -331,7 +300,6 @@ export default {
         </div>
         <div id="businessMedicationsAdmin">
           <div v-if="isActiveBusiness && state.toggles['medications.admin.view']">
-            <div class="control-box my-4"></div>
             <div v-if="!loading" id="businessMedicationsAdmin-result" class="mt-4">
               <div>
                 <div v-if="!commerce">
@@ -349,7 +317,7 @@ export default {
                 <div class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
                       @click="showAdd()"
                       data-bs-toggle="modal"
                       data-bs-target="#add-medication"
@@ -387,29 +355,10 @@ export default {
                       </div>
                     </div>
                     <div v-if="state.extendedEntity === index" class="mt-3">
-                      <div id="medication-id-form" class="row mb-1">
-                        <div class="col">
-                          <span><strong>Id:</strong> {{ medication.id }}</span>
-                          <button
-                            type="button"
-                            class="btn btn-link btn-sm p-0 ms-2 align-baseline"
-                            @click="copyIdToClipboard(medication.id)"
-                            :title="$t('copy') || 'Copiar Id'"
-                          >
-                            <i class="bi bi-clipboard"></i>
-                          </button>
-                        </div>
-                      </div>
                       <div class="form-fields-container">
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.name') }}
-                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                              <template #content>
-                                <div>{{ $t('businessMedicationsAdmin.nameHelp') }}</div>
-                              </template>
-                              <i class="bi bi-info-circle-fill form-help-icon"></i>
-                            </Popper>
                           </label>
                           <input
                             id="update-medication-name-form"
@@ -423,12 +372,6 @@ export default {
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.activePrinciple') }}
-                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                              <template #content>
-                                <div>{{ $t('businessMedicationsAdmin.activePrincipleHelp') }}</div>
-                              </template>
-                              <i class="bi bi-info-circle-fill form-help-icon"></i>
-                            </Popper>
                           </label>
                           <input
                             id="update-medication-activePrinciple-form"
@@ -442,12 +385,6 @@ export default {
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.presentation') }}
-                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                              <template #content>
-                                <div>{{ $t('businessMedicationsAdmin.presentationHelp') }}</div>
-                              </template>
-                              <i class="bi bi-info-circle-fill form-help-icon"></i>
-                            </Popper>
                           </label>
                           <input
                             id="update-medication-presentation-form"
@@ -461,12 +398,6 @@ export default {
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.route') }}
-                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                              <template #content>
-                                <div>{{ $t('businessMedicationsAdmin.routeHelp') }}</div>
-                              </template>
-                              <i class="bi bi-info-circle-fill form-help-icon"></i>
-                            </Popper>
                           </label>
                           <input
                             id="update-medication-route-form"
@@ -556,7 +487,7 @@ export default {
                 <div v-if="commerce" class="row mb-2">
                   <div class="col lefted">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
                       @click="showAdd()"
                       data-bs-toggle="modal"
                       data-bs-target="#add-medication"
@@ -598,12 +529,6 @@ export default {
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.name') }}
-                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                              <template #content>
-                                <div>{{ $t('businessMedicationsAdmin.nameHelp') }}</div>
-                              </template>
-                              <i class="bi bi-info-circle-fill form-help-icon"></i>
-                            </Popper>
                           </label>
                           <input
                             id="update-medication-name-form"
@@ -617,12 +542,6 @@ export default {
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.activePrinciple') }}
-                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                              <template #content>
-                                <div>{{ $t('businessMedicationsAdmin.activePrincipleHelp') }}</div>
-                              </template>
-                              <i class="bi bi-info-circle-fill form-help-icon"></i>
-                            </Popper>
                           </label>
                           <input
                             id="update-medication-activePrinciple-form"
@@ -636,12 +555,6 @@ export default {
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.presentation') }}
-                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                              <template #content>
-                                <div>{{ $t('businessMedicationsAdmin.presentationHelp') }}</div>
-                              </template>
-                              <i class="bi bi-info-circle-fill form-help-icon"></i>
-                            </Popper>
                           </label>
                           <input
                             id="update-medication-presentation-form"
@@ -655,12 +568,6 @@ export default {
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.route') }}
-                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                              <template #content>
-                                <div>{{ $t('businessMedicationsAdmin.routeHelp') }}</div>
-                              </template>
-                              <i class="bi bi-info-circle-fill form-help-icon"></i>
-                            </Popper>
                           </label>
                           <input
                             id="update-medication-route-form"
@@ -739,13 +646,7 @@ export default {
               <div class="form-fields-container">
                 <div class="form-group-modern">
                   <label class="form-label-modern">
-                      {{ $t('businessMedicationsAdmin.name') }} *
-                      <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                        <template #content>
-                          <div>{{ $t('businessMedicationsAdmin.nameHelp') }}</div>
-                        </template>
-                        <i class="bi bi-info-circle-fill form-help-icon"></i>
-                      </Popper>
+                    {{ $t('businessMedicationsAdmin.name') }} *
                   </label>
                   <input
                     id="add-medication-name-form"
@@ -758,13 +659,7 @@ export default {
                 </div>
                 <div class="form-group-modern">
                   <label class="form-label-modern">
-                      {{ $t('businessMedicationsAdmin.commercialName') }}
-                      <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                        <template #content>
-                          <div>{{ $t('businessMedicationsAdmin.commercialNameHelp') }}</div>
-                        </template>
-                        <i class="bi bi-info-circle-fill form-help-icon"></i>
-                      </Popper>
+                    {{ $t('businessMedicationsAdmin.commercialName') }}
                   </label>
                   <input
                     id="add-medication-commercialName-form"
@@ -776,13 +671,7 @@ export default {
                 </div>
                 <div class="form-group-modern">
                   <label class="form-label-modern">
-                      {{ $t('businessMedicationsAdmin.activePrinciple') }} *
-                      <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                        <template #content>
-                          <div>{{ $t('businessMedicationsAdmin.activePrincipleHelp') }}</div>
-                        </template>
-                        <i class="bi bi-info-circle-fill form-help-icon"></i>
-                      </Popper>
+                    {{ $t('businessMedicationsAdmin.activePrinciple') }} *
                   </label>
                   <input
                     id="add-medication-activePrinciple-form"
@@ -794,13 +683,7 @@ export default {
                 </div>
                 <div class="form-group-modern">
                   <label class="form-label-modern">
-                      {{ $t('businessMedicationsAdmin.presentation') }}
-                      <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                        <template #content>
-                          <div>{{ $t('businessMedicationsAdmin.presentationHelp') }}</div>
-                        </template>
-                        <i class="bi bi-info-circle-fill form-help-icon"></i>
-                      </Popper>
+                    {{ $t('businessMedicationsAdmin.presentation') }}
                   </label>
                   <input
                     id="add-medication-presentation-form"
@@ -812,13 +695,7 @@ export default {
                 </div>
                 <div class="form-group-modern">
                   <label class="form-label-modern">
-                      {{ $t('businessMedicationsAdmin.dosageForm') }}
-                      <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                        <template #content>
-                          <div>{{ $t('businessMedicationsAdmin.dosageFormHelp') }}</div>
-                        </template>
-                        <i class="bi bi-info-circle-fill form-help-icon"></i>
-                      </Popper>
+                    {{ $t('businessMedicationsAdmin.dosageForm') }}
                   </label>
                   <input
                     id="add-medication-dosageForm-form"
@@ -830,13 +707,7 @@ export default {
                 </div>
                 <div class="form-group-modern">
                   <label class="form-label-modern">
-                      {{ $t('businessMedicationsAdmin.route') }}
-                      <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                        <template #content>
-                          <div>{{ $t('businessMedicationsAdmin.routeHelp') }}</div>
-                        </template>
-                        <i class="bi bi-info-circle-fill form-help-icon"></i>
-                      </Popper>
+                    {{ $t('businessMedicationsAdmin.route') }}
                   </label>
                   <input
                     id="add-medication-route-form"
@@ -910,12 +781,6 @@ export default {
   margin-bottom: 0;
   min-width: 120px;
   flex-shrink: 0;
-}
-
-.form-help-icon {
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.4);
-  cursor: help;
 }
 
 .form-control-modern {
@@ -992,11 +857,5 @@ export default {
     width: auto;
     text-align: left;
   }
-}
-
-.form-help-icon {
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.4);
-  cursor: help;
 }
 </style>

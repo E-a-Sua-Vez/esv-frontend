@@ -268,7 +268,6 @@
   "commissionPayments": {
     "title": "Pagos de Comisiones",
     "createPayment": "Crear Pago de Comisiones",
-    "createNew": "Crear Nuevo",
     "editPayment": "Editar Pago",
     "confirmPayment": "Confirmar Pago",
     "cancelPayment": "Cancelar Pago",
@@ -279,8 +278,6 @@
     "dateTo": "Fecha Hasta",
     "search": "Buscar Ingresos",
     "unpaidIncomes": "Ingresos sin Comisión Pagada",
-    "selectedIncomes": "Ingresos Seleccionados",
-    "selectedCount": "Seleccionados",
     "selectAll": "Seleccionar Todos",
     "deselectAll": "Deseleccionar Todos",
     "date": "Fecha",
@@ -1172,7 +1169,6 @@
     "paymentFiscalNote": "Nota Fiscal:",
     "paymentAmount": "Monto Pagado:",
     "paymentCommission": "Comisión:",
-    "professionalCommission": "Comisión Profesional:",
     "paymentDate": "Fecha de Pago:",
     "outcomeType": "Tipo:",
     "outcomeProduct": "Producto:",
@@ -2617,10 +2613,6 @@
     "indicators": "Indicadores",
     "graph": "Tendencias",
     "surveys": "Encuestas",
-    "hideDetails": "Ocultar Detalles",
-    "incomeCard": {
-      "contactInfo": "Información de Contacto"
-    },
     "lgpdCompliance": {
       "title": "Compliance LGPD",
       "complianceScore": "Puntuación de Compliance",
@@ -4389,7 +4381,6 @@
       "minAmount": "Monto Mínimo",
       "maxAmount": "Monto Máximo",
       "incomeType": "Tipo de Ingreso",
-      "outcomeType": "Tipo de Egreso",
       "paymentMethod": "Método de Pago",
       "professional": "Profesional",
       "all": "Todos"

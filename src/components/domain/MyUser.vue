@@ -13,11 +13,10 @@ import Spinner from '../common/Spinner.vue';
 import Alert from '../common/Alert.vue';
 import Warning from '../common/Warning.vue';
 import CommerceLogo from '../common/CommerceLogo.vue';
-
 export default {
   components: { Message, Spinner, Alert, Warning, CommerceLogo },
   name: 'MyUser',
-  emits: ['toggle-inbox', 'open-professional-profile'],
+  emits: ['toggle-inbox'],
   async setup(props, { emit }) {
     const router = useRouter();
     let store = globalStore();
@@ -153,10 +152,6 @@ export default {
       emit('toggle-inbox');
     };
 
-    const openProfessionalModal = () => {
-      emit('open-professional-profile');
-    };
-
     return {
       state,
       store,
@@ -170,7 +165,6 @@ export default {
       openInbox,
       sendEmail,
       unreadCount,
-      openProfessionalModal,
     };
   },
 };
@@ -265,16 +259,8 @@ export default {
     </div>
     <div class="row col mx-4 mt-3 mb-1" v-if="state.showActions">
       <button
-        v-if="state.currentUserType === 'collaborator'"
-        class="btn btn-md btn-size fw-bold btn-dark rounded-pill my-1 w-100"
-        @click="openProfessionalModal()"
-        title="Ver perfil profesional"
-      >
-        {{ $t('myUser.professionalProfile') }} <i class="bi bi-person-badge"></i>
-      </button>
-      <button
         v-if="state.currentUserType !== 'client'"
-        class="btn btn-md btn-size fw-bold btn-dark rounded-pill my-1 w-100"
+        class="btn btn-md btn-size fw-bold btn-dark rounded-pill my-1"
         @click="sendEmail()"
       >
         {{ $t('myUser.password') }} <i class="bi bi-key-fill"></i>

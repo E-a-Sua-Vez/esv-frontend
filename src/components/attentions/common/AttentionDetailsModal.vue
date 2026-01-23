@@ -10,7 +10,6 @@ import {
   transferAttention,
   getPendingCommerceAttentions,
   advanceStage,
-  assignProfessional,
 } from '../../../application/services/attention';
 import { getActiveFeature } from '../../../shared/features';
 import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data.ts';
@@ -18,7 +17,6 @@ import { getQueueById } from '../../../application/services/queue';
 import { getBookingDetails } from '../../../application/services/booking';
 import { getCollaboratorById } from '../../../application/services/collaborator';
 import { getAttentionDetails } from '../../../application/services/attention';
-import { getActiveProfessionalsByCommerce } from '../../../application/services/professional';
 import { getConsentStatus } from '../../../application/services/consent';
 import { ATTENTION_STATUS } from '../../../shared/constants';
 import Warning from '../../common/Warning.vue';
@@ -26,11 +24,10 @@ import AreYouSure from '../../common/AreYouSure.vue';
 import PaymentForm from '../../payments/PaymentForm.vue';
 import Message from '../../common/Message.vue';
 import AttentionTimeline from './AttentionTimeline.vue';
-import ProfessionalSelector from '../../professional/ProfessionalSelector.vue';
 
 export default {
   name: 'AttentionDetailsModal',
-  components: { Popper, Spinner, Warning, AreYouSure, PaymentForm, Message, AttentionTimeline, ProfessionalSelector },
+  components: { Popper, Spinner, Warning, AreYouSure, PaymentForm, Message, AttentionTimeline },
   props: {
     show: { type: Boolean, default: false },
     attention: { type: Object, default: undefined },
@@ -44,7 +41,6 @@ export default {
       loading: false,
       extendedPaymentEntity: false,
       extendedTransferEntity: false,
-      extendedProfessionalEntity: false,
       newPaymentConfirmationData: {},
       paymentTypes: [],
       paymentMethods: [],
@@ -56,7 +52,6 @@ export default {
       goToCancel: false,
       goToConfirm: false,
       goToAdvanceStage: false,
-      goToAssignProfessional: false,
       selectedNextStage: '',
       stageNotes: '',
       queuesToTransfer: [],
@@ -69,9 +64,6 @@ export default {
       loadingConsentStatus: false,
       consentStatusInterval: null,
       alertError: '',
-      selectedProfessional: null,
-      professionalCommission: null,
-      professionals: [],
     };
   },
   beforeMount() {
@@ -146,7 +138,6 @@ export default {
     showPaymentDetails() {
       this.extendedPaymentEntity = !this.extendedPaymentEntity;
       this.extendedTransferEntity = false;
-      this.extendedProfessionalEntity = false;
       this.newPaymentConfirmationData = {
         processPaymentNow: true,
       };
@@ -154,7 +145,6 @@ export default {
     async showTransferDetails() {
       this.extendedTransferEntity = !this.extendedTransferEntity;
       this.extendedPaymentEntity = false;
-      this.extendedProfessionalEntity = false;
       if (this.extendedTransferEntity === true) {
         await this.toTransfer();
       }
@@ -415,119 +405,6 @@ export default {
     },
     cancelCancel() {
       this.goToCancel = false;
-    },
-    showProfessionalDetails() {
-      this.extendedProfessionalEntity = !this.extendedProfessionalEntity;
-      this.extendedPaymentEntity = false;
-      this.extendedTransferEntity = false;
-      // Cargar profesionales solo cuando se abre la sección
-      if (this.extendedProfessionalEntity && this.professionals.length === 0) {
-        this.loadProfessionals();
-      }
-    },
-    async loadProfessionals() {
-      if (!this.attention || !this.attention.commerceId) {
-        console.log('[AttentionDetailsModal] loadProfessionals - No attention or commerceId');
-        return;
-      }
-      console.log('[AttentionDetailsModal] Loading professionals for commerce:', this.attention.commerceId);
-      try {
-        this.professionals = await getActiveProfessionalsByCommerce(this.attention.commerceId);
-        console.log('[AttentionDetailsModal] Professionals loaded:', this.professionals.length, this.professionals);
-      } catch (error) {
-        console.error('[AttentionDetailsModal] Error loading professionals:', error);
-        this.professionals = [];
-      }
-    },
-    handleProfessionalSelected(professional) {
-      this.selectedProfessional = professional;
-      if (professional && professional.financialInfo) {
-        const { commissionType, commissionValue } = professional.financialInfo;
-        if (commissionValue) {
-          this.professionalCommission = commissionValue;
-        }
-      }
-    },
-    getSuggestedCommission() {
-      if (!this.selectedProfessional || !this.selectedProfessional.financialInfo) {
-        return '';
-      }
-      const { commissionType, commissionValue } = this.selectedProfessional.financialInfo;
-      if (!commissionValue) return '';
-      
-      if (commissionType === 'PERCENTAGE') {
-        return `${commissionValue}%`;
-      }
-      return `${commissionValue} ${this.commerce?.currency || 'CLP'}`;
-    },
-    // PROFESSIONAL PAYMENT COMMISSION DATA
-    getAssignedProfessionalCommissionData() {
-      if (!this.attention?.professionalName) {
-        return { name: null, commission: null, suggestedAmount: 0 };
-      }
-      
-      // Try to get from selectedProfessional first
-      if (this.selectedProfessional?.financialInfo) {
-        const { commissionType, commissionValue } = this.selectedProfessional.financialInfo;
-        let suggestedAmount = 0;
-        let commissionDisplay = '';
-        
-        if (commissionValue) {
-          if (commissionType === 'PERCENTAGE') {
-            commissionDisplay = `${commissionValue}%`;
-            // Calculate percentage of payment amount if available
-            if (this.newPaymentConfirmationData.paymentAmount) {
-              suggestedAmount = Math.round(this.newPaymentConfirmationData.paymentAmount * commissionValue / 100);
-            }
-          } else {
-            commissionDisplay = `${commissionValue} ${this.commerce?.currency || 'CLP'}`;
-            suggestedAmount = Number(commissionValue);
-          }
-        }
-        
-        return {
-          name: this.attention.professionalName,
-          commission: commissionDisplay,
-          suggestedAmount: suggestedAmount
-        };
-      }
-      
-      // Fallback to just the name
-      return {
-        name: this.attention.professionalName,
-        commission: null,
-        suggestedAmount: 0
-      };
-    },
-    goAssignProfessional() {
-      if (!this.selectedProfessional) {
-        this.alertError = this.$t('professionals.selectProfessionalFirst') || 'Por favor seleccione un profesional';
-        return;
-      }
-      this.goToAssignProfessional = !this.goToAssignProfessional;
-    },
-    cancelAssignProfessional() {
-      this.goToAssignProfessional = false;
-    },
-    async confirmAssignProfessional() {
-      if (!this.selectedProfessional) {
-        this.alertError = this.$t('professionals.selectProfessionalFirst') || 'Por favor seleccione un profesional';
-        return;
-      }
-      try {
-        this.loading = true;
-        this.alertError = '';
-        if (this.attention && this.attention.id) {
-          await assignProfessional(this.attention.id, this.selectedProfessional.id, this.selectedProfessional.personalInfo?.name || this.selectedProfessional.name);
-          this.$emit('attention-updated');
-          this.goToAssignProfessional = false;
-          this.extendedProfessionalEntity = false;
-        }
-        this.loading = false;
-      } catch (error) {
-        this.loading = false;
-        this.alertError = error.response?.data?.message || error.message || this.$t('professionals.assignError') || 'Error al asignar profesional';
-      }
     },
     goConfirm() {
       this.goToConfirm = !this.goToConfirm;
@@ -1088,7 +965,6 @@ export default {
                 v-if="
                   attention.queueName ||
                   attention.collaboratorName ||
-                  attention.professionalName ||
                   (attention.servicesDetails && attention.servicesDetails.length > 0) ||
                   attention.createdDate
                 "
@@ -1106,13 +982,6 @@ export default {
                   <span class="attention-context-label-inline">Colaborador</span>
                   <span class="attention-context-value-inline">{{
                     attention.collaboratorName || 'N/I'
-                  }}</span>
-                </div>
-                <div v-if="attention.professionalName" class="attention-context-item-inline">
-                  <i class="bi bi-person-badge"></i>
-                  <span class="attention-context-label-inline">{{ $t('professionals.professional') || 'Profesional' }}</span>
-                  <span class="attention-context-value-inline">{{
-                    attention.professionalName || 'N/I'
                   }}</span>
                 </div>
                 <div v-if="attention.createdDate" class="attention-context-item-inline">
@@ -1269,10 +1138,7 @@ export default {
               <!-- Action Buttons -->
               <div class="attention-actions-tabs">
                 <button
-                  v-if="
-                    getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT') &&
-                    !attention.paid
-                  "
+                  v-if="getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')"
                   class="attention-action-tab"
                   :class="{ 'attention-action-tab-active': extendedPaymentEntity }"
                   @click.prevent="showPaymentDetails()"
@@ -1281,18 +1147,6 @@ export default {
                   <span>{{ $t('collaboratorBookingsView.paymentConfirm') }}</span>
                   <i
                     :class="`bi ${extendedPaymentEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-                  ></i>
-                </button>
-                <button
-                  v-if="getActiveFeature(commerce, 'professional-assignment-enabled', 'PRODUCT')"
-                  class="attention-action-tab"
-                  :class="{ 'attention-action-tab-active': extendedProfessionalEntity }"
-                  @click.prevent="showProfessionalDetails()"
-                >
-                  <i class="bi bi-person-badge"></i>
-                  <span>{{ $t('professionals.assignProfessional') }}</span>
-                  <i
-                    :class="`bi ${extendedProfessionalEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
                   ></i>
                 </button>
                 <button
@@ -1367,9 +1221,6 @@ export default {
                         "
                         :errors-add="errorsAdd"
                         :receive-data="receiveData"
-                        :professional-name="getAssignedProfessionalCommissionData().name"
-                        :professional-commission="getAssignedProfessionalCommissionData().commission"
-                        :suggested-commission-amount="getAssignedProfessionalCommissionData().suggestedAmount"
                       >
                       </PaymentForm>
                       <div class="attention-action-buttons">
@@ -1384,8 +1235,8 @@ export default {
                       </div>
                       <AreYouSure
                         :show="goToConfirm"
-                        :yes-disabled="!toggles || !toggles['collaborator.attentions.confirm']"
-                        :no-disabled="!toggles || !toggles['collaborator.attentions.confirm']"
+                        :yes-disabled="toggles && toggles['collaborator.attentions.confirm']"
+                        :no-disabled="toggles && toggles['collaborator.attentions.confirm']"
                         @actionYes="confirm()"
                         @actionNo="confirmCancel()"
                       >
@@ -1396,105 +1247,6 @@ export default {
                         :title="$t('collaboratorBookingsView.message.8.title')"
                         :content="$t('collaboratorBookingsView.message.8.content')"
                       />
-                    </div>
-                  </div>
-                </div>
-              </Transition>
-
-              <!-- PROFESSIONAL ASSIGNMENT -->
-              <Transition name="slide-fade">
-                <div
-                  v-if="
-                    extendedProfessionalEntity &&
-                    getActiveFeature(commerce, 'professional-assignment-enabled', 'PRODUCT')
-                  "
-                  class="attention-action-section"
-                >
-                  <div class="attention-action-content">
-                    <div class="attention-action-form payment-form-modern">
-                      <div class="attention-action-header">
-                        <i class="bi bi-person-badge"></i>
-                        <span>{{ $t('professionals.assignProfessional') }}</span>
-                      </div>
-                      <div class="payment-form-content">
-                        <div
-                          v-if="attention.professionalName"
-                          class="professional-assigned-alert"
-                        >
-                          <i class="bi bi-person-badge-fill"></i>
-                          <span class="alert-text">
-                            {{ $t('professionals.alreadyAssigned') || 'Profesional ya asignado' }}: 
-                            <strong>{{ attention.professionalName }}</strong>
-                          </span>
-                          <small class="alert-action">
-                            {{ $t('professionals.canReplace') || 'Puede reemplazarlo seleccionando otro.' }}
-                          </small>
-                        </div>
-                        <div class="payment-form-field">
-                          <label class="payment-form-label">{{ $t('professionals.selectProfessional') }}</label>
-                          <ProfessionalSelector
-                            :professionals="professionals"
-                            :filter-by-service="attention.servicesId"
-                            :show-commission="false"
-                            @professional-selected="handleProfessionalSelected"
-                          />
-                        </div>
-                        <div
-                          v-if="
-                            selectedProfessional &&
-                            getActiveFeature(commerce, 'professional-commission-enabled', 'PRODUCT')
-                          "
-                          class="payment-form-field"
-                        >
-                          <label class="payment-form-label">{{ $t('professionals.commission') }}</label>
-                          <div class="d-flex align-items-center gap-2">
-                            <input
-                              v-model="professionalCommission"
-                              type="number"
-                              class="payment-form-input"
-                              :placeholder="getSuggestedCommission()"
-                            />
-                            <span class="text-muted">
-                              {{
-                                selectedProfessional.financialInfo?.commissionType === 'PERCENTAGE'
-                                  ? '%'
-                                  : commerce.currency || 'CLP'
-                              }}
-                            </span>
-                          </div>
-                          <small class="text-muted">
-                            {{ $t('professionals.suggestedCommission') }}:
-                            {{ getSuggestedCommission() }}
-                          </small>
-                        </div>
-                        <div
-                          v-if="
-                            professionalCommission &&
-                            !selectedProfessional &&
-                            getActiveFeature(commerce, 'professional-commission-enabled', 'PRODUCT')
-                          "
-                          class="alert alert-warning mt-2"
-                        >
-                          <i class="bi bi-exclamation-triangle"></i>
-                          {{ $t('professionals.commissionWithoutProfessional') }}
-                        </div>
-                      </div>
-                      <div class="attention-action-buttons">
-                        <button
-                          class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
-                          @click="goAssignProfessional()"
-                          :disabled="!selectedProfessional"
-                        >
-                          <i class="bi bi-person-check-fill"></i>
-                          {{ $t('professionals.assignProfessional') }}
-                        </button>
-                      </div>
-                      <AreYouSure
-                        :show="goToAssignProfessional"
-                        @actionYes="confirmAssignProfessional()"
-                        @actionNo="cancelAssignProfessional()"
-                      >
-                      </AreYouSure>
                     </div>
                   </div>
                 </div>
@@ -1559,8 +1311,8 @@ export default {
                       </div>
                       <AreYouSure
                         :show="goToTransfer"
-                        :yes-disabled="!toggles || !toggles['collaborator.attentions.transfer']"
-                        :no-disabled="!toggles || !toggles['collaborator.attentions.transfer']"
+                        :yes-disabled="toggles && toggles['collaborator.attentions.transfer']"
+                        :no-disabled="toggles && toggles['collaborator.attentions.transfer']"
                         @actionYes="transfer()"
                         @actionNo="cancelTransfer()"
                       >
@@ -1709,8 +1461,8 @@ export default {
                 <div class="attention-actions-confirmations">
                   <AreYouSure
                     :show="goToCancel"
-                      :yes-disabled="!toggles || !toggles['collaborator.attentions.cancel']"
-                      :no-disabled="!toggles || !toggles['collaborator.attentions.cancel']"
+                    :yes-disabled="toggles && toggles['collaborator.attentions.cancel']"
+                    :no-disabled="toggles && toggles['collaborator.attentions.cancel']"
                     @actionYes="cancel()"
                     @actionNo="cancelCancel()"
                   >
@@ -2644,100 +2396,5 @@ export default {
     align-items: flex-start;
     gap: 0.5rem;
   }
-}
-
-.professional-assigned-alert {
-  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-  border: 1px solid #90caf9;
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin: 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  line-height: 1.3;
-  color: #1565c0;
-}
-
-.professional-assigned-alert i {
-  color: #1976d2;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.professional-assigned-alert .alert-text {
-  flex: 1;
-  margin: 0;
-}
-
-.professional-assigned-alert .alert-action {
-  display: block;
-  color: #1976d2;
-  font-size: 11px;
-  margin-top: 2px;
-  font-style: italic;
-}
-
-.professional-assigned-alert strong {
-  color: #0d47a1;
-  font-weight: 600;
-}
-
-/* Payment Form Styles - Para formulario de profesionales */
-.payment-form-modern {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
-.payment-form-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
-.payment-form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.payment-form-label {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.7);
-  letter-spacing: -0.01em;
-}
-
-.payment-form-select,
-.payment-form-input {
-  padding: 0.375rem 0.625rem;
-  border: 1px solid rgba(169, 169, 169, 0.2);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.95);
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.7);
-  transition: all 0.2s ease;
-  width: 100%;
-}
-
-.payment-form-select:hover,
-.payment-form-input:hover {
-  border-color: rgba(0, 194, 203, 0.3);
-  background: rgba(255, 255, 255, 1);
-}
-
-.payment-form-select:focus,
-.payment-form-input:focus {
-  outline: none;
-  border-color: #00c2cb;
-  box-shadow: 0 0 0 3px rgba(0, 194, 203, 0.1);
-}
-
-.payment-form-select.is-invalid,
-.payment-form-input.is-invalid {
-  border-color: #dc3545;
 }
 </style>

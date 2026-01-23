@@ -68,10 +68,21 @@ export default {
       dateType: 'month',
       showResume: true,
       showIncomes: false,
-      showCommissionPayments: false,
       showOutcomes: false,
       toggles: {},
       allCommerces: ref([]),
+      // Shared filter state
+      sharedIncomeFilters: {
+        incomeStatus: undefined,
+        fiscalNote: undefined,
+        automatic: undefined,
+        asc: false,
+        searchText: undefined,
+        startDate: undefined,
+        endDate: undefined,
+      },
+      // Modal states
+      showCommissionPaymentsModal: false,
     });
 
     // Use global commerce from store
@@ -170,29 +181,25 @@ export default {
       state.showResume = true;
       state.showIncomes = false;
       state.showOutcomes = false;
-      state.showCommissionPayments = false;
     };
 
     const showIncomes = () => {
       state.showResume = false;
       state.showIncomes = true;
       state.showOutcomes = false;
-      state.showCommissionPayments = false;
     };
 
     const showOutcomes = () => {
       state.showResume = false;
       state.showIncomes = false;
       state.showOutcomes = true;
-      state.showCommissionPayments = false;
     };
 
-    const showCommissionPayments = () => {
-      state.showResume = false;
-      state.showIncomes = false;
-      state.showOutcomes = false;
-      state.showCommissionPayments = true;
+    const closeCommissionPaymentsModal = () => {
+      state.showCommissionPaymentsModal = false;
     };
+
+
 
     const handleFiltersToggle = () => {
       // Handle filters toggle if needed
@@ -203,6 +210,20 @@ export default {
       if (commerce && commerce.id && commerce.id !== 'ALL') {
         await store.setCurrentCommerce(commerce);
       }
+    };
+
+    // Shared filter functions
+    const setSharedIncomeStatus = (value) => {
+      console.log('BusinessFinancial.setSharedIncomeStatus:', { oldValue: state.sharedIncomeFilters.incomeStatus, newValue: value });
+      state.sharedIncomeFilters.incomeStatus = value;
+    };
+
+    const setSharedFiscalNote = (value) => {
+      state.sharedIncomeFilters.fiscalNote = value;
+    };
+
+    const setSharedAutomatic = (value) => {
+      state.sharedIncomeFilters.automatic = value;
     };
 
     return {
@@ -216,10 +237,13 @@ export default {
       showResume,
       showIncomes,
       showOutcomes,
-      showCommissionPayments,
+      closeCommissionPaymentsModal,
       getLocalHour,
       handleFiltersToggle,
       handleCommerceChanged,
+      setSharedIncomeStatus,
+      setSharedFiscalNote,
+      setSharedAutomatic,
     };
   },
 };
@@ -260,7 +284,7 @@ export default {
             </div>
             <div v-if="!loading" id="businessFinancial-result" class="mt-2">
               <div class="row col mx-1 mt-3 mb-1 tabs-header-divider">
-                <div class="col-3 centered">
+                <div class="col-4 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showResume ? 'btn-selected' : ''"
@@ -271,7 +295,7 @@ export default {
                     <i class="bi bi-graph-up"></i>
                   </button>
                 </div>
-                <div class="col-3 centered">
+                <div class="col-4 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showIncomes ? 'btn-selected' : ''"
@@ -282,7 +306,7 @@ export default {
                     <i class="bi bi-arrow-down-circle-fill"></i>
                   </button>
                 </div>
-                <div class="col-3 centered">
+                <div class="col-4 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showOutcomes ? 'btn-selected' : ''"
@@ -293,17 +317,7 @@ export default {
                     <i class="bi bi-arrow-up-circle-fill"></i>
                   </button>
                 </div>
-                <div class="col-3 centered">
-                  <button
-                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
-                    :class="state.showCommissionPayments ? 'btn-selected' : ''"
-                    @click="showCommissionPayments()"
-                    :disabled="!state.toggles['financial.incomes.view']"
-                  >
-                    {{ $t('commissionPayments.title') }} <br />
-                    <i class="bi bi-cash-coin"></i>
-                  </button>
-                </div>
+
               </div>
               <div>
                 <ResumeFinancialManagement
@@ -336,13 +350,6 @@ export default {
                   filters-location="component"
                 >
                 </OutcomesFinancialManagement>
-                <CommissionPaymentsManagement
-                  v-if="state.showCommissionPayments"
-                  :commerce="commerce"
-                  :business="state.business"
-                  :toggles="state.toggles"
-                >
-                </CommissionPaymentsManagement>
               </div>
             </div>
           </div>
@@ -598,44 +605,50 @@ export default {
                             <div class="d-flex gap-2 align-items-center">
                               <input
                                 type="radio"
-                                class="btn-check"
-                                :id="'confirmed-income-' + Math.random()"
-                                :value="'CONFIRMED'"
-                                :checked="filterProps.incomeStatus === 'CONFIRMED'"
-                                @change="
-                                  filterProps.incomeStatus = 'CONFIRMED';
-                                  filterProps.refresh(1);
-                                "
+                                class="btn-check btn-sm"
+                                :checked="!filterProps.incomeStatus || filterProps.incomeStatus === ''"
+                                @change="setSharedIncomeStatus('')"
+                                name="income-status-type"
+                                id="income-status-all"
+                                autocomplete="off"
                               />
-                              <label class="btn btn-sm" :for="'confirmed-income-' + Math.random()">
+                              <label class="btn btn-sm" for="income-status-all">
+                                <i class="bi bi-list"></i>
+                              </label>
+                              <input
+                                type="radio"
+                                class="btn-check btn-sm"
+                                :checked="filterProps.incomeStatus === 'CONFIRMED'"
+                                @change="setSharedIncomeStatus('CONFIRMED')"
+                                name="income-status-type"
+                                id="income-status-confirmed"
+                                autocomplete="off"
+                              />
+                              <label class="btn btn-sm" for="income-status-confirmed">
                                 <i class="bi bi-check-circle-fill green-icon"></i>
                               </label>
                               <input
                                 type="radio"
-                                class="btn-check"
-                                :id="'pending-income-' + Math.random()"
-                                :value="'PENDING'"
+                                class="btn-check btn-sm"
                                 :checked="filterProps.incomeStatus === 'PENDING'"
-                                @change="
-                                  filterProps.incomeStatus = 'PENDING';
-                                  filterProps.refresh(1);
-                                "
+                                @change="setSharedIncomeStatus('PENDING')"
+                                name="income-status-type"
+                                id="income-status-pending"
+                                autocomplete="off"
                               />
-                              <label class="btn btn-sm" :for="'pending-income-' + Math.random()">
+                              <label class="btn btn-sm" for="income-status-pending">
                                 <i class="bi bi-clock-fill yellow-icon"></i>
                               </label>
                               <input
                                 type="radio"
-                                class="btn-check"
-                                :id="'cancelled-income-' + Math.random()"
-                                :value="'CANCELLED'"
+                                class="btn-check btn-sm"
                                 :checked="filterProps.incomeStatus === 'CANCELLED'"
-                                @change="
-                                  filterProps.incomeStatus = 'CANCELLED';
-                                  filterProps.refresh(1);
-                                "
+                                @change="setSharedIncomeStatus('CANCELLED')"
+                                name="income-status-type"
+                                id="income-status-cancelled"
+                                autocomplete="off"
                               />
-                              <label class="btn btn-sm" :for="'cancelled-income-' + Math.random()">
+                              <label class="btn btn-sm" for="income-status-cancelled">
                                 <i class="bi bi-x-circle-fill red-icon"></i>
                               </label>
                             </div>
@@ -676,6 +689,112 @@ export default {
                                 $t('dashboard.asc') || 'Ascendente'
                               }}</label>
                             </div>
+                          </div>
+
+                          <!-- Amount Range Filters -->
+                          <div class="mb-3">
+                            <label class="form-label fw-bold mb-2">{{
+                              $t('businessFinancial.filters.amountRange') || 'Faixa de Valores'
+                            }}</label>
+                            <div class="row">
+                              <div class="col-5">
+                                <input
+                                  type="number"
+                                  class="form-control form-control-sm"
+                                  :value="filterProps.minAmount"
+                                  @input="e => { filterProps.minAmount = e.target.value; }"
+                                  :placeholder="$t('businessFinancial.filters.minAmount') || 'Valor Mínimo'"
+                                  min="0"
+                                  step="0.01"
+                                />
+                              </div>
+                              <div class="col-5">
+                                <input
+                                  type="number"
+                                  class="form-control form-control-sm"
+                                  :value="filterProps.maxAmount"
+                                  @input="e => { filterProps.maxAmount = e.target.value; }"
+                                  :placeholder="$t('businessFinancial.filters.maxAmount') || 'Valor Máximo'"
+                                  min="0"
+                                  step="0.01"
+                                />
+                              </div>
+                              <div class="col-2">
+                                <button
+                                  class="btn btn-sm btn-dark rounded-pill"
+                                  @click="filterProps.refresh()"
+                                  :disabled="filterProps.loading"
+                                >
+                                  <i class="bi bi-search"></i>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Income Type and Payment Method Filters -->
+                          <div class="mb-3">
+                            <div class="row">
+                              <div class="col-6">
+                                <label class="form-label fw-bold mb-2">{{
+                                  $t('businessFinancial.filters.incomeType') || 'Tipo de Receita'
+                                }}</label>
+                                <select
+                                  class="form-control form-control-sm"
+                                  :value="filterProps.incomeTypeFilter"
+                                  @change="e => { filterProps.incomeTypeFilter = e.target.value; filterProps.refresh(); }"
+                                >
+                                  <option :value="undefined">
+                                    {{ $t('businessFinancial.filters.all') || 'Todos' }}
+                                  </option>
+                                  <option value="STANDARD">{{ $t('incomeTypes.STANDARD') || 'Padrão' }}</option>
+                                  <option value="FUND_INCREASE">{{ $t('incomeTypes.FUND_INCREASE') || 'Aumento de Fundo' }}</option>
+                                  <option value="PACKAGE">{{ $t('incomeTypes.PACKAGE') || 'Pacote' }}</option>
+                                </select>
+                              </div>
+                              <div class="col-6">
+                                <label class="form-label fw-bold mb-2">{{
+                                  $t('businessFinancial.filters.paymentMethod') || 'Método de Pagamento'
+                                }}</label>
+                                <select
+                                  class="form-control form-control-sm"
+                                  :value="filterProps.paymentMethodFilter"
+                                  @change="e => { filterProps.paymentMethodFilter = e.target.value; filterProps.refresh(); }"
+                                >
+                                  <option :value="undefined">
+                                    {{ $t('businessFinancial.filters.all') || 'Todos' }}
+                                  </option>
+                                  <option value="CASH">{{ $t('paymentClientMethods.CASH') || 'Dinheiro' }}</option>
+                                  <option value="CARD">{{ $t('paymentClientMethods.CARD') || 'Cartão' }}</option>
+                                  <option value="TRANSFER">{{ $t('paymentClientMethods.TRANSFER') || 'Transferência' }}</option>
+                                  <option value="CHECK">{{ $t('paymentClientMethods.CHECK') || 'Cheque' }}</option>
+                                  <option value="OTHER">{{ $t('paymentClientMethods.OTHER') || 'Outro' }}</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Professional Filter -->
+                          <div class="mb-3">
+                            <label class="form-label fw-bold mb-2">{{
+                              $t('businessFinancial.filters.professional') || 'Profissional'
+                            }} ({{ filterProps.professionals?.length || 0 }})</label>
+                            <select
+                              class="form-control form-control-sm"
+                              :value="filterProps.professionalFilter"
+                              @change="e => { filterProps.professionalFilter = e.target.value; filterProps.refresh(); }"
+                              :disabled="!filterProps.professionals || filterProps.professionals.length === 0"
+                            >
+                              <option :value="undefined">
+                                {{ $t('businessFinancial.filters.all') || 'Todos' }}
+                              </option>
+                              <option
+                                v-for="professional in filterProps.professionals || []"
+                                :key="professional.id"
+                                :value="professional.id"
+                              >
+                                {{ professional.personalInfo?.name || professional.name || '-' }}
+                              </option>
+                            </select>
                           </div>
 
                           <!-- Clear button -->
@@ -827,7 +946,7 @@ export default {
               <template #content>
                 <!-- Header with tabs -->
                 <div class="row col mx-1 mt-3 mb-3 tabs-header-divider">
-                  <div class="col-3 centered">
+                  <div class="col-4 centered">
                     <button
                       class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                       :class="state.showResume ? 'btn-selected' : ''"
@@ -838,7 +957,7 @@ export default {
                       <i class="bi bi-graph-up"></i>
                     </button>
                   </div>
-                  <div class="col-5 centered">
+                  <div class="col-4 centered">
                     <button
                       class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                       :class="state.showIncomes ? 'btn-selected' : ''"
@@ -860,6 +979,7 @@ export default {
                       <i class="bi bi-arrow-up-circle-fill"></i>
                     </button>
                   </div>
+
                 </div>
 
                 <!-- Main content components -->
@@ -880,7 +1000,7 @@ export default {
                   :queues="state.queues"
                   :commerces="selectedCommerces"
                   :business="state.business"
-                  filters-location="slot"
+                  :shared-filters="state.sharedIncomeFilters"
                 >
                 </IncomesFinancialManagement>
                 <OutcomesFinancialManagement
@@ -891,6 +1011,7 @@ export default {
                   :commerces="selectedCommerces"
                   :business="state.business"
                   filters-location="slot"
+                  @open-commission-payments="() => state.showCommissionPaymentsModal = true"
                 >
                 </OutcomesFinancialManagement>
               </template>
@@ -900,6 +1021,36 @@ export default {
             <Message
               :title="$t('businessFinancial.message.1.title')"
               :content="$t('businessFinancial.message.1.content')"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commission Payments Modal -->
+    <div
+      v-if="state.showCommissionPaymentsModal"
+      class="modal fade show d-block"
+      tabindex="-1"
+      style="background-color: rgba(0,0,0,0.5);"
+    >
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0 centered active-name">
+            <h5 class="modal-title fw-bold">
+              <i class="bi bi-cash-coin"></i> {{ $t('commissionPayments.title') }}
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              @click="closeCommissionPaymentsModal()"
+            ></button>
+          </div>
+          <div class="modal-body text-center mb-0">
+            <CommissionPaymentsManagement
+              :commerce="commerce"
+              :business="state.business"
+              :toggles="state.toggles"
             />
           </div>
         </div>

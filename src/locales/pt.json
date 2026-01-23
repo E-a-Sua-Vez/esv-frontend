@@ -267,6 +267,7 @@
   "commissionPayments": {
     "title": "Pagamentos de Comissões",
     "createPayment": "Criar Pagamento de Comissões",
+    "createNew": "Criar Novo",
     "editPayment": "Editar Pagamento",
     "confirmPayment": "Confirmar Pagamento",
     "cancelPayment": "Cancelar Pagamento",
@@ -277,6 +278,8 @@
     "dateTo": "Data Até",
     "search": "Buscar Receitas",
     "unpaidIncomes": "Receitas sem Comissão Paga",
+    "selectedIncomes": "Receitas Selecionadas",
+    "selectedCount": "Selecionadas",
     "selectAll": "Selecionar Todos",
     "deselectAll": "Desselecionar Todos",
     "date": "Data",
@@ -321,7 +324,13 @@
     "toRemove": "A Remover",
     "toAdd": "A Adicionar",
     "finalTotal": "Total Final",
-    "paymentDetails": "Detalhes do Pagamento",
+    "paymentDetails": {
+      "paymentType": "Tipo de Pagamento",
+      "paymentMethod": "Método de Pagamento",
+      "paymentAmount": "Valor do Pagamento",
+      "professionalCommission": "Comissão Profissional",
+      "paymentDate": "Data do Pagamento"
+    },
     "cancellationDetails": "Detalhes do Cancelamento",
     "commissionPaymentStatus": {
       "CREATED": "Criado",
@@ -1058,6 +1067,7 @@
     "paymentFiscalNote": "Nota Fiscal:",
     "paymentAmount": "Valor Pagado:",
     "paymentCommission": "Comissão:",
+    "professionalCommission": "Comissão Profissional:",
     "paymentDate": "Data de Pagamento:",
     "outcomeType": "Tipo:",
     "outcomeProduct": "Produto:",
@@ -2491,9 +2501,11 @@
     "clear": "Limpar",
     "return": "Voltar",
     "bookings": "Reservas",
+    "paid": "Pago",
     "packages": "Pacotes",
     "indicators": "Indicadores",
     "graph": "Tendências",
+    "hideDetails": "Ocultar Detalhes",
     "lgpdCompliance": {
       "notificationMetrics": {
         "title": "Métricas de Notificações",
@@ -3142,6 +3154,13 @@
           "4": "reservas."
         }
       }
+    },
+    "status": {
+      "pending": "Pendente",
+      "confirmed": "Confirmado",
+      "processed": "Atendido",
+      "cancelled": "Cancelado",
+      "unknown": "Indefinido"
     },
     "message": {
       "1": {

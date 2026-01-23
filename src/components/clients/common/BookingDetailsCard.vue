@@ -243,6 +243,44 @@ export default {
         return idNumber || 'N/I';
       }
     },
+    getStatusText(status) {
+      try {
+        if (status === 'PENDING') {
+          return this.$t('dashboard.status.pending') || 'Pendente';
+        } else if (status === 'CONFIRMED') {
+          return this.$t('dashboard.status.confirmed') || 'Confirmado';
+        } else if (status === 'PROCESSED') {
+          return this.$t('dashboard.status.processed') || 'Atendido';
+        } else if (status === 'USER_CANCELED') {
+          return this.$t('dashboard.status.cancelled') || 'Cancelado';
+        }
+        return this.$t('dashboard.status.unknown') || 'Indefinido';
+      } catch (error) {
+        console.error('Error getting status text:', error);
+        return 'N/I';
+      }
+    },
+    getStatusBadgeClass(status) {
+      try {
+        if (status === 'PENDING') {
+          return 'badge-warning';
+        } else if (status === 'CONFIRMED') {
+          return 'badge-info';
+        } else if (status === 'PROCESSED') {
+          return 'badge-success';
+        } else if (status === 'USER_CANCELED') {
+          return 'badge-danger';
+        }
+        return 'badge-secondary';
+      } catch (error) {
+        console.error('Error getting status badge class:', error);
+        return 'badge-secondary';
+      }
+    },
+    // Check if booking is processed and cannot be modified
+    isBookingProcessed() {
+      return this.booking && (this.booking.processed || this.booking.status === 'PROCESSED');
+    },
   },
   watch: {
     detailsOpened: {
@@ -305,10 +343,32 @@ export default {
           </span>
         </div>
 
+        <!-- Status Badge -->
+        <div class="status-badge-wrapper">
+          <Popper :class="'dark'" arrow disable-click-away hover>
+            <template #content>
+              <div>{{ $t('dashboard.clientCard.tooltip.status') || 'Estado do agendamento' }}: {{ getStatusText(booking?.status) }}</div>
+            </template>
+            <span class="badge-mini status-badge" :class="getStatusBadgeClass(booking?.status)">
+              <i :class="`bi ${clasifyStatus(booking?.status)}`"></i>
+              {{ getStatusText(booking?.status) }}
+            </span>
+          </Popper>
+        </div>
+
         <!-- Client Info - Horizontal -->
         <div class="client-info-inline">
           <div class="client-name-inline">
             <span class="client-name-text">{{ bookingFullName }}</span>
+            <!-- Paid Status Badge -->
+            <div
+              v-if="booking.paid || booking.confirmed || booking.confirmationData?.paid"
+              class="attention-paid-badge"
+              :title="$t('collaboratorBookingsView.paymentConfirmed') || 'Pagamento Confirmado'"
+            >
+              <i class="bi bi-check-circle-fill"></i>
+              <span class="paid-text">Pago</span>
+            </div>
             <Popper :class="'dark'" arrow disable-click-away hover>
               <template #content>
                 <div>
@@ -337,12 +397,6 @@ export default {
                 </div>
               </template>
               <i class="bi bi-person-fill-check icon-mini-separated" @click.stop></i>
-            </Popper>
-            <Popper v-if="booking?.paid" :class="'dark'" arrow disable-click-away hover>
-              <template #content>
-                <div>{{ $t('dashboard.clientCard.tooltip.paid') || 'Agendamento pago' }}</div>
-              </template>
-              <i class="bi bi-coin icon-mini-separated blue-icon" @click.stop></i>
             </Popper>
           </div>
         </div>
@@ -1772,6 +1826,94 @@ export default {
 
 .metric-card-details strong {
   font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Paid Badge - Matching Attention Style */
+.attention-paid-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-left: 0.375rem;
+  white-space: nowrap;
+}
+
+.attention-paid-badge i {
+  color: #059669;
+  font-size: 0.75rem;
+}
+
+.attention-paid-badge .paid-text {
+  color: #059669;
+  font-weight: 600;
+}
+
+/* Status Badge Wrapper */
+.status-badge-wrapper {
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+
+/* Status Badge Classes */
+.status-badge {
+  white-space: nowrap;
+}
+
+.status-badge.badge-warning {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.15) 100%);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.status-badge.badge-warning i {
+  color: #d97706;
+}
+
+.status-badge.badge-info {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(29, 78, 216, 0.15) 100%);
+  color: #1d4ed8;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.status-badge.badge-info i {
+  color: #1d4ed8;
+}
+
+.status-badge.badge-success {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.status-badge.badge-success i {
+  color: #059669;
+}
+
+.status-badge.badge-danger {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.15) 100%);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.status-badge.badge-danger i {
+  color: #dc2626;
+}
+
+.status-badge.badge-secondary {
+  background: rgba(169, 169, 169, 0.15);
+  color: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(169, 169, 169, 0.25);
+}
+
+.status-badge.badge-secondary i {
   color: rgba(0, 0, 0, 0.7);
 }
 </style>

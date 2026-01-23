@@ -301,10 +301,17 @@ export default {
           const donutChartOptions = {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+              padding: {
+                top: 10,
+                bottom: 10,
+                left: 10,
+                right: 10
+              }
+            },
             plugins: {
               legend: {
-                display: true,
-                position: 'bottom',
+                display: false,
               },
               tooltip: {
                 callbacks: {
@@ -1828,7 +1835,7 @@ export default {
                   <!-- Projected Cash Flow and Goal Progress -->
                   <div
                     v-if="financialResume.resume.projectedCashFlow !== undefined"
-                    class="row mb-3"
+                    class="row mb-3 mx-1"
                   >
                     <div class="col-12 mb-3 d-flex">
                       <div class="card p-3 w-100 h-100 projected-cash-flow-card">
@@ -1991,46 +1998,34 @@ export default {
                       </div>
                     </div>
                   </div>
-                  <div class="row">
-                    <div id="profit" class="col">
-                      <SimpleCard
-                        :show="true"
-                        :data="+financialResume['resume']['diff'] || 0"
-                        :subdata="`${+financialResume['resume']['avg'] || 0}%`"
-                        :title="$t('businessFinancial.profit')"
-                        :show-tooltip="false"
-                        :icon="'bi-arrow-up-circle-fill'"
-                        :icon-style-class="'green-icon'"
-                      >
-                      </SimpleCard>
-                    </div>
-                  </div>
                   <!-- Charts Section -->
                   <div class="row mx-2 mt-3">
                     <!-- Evolution Chart -->
                     <div
-                      class="col-12 col-lg-8 mb-3"
+                      class="col-12 col-lg-6 mb-3"
                       v-if="
-                        calculatedMetrics['incomes.created']?.evolution?.datasets &&
-                        calculatedMetrics['outcomes.created']?.evolution?.datasets
+                        financialResume.evolution &&
+                        financialResume.evolution.chartData &&
+                        financialResume.evolution.chartData.datasets &&
+                        financialResume.evolution.chartData.datasets.length > 0
                       "
                     >
-                      <div class="modern-card centered p-4">
+                      <div class="modern-card p-4">
                         <div class="fw-bold mb-2">
                           <span>{{ $t('businessFinancial.evolution') }} </span>
                         </div>
-                        <LineChart
-                          v-if="financialResume.evolution && financialResume.evolution.chartData"
-                          class="centered"
-                          :chart-data="financialResume.evolution.chartData"
-                          :options="financialResume.evolution.options"
-                        />
+                        <div style="height: 280px; width: 100%; margin: 1rem 0;">
+                          <LineChart
+                            :chart-data="financialResume.evolution.chartData"
+                            :options="financialResume.evolution.options"
+                          />
+                        </div>
                       </div>
                     </div>
 
                     <!-- Income Distribution Donut Chart -->
                     <div
-                      class="col-12 col-lg-4 mb-3"
+                      class="col-12 col-lg-6 mb-3"
                       v-if="
                         financialResume.incomeDistribution &&
                         financialResume.incomeDistribution.chartData &&
@@ -2038,16 +2033,17 @@ export default {
                         financialResume.incomeDistribution.chartData.labels.length > 0
                       "
                     >
-                      <div class="modern-card centered p-4">
+                      <div class="modern-card p-4">
                         <div class="fw-bold mb-2">
                           <span>{{ $t('businessFinancial.distribution.title') }} </span>
                         </div>
-                        <DoughnutChart
-                          class="centered"
-                          :chart-data="financialResume.incomeDistribution.chartData"
-                          :options="financialResume.incomeDistribution.options"
-                        />
-                        <div class="mt-3">
+                        <div style="height: 280px; width: 100%; margin: 1rem 0;">
+                          <DoughnutChart
+                            :chart-data="financialResume.incomeDistribution.chartData"
+                            :options="financialResume.incomeDistribution.options"
+                          />
+                        </div>
+                        <div class="mt-4">
                           <div
                             v-for="(label, index) in financialResume.incomeDistribution.chartData
                               .labels"
@@ -2083,7 +2079,7 @@ export default {
 
                   <!-- Trends Section -->
                   <div
-                    v-if="trends && trends.monthlyData && trends.monthlyData.length > 0"
+                    v-if="trends && trends.averageIncomes !== undefined"
                     class="row mb-3"
                   >
                     <div class="col-12">
@@ -2199,18 +2195,10 @@ export default {
                           </div>
                         </div>
 
-                        <!-- Trends Chart -->
-                        <div class="mb-3" style="height: 300px">
-                          <LineChart
-                            :chart-data="getTrendsChartData()"
-                            :options="getTrendsChartOptions()"
-                          />
-                        </div>
-
                         <!-- Average Metrics -->
-                        <div class="row">
-                          <div class="col-6 col-md-3 mb-2">
-                            <div class="text-center p-2 modern-metric-mini-card">
+                        <div class="row mb-3">
+                          <div class="col-6 col-md-3 mb-2 d-flex">
+                            <div class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center">
                               <div class="small text-muted">
                                 {{ $t('businessFinancial.trends.averageIncomes') }}
                               </div>
@@ -2226,8 +2214,8 @@ export default {
                               </div>
                             </div>
                           </div>
-                          <div class="col-6 col-md-3 mb-2">
-                            <div class="text-center p-2 modern-metric-mini-card">
+                          <div class="col-6 col-md-3 mb-2 d-flex">
+                            <div class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center">
                               <div class="small text-muted">
                                 {{ $t('businessFinancial.trends.averageOutcomes') }}
                               </div>
@@ -2243,8 +2231,8 @@ export default {
                               </div>
                             </div>
                           </div>
-                          <div class="col-6 col-md-3 mb-2">
-                            <div class="text-center p-2 modern-metric-mini-card">
+                          <div class="col-6 col-md-3 mb-2 d-flex">
+                            <div class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center">
                               <div class="small text-muted">
                                 {{ $t('businessFinancial.trends.averageProfit') }}
                               </div>
@@ -2260,14 +2248,22 @@ export default {
                               </div>
                             </div>
                           </div>
-                          <div class="col-6 col-md-3 mb-2">
-                            <div class="text-center p-2 modern-metric-mini-card">
+                          <div class="col-6 col-md-3 mb-2 d-flex">
+                            <div class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center">
                               <div class="small text-muted">
                                 {{ $t('businessFinancial.trends.averageMargin') }}
                               </div>
                               <div class="fw-bold">{{ trends.averageMargin.toFixed(2) }}%</div>
                             </div>
                           </div>
+                        </div>
+
+                        <!-- Trends Chart -->
+                        <div style="height: 400px">
+                          <LineChart
+                            :chart-data="getTrendsChartData()"
+                            :options="getTrendsChartOptions()"
+                          />
                         </div>
                       </div>
                     </div>
@@ -2431,7 +2427,7 @@ export default {
               </div>
               <div v-else>
                 <Message
-                  :icon="'bi-graph-up-arrow'"
+                  :icon="'graph-up-arrow'"
                   :title="$t('dashboard.message.2.title')"
                   :content="$t('dashboard.message.2.content')"
                 />
@@ -2442,7 +2438,7 @@ export default {
       </div>
       <div v-if="showResumeFinancialManagement === true && !toggles['financial.resume.view']">
         <Message
-          :icon="'bi-graph-up-arrow'"
+          :icon="'graph-up-arrow'"
           :title="$t('dashboard.message.1.title')"
           :content="$t('dashboard.message.1.content')"
         />

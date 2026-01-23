@@ -57,14 +57,14 @@ export const updateCollaborator = async (id, collaborator) => {
       delete collaborator.profilePhoto;
     }
   }
-  
+
   return (await requestBackend.patch(`/${entity}/${id}`, collaborator, await getHeaders())).data;
 };
 
 export const uploadProfilePhoto = async (id, photoFile) => {
   const formData = new FormData();
   formData.append('photo', photoFile);
-  
+
   const response = await requestBackend.post(
     `/${entity}/${id}/profile-photo`,
     formData,
@@ -73,7 +73,7 @@ export const uploadProfilePhoto = async (id, photoFile) => {
       'Content-Type': 'multipart/form-data'
     }
   );
-  
+
   return response.data.photoUrl;
 };
 

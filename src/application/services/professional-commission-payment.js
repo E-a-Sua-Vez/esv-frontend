@@ -1,17 +1,17 @@
-import { requestBackend, requestQueryStack, getHeaders } from '../api';
+import { requestBackend, requestQuery, getHeaders } from '../api';
 
 const entity = 'professional-commission-payment';
 const queryEntity = 'professional-commission-payments';
 
 export const getCommissionPaymentById = async id =>
-  (await requestQueryStack.get(`/${queryEntity}/${id}`, await getHeaders())).data;
+  (await requestQuery.get(`/${queryEntity}/${id}`, await getHeaders())).data;
 
 export const getCommissionPaymentsByCommerce = async commerceId =>
-  (await requestQueryStack.get(`/${queryEntity}/commerce/${commerceId}`, await getHeaders())).data;
+  (await requestQuery.get(`/${queryEntity}/commerce/${commerceId}`, await getHeaders())).data;
 
 export const getCommissionPaymentsByProfessional = async professionalId =>
   (
-    await requestQueryStack.get(
+    await requestQuery.get(
       `/${queryEntity}/professional/${professionalId}`,
       await getHeaders(),
     )
@@ -19,7 +19,7 @@ export const getCommissionPaymentsByProfessional = async professionalId =>
 
 export const getCommissionPaymentsByStatus = async (commerceId, status) =>
   (
-    await requestQueryStack.get(
+    await requestQuery.get(
       `/${queryEntity}/commerce/${commerceId}/status/${status}`,
       await getHeaders(),
     )
@@ -31,7 +31,7 @@ export const getCommissionPaymentsByProfessionalAndStatus = async (
   status,
 ) =>
   (
-    await requestQueryStack.get(
+    await requestQuery.get(
       `/${queryEntity}/professional/${professionalId}/commerce/${commerceId}/status/${status}`,
       await getHeaders(),
     )

@@ -254,7 +254,7 @@ export default {
             :title="$t('dashboard.reports.surveys-question.title')"
             :show-tooltip="true"
             :description="$t('dashboard.reports.surveys-question.description')"
-            :icon="'bi-file-earmark-pdf'"
+            :icon="'file-earmark-pdf'"
             @download="exportToPDF"
             :can-download="toggles['dashboard.reports.surveys'] === true"
           ></SimpleDownloadCard>

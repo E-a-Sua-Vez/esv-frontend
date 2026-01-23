@@ -149,10 +149,10 @@ export default {
             Object.keys(state.groupedQueues).length > 0 &&
             state.collaborator.type === 'STANDARD'
           ) {
-            const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(
+            const collaboratorQueues = state.groupedQueues['PROFESSIONAL'].filter(
               queue => queue.collaboratorId === state.collaborator.id
             );
-            const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
+            const otherQueues = state.queues.filter(queue => queue.type !== 'PROFESSIONAL');
             const queues = [...collaboratorQueues, ...otherQueues];
             state.queues = queues;
           }
@@ -1100,7 +1100,7 @@ export default {
                   :title="$t('dashboard.reports.indicators.title')"
                   :show-tooltip="true"
                   :description="$t('dashboard.reports.indicators.description')"
-                  :icon="'bi-file-earmark-pdf'"
+                  :icon="'file-earmark-pdf'"
                   :can-download="state.toggles['dashboard.reports.indicators'] === true"
                   class="mb-3"
                   @download="handleExportToPDF"
@@ -1303,7 +1303,7 @@ export default {
                       :title="$t('dashboard.reports.indicators.title')"
                       :show-tooltip="true"
                       :description="$t('dashboard.reports.indicators.description')"
-                      :icon="'bi-file-earmark-pdf'"
+                      :icon="'file-earmark-pdf'"
                       :can-download="state.toggles['dashboard.reports.indicators'] === true"
                       class="mb-3"
                       @download="handleExportToPDF"

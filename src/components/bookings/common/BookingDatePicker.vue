@@ -124,7 +124,7 @@ export default {
           state.blocksByDay = await getQueueBlockDetailsByDay(queue.value.id);
 
           const queueType = queue.value.type;
-          if (queueType === 'COLLABORATOR') {
+          if (queueType === 'PROFESSIONAL') {
             const collaborator = await getCollaboratorDetailsById(queue.value.collaboratorId);
             if (collaborator && collaborator.id) {
               queue.value.collaborator = collaborator;

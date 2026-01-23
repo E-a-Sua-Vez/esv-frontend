@@ -474,7 +474,7 @@ export default {
           :title="$t('dashboard.reports.surveys-consolidated.title')"
           :show-tooltip="true"
           :description="$t('dashboard.reports.surveys-consolidated.description')"
-          :icon="'bi-file-earmark-pdf'"
+          :icon="'file-earmark-pdf'"
           @download="exportToPDF"
           :can-download="toggles['dashboard.reports.surveys-consolidated'] === true"
         ></SimpleDownloadCard>
@@ -554,7 +554,7 @@ export default {
                     :title="$t('dashboard.items.attentions.3')"
                     :show-tooltip="true"
                     :description="$t('dashboard.rating')"
-                    :icon="'bi-star-fill'"
+                    :icon="'star-fill'"
                     :icon-style-class="'yellow-icon'"
                     :details-opened="state.detailsOpened"
                   >
@@ -580,7 +580,7 @@ export default {
                     :title="$t('dashboard.items.attentions.24')"
                     :show-tooltip="true"
                     :description="$t('dashboard.nps.description')"
-                    :icon="'bi-megaphone-fill'"
+                    :icon="'megaphone-fill'"
                     :details-opened="state.detailsOpened"
                   >
                     <template v-slot:details>
@@ -610,7 +610,7 @@ export default {
                     :title="$t('dashboard.items.attentions.21')"
                     :show-tooltip="true"
                     :description="$t('dashboard.sentiment')"
-                    :icon="'bi-chat-heart-fill'"
+                    :icon="'chat-heart-fill'"
                     :icon-style-class="'red-icon'"
                     :details-opened="state.detailsOpened"
                   >
@@ -699,7 +699,7 @@ export default {
               </div>
               <div v-else>
                 <Message
-                  :icon="'bi-graph-up-arrow'"
+                  :icon="'graph-up-arrow'"
                   :title="$t('dashboard.items.attentions.graph.8')"
                   :content="$t('dashboard.message.2.content')"
                 />
@@ -775,7 +775,7 @@ export default {
               </div>
               <div v-else>
                 <Message
-                  :icon="'bi-graph-up-arrow'"
+                  :icon="'graph-up-arrow'"
                   :title="$t('dashboard.items.attentions.graph.9')"
                   :content="$t('dashboard.message.2.content')"
                 />
@@ -787,7 +787,7 @@ export default {
       </div>
       <div v-else>
         <Message
-          :icon="'bi-graph-up-arrow'"
+          :icon="'graph-up-arrow'"
           :title="$t('dashboard.message.2.title')"
           :content="$t('dashboard.message.2.content')"
         />

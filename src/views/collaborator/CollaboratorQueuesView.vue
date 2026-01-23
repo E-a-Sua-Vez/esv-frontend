@@ -66,6 +66,7 @@ export default {
       business: {},
       groupedQueues: [],
       collaborator: {},
+      professional: {}, // Professional data for queue filtering
       modules: ref({}),
       activeCommerce: false,
       captcha: false,
@@ -461,21 +462,45 @@ export default {
         getActiveFeature(commerce.value, 'attention-queue-typegrouped', 'PRODUCT')
       ) {
         state.groupedQueues = await getGroupedQueueByCommerceId(commerce.value.id);
-        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
-          const collaboratorQueues = state.groupedQueues['COLLABORATOR'].filter(
-            queue => queue.collaboratorId === state.collaborator.id
-          );
-          const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
-          const queues = [...collaboratorQueues, ...otherQueues];
-          state.queues = queues;
+
+        const collaboratorType = state.collaborator.type;
+
+        // Load professional data if collaborator has professionalId
+        if (state.collaborator && state.collaborator.professionalId && !state.professional) {
+          try {
+            const { getProfessionalById } = await import('../../application/services/professional');
+            state.professional = await getProfessionalById(state.collaborator.professionalId);
+          } catch (error) {
+            console.warn('Could not load professional data, falling back to collaborator', error);
+            state.professional = state.collaborator;
+          }
         }
-        if (
-          Object.keys(state.groupedQueues).length > 0 &&
-          state.collaborator.type === 'ASSISTANT'
-        ) {
-          const otherQueues = state.queues.filter(queue => queue.type !== 'COLLABORATOR');
-          const queues = [...otherQueues];
-          state.queues = queues;
+
+        if (Object.keys(state.groupedQueues).length > 0) {
+          // Build all queues from grouped queues
+          const allQueues = Object.values(state.groupedQueues).flat();
+
+          if (collaboratorType === 'STANDARD') {
+            // STANDARD: Only sees their own professional queues + non-professional queues
+            const professionalQueues = (state.groupedQueues['PROFESSIONAL'] || []).filter(
+              queue => {
+                // Use professionalId if available, otherwise fallback to collaboratorId
+                if (state.professional && state.professional.id) {
+                  return queue.professionalId === state.professional.id;
+                }
+                return queue.collaboratorId === state.collaborator.id;
+              }
+            );
+            const otherQueues = allQueues.filter(queue => queue.type !== 'PROFESSIONAL');
+            state.queues = [...professionalQueues, ...otherQueues];
+          } else if (collaboratorType === 'ASSISTANT') {
+            // ASSISTANT: Only sees non-professional queues
+            const otherQueues = allQueues.filter(queue => queue.type !== 'PROFESSIONAL');
+            state.queues = [...otherQueues];
+          } else {
+            // All other types can see all queues (no filtering)
+            state.queues = allQueues;
+          }
         }
       }
       // Initialize queue status after queues are loaded
@@ -801,24 +826,48 @@ export default {
       }
     });
 
-    // Computed property to sort queues: COLLABORATOR queues first, then SELECT_SERVICE (geral), then others
+    // Computed property to sort queues: PROFESSIONAL queues first, then SELECT_SERVICE (geral), then others
     const sortedQueues = computed(() => {
       if (!state.queues || state.queues.length === 0) return [];
 
       // Filter active queues only
       const activeQueues = state.queues.filter(queue => queue && queue.active && queue.id);
 
-      // 1. Collaborator queues (dedicated to this collaborator)
+      // 1. PROFESSIONAL queues - logic should match initQueues filtering
       const collaboratorQueues = activeQueues.filter(
-        queue => queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator?.id
+        queue => {
+          if (queue.type !== 'PROFESSIONAL') return false;
+
+          // For FULL type collaborators: show all PROFESSIONAL queues
+          if (state.collaborator?.type === 'FULL') {
+            return true;
+          }
+
+          // For STANDARD type: show only their professional queues
+          if (state.collaborator?.type === 'STANDARD') {
+            // Use professionalId if available, otherwise fallback to collaboratorId
+            if (state.professional && state.professional.id) {
+              return queue.professionalId === state.professional.id;
+            }
+            return queue.collaboratorId === state.collaborator?.id;
+          }
+
+          // For ASSISTANT: no professional queues (handled in initQueues)
+          if (state.collaborator?.type === 'ASSISTANT') {
+            return false;
+          }
+
+          // For other types: show all PROFESSIONAL queues
+          return true;
+        }
       );
 
       // 2. General queues (SELECT_SERVICE type)
       const generalQueues = activeQueues.filter(queue => queue.type === 'SELECT_SERVICE');
 
-      // 3. Other queues (not COLLABORATOR and not SELECT_SERVICE)
+      // 3. Other queues (not PROFESSIONAL and not SELECT_SERVICE)
       const otherQueues = activeQueues.filter(
-        queue => queue.type !== 'COLLABORATOR' && queue.type !== 'SELECT_SERVICE'
+        queue => queue.type !== 'PROFESSIONAL' && queue.type !== 'SELECT_SERVICE'
       );
 
       return [...collaboratorQueues, ...generalQueues, ...otherQueues];
@@ -826,7 +875,7 @@ export default {
 
     // Helper function to check if a queue is dedicated to the collaborator
     const isDedicatedQueue = queue =>
-      queue && queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator?.id;
+      queue && queue.type === 'PROFESSIONAL' && queue.collaboratorId === state.collaborator?.id;
 
     return {
       siteKey,
@@ -913,7 +962,7 @@ export default {
                         <div class="queue-row-header">
                           <div class="queue-row-icon-wrapper">
                             <i
-                              v-if="queue.type === 'COLLABORATOR'"
+                              v-if="queue.type === 'PROFESSIONAL'"
                               class="bi bi-person-fill queue-row-icon"
                             ></i>
                             <i v-else class="bi bi-people-fill queue-row-icon"></i>
@@ -921,7 +970,7 @@ export default {
                           <div class="queue-row-title-section">
                             <h5 class="queue-row-title">{{ queue.name }}</h5>
                             <span
-                              v-if="queue.type === 'COLLABORATOR'"
+                              v-if="queue.type === 'PROFESSIONAL'"
                               class="queue-row-badge queue-row-badge-collaborator"
                             >
                               <i class="bi bi-person-badge"></i>
@@ -996,7 +1045,7 @@ export default {
                     <div class="queue-row-header">
                       <div class="queue-row-icon-wrapper">
                         <i
-                          v-if="queue.type === 'COLLABORATOR'"
+                          v-if="queue.type === 'PROFESSIONAL'"
                           class="bi bi-person-fill queue-row-icon"
                         ></i>
                         <i v-else class="bi bi-people-fill queue-row-icon"></i>
@@ -1004,7 +1053,7 @@ export default {
                       <div class="queue-row-title-section">
                         <h5 class="queue-row-title">{{ queue.name }}</h5>
                         <span
-                          v-if="queue.type === 'COLLABORATOR'"
+                          v-if="queue.type === 'PROFESSIONAL'"
                           class="queue-row-badge queue-row-badge-collaborator"
                         >
                           <i class="bi bi-person-badge"></i>
@@ -1136,7 +1185,7 @@ export default {
                         <div class="queue-row-header">
                           <div class="queue-row-icon-wrapper">
                             <i
-                              v-if="queue.type === 'COLLABORATOR'"
+                              v-if="queue.type === 'PROFESSIONAL'"
                               class="bi bi-person-fill queue-row-icon"
                             ></i>
                             <i v-else class="bi bi-people-fill queue-row-icon"></i>
@@ -1144,7 +1193,7 @@ export default {
                           <div class="queue-row-title-section">
                             <h5 class="queue-row-title">{{ queue.name }}</h5>
                             <span
-                              v-if="queue.type === 'COLLABORATOR'"
+                              v-if="queue.type === 'PROFESSIONAL'"
                               class="queue-row-badge queue-row-badge-collaborator"
                             >
                               <i class="bi bi-person-badge"></i>
@@ -1219,7 +1268,7 @@ export default {
                     <div class="queue-row-header">
                       <div class="queue-row-icon-wrapper">
                         <i
-                          v-if="queue.type === 'COLLABORATOR'"
+                          v-if="queue.type === 'PROFESSIONAL'"
                           class="bi bi-person-fill queue-row-icon"
                         ></i>
                         <i v-else class="bi bi-people-fill queue-row-icon"></i>
@@ -1227,7 +1276,7 @@ export default {
                       <div class="queue-row-title-section">
                         <h5 class="queue-row-title">{{ queue.name }}</h5>
                         <span
-                          v-if="queue.type === 'COLLABORATOR'"
+                          v-if="queue.type === 'PROFESSIONAL'"
                           class="queue-row-badge queue-row-badge-collaborator"
                         >
                           <i class="bi bi-person-badge"></i>

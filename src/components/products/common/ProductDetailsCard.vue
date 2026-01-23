@@ -798,7 +798,7 @@ export default {
                     :description="
                       $t('businessProductStockAdmin.reports.consumption-details.description')
                     "
-                    :icon="'bi-file-earmark-spreadsheet'"
+                    :icon="'file-earmark-spreadsheet'"
                     @download="handleExportConsumptionCSV"
                     :can-download="toggles['products-stock.reports.consumption-details'] === true"
                   ></SimpleDownloadCard>
@@ -878,7 +878,7 @@ export default {
                     :description="
                       $t('businessProductStockAdmin.reports.replacement-details.description')
                     "
-                    :icon="'bi-file-earmark-spreadsheet'"
+                    :icon="'file-earmark-spreadsheet'"
                     @download="handleExportReplacementCSV"
                     :can-download="toggles['products-stock.reports.replacement-details'] === true"
                   ></SimpleDownloadCard>

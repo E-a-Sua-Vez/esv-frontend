@@ -33,11 +33,11 @@ export default {
   },
   setup(props) {
     const loading = ref(false);
-    const alertError = ref('');
+    const alertError = ref(null);
     const activeTab = ref('create'); // create, created, paid, cancelled
     const professionals = ref([]);
     const allPayments = ref([]);
-    
+
     // Filtros para crear nuevo pago
     const selectedProfessionalId = ref(null);
     const periodFrom = ref(null);
@@ -45,26 +45,26 @@ export default {
     const unpaidIncomes = ref([]);
     const selectedIncomeIds = ref([]);
     const notes = ref('');
-    
+
     // Modales
     const showEditModal = ref(false);
     const showConfirmModal = ref(false);
     const showCancelModal = ref(false);
     const selectedPayment = ref(null);
 
-    const createdPayments = computed(() => 
+    const createdPayments = computed(() =>
       allPayments.value.filter(p => p.status === 'CREATED')
     );
-    
-    const paidPayments = computed(() => 
+
+    const paidPayments = computed(() =>
       allPayments.value.filter(p => p.status === 'PAID')
     );
-    
-    const cancelledPayments = computed(() => 
+
+    const cancelledPayments = computed(() =>
       allPayments.value.filter(p => p.status === 'CANCELLED')
     );
 
-    const selectedProfessional = computed(() => 
+    const selectedProfessional = computed(() =>
       professionals.value.find(p => p.id === selectedProfessionalId.value)
     );
 
@@ -108,14 +108,14 @@ export default {
         loading.value = true;
         const from = periodFrom.value ? new Date(periodFrom.value).toISOString() : null;
         const to = periodTo.value ? new Date(periodTo.value).toISOString() : null;
-        
+
         unpaidIncomes.value = await getUnpaidIncomesByProfessional(
           selectedProfessionalId.value,
           props.commerce.id,
           from,
           to
         );
-        
+
         selectedIncomeIds.value = [];
         loading.value = false;
       } catch (error) {
@@ -141,7 +141,7 @@ export default {
 
       try {
         loading.value = true;
-        
+
         await createCommissionPayment(
           props.commerce.id,
           props.business.id,
@@ -156,7 +156,7 @@ export default {
         selectedIncomeIds.value = [];
         unpaidIncomes.value = [];
         notes.value = '';
-        
+
         await loadPayments();
         activeTab.value = 'created';
         loading.value = false;
@@ -241,59 +241,51 @@ export default {
 <template>
   <div>
     <Spinner :show="loading" />
-    <Alert :show="alertError !== ''" :message="alertError" />
+    <Alert :show="alertError !== null && alertError !== ''" :message="alertError" />
 
-    <!-- Tabs -->
+    <!-- Tabs con estilo moderno -->
     <div class="row mb-3">
-      <div class="col">
-        <ul class="nav nav-tabs">
-          <li class="nav-item">
-            <a 
-              class="nav-link" 
-              :class="{ active: activeTab === 'create' }"
-              @click="activeTab = 'create'"
-              style="cursor: pointer"
-            >
-              <i class="bi bi-plus-circle"></i> {{ $t('commissionPayments.createNew') }}
-            </a>
-          </li>
-          <li class="nav-item">
-            <a 
-              class="nav-link" 
-              :class="{ active: activeTab === 'created' }"
-              @click="activeTab = 'created'"
-              style="cursor: pointer"
-            >
-              <i class="bi bi-clock"></i> {{ $t('commissionPayments.created') }}
-              <span v-if="createdPayments.length > 0" class="badge bg-warning ms-1">
-                {{ createdPayments.length }}
-              </span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a 
-              class="nav-link" 
-              :class="{ active: activeTab === 'paid' }"
-              @click="activeTab = 'paid'"
-              style="cursor: pointer"
-            >
-              <i class="bi bi-check-circle"></i> {{ $t('commissionPayments.paid') }}
-              <span v-if="paidPayments.length > 0" class="badge bg-success ms-1">
-                {{ paidPayments.length }}
-              </span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a 
-              class="nav-link" 
-              :class="{ active: activeTab === 'cancelled' }"
-              @click="activeTab = 'cancelled'"
-              style="cursor: pointer"
-            >
-              <i class="bi bi-x-circle"></i> {{ $t('commissionPayments.cancelled') }}
-            </a>
-          </li>
-        </ul>
+      <div class="col-12">
+        <div class="modern-tabs">
+          <button
+            class="tab-button"
+            :class="{ active: activeTab === 'create' }"
+            @click="activeTab = 'create'"
+          >
+            <i class="bi bi-plus-circle"></i>
+            <span>{{ $t('commissionPayments.createNew') }}</span>
+          </button>
+          <button
+            class="tab-button"
+            :class="{ active: activeTab === 'created' }"
+            @click="activeTab = 'created'"
+          >
+            <i class="bi bi-clock"></i>
+            <span>{{ $t('commissionPayments.created') }}</span>
+            <span v-if="createdPayments.length > 0" class="badge bg-warning ms-1">
+              {{ createdPayments.length }}
+            </span>
+          </button>
+          <button
+            class="tab-button"
+            :class="{ active: activeTab === 'paid' }"
+            @click="activeTab = 'paid'"
+          >
+            <i class="bi bi-check-circle"></i>
+            <span>{{ $t('commissionPayments.paid') }}</span>
+            <span v-if="paidPayments.length > 0" class="badge bg-success ms-1">
+              {{ paidPayments.length }}
+            </span>
+          </button>
+          <button
+            class="tab-button"
+            :class="{ active: activeTab === 'cancelled' }"
+            @click="activeTab = 'cancelled'"
+          >
+            <i class="bi bi-x-circle"></i>
+            <span>{{ $t('commissionPayments.cancelled') }}</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -307,42 +299,42 @@ export default {
                 {{ $t('commissionPayments.selectProfessional') }}
               </label>
               <select v-model="selectedProfessionalId" class="form-control metric-controls">
-                <option :value="null">{{ $t('professionals.selectProfessional') }}</option>
+                <option :value="null">{{ $t('commissionPayments.selectProfessional') }}</option>
                 <option v-for="prof in professionals" :key="prof.id" :value="prof.id">
-                  {{ prof.name }}
+                  {{ prof.personalInfo?.name || prof.name || 'Sin nombre' }}
                 </option>
               </select>
             </div>
-            
+
             <div class="col-12 col-md-3 mb-3">
               <label class="form-label metric-card-subtitle fw-bold">
-                {{ $t('commissionPayments.periodFrom') }}
+                {{ $t('commissionPayments.dateFrom') }}
               </label>
-              <input 
-                type="date" 
-                v-model="periodFrom" 
+              <input
+                type="date"
+                v-model="periodFrom"
                 class="form-control metric-controls"
               />
             </div>
-            
+
             <div class="col-12 col-md-3 mb-3">
               <label class="form-label metric-card-subtitle fw-bold">
-                {{ $t('commissionPayments.periodTo') }}
+                {{ $t('commissionPayments.dateTo') }}
               </label>
-              <input 
-                type="date" 
-                v-model="periodTo" 
+              <input
+                type="date"
+                v-model="periodTo"
                 class="form-control metric-controls"
               />
             </div>
 
             <div class="col-12 col-md-2 mb-3 d-flex align-items-end">
-              <button 
-                @click="searchUnpaidIncomes" 
-                class="btn btn-primary w-100"
+              <button
+                @click="searchUnpaidIncomes"
+                class="btn btn-md btn-dark fw-bold rounded-pill w-100"
                 :disabled="!selectedProfessionalId"
               >
-                <i class="bi bi-search"></i> {{ $t('commissionPayments.searchPending') }}
+                <i class="bi bi-search"></i> {{ $t('commissionPayments.search') }}
               </button>
             </div>
           </div>
@@ -352,14 +344,14 @@ export default {
             <h5 class="metric-card-title">
               <i class="bi bi-list-check"></i> {{ $t('commissionPayments.selectedIncomes') }}
             </h5>
-            
+
             <div class="table-responsive">
               <table class="table table-hover">
                 <thead>
                   <tr>
                     <th>
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         @change="selectAll"
                         :checked="selectedIncomeIds.length === unpaidIncomes.length && unpaidIncomes.length > 0"
                       />
@@ -373,9 +365,9 @@ export default {
                 <tbody>
                   <tr v-for="income in unpaidIncomes" :key="income.id">
                     <td>
-                      <input 
-                        type="checkbox" 
-                        v-model="selectedIncomeIds" 
+                      <input
+                        type="checkbox"
+                        v-model="selectedIncomeIds"
                         :value="income.id"
                       />
                     </td>
@@ -420,7 +412,7 @@ export default {
                 <label class="form-label metric-card-subtitle fw-bold">
                   {{ $t('commissionPayments.notes') }}
                 </label>
-                <textarea 
+                <textarea
                   v-model="notes"
                   class="form-control metric-controls"
                   rows="3"
@@ -432,7 +424,7 @@ export default {
             <!-- Botón Crear -->
             <div class="row mt-3">
               <div class="col-12 text-end">
-                <button 
+                <button
                   @click="createPayment"
                   class="btn btn-lg btn-success"
                   :disabled="selectedIncomeIds.length === 0"
@@ -457,8 +449,8 @@ export default {
     <!-- Tab: Pagos Creados -->
     <div v-if="activeTab === 'created'">
       <div v-if="createdPayments.length > 0" class="row">
-        <div 
-          v-for="payment in createdPayments" 
+        <div
+          v-for="payment in createdPayments"
           :key="payment.id"
           class="col-12 mb-3"
         >
@@ -482,8 +474,8 @@ export default {
     <!-- Tab: Pagos Confirmados -->
     <div v-if="activeTab === 'paid'">
       <div v-if="paidPayments.length > 0" class="row">
-        <div 
-          v-for="payment in paidPayments" 
+        <div
+          v-for="payment in paidPayments"
           :key="payment.id"
           class="col-12 mb-3"
         >
@@ -504,8 +496,8 @@ export default {
     <!-- Tab: Pagos Cancelados -->
     <div v-if="activeTab === 'cancelled'">
       <div v-if="cancelledPayments.length > 0" class="row">
-        <div 
-          v-for="payment in cancelledPayments" 
+        <div
+          v-for="payment in cancelledPayments"
           :key="payment.id"
           class="col-12 mb-3"
         >
@@ -568,5 +560,69 @@ export default {
 
 .table-hover tbody tr:hover {
   background-color: #f8f9fa;
+}
+
+/* Tabs modernos */
+.modern-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  padding: 4px;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #6c757d;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab-button:hover {
+  background-color: rgba(0, 74, 173, 0.1);
+  color: #004aad;
+}
+
+.tab-button.active {
+  background: linear-gradient(135deg, #004aad 0%, #00c2cb 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 74, 173, 0.3);
+  transform: translateY(-1px);
+}
+
+.tab-button i {
+  font-size: 16px;
+}
+
+.badge {
+  border-radius: 10px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .modern-tabs {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .tab-button {
+    text-align: left;
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 </style>

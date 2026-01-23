@@ -504,7 +504,7 @@ export default {
         :title="$t('dashboard.reports.indicators.title')"
         :show-tooltip="true"
         :description="$t('dashboard.reports.indicators.description')"
-        :icon="'bi-file-earmark-pdf'"
+        :icon="'file-earmark-pdf'"
         @download="handleDownload"
         :can-download="toggles['dashboard.reports.indicators'] === true"
       ></SimpleDownloadCard>
@@ -915,7 +915,7 @@ export default {
               "
               :title="$t('dashboard.items.attentions.1')"
               :show-tooltip="false"
-              :icon="'bi-qr-code'"
+              :icon="'qr-code'"
               :icon-style-class="'blue-icon'"
               :details-opened="detailsOpened"
             >
@@ -951,7 +951,7 @@ export default {
               :title="$t('dashboard.items.attentions.27')"
               :show-tooltip="true"
               :description="$t('dashboard.booking')"
-              :icon="'bi-calendar2-check-fill'"
+              :icon="'calendar2-check-fill'"
               :icon-style-class="'orange-icon'"
               :details-opened="detailsOpened"
             >
@@ -1096,7 +1096,7 @@ export default {
                     :title="$t('dashboard.items.attentions.2')"
                     :show-tooltip="true"
                     :description="$t('dashboard.seconds')"
-                    :icon="'bi-clock-history'"
+                    :icon="'clock-history'"
                     :icon-style-class="'green-icon'"
                   >
                   </SimpleCard>
@@ -1121,7 +1121,7 @@ export default {
                   :subdata="calculatedMetrics['attention.created'].noDevice || 0"
                   :title="$t('dashboard.items.attentions.5')"
                   :show-tooltip="false"
-                  :icon="'bi-people-fill'"
+                  :icon="'people-fill'"
                   :icon-style-class="'orange-icon'"
                 >
                 </SimpleCard>
@@ -1136,7 +1136,7 @@ export default {
               :title="$t('dashboard.items.attentions.3')"
               :show-tooltip="true"
               :description="$t('dashboard.rating')"
-              :icon="'bi-star-fill'"
+              :icon="'star-fill'"
               :icon-style-class="'yellow-icon'"
               :details-opened="detailsOpened"
             >
@@ -1162,7 +1162,7 @@ export default {
               :title="$t('dashboard.items.attentions.24')"
               :show-tooltip="true"
               :description="$t('dashboard.nps.description')"
-              :icon="'bi-megaphone-fill'"
+              :icon="'megaphone-fill'"
               :details-opened="detailsOpened"
             >
               <template v-slot:details>
@@ -1187,7 +1187,7 @@ export default {
               :title="$t('dashboard.items.attentions.21')"
               :show-tooltip="true"
               :description="$t('dashboard.sentiment')"
-              :icon="'bi-chat-heart-fill'"
+              :icon="'chat-heart-fill'"
               :icon-style-class="'red-icon'"
               :details-opened="detailsOpened"
             >
@@ -1223,7 +1223,7 @@ export default {
                 $t('dashboard.collaborators.tooltip') ||
                 'Métricas de productividad, eficiencia y calidad de servicio por colaborador'
               "
-              :icon="'bi-people-fill'"
+              :icon="'people-fill'"
               :icon-style-class="'blue-icon'"
               :details-opened="detailsOpened"
             >
@@ -1253,7 +1253,7 @@ export default {
               :title="$t('dashboard.items.attentions.31')"
               :show-tooltip="true"
               :description="$t('dashboard.origin')"
-              :icon="'bi-emoji-heart-eyes-fill'"
+              :icon="'emoji-heart-eyes-fill'"
               :icon-style-class="'orange-icon'"
               :details-opened="detailsOpened"
             >
@@ -1280,7 +1280,7 @@ export default {
               :title="$t('dashboard.items.attentions.32')"
               :show-tooltip="true"
               :description="$t('dashboard.contacts')"
-              :icon="'bi-chat-left-dots-fill'"
+              :icon="'chat-left-dots-fill'"
               :icon-style-class="'yellow-icon'"
               :details-opened="detailsOpened"
             >
@@ -1317,7 +1317,7 @@ export default {
               :data="calculatedMetrics['notification.created'].notificationNumber"
               :title="$t('dashboard.items.attentions.6')"
               :show-tooltip="false"
-              :icon="'bi-send-check-fill'"
+              :icon="'send-check-fill'"
               :icon-style-class="'blue-icon'"
               :details-opened="detailsOpened"
             >
@@ -1343,7 +1343,7 @@ export default {
               :description="
                 $t('dashboard.telemedicine.description') || 'Métricas de sesiones de telemedicina'
               "
-              :icon="'bi-camera-video-fill'"
+              :icon="'camera-video-fill'"
               :icon-style-class="'blue-icon'"
               :details-opened="detailsOpened"
             >
@@ -1403,7 +1403,7 @@ export default {
     </div>
     <div v-if="showIndicators === true && !toggles['dashboard.indicators.view']">
       <Message
-        :icon="'bi-graph-up-arrow'"
+        :icon="'graph-up-arrow'"
         :title="$t('dashboard.message.1.title')"
         :content="$t('dashboard.message.1.content')"
       />

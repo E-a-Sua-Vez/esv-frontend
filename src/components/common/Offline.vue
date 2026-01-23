@@ -9,32 +9,50 @@ export default {
   data() {
     return {
       onLine: navigator.onLine,
+      intervalId: null,
+      userDismissed: false,
     };
+  },
+  mounted() {
+    // Set up interval to check connection status
+    this.intervalId = setInterval(() => {
+      this.onLine = navigator.onLine;
+    }, 4000);
+    
+    // Also listen to online/offline events
+    window.addEventListener('online', this.handleOnline);
+    window.addEventListener('offline', this.handleOffline);
+  },
+  beforeUnmount() {
+    // Clean up interval and event listeners
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+    window.removeEventListener('online', this.handleOnline);
+    window.removeEventListener('offline', this.handleOffline);
   },
   methods: {
     refresh() {
       this.$router.go();
     },
     close() {
+      this.userDismissed = true;
+    },
+    handleOnline() {
       this.onLine = true;
+      this.userDismissed = false; // Reset dismissal when connection is restored
+    },
+    handleOffline() {
+      this.onLine = false;
+      this.userDismissed = false; // Reset dismissal to show new offline message
     },
   },
-  watch: {
-    store: {
-      immediate: true,
-      deep: true,
-      async handler() {
-        setInterval(() => {
-          this.onLine = navigator.onLine;
-        }, 4000);
-      },
-    },
-  },
+
 };
 </script>
 
 <template>
-  <div v-if="show && !onLine">
+  <div v-if="(show || !onLine) && !onLine && !userDismissed">
     <div aria-live="polite" aria-atomic="true">
       <div class="toast-container top-0 start-50 translate-middle-x p-3">
         <div class="toast d-flex" role="alert">

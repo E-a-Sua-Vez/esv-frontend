@@ -175,7 +175,7 @@ export default {
           console.log('👨‍⚕️ Doctor ID set from collaborator (fallback):', state.reference.referringDoctorId);
         }
       }
-      
+
       // Fallback final: usar usuario actual del store
       if (!state.reference.referringDoctorId) {
         console.warn('⚠️ No professional/collaborator ID found in attention, using current user from store');

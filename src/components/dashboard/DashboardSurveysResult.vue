@@ -189,7 +189,7 @@ export default {
           :title="$t('dashboard.reports.surveys.title')"
           :show-tooltip="true"
           :description="$t('dashboard.reports.surveys.description')"
-          :icon="'bi-file-earmark-pdf'"
+          :icon="'file-earmark-pdf'"
           @download="exportToPDF"
           :can-download="true"
         ></SimpleDownloadCard>
@@ -254,7 +254,7 @@ export default {
                   :title="$t('dashboard.items.attentions.3')"
                   :show-tooltip="true"
                   :description="$t('dashboard.rating')"
-                  :icon="'bi-star-fill'"
+                  :icon="'star-fill'"
                   :icon-style-class="'yellow-icon'"
                   :details-opened="detailsOpened"
                 >
@@ -282,7 +282,7 @@ export default {
                   :title="$t('dashboard.items.attentions.24')"
                   :show-tooltip="true"
                   :description="$t('dashboard.nps.description')"
-                  :icon="'bi-megaphone-fill'"
+                  :icon="'megaphone-fill'"
                   :icon-style-class="'orange-icon'"
                   :details-opened="detailsOpened"
                 >
@@ -355,7 +355,7 @@ export default {
           </div>
           <div v-else>
             <Message
-              :icon="'bi-graph-up-arrow'"
+              :icon="'graph-up-arrow'"
               :title="$t('dashboard.message.2.title')"
               :content="$t('dashboard.message.2.content')"
             />

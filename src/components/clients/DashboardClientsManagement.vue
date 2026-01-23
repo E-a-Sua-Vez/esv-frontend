@@ -1236,7 +1236,7 @@ export default {
               </div>
               <div v-else>
                 <Message
-                  :icon="'bi-graph-up-arrow'"
+                  :icon="'graph-up-arrow'"
                   :title="$t('dashboard.message.2.title')"
                   :content="$t('dashboard.message.2.content')"
                 />
@@ -1248,7 +1248,7 @@ export default {
     </div>
     <div v-if="showClientManagement === true && !toggles['dashboard.clients-management.view']">
       <Message
-        :icon="'bi-graph-up-arrow'"
+        :icon="'graph-up-arrow'"
         :title="$t('dashboard.message.1.title')"
         :content="$t('dashboard.message.1.content')"
       />

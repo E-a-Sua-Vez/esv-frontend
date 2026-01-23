@@ -340,7 +340,7 @@ export default {
     const needsServiceSelection = () => {
       if (!state.queue) return false;
       return (
-        ['COLLABORATOR', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(state.queue.type) &&
+        ['PROFESSIONAL', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(state.queue.type) &&
         state.queue.services &&
         state.queue.services.length > 0
       );
@@ -407,10 +407,10 @@ export default {
         return hasServices;
       }
 
-      // For COLLABORATOR queues, they need to be loaded dynamically, so we can't preselect them
+      // For PROFESSIONAL queues, they need to be loaded dynamically, so we can't preselect them
       // They need service selection after loading collaborator details
-      if (queue.type === 'COLLABORATOR') {
-        console.log('🔍 COLLABORATOR queue - cannot preselect (needs dynamic loading)');
+      if (queue.type === 'PROFESSIONAL') {
+        console.log('🔍 PROFESSIONAL queue - cannot preselect (needs dynamic loading)');
         return false;
       }
 
@@ -1297,8 +1297,8 @@ export default {
       console.log('🏢 Queue services:', queue.services);
       console.log('🏢 Queue collaborator:', queue.collaborator);
 
-      // For COLLABORATOR queues, load collaborator details to get services (same as CommerceQueuesView)
-      if (queue.type === 'COLLABORATOR' && queue.collaboratorId) {
+      // For PROFESSIONAL queues, load collaborator details to get services (same as CommerceQueuesView)
+      if (queue.type === 'PROFESSIONAL' && queue.collaboratorId) {
         try {
           console.log('🔧 Loading collaborator details for ID:', queue.collaboratorId);
           const collaborator = await getCollaboratorDetailsById(queue.collaboratorId);
@@ -2443,6 +2443,10 @@ export default {
             ...(clientIdValue && { clientId: clientIdValue }), // Only include clientId if we have it and are confident it's correct
             sessionId: props.sessionId,
           };
+          // Add professionalId if queue has one
+          if (state.queue.professionalId) {
+            bookingData.professionalId = state.queue.professionalId;
+          }
 
           console.log('📋 COMPLETE bookingData object being sent:', {
             queueId: bookingData.queueId,
@@ -2598,6 +2602,10 @@ export default {
               block: convertedBlock,
               ...(props.preselectedPackageId && { packageId: props.preselectedPackageId }), // Add packageId if provided
             };
+            // Add professionalId if queue has one
+            if (state.queue.professionalId) {
+              attentionData.professionalId = state.queue.professionalId;
+            }
 
             console.log('📋 attentionData.user before sending:', {
               isUndefined: userData === undefined,

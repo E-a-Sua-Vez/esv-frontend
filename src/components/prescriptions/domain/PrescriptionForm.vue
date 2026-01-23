@@ -194,9 +194,9 @@ export default {
           }
         }
         state.prescription.doctorName =
-          attentionDetails?.collaborator?.name || 
+          attentionDetails?.collaborator?.name ||
           attentionDetails?.professional?.name ||
-          attentionDetails?.collaborator?.alias || 
+          attentionDetails?.collaborator?.alias ||
           '';
       } else {
         // Fallback: Get current user from store (should be the collaborator creating the prescription)

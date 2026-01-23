@@ -21,8 +21,8 @@ import {
   bookingBlockNumberUsedCollection,
 } from '../application/firebase';
 import { ATTENTION_STATUS, BOOKING_STATUS } from '../shared/constants';
-import { getProfessionalsByCommerce } from '../application/services/professional';
 import {
+  getDetailsCollaboratorsByCommerceId,
   getCollaboratorDetailsById,
 } from '../application/services/collaborator';
 import Message from '../components/common/Message.vue';
@@ -287,7 +287,7 @@ export default {
             }
           }
           const [collaborators, groupedQueues] = await Promise.all([
-            getProfessionalsByCommerce(state.commerce.id),
+            getDetailsCollaboratorsByCommerceId(state.commerce.id),
             getGroupedQueueByCommerceId(state.commerce.id),
           ]);
           if ((queueId && queueId !== 'undefined') || (queue && queue !== undefined)) {
@@ -1537,29 +1537,10 @@ export default {
 
     const showReserve = () => {
       state.block = {};
-      state.attentionBlock = {};
-      state.date = undefined;
+      (state.attentionBlock = {}), (state.date = undefined);
       state.specificCalendarDate = undefined;
       state.showToday = false;
       state.showReserve = true;
-
-      // Después de abrir la sección de reserva, desplazar y enfocar el selector de fecha
-      nextTick(() => {
-        setTimeout(() => {
-          const bookingDateSection = document.querySelector('#booking-date');
-          if (bookingDateSection) {
-            bookingDateSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-            // Intentar enfocar el primer día habilitado del calendario
-            const firstAvailableDay = bookingDateSection.querySelector(
-              '.vc-day-content[aria-disabled="false"]'
-            );
-            if (firstAvailableDay) {
-              firstAvailableDay.focus();
-            }
-          }
-        }, 200);
-      });
     };
 
     const validateCaptchaOk = async response => {
@@ -2335,10 +2316,15 @@ export default {
       }, 300);
     };
 
-    // Handle show manual selection (from NextAvailableSlot)
+    // Handle show manual selection
     const handleShowManualSelection = () => {
-      // Abrir la sección de reserva; showReserve se encarga de hacer scroll/enfocar el calendario
-      showReserve();
+      // Just scroll to the manual selection area
+      setTimeout(() => {
+        const manualSelection = document.querySelector('#booking .data-card');
+        if (manualSelection) {
+          manualSelection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
     };
 
     const showFormStep = () => {
@@ -2982,11 +2968,6 @@ export default {
             const timeCard = document.querySelector('.time-slot-grid');
             if (timeCard) {
               timeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-              const firstTimeButton = timeCard.querySelector('.time-slot-button');
-              if (firstTimeButton) {
-                firstTimeButton.focus();
-              }
             }
           }, 600);
         });
@@ -3038,11 +3019,6 @@ export default {
             const timeCard = document.querySelector('.time-slot-grid');
             if (timeCard) {
               timeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-              const firstTimeButton = timeCard.querySelector('.time-slot-button');
-              if (firstTimeButton) {
-                firstTimeButton.focus();
-              }
             }
           }, 600);
         });
@@ -3715,7 +3691,6 @@ export default {
                         <!-- BOOKING -->
                         <div class="col">
                           <button
-                            id="booking-reserve-button"
                             class="btn-size btn btn-md btn-block col-12 fw-bold btn-step-action rounded-pill mt-1 mb-1 px-3 py-2"
                             v-if="!isQueueWalkin()"
                             @click="showReserve()"

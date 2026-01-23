@@ -52,13 +52,17 @@ export default {
     consents: { type: Array, default: () => [] },
     requirements: { type: Array, default: () => [] },
     autoRefresh: { type: Boolean, default: true },
-    refreshInterval: { type: Number, default: 10000 }, // 10 segundos
+    refreshInterval: { type: Number, default: 60000 }, // 60 segundos - menos agresivo
   },
-  emits: ['refresh', 'open-manager', 'status-updated'],
+  emits: ['refresh', 'open-manager', 'status-updated', 'polling-stopped'],
   setup(props, { emit }) {
     const { t } = useI18n();
     const requesting = ref(false);
     let refreshIntervalId = null;
+    let currentInterval = ref(props.refreshInterval);
+    let errorCount = ref(0);
+    const MAX_ERRORS = 3;
+    const MAX_INTERVAL = 300000; // 5 minutos máximo
 
     const allConsents = computed(() => {
       if (!props.requirements || props.requirements.length === 0) {
@@ -161,18 +165,73 @@ export default {
         const status = await getConsentStatus(props.commerceId, props.clientId);
         emit('status-updated', status);
         emit('refresh');
+
+        // Reset error count and interval on success
+        errorCount.value = 0;
+        currentInterval.value = props.refreshInterval;
+
+        // Restart interval with normal timing
+        if (refreshIntervalId && props.autoRefresh) {
+          clearInterval(refreshIntervalId);
+          startPolling();
+        }
+
       } catch (error) {
         console.error('Error refreshing consent status:', error);
+
+        // Handle rate limiting and other errors
+        if (error.response?.status === 429) {
+          errorCount.value++;
+          console.warn(`Rate limited. Error count: ${errorCount.value}/${MAX_ERRORS}`);
+
+          if (errorCount.value >= MAX_ERRORS) {
+            console.warn('Max errors reached. Stopping polling to prevent further rate limiting.');
+            if (refreshIntervalId) {
+              clearInterval(refreshIntervalId);
+              refreshIntervalId = null;
+            }
+            emit('polling-stopped', { reason: 'rate-limited', errorCount: errorCount.value });
+            return;
+          }
+
+          // Exponential backoff for rate limiting
+          currentInterval.value = Math.min(currentInterval.value * 2, MAX_INTERVAL);
+          console.warn(`Increasing interval to ${currentInterval.value}ms due to rate limiting`);
+
+          // Restart polling with increased interval
+          if (refreshIntervalId) {
+            clearInterval(refreshIntervalId);
+            startPolling();
+          }
+        } else {
+          // For other errors, just increase error count but don't change interval as aggressively
+          errorCount.value++;
+          if (errorCount.value >= MAX_ERRORS) {
+            console.warn('Max errors reached. Stopping polling.');
+            if (refreshIntervalId) {
+              clearInterval(refreshIntervalId);
+              refreshIntervalId = null;
+            }
+            emit('polling-stopped', { reason: 'max-errors', errorCount: errorCount.value });
+          }
+        }
+      }
+    };
+
+    const startPolling = () => {
+      if (refreshIntervalId) {
+        clearInterval(refreshIntervalId);
+      }
+      if (props.autoRefresh && props.commerceId && props.clientId) {
+        refreshIntervalId = setInterval(() => {
+          refreshStatus();
+        }, currentInterval.value);
       }
     };
 
     // Polling para atualização em tempo real
     onMounted(() => {
-      if (props.autoRefresh && props.commerceId && props.clientId) {
-        refreshIntervalId = setInterval(() => {
-          refreshStatus();
-        }, props.refreshInterval);
-      }
+      startPolling();
     });
 
     onUnmounted(() => {
@@ -186,16 +245,38 @@ export default {
     watch(
       () => [props.commerceId, props.clientId],
       () => {
-        if (refreshIntervalId) {
-          clearInterval(refreshIntervalId);
-        }
-        if (props.autoRefresh && props.commerceId && props.clientId) {
-          refreshIntervalId = setInterval(() => {
-            refreshStatus();
-          }, props.refreshInterval);
+        // Reset error tracking when props change
+        errorCount.value = 0;
+        currentInterval.value = props.refreshInterval;
+        startPolling();
+      }
+    );
+
+    // Watch for changes in autoRefresh prop
+    watch(
+      () => props.autoRefresh,
+      (newValue) => {
+        if (newValue) {
+          startPolling();
+        } else {
+          if (refreshIntervalId) {
+            clearInterval(refreshIntervalId);
+            refreshIntervalId = null;
+          }
         }
       }
     );
+
+    // Manual restart function - resets error counts and restarts polling
+    const restartPolling = () => {
+      errorCount.value = 0;
+      currentInterval.value = props.refreshInterval;
+      if (refreshIntervalId) {
+        clearInterval(refreshIntervalId);
+        refreshIntervalId = null;
+      }
+      startPolling();
+    };
 
     return {
       requesting,
@@ -212,6 +293,7 @@ export default {
       requestAllPending,
       openFullManager,
       refreshStatus,
+      restartPolling,
     };
   },
 };

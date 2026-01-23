@@ -598,7 +598,7 @@ export default {
               </div>
               <div v-else>
                 <Message
-                  :icon="'bi-box'"
+                  :icon="'box'"
                   :title="$t('package.noPackages') || 'No hay paquetes'"
                   :content="
                     $t('package.noPackagesMessage') ||
@@ -619,7 +619,7 @@ export default {
       "
     >
       <Message
-        :icon="'bi-box'"
+        :icon="'box'"
         :title="$t('dashboard.message.1.title') || 'Sin permisos'"
         :content="$t('dashboard.message.1.content') || 'No tienes permisos para ver esta sección'"
       />

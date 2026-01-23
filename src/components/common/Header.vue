@@ -31,7 +31,6 @@ import MessageNotificationBadge from '../messages/MessageNotificationBadge.vue';
 import ChatNotificationBadge from '../messages/ChatNotificationBadge.vue';
 import MessageInbox from '../messages/MessageInbox.vue';
 import ChatInbox from '../messages/ChatInbox.vue';
-import ProfessionalProfileModal from '../professional/ProfessionalProfileModal.vue';
 
 export default {
   components: {
@@ -44,7 +43,6 @@ export default {
     ChatNotificationBadge,
     MessageInbox,
     ChatInbox,
-    ProfessionalProfileModal,
   },
   name: 'Header',
   async setup() {
@@ -53,9 +51,6 @@ export default {
     let store = globalStore();
 
     const loading = ref(false);
-
-    // Professional Profile Modal state
-    const isProfessionalModalOpen = ref(false);
 
     // Initialize permissions composable
     const {
@@ -737,14 +732,6 @@ export default {
       chatInboxOpen.value = false;
     };
 
-    const openProfessionalModal = () => {
-      isProfessionalModalOpen.value = true;
-    };
-
-    const closeProfessionalModal = () => {
-      isProfessionalModalOpen.value = false;
-    };
-
     // Handle commerce change - close menus and refresh user data
     const handleCommerceChanged = async () => {
       // Close both menus
@@ -815,7 +802,6 @@ export default {
           'modules-admin',
           'queues-admin',
           'collaborators-admin',
-          'professionals-admin',
           'surveys-admin',
           'product-admin',
           'outcome-types-admin',
@@ -1025,9 +1011,6 @@ export default {
       chatInboxOpen,
       toggleChatInbox,
       closeChatInbox,
-      isProfessionalModalOpen,
-      openProfessionalModal,
-      closeProfessionalModal,
       getMenuOptions,
       navigateToMenuOption,
       getMenuTranslationKey,
@@ -2117,23 +2100,12 @@ export default {
               ></button>
             </div>
             <div class="modal-body text-center pb-3">
-              <MyUser
-                @toggle-inbox="toggleInbox"
-                @open-professional-profile="openProfessionalModal"
-              >
-              </MyUser>
+              <MyUser @toggle-inbox="toggleInbox"> </MyUser>
             </div>
           </div>
         </div>
       </div>
     </Teleport>
-
-    <!-- Professional Profile Modal -->
-    <ProfessionalProfileModal
-      :is-open="isProfessionalModalOpen"
-      :collaborator-id="state.currentUser?.id"
-      @close="closeProfessionalModal"
-    />
 
     <!-- Internal Messages and Chat Inboxes -->
     <MessageInbox

@@ -503,7 +503,7 @@ export default {
     </div>
     <div v-if="showClientDataManagement === true && (!toggles || !toggles['client.admin.edit'])">
       <Message
-        :icon="'bi-graph-up-arrow'"
+        :icon="'graph-up-arrow'"
         :title="$t('dashboard.message.1.title')"
         :content="$t('dashboard.message.1.content')"
       />

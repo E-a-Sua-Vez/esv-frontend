@@ -48,7 +48,7 @@ export default {
             <Suspense>
               <template #default>
                 <div class="main-content-wrapper">
-                  <Offline :show="true"></Offline>
+                  <Offline></Offline>
                   <component
                     :is="Component"
                     :key="$route.path"

@@ -238,7 +238,7 @@ export default {
         }`"
         :show-tooltip="true"
         :description="$t('dashboard.reports.graphs.description')"
-        :icon="'bi-file-earmark-pdf'"
+        :icon="'file-earmark-pdf'"
         :can-download="toggles['dashboard.reports.graphs'] === true"
         @download="exportToPDF"
       ></SimpleDownloadCard>
@@ -419,7 +419,7 @@ export default {
                   <div v-else>
                     <Message
                       v-if="!downloading"
-                      :icon="'bi-graph-up-arrow'"
+                      :icon="'graph-up-arrow'"
                       :title="$t('dashboard.items.attentions.graph.1')"
                       :content="$t('dashboard.message.2.content')"
                     />
@@ -483,7 +483,7 @@ export default {
                   <div v-else>
                     <Message
                       v-if="!downloading"
-                      :icon="'bi-graph-up-arrow'"
+                      :icon="'graph-up-arrow'"
                       :title="$t('dashboard.items.attentions.graph.2')"
                       :content="$t('dashboard.message.2.content')"
                     />
@@ -594,7 +594,7 @@ export default {
                   <div v-else>
                     <Message
                       v-if="!downloading"
-                      :icon="'bi-graph-up-arrow'"
+                      :icon="'graph-up-arrow'"
                       :title="$t('dashboard.items.attentions.graph.3')"
                       :content="$t('dashboard.message.2.content')"
                     />
@@ -703,7 +703,7 @@ export default {
                   <div v-else>
                     <Message
                       v-if="!downloading"
-                      :icon="'bi-graph-up-arrow'"
+                      :icon="'graph-up-arrow'"
                       :title="$t('dashboard.items.attentions.graph.7')"
                       :content="$t('dashboard.message.2.content')"
                     />
@@ -767,7 +767,7 @@ export default {
                   <div v-else>
                     <Message
                       v-if="!downloading"
-                      :icon="'bi-graph-up-arrow'"
+                      :icon="'graph-up-arrow'"
                       :title="$t('dashboard.items.attentions.graph.4')"
                       :content="$t('dashboard.message.2.content')"
                     />
@@ -837,7 +837,7 @@ export default {
                   <div v-else>
                     <Message
                       v-if="!downloading"
-                      :icon="'bi-graph-up-arrow'"
+                      :icon="'graph-up-arrow'"
                       :title="$t('dashboard.items.attentions.graph.6')"
                       :content="$t('dashboard.message.2.content')"
                     />
@@ -887,7 +887,7 @@ export default {
                   <div v-else>
                     <Message
                       v-if="!downloading"
-                      :icon="'bi-graph-up-arrow'"
+                      :icon="'graph-up-arrow'"
                       :title="$t('dashboard.items.attentions.graph.5')"
                       :content="$t('dashboard.message.2.content')"
                     />
@@ -937,7 +937,7 @@ export default {
                   <div v-else>
                     <Message
                       v-if="!downloading"
-                      :icon="'bi-graph-up-arrow'"
+                      :icon="'graph-up-arrow'"
                       :title="$t('dashboard.items.attentions.graph.13')"
                       :content="$t('dashboard.message.2.content')"
                     />
@@ -946,7 +946,7 @@ export default {
               </div>
               <div v-if="showAttentions === true && !toggles['dashboard.graphs-attentions.view']">
                 <Message
-                  :icon="'bi-graph-up-arrow'"
+                  :icon="'graph-up-arrow'"
                   :title="$t('dashboard.message.1.title')"
                   :content="$t('dashboard.message.1.content')"
                 />
@@ -987,7 +987,7 @@ export default {
                   <div v-else>
                     <Message
                       v-if="!downloading"
-                      :icon="'bi-graph-up-arrow'"
+                      :icon="'graph-up-arrow'"
                       :title="$t('dashboard.items.attentions.graph.10')"
                       :content="$t('dashboard.message.2.content')"
                     />
@@ -1096,7 +1096,7 @@ export default {
                   <div v-else>
                     <Message
                       v-if="!downloading"
-                      :icon="'bi-graph-up-arrow'"
+                      :icon="'graph-up-arrow'"
                       :title="$t('dashboard.items.attentions.graph.11')"
                       :content="$t('dashboard.message.2.content')"
                     />
@@ -1152,7 +1152,7 @@ export default {
                   <div v-else>
                     <Message
                       v-if="!downloading"
-                      :icon="'bi-graph-up-arrow'"
+                      :icon="'graph-up-arrow'"
                       :title="$t('dashboard.items.attentions.graph.12')"
                       :content="$t('dashboard.message.2.content')"
                     />
@@ -1282,7 +1282,7 @@ export default {
                   <div v-else>
                     <Message
                       v-if="!downloading"
-                      :icon="'bi-graph-up-arrow'"
+                      :icon="'graph-up-arrow'"
                       :title="$t('dashboard.items.attentions.graph.14')"
                       :content="$t('dashboard.message.2.content')"
                     />
@@ -1291,7 +1291,7 @@ export default {
               </div>
               <div v-if="showBookings === true && !toggles['dashboard.graphs-bookings.view']">
                 <Message
-                  :icon="'bi-graph-up-arrow'"
+                  :icon="'graph-up-arrow'"
                   :title="$t('dashboard.message.1.title')"
                   :content="$t('dashboard.message.1.content')"
                 />
@@ -1304,7 +1304,7 @@ export default {
     </div>
     <div v-if="showGraphs === true && !toggles['dashboard.graphs.view']">
       <Message
-        :icon="'bi-graph-up-arrow'"
+        :icon="'graph-up-arrow'"
         :title="$t('dashboard.message.1.title')"
         :content="$t('dashboard.message.1.content')"
       />

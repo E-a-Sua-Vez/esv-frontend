@@ -12,6 +12,7 @@
         :client-id="clientId"
         :consents="consentStatus?.consents || []"
         :requirements="consentStatus?.requirements || []"
+        :auto-refresh="false"
         @refresh="loadConsentStatus"
         @open-manager="() => {}"
         class="mb-4"

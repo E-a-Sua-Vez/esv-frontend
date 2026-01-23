@@ -290,7 +290,7 @@ export default {
           getQueue(state.queue);
         }
         const searchText = newData.searchCollaboratorText.toUpperCase();
-        const collaboratorQueues = groupedQueues.value['COLLABORATOR'];
+        const collaboratorQueues = groupedQueues.value['PROFESSIONAL'];
         if (collaboratorQueues && collaboratorQueues.length > 0) {
           const result = collaboratorQueues.filter(queue => {
             const containQueueName = queue.name.toUpperCase().includes(searchText);
@@ -311,14 +311,14 @@ export default {
           state.filteredCollaboratorQueues = result;
         }
       } else {
-        state.filteredCollaboratorQueues = groupedQueues.value['COLLABORATOR'];
+        state.filteredCollaboratorQueues = groupedQueues.value['PROFESSIONAL'];
       }
       refresh(state.filteredCollaboratorQueues);
     });
 
     watch(changePage, async newData => {
       if (newData.page) {
-        refresh(groupedQueues.value['COLLABORATOR']);
+        refresh(groupedQueues.value['PROFESSIONAL']);
       }
     });
 

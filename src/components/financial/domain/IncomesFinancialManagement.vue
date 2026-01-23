@@ -36,6 +36,7 @@ export default {
     queues: { type: Array, default: undefined },
     business: { type: Object, default: undefined },
     filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
+    sharedFilters: { type: Object, default: undefined }, // Shared filters from parent
   },
   data() {
     const store = globalStore();
@@ -60,7 +61,7 @@ export default {
       errorsAdd: [],
       page: 1,
       limits: [10, 20, 50, 100],
-      limit: 10,
+      limit: 20, // Aumentado de 10 a 20 para mejorar rendimiento inicial
       incomeTitleError: false,
       incomeDateError: false,
       incomeTypeError: false,
@@ -81,10 +82,17 @@ export default {
       paymentMethodFilter: undefined,
       professionalFilter: undefined,
       professionals: [],
+      // Cache para profesionales por commerceId
+      professionalCache: new Map(),
+      // Loading states más granulares
+      isInitialLoad: true,
+      isRefreshing: false,
     };
   },
   async beforeMount() {
     this.incomeTypes = getIncomeTypesToIncrease();
+    await this.getCurrentMonth();
+    // Los profesionales se cargan bajo demanda en refresh()
   },
   methods: {
     setPage(pageIn) {
@@ -131,16 +139,33 @@ export default {
         this.automatic = false;
       }
     },
+    setIncomeStatus(value) {
+      this.incomeStatus = value;
+      // Force immediate refresh for slot-based filters
+      if (this.filtersLocation === 'slot') {
+        this.$nextTick(() => {
+          this.refresh();
+        });
+      }
+    },
     async refresh() {
       try {
-        this.loading = true;
+        // Distinguir entre carga inicial y refresh
+        if (this.isInitialLoad) {
+          this.loading = true;
+        } else {
+          this.isRefreshing = true;
+        }
+
         let commerceIds = [this.commerce.id];
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
+
+        // Llamada optimizada a la API
         let incomes = await getIncomesDetails(
-          this.business.id,
-          this.commerce.id,
+          this.business?.id,
+          this.commerce?.id,
           this.startDate,
           this.endDate,
           commerceIds,
@@ -150,54 +175,68 @@ export default {
           this.asc,
           this.incomeStatus,
           this.fiscalNote,
-          this.automatic
+          this.automatic,
+          this.minAmount,
+          this.maxAmount,
+          this.incomeTypeFilter,
+          this.paymentMethodFilter,
+          this.professionalFilter
         );
 
-        // Apply client-side filters
-        if (incomes && incomes.length > 0) {
-          // Filter by amount range
-          if (this.minAmount !== undefined && this.minAmount !== null && this.minAmount !== '') {
-            incomes = incomes.filter(
-              income => parseFloat(income.amount || 0) >= parseFloat(this.minAmount)
-            );
-          }
-          if (this.maxAmount !== undefined && this.maxAmount !== null && this.maxAmount !== '') {
-            incomes = incomes.filter(
-              income => parseFloat(income.amount || 0) <= parseFloat(this.maxAmount)
-            );
-          }
-          // Filter by income type
-          if (this.incomeTypeFilter !== undefined && this.incomeTypeFilter !== null) {
-            incomes = incomes.filter(income => income.type === this.incomeTypeFilter);
-          }
-          // Filter by payment method
-          if (this.paymentMethodFilter !== undefined && this.paymentMethodFilter !== null) {
-            incomes = incomes.filter(income => income.paymentMethod === this.paymentMethodFilter);
-          }
-          // Filter by professional
-          if (this.professionalFilter !== undefined && this.professionalFilter !== null) {
-            incomes = incomes.filter(income => income.professionalId === this.professionalFilter);
-          }
+        this.financialIncomes = Array.isArray(incomes) ? incomes : [];
+
+        // Carga optimizada de profesionales con cache
+        await this.loadProfessionalsIfNeeded();
+
+        this.updatePaginationData();
+
+        // Marcar la carga inicial como completada
+        if (this.isInitialLoad) {
+          this.isInitialLoad = false;
+          this.loading = false;
+        } else {
+          this.isRefreshing = false;
+        }
+      } catch (error) {
+        console.error('Error en refresh de ingresos:', error);
+        this.financialIncomes = [];
+        this.counter = 0;
+        this.totalPages = 0;
+        this.updatePaginationData();
+
+        if (this.isInitialLoad) {
+          this.isInitialLoad = false;
+          this.loading = false;
+        } else {
+          this.isRefreshing = false;
+        }
+      }
+    },
+    // Método optimizado para cargar profesionales con cache
+    async loadProfessionalsIfNeeded() {
+      // Verificar si hay ingresos con profesionalId
+      const professionalIds = [...new Set((this.financialIncomes || []).filter(i => i.professionalId).map(i => i.professionalId))];
+
+      if (professionalIds.length > 0 && this.commerce?.id) {
+        const commerceId = this.commerce.id;
+
+        // Verificar si ya tenemos los profesionales en cache
+        if (this.professionalCache.has(commerceId)) {
+          this.professionals = this.professionalCache.get(commerceId);
+          return;
         }
 
-        this.financialIncomes = incomes;
-        
-        // Load professionals if there are incomes with professionalId
-        const professionalIds = [...new Set(incomes.filter(i => i.professionalId).map(i => i.professionalId))];
-        if (professionalIds.length > 0 && this.commerce?.id) {
-          try {
-            const professionals = await getProfessionalsByCommerce(this.commerce.id);
-            this.professionals = professionals || [];
-          } catch (error) {
-            console.error('Error loading professionals:', error);
-            this.professionals = [];
-          }
+        // Cargar profesionales del API
+        try {
+          const professionals = await getProfessionalsByCommerce(commerceId);
+          this.professionals = professionals || [];
+
+          // Guardar en cache
+          this.professionalCache.set(commerceId, this.professionals);
+        } catch (error) {
+          console.error('Error cargando profesionales:', error);
+          this.professionals = [];
         }
-        
-        this.updatePaginationData();
-        this.loading = false;
-      } catch (error) {
-        this.loading = false;
       }
     },
     showFilters() {
@@ -265,11 +304,11 @@ export default {
     },
     updatePaginationData() {
       if (this.financialIncomes && this.financialIncomes.length > 0) {
-        const { counter } = this.financialIncomes[0];
-        this.counter = counter;
-        const total = counter / this.limit;
+        // Use server-provided counter from first record
+        this.counter = this.financialIncomes[0].counter || this.financialIncomes.length;
+        const total = this.counter / this.limit;
         const totalB = Math.trunc(total);
-        this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
+        this.totalPages = totalB <= 0 ? 1 : this.counter % this.limit === 0 ? totalB : totalB + 1;
       } else {
         this.counter = 0;
         this.totalPages = 0;
@@ -292,7 +331,12 @@ export default {
           this.asc,
           this.incomeStatus,
           this.fiscalNote,
-          this.automatic
+          this.automatic,
+          this.minAmount,
+          this.maxAmount,
+          this.incomeTypeFilter,
+          this.paymentMethodFilter,
+          this.professionalFilter
         );
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
@@ -349,7 +393,22 @@ export default {
   },
   computed: {
     changeData() {
-      const { page, asc, limit, incomeStatus, fiscalNote, automatic } = this;
+      const {
+        page,
+        asc,
+        limit,
+        incomeStatus,
+        fiscalNote,
+        automatic,
+        searchText,
+        startDate,
+        endDate,
+        minAmount,
+        maxAmount,
+        incomeTypeFilter,
+        paymentMethodFilter,
+        professionalFilter
+      } = this;
       return {
         page,
         asc,
@@ -357,6 +416,14 @@ export default {
         incomeStatus,
         fiscalNote,
         automatic,
+        searchText,
+        startDate,
+        endDate,
+        minAmount,
+        maxAmount,
+        incomeTypeFilter,
+        paymentMethodFilter,
+        professionalFilter
       };
     },
   },
@@ -372,11 +439,22 @@ export default {
             oldData.limit !== newData.limit ||
             oldData.incomeStatus !== newData.incomeStatus ||
             oldData.fiscalNote !== newData.fiscalNote ||
-            oldData.automatic !== newData.automatic)
+            oldData.automatic !== newData.automatic ||
+            oldData.searchText !== newData.searchText ||
+            oldData.startDate !== newData.startDate ||
+            oldData.endDate !== newData.endDate ||
+            oldData.minAmount !== newData.minAmount ||
+            oldData.maxAmount !== newData.maxAmount ||
+            oldData.incomeTypeFilter !== newData.incomeTypeFilter ||
+            oldData.paymentMethodFilter !== newData.paymentMethodFilter ||
+            oldData.professionalFilter !== newData.professionalFilter)
         ) {
           this.page = 1;
         }
-        this.refresh();
+        // Only refresh if this is not the initial mount (oldData exists)
+        if (oldData) {
+          this.refresh();
+        }
       },
     },
     store: {
@@ -385,6 +463,24 @@ export default {
       async handler() {
         await this.getUserType();
         await this.getUser();
+      },
+    },
+    sharedFilters: {
+      immediate: true,
+      deep: true,
+      handler(newSharedFilters) {
+        if (newSharedFilters && this.filtersLocation !== 'slot') {
+          // Sync shared filters to local state
+          if (newSharedFilters.incomeStatus !== this.incomeStatus) {
+            this.incomeStatus = newSharedFilters.incomeStatus;
+          }
+          if (newSharedFilters.fiscalNote !== this.fiscalNote) {
+            this.fiscalNote = newSharedFilters.fiscalNote;
+          }
+          if (newSharedFilters.automatic !== this.automatic) {
+            this.automatic = newSharedFilters.automatic;
+          }
+        }
       },
     },
   },
@@ -414,6 +510,13 @@ export default {
       :check-fiscal-note="checkFiscalNote"
       :check-automatic="checkAutomatic"
       :check-asc="checkAsc"
+      :set-income-status="setIncomeStatus"
+      :min-amount="minAmount"
+      :max-amount="maxAmount"
+      :income-type-filter="incomeTypeFilter"
+      :payment-method-filter="paymentMethodFilter"
+      :professional-filter="professionalFilter"
+      :professionals="professionals"
     ></slot>
 
     <div
@@ -449,7 +552,8 @@ export default {
                   </div>
                 </div>
                 <!-- Filters Section - Can be shown in component or exposed via slot -->
-                <div v-if="filtersLocation === 'component'" class="my-2 row metric-card">
+                <!-- Hidden on desktop since lateral filters are available -->
+                <div v-if="filtersLocation === 'component'" class="my-2 row metric-card d-lg-none">
                   <div class="col-12">
                     <span class="metric-card-subtitle">
                       <span
@@ -565,10 +669,24 @@ export default {
                         type="radio"
                         class="btn btn-check btn-sm"
                         v-model="incomeStatus"
+                        :value="undefined"
+                        name="incomeStatus-type"
+                        id="all-status"
+                        autocomplete="off"
+                        @change="refresh()"
+                      />
+                      <label class="btn" for="all-status">
+                        <i :class="`bi bi-list-ul`"></i>
+                      </label>
+                      <input
+                        type="radio"
+                        class="btn btn-check btn-sm"
+                        v-model="incomeStatus"
                         value="CONFIRMED"
                         name="incomeStatus-type"
                         id="confirmed-contacted"
                         autocomplete="off"
+                        @change="refresh()"
                       />
                       <label class="btn" for="confirmed-contacted">
                         <i :class="`bi bi-check-circle-fill green-icon`"></i>
@@ -581,6 +699,7 @@ export default {
                         name="incomeStatus-type"
                         id="pending-contacted"
                         autocomplete="off"
+                        @change="refresh()"
                       />
                       <label class="btn" for="pending-contacted">
                         <i :class="`bi bi-clock-fill yellow-icon`"></i>
@@ -593,6 +712,7 @@ export default {
                         name="incomeStatus-type"
                         id="cancelled-contacted"
                         autocomplete="off"
+                        @change="refresh()"
                       />
                       <label class="btn" for="cancelled-contacted">
                         <i :class="`bi bi-x-circle-fill red-icon`"></i>
@@ -739,21 +859,22 @@ export default {
                         </select>
                       </div>
                     </div>
-                    <div class="row mt-2" v-if="professionals && professionals.length > 0">
+                    <div class="row mt-2">
                       <div class="col-12">
                         <label class="form-label metric-card-subtitle fw-bold">
-                          {{ $t('businessFinancial.filters.professional') }}
+                          {{ $t('businessFinancial.filters.professional') }} ({{ professionals.length }})
                         </label>
                         <select
                           class="form-control metric-controls"
                           v-model="professionalFilter"
                           @change="refresh()"
+                          :disabled="!professionals || professionals.length === 0"
                         >
                           <option :value="undefined">
                             {{ $t('businessFinancial.filters.all') }}
                           </option>
                           <option v-for="professional in professionals" :key="professional.id" :value="professional.id">
-                            {{ professional.name }}
+                            {{ professional.personalInfo?.name || professional.name || professional.professionalName || '-' }}
                           </option>
                         </select>
                       </div>

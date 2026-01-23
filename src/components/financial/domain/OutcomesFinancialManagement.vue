@@ -12,6 +12,7 @@ import { createOutcome } from '../../../application/services/outcome';
 import { getDate } from '../../../shared/utils/date';
 import { getOutcomesDetails } from '../../../application/services/query-stack';
 import { getProductByCommerce } from '../../../application/services/product';
+import { getProfessionalsByCommerce } from '../../../application/services/professional';
 import { getCompanyByCommerce } from '../../../application/services/company';
 import OutcomeDetailsCard from './common/OutcomeDetailsCard.vue';
 import Toggle from '@vueform/toggle';
@@ -41,6 +42,7 @@ export default {
     financialOutcomesIn: { type: Array, default: [] },
     filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
   },
+  emits: ['open-commission-payments'],
   data() {
     const store = globalStore();
     return {
@@ -76,6 +78,13 @@ export default {
       products: [],
       beneficiaries: [],
       selectedBeneficiary: {},
+      // Additional filters
+      minAmount: undefined,
+      maxAmount: undefined,
+      outcomeTypeFilter: undefined,
+      paymentMethodFilter: undefined,
+      professionalFilter: undefined,
+      professionals: [],
     };
   },
   async beforeMount() {
@@ -83,6 +92,7 @@ export default {
       this.outcomeTypes = await getOutcomeTypesByCommerceId(this.commerce.id);
       this.products = await getProductByCommerce(this.commerce.id);
     }
+    await this.getCurrentMonth();
   },
   methods: {
     setPage(pageIn) {
@@ -98,6 +108,11 @@ export default {
       this.page = 1;
       this.startDate = undefined;
       this.endDate = undefined;
+      this.minAmount = undefined;
+      this.maxAmount = undefined;
+      this.outcomeTypeFilter = undefined;
+      this.paymentMethodFilter = undefined;
+      this.professionalFilter = undefined;
       await this.refresh();
     },
     async checkAsc(event) {
@@ -114,6 +129,20 @@ export default {
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
+
+        // Debug logging
+        console.log('OutcomesFinancialManagement.refresh - Filters:', {
+          startDate: this.startDate,
+          endDate: this.endDate,
+          searchText: this.searchText,
+          asc: this.asc,
+          minAmount: this.minAmount,
+          maxAmount: this.maxAmount,
+          outcomeTypeFilter: this.outcomeTypeFilter,
+          paymentMethodFilter: this.paymentMethodFilter,
+          professionalFilter: this.professionalFilter,
+        });
+
         this.financialOutcomes = await getOutcomesDetails(
           this.business.id,
           this.commerce.id,
@@ -126,8 +155,29 @@ export default {
           this.asc,
           this.incomeStatus,
           this.fiscalNote,
-          this.automatic
+          this.automatic,
+          this.minAmount,
+          this.maxAmount,
+          this.outcomeTypeFilter,
+          this.paymentMethodFilter
         );
+
+        console.log('OutcomesFinancialManagement.refresh - API Response:', {
+          count: this.financialOutcomes?.length || 0,
+          firstOutcome: this.financialOutcomes?.[0],
+          hasClientSideFilters: !!(this.minAmount || this.maxAmount || this.outcomeTypeFilter || this.paymentMethodFilter || this.professionalFilter),
+        });
+
+        // Load professionals if there are outcomes with professional data
+        if (this.commerce?.id) {
+          try {
+            const professionals = await getProfessionalsByCommerce(this.commerce.id);
+            this.professionals = professionals || [];
+          } catch (error) {
+            console.error('Error loading professionals:', error);
+            this.professionals = [];
+          }
+        }
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
@@ -145,11 +195,11 @@ export default {
     },
     updatePaginationData() {
       if (this.financialOutcomes && this.financialOutcomes.length > 0) {
-        const { counter } = this.financialOutcomes[0];
-        this.counter = counter;
-        const total = counter / this.limit;
+        // Use the actual filtered count instead of relying on server counter
+        this.counter = this.financialOutcomes.length;
+        const total = this.counter / this.limit;
         const totalB = Math.trunc(total);
-        this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
+        this.totalPages = totalB <= 0 ? 1 : this.counter % this.limit === 0 ? totalB : totalB + 1;
       } else {
         this.counter = 0;
         this.totalPages = 0;
@@ -166,13 +216,17 @@ export default {
           this.startDate,
           this.endDate,
           commerceIds,
-          this.page,
-          this.limit,
+          undefined,
+          undefined,
           this.searchText,
           this.asc,
           this.incomeStatus,
           this.fiscalNote,
-          this.automatic
+          this.automatic,
+          this.minAmount,
+          this.maxAmount,
+          this.outcomeTypeFilter,
+          this.paymentMethodFilter
         );
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
@@ -403,6 +457,13 @@ export default {
                     >
                       <i class="bi bi-plus-lg"></i> {{ $t('add') }}
                     </button>
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 ms-2"
+                      @click="$emit('open-commission-payments')"
+                      :disabled="!toggles['financial.incomes.view']"
+                    >
+                      <i class="bi bi-cash-coin"></i> {{ $t('commissionPayments.title') }}
+                    </button>
                     <SimpleDownloadButton
                       :download="toggles['financial.reports.outcomes']"
                       :show-tooltip="true"
@@ -413,7 +474,8 @@ export default {
                   </div>
                 </div>
                 <!-- Filters Section - Can be shown in component or exposed via slot -->
-                <div v-if="filtersLocation === 'component'" class="my-2 row metric-card">
+                <!-- Hidden on desktop since lateral filters are available -->
+                <div v-if="filtersLocation === 'component'" class="my-2 row metric-card d-lg-none">
                   <div class="col-12">
                     <span class="metric-card-subtitle">
                       <span
@@ -542,6 +604,101 @@ export default {
                         </div>
                       </div>
                     </div>
+                    <!-- Additional Filters -->
+                    <div class="row mt-2">
+                      <div class="col-12">
+                        <label class="form-label metric-card-subtitle fw-bold">
+                          {{ $t('businessFinancial.filters.amountRange') }}
+                        </label>
+                      </div>
+                      <div class="col-5">
+                        <input
+                          type="number"
+                          class="form-control metric-controls"
+                          v-model="minAmount"
+                          :placeholder="$t('businessFinancial.filters.minAmount')"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                      <div class="col-5">
+                        <input
+                          type="number"
+                          class="form-control metric-controls"
+                          v-model="maxAmount"
+                          :placeholder="$t('businessFinancial.filters.maxAmount')"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                      <div class="col-2">
+                        <button
+                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                          @click="refresh()"
+                        >
+                          <span><i class="bi bi-search"></i></span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="row mt-2">
+                      <div class="col-6">
+                        <label class="form-label metric-card-subtitle fw-bold">
+                          {{ $t('businessFinancial.filters.outcomeType') }}
+                        </label>
+                        <select
+                          class="form-control metric-controls"
+                          v-model="outcomeTypeFilter"
+                          @change="refresh()"
+                        >
+                          <option :value="undefined">
+                            {{ $t('businessFinancial.filters.all') }}
+                          </option>
+                          <option v-for="type in outcomeTypes" :key="type.id" :value="type.id">
+                            {{ type.name }}
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label metric-card-subtitle fw-bold">
+                          {{ $t('businessFinancial.filters.paymentMethod') }}
+                        </label>
+                        <select
+                          class="form-control metric-controls"
+                          v-model="paymentMethodFilter"
+                          @change="refresh()"
+                        >
+                          <option :value="undefined">
+                            {{ $t('businessFinancial.filters.all') }}
+                          </option>
+                          <option value="CASH">{{ $t('paymentClientMethods.CASH') }}</option>
+                          <option value="CARD">{{ $t('paymentClientMethods.CARD') }}</option>
+                          <option value="TRANSFER">
+                            {{ $t('paymentClientMethods.TRANSFER') }}
+                          </option>
+                          <option value="CHECK">{{ $t('paymentClientMethods.CHECK') }}</option>
+                          <option value="OTHER">{{ $t('paymentClientMethods.OTHER') }}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="row mt-2" v-if="professionals && professionals.length > 0">
+                      <div class="col-12">
+                        <label class="form-label metric-card-subtitle fw-bold">
+                          {{ $t('businessFinancial.filters.professional') }}
+                        </label>
+                        <select
+                          class="form-control metric-controls"
+                          v-model="professionalFilter"
+                          @change="refresh()"
+                        >
+                          <option :value="undefined">
+                            {{ $t('businessFinancial.filters.all') }}
+                          </option>
+                          <option v-for="professional in professionals" :key="professional.id" :value="professional.id">
+                            {{ professional.personalInfo?.name || professional.name || '-' }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -627,6 +784,8 @@ export default {
                     :commerce="commerce"
                     :commerces="commerces"
                     :toggles="toggles"
+                    :professionals="professionals"
+                    @refresh="refresh"
                   >
                   </OutcomeDetailsCard>
                 </div>

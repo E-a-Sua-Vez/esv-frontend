@@ -36,7 +36,7 @@
                 <Message
                   :title="$t('clientPortal.login.commerceNotFoundTitle')"
                   :content="$t('clientPortal.login.commerceNotFound')"
-                  :icon="'bi-exclamation-triangle-fill'"
+                  :icon="'exclamation-triangle-fill'"
                   type="error"
                 />
               </div>

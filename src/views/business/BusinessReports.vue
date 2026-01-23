@@ -557,7 +557,7 @@ export default {
                   :title="$t('businessReports.items.reports.1.name')"
                   :show-tooltip="true"
                   :description="$t('businessReports.items.reports.1.description')"
-                  :icon="'bi-qr-code'"
+                  :icon="'qr-code'"
                   :icon-style-class="'blue-icon'"
                   @download="downloadAttentionsReport"
                 ></SimpleDownloadCard>
@@ -567,7 +567,7 @@ export default {
                   :title="$t('businessReports.items.reports.2.name')"
                   :show-tooltip="true"
                   :description="$t('businessReports.items.reports.2.description')"
-                  :icon="'bi-send-check-fill'"
+                  :icon="'send-check-fill'"
                   :icon-style-class="'blue-icon'"
                   @download="downloadNotificationsReport"
                 ></SimpleDownloadCard>
@@ -577,7 +577,7 @@ export default {
                   :title="$t('businessReports.items.reports.3.name')"
                   :show-tooltip="true"
                   :description="$t('businessReports.items.reports.3.description')"
-                  :icon="'bi-star-fill'"
+                  :icon="'star-fill'"
                   :icon-style-class="'yellow-icon'"
                   @download="downloadSurveysReport"
                 ></SimpleDownloadCard>
@@ -587,7 +587,7 @@ export default {
                   :title="$t('businessReports.items.reports.4.name')"
                   :show-tooltip="true"
                   :description="$t('businessReports.items.reports.4.description')"
-                  :icon="'bi-calendar2-check-fill'"
+                  :icon="'calendar2-check-fill'"
                   :icon-style-class="'orange-icon'"
                   @download="downloadBookingsReport"
                 ></SimpleDownloadCard>
@@ -597,7 +597,7 @@ export default {
                   :title="$t('businessReports.items.reports.5.name')"
                   :show-tooltip="true"
                   :description="$t('businessReports.items.reports.5.description')"
-                  :icon="'bi-calendar-heart-fill'"
+                  :icon="'calendar-heart-fill'"
                   :icon-style-class="'red-icon'"
                   @download="downloadWaitlistsReport"
                 ></SimpleDownloadCard>
@@ -607,7 +607,7 @@ export default {
                   :title="$t('businessReports.items.reports.6.name')"
                   :show-tooltip="true"
                   :description="$t('businessReports.items.reports.6.description')"
-                  :icon="'bi-person-fill'"
+                  :icon="'person-fill'"
                   :icon-style-class="'blue-icon'"
                   @download="downloadClientsReport"
                 ></SimpleDownloadCard>
@@ -617,7 +617,7 @@ export default {
                   :title="$t('businessReports.items.reports.7.name')"
                   :show-tooltip="true"
                   :description="$t('businessReports.items.reports.7.description')"
-                  :icon="'bi-chat-left-dots-fill'"
+                  :icon="'chat-left-dots-fill'"
                   :icon-style-class="'green-icon'"
                   @download="downloadClientContactsReport"
                 ></SimpleDownloadCard>
@@ -627,7 +627,7 @@ export default {
                   :title="$t('businessReports.items.reports.10.name')"
                   :show-tooltip="true"
                   :description="$t('businessReports.items.reports.10.description')"
-                  :icon="'bi-eyedropper'"
+                  :icon="'eyedropper'"
                   :icon-style-class="'red-icon'"
                   @download="downloadIncomesReport"
                 ></SimpleDownloadCard>
@@ -637,7 +637,7 @@ export default {
                   :title="$t('businessReports.items.reports.11.name')"
                   :show-tooltip="true"
                   :description="$t('businessReports.items.reports.11.description')"
-                  :icon="'bi-cash-coin'"
+                  :icon="'cash-coin'"
                   :icon-style-class="'blue-icon'"
                   @download="downloadIncomesReport"
                 ></SimpleDownloadCard>
@@ -647,7 +647,7 @@ export default {
                   :title="$t('businessReports.items.reports.12.name')"
                   :show-tooltip="true"
                   :description="$t('businessReports.items.reports.12.description')"
-                  :icon="'bi-cash-coin'"
+                  :icon="'cash-coin'"
                   :icon-style-class="'red-icon'"
                   @download="downloadOutcomesReport"
                 ></SimpleDownloadCard>
@@ -833,7 +833,7 @@ export default {
                       :title="$t('businessReports.items.reports.1.name')"
                       :show-tooltip="true"
                       :description="$t('businessReports.items.reports.1.description')"
-                      :icon="'bi-qr-code'"
+                      :icon="'qr-code'"
                       :icon-style-class="'blue-icon'"
                       @download="downloadAttentionsReport"
                     ></SimpleDownloadCard>
@@ -843,7 +843,7 @@ export default {
                       :title="$t('businessReports.items.reports.2.name')"
                       :show-tooltip="true"
                       :description="$t('businessReports.items.reports.2.description')"
-                      :icon="'bi-send-check-fill'"
+                      :icon="'send-check-fill'"
                       :icon-style-class="'blue-icon'"
                       @download="downloadNotificationsReport"
                     ></SimpleDownloadCard>
@@ -853,7 +853,7 @@ export default {
                       :title="$t('businessReports.items.reports.3.name')"
                       :show-tooltip="true"
                       :description="$t('businessReports.items.reports.3.description')"
-                      :icon="'bi-star-fill'"
+                      :icon="'star-fill'"
                       :icon-style-class="'yellow-icon'"
                       @download="downloadSurveysReport"
                     ></SimpleDownloadCard>
@@ -863,7 +863,7 @@ export default {
                       :title="$t('businessReports.items.reports.4.name')"
                       :show-tooltip="true"
                       :description="$t('businessReports.items.reports.4.description')"
-                      :icon="'bi-calendar2-check-fill'"
+                      :icon="'calendar2-check-fill'"
                       :icon-style-class="'orange-icon'"
                       @download="downloadBookingsReport"
                     ></SimpleDownloadCard>
@@ -873,7 +873,7 @@ export default {
                       :title="$t('businessReports.items.reports.5.name')"
                       :show-tooltip="true"
                       :description="$t('businessReports.items.reports.5.description')"
-                      :icon="'bi-calendar-heart-fill'"
+                      :icon="'calendar-heart-fill'"
                       :icon-style-class="'red-icon'"
                       @download="downloadWaitlistsReport"
                     ></SimpleDownloadCard>
@@ -883,7 +883,7 @@ export default {
                       :title="$t('businessReports.items.reports.6.name')"
                       :show-tooltip="true"
                       :description="$t('businessReports.items.reports.6.description')"
-                      :icon="'bi-person-fill'"
+                      :icon="'person-fill'"
                       :icon-style-class="'blue-icon'"
                       @download="downloadClientsReport"
                     ></SimpleDownloadCard>
@@ -893,7 +893,7 @@ export default {
                       :title="$t('businessReports.items.reports.7.name')"
                       :show-tooltip="true"
                       :description="$t('businessReports.items.reports.7.description')"
-                      :icon="'bi-chat-left-dots-fill'"
+                      :icon="'chat-left-dots-fill'"
                       :icon-style-class="'green-icon'"
                       @download="downloadClientContactsReport"
                     ></SimpleDownloadCard>
@@ -903,7 +903,7 @@ export default {
                       :title="$t('businessReports.items.reports.10.name')"
                       :show-tooltip="true"
                       :description="$t('businessReports.items.reports.10.description')"
-                      :icon="'bi-eyedropper'"
+                      :icon="'eyedropper'"
                       :icon-style-class="'red-icon'"
                       @download="downloadIncomesReport"
                     ></SimpleDownloadCard>
@@ -913,7 +913,7 @@ export default {
                       :title="$t('businessReports.items.reports.11.name')"
                       :show-tooltip="true"
                       :description="$t('businessReports.items.reports.11.description')"
-                      :icon="'bi-cash-coin'"
+                      :icon="'cash-coin'"
                       :icon-style-class="'blue-icon'"
                       @download="downloadIncomesReport"
                     ></SimpleDownloadCard>
@@ -923,7 +923,7 @@ export default {
                       :title="$t('businessReports.items.reports.12.name')"
                       :show-tooltip="true"
                       :description="$t('businessReports.items.reports.12.description')"
-                      :icon="'bi-cash-coin'"
+                      :icon="'cash-coin'"
                       :icon-style-class="'red-icon'"
                       @download="downloadOutcomesReport"
                     ></SimpleDownloadCard>

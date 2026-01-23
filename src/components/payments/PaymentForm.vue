@@ -76,6 +76,12 @@ export default {
           }
         }
         loading.value = false;
+
+        // Inicializar comisión si suggestedCommissionAmount está disponible
+        if (suggestedCommissionAmount.value && suggestedCommissionAmount.value > 0) {
+          state.newConfirmationData.paymentCommission = Number(suggestedCommissionAmount.value);
+          sendData();
+        }
       } catch (error) {
         loading.value = false;
       }
@@ -83,19 +89,71 @@ export default {
 
     // AUTO-CALCULATE COMMISSION based on professional data
     const calculateSuggestedCommission = () => {
-      if (!suggestedCommissionAmount.value || !state.newConfirmationData.paymentAmount) {
-        return 0;
+      // If suggestedCommissionAmount is already calculated (from parent), use it
+      if (suggestedCommissionAmount.value && suggestedCommissionAmount.value > 0) {
+        return Number(suggestedCommissionAmount.value);
       }
-      return Number(suggestedCommissionAmount.value);
+
+      // Otherwise, calculate based on commission type
+      if (professionalCommission.value && state.newConfirmationData.paymentAmount) {
+        const amount = Number(state.newConfirmationData.paymentAmount);
+        const commission = Number(professionalCommission.value);
+
+        // Check if it's a percentage (assuming PERCENTAGE if commission < 100)
+        // This is a heuristic; ideally we'd have the type passed separately
+        if (commission > 0 && commission <= 100) {
+          // Treat as percentage
+          return Math.round(amount * commission / 100);
+        } else {
+          // Treat as fixed amount
+          return commission;
+        }
+      }
+      return 0;
     };
 
     // WATCHER for professional commission auto-calculation
-    watch([professionalCommission, suggestedCommissionAmount, () => state.newConfirmationData.paymentAmount], () => {
-      if (professionalName.value && state.newConfirmationData.paymentAmount > 0) {
+    watch([professionalName, professionalCommission, suggestedCommissionAmount, () => state.newConfirmationData.paymentAmount], () => {
+      console.log('[PaymentForm] Main watcher triggered:', {
+        professionalName: professionalName.value,
+        professionalCommission: professionalCommission.value,
+        suggestedCommissionAmount: suggestedCommissionAmount.value,
+        paymentAmount: state.newConfirmationData.paymentAmount,
+        currentCommission: state.newConfirmationData.paymentCommission
+      });
+
+      // Auto-set commission when professional is assigned
+      if (professionalName.value) {
         const suggested = calculateSuggestedCommission();
-        if (suggested > 0 && !state.newConfirmationData.paymentCommission) {
-          state.newConfirmationData.paymentCommission = suggested;
+        console.log('[PaymentForm] Calculated suggested:', suggested);
+
+        if (suggested > 0) {
+          // Siempre usar suggestedCommissionAmount si está disponible (viene del backend)
+          if (suggestedCommissionAmount.value && suggestedCommissionAmount.value > 0) {
+            const newValue = Number(suggestedCommissionAmount.value);
+            console.log('[PaymentForm] Using suggestedCommissionAmount:', newValue);
+            state.newConfirmationData.paymentCommission = newValue;
+            sendData();
+          }
+          // Solo calcular automáticamente si el campo está vacío/cero Y hay paymentAmount
+          else if (state.newConfirmationData.paymentAmount > 0 &&
+                  (!state.newConfirmationData.paymentCommission || state.newConfirmationData.paymentCommission === 0)) {
+            console.log('[PaymentForm] Auto-calculating commission:', suggested);
+            state.newConfirmationData.paymentCommission = suggested;
+            sendData();
+          }
         }
+      }
+    });
+
+    // WATCHER específico para suggestedCommissionAmount - actualizar inmediatamente
+    watch(suggestedCommissionAmount, (newValue) => {
+      console.log('[PaymentForm] suggestedCommissionAmount changed:', newValue, typeof newValue);
+      if (newValue && newValue > 0 && professionalName.value) {
+        const numValue = Number(newValue);
+        console.log('[PaymentForm] Setting paymentCommission to:', numValue);
+        state.newConfirmationData.paymentCommission = numValue;
+        sendData();
       }
     }, { immediate: true });
 
@@ -106,17 +164,24 @@ export default {
     const selectPaymentType = $event => {
       if ($event && $event.target) {
         const paymentType = $event.target.value;
+        // Preservar comisión del profesional si está asignado
+        const currentProfessionalCommission = (professionalName.value && state.newConfirmationData.paymentCommission)
+          ? state.newConfirmationData.paymentCommission
+          : null;
+
         if (['PAID', 'RETURN', 'EVALUATION', 'PROMOTION', 'TRIAL'].includes(paymentType)) {
           state.newConfirmationData.paymentMethod = 'PAID';
           state.newConfirmationData.paymentAmount = 0;
           state.newConfirmationData.totalAmount = 0;
-          state.newConfirmationData.paymentCommission = 0;
+          // Solo borrar comisión si NO hay profesional asignado
+          state.newConfirmationData.paymentCommission = currentProfessionalCommission || 0;
           state.newConfirmationData.installments = 1;
         } else {
           state.newConfirmationData.paymentMethod = '';
           state.newConfirmationData.paymentAmount = null;
           state.newConfirmationData.totalAmount = null;
-          state.newConfirmationData.paymentCommission = null;
+          // Solo borrar comisión si NO hay profesional asignado
+          state.newConfirmationData.paymentCommission = currentProfessionalCommission;
           state.newConfirmationData.installments = 1;
         }
       }
@@ -194,11 +259,16 @@ export default {
 
     const selectPayment = payment => {
       if (payment && payment.id) {
+        // Preservar comisión del profesional si está asignado
+        const currentProfessionalCommission = (professionalName.value && state.newConfirmationData.paymentCommission)
+          ? state.newConfirmationData.paymentCommission
+          : 0;
+
         state.newConfirmationData.paymentType = 'PARTIAL';
         state.newConfirmationData.paymentMethod = payment.paymentMethod || undefined;
         state.newConfirmationData.paymentAmount = payment.amount || undefined;
         state.newConfirmationData.totalAmount = payment.totalAmount || undefined;
-        state.newConfirmationData.paymentCommission = 0;
+        state.newConfirmationData.paymentCommission = currentProfessionalCommission;
         state.newConfirmationData.paymentFiscalNote = payment.fiscalNote || undefined;
         state.newConfirmationData.installments = payment.installments || undefined;
         state.newConfirmationData.pendingPaymentId = payment.id;
@@ -207,13 +277,18 @@ export default {
     };
 
     const processPaymentNow = async event => {
+      // Preservar comisión del profesional si está asignado
+      const currentProfessionalCommission = (professionalName.value && state.newConfirmationData.paymentCommission)
+        ? state.newConfirmationData.paymentCommission
+        : undefined;
+
       state.newConfirmationData.processPaymentNow = event.target.checked;
       if (state.newConfirmationData.processPaymentNow) {
         state.newConfirmationData.paymentType = undefined;
         state.newConfirmationData.paymentMethod = undefined;
         state.newConfirmationData.paymentAmount = undefined;
         state.newConfirmationData.totalAmount = undefined;
-        state.newConfirmationData.paymentCommission = undefined;
+        state.newConfirmationData.paymentCommission = currentProfessionalCommission;
         state.newConfirmationData.paymentFiscalNote = undefined;
         state.newConfirmationData.installments = undefined;
         state.newConfirmationData.pendingPaymentId = undefined;
@@ -478,6 +553,7 @@ export default {
                 v-model="state.newConfirmationData.paymentAmount"
                 placeholder="100"
                 @keyup="sendData"
+                @input="sendData"
               />
             </div>
             <div class="payment-form-field">
@@ -504,13 +580,13 @@ export default {
                 <div class="professional-commission-info">
                   <span class="professional-name">{{ professionalName }}</span>
                   <span v-if="professionalCommission" class="suggested-commission">
-                    {{ $t('professionals.suggestedCommission') || 'Comisión Sugerida' }}: 
+                    {{ $t('professionals.suggestedCommission') || 'Comisión Sugerida' }}:
                     <strong>{{ professionalCommission }}</strong>
                   </span>
-                  <span v-if="suggestedCommissionAmount && state.newConfirmationData.paymentAmount" 
+                  <span v-if="suggestedCommissionAmount && state.newConfirmationData.paymentAmount"
                         class="calculated-commission">
-                    {{ $t('professionals.calculatedAmount') || 'Monto Calculado' }}: 
-                    <strong>{{ suggestedCommissionAmount }} {{ commerce?.currency || 'CLP' }}</strong>
+                    {{ $t('professionals.calculatedAmount') || 'Monto Calculado' }}:
+                    <strong>{{ suggestedCommissionAmount }} {{ commerce?.currency || 'BRL' }}</strong>
                   </span>
                 </div>
               </div>
@@ -523,9 +599,10 @@ export default {
                 min="1"
                 type="number"
                 class="payment-form-input"
-                v-model="state.newConfirmationData.paymentCommission"
+                v-model.number="state.newConfirmationData.paymentCommission"
                 placeholder="100"
-                @keyup="sendData"
+                @input="sendData"
+                @change="sendData"
               />
             </div>
             <div class="payment-form-field payment-form-switch">

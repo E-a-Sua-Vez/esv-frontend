@@ -393,9 +393,9 @@ export default {
 
       let visibleQueues = [];
       if (state.showQueues) {
-        visibleQueues = queues.value.filter(queue => queue.type !== 'COLLABORATOR');
+        visibleQueues = queues.value.filter(queue => queue.type !== 'PROFESSIONAL');
       } else if (state.showCollaboratorQueues) {
-        visibleQueues = queues.value.filter(queue => queue.type === 'COLLABORATOR');
+        visibleQueues = queues.value.filter(queue => queue.type === 'PROFESSIONAL');
       } else if (state.showAllQueues) {
         visibleQueues = queues.value;
       }
@@ -1270,7 +1270,7 @@ export default {
       state.showQueueSelector = false;
 
       // Show the correct queue type view based on the selected queue
-      if (queue.type === 'COLLABORATOR') {
+      if (queue.type === 'PROFESSIONAL') {
         state.showCollaboratorQueues = true;
         state.showQueues = false;
         state.showAllQueues = false;
@@ -1524,9 +1524,9 @@ export default {
 
       let visibleQueues = [];
       if (state.showQueues) {
-        visibleQueues = queues.value.filter(queue => queue.type !== 'COLLABORATOR');
+        visibleQueues = queues.value.filter(queue => queue.type !== 'PROFESSIONAL');
       } else if (state.showCollaboratorQueues) {
-        visibleQueues = queues.value.filter(queue => queue.type === 'COLLABORATOR');
+        visibleQueues = queues.value.filter(queue => queue.type === 'PROFESSIONAL');
       } else if (state.showAllQueues) {
         visibleQueues = queues.value;
       }
@@ -1552,9 +1552,9 @@ export default {
 
       let visibleQueues = [];
       if (state.showQueues) {
-        visibleQueues = queues.value.filter(queue => queue.type !== 'COLLABORATOR');
+        visibleQueues = queues.value.filter(queue => queue.type !== 'PROFESSIONAL');
       } else if (state.showCollaboratorQueues) {
-        visibleQueues = queues.value.filter(queue => queue.type === 'COLLABORATOR');
+        visibleQueues = queues.value.filter(queue => queue.type === 'PROFESSIONAL');
       } else if (state.showAllQueues) {
         visibleQueues = queues.value;
       }
@@ -1580,9 +1580,9 @@ export default {
       if (!queues.value || queues.value.length === 0) return [];
       const validQueues = queues.value.filter(queue => queue && queue.type);
       if (state.showQueues) {
-        return validQueues.filter(queue => queue.type !== 'COLLABORATOR');
+        return validQueues.filter(queue => queue.type !== 'PROFESSIONAL');
       } else if (state.showCollaboratorQueues) {
-        return validQueues.filter(queue => queue.type === 'COLLABORATOR');
+        return validQueues.filter(queue => queue.type === 'PROFESSIONAL');
       } else if (state.showAllQueues) {
         return validQueues;
       }
@@ -2172,7 +2172,7 @@ export default {
           <div class="row g-1 mx-0 my-0" v-if="state.showQueues && queues && queues.length > 0">
             <div
               v-for="(queue, index) in queues.filter(
-                queue => queue && queue.type && queue.type !== 'COLLABORATOR'
+                queue => queue && queue.type && queue.type !== 'PROFESSIONAL'
               )"
               :key="queue.id"
               :data-queue-id="queue.id"
@@ -2224,7 +2224,7 @@ export default {
           >
             <div
               v-for="(queue, index) in queues.filter(
-                queue => queue && queue.type && queue.type === 'COLLABORATOR'
+                queue => queue && queue.type && queue.type === 'PROFESSIONAL'
               )"
               :key="queue.id"
               :data-queue-id="queue.id"
@@ -2714,7 +2714,7 @@ export default {
               </div>
               <div v-if="!state.client" class="client-empty-state">
                 <Message
-                  :icon="'bi-search'"
+                  :icon="'search'"
                   :title="$t('dashboard.message.2.title')"
                   :content="$t('dashboard.message.2.content')"
                 />

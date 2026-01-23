@@ -802,7 +802,12 @@ export const getIncomesDetails = async (
   asc = true,
   incomeStatus = undefined,
   fiscalNote = undefined,
-  automatic = undefined
+  automatic = undefined,
+  minAmount = undefined,
+  maxAmount = undefined,
+  incomeTypeFilter = undefined,
+  paymentMethodFilter = undefined,
+  professionalFilter = undefined
 ) => {
   const options = {};
   options.params = {
@@ -816,8 +821,15 @@ export const getIncomesDetails = async (
     asc,
     businessId,
     incomeStatus,
-    fiscalNote,
-    automatic,
+    fiscalNote: fiscalNote !== undefined ? fiscalNote.toString() : undefined,
+    automatic: automatic !== undefined ? automatic.toString() : undefined,
+    minAmount,
+    maxAmount,
+    incomeTypeFilter,
+    paymentMethodFilter,
+    professionalFilter,
+    // Add timestamp to prevent caching
+    _t: Date.now(),
   };
   options.paramsSerializer = params => qs.stringify(params);
   const { headers } = await getHeaders();
@@ -837,7 +849,11 @@ export const getOutcomesDetails = async (
   asc = true,
   incomeStatus = undefined,
   fiscalNote = undefined,
-  automatic = undefined
+  automatic = undefined,
+  minAmount = undefined,
+  maxAmount = undefined,
+  outcomeTypeFilter = undefined,
+  paymentMethodFilter = undefined
 ) => {
   const options = {};
   options.params = {
@@ -851,8 +867,14 @@ export const getOutcomesDetails = async (
     asc,
     businessId,
     incomeStatus,
-    fiscalNote,
-    automatic,
+    fiscalNote: fiscalNote !== undefined ? fiscalNote.toString() : undefined,
+    automatic: automatic !== undefined ? automatic.toString() : undefined,
+    minAmount,
+    maxAmount,
+    outcomeTypeFilter,
+    paymentMethodFilter,
+    // Add timestamp to prevent caching
+    _t: Date.now(),
   };
   options.paramsSerializer = params => qs.stringify(params);
   const { headers } = await getHeaders();

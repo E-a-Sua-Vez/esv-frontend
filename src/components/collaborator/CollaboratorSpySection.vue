@@ -81,6 +81,7 @@ export default {
     const state = reactive({
       currentUser: {},
       collaborator: {},
+      professional: {}, // Professional data for queue filtering
       business: {},
       commerces: [],
       commerce: {},
@@ -571,17 +572,57 @@ export default {
         // Check for grouped queues if feature is active
         if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
           const groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
-          if (Object.keys(groupedQueues).length > 0 && state.collaborator.type === 'STANDARD') {
-            const collaboratorQueues = groupedQueues['COLLABORATOR'] || [];
-            queues = collaboratorQueues.filter(
-              queue => queue.collaboratorId === state.collaborator.id
-            );
+          const collaboratorType = state.collaborator.type;
+
+          // Load professional data if collaborator has professionalId
+          if (state.collaborator && state.collaborator.professionalId && !state.professional) {
+            try {
+              const { getProfessionalById } = await import('../../application/services/professional');
+              state.professional = await getProfessionalById(state.collaborator.professionalId);
+            } catch (error) {
+              console.warn('Could not load professional data, falling back to collaborator', error);
+              state.professional = state.collaborator;
+            }
+          }
+
+          if (Object.keys(groupedQueues).length > 0) {
+            // Build all queues from grouped queues
+            const allQueues = Object.values(groupedQueues).flat();
+
+            if (collaboratorType === 'STANDARD') {
+              // STANDARD: Their own professional queues + non-professional queues
+              const professionalQueues = (groupedQueues['PROFESSIONAL'] || []).filter(
+                queue => {
+                  // Use professionalId if available, otherwise fallback to collaboratorId
+                  if (state.professional && state.professional.id) {
+                    return queue.professionalId === state.professional.id;
+                  }
+                  return queue.collaboratorId === state.collaborator.id;
+                }
+              );
+              const otherQueues = allQueues.filter(queue => queue.type !== 'PROFESSIONAL');
+              queues = [...professionalQueues, ...otherQueues];
+            } else if (collaboratorType === 'ASSISTANT') {
+              // ASSISTANT: No professional queues, only general queues
+              queues = allQueues.filter(queue => queue.type !== 'PROFESSIONAL');
+            } else {
+              // All other types: Can see all queues
+              queues = allQueues;
+            }
           }
         } else {
-          // Filter queues where type is COLLABORATOR and collaboratorId matches
-          queues = queues.filter(
-            queue => queue.type === 'COLLABORATOR' && queue.collaboratorId === state.collaborator.id
-          );
+          // Legacy logic for non-grouped queues
+          const collaboratorType = state.collaborator.type;
+          if (collaboratorType === 'STANDARD') {
+            // Filter queues where type is PROFESSIONAL and collaboratorId matches
+            queues = queues.filter(
+              queue => queue.type === 'PROFESSIONAL' && queue.collaboratorId === state.collaborator.id
+            );
+          } else if (collaboratorType === 'ASSISTANT') {
+            // ASSISTANT: No professional queues
+            queues = queues.filter(queue => queue.type !== 'PROFESSIONAL');
+          }
+          // All other types can see all queues
         }
 
         state.dedicatedQueues = queues;
@@ -601,30 +642,70 @@ export default {
         const queueIds = state.dedicatedQueues.map(q => q.id);
 
         // Get today's attentions
-        const attentions = await getPendingAttentionsDetails(
-          state.commerce.id,
-          today,
-          today,
-          [state.commerce.id],
-          1,
-          1000,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined
-        );
+        let attentions = [];
 
-        // Filter by queue IDs and status PENDING (only pending attentions should be shown)
+        if (queueIds.length === 0) {
+          // No queues assigned
+          state.todayAttentions = [];
+          return;
+        } else if (queueIds.length === 1) {
+          // Single queue - filter efficiently in API
+          attentions = await getPendingAttentionsDetails(
+            state.commerce.id,
+            today,
+            today,
+            [state.commerce.id],
+            1,
+            1000,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            queueIds[0], // Pass single queueId to API
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined
+          );
+        } else {
+          // Multiple queues - get all and filter afterwards (more efficient than multiple API calls)
+          attentions = await getPendingAttentionsDetails(
+            state.commerce.id,
+            today,
+            today,
+            [state.commerce.id],
+            1,
+            1000,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined, // No queueId filter in API
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined
+          );
+        }
+
+        // Filter by queue IDs and status PENDING
         const todayAttentions = (attentions || []).filter(
-          att => att.queueId && queueIds.includes(att.queueId) && att.status === 'PENDING'
+          att => {
+            // Always check status first
+            if (att.status !== 'PENDING') return false;
+
+            // If single queue, it's already filtered by API
+            if (queueIds.length === 1) return true;
+
+            // If multiple queues, filter by all queueIds
+            return att.queueId && queueIds.includes(att.queueId);
+          }
         );
 
         // Format attentions

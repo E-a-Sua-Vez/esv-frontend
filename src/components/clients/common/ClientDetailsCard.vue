@@ -1994,7 +1994,7 @@ export default {
                     :title="$t('dashboard.reports.attentions-management.title')"
                     :show-tooltip="true"
                     :description="$t('dashboard.reports.attentions-management.description')"
-                    :icon="'bi-file-earmark-spreadsheet'"
+                    :icon="'file-earmark-spreadsheet'"
                     @download="handleExportCSV"
                     :can-download="toggles['dashboard.reports.attentions-management'] === true"
                   ></SimpleDownloadCard>
@@ -2073,7 +2073,7 @@ export default {
                     :title="$t('dashboard.reports.bookings-management.title')"
                     :show-tooltip="true"
                     :description="$t('dashboard.reports.bookings-management.description')"
-                    :icon="'bi-file-earmark-spreadsheet'"
+                    :icon="'file-earmark-spreadsheet'"
                     @download="handleExportBookingsCSV"
                     :can-download="toggles['dashboard.reports.bookings-management'] === true"
                   ></SimpleDownloadCard>
@@ -2157,7 +2157,7 @@ export default {
                       $t('dashboard.reports.packages-management.description') ||
                       'Exportar lista de paquetes'
                     "
-                    :icon="'bi-file-earmark-spreadsheet'"
+                    :icon="'file-earmark-spreadsheet'"
                     @download="handleExportPackagesCSV"
                     :can-download="toggles['dashboard.reports.packages-management'] === true"
                   ></SimpleDownloadCard>
@@ -2300,7 +2300,7 @@ export default {
                     :title="$t('dashboard.reports.contacts-management.title')"
                     :show-tooltip="true"
                     :description="$t('dashboard.reports.contacts-management.description')"
-                    :icon="'bi-file-earmark-spreadsheet'"
+                    :icon="'file-earmark-spreadsheet'"
                     @download="handleExportContactsCSV"
                     :can-download="toggles['dashboard.reports.contacts-management'] === true"
                   ></SimpleDownloadCard>

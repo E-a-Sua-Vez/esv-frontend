@@ -2019,7 +2019,7 @@ export default {
     </div>
     <div v-if="showPatientHistoryManagement === true && !toggles['patient.history.view']">
       <Message
-        :icon="'bi-graph-up-arrow'"
+        :icon="'graph-up-arrow'"
         :title="$t('dashboard.message.1.title')"
         :content="$t('dashboard.message.1.content')"
       />

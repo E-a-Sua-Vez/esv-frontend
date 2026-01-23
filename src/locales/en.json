@@ -265,6 +265,7 @@
   "commissionPayments": {
     "title": "Commission Payments",
     "createPayment": "Create Commission Payment",
+    "createNew": "Create New",
     "editPayment": "Edit Payment",
     "confirmPayment": "Confirm Payment",
     "cancelPayment": "Cancel Payment",
@@ -275,6 +276,8 @@
     "dateTo": "Date To",
     "search": "Search Incomes",
     "unpaidIncomes": "Incomes with Unpaid Commission",
+    "selectedIncomes": "Selected Incomes",
+    "selectedCount": "Selected",
     "selectAll": "Select All",
     "deselectAll": "Deselect All",
     "date": "Date",
@@ -319,7 +322,13 @@
     "toRemove": "To Remove",
     "toAdd": "To Add",
     "finalTotal": "Final Total",
-    "paymentDetails": "Payment Details",
+    "paymentDetails": {
+      "paymentType": "Payment Type",
+      "paymentMethod": "Payment Method",
+      "paymentAmount": "Payment Amount",
+      "professionalCommission": "Professional Commission",
+      "paymentDate": "Payment Date"
+    },
     "cancellationDetails": "Cancellation Details",
     "commissionPaymentStatus": {
       "CREATED": "Created",
@@ -2550,6 +2559,7 @@
     "indicators": "Indicators",
     "graph": "Trends",
     "bookings": "Bookings",
+    "paid": "Paid",
     "packages": "Packages",
     "details": "Details",
     "surveys": "Surveys",
@@ -3158,6 +3168,13 @@
           "4": "bookings."
         }
       }
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "processed": "Completed",
+      "cancelled": "Cancelled",
+      "unknown": "Unknown"
     },
     "message": {
       "1": {

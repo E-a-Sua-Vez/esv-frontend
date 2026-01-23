@@ -272,14 +272,14 @@ export default {
       ) {
         state.groupedQueues = await getGroupedQueueByCommerceId(commerce.value.id);
 
-        // Check for COLLABORATOR type group (queues assigned to collaborators/professionals)
+        // Check for PROFESSIONAL type group (queues assigned to collaborators/professionals)
         const hasGroupedProfessionalQueues =
           state.groupedQueues &&
-          Array.isArray(state.groupedQueues['COLLABORATOR']) &&
-          state.groupedQueues['COLLABORATOR'].length > 0;
+          Array.isArray(state.groupedQueues['PROFESSIONAL']) &&
+          state.groupedQueues['PROFESSIONAL'].length > 0;
 
         if (hasGroupedProfessionalQueues && state.collaborator.type === 'STANDARD') {
-          const professionalGroup = state.groupedQueues['COLLABORATOR'] || [];
+          const professionalGroup = state.groupedQueues['PROFESSIONAL'] || [];
           // Filter queues assigned to this professional by professionalId
           const professionalQueues = professionalGroup.filter(
             queue => queue.professionalId === state.professional.id
@@ -287,14 +287,14 @@ export default {
 
           state.professionalQueues = professionalQueues;
 
-          const otherQueues = currentQueues.filter(queue => queue.type !== 'COLLABORATOR');
+          const otherQueues = currentQueues.filter(queue => queue.type !== 'PROFESSIONAL');
           const queues = [...professionalQueues, ...otherQueues];
           state.queues = queues;
           return;
         }
 
         if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'ASSISTANT') {
-          const otherQueues = currentQueues.filter(queue => queue.type !== 'COLLABORATOR');
+          const otherQueues = currentQueues.filter(queue => queue.type !== 'PROFESSIONAL');
           const queues = [...otherQueues];
           state.queues = queues;
           state.professionalQueues = [];

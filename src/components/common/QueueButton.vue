@@ -26,7 +26,7 @@ export default {
 
     const queueIcon = type => {
       if (type) {
-        if (type === 'COLLABORATOR') {
+        if (type === 'PROFESSIONAL') {
           return 'bi-person-circle';
         }
         if (type === 'SERVICE') {
@@ -45,7 +45,7 @@ export default {
 
     const queueStyle = type => {
       if (type) {
-        if (type === 'COLLABORATOR') {
+        if (type === 'PROFESSIONAL') {
           return 'btn-light';
         }
         return 'btn-secondary';
@@ -214,7 +214,7 @@ export default {
                 </span>
               </Popper>
             </div>
-            <div v-if="['COLLABORATOR'].includes(queue.type)" class="professional-services">
+            <div v-if="['PROFESSIONAL'].includes(queue.type)" class="professional-services">
               <i class="bi bi-tag-fill service-icon"></i>
               <span class="services-text">
                 {{
@@ -242,7 +242,7 @@ export default {
             <div
               class="professional-duration"
               v-if="
-                !['COLLABORATOR', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.type) &&
+                !['PROFESSIONAL', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.type) &&
                 (queue.blockTime || queue.estimatedTime)
               "
             >
