@@ -529,6 +529,12 @@ export default {
 }
 
 .filters-content {
+  font-size: 0.8rem;
+  line-height: .9;
+  font-weight: 300 !important;
+  color: rgba(0, 0, 0, 0.7);
+  text-transform: uppercase;
+  align-items: flex-start;
   padding: 0.5rem;
   background: #f8f9fa;
   border-top: 1px solid #e9ecef;

@@ -125,18 +125,6 @@ export default {
           this.ratingType,
           this.npsType
         );
-        // 🔍 DEBUG: Verificar IDs recibidos del query-stack
-        if (this.clients && this.clients.length > 0) {
-          console.log(
-            '🔍 DEBUG Client IDs from query-stack:',
-            this.clients.map(c => ({
-              id: c.id,
-              userId: c.userId,
-              userName: c.userName,
-              userEmail: c.userEmail,
-            })),
-          );
-        }
         if (this.clients && this.clients.length > 0) {
           const { counter } = this.clients[0];
           this.counter = counter;

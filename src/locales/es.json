@@ -257,7 +257,8 @@
     "INSTALLMENT": "Cuota",
     "UNIQUE": "Pago Único",
     "STANDARD": "Entrada Normal",
-    "FUND_INCREASE": "Incremento de Fondos"
+    "FUND_INCREASE": "Incremento de Fondos",
+    "PACKAGE": "Paquete"
   },
   "incomeStatus": {
     "CONFIRMED": "Confirmado",
@@ -275,7 +276,10 @@
     "BOLETO": "Boleto",
     "PIX": "Pix",
     "HEALTH_AGREEMENT": "Convenio Salud",
-    "OTHER": "Otro"
+    "OTHER": "Otro",
+    "CASH": "Efectivo",
+    "CARD": "Tarjeta",
+    "TRANSFER": "Transferencia"
   },
   "paymentFiscalNotes": {
     "NOTA_FISCAL": "Nota Fiscal",
@@ -2643,7 +2647,14 @@
     "graph": "Tendencias",
     "surveys": "Encuestas",
     "hideDetails": "Ocultar Detalles",
+    "showDetails": "Mostrar Detalles",
     "incomeCard": {
+      "tooltip": {
+        "type": "Tipo de ingreso",
+        "copy": "Copiar datos",
+        "paymentType": "Tipo de pago",
+        "status": "Estado del pago"
+      },
       "contactInfo": "Información de Contacto"
     },
     "lgpdCompliance": {

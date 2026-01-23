@@ -827,10 +827,19 @@ export const getIncomesDetails = async (
     maxAmount,
     incomeTypeFilter,
     paymentMethodFilter,
-    professionalFilter,
     // Add timestamp to prevent caching
     _t: Date.now(),
   };
+  
+  // Only include professionalFilter if it has a value
+  if (professionalFilter !== undefined && professionalFilter !== null && professionalFilter !== '') {
+    options.params.professionalFilter = professionalFilter;
+    console.log('[getIncomesDetails] Including professionalFilter in params:', professionalFilter);
+  } else {
+    console.log('[getIncomesDetails] professionalFilter is empty/undefined, not including in params');
+  }
+  
+  console.log('[getIncomesDetails] Final params:', options.params);
   options.paramsSerializer = params => qs.stringify(params);
   const { headers } = await getHeaders();
   options.headers = headers;

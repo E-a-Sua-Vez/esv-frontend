@@ -254,7 +254,8 @@
     "INSTALLMENT": "Installment",
     "UNIQUE": "Unique Payment",
     "FUND_INCREASE": "Fund Increase",
-    "STANDARD": "Standard"
+    "STANDARD": "Standard",
+    "PACKAGE": "Package"
   },
   "incomeStatus": {
     "CONFIRMED": "Confirmed",
@@ -272,7 +273,10 @@
     "BOLETO": "Boleto",
     "PIX": "Pix",
     "HEALTH_AGREEMENT": "Health Agreement",
-    "OTHER": "Other"
+    "OTHER": "Other",
+    "CASH": "Cash",
+    "CARD": "Card",
+    "TRANSFER": "Transfer"
   },
   "paymentFiscalNotes": {
     "FISCAL_NOTE": "Fiscal Note",
@@ -2597,6 +2601,17 @@
     "bookingDetails": "Booking Details",
     "time": "Time",
     "seconds": "In Minutes",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details",
+    "incomeCard": {
+      "tooltip": {
+        "type": "Income type",
+        "copy": "Copy data",
+        "paymentType": "Payment type",
+        "status": "Payment status"
+      },
+      "contactInfo": "Contact Information"
+    },
     "intelligentEstimationTooltip": "This time was calculated using intelligent learning (median) based on historical data from completed services. The median is more robust than the average, not being affected by extreme values.",
     "queueDetails": {
       "title": "Queue Details",
@@ -4148,6 +4163,7 @@
       "professional": "Professional",
       "all": "All"
     },
+    "commission": "Commission",
     "projectedCashFlow": "Projected Cash Flow",
     "projectedCashFlowDescription": "Projection based on daily average of current period",
     "projectedCashFlowDays": "Days remaining in the month: {days}",

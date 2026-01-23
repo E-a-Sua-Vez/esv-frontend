@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getCommerceById } from '../../application/services/commerce';
@@ -43,6 +43,19 @@ export default {
 
     const loading = ref(false);
     const alertError = ref('');
+
+    // Refs to access child component instances
+    const incomesFilterRef = ref(null);
+    const incomesContentRef = ref(null);
+    const outcomesFilterRef = ref(null);
+    const outcomesContentRef = ref(null);
+    const resumeFilterRef = ref(null);
+    const resumeContentRef = ref(null);
+    
+    // Refs for timeout management
+    const timeoutRefIncomes = ref(null);
+    const timeoutRefOutcomes = ref(null);
+    const timeoutRefResume = ref(null);
 
     const attentionCreated = {
       attentionNumber: 0,
@@ -203,6 +216,283 @@ export default {
       // Handle filters toggle if needed
     };
 
+    // Wrapper function to refresh content instance when filters change - following BusinessTracing pattern
+    // CRITICAL: This function must sync ALL filter values exactly as they are in filterInstance
+    // to ensure mobile and desktop produce identical results
+    const refreshIncomesContent = (filterPropsOverride = null) => {
+      // Use nextTick to ensure filter instance values are updated
+      nextTick(() => {
+        nextTick(() => {
+          if (incomesFilterRef.value && incomesContentRef.value) {
+            const filterInstance = incomesFilterRef.value;
+            const contentInstance = incomesContentRef.value;
+
+            if (!filterInstance || !contentInstance) {
+              return;
+            }
+
+            // Clear previous data immediately
+            contentInstance.financialIncomes = [];
+            contentInstance.counter = 0;
+            contentInstance.totalPages = 0;
+
+            // Set flag to skip watch during manual sync
+            contentInstance._skipWatch = true;
+
+            // Sync all filter properties - read from filterPropsOverride if provided, otherwise from filterInstance
+            contentInstance.page = 1;
+
+            // Helper function to get value - prioritize override, then filterInstance, then undefined
+            const getValue = key => {
+              if (filterPropsOverride && key in filterPropsOverride) {
+                return filterPropsOverride[key];
+              }
+              return filterInstance[key];
+            };
+
+            // Helper to normalize string values (empty string -> undefined, trim whitespace)
+            const normalizeString = value => {
+              if (value === null || value === undefined) return undefined;
+              const str = String(value).trim();
+              return str === '' ? undefined : str;
+            };
+
+            // Sync all filter values - EXACTLY as they are in filterInstance
+            contentInstance.startDate = normalizeString(getValue('startDate'));
+            contentInstance.endDate = normalizeString(getValue('endDate'));
+            contentInstance.searchText = normalizeString(getValue('searchText'));
+            contentInstance.incomeStatus = getValue('incomeStatus');
+            
+            // Handle boolean values - ensure they are properly set (true/false or undefined)
+            const fiscalNoteValue = getValue('fiscalNote');
+            contentInstance.fiscalNote = fiscalNoteValue !== undefined ? fiscalNoteValue : undefined;
+            
+            const automaticValue = getValue('automatic');
+            contentInstance.automatic = automaticValue !== undefined ? automaticValue : undefined;
+            
+            const ascValue = getValue('asc');
+            contentInstance.asc = ascValue !== undefined ? ascValue : false;
+            
+            contentInstance.minAmount = getValue('minAmount');
+            contentInstance.maxAmount = getValue('maxAmount');
+            
+            // Handle filter values - ensure undefined is properly handled
+            const incomeTypeValue = getValue('incomeTypeFilter');
+            contentInstance.incomeTypeFilter = incomeTypeValue !== undefined && incomeTypeValue !== null && incomeTypeValue !== '' ? incomeTypeValue : undefined;
+            
+            const paymentMethodValue = getValue('paymentMethodFilter');
+            contentInstance.paymentMethodFilter = paymentMethodValue !== undefined && paymentMethodValue !== null && paymentMethodValue !== '' ? paymentMethodValue : undefined;
+            
+            const professionalValue = getValue('professionalFilter');
+            contentInstance.professionalFilter = professionalValue !== undefined && professionalValue !== null && professionalValue !== '' ? professionalValue : undefined;
+
+            console.log('[refreshIncomesContent] Syncing filters:', {
+              professionalFilter: contentInstance.professionalFilter,
+              startDate: contentInstance.startDate,
+              endDate: contentInstance.endDate,
+            });
+
+            // Clear skip flag and refresh
+            contentInstance._skipWatch = false;
+
+            // Force Vue to update the reactive properties
+            nextTick(() => {
+              nextTick(() => {
+                if (contentInstance && contentInstance.refresh) {
+                  contentInstance.refresh();
+                }
+              });
+            });
+          }
+        });
+      });
+    };
+
+    // Helper function to get all current filter values from filterProps
+    const getAllFilterValues = (filterProps, override = {}) => {
+      return {
+        startDate: override.startDate !== undefined ? override.startDate : filterProps.startDate,
+        endDate: override.endDate !== undefined ? override.endDate : filterProps.endDate,
+        searchText: override.searchText !== undefined ? override.searchText : filterProps.searchText,
+        incomeStatus: override.incomeStatus !== undefined ? override.incomeStatus : filterProps.incomeStatus,
+        fiscalNote: override.fiscalNote !== undefined ? override.fiscalNote : filterProps.fiscalNote,
+        automatic: override.automatic !== undefined ? override.automatic : filterProps.automatic,
+        asc: override.asc !== undefined ? override.asc : filterProps.asc,
+        minAmount: override.minAmount !== undefined ? override.minAmount : filterProps.minAmount,
+        maxAmount: override.maxAmount !== undefined ? override.maxAmount : filterProps.maxAmount,
+        incomeTypeFilter: override.incomeTypeFilter !== undefined ? override.incomeTypeFilter : filterProps.incomeTypeFilter,
+        paymentMethodFilter: override.paymentMethodFilter !== undefined ? override.paymentMethodFilter : filterProps.paymentMethodFilter,
+        professionalFilter: override.professionalFilter !== undefined ? override.professionalFilter : filterProps.professionalFilter,
+      };
+    };
+
+    // Helper function to refresh incomes content with delay (debounce)
+    const refreshIncomesContentDelayed = (filterPropsOverride = null, delay = 50) => {
+      if (timeoutRefIncomes.value) {
+        clearTimeout(timeoutRefIncomes.value);
+      }
+      timeoutRefIncomes.value = setTimeout(() => {
+        refreshIncomesContent(filterPropsOverride);
+        timeoutRefIncomes.value = null;
+      }, delay);
+    };
+
+    // Helper function to get all current filter values for Outcomes
+    const getAllOutcomesFilterValues = (filterProps, override = {}) => {
+      return {
+        startDate: override.startDate !== undefined ? override.startDate : filterProps.startDate,
+        endDate: override.endDate !== undefined ? override.endDate : filterProps.endDate,
+        searchText: override.searchText !== undefined ? override.searchText : filterProps.searchText,
+        asc: override.asc !== undefined ? override.asc : filterProps.asc,
+        minAmount: override.minAmount !== undefined ? override.minAmount : filterProps.minAmount,
+        maxAmount: override.maxAmount !== undefined ? override.maxAmount : filterProps.maxAmount,
+        outcomeTypeFilter: override.outcomeTypeFilter !== undefined ? override.outcomeTypeFilter : filterProps.outcomeTypeFilter,
+        paymentMethodFilter: override.paymentMethodFilter !== undefined ? override.paymentMethodFilter : filterProps.paymentMethodFilter,
+        professionalFilter: override.professionalFilter !== undefined ? override.professionalFilter : filterProps.professionalFilter,
+      };
+    };
+
+    // Wrapper function to refresh outcomes content instance when filters change
+    const refreshOutcomesContent = (filterPropsOverride = null) => {
+      nextTick(() => {
+        nextTick(() => {
+          if (outcomesFilterRef.value && outcomesContentRef.value) {
+            const filterInstance = outcomesFilterRef.value;
+            const contentInstance = outcomesContentRef.value;
+
+            if (!filterInstance || !contentInstance) {
+              return;
+            }
+
+            // Clear previous data immediately
+            contentInstance.financialOutcomes = [];
+            contentInstance.counter = 0;
+            contentInstance.totalPages = 0;
+
+            // Set flag to skip watch during manual sync
+            contentInstance._skipWatch = true;
+
+            // Helper function to get value - prioritize override, then filterInstance, then undefined
+            const getValue = key => {
+              if (filterPropsOverride && key in filterPropsOverride) {
+                return filterPropsOverride[key];
+              }
+              return filterInstance[key];
+            };
+
+            // Helper to normalize string values
+            const normalizeString = value => {
+              if (value === null || value === undefined) return undefined;
+              const str = String(value).trim();
+              return str === '' ? undefined : str;
+            };
+
+            // Sync all filter values
+            contentInstance.page = 1;
+            contentInstance.startDate = normalizeString(getValue('startDate'));
+            contentInstance.endDate = normalizeString(getValue('endDate'));
+            contentInstance.searchText = normalizeString(getValue('searchText'));
+            const ascValue = getValue('asc');
+            contentInstance.asc = ascValue !== undefined ? ascValue : true;
+            contentInstance.minAmount = getValue('minAmount');
+            contentInstance.maxAmount = getValue('maxAmount');
+            const outcomeTypeValue = getValue('outcomeTypeFilter');
+            contentInstance.outcomeTypeFilter = outcomeTypeValue !== undefined && outcomeTypeValue !== null && outcomeTypeValue !== '' ? outcomeTypeValue : undefined;
+            const paymentMethodValue = getValue('paymentMethodFilter');
+            contentInstance.paymentMethodFilter = paymentMethodValue !== undefined && paymentMethodValue !== null && paymentMethodValue !== '' ? paymentMethodValue : undefined;
+            const professionalValue = getValue('professionalFilter');
+            contentInstance.professionalFilter = professionalValue !== undefined && professionalValue !== null && professionalValue !== '' ? professionalValue : undefined;
+
+            // Clear skip flag and refresh
+            contentInstance._skipWatch = false;
+
+            // Force Vue to update the reactive properties
+            nextTick(() => {
+              nextTick(() => {
+                if (contentInstance && contentInstance.refresh) {
+                  contentInstance.refresh();
+                }
+              });
+            });
+          }
+        });
+      });
+    };
+
+    // Helper function to refresh outcomes content with delay (debounce)
+    const refreshOutcomesContentDelayed = (filterPropsOverride = null, delay = 50) => {
+      if (timeoutRefOutcomes.value) {
+        clearTimeout(timeoutRefOutcomes.value);
+      }
+      timeoutRefOutcomes.value = setTimeout(() => {
+        refreshOutcomesContent(filterPropsOverride);
+        timeoutRefOutcomes.value = null;
+      }, delay);
+    };
+
+    // Helper function to get all current filter values for Resume
+    const getAllResumeFilterValues = (filterProps, override = {}) => {
+      return {
+        startDate: override.startDate !== undefined ? override.startDate : filterProps.startDate,
+        endDate: override.endDate !== undefined ? override.endDate : filterProps.endDate,
+      };
+    };
+
+    // Wrapper function to refresh resume content instance when filters change
+    const refreshResumeContent = (filterPropsOverride = null) => {
+      nextTick(() => {
+        nextTick(() => {
+          if (resumeFilterRef.value && resumeContentRef.value) {
+            const filterInstance = resumeFilterRef.value;
+            const contentInstance = resumeContentRef.value;
+
+            if (!filterInstance || !contentInstance) {
+              return;
+            }
+
+            // Helper function to get value - prioritize override, then filterInstance, then undefined
+            const getValue = key => {
+              if (filterPropsOverride && key in filterPropsOverride) {
+                return filterPropsOverride[key];
+              }
+              return filterInstance[key];
+            };
+
+            // Helper to normalize string values
+            const normalizeString = value => {
+              if (value === null || value === undefined) return undefined;
+              const str = String(value).trim();
+              return str === '' ? undefined : str;
+            };
+
+            // Sync all filter values
+            contentInstance.startDate = normalizeString(getValue('startDate'));
+            contentInstance.endDate = normalizeString(getValue('endDate'));
+
+            // Force Vue to update the reactive properties
+            nextTick(() => {
+              nextTick(() => {
+                if (contentInstance && contentInstance.refresh) {
+                  contentInstance.refresh();
+                }
+              });
+            });
+          }
+        });
+      });
+    };
+
+    // Helper function to refresh resume content with delay (debounce)
+    const refreshResumeContentDelayed = (filterPropsOverride = null, delay = 50) => {
+      if (timeoutRefResume.value) {
+        clearTimeout(timeoutRefResume.value);
+      }
+      timeoutRefResume.value = setTimeout(() => {
+        refreshResumeContent(filterPropsOverride);
+        timeoutRefResume.value = null;
+      }, delay);
+    };
+
     const handleCommerceChanged = async commerce => {
       // Commerce is now managed globally
       if (commerce && commerce.id && commerce.id !== 'ALL') {
@@ -210,21 +500,82 @@ export default {
       }
     };
 
-    // Shared filter functions
+    // Shared filter functions - updated to sync with filter instance and refresh content
     const setSharedIncomeStatus = value => {
       console.log('BusinessFinancial.setSharedIncomeStatus:', {
         oldValue: state.sharedIncomeFilters.incomeStatus,
         newValue: value,
       });
       state.sharedIncomeFilters.incomeStatus = value;
+      
+      // Update filter instance if available
+      if (incomesFilterRef.value) {
+        incomesFilterRef.value.incomeStatus = value === '' ? undefined : value;
+        // Use getAllFilterValues helper to get all current values from filter instance
+        const filterProps = {
+          startDate: incomesFilterRef.value.startDate,
+          endDate: incomesFilterRef.value.endDate,
+          searchText: incomesFilterRef.value.searchText,
+          incomeStatus: value === '' ? undefined : value,
+          fiscalNote: incomesFilterRef.value.fiscalNote,
+          automatic: incomesFilterRef.value.automatic,
+          asc: incomesFilterRef.value.asc,
+          minAmount: incomesFilterRef.value.minAmount,
+          maxAmount: incomesFilterRef.value.maxAmount,
+          incomeTypeFilter: incomesFilterRef.value.incomeTypeFilter,
+          paymentMethodFilter: incomesFilterRef.value.paymentMethodFilter,
+          professionalFilter: incomesFilterRef.value.professionalFilter,
+        };
+        refreshIncomesContentDelayed(filterProps);
+      }
     };
 
     const setSharedFiscalNote = value => {
       state.sharedIncomeFilters.fiscalNote = value;
+      
+      // Update filter instance if available
+      if (incomesFilterRef.value) {
+        incomesFilterRef.value.fiscalNote = value;
+        const filterProps = {
+          startDate: incomesFilterRef.value.startDate,
+          endDate: incomesFilterRef.value.endDate,
+          searchText: incomesFilterRef.value.searchText,
+          incomeStatus: incomesFilterRef.value.incomeStatus,
+          fiscalNote: value,
+          automatic: incomesFilterRef.value.automatic,
+          asc: incomesFilterRef.value.asc,
+          minAmount: incomesFilterRef.value.minAmount,
+          maxAmount: incomesFilterRef.value.maxAmount,
+          incomeTypeFilter: incomesFilterRef.value.incomeTypeFilter,
+          paymentMethodFilter: incomesFilterRef.value.paymentMethodFilter,
+          professionalFilter: incomesFilterRef.value.professionalFilter,
+        };
+        refreshIncomesContentDelayed(filterProps);
+      }
     };
 
     const setSharedAutomatic = value => {
       state.sharedIncomeFilters.automatic = value;
+      
+      // Update filter instance if available
+      if (incomesFilterRef.value) {
+        incomesFilterRef.value.automatic = value;
+        const filterProps = {
+          startDate: incomesFilterRef.value.startDate,
+          endDate: incomesFilterRef.value.endDate,
+          searchText: incomesFilterRef.value.searchText,
+          incomeStatus: incomesFilterRef.value.incomeStatus,
+          fiscalNote: incomesFilterRef.value.fiscalNote,
+          automatic: value,
+          asc: incomesFilterRef.value.asc,
+          minAmount: incomesFilterRef.value.minAmount,
+          maxAmount: incomesFilterRef.value.maxAmount,
+          incomeTypeFilter: incomesFilterRef.value.incomeTypeFilter,
+          paymentMethodFilter: incomesFilterRef.value.paymentMethodFilter,
+          professionalFilter: incomesFilterRef.value.professionalFilter,
+        };
+        refreshIncomesContentDelayed(filterProps);
+      }
     };
 
     return {
@@ -245,6 +596,24 @@ export default {
       setSharedIncomeStatus,
       setSharedFiscalNote,
       setSharedAutomatic,
+      // Refs for filter and content instances
+      incomesFilterRef,
+      incomesContentRef,
+      outcomesFilterRef,
+      outcomesContentRef,
+      resumeFilterRef,
+      resumeContentRef,
+      // Functions to sync filters to content
+      refreshIncomesContent,
+      refreshIncomesContentDelayed,
+      getAllFilterValues,
+      refreshOutcomesContent,
+      refreshOutcomesContentDelayed,
+      getAllOutcomesFilterValues,
+      refreshResumeContent,
+      refreshResumeContentDelayed,
+      getAllResumeFilterValues,
+      nextTick,
     };
   },
 };
@@ -416,6 +785,7 @@ export default {
                       :commerces="Array.isArray(selectedCommerces) ? selectedCommerces : []"
                       :business="state.business"
                       filters-location="slot"
+                      ref="resumeFilterRef"
                     >
                       <template #filters-exposed="filterProps">
                         <div class="filters-content-wrapper">
@@ -424,7 +794,16 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getToday()"
+                                @click="
+                                  filterProps.getToday();
+                                  nextTick(() => {
+                                    if (resumeFilterRef.value) {
+                                      resumeFilterRef.value.startDate = filterProps.startDate;
+                                      resumeFilterRef.value.endDate = filterProps.endDate;
+                                    }
+                                    refreshResumeContentDelayed(getAllResumeFilterValues(filterProps));
+                                  });
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.today') }}
@@ -433,7 +812,16 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getCurrentMonth()"
+                                @click="
+                                  filterProps.getCurrentMonth();
+                                  nextTick(() => {
+                                    if (resumeFilterRef.value) {
+                                      resumeFilterRef.value.startDate = filterProps.startDate;
+                                      resumeFilterRef.value.endDate = filterProps.endDate;
+                                    }
+                                    refreshResumeContentDelayed(getAllResumeFilterValues(filterProps));
+                                  });
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.thisMonth') }}
@@ -442,7 +830,16 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getLastMonth()"
+                                @click="
+                                  filterProps.getLastMonth();
+                                  nextTick(() => {
+                                    if (resumeFilterRef.value) {
+                                      resumeFilterRef.value.startDate = filterProps.startDate;
+                                      resumeFilterRef.value.endDate = filterProps.endDate;
+                                    }
+                                    refreshResumeContentDelayed(getAllResumeFilterValues(filterProps));
+                                  });
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.lastMonth') }}
@@ -451,7 +848,16 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getLastThreeMonths()"
+                                @click="
+                                  filterProps.getLastThreeMonths();
+                                  nextTick(() => {
+                                    if (resumeFilterRef.value) {
+                                      resumeFilterRef.value.startDate = filterProps.startDate;
+                                      resumeFilterRef.value.endDate = filterProps.endDate;
+                                    }
+                                    refreshResumeContentDelayed(getAllResumeFilterValues(filterProps));
+                                  });
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.lastThreeMonths') }}
@@ -469,21 +875,45 @@ export default {
                             @update:startDate="
                               val => {
                                 filterProps.startDate = val;
+                                if (resumeFilterRef.value) {
+                                  resumeFilterRef.value.startDate = val;
+                                }
                               }
                             "
                             @update:endDate="
                               val => {
                                 filterProps.endDate = val;
+                                if (resumeFilterRef.value) {
+                                  resumeFilterRef.value.endDate = val;
+                                }
                               }
                             "
-                            @search="() => filterProps.refresh()"
+                            @search="
+                              refreshResumeContentDelayed(getAllResumeFilterValues(filterProps))
+                            "
                           />
 
                           <!-- Clear button -->
                           <div class="mb-3 mt-3">
                             <button
                               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100"
-                              @click="filterProps.clear()"
+                              @click="
+                                async () => {
+                                  await filterProps.clear();
+                                  await nextTick();
+                                  if (resumeFilterRef.value) {
+                                    resumeFilterRef.value.startDate = undefined;
+                                    resumeFilterRef.value.endDate = undefined;
+                                    filterProps.startDate = undefined;
+                                    filterProps.endDate = undefined;
+                                  }
+                                  await nextTick();
+                                  refreshResumeContentDelayed({
+                                    startDate: undefined,
+                                    endDate: undefined,
+                                  });
+                                }
+                              "
                             >
                               <i class="bi bi-eraser-fill"></i>
                               {{ $t('dashboard.clear') || 'Limpiar' }}
@@ -503,6 +933,7 @@ export default {
                       :commerces="Array.isArray(selectedCommerces) ? selectedCommerces : []"
                       :business="state.business"
                       filters-location="slot"
+                      ref="incomesFilterRef"
                     >
                       <template #filters-exposed="filterProps">
                         <div class="filters-content-wrapper">
@@ -511,7 +942,16 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getToday()"
+                                @click="
+                                  filterProps.getToday();
+                                  nextTick(() => {
+                                    if (incomesFilterRef.value) {
+                                      incomesFilterRef.value.startDate = filterProps.startDate;
+                                      incomesFilterRef.value.endDate = filterProps.endDate;
+                                    }
+                                    refreshIncomesContentDelayed(getAllFilterValues(filterProps));
+                                  });
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.today') }}
@@ -520,7 +960,16 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getCurrentMonth()"
+                                @click="
+                                  filterProps.getCurrentMonth();
+                                  nextTick(() => {
+                                    if (incomesFilterRef.value) {
+                                      incomesFilterRef.value.startDate = filterProps.startDate;
+                                      incomesFilterRef.value.endDate = filterProps.endDate;
+                                    }
+                                    refreshIncomesContentDelayed(getAllFilterValues(filterProps));
+                                  });
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.thisMonth') }}
@@ -529,7 +978,16 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getLastMonth()"
+                                @click="
+                                  filterProps.getLastMonth();
+                                  nextTick(() => {
+                                    if (incomesFilterRef.value) {
+                                      incomesFilterRef.value.startDate = filterProps.startDate;
+                                      incomesFilterRef.value.endDate = filterProps.endDate;
+                                    }
+                                    refreshIncomesContentDelayed(getAllFilterValues(filterProps));
+                                  });
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.lastMonth') }}
@@ -538,7 +996,16 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getLastThreeMonths()"
+                                @click="
+                                  filterProps.getLastThreeMonths();
+                                  nextTick(() => {
+                                    if (incomesFilterRef.value) {
+                                      incomesFilterRef.value.startDate = filterProps.startDate;
+                                      incomesFilterRef.value.endDate = filterProps.endDate;
+                                    }
+                                    refreshIncomesContentDelayed(getAllFilterValues(filterProps));
+                                  });
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.lastThreeMonths') }}
@@ -556,14 +1023,22 @@ export default {
                             @update:startDate="
                               val => {
                                 filterProps.startDate = val;
+                                if (incomesFilterRef.value) {
+                                  incomesFilterRef.value.startDate = val;
+                                }
                               }
                             "
                             @update:endDate="
                               val => {
                                 filterProps.endDate = val;
+                                if (incomesFilterRef.value) {
+                                  incomesFilterRef.value.endDate = val;
+                                }
                               }
                             "
-                            @search="() => filterProps.refresh()"
+                            @search="
+                              refreshIncomesContentDelayed(getAllFilterValues(filterProps))
+                            "
                           />
 
                           <!-- Search field -->
@@ -578,14 +1053,20 @@ export default {
                                 :value="filterProps.searchText"
                                 @input="
                                   e => {
-                                    filterProps.searchText = e.target.value;
+                                    const newValue = e.target.value;
+                                    filterProps.searchText = newValue;
+                                    if (incomesFilterRef.value) {
+                                      incomesFilterRef.value.searchText = newValue;
+                                    }
                                   }
                                 "
                                 :placeholder="$t('dashboard.search')"
                               />
                               <button
                                 class="btn btn-sm btn-dark rounded-pill"
-                                @click="filterProps.refresh()"
+                                @click="
+                                  refreshIncomesContentDelayed(getAllFilterValues(filterProps))
+                                "
                                 :disabled="filterProps.loading"
                                 style="flex-shrink: 0"
                               >
@@ -600,20 +1081,6 @@ export default {
                               $t('dashboard.tracing.filters.attention') || 'Estado'
                             }}</label>
                             <div class="d-flex gap-2 align-items-center">
-                              <input
-                                type="radio"
-                                class="btn-check btn-sm"
-                                :checked="
-                                  !filterProps.incomeStatus || filterProps.incomeStatus === ''
-                                "
-                                @change="setSharedIncomeStatus('')"
-                                name="income-status-type"
-                                id="income-status-all"
-                                autocomplete="off"
-                              />
-                              <label class="btn btn-sm" for="income-status-all">
-                                <i class="bi bi-list"></i>
-                              </label>
                               <input
                                 type="radio"
                                 class="btn-check btn-sm"
@@ -660,7 +1127,22 @@ export default {
                                 class="form-check-input"
                                 type="checkbox"
                                 :checked="filterProps.fiscalNote"
-                                @change="filterProps.checkFiscalNote($event)"
+                                @change="
+                                  e => {
+                                    const newValue = e.target.checked;
+                                    // Update filterProps first
+                                    filterProps.fiscalNote = newValue;
+                                    filterProps.checkFiscalNote(e);
+                                    // Update filter instance
+                                    if (incomesFilterRef.value) {
+                                      incomesFilterRef.value.fiscalNote = newValue;
+                                    }
+                                    // Use the new value directly instead of filterProps
+                                    nextTick(() => {
+                                      refreshIncomesContentDelayed(getAllFilterValues(filterProps, { fiscalNote: newValue }));
+                                    });
+                                  }
+                                "
                               />
                               <label class="form-check-label">{{
                                 $t('collaboratorBookingsView.fiscalNote') || 'Nota Fiscal'
@@ -671,7 +1153,22 @@ export default {
                                 class="form-check-input"
                                 type="checkbox"
                                 :checked="filterProps.automatic"
-                                @change="filterProps.checkAutomatic($event)"
+                                @change="
+                                  e => {
+                                    const newValue = e.target.checked;
+                                    // Update filterProps first
+                                    filterProps.automatic = newValue;
+                                    filterProps.checkAutomatic(e);
+                                    // Update filter instance
+                                    if (incomesFilterRef.value) {
+                                      incomesFilterRef.value.automatic = newValue;
+                                    }
+                                    // Use the new value directly instead of filterProps
+                                    nextTick(() => {
+                                      refreshIncomesContentDelayed(getAllFilterValues(filterProps, { automatic: newValue }));
+                                    });
+                                  }
+                                "
                               />
                               <label class="form-check-label">{{
                                 $t('collaboratorBookingsView.automatic') || 'Automático'
@@ -682,7 +1179,22 @@ export default {
                                 class="form-check-input"
                                 type="checkbox"
                                 :checked="filterProps.asc"
-                                @change="filterProps.checkAsc($event)"
+                                @change="
+                                  e => {
+                                    const newValue = e.target.checked;
+                                    // Update filterProps first
+                                    filterProps.asc = newValue;
+                                    filterProps.checkAsc(e);
+                                    // Update filter instance
+                                    if (incomesFilterRef.value) {
+                                      incomesFilterRef.value.asc = newValue;
+                                    }
+                                    // Use the new value directly instead of filterProps
+                                    nextTick(() => {
+                                      refreshIncomesContentDelayed(getAllFilterValues(filterProps, { asc: newValue }));
+                                    });
+                                  }
+                                "
                               />
                               <label class="form-check-label">{{
                                 $t('dashboard.asc') || 'Ascendente'
@@ -703,7 +1215,11 @@ export default {
                                   :value="filterProps.minAmount"
                                   @input="
                                     e => {
-                                      filterProps.minAmount = e.target.value;
+                                      const newValue = e.target.value;
+                                      filterProps.minAmount = newValue;
+                                      if (incomesFilterRef.value) {
+                                        incomesFilterRef.value.minAmount = newValue;
+                                      }
                                     }
                                   "
                                   :placeholder="
@@ -720,7 +1236,11 @@ export default {
                                   :value="filterProps.maxAmount"
                                   @input="
                                     e => {
-                                      filterProps.maxAmount = e.target.value;
+                                      const newValue = e.target.value;
+                                      filterProps.maxAmount = newValue;
+                                      if (incomesFilterRef.value) {
+                                        incomesFilterRef.value.maxAmount = newValue;
+                                      }
                                     }
                                   "
                                   :placeholder="
@@ -733,7 +1253,9 @@ export default {
                               <div class="col-2">
                                 <button
                                   class="btn btn-sm btn-dark rounded-pill"
-                                  @click="filterProps.refresh()"
+                                  @click="
+                                    refreshIncomesContentDelayed(getAllFilterValues(filterProps))
+                                  "
                                   :disabled="filterProps.loading"
                                 >
                                   <i class="bi bi-search"></i>
@@ -750,12 +1272,28 @@ export default {
                                   $t('businessFinancial.filters.incomeType') || 'Tipo de Receita'
                                 }}</label>
                                 <select
-                                  class="form-control form-control-sm"
+                                  class="form-select form-select-sm"
                                   :value="filterProps.incomeTypeFilter"
                                   @change="
                                     e => {
-                                      filterProps.incomeTypeFilter = e.target.value;
-                                      filterProps.refresh();
+                                      // Handle undefined value correctly - empty string or 'undefined' string should be undefined
+                                      let newValue = e.target.value;
+                                      if (newValue === '' || newValue === 'undefined' || newValue === 'null') {
+                                        newValue = undefined;
+                                      }
+                                      
+                                      // Update filterProps first
+                                      filterProps.incomeTypeFilter = newValue;
+                                      
+                                      // Update filter instance
+                                      if (incomesFilterRef.value) {
+                                        incomesFilterRef.value.incomeTypeFilter = newValue;
+                                      }
+                                      
+                                      // Use the new value directly
+                                      nextTick(() => {
+                                        refreshIncomesContentDelayed(getAllFilterValues(filterProps, { incomeTypeFilter: newValue }));
+                                      });
                                     }
                                   "
                                 >
@@ -763,13 +1301,19 @@ export default {
                                     {{ $t('businessFinancial.filters.all') || 'Todos' }}
                                   </option>
                                   <option value="STANDARD">
-                                    {{ $t('incomeTypes.STANDARD') || 'Padrão' }}
+                                    {{ $t('incomeTypes.STANDARD') || 'Recebemento Normal' }}
                                   </option>
                                   <option value="FUND_INCREASE">
                                     {{ $t('incomeTypes.FUND_INCREASE') || 'Aumento de Fundo' }}
                                   </option>
-                                  <option value="PACKAGE">
-                                    {{ $t('incomeTypes.PACKAGE') || 'Pacote' }}
+                                  <option value="UNIQUE">
+                                    {{ $t('incomeTypes.UNIQUE') || 'Pagamento Único' }}
+                                  </option>
+                                  <option value="FIRST_PAYMENT">
+                                    {{ $t('incomeTypes.FIRST_PAYMENT') || 'Primeiro Pagamento' }}
+                                  </option>
+                                  <option value="INSTALLMENT">
+                                    {{ $t('incomeTypes.INSTALLMENT') || 'Parcelas' }}
                                   </option>
                                 </select>
                               </div>
@@ -779,29 +1323,57 @@ export default {
                                   'Método de Pagamento'
                                 }}</label>
                                 <select
-                                  class="form-control form-control-sm"
+                                  class="form-select form-select-sm"
                                   :value="filterProps.paymentMethodFilter"
                                   @change="
                                     e => {
-                                      filterProps.paymentMethodFilter = e.target.value;
-                                      filterProps.refresh();
+                                      // Handle undefined value correctly - empty string or 'undefined' string should be undefined
+                                      let newValue = e.target.value;
+                                      if (newValue === '' || newValue === 'undefined' || newValue === 'null') {
+                                        newValue = undefined;
+                                      }
+                                      
+                                      // Update filterProps first
+                                      filterProps.paymentMethodFilter = newValue;
+                                      
+                                      // Update filter instance
+                                      if (incomesFilterRef.value) {
+                                        incomesFilterRef.value.paymentMethodFilter = newValue;
+                                      }
+                                      
+                                      // Use the new value directly
+                                      nextTick(() => {
+                                        refreshIncomesContentDelayed(getAllFilterValues(filterProps, { paymentMethodFilter: newValue }));
+                                      });
                                     }
                                   "
                                 >
                                   <option :value="undefined">
                                     {{ $t('businessFinancial.filters.all') || 'Todos' }}
                                   </option>
-                                  <option value="CASH">
-                                    {{ $t('paymentClientMethods.CASH') || 'Dinheiro' }}
+                                  <option value="MONEY">
+                                    {{ $t('paymentClientMethods.MONEY') || 'Dinheiro' }}
                                   </option>
-                                  <option value="CARD">
-                                    {{ $t('paymentClientMethods.CARD') || 'Cartão' }}
+                                  <option value="CREDIT_CARD">
+                                    {{ $t('paymentClientMethods.CREDIT_CARD') || 'Cartão de Crédito' }}
                                   </option>
-                                  <option value="TRANSFER">
-                                    {{ $t('paymentClientMethods.TRANSFER') || 'Transferência' }}
+                                  <option value="DEBIT_CARD">
+                                    {{ $t('paymentClientMethods.DEBIT_CARD') || 'Cartão de Débito' }}
+                                  </option>
+                                  <option value="WIRE_TRANSFER">
+                                    {{ $t('paymentClientMethods.WIRE_TRANSFER') || 'Transferência Bancária' }}
+                                  </option>
+                                  <option value="PIX">
+                                    {{ $t('paymentClientMethods.PIX') || 'Pix' }}
+                                  </option>
+                                  <option value="BOLETO">
+                                    {{ $t('paymentClientMethods.BOLETO') || 'Boleto' }}
                                   </option>
                                   <option value="CHECK">
                                     {{ $t('paymentClientMethods.CHECK') || 'Cheque' }}
+                                  </option>
+                                  <option value="HEALTH_AGREEMENT">
+                                    {{ $t('paymentClientMethods.HEALTH_AGREEMENT') || 'Convenio Saúde' }}
                                   </option>
                                   <option value="OTHER">
                                     {{ $t('paymentClientMethods.OTHER') || 'Outro' }}
@@ -820,19 +1392,50 @@ export default {
                               ({{ filterProps.professionals?.length || 0 }})</label
                             >
                             <select
-                              class="form-control form-control-sm"
-                              :value="filterProps.professionalFilter"
+                              class="form-select form-select-sm"
+                              :value="filterProps.professionalFilter === undefined ? '' : filterProps.professionalFilter"
                               @change="
                                 e => {
-                                  filterProps.professionalFilter = e.target.value;
-                                  filterProps.refresh();
+                                  const selectedValue = e.target.value;
+                                  // Convert empty string to undefined for API consistency
+                                  const newValue = selectedValue === '' ? undefined : selectedValue;
+                                  console.log('[BusinessFinancial Desktop] Selected value:', selectedValue);
+                                  console.log('[BusinessFinancial Desktop] Setting to:', newValue);
+                                  
+                                  // Update filter instance directly
+                                  if (filterProps.setProfessionalFilter) {
+                                    filterProps.setProfessionalFilter(newValue);
+                                  } else {
+                                    filterProps.professionalFilter = newValue;
+                                  }
+                                  
+                                  // Also update the filter instance directly
+                                  if (incomesFilterRef.value) {
+                                    incomesFilterRef.value.professionalFilter = newValue;
+                                  }
+                                  
+                                  // Sync to content instance using the refresh function
+                                  refreshIncomesContentDelayed({
+                                    professionalFilter: newValue,
+                                    startDate: filterProps.startDate,
+                                    endDate: filterProps.endDate,
+                                    searchText: filterProps.searchText,
+                                    incomeStatus: filterProps.incomeStatus,
+                                    fiscalNote: filterProps.fiscalNote,
+                                    automatic: filterProps.automatic,
+                                    asc: filterProps.asc,
+                                    minAmount: filterProps.minAmount,
+                                    maxAmount: filterProps.maxAmount,
+                                    incomeTypeFilter: filterProps.incomeTypeFilter,
+                                    paymentMethodFilter: filterProps.paymentMethodFilter,
+                                  });
                                 }
                               "
                               :disabled="
                                 !filterProps.professionals || filterProps.professionals.length === 0
                               "
                             >
-                              <option :value="undefined">
+                              <option value="">
                                 {{ $t('businessFinancial.filters.all') || 'Todos' }}
                               </option>
                               <option
@@ -849,7 +1452,63 @@ export default {
                           <div class="mb-3 mt-3">
                             <button
                               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100"
-                              @click="filterProps.clear()"
+                              @click="
+                                async () => {
+                                  // Call clear() method which resets all filters in the component
+                                  await filterProps.clear();
+                                  
+                                  // Wait for nextTick to ensure all values are updated
+                                  await nextTick();
+                                  
+                                  if (incomesFilterRef.value) {
+                                    // Explicitly sync ALL cleared values to filter instance
+                                    // This ensures both filter and content instances are in sync
+                                    incomesFilterRef.value.startDate = undefined;
+                                    incomesFilterRef.value.endDate = undefined;
+                                    incomesFilterRef.value.searchText = undefined;
+                                    incomesFilterRef.value.incomeStatus = undefined;
+                                    incomesFilterRef.value.fiscalNote = undefined;
+                                    incomesFilterRef.value.automatic = undefined;
+                                    incomesFilterRef.value.asc = false; // Default to false
+                                    incomesFilterRef.value.minAmount = undefined;
+                                    incomesFilterRef.value.maxAmount = undefined;
+                                    incomesFilterRef.value.incomeTypeFilter = undefined;
+                                    incomesFilterRef.value.paymentMethodFilter = undefined;
+                                    incomesFilterRef.value.professionalFilter = undefined;
+                                    
+                                    // Also update filterProps to ensure consistency
+                                    filterProps.startDate = undefined;
+                                    filterProps.endDate = undefined;
+                                    filterProps.searchText = undefined;
+                                    filterProps.incomeStatus = undefined;
+                                    filterProps.fiscalNote = undefined;
+                                    filterProps.automatic = undefined;
+                                    filterProps.asc = false;
+                                    filterProps.minAmount = undefined;
+                                    filterProps.maxAmount = undefined;
+                                    filterProps.incomeTypeFilter = undefined;
+                                    filterProps.paymentMethodFilter = undefined;
+                                    filterProps.professionalFilter = undefined;
+                                  }
+                                  
+                                  // Refresh content with all cleared values
+                                  await nextTick();
+                                  refreshIncomesContentDelayed({
+                                    startDate: undefined,
+                                    endDate: undefined,
+                                    searchText: undefined,
+                                    incomeStatus: undefined,
+                                    fiscalNote: undefined,
+                                    automatic: undefined,
+                                    asc: false,
+                                    minAmount: undefined,
+                                    maxAmount: undefined,
+                                    incomeTypeFilter: undefined,
+                                    paymentMethodFilter: undefined,
+                                    professionalFilter: undefined,
+                                  });
+                                }
+                              "
                             >
                               <i class="bi bi-eraser-fill"></i>
                               {{ $t('dashboard.clear') || 'Limpiar' }}
@@ -869,6 +1528,7 @@ export default {
                       :commerces="Array.isArray(selectedCommerces) ? selectedCommerces : []"
                       :business="state.business"
                       filters-location="slot"
+                      ref="outcomesFilterRef"
                     >
                       <template #filters-exposed="filterProps">
                         <div class="filters-content-wrapper">
@@ -877,7 +1537,16 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getToday()"
+                                @click="
+                                  filterProps.getToday();
+                                  nextTick(() => {
+                                    if (outcomesFilterRef.value) {
+                                      outcomesFilterRef.value.startDate = filterProps.startDate;
+                                      outcomesFilterRef.value.endDate = filterProps.endDate;
+                                    }
+                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps));
+                                  });
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.today') }}
@@ -886,7 +1555,16 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getCurrentMonth()"
+                                @click="
+                                  filterProps.getCurrentMonth();
+                                  nextTick(() => {
+                                    if (outcomesFilterRef.value) {
+                                      outcomesFilterRef.value.startDate = filterProps.startDate;
+                                      outcomesFilterRef.value.endDate = filterProps.endDate;
+                                    }
+                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps));
+                                  });
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.thisMonth') }}
@@ -895,7 +1573,16 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getLastMonth()"
+                                @click="
+                                  filterProps.getLastMonth();
+                                  nextTick(() => {
+                                    if (outcomesFilterRef.value) {
+                                      outcomesFilterRef.value.startDate = filterProps.startDate;
+                                      outcomesFilterRef.value.endDate = filterProps.endDate;
+                                    }
+                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps));
+                                  });
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.lastMonth') }}
@@ -904,7 +1591,16 @@ export default {
                             <div class="col-6 mb-2">
                               <button
                                 class="btn btn-sm btn-dark rounded-pill w-100"
-                                @click="filterProps.getLastThreeMonths()"
+                                @click="
+                                  filterProps.getLastThreeMonths();
+                                  nextTick(() => {
+                                    if (outcomesFilterRef.value) {
+                                      outcomesFilterRef.value.startDate = filterProps.startDate;
+                                      outcomesFilterRef.value.endDate = filterProps.endDate;
+                                    }
+                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps));
+                                  });
+                                "
                                 :disabled="filterProps.loading"
                               >
                                 {{ $t('dashboard.lastThreeMonths') }}
@@ -922,14 +1618,22 @@ export default {
                             @update:startDate="
                               val => {
                                 filterProps.startDate = val;
+                                if (outcomesFilterRef.value) {
+                                  outcomesFilterRef.value.startDate = val;
+                                }
                               }
                             "
                             @update:endDate="
                               val => {
                                 filterProps.endDate = val;
+                                if (outcomesFilterRef.value) {
+                                  outcomesFilterRef.value.endDate = val;
+                                }
                               }
                             "
-                            @search="() => filterProps.refresh()"
+                            @search="
+                              refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps))
+                            "
                           />
 
                           <!-- Search field -->
@@ -944,14 +1648,20 @@ export default {
                                 :value="filterProps.searchText"
                                 @input="
                                   e => {
-                                    filterProps.searchText = e.target.value;
+                                    const newValue = e.target.value;
+                                    filterProps.searchText = newValue;
+                                    if (outcomesFilterRef.value) {
+                                      outcomesFilterRef.value.searchText = newValue;
+                                    }
                                   }
                                 "
                                 :placeholder="$t('dashboard.search')"
                               />
                               <button
                                 class="btn btn-sm btn-dark rounded-pill"
-                                @click="filterProps.refresh()"
+                                @click="
+                                  refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps))
+                                "
                                 :disabled="filterProps.loading"
                                 style="flex-shrink: 0"
                               >
@@ -967,7 +1677,19 @@ export default {
                                 class="form-check-input"
                                 type="checkbox"
                                 :checked="filterProps.asc"
-                                @change="filterProps.checkAsc($event)"
+                                @change="
+                                  e => {
+                                    const newValue = e.target.checked;
+                                    filterProps.asc = newValue;
+                                    filterProps.checkAsc(e);
+                                    if (outcomesFilterRef.value) {
+                                      outcomesFilterRef.value.asc = newValue;
+                                    }
+                                    nextTick(() => {
+                                      refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps, { asc: newValue }));
+                                    });
+                                  }
+                                "
                               />
                               <label class="form-check-label">{{
                                 $t('dashboard.asc') || 'Ascendente'
@@ -979,7 +1701,29 @@ export default {
                           <div class="mb-3 mt-3">
                             <button
                               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100"
-                              @click="filterProps.clear()"
+                              @click="
+                                async () => {
+                                  await filterProps.clear();
+                                  await nextTick();
+                                  if (outcomesFilterRef.value) {
+                                    outcomesFilterRef.value.startDate = undefined;
+                                    outcomesFilterRef.value.endDate = undefined;
+                                    outcomesFilterRef.value.searchText = undefined;
+                                    outcomesFilterRef.value.asc = true;
+                                    filterProps.startDate = undefined;
+                                    filterProps.endDate = undefined;
+                                    filterProps.searchText = undefined;
+                                    filterProps.asc = true;
+                                  }
+                                  await nextTick();
+                                  refreshOutcomesContentDelayed({
+                                    startDate: undefined,
+                                    endDate: undefined,
+                                    searchText: undefined,
+                                    asc: true,
+                                  });
+                                }
+                              "
                             >
                               <i class="bi bi-eraser-fill"></i>
                               {{ $t('dashboard.clear') || 'Limpiar' }}
@@ -1038,6 +1782,7 @@ export default {
                   :commerces="selectedCommerces"
                   :business="state.business"
                   filters-location="slot"
+                  ref="resumeContentRef"
                 >
                 </ResumeFinancialManagement>
                 <IncomesFinancialManagement
@@ -1048,6 +1793,8 @@ export default {
                   :commerces="selectedCommerces"
                   :business="state.business"
                   :shared-filters="state.sharedIncomeFilters"
+                  filters-location="slot"
+                  ref="incomesContentRef"
                 >
                 </IncomesFinancialManagement>
                 <OutcomesFinancialManagement
@@ -1058,6 +1805,7 @@ export default {
                   :commerces="selectedCommerces"
                   :business="state.business"
                   filters-location="slot"
+                  ref="outcomesContentRef"
                   @open-commission-payments="() => (state.showCommissionPaymentsModal = true)"
                 >
                 </OutcomesFinancialManagement>

@@ -226,6 +226,15 @@ export default {
       emit('refresh');
     };
 
+    // Get current date formatted
+    const currentDate = computed(() => {
+      const date = new Date();
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    });
+
     return {
       filtersCollapsed,
       panelRef,
@@ -241,6 +250,7 @@ export default {
       toggleFilters,
       handleCommerceChange,
       refresh,
+      currentDate,
     };
   },
 };
@@ -299,10 +309,10 @@ export default {
           :disabled="loading"
         >
           <option v-for="com in normalizedCommerces" :key="com.id" :value="com.id">
-            {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
+            {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }} - {{ currentDate }}
           </option>
           <option v-if="showAllOption" :value="'ALL'">
-            {{ $t('dashboard.all') || 'All' }}
+            {{ $t('dashboard.all') || 'All' }} - {{ currentDate }}
           </option>
         </select>
       </div>
@@ -403,6 +413,12 @@ export default {
   max-height: 5000px;
   opacity: 1;
   overflow: hidden;
+  font-size: 0.8rem;
+  line-height: .9;
+  font-weight: 300 !important;
+  color: rgba(0, 0, 0, 0.7);
+  text-transform: uppercase;
+  align-items: flex-start;
   transition: max-height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
     opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
     padding 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
@@ -419,5 +435,36 @@ export default {
     opacity 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94),
     padding 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
     margin 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Reduce placeholder text size for all inputs and selects */
+.filters-content ::placeholder,
+.filters-content input::placeholder,
+.filters-content select::placeholder,
+.filters-content textarea::placeholder {
+  font-size: 0.7rem !important;
+  opacity: 0.6;
+}
+
+/* Also apply to form-control and form-select classes within filters */
+.filters-content .form-control::placeholder,
+.filters-content .form-select::placeholder,
+.filters-content .form-control-sm::placeholder {
+  font-size: 0.7rem !important;
+  opacity: 0.6;
+}
+
+/* Reduce button text size */
+.filters-content .btn,
+.filters-content .btn-sm,
+.filters-content button {
+  font-size: 0.75rem !important;
+  line-height: 1.2;
+}
+
+/* Keep icon sizes normal but reduce text */
+.filters-content .btn i,
+.filters-content button i {
+  font-size: 0.9rem;
 }
 </style>

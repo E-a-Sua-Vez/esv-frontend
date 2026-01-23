@@ -256,7 +256,8 @@
     "INSTALLMENT": "Parcelas",
     "UNIQUE": "Pagamento Único",
     "FUND_INCREASE": "Aumento de Fundos",
-    "STANDARD": "Recebemento Normal"
+    "STANDARD": "Recebemento Normal",
+    "PACKAGE": "Pacote"
   },
   "incomeStatus": {
     "CONFIRMED": "Confirmado",
@@ -274,7 +275,10 @@
     "BOLETO": "Boleto",
     "PIX": "Pix",
     "HEALTH_AGREEMENT": "Convenio Saúde",
-    "OTHER": "Outro"
+    "OTHER": "Outro",
+    "CASH": "Dinheiro",
+    "CARD": "Cartão",
+    "TRANSFER": "Transferência"
   },
   "paymentFiscalNotes": {
     "NOTA_FISCAL": "Nota Fiscal",
@@ -2531,6 +2535,16 @@
     "indicators": "Indicadores",
     "graph": "Tendências",
     "hideDetails": "Ocultar Detalhes",
+    "showDetails": "Mostrar Detalhes",
+    "incomeCard": {
+      "tooltip": {
+        "type": "Tipo de receita",
+        "copy": "Copiar dados",
+        "paymentType": "Tipo de pagamento",
+        "status": "Status do pagamento"
+      },
+      "contactInfo": "Informação de Contato"
+    },
     "lgpdCompliance": {
       "notificationMetrics": {
         "title": "Métricas de Notificações",
@@ -4158,6 +4172,7 @@
       "professional": "Profissional",
       "all": "Todos"
     },
+    "commission": "Comissão",
     "projectedCashFlow": "Fluxo de Caixa Projetado",
     "projectedCashFlowDescription": "Projeção baseada na média diária do período atual",
     "projectedCashFlowDays": "Dias restantes do mês: {days}",

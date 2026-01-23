@@ -102,9 +102,10 @@ export default {
       return getDate(dateIn, timeZoneIn);
     },
     async clear() {
-      this.asc = true;
+      // Reset ALL filters to their default/empty values
+      this.asc = false; // Default to false (descending)
       this.searchText = undefined;
-      this.limit = 10;
+      this.limit = 20; // Use the default limit from data()
       this.page = 1;
       this.startDate = undefined;
       this.endDate = undefined;
@@ -148,6 +149,53 @@ export default {
         });
       }
     },
+    handleProfessionalFilterChange(event) {
+      // Read value from event if provided (for component mode)
+      // Or use current value if called from slot mode
+      let selectedValue;
+      if (event && event.target) {
+        selectedValue = event.target.value;
+      } else {
+        selectedValue = this.professionalFilter;
+      }
+      
+      // Convert empty string or "undefined" string to undefined
+      const newValue = selectedValue === '' || selectedValue === 'undefined' ? undefined : selectedValue;
+      
+      console.log('[handleProfessionalFilterChange] Selected value:', selectedValue);
+      console.log('[handleProfessionalFilterChange] New value:', newValue);
+      console.log('[handleProfessionalFilterChange] Type:', typeof newValue);
+      
+      // Update the value
+      this.professionalFilter = newValue;
+      
+      console.log('[handleProfessionalFilterChange] After setting, professionalFilter is:', this.professionalFilter);
+      
+      this.page = 1; // Reset to first page when filter changes
+      this.refresh();
+    },
+    setProfessionalFilter(value) {
+      // Method to set professionalFilter from slot (for desktop filters)
+      const newValue = value === '' || value === 'undefined' ? undefined : value;
+      console.log('[setProfessionalFilter] Setting to:', newValue);
+      console.log('[setProfessionalFilter] Current professionalFilter:', this.professionalFilter);
+      
+      // Only update if value actually changed
+      if (this.professionalFilter !== newValue) {
+        this.professionalFilter = newValue;
+        this.page = 1;
+        // Clear the list immediately to show loading state
+        this.financialIncomes = [];
+        this.counter = 0;
+        this.totalPages = 0;
+        
+        console.log('[setProfessionalFilter] After setting, professionalFilter is:', this.professionalFilter);
+        console.log('[setProfessionalFilter] Calling refresh()...');
+        
+        // Call refresh to get new data
+        this.refresh();
+      }
+    },
     async refresh() {
       try {
         // Distinguir entre carga inicial y refresh
@@ -162,6 +210,9 @@ export default {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
 
+        // Debug: Log professional filter before API call
+        console.log('Calling getIncomesDetails with professionalFilter:', this.professionalFilter);
+        
         // Llamada optimizada a la API
         const incomes = await getIncomesDetails(
           this.business?.id,
@@ -183,7 +234,60 @@ export default {
           this.professionalFilter,
         );
 
-        this.financialIncomes = Array.isArray(incomes) ? incomes : [];
+        console.log('[refresh] API returned incomes:', incomes);
+        console.log('[refresh] Incomes array length:', Array.isArray(incomes) ? incomes.length : 'not an array');
+        console.log('[refresh] First income:', Array.isArray(incomes) && incomes.length > 0 ? incomes[0] : 'no incomes');
+
+        // Clear first to force UI update
+        this.financialIncomes = [];
+        this.counter = 0;
+        this.totalPages = 0;
+        
+        // Use nextTick to ensure UI updates before assigning new data
+        await this.$nextTick();
+        
+        // Force reactivity by creating a new array reference
+        this.financialIncomes = Array.isArray(incomes) ? [...incomes] : [];
+        
+        console.log('[refresh] financialIncomes after assignment:', this.financialIncomes.length);
+        console.log('[refresh] financialIncomes content:', JSON.stringify(this.financialIncomes));
+
+        // Set default minAmount to 0 and maxAmount to maximum value from records if not already set
+        // Only set these values if they haven't been explicitly set by the user
+        if (this.financialIncomes && this.financialIncomes.length > 0) {
+          // Calculate maximum amount from the loaded incomes
+          const amounts = this.financialIncomes
+            .map(income => {
+              // Use amount or totalAmount field
+              const amount = income?.amount || income?.totalAmount || 0;
+              return parseFloat(amount) || 0;
+            })
+            .filter(amount => amount > 0); // Filter out zeros and invalid values
+
+          if (amounts.length > 0) {
+            const maxAmountFromRecords = Math.max(...amounts);
+
+            // Set minAmount to 0 if undefined, null, or empty string
+            if (this.minAmount === undefined || this.minAmount === null || this.minAmount === '') {
+              this.minAmount = 0;
+            }
+
+            // Set maxAmount to maximum value if undefined, null, or empty string
+            if (this.maxAmount === undefined || this.maxAmount === null || this.maxAmount === '') {
+              this.maxAmount = maxAmountFromRecords;
+            }
+          } else {
+            // If no valid amounts found, just set minAmount to 0
+            if (this.minAmount === undefined || this.minAmount === null || this.minAmount === '') {
+              this.minAmount = 0;
+            }
+          }
+        } else {
+          // If no records, set minAmount to 0 if undefined
+          if (this.minAmount === undefined || this.minAmount === null || this.minAmount === '') {
+            this.minAmount = 0;
+          }
+        }
 
         // Carga optimizada de profesionales con cache
         await this.loadProfessionalsIfNeeded();
@@ -313,9 +417,11 @@ export default {
         const total = this.counter / this.limit;
         const totalB = Math.trunc(total);
         this.totalPages = totalB <= 0 ? 1 : this.counter % this.limit === 0 ? totalB : totalB + 1;
+        console.log('[updatePaginationData] Counter:', this.counter, 'Total pages:', this.totalPages, 'Incomes length:', this.financialIncomes.length);
       } else {
         this.counter = 0;
         this.totalPages = 0;
+        console.log('[updatePaginationData] No incomes, reset counter and totalPages');
       }
     },
     async exportToCSV() {
@@ -432,32 +538,77 @@ export default {
     },
   },
   watch: {
+    professionalFilter: {
+      handler(newVal, oldVal) {
+        console.log('[watch professionalFilter] Changed from:', oldVal, 'to:', newVal);
+        // When filtersLocation is 'slot', the value might be updated from the parent template
+        // Make sure we're using the latest value
+        if (this.filtersLocation === 'slot' && newVal !== oldVal) {
+          console.log('[watch professionalFilter] Value changed in slot mode, ensuring sync');
+        }
+      },
+      immediate: true,
+    },
     changeData: {
       immediate: true,
       deep: true,
       async handler(oldData, newData) {
-        if (
-          oldData &&
-          newData &&
-          (oldData.asc !== newData.asc ||
-            oldData.limit !== newData.limit ||
-            oldData.incomeStatus !== newData.incomeStatus ||
-            oldData.fiscalNote !== newData.fiscalNote ||
-            oldData.automatic !== newData.automatic ||
-            oldData.searchText !== newData.searchText ||
-            oldData.startDate !== newData.startDate ||
-            oldData.endDate !== newData.endDate ||
-            oldData.minAmount !== newData.minAmount ||
-            oldData.maxAmount !== newData.maxAmount ||
-            oldData.incomeTypeFilter !== newData.incomeTypeFilter ||
-            oldData.paymentMethodFilter !== newData.paymentMethodFilter ||
-            oldData.professionalFilter !== newData.professionalFilter)
-        ) {
-          this.page = 1;
-        }
-        // Only refresh if this is not the initial mount (oldData exists)
-        if (oldData) {
-          this.refresh();
+        try {
+          // Skip watch if flag is set (during manual sync from parent)
+          if (this._skipWatch) {
+            return;
+          }
+
+          if (
+            oldData &&
+            newData &&
+            (oldData.asc !== newData.asc ||
+              oldData.limit !== newData.limit ||
+              oldData.incomeStatus !== newData.incomeStatus ||
+              oldData.fiscalNote !== newData.fiscalNote ||
+              oldData.automatic !== newData.automatic ||
+              oldData.searchText !== newData.searchText ||
+              oldData.startDate !== newData.startDate ||
+              oldData.endDate !== newData.endDate ||
+              oldData.minAmount !== newData.minAmount ||
+              oldData.maxAmount !== newData.maxAmount ||
+              oldData.incomeTypeFilter !== newData.incomeTypeFilter ||
+              oldData.paymentMethodFilter !== newData.paymentMethodFilter ||
+              oldData.professionalFilter !== newData.professionalFilter)
+          ) {
+            this.page = 1;
+          }
+          // Only refresh if this is not the initial mount (oldData exists)
+          // Skip refresh if ONLY professionalFilter changed - let handleProfessionalFilterChange handle it
+          // This prevents the watch from calling refresh() before the handler updates the value
+          if (oldData && newData) {
+            const otherFiltersChanged = 
+              oldData.asc !== newData.asc ||
+              oldData.limit !== newData.limit ||
+              oldData.incomeStatus !== newData.incomeStatus ||
+              oldData.fiscalNote !== newData.fiscalNote ||
+              oldData.automatic !== newData.automatic ||
+              oldData.searchText !== newData.searchText ||
+              oldData.startDate !== newData.startDate ||
+              oldData.endDate !== newData.endDate ||
+              oldData.minAmount !== newData.minAmount ||
+              oldData.maxAmount !== newData.maxAmount ||
+              oldData.incomeTypeFilter !== newData.incomeTypeFilter ||
+              oldData.paymentMethodFilter !== newData.paymentMethodFilter;
+            
+            const onlyProfessionalFilterChanged = 
+              !otherFiltersChanged && 
+              oldData.professionalFilter !== newData.professionalFilter;
+            
+            // Only call refresh if other filters changed
+            // If ONLY professionalFilter changed, skip - let handleProfessionalFilterChange handle it
+            // OR if filtersLocation is 'slot', skip - let parent refreshIncomesContent handle it
+            if (!onlyProfessionalFilterChanged && this.filtersLocation !== 'slot') {
+              await this.refresh();
+            }
+          }
+        } catch (error) {
+          console.error('Error in changeData watcher:', error);
         }
       },
     },
@@ -486,6 +637,25 @@ export default {
           }
         }
       },
+    },
+    // Watch for changes in professionalFilter
+    professionalFilter: {
+      handler(newVal, oldVal) {
+        console.log('[watch professionalFilter] Changed from:', oldVal, 'to:', newVal);
+        
+        // When filters are in slot mode and value changes, ensure refresh is called
+        if (this.filtersLocation === 'slot' && newVal !== oldVal && oldVal !== undefined) {
+          console.log('[watch professionalFilter] Value changed in slot mode, ensuring refresh');
+          // setProfessionalFilter should have already called refresh, but ensure it
+          this.$nextTick(() => {
+            if (this.professionalFilter === newVal) {
+              // Value is stable, refresh if needed
+              console.log('[watch professionalFilter] Value is stable, checking if refresh needed');
+            }
+          });
+        }
+      },
+      immediate: true,
     },
   },
 };
@@ -521,6 +691,7 @@ export default {
       :payment-method-filter="paymentMethodFilter"
       :professional-filter="professionalFilter"
       :professionals="professionals"
+      :set-professional-filter="setProfessionalFilter"
     ></slot>
 
     <div
@@ -836,8 +1007,20 @@ export default {
                           <option :value="undefined">
                             {{ $t('businessFinancial.filters.all') }}
                           </option>
-                          <option v-for="type in incomeTypes" :key="type.value" :value="type.value">
-                            {{ $t(`incomeTypes.${type.value}`) }}
+                          <option value="STANDARD">
+                            {{ $t('incomeTypes.STANDARD') || 'Recebemento Normal' }}
+                          </option>
+                          <option value="FUND_INCREASE">
+                            {{ $t('incomeTypes.FUND_INCREASE') || 'Aumento de Fundo' }}
+                          </option>
+                          <option value="UNIQUE">
+                            {{ $t('incomeTypes.UNIQUE') || 'Pagamento Único' }}
+                          </option>
+                          <option value="FIRST_PAYMENT">
+                            {{ $t('incomeTypes.FIRST_PAYMENT') || 'Primeiro Pagamento' }}
+                          </option>
+                          <option value="INSTALLMENT">
+                            {{ $t('incomeTypes.INSTALLMENT') || 'Parcelas' }}
                           </option>
                         </select>
                       </div>
@@ -853,12 +1036,16 @@ export default {
                           <option :value="undefined">
                             {{ $t('businessFinancial.filters.all') }}
                           </option>
-                          <option value="CASH">{{ $t('paymentClientMethods.CASH') }}</option>
-                          <option value="CARD">{{ $t('paymentClientMethods.CARD') }}</option>
-                          <option value="TRANSFER">
-                            {{ $t('paymentClientMethods.TRANSFER') }}
+                          <option value="MONEY">{{ $t('paymentClientMethods.MONEY') }}</option>
+                          <option value="CREDIT_CARD">{{ $t('paymentClientMethods.CREDIT_CARD') }}</option>
+                          <option value="DEBIT_CARD">{{ $t('paymentClientMethods.DEBIT_CARD') }}</option>
+                          <option value="WIRE_TRANSFER">
+                            {{ $t('paymentClientMethods.WIRE_TRANSFER') }}
                           </option>
+                          <option value="PIX">{{ $t('paymentClientMethods.PIX') }}</option>
+                          <option value="BOLETO">{{ $t('paymentClientMethods.BOLETO') }}</option>
                           <option value="CHECK">{{ $t('paymentClientMethods.CHECK') }}</option>
+                          <option value="HEALTH_AGREEMENT">{{ $t('paymentClientMethods.HEALTH_AGREEMENT') }}</option>
                           <option value="OTHER">{{ $t('paymentClientMethods.OTHER') }}</option>
                         </select>
                       </div>
@@ -873,7 +1060,7 @@ export default {
                         <select
                           class="form-control metric-controls"
                           v-model="professionalFilter"
-                          @change="refresh()"
+                          @change="handleProfessionalFilterChange"
                           :disabled="!professionals || professionals.length === 0"
                         >
                           <option :value="undefined">
@@ -967,11 +1154,11 @@ export default {
                   </ul>
                 </nav>
               </div>
-              <div v-if="this.financialIncomes && this.financialIncomes.length > 0">
+              <div v-if="financialIncomes && financialIncomes.length > 0" :key="`incomes-list-${professionalFilter || 'all'}-${page}`">
                 <div
                   class="row"
                   v-for="(income, index) in financialIncomes"
-                  :key="`financialIncomes-${index}`"
+                  :key="`income-${income.id || income.incomeId || index}-${professionalFilter || 'all'}-${page}`"
                 >
                   <IncomeDetailsCard
                     :show="true"
@@ -985,7 +1172,7 @@ export default {
                   </IncomeDetailsCard>
                 </div>
               </div>
-              <div v-else>
+              <div v-else :key="`no-incomes-${professionalFilter || 'all'}-${page}`">
                 <Message
                   :icon="'bi-graph-up-arrow'"
                   :title="$t('dashboard.message.2.title')"
