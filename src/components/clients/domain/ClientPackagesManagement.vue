@@ -28,7 +28,7 @@ export default {
     commerces: Array,
     queues: { type: Array, default: () => [] },
   },
-  emits: ['open-attention-modal'],
+  emits: ['open-attention-modal', 'open-payment-form'],
   data() {
     return {
       loading: false,
@@ -253,6 +253,10 @@ export default {
       a.href = URL.createObjectURL(blob);
       a.download = `packages-${this.commerce.tag}.csv`;
       a.click();
+    },
+    handleOpenPaymentForm(paymentData) {
+      // Emitir evento para abrir PaymentForm con datos del paquete
+      this.$emit('open-payment-form', paymentData);
     },
   },
 
@@ -490,6 +494,7 @@ export default {
                       @package-updated="handlePackageUpdated"
                       @refresh="refresh"
                       @open-attention-modal="handleOpenAttentionModal"
+                      @open-payment-form="handleOpenPaymentForm"
                     ></PackageDetailsCard>
                   </div>
                 </div>
@@ -524,6 +529,7 @@ export default {
                       @package-updated="handlePackageUpdated"
                       @refresh="refresh"
                       @open-attention-modal="handleOpenAttentionModal"
+                      @open-payment-form="handleOpenPaymentForm"
                     ></PackageDetailsCard>
                   </div>
                 </div>
@@ -558,6 +564,7 @@ export default {
                       @package-updated="handlePackageUpdated"
                       @refresh="refresh"
                       @open-attention-modal="handleOpenAttentionModal"
+                      @open-payment-form="handleOpenPaymentForm"
                     ></PackageDetailsCard>
                   </div>
                 </div>
@@ -592,6 +599,7 @@ export default {
                       @package-updated="handlePackageUpdated"
                       @refresh="refresh"
                       @open-attention-modal="handleOpenAttentionModal"
+                      @open-payment-form="handleOpenPaymentForm"
                     ></PackageDetailsCard>
                   </div>
                 </div>

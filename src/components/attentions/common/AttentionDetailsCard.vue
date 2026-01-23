@@ -908,7 +908,7 @@ export default {
             <span
               v-if="attention.number"
               class="badge-mini service-tag-mini"
-              style="background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);"
+              style="background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%)"
             >
               #{{ attention.number }}
             </span>
@@ -925,18 +925,16 @@ export default {
               <template #content>
                 <div>{{ $t(`attention.stage.${attention.currentStage}`) }}</div>
               </template>
-              <span class="badge-mini service-tag-mini" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);" @click.stop>
+              <span
+                class="badge-mini service-tag-mini"
+                style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%)"
+                @click.stop
+              >
                 {{ $t(`attention.stage.${attention.currentStage}`) }}
               </span>
             </Popper>
             <!-- LGPD Consent Indicators -->
-            <Popper
-              v-if="hasBlockingConsents()"
-              :class="'dark'"
-              arrow
-              disable-click-away
-              hover
-            >
+            <Popper v-if="hasBlockingConsents()" :class="'dark'" arrow disable-click-away hover>
               <template #content>
                 <div>
                   {{ $t('attention.lgpd.blockingConsents', { count: getBlockingConsentsCount() }) }}
@@ -945,7 +943,7 @@ export default {
               </template>
               <i
                 class="bi bi-shield-exclamation icon-mini-separated"
-                style="cursor: pointer; color: #dc3545;"
+                style="cursor: pointer; color: #dc3545"
                 @click.stop="openLgpdModal()"
               ></i>
             </Popper>
@@ -957,11 +955,13 @@ export default {
               hover
             >
               <template #content>
-                <div>{{ $t('attention.lgpd.missingConsents', { count: getMissingConsentsCount() }) }}</div>
+                <div>
+                  {{ $t('attention.lgpd.missingConsents', { count: getMissingConsentsCount() }) }}
+                </div>
               </template>
               <i
                 class="bi bi-shield-check icon-mini-separated"
-                style="color: #ffc107;"
+                style="color: #ffc107"
                 @click.stop
               ></i>
             </Popper>
@@ -977,7 +977,7 @@ export default {
               </template>
               <i
                 class="bi bi-shield-check icon-mini-separated"
-                style="color: #28a745;"
+                style="color: #28a745"
                 @click.stop
               ></i>
             </Popper>
@@ -989,8 +989,16 @@ export default {
               class="bi bi-coin icon-mini-separated blue-icon"
               @click.stop
             ></i>
-            <i v-if="attention.productCounter > 0" class="bi bi-eyedropper icon-mini-separated" @click.stop></i>
-            <i v-if="attention.termsConditionsAcceptedCode" class="bi bi-person-fill-check icon-mini-separated" @click.stop></i>
+            <i
+              v-if="attention.productCounter > 0"
+              class="bi bi-eyedropper icon-mini-separated"
+              @click.stop
+            ></i>
+            <i
+              v-if="attention.termsConditionsAcceptedCode"
+              class="bi bi-person-fill-check icon-mini-separated"
+              @click.stop
+            ></i>
           </div>
         </div>
 

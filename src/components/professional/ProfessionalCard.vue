@@ -37,7 +37,7 @@ const professionalTypeLabel = computed(() => {
 const commissionLabel = computed(() => {
   const { commissionType, commissionValue } = props.professional.financialInfo || {};
   if (!commissionType || !commissionValue) return '-';
-  
+
   if (commissionType === 'PERCENTAGE') {
     return `${commissionValue}%`;
   }

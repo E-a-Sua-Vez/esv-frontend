@@ -52,13 +52,9 @@ export default {
     const showCancelModal = ref(false);
     const selectedPayment = ref(null);
 
-    const createdPayments = computed(() =>
-      allPayments.value.filter(p => p.status === 'CREATED')
-    );
+    const createdPayments = computed(() => allPayments.value.filter(p => p.status === 'CREATED'));
 
-    const paidPayments = computed(() =>
-      allPayments.value.filter(p => p.status === 'PAID')
-    );
+    const paidPayments = computed(() => allPayments.value.filter(p => p.status === 'PAID'));
 
     const cancelledPayments = computed(() =>
       allPayments.value.filter(p => p.status === 'CANCELLED')
@@ -125,7 +121,7 @@ export default {
       }
     };
 
-    const selectAll = (event) => {
+    const selectAll = event => {
       if (event.target.checked) {
         selectedIncomeIds.value = unpaidIncomes.value.map(inc => inc.id);
       } else {
@@ -167,17 +163,17 @@ export default {
       }
     };
 
-    const openEditModal = (payment) => {
+    const openEditModal = payment => {
       selectedPayment.value = payment;
       showEditModal.value = true;
     };
 
-    const openConfirmModal = (payment) => {
+    const openConfirmModal = payment => {
       selectedPayment.value = payment;
       showConfirmModal.value = true;
     };
 
-    const openCancelModal = (payment) => {
+    const openCancelModal = payment => {
       selectedPayment.value = payment;
       showCancelModal.value = true;
     };
@@ -190,13 +186,10 @@ export default {
       await loadPayments();
     };
 
-    const formatDate = (date) => {
-      return getDate(date);
-    };
+    const formatDate = date => getDate(date);
 
-    const formatCurrency = (amount) => {
-      return Number(parseFloat(amount || 0).toFixed(2)).toLocaleString('de-DE');
-    };
+    const formatCurrency = amount =>
+      Number(parseFloat(amount || 0).toFixed(2)).toLocaleString('de-DE');
 
     onMounted(async () => {
       await loadProfessionals();
@@ -310,22 +303,14 @@ export default {
               <label class="form-label metric-card-subtitle fw-bold">
                 {{ $t('commissionPayments.dateFrom') }}
               </label>
-              <input
-                type="date"
-                v-model="periodFrom"
-                class="form-control metric-controls"
-              />
+              <input type="date" v-model="periodFrom" class="form-control metric-controls" />
             </div>
 
             <div class="col-12 col-md-3 mb-3">
               <label class="form-label metric-card-subtitle fw-bold">
                 {{ $t('commissionPayments.dateTo') }}
               </label>
-              <input
-                type="date"
-                v-model="periodTo"
-                class="form-control metric-controls"
-              />
+              <input type="date" v-model="periodTo" class="form-control metric-controls" />
             </div>
 
             <div class="col-12 col-md-2 mb-3 d-flex align-items-end">
@@ -353,7 +338,10 @@ export default {
                       <input
                         type="checkbox"
                         @change="selectAll"
-                        :checked="selectedIncomeIds.length === unpaidIncomes.length && unpaidIncomes.length > 0"
+                        :checked="
+                          selectedIncomeIds.length === unpaidIncomes.length &&
+                          unpaidIncomes.length > 0
+                        "
                       />
                     </th>
                     <th>{{ $t('commissionPayments.date') }}</th>
@@ -365,11 +353,7 @@ export default {
                 <tbody>
                   <tr v-for="income in unpaidIncomes" :key="income.id">
                     <td>
-                      <input
-                        type="checkbox"
-                        v-model="selectedIncomeIds"
-                        :value="income.id"
-                      />
+                      <input type="checkbox" v-model="selectedIncomeIds" :value="income.id" />
                     </td>
                     <td>{{ formatDate(income.createdAt) }}</td>
                     <td>
@@ -378,7 +362,9 @@ export default {
                       </span>
                     </td>
                     <td class="fw-bold">${{ formatCurrency(income.amount) }}</td>
-                    <td class="text-success fw-bold">${{ formatCurrency(income.professionalCommission) }}</td>
+                    <td class="text-success fw-bold">
+                      ${{ formatCurrency(income.professionalCommission) }}
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -399,7 +385,9 @@ export default {
                     </div>
                     <div class="col-md-4">
                       <strong>{{ $t('commissionPayments.totalCommission') }}:</strong>
-                      <span class="ms-2 fs-5 text-success">${{ formatCurrency(totalCommission) }}</span>
+                      <span class="ms-2 fs-5 text-success"
+                        >${{ formatCurrency(totalCommission) }}</span
+                      >
                     </div>
                   </div>
                 </div>
@@ -435,7 +423,10 @@ export default {
             </div>
           </div>
 
-          <div v-else-if="selectedProfessionalId && unpaidIncomes.length === 0 && !loading" class="mt-4">
+          <div
+            v-else-if="selectedProfessionalId && unpaidIncomes.length === 0 && !loading"
+            class="mt-4"
+          >
             <Message
               :icon="'bi-info-circle'"
               :title="$t('commissionPayments.messages.noUnpaidIncomes')"
@@ -449,11 +440,7 @@ export default {
     <!-- Tab: Pagos Creados -->
     <div v-if="activeTab === 'created'">
       <div v-if="createdPayments.length > 0" class="row">
-        <div
-          v-for="payment in createdPayments"
-          :key="payment.id"
-          class="col-12 mb-3"
-        >
+        <div v-for="payment in createdPayments" :key="payment.id" class="col-12 mb-3">
           <CommissionPaymentCard
             :payment="payment"
             :professionals="professionals"
@@ -474,15 +461,8 @@ export default {
     <!-- Tab: Pagos Confirmados -->
     <div v-if="activeTab === 'paid'">
       <div v-if="paidPayments.length > 0" class="row">
-        <div
-          v-for="payment in paidPayments"
-          :key="payment.id"
-          class="col-12 mb-3"
-        >
-          <CommissionPaymentCard
-            :payment="payment"
-            :professionals="professionals"
-          />
+        <div v-for="payment in paidPayments" :key="payment.id" class="col-12 mb-3">
+          <CommissionPaymentCard :payment="payment" :professionals="professionals" />
         </div>
       </div>
       <Message
@@ -496,15 +476,8 @@ export default {
     <!-- Tab: Pagos Cancelados -->
     <div v-if="activeTab === 'cancelled'">
       <div v-if="cancelledPayments.length > 0" class="row">
-        <div
-          v-for="payment in cancelledPayments"
-          :key="payment.id"
-          class="col-12 mb-3"
-        >
-          <CommissionPaymentCard
-            :payment="payment"
-            :professionals="professionals"
-          />
+        <div v-for="payment in cancelledPayments" :key="payment.id" class="col-12 mb-3">
+          <CommissionPaymentCard :payment="payment" :professionals="professionals" />
         </div>
       </div>
       <Message
@@ -555,7 +528,7 @@ export default {
   background: white;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .table-hover tbody tr:hover {

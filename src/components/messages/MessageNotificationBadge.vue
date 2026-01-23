@@ -25,16 +25,12 @@ const emit = defineEmits(['toggle-inbox']);
 const { unreadCount: notificationsUnread, unreadByPriority } = useMessageInbox();
 
 // Solo conteo de notificaciones/mensajes (sin chats)
-const unreadCount = computed(() => {
-  return notificationsUnread.value;
-});
+const unreadCount = computed(() => notificationsUnread.value);
 
 const hasUrgent = computed(() => unreadByPriority.value.urgent > 0);
 const hasHigh = computed(() => unreadByPriority.value.high > 0);
 
-const displayCount = computed(() => {
-  return unreadCount.value > 99 ? '99+' : unreadCount.value;
-});
+const displayCount = computed(() => (unreadCount.value > 99 ? '99+' : unreadCount.value));
 
 const badgeClass = computed(() => {
   if (hasUrgent.value) return 'badge-urgent';
@@ -94,7 +90,10 @@ function toggleInbox() {
 }
 
 @keyframes bellRing {
-  0%, 10%, 20%, 100% {
+  0%,
+  10%,
+  20%,
+  100% {
     transform: rotate(0deg);
   }
   5% {
@@ -106,7 +105,8 @@ function toggleInbox() {
 }
 
 @keyframes urgentPulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
   }
   50% {

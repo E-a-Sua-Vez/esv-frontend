@@ -172,7 +172,10 @@ export default {
       } else {
         state.emailError = false;
       }
-      if (!professional.professionalInfo?.professionalType || professional.professionalInfo.professionalType.length === 0) {
+      if (
+        !professional.professionalInfo?.professionalType ||
+        professional.professionalInfo.professionalType.length === 0
+      ) {
         state.typeError = true;
         state.errorsAdd.push('businessProfessionalsAdmin.validate.type');
       } else {
@@ -198,7 +201,10 @@ export default {
       } else {
         state.emailError = false;
       }
-      if (!professional.professionalInfo?.professionalType || professional.professionalInfo.professionalType.length === 0) {
+      if (
+        !professional.professionalInfo?.professionalType ||
+        professional.professionalInfo.professionalType.length === 0
+      ) {
         state.typeError = true;
         state.errorsUpdate.push('businessProfessionalsAdmin.validate.type');
       } else {
@@ -220,8 +226,13 @@ export default {
           // Limpiar financialInfo si está incompleto o vacío
           if (state.newProfessional.financialInfo) {
             // Limpiar commission si está incompleto
-            const hasCommissionType = state.newProfessional.financialInfo.commissionType && state.newProfessional.financialInfo.commissionType.trim() !== '';
-            const hasCommissionValue = state.newProfessional.financialInfo.commissionValue !== null && state.newProfessional.financialInfo.commissionValue !== undefined && state.newProfessional.financialInfo.commissionValue !== '';
+            const hasCommissionType =
+              state.newProfessional.financialInfo.commissionType &&
+              state.newProfessional.financialInfo.commissionType.trim() !== '';
+            const hasCommissionValue =
+              state.newProfessional.financialInfo.commissionValue !== null &&
+              state.newProfessional.financialInfo.commissionValue !== undefined &&
+              state.newProfessional.financialInfo.commissionValue !== '';
 
             // Si no tiene ambos o solo tiene uno, limpiar ambos
             if (!hasCommissionType || !hasCommissionValue) {
@@ -232,7 +243,8 @@ export default {
             // Limpiar paymentAccount si está vacío
             if (state.newProfessional.financialInfo?.paymentAccount) {
               const pa = state.newProfessional.financialInfo.paymentAccount;
-              const isEmpty = !pa.bank && !pa.accountNumber && !pa.accountType && !pa.pixKey && !pa.holder;
+              const isEmpty =
+                !pa.bank && !pa.accountNumber && !pa.accountType && !pa.pixKey && !pa.holder;
               if (isEmpty) {
                 delete state.newProfessional.financialInfo.paymentAccount;
               }
@@ -263,8 +275,13 @@ export default {
           // Limpiar financialInfo si está incompleto o vacío
           if (professional.financialInfo) {
             // Limpiar commission si está incompleto
-            const hasCommissionType = professional.financialInfo.commissionType && professional.financialInfo.commissionType.trim() !== '';
-            const hasCommissionValue = professional.financialInfo.commissionValue !== null && professional.financialInfo.commissionValue !== undefined && professional.financialInfo.commissionValue !== '';
+            const hasCommissionType =
+              professional.financialInfo.commissionType &&
+              professional.financialInfo.commissionType.trim() !== '';
+            const hasCommissionValue =
+              professional.financialInfo.commissionValue !== null &&
+              professional.financialInfo.commissionValue !== undefined &&
+              professional.financialInfo.commissionValue !== '';
 
             // Si no tiene ambos o solo tiene uno, limpiar ambos
             if (!hasCommissionType || !hasCommissionValue) {
@@ -291,7 +308,8 @@ export default {
                 }
               } else {
                 // Si es objeto y está vacío, eliminar
-                const isEmpty = !pa.bank && !pa.accountNumber && !pa.accountType && !pa.pixKey && !pa.holder;
+                const isEmpty =
+                  !pa.bank && !pa.accountNumber && !pa.accountType && !pa.pixKey && !pa.holder;
                 if (isEmpty) {
                   delete professional.financialInfo.paymentAccount;
                 }
@@ -884,9 +902,7 @@ export default {
       <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold">
-              <i class="bi bi-plus-lg"></i> {{ $t('add') }}
-            </h5>
+            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
             <button
               id="close-modal"
               class="btn-close"
@@ -1109,7 +1125,7 @@ export default {
   display: inline-flex;
   align-items: center;
   padding: 0.35rem 0.625rem;
-  background: linear-gradient(135deg, #004AAD 0%, #004AAD 100%);
+  background: linear-gradient(135deg, #004aad 0%, #004aad 100%);
   color: white;
   border-radius: 12px;
   font-size: 0.75rem;

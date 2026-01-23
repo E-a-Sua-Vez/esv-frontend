@@ -64,7 +64,7 @@
             :key="filter"
             type="button"
             class="filter-tab-btn"
-            :class="{ 'active': activeFilter === filter }"
+            :class="{ active: activeFilter === filter }"
             @click="setFilter(filter)"
           >
             <i :class="`bi ${getFilterIcon(filter)} me-2`"></i>
@@ -85,11 +85,7 @@
 
           <!-- Sessions Grid -->
           <div v-else class="sessions-grid">
-            <div
-              v-for="session in filteredSessions"
-              :key="session.id"
-              class="session-card-modern"
-            >
+            <div v-for="session in filteredSessions" :key="session.id" class="session-card-modern">
               <!-- Card Header with Badges -->
               <div class="session-card-header-modern">
                 <div class="session-meta-badges">
@@ -190,8 +186,10 @@ export default {
 
     // Toggles para ComponentMenu (computed basado en permisos)
     const toggles = computed(() => ({
-      'clientPortal.telemedicine.view': permissions.value['client-portal.telemedicine.view'] || false,
-      'clientPortal.telemedicine.join': permissions.value['client-portal.telemedicine.join'] || false,
+      'clientPortal.telemedicine.view':
+        permissions.value['client-portal.telemedicine.view'] || false,
+      'clientPortal.telemedicine.join':
+        permissions.value['client-portal.telemedicine.join'] || false,
     }));
 
     const filters = ['all', 'active', 'scheduled', 'completed', 'cancelled'];
@@ -329,7 +327,10 @@ export default {
         const storedCommerce = localStorage.getItem('clientPortalCommerce');
 
         if (!storedClient || !storedCommerce) {
-          router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
+          router.push({
+            name: 'client-portal-login',
+            params: { commerceSlug: commerceSlug.value },
+          });
           return;
         }
 
@@ -778,5 +779,3 @@ export default {
   }
 }
 </style>
-
-

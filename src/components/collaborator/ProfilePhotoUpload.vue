@@ -29,7 +29,7 @@ export default {
     };
 
     // Handle file upload
-    const handleFileUpload = (event) => {
+    const handleFileUpload = event => {
       const file = event.target.files[0];
       if (!file) return;
 
@@ -49,7 +49,7 @@ export default {
 
       // Create preview URL
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         uploadedPhoto.value = e.target.result;
 
         // Create FormData to send file to backend
@@ -62,11 +62,11 @@ export default {
         const updatedCollaborator = {
           id: props.collaboratorId,
           profilePhoto: {
-            file: file, // Keep file reference for validation
+            file, // Keep file reference for validation
             url: e.target.result, // Preview URL (base64)
             filename: file.name,
-            formData: formData // Send FormData separately
-          }
+            formData, // Send FormData separately
+          },
         };
 
         emit('updated', updatedCollaborator);
@@ -94,7 +94,7 @@ export default {
             return;
           }
         }
-        
+
         // Fallback a la prop tal cual
         const photoUrl = props.existingPhoto?.url || props.existingPhoto || null;
         resolvedPhotoUrl.value = photoUrl;
@@ -130,7 +130,7 @@ export default {
           :src="uploadedPhoto || resolvedPhotoUrl"
           :alt="$t('collaborator.profilePhoto.current')"
           class="photo-preview-img"
-        >
+        />
         <div v-else class="photo-placeholder">
           <i class="bi bi-person-circle"></i>
         </div>
@@ -147,8 +147,14 @@ export default {
           >
             <i v-if="uploading" class="bi bi-hourglass-split me-1"></i>
             <i v-else class="bi bi-camera me-1"></i>
-            <span v-if="uploading">{{ $t('collaborator.profilePhoto.uploading') || 'Cargando...' }}</span>
-            <span v-else>{{ existingPhoto || uploadedPhoto ? $t('collaborator.profilePhoto.update') : $t('collaborator.profilePhoto.upload') }}</span>
+            <span v-if="uploading">{{
+              $t('collaborator.profilePhoto.uploading') || 'Cargando...'
+            }}</span>
+            <span v-else>{{
+              existingPhoto || uploadedPhoto
+                ? $t('collaborator.profilePhoto.update')
+                : $t('collaborator.profilePhoto.upload')
+            }}</span>
           </button>
           <span v-if="uploadedPhoto && !uploading" class="small text-muted">
             <i class="bi bi-check-circle text-success"></i>

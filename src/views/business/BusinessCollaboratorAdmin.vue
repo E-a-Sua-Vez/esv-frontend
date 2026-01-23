@@ -493,7 +493,7 @@ export default {
       }
     };
 
-    const openCreateProfessionalModal = (index) => {
+    const openCreateProfessionalModal = index => {
       const formRef = collaboratorFormRefs.value[index];
       if (formRef && typeof formRef.openCreateProfessionalModal === 'function') {
         formRef.openCreateProfessionalModal();
@@ -667,7 +667,10 @@ export default {
                           @click="openCreateProfessionalModal(index)"
                           :disabled="!state.toggles['collaborators.admin.edit']"
                         >
-                          {{ $t('collaborator.createProfessionalProfile') || 'Criar Perfil Profissional' }}
+                          {{
+                            $t('collaborator.createProfessionalProfile') ||
+                            'Criar Perfil Profissional'
+                          }}
                           <i class="bi bi-person-plus me-2"></i>
                         </button>
                         <button
@@ -860,7 +863,10 @@ export default {
                           @click="openCreateProfessionalModal(index)"
                           :disabled="!state.toggles['collaborators.admin.edit']"
                         >
-                          {{ $t('collaborator.createProfessionalProfile') || 'Criar Perfil Profissional' }}
+                          {{
+                            $t('collaborator.createProfessionalProfile') ||
+                            'Criar Perfil Profissional'
+                          }}
                           <i class="bi bi-person-plus me-2"></i>
                         </button>
                         <button

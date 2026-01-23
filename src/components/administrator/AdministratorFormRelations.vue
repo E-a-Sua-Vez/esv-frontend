@@ -55,7 +55,7 @@ export default {
             <div>
               {{
                 $t('businessAdministratorAdmin.commercesHelp') ||
-                  'Lista de comercios a los que este administrador tiene acceso. Selecciona uno o varios y usa la X para removerlos.'
+                'Lista de comercios a los que este administrador tiene acceso. Selecciona uno o varios y usa la X para removerlos.'
               }}
             </div>
           </template>

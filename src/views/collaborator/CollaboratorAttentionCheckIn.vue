@@ -62,7 +62,10 @@
           <!-- Client Requirements Cards & Check-In Call -->
           <div v-if="state.user?.id" class="client-requirements-section mt-3">
             <!-- Gestión de la Atención -->
-            <div v-if="state.attention && state.attention.id" class="client-management-section my-3">
+            <div
+              v-if="state.attention && state.attention.id"
+              class="client-management-section my-3"
+            >
               <h5 class="client-management-title">
                 {{
                   $t('collaboratorQueueAttentions.attentionManagement') || 'Gestión de la Atención:'
@@ -76,7 +79,7 @@
                   <span>
                     {{
                       $t('collaboratorAttentionCheckIn.callClient') ||
-                        'Enviar mensaje de WhatsApp al cliente para hacer el check-in'
+                      'Enviar mensaje de WhatsApp al cliente para hacer el check-in'
                     }}
                   </span>
                   <Popper :class="'dark p-1'" arrow placement="top">
@@ -84,7 +87,7 @@
                       <div>
                         {{
                           $t('collaboratorAttentionCheckIn.callClientHelp') ||
-                            'Se enviará un mensaje de WhatsApp al número del cliente indicándole que se acerque a tu módulo para realizar su check-in. Solo se enviará una vez por atención.'
+                          'Se enviará un mensaje de WhatsApp al número del cliente indicándole que se acerque a tu módulo para realizar su check-in. Solo se enviará una vez por atención.'
                         }}
                       </div>
                     </template>
@@ -113,7 +116,7 @@
                   <span v-else>
                     {{
                       $t('collaboratorAttentionCheckIn.callClientAction') ||
-                        'Enviar mensaje de WhatsApp'
+                      'Enviar mensaje de WhatsApp'
                     }}
                   </span>
                 </button>
@@ -882,7 +885,7 @@ export default {
             // Now that commerce is loaded, validate and redirect if needed
             // Use store commerce or attentionDetails commerce for validation
             const commerceForValidation = store.getCurrentCommerce || attentionDetails.commerce;
-            state.commerce = state.commerce?.id ? state.commerce : (commerceForValidation || {});
+            state.commerce = state.commerce?.id ? state.commerce : commerceForValidation || {};
             if (validateAndRedirect(attentionDetails, commerceForValidation)) {
               loading.value = false;
               return; // Stop here if redirecting
@@ -1099,7 +1102,10 @@ export default {
       if (!state.attention?.id) return;
 
       try {
-        const updatedAttention = await getAttentionDetails(state.attention.id, state.currentUser?.id);
+        const updatedAttention = await getAttentionDetails(
+          state.attention.id,
+          state.currentUser?.id,
+        );
 
         if (updatedAttention.queue) {
           state.queue = updatedAttention.queue;

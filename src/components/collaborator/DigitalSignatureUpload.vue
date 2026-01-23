@@ -8,7 +8,7 @@
             <div>
               {{
                 $t('digitalSignature.currentHelp') ||
-                  'Imagen de la firma digital actualmente asociada al colaborador y usada para firmar documentos.'
+                'Imagen de la firma digital actualmente asociada al colaborador y usada para firmar documentos.'
               }}
             </div>
           </template>
@@ -33,7 +33,7 @@
             <div>
               {{
                 $t('digitalSignature.uploadHelp') ||
-                  'Selecciona una imagen clara de la firma del profesional (por ejemplo, foto escaneada o firmada en tablet).'
+                'Selecciona una imagen clara de la firma del profesional (por ejemplo, foto escaneada o firmada en tablet).'
               }}
             </div>
           </template>
@@ -61,7 +61,7 @@
               <div>
                 {{
                   $t('digitalSignature.crmHelp') ||
-                    'Número de registro profesional (CRM u organismo equivalente) ligado a la firma digital.'
+                  'Número de registro profesional (CRM u organismo equivalente) ligado a la firma digital.'
                 }}
               </div>
             </template>
@@ -78,7 +78,7 @@
               <div>
                 {{
                   $t('digitalSignature.crmStateHelp') ||
-                    'Estado o provincia asociado al registro profesional (por ejemplo, SP, RJ, BA).'
+                  'Estado o provincia asociado al registro profesional (por ejemplo, SP, RJ, BA).'
                 }}
               </div>
             </template>
@@ -143,7 +143,7 @@ const loadCurrentSignature = async () => {
           file: null,
           crm: crm.value,
           crmState: crmState.value,
-        }
+        },
       });
     }
   } catch (e) {
@@ -174,7 +174,7 @@ const handleFileSelect = event => {
         file: selectedFile.value,
         crm: crm.value,
         crmState: crmState.value,
-      }
+      },
     });
   };
   reader.readAsDataURL(file);
@@ -190,7 +190,7 @@ watch([crm, crmState], () => {
         file: selectedFile.value || null,
         crm: crm.value,
         crmState: crmState.value,
-      }
+      },
     });
   }
 });

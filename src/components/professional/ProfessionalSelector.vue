@@ -37,32 +37,32 @@ const selectedId = ref(props.modelValue);
 
 const filteredProfessionals = computed(() => {
   let professionals = props.professionals.filter(p => p.active && p.available);
-  
+
   if (props.filterByService) {
-    const servicesToFilter = Array.isArray(props.filterByService) 
-      ? props.filterByService 
+    const servicesToFilter = Array.isArray(props.filterByService)
+      ? props.filterByService
       : [props.filterByService];
-    
+
     professionals = professionals.filter(p => {
       const servicesId = p.professionalInfo?.servicesId || [];
       // Professional must have at least one of the required services
       return servicesToFilter.some(serviceId => servicesId.includes(serviceId));
     });
   }
-  
+
   return professionals;
 });
 
-const selectedProfessional = computed(() => {
-  return filteredProfessionals.value.find(p => p.id === selectedId.value);
-});
+const selectedProfessional = computed(() =>
+  filteredProfessionals.value.find(p => p.id === selectedId.value)
+);
 
 const commissionInfo = computed(() => {
   if (!props.showCommission || !selectedProfessional.value) return null;
-  
+
   const { commissionType, commissionValue } = selectedProfessional.value.financialInfo || {};
   if (!commissionType || !commissionValue) return null;
-  
+
   return {
     type: commissionType,
     value: commissionValue,
@@ -86,7 +86,7 @@ watch(
 watch(selectedId, newVal => {
   emit('update:modelValue', newVal);
   emit('change', newVal);
-  
+
   const professional = filteredProfessionals.value.find(p => p.id === newVal);
   if (professional) {
     emit('professional-selected', professional);
@@ -96,11 +96,7 @@ watch(selectedId, newVal => {
 
 <template>
   <div class="professional-selector">
-    <select
-      v-model="selectedId"
-      class="payment-form-select"
-      :disabled="disabled"
-    >
+    <select v-model="selectedId" class="payment-form-select" :disabled="disabled">
       <option :value="null">
         {{ placeholder || t('professionals.selectProfessional') }}
       </option>
@@ -112,17 +108,20 @@ watch(selectedId, newVal => {
         {{ getProfessionalLabel(professional) }}
       </option>
     </select>
-    
+
     <div v-if="commissionInfo" class="commission-info mt-2">
       <i class="bi bi-info-circle"></i>
       <span>
-        {{ t('professionals.commissionWillBe') }}: 
+        {{ t('professionals.commissionWillBe') }}:
         <strong>{{ commissionInfo.label }}</strong>
         ({{ t(`professionals.commissionTypes.${commissionInfo.type}`) }})
       </span>
     </div>
-    
-    <div v-if="filterByService && filteredProfessionals.length === 0" class="alert alert-warning mt-2">
+
+    <div
+      v-if="filterByService && filteredProfessionals.length === 0"
+      class="alert alert-warning mt-2"
+    >
       <i class="bi bi-exclamation-triangle"></i>
       {{ t('professionals.noAvailableForService') }}
     </div>

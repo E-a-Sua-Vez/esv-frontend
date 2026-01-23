@@ -18,7 +18,7 @@ export default {
     this.intervalId = setInterval(() => {
       this.onLine = navigator.onLine;
     }, 4000);
-    
+
     // Also listen to online/offline events
     window.addEventListener('online', this.handleOnline);
     window.addEventListener('offline', this.handleOffline);
@@ -47,7 +47,6 @@ export default {
       this.userDismissed = false; // Reset dismissal to show new offline message
     },
   },
-
 };
 </script>
 

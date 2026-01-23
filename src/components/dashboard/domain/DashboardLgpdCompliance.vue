@@ -177,7 +177,13 @@ export default {
             :title="$t('dashboard.lgpdCompliance.complianceScore')"
             :data="`${metrics.complianceScore}%`"
             :icon="'shield-check'"
-            :iconStyleClass="complianceScoreColor === 'success' ? 'green-icon' : complianceScoreColor === 'warning' ? 'yellow-icon' : 'red-icon'"
+            :icon-style-class="
+              complianceScoreColor === 'success'
+                ? 'green-icon'
+                : complianceScoreColor === 'warning'
+                ? 'yellow-icon'
+                : 'red-icon'
+            "
           />
         </div>
         <div class="col-12 col-md-6 col-lg-3 mb-3 d-flex">
@@ -186,7 +192,7 @@ export default {
             :data="metrics.clientsWithAllConsents"
             :subdata="`/ ${metrics.totalClients}`"
             :icon="'people'"
-            :iconStyleClass="'green-icon'"
+            :icon-style-class="'green-icon'"
           />
         </div>
         <div class="col-12 col-md-6 col-lg-3 mb-3 d-flex">
@@ -195,7 +201,7 @@ export default {
             :data="metrics.pendingConsents"
             :subdata="`/ ${metrics.totalConsents}`"
             :icon="'clock-history'"
-            :iconStyleClass="'yellow-icon'"
+            :icon-style-class="'yellow-icon'"
           />
         </div>
         <div class="col-12 col-md-6 col-lg-3 mb-3 d-flex">
@@ -204,7 +210,7 @@ export default {
             :data="metrics.expiredConsents"
             :subdata="`/ ${metrics.totalConsents}`"
             :icon="'exclamation-triangle'"
-            :iconStyleClass="'red-icon'"
+            :icon-style-class="'red-icon'"
           />
         </div>
       </div>
@@ -216,7 +222,7 @@ export default {
             :title="$t('dashboard.lgpdCompliance.complianceOverview')"
             :details-opened="detailsOpened"
             :icon="'graph-up-arrow'"
-            :iconStyleClass="'green-icon'"
+            :icon-style-class="'green-icon'"
             @toggle="toggleDetails"
           >
             <template #summary>
@@ -283,7 +289,7 @@ export default {
             :title="$t('dashboard.lgpdCompliance.consentsBreakdown')"
             :details-opened="false"
             :icon="'pie-chart'"
-            :iconStyleClass="'blue-icon'"
+            :icon-style-class="'blue-icon'"
           >
             <template #summary>
               <div class="d-flex align-items-center justify-content-between">
@@ -350,7 +356,7 @@ export default {
             :title="$t('dashboard.lgpdCompliance.notificationMetrics.title')"
             :details-opened="false"
             :icon="'bell'"
-            :iconStyleClass="'blue-icon'"
+            :icon-style-class="'blue-icon'"
           >
             <template #summary>
               <div class="d-flex align-items-center justify-content-between">

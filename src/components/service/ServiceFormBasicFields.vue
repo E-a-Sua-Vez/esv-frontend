@@ -123,10 +123,7 @@ export default {
           <i class="bi bi-info-circle-fill h7"></i>
         </Popper>
       </label>
-      <Toggle
-        v-model="service.online"
-        :disabled="!toggles['services.admin.edit']"
-      />
+      <Toggle v-model="service.online" :disabled="!toggles['services.admin.edit']" />
     </div>
     <div class="form-group-modern form-group-toggle" v-if="!isAdd">
       <label class="form-label-modern">
@@ -138,10 +135,7 @@ export default {
           <i class="bi bi-info-circle-fill h7"></i>
         </Popper>
       </label>
-      <Toggle
-        v-model="service.active"
-        :disabled="!toggles['services.admin.edit']"
-      />
+      <Toggle v-model="service.active" :disabled="!toggles['services.admin.edit']" />
     </div>
     <div class="form-group-modern">
       <label class="form-label-modern">

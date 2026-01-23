@@ -1,7 +1,10 @@
 <script>
 import Popper from 'vue3-popper';
 import Toggle from '@vueform/toggle';
-import { updateFeatureToggle, addFeatureToggle } from '../../../application/services/feature-toggle';
+import {
+  updateFeatureToggle,
+  addFeatureToggle,
+} from '../../../application/services/feature-toggle';
 
 export default {
   name: 'SimpleConfigurationCard',
@@ -54,11 +57,9 @@ export default {
             :class="'dark'"
             arrow
             disable-click-away
-            :content="
-              `${$t('configuration.' + configuration.name + '.description')} (key: ${
-                configuration.name
-              }, type: ${configuration.type})`
-            "
+            :content="`${$t('configuration.' + configuration.name + '.description')} (key: ${
+              configuration.name
+            }, type: ${configuration.type})`"
           >
             <i class="bi bi-info-circle-fill config-info-icon"></i>
           </Popper>

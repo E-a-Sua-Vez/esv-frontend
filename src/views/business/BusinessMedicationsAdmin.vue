@@ -317,7 +317,11 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessMedicationsAdmin.title`)"
           :toggles="state.toggles"
@@ -593,29 +597,29 @@ export default {
                       </div>
                     </div>
                     <div v-if="state.extendedEntity === index" class="mt-3">
-                    <div id="medication-id-form" class="row mb-1">
-                      <div class="col">
-                        <span><strong>Id:</strong> {{ medication.id }}</span>
-                        <button
-                          type="button"
-                          class="btn btn-link btn-sm p-0 ms-2 align-baseline"
-                          @click="copyIdToClipboard(medication.id)"
-                          :title="$t('copy') || 'Copiar Id'"
-                        >
-                          <i class="bi bi-clipboard"></i>
-                        </button>
+                      <div id="medication-id-form" class="row mb-1">
+                        <div class="col">
+                          <span><strong>Id:</strong> {{ medication.id }}</span>
+                          <button
+                            type="button"
+                            class="btn btn-link btn-sm p-0 ms-2 align-baseline"
+                            @click="copyIdToClipboard(medication.id)"
+                            :title="$t('copy') || 'Copiar Id'"
+                          >
+                            <i class="bi bi-clipboard"></i>
+                          </button>
+                        </div>
                       </div>
-                    </div>
                       <div class="form-fields-container">
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.name') }}
-                          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                            <template #content>
-                              <div>{{ $t('businessMedicationsAdmin.nameHelp') }}</div>
-                            </template>
-                            <i class="bi bi-info-circle-fill form-help-icon"></i>
-                          </Popper>
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicationsAdmin.nameHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
                           </label>
                           <input
                             id="update-medication-name-form"
@@ -629,12 +633,12 @@ export default {
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.activePrinciple') }}
-                          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                            <template #content>
-                              <div>{{ $t('businessMedicationsAdmin.activePrincipleHelp') }}</div>
-                            </template>
-                            <i class="bi bi-info-circle-fill form-help-icon"></i>
-                          </Popper>
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicationsAdmin.activePrincipleHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
                           </label>
                           <input
                             id="update-medication-activePrinciple-form"
@@ -648,12 +652,12 @@ export default {
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.presentation') }}
-                          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                            <template #content>
-                              <div>{{ $t('businessMedicationsAdmin.presentationHelp') }}</div>
-                            </template>
-                            <i class="bi bi-info-circle-fill form-help-icon"></i>
-                          </Popper>
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicationsAdmin.presentationHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
                           </label>
                           <input
                             id="update-medication-presentation-form"
@@ -667,12 +671,12 @@ export default {
                         <div class="form-group-modern">
                           <label class="form-label-modern">
                             {{ $t('businessMedicationsAdmin.route') }}
-                          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-                            <template #content>
-                              <div>{{ $t('businessMedicationsAdmin.routeHelp') }}</div>
-                            </template>
-                            <i class="bi bi-info-circle-fill form-help-icon"></i>
-                          </Popper>
+                            <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                              <template #content>
+                                <div>{{ $t('businessMedicationsAdmin.routeHelp') }}</div>
+                              </template>
+                              <i class="bi bi-info-circle-fill form-help-icon"></i>
+                            </Popper>
                           </label>
                           <input
                             id="update-medication-route-form"

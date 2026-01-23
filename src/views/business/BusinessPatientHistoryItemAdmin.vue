@@ -164,10 +164,7 @@ function goBack() {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo
-          :src="state.business?.logo"
-          :loading="loading"
-        ></CommerceLogo>
+        <CommerceLogo :src="state.business?.logo" :loading="loading"></CommerceLogo>
         <ComponentMenu
           :title="$t('businessPatientHistoryItemAdmin.title')"
           :toggles="state.toggles"

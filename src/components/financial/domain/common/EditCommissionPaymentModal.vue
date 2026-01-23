@@ -2,7 +2,10 @@
 import { ref, computed, onMounted } from 'vue';
 import Spinner from '../../../common/Spinner.vue';
 import Alert from '../../../common/Alert.vue';
-import { updateCommissionPayment, getUnpaidIncomesByProfessional } from '../../../../application/services/professional-commission-payment';
+import {
+  updateCommissionPayment,
+  getUnpaidIncomesByProfessional,
+} from '../../../../application/services/professional-commission-payment';
 import { getDate } from '../../../../shared/utils/date';
 
 export default {
@@ -25,8 +28,8 @@ export default {
 
     const totalToAdd = computed(() => incomeIdsToAdd.value.length);
     const totalToRemove = computed(() => incomeIdsToRemove.value.length);
-    const finalTotal = computed(() => 
-      currentIncomeIds.value.length - totalToRemove.value + totalToAdd.value
+    const finalTotal = computed(
+      () => currentIncomeIds.value.length - totalToRemove.value + totalToAdd.value
     );
 
     const loadAvailableIncomes = async () => {
@@ -49,7 +52,7 @@ export default {
     const saveChanges = async () => {
       try {
         loading.value = true;
-        
+
         await updateCommissionPayment(
           props.payment.id,
           incomeIdsToAdd.value.length > 0 ? incomeIdsToAdd.value : undefined,
@@ -66,8 +69,9 @@ export default {
       }
     };
 
-    const formatDate = (date) => getDate(date);
-    const formatCurrency = (amount) => Number(parseFloat(amount || 0).toFixed(2)).toLocaleString('de-DE');
+    const formatDate = date => getDate(date);
+    const formatCurrency = amount =>
+      Number(parseFloat(amount || 0).toFixed(2)).toLocaleString('de-DE');
 
     onMounted(async () => {
       currentIncomeIds.value = [...props.payment.incomeIds];
@@ -95,7 +99,7 @@ export default {
 </script>
 
 <template>
-  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5)">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
@@ -104,7 +108,7 @@ export default {
           </h5>
           <button type="button" class="btn-close" @click="$emit('close')"></button>
         </div>
-        
+
         <div class="modal-body">
           <Spinner :show="loading" />
           <Alert :show="alertError !== ''" :message="alertError" />
@@ -125,11 +129,7 @@ export default {
                 <tbody>
                   <tr v-for="incomeId in currentIncomeIds" :key="incomeId">
                     <td>
-                      <input 
-                        type="checkbox" 
-                        v-model="incomeIdsToRemove" 
-                        :value="incomeId"
-                      />
+                      <input type="checkbox" v-model="incomeIdsToRemove" :value="incomeId" />
                     </td>
                     <td>{{ incomeId }}</td>
                   </tr>
@@ -157,11 +157,7 @@ export default {
                 <tbody>
                   <tr v-for="income in availableIncomes" :key="income.id">
                     <td>
-                      <input 
-                        type="checkbox" 
-                        v-model="incomeIdsToAdd" 
-                        :value="income.id"
-                      />
+                      <input type="checkbox" v-model="incomeIdsToAdd" :value="income.id" />
                     </td>
                     <td>{{ formatDate(income.createdAt) }}</td>
                     <td>
@@ -170,7 +166,9 @@ export default {
                       </span>
                     </td>
                     <td>${{ formatCurrency(income.amount) }}</td>
-                    <td class="text-success">${{ formatCurrency(income.professionalCommission) }}</td>
+                    <td class="text-success">
+                      ${{ formatCurrency(income.professionalCommission) }}
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -199,7 +197,7 @@ export default {
           <!-- Notas -->
           <div class="mb-3">
             <label class="form-label fw-bold">{{ $t('commissionPayments.notes') }}</label>
-            <textarea 
+            <textarea
               v-model="notes"
               class="form-control"
               rows="3"
@@ -207,16 +205,18 @@ export default {
             ></textarea>
           </div>
         </div>
-        
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" @click="$emit('close')">
             {{ $t('commissionPayments.cancel') }}
           </button>
-          <button 
-            type="button" 
-            class="btn btn-primary" 
+          <button
+            type="button"
+            class="btn btn-primary"
             @click="saveChanges"
-            :disabled="loading || (totalToAdd === 0 && totalToRemove === 0 && notes === payment.notes)"
+            :disabled="
+              loading || (totalToAdd === 0 && totalToRemove === 0 && notes === payment.notes)
+            "
           >
             <i class="bi bi-save"></i> {{ $t('commissionPayments.saveChanges') }}
           </button>

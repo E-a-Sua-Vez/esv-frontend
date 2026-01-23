@@ -58,6 +58,3 @@ export const getAllConsents = async filters => {
   if (filters.limit) params.append('limit', filters.limit);
   return (await requestBackend.get(`/${entity}/?${params}`, await getHeaders())).data;
 };
-
-
-

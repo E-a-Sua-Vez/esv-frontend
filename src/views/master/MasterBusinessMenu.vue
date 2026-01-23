@@ -449,7 +449,8 @@ export default {
         <div class="modal-content">
           <div class="modal-header border-0 centered active-name">
             <h5 class="modal-title">
-              <i class="bi bi-shop"></i> {{ $t('businessAdmin.selectCommerce') || 'Seleccionar Comercio' }}
+              <i class="bi bi-shop"></i>
+              {{ $t('businessAdmin.selectCommerce') || 'Seleccionar Comercio' }}
             </h5>
             <button
               type="button"

@@ -169,8 +169,12 @@ export default {
     }));
 
     // Permisos individuales para acciones específicas
-    const canViewConsents = computed(() => permissions.value['client-portal.consents.view'] || false);
-    const canRevokeConsents = computed(() => permissions.value['client-portal.consents.reject'] || false);
+    const canViewConsents = computed(
+      () => permissions.value['client-portal.consents.view'] || false,
+    );
+    const canRevokeConsents = computed(
+      () => permissions.value['client-portal.consents.reject'] || false,
+    );
 
     let sessionCheckInterval = null;
     let inactivityTimeout = null;
@@ -400,12 +404,22 @@ export default {
           // Carregar consentimentos
           await loadConsents();
         } else {
-          router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
+          router.push({
+            name: 'client-portal-login',
+            params: { commerceSlug: commerceSlug.value },
+          });
         }
       } catch (err) {
         error.value = err.response?.data?.message || t('clientPortal.consents.sessionError');
         if (err.response?.status === 401 || err.response?.status === 403) {
-          setTimeout(() => router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } }), 2000);
+          setTimeout(
+            () =>
+              router.push({
+                name: 'client-portal-login',
+                params: { commerceSlug: commerceSlug.value },
+              }),
+            2000,
+          );
         }
       } finally {
         loading.value = false;
@@ -472,11 +486,17 @@ export default {
           try {
             const response = await validatePortalSession(token);
             if (!response || !response.valid || response.expired) {
-              router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
+              router.push({
+                name: 'client-portal-login',
+                params: { commerceSlug: commerceSlug.value },
+              });
             }
           } catch (err) {
             if (err.response?.status === 401 || err.response?.status === 403) {
-              router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
+              router.push({
+                name: 'client-portal-login',
+                params: { commerceSlug: commerceSlug.value },
+              });
             }
           }
         }

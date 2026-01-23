@@ -1,7 +1,7 @@
 <template>
   <div class="message-composer-modal" v-if="isOpen">
     <div class="modal-overlay" @click="close"></div>
-    
+
     <div class="modal-container">
       <div class="modal-header">
         <h3>{{ $t('messages.compose.title') }}</h3>
@@ -36,12 +36,12 @@
         <div class="form-group" v-if="form.recipientType">
           <label>{{ $t('messages.compose.selectRecipient') }} *</label>
           <select v-model="form.recipientId" class="form-control" :disabled="loadingRecipients">
-            <option value="">{{ loadingRecipients ? $t('common.loading') : $t('messages.compose.chooseRecipient') }}</option>
-            <option 
-              v-for="recipient in recipients" 
-              :key="recipient.id" 
-              :value="recipient.id"
-            >
+            <option value="">
+              {{
+                loadingRecipients ? $t('common.loading') : $t('messages.compose.chooseRecipient')
+              }}
+            </option>
+            <option v-for="recipient in recipients" :key="recipient.id" :value="recipient.id">
               {{ recipient.name || recipient.email }}
             </option>
           </select>
@@ -53,13 +53,21 @@
           <select v-model="form.category" class="form-control">
             <option value="direct_message">{{ $t('messages.categories.direct_message') }}</option>
             <option value="announcement">{{ $t('messages.categories.announcement') }}</option>
-            <option value="attention_reminder">{{ $t('messages.categories.attention_reminder') }}</option>
-            <option value="booking_reminder">{{ $t('messages.categories.booking_reminder') }}</option>
-            <option value="booking_confirmed">{{ $t('messages.categories.booking_confirmed') }}</option>
+            <option value="attention_reminder">
+              {{ $t('messages.categories.attention_reminder') }}
+            </option>
+            <option value="booking_reminder">
+              {{ $t('messages.categories.booking_reminder') }}
+            </option>
+            <option value="booking_confirmed">
+              {{ $t('messages.categories.booking_confirmed') }}
+            </option>
             <option value="task_assigned">{{ $t('messages.categories.task_assigned') }}</option>
             <option value="stock">{{ $t('messages.categories.stock') }}</option>
             <option value="low_stock">{{ $t('messages.categories.low_stock') }}</option>
-            <option value="payment_received">{{ $t('messages.categories.payment_received') }}</option>
+            <option value="payment_received">
+              {{ $t('messages.categories.payment_received') }}
+            </option>
             <option value="payment_pending">{{ $t('messages.categories.payment_pending') }}</option>
           </select>
         </div>
@@ -78,9 +86,9 @@
         <!-- Título -->
         <div class="form-group">
           <label>{{ $t('messages.compose.title') }} *</label>
-          <input 
-            v-model="form.title" 
-            type="text" 
+          <input
+            v-model="form.title"
+            type="text"
             class="form-control"
             :placeholder="$t('messages.compose.titlePlaceholder')"
             maxlength="100"
@@ -90,8 +98,8 @@
         <!-- Contenido -->
         <div class="form-group">
           <label>{{ $t('messages.compose.content') }} *</label>
-          <textarea 
-            v-model="form.content" 
+          <textarea
+            v-model="form.content"
             class="form-control"
             :placeholder="$t('messages.compose.contentPlaceholder')"
             rows="6"
@@ -103,9 +111,9 @@
         <!-- Acción (opcional) -->
         <div class="form-group">
           <label>{{ $t('messages.compose.actionLink') }}</label>
-          <input 
-            v-model="form.actionLink" 
-            type="text" 
+          <input
+            v-model="form.actionLink"
+            type="text"
             class="form-control"
             :placeholder="$t('messages.compose.actionLinkPlaceholder')"
           />
@@ -113,9 +121,9 @@
 
         <div class="form-group" v-if="form.actionLink">
           <label>{{ $t('messages.compose.actionLabel') }}</label>
-          <input 
-            v-model="form.actionLabel" 
-            type="text" 
+          <input
+            v-model="form.actionLabel"
+            type="text"
             class="form-control"
             :placeholder="$t('messages.compose.actionLabelPlaceholder')"
           />
@@ -126,11 +134,7 @@
         <button @click="close" class="btn btn-secondary">
           {{ $t('common.cancel') }}
         </button>
-        <button 
-          @click="send" 
-          class="btn btn-primary" 
-          :disabled="!canSend || sending"
-        >
+        <button @click="send" class="btn btn-primary" :disabled="!canSend || sending">
           <i class="bi bi-send" v-if="!sending"></i>
           <span class="spinner-border spinner-border-sm" v-if="sending"></span>
           {{ sending ? $t('common.sending') : $t('messages.compose.send') }}
@@ -177,25 +181,27 @@ const recipients = ref([]);
 const loadingRecipients = ref(false);
 const sending = ref(false);
 
-const canSendNotifications = computed(() => {
-  return props.userRole === 'master' || props.userRole === 'administrator';
-});
+const canSendNotifications = computed(
+  () => props.userRole === 'master' || props.userRole === 'administrator'
+);
 
-const canSend = computed(() => {
-  return (
+const canSend = computed(
+  () =>
     form.value.recipientId &&
     form.value.recipientType &&
     form.value.category &&
     form.value.title.trim() &&
     form.value.content.trim()
-  );
-});
+);
 
-watch(() => props.isOpen, (newVal) => {
-  if (newVal) {
-    resetForm();
-  }
-});
+watch(
+  () => props.isOpen,
+  newVal => {
+    if (newVal) {
+      resetForm();
+    }
+  },
+);
 
 async function loadRecipients() {
   if (!form.value.recipientType) {
@@ -221,7 +227,8 @@ async function loadRecipients() {
     const response = await requestBackend.get(endpoint);
     recipients.value = response.data.map(item => ({
       id: item.id,
-      name: item.name || item.businessName || `${item.firstName || ''} ${item.lastName || ''}`.trim(),
+      name:
+        item.name || item.businessName || `${item.firstName || ''} ${item.lastName || ''}`.trim(),
       email: item.email,
     }));
   } catch (error) {

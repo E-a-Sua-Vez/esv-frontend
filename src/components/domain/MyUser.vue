@@ -46,7 +46,9 @@ export default {
       if (state.currentUser !== undefined && state.currentUser !== null) {
         // For client portal, format name properly
         if (store.getCurrentUserType === 'client') {
-          state.userName = `${state.currentUser.name || ''} ${state.currentUser.lastName || ''}`.trim() || 'Cliente';
+          state.userName =
+            `${state.currentUser.name || ''} ${state.currentUser.lastName || ''}`.trim() ||
+            'Cliente';
         } else {
           state.userName = state.currentUser.alias || state.currentUser.name;
         }

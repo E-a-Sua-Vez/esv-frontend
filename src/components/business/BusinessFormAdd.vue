@@ -27,10 +27,7 @@
       <div id="business-keyName-form-add" class="row g-1">
         <div class="col-4 text-label">
           {{ $t('businessAdmin.keyName') }}
-          <Popper
-            :class="'dark p-1'"
-            arrow
-          >
+          <Popper :class="'dark p-1'" arrow>
             <template #content>
               <div>{{ $t('businessAdmin.keyNameHelp') }}</div>
             </template>
@@ -98,7 +95,11 @@
 
       <!-- Datos de localización -->
       <div class="row g-1">
-        <a class="nav-link fw-bold section-toggle-button" data-bs-toggle="collapse" href="#add-location">
+        <a
+          class="nav-link fw-bold section-toggle-button"
+          data-bs-toggle="collapse"
+          href="#add-location"
+        >
           {{ $t('businessAdmin.location') }} <i class="bi bi-chevron-down"></i>
         </a>
       </div>
@@ -269,7 +270,11 @@
 
       <!-- Datos de Contacto -->
       <div class="row g-1">
-        <a class="nav-link fw-bold section-toggle-button" data-bs-toggle="collapse" href="#add-contact">
+        <a
+          class="nav-link fw-bold section-toggle-button"
+          data-bs-toggle="collapse"
+          href="#add-contact"
+        >
           {{ $t('businessAdmin.contact') }} <i class="bi bi-chevron-down"></i>
         </a>
       </div>
@@ -454,7 +459,11 @@
 
       <!-- Datos de Servicio -->
       <div class="row g-1">
-        <a class="nav-link fw-bold section-toggle-button" data-bs-toggle="collapse" href="#add-service">
+        <a
+          class="nav-link fw-bold section-toggle-button"
+          data-bs-toggle="collapse"
+          href="#add-service"
+        >
           {{ $t('businessAdmin.service') }} <i class="bi bi-chevron-down"></i>
         </a>
       </div>
@@ -627,11 +636,7 @@
           v-if="modelValue.serviceInfo?.personalized === true"
           class="row g-1"
         >
-          <div
-            class="row g-1"
-            v-for="day in modelValue.serviceInfo?.attentionDays"
-            :key="day"
-          >
+          <div class="row g-1" v-for="day in modelValue.serviceInfo?.attentionDays" :key="day">
             <div class="col-4 text-label">
               {{ $t(`days.${day}`) }}
             </div>
@@ -768,9 +773,7 @@ export default {
       });
     };
 
-    const dayChecked = day => {
-      return props.modelValue.serviceInfo?.attentionDays?.includes(day) || false;
-    };
+    const dayChecked = day => props.modelValue.serviceInfo?.attentionDays?.includes(day) || false;
 
     const checkDay = (event, day) => {
       const serviceInfo = props.modelValue.serviceInfo || {};
@@ -827,7 +830,7 @@ export default {
 
     const handlePersonalizedToggle = value => {
       const serviceInfo = props.modelValue.serviceInfo || {};
-      let personalizedHours = {};
+      const personalizedHours = {};
 
       if (value === true) {
         // Initialize personalizedHours for all selected days

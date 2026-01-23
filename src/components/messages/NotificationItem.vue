@@ -1,10 +1,7 @@
 <template>
   <div
     class="notification-card"
-    :class="[
-      { 'unread': message.status === 'unread' },
-      `priority-${message.priority}`
-    ]"
+    :class="[{ unread: message.status === 'unread' }, `priority-${message.priority}`]"
     @click="handleClick"
   >
     <div class="card-accent" :class="`accent-${message.priority}`"></div>
@@ -38,11 +35,7 @@
           >
             <i class="bi bi-check2"></i>
           </button>
-          <button
-            @click.stop="handleArchive"
-            class="action-btn"
-            :title="$t('messages.archive')"
-          >
+          <button @click.stop="handleArchive" class="action-btn" :title="$t('messages.archive')">
             <i class="bi bi-archive"></i>
           </button>
         </div>
@@ -97,26 +90,26 @@ const categoryIcons = {
   NOTIFICATION: 'bi bi-bell',
 };
 
-const getCategoryIcon = (category) => {
-  return categoryIcons[category] || 'bi bi-info-circle';
-};
+const getCategoryIcon = category => categoryIcons[category] || 'bi bi-info-circle';
 
 const getSenderName = () => {
   if (!props.message.senderId) return '';
 
   // Si senderId es un objeto con información del remitente
   if (typeof props.message.senderId === 'object') {
-    return props.message.senderId.email ||
-           props.message.senderId.name ||
-           props.message.senderId.id ||
-           t('messages.sender.unknown');
+    return (
+      props.message.senderId.email ||
+      props.message.senderId.name ||
+      props.message.senderId.id ||
+      t('messages.sender.unknown')
+    );
   }
 
   // Si es solo un string, retornar el ID
   return props.message.senderId;
 };
 
-const formatTime = (timestamp) => {
+const formatTime = timestamp => {
   if (!timestamp) return '';
 
   const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);

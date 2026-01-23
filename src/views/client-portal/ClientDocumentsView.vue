@@ -192,7 +192,10 @@ export default {
         const storedCommerce = localStorage.getItem('clientPortalCommerce');
 
         if (!storedClient || !storedCommerce) {
-          router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
+          router.push({
+            name: 'client-portal-login',
+            params: { commerceSlug: commerceSlug.value },
+          });
           return;
         }
 
@@ -525,6 +528,3 @@ export default {
   }
 }
 </style>
-
-
-

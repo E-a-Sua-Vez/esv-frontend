@@ -70,13 +70,13 @@ export default {
 
       const dayOrder = ['1', '2', '3', '4', '5', '6', '7'];
       const dayKeyToCode = {
-        '1': 'Seg',
-        '2': 'Ter',
-        '3': 'Qua',
-        '4': 'Qui',
-        '5': 'Sex',
-        '6': 'Sab',
-        '7': 'Dom',
+        1: 'Seg',
+        2: 'Ter',
+        3: 'Qua',
+        4: 'Qui',
+        5: 'Sex',
+        6: 'Sab',
+        7: 'Dom',
       };
 
       const orderedDays = dayOrder.filter(d => hours[d]);

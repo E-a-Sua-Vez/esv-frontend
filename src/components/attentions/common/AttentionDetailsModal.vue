@@ -16,7 +16,10 @@ import { getActiveFeature } from '../../../shared/features';
 import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data.ts';
 import { getQueueById } from '../../../application/services/queue';
 import { getBookingDetails } from '../../../application/services/booking';
-import { getActiveProfessionalsByCommerce } from '../../../application/services/professional';
+import {
+  getActiveProfessionalsByCommerce,
+  getProfessionalById,
+} from '../../../application/services/professional';
 import { getCollaboratorById } from '../../../application/services/collaborator';
 import { getAttentionDetails } from '../../../application/services/attention';
 import { getConsentStatus } from '../../../application/services/consent';
@@ -30,7 +33,16 @@ import ProfessionalSelector from '../../professional/ProfessionalSelector.vue';
 
 export default {
   name: 'AttentionDetailsModal',
-  components: { Popper, Spinner, Warning, AreYouSure, PaymentForm, Message, AttentionTimeline, ProfessionalSelector },
+  components: {
+    Popper,
+    Spinner,
+    Warning,
+    AreYouSure,
+    PaymentForm,
+    Message,
+    AttentionTimeline,
+    ProfessionalSelector,
+  },
   props: {
     show: { type: Boolean, default: false },
     attention: { type: Object, default: undefined },
@@ -72,6 +84,8 @@ export default {
       selectedProfessional: null,
       professionalCommission: null,
       professionals: [],
+      loadingProfessionalData: false,
+      _permissionsDebugLogged: false,
     };
   },
   beforeMount() {
@@ -99,7 +113,9 @@ export default {
   computed: {
     // Check if toggles have been loaded (not empty object)
     togglesLoaded() {
-      return this.toggles && typeof this.toggles === 'object' && Object.keys(this.toggles).length > 0;
+      return (
+        this.toggles && typeof this.toggles === 'object' && Object.keys(this.toggles).length > 0
+      );
     },
     attentionFullName() {
       if (!this.attention) return '';
@@ -121,8 +137,70 @@ export default {
       if (!this.attention) return '';
       return this.attention.user?.idNumber || this.attention.userIdNumber || '';
     },
+    // Check if attention is terminated or cancelled
+    isAttentionTerminatedOrCancelled() {
+      if (!this.attention || !this.attention.status) return false;
+      const terminatedOrCancelledStatuses = [
+        ATTENTION_STATUS.TERMINATED,
+        ATTENTION_STATUS.RATED,
+        ATTENTION_STATUS.CANCELLED,
+        ATTENTION_STATUS.SKIPED,
+        ATTENTION_STATUS.USER_CANCELLED,
+        ATTENTION_STATUS.TERMINATED_RESERVE_CANCELLED,
+      ];
+      return terminatedOrCancelledStatuses.includes(this.attention.status);
+    },
   },
   methods: {
+    // Permission helper: supports exact keys and keys with extra segments (prefix match)
+    hasPermission(keyOrPrefix) {
+      if (!this.toggles || typeof this.toggles !== 'object') return false;
+      if (this.toggles[keyOrPrefix] === true) return true;
+      const prefix = `${keyOrPrefix}.`;
+      return Object.keys(this.toggles).some(k => k.startsWith(prefix) && this.toggles[k] === true);
+    },
+    // Collaborator attention permissions have been seen with both "attention" and "attentions"
+    hasCollaboratorAttentionPermission(action) {
+      const directMatch =
+        this.hasPermission(`collaborator.attentions.${action}`) ||
+        this.hasPermission(`collaborator.attention.${action}`);
+      if (directMatch) return true;
+
+      // Fallback: accept any collaborator.* key that looks like attention+action.
+      // This handles variants like collaborator.attentions.confirm-payment, collaborator.attentions.paymentConfirm, etc.
+      if (this.toggles && typeof this.toggles === 'object') {
+        const keys = Object.keys(this.toggles);
+        const actionLower = String(action || '').toLowerCase();
+        const fuzzyMatch = keys.some(k => {
+          const kl = k.toLowerCase();
+          return (
+            kl.startsWith('collaborator.') &&
+            kl.includes('attent') &&
+            kl.includes(actionLower) &&
+            this.toggles[k] === true
+          );
+        });
+        if (fuzzyMatch) return true;
+
+        // Debug once: print what keys arrived so we can align exactly
+        if (this.togglesLoaded && !this._permissionsDebugLogged) {
+          this._permissionsDebugLogged = true;
+          const related = keys
+            .filter(
+              k => k.toLowerCase().startsWith('collaborator.') && k.toLowerCase().includes('attent'),
+            )
+            .sort();
+          console.warn('[AttentionDetailsModal] collaborator attention permission keys:', related);
+          console.warn('[AttentionDetailsModal] requested action:', action, 'value:', {
+            directConfirm: this.toggles['collaborator.attentions.confirm'],
+            directCancel: this.toggles['collaborator.attentions.cancel'],
+            directTransfer: this.toggles['collaborator.attentions.transfer'],
+          });
+        }
+      }
+
+      return false;
+    },
     closeModal() {
       this.$emit('close');
     },
@@ -152,7 +230,9 @@ export default {
       this.extendedTransferEntity = false;
       this.extendedProfessionalEntity = false;
       this.newPaymentConfirmationData = {
-        processPaymentNow: true,
+        // Keep consistent with bookings: allow confirming without forcing payment fields
+        // PaymentForm can toggle this to true when user chooses to process payment now.
+        processPaymentNow: false,
       };
     },
     async showTransferDetails() {
@@ -202,6 +282,47 @@ export default {
       }
       return commissionType === 'PERCENTAGE' ? `${commissionValue}%` : `${commissionValue}`;
     },
+    async loadProfessionalDataIfNeeded() {
+      if (this.loadingProfessionalData) return;
+      if (!this.attention?.professionalId) return;
+
+      this.loadingProfessionalData = true;
+      try {
+        // Try list first (active professionals by commerce) to avoid extra calls
+        if (
+          (!this.professionals || this.professionals.length === 0) &&
+          this.attention?.commerceId
+        ) {
+          await this.loadProfessionals();
+        }
+
+        let professional =
+          (this.professionals || []).find(p => p.id === this.attention.professionalId) || null;
+
+        // If not found (or missing financialInfo), fetch by id to guarantee full data
+        if (
+          !professional ||
+          !professional.financialInfo ||
+          professional.financialInfo.commissionValue === undefined
+        ) {
+          professional = await getProfessionalById(this.attention.professionalId);
+        }
+
+        if (professional) {
+          this.selectedProfessional = professional;
+          if (
+            professional.financialInfo?.commissionValue !== undefined &&
+            professional.financialInfo?.commissionValue !== null
+          ) {
+            this.professionalCommission = professional.financialInfo.commissionValue;
+          }
+        }
+      } catch (e) {
+        console.warn('[AttentionDetailsModal] Could not reload professional data:', e);
+      } finally {
+        this.loadingProfessionalData = false;
+      }
+    },
     // PROFESSIONAL PAYMENT COMMISSION DATA (used by PaymentForm)
     getAssignedProfessionalCommissionData() {
       if (!this.attention?.professionalName) {
@@ -210,7 +331,10 @@ export default {
 
       // 1) Prefer persisted confirmation data (if backend already stored it)
       const confirmationData = this.attention?.paymentConfirmationData;
-      if (confirmationData?.professionalCommissionType && confirmationData?.professionalCommissionValue) {
+      if (
+        confirmationData?.professionalCommissionType &&
+        confirmationData?.professionalCommissionValue
+      ) {
         const { professionalCommissionType, professionalCommissionValue } = confirmationData;
         let suggestedAmount = 0;
         let commissionDisplay = '';
@@ -226,7 +350,9 @@ export default {
               suggestedAmount = confirmationData.professionalCommissionAmount;
             }
           } else {
-            commissionDisplay = `${professionalCommissionValue} ${this.commerce?.currency || 'BRL'}`;
+            commissionDisplay = `${professionalCommissionValue} ${
+              this.commerce?.currency || 'BRL'
+            }`;
             suggestedAmount = Number(professionalCommissionValue);
           }
         }
@@ -248,7 +374,9 @@ export default {
           if (commissionType === 'PERCENTAGE') {
             commissionDisplay = `${commissionValue}%`;
             if (this.newPaymentConfirmationData?.paymentAmount) {
-              suggestedAmount = Math.round((this.newPaymentConfirmationData.paymentAmount * commissionValue) / 100);
+              suggestedAmount = Math.round(
+                (this.newPaymentConfirmationData.paymentAmount * commissionValue) / 100,
+              );
             }
           } else {
             commissionDisplay = `${commissionValue} ${this.commerce?.currency || 'BRL'}`;
@@ -261,6 +389,16 @@ export default {
           commission: commissionDisplay,
           suggestedAmount,
         };
+      }
+
+      // 3) If we have professionalId but not the professional data yet, reload it
+      if (
+        this.attention?.professionalId &&
+        !this.selectedProfessional &&
+        !this.loadingProfessionalData
+      ) {
+        // fire and forget; computed will re-run after state updates
+        this.loadProfessionalDataIfNeeded();
       }
 
       // Fallback: name only
@@ -278,6 +416,11 @@ export default {
     },
     async confirmAssignProfessional() {
       if (!this.attention || !this.attention.id || !this.selectedProfessional) {
+        return;
+      }
+      // Prevent action if attention is terminated or cancelled
+      if (this.isAttentionTerminatedOrCancelled) {
+        this.alertError = 'No se puede asignar un profesional a una atención terminada o cancelada';
         return;
       }
       try {
@@ -346,6 +489,11 @@ export default {
       return false;
     },
     async confirm() {
+      // Prevent action if attention is terminated or cancelled
+      if (this.isAttentionTerminatedOrCancelled) {
+        this.alertError = 'No se puede confirmar el pago de una atención terminada o cancelada';
+        return;
+      }
       try {
         this.loading = true;
         if (this.attention && this.attention.id) {
@@ -515,6 +663,11 @@ export default {
       }
     },
     async transfer() {
+      // Prevent action if attention is terminated or cancelled
+      if (this.isAttentionTerminatedOrCancelled) {
+        this.alertError = 'No se puede transferir una atención terminada o cancelada';
+        return;
+      }
       try {
         this.loading = true;
         if (!this.attention || !this.attention.id) {
@@ -815,7 +968,7 @@ export default {
         return false;
       }
       // Check permissions
-      if (!this.toggles || !this.toggles['collaborator.attentions.confirm']) {
+      if (this.togglesLoaded && !this.hasCollaboratorAttentionPermission('confirm')) {
         return false;
       }
       // Check if payment feature is active
@@ -942,10 +1095,15 @@ export default {
             const collaborator = await getCollaboratorById(attentionDetails.collaboratorId);
             if (collaborator) {
               collaboratorsMap[attentionDetails.collaboratorId] =
-                collaborator.name || collaborator.alias || attentionDetails.collaboratorId;
+                collaborator.name || collaborator.alias || 'N/A';
+            } else {
+              // If collaborator not found, set to null so it displays as N/A
+              collaboratorsMap[attentionDetails.collaboratorId] = null;
             }
           } catch (error) {
             console.error('Error loading main collaborator:', error);
+            // On error, set to null so it displays as N/A
+            collaboratorsMap[attentionDetails.collaboratorId] = null;
           }
         }
 
@@ -965,13 +1123,15 @@ export default {
                   const collaborator = await getCollaboratorById(collaboratorId);
                   if (collaborator) {
                     collaboratorsMap[collaboratorId] =
-                      collaborator.name || collaborator.alias || collaboratorId;
+                      collaborator.name || collaborator.alias || 'N/A';
                   } else {
-                    collaboratorsMap[collaboratorId] = collaboratorId;
+                    // If collaborator not found, don't show the ID, show N/A instead
+                    collaboratorsMap[collaboratorId] = null;
                   }
                 } catch (error) {
                   console.error(`Error loading collaborator ${collaboratorId}:`, error);
-                  collaboratorsMap[collaboratorId] = collaboratorId;
+                  // On error, don't show the ID, show null so it displays as N/A
+                  collaboratorsMap[collaboratorId] = null;
                 }
               }
             },
@@ -1084,9 +1244,26 @@ export default {
                     </div>
                     <div class="attention-client-details">
                       <span class="attention-client-name">{{ attentionFullName }}</span>
-                      <span v-if="attention && attention.number" class="attention-number-badge-inline">
+                      <span
+                        v-if="attention && attention.number"
+                        class="attention-number-badge-inline"
+                      >
                         #{{ attention.number }}
                       </span>
+                      <!-- Paid Status Badge -->
+                      <div
+                        v-if="
+                          attention?.paymentConfirmationData?.paid === true ||
+                          attention?.paid === true
+                        "
+                        class="attention-paid-badge"
+                        :title="
+                          $t('collaboratorBookingsView.paymentConfirmed') || 'Pagamento Confirmado'
+                        "
+                      >
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span class="paid-text">{{ $t('dashboard.paid') }}</span>
+                      </div>
                       <button class="btn-copy-mini" @click="copyAttention()" title="Copiar datos">
                         <i class="bi bi-file-earmark-spreadsheet"></i>
                       </button>
@@ -1094,7 +1271,7 @@ export default {
                         v-if="attention && canCancelAttention(attention)"
                         class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3 card-action"
                         @click="goCancel()"
-                        :disabled="!toggles || !toggles['collaborator.attentions.cancel']"
+                        :disabled="togglesLoaded && !hasCollaboratorAttentionPermission('cancel')"
                         title="Cancelar atención"
                       >
                         <i class="bi bi-person-x-fill"></i>
@@ -1137,17 +1314,23 @@ export default {
               <div
                 v-if="
                   attention.queueName ||
+                  (queues && queues.length > 0 && queues[0]?.name) ||
                   attention.collaboratorName ||
+                  attention.professionalName ||
+                  attention.professionalId ||
                   (attention.servicesDetails && attention.servicesDetails.length > 0) ||
                   attention.createdDate
                 "
                 class="attention-context-info-compact"
               >
-                <div v-if="attention.queueName" class="attention-context-item-inline">
+                <div
+                  v-if="attention.queueName || (queues && queues.length > 0 && queues[0]?.name)"
+                  class="attention-context-item-inline"
+                >
                   <i class="bi bi-person-lines-fill"></i>
                   <span class="attention-context-label-inline">Fila</span>
                   <span class="attention-context-value-inline">{{
-                    attention.queueName || 'N/I'
+                    attention.queueName || (queues && queues.length > 0 ? queues[0].name : 'N/I')
                   }}</span>
                 </div>
                 <div v-if="attention.collaboratorName" class="attention-context-item-inline">
@@ -1155,6 +1338,18 @@ export default {
                   <span class="attention-context-label-inline">Colaborador</span>
                   <span class="attention-context-value-inline">{{
                     attention.collaboratorName || 'N/I'
+                  }}</span>
+                </div>
+                <div
+                  v-if="attention.professionalName || attention.professionalId"
+                  class="attention-context-item-inline"
+                >
+                  <i class="bi bi-person-badge"></i>
+                  <span class="attention-context-label-inline">{{
+                    $t('professionals.professional') || 'Profesional'
+                  }}</span>
+                  <span class="attention-context-value-inline">{{
+                    attention.professionalName || attention.professionalId || 'N/I'
                   }}</span>
                 </div>
                 <div v-if="attention.createdDate" class="attention-context-item-inline">
@@ -1201,27 +1396,104 @@ export default {
                     $t('collaboratorBookingsView.paymentData') || 'Dados de Pagamento'
                   }}</span>
                 </div>
-                <div class="attention-confirmation-tags">
-                  <span v-if="attention.paymentType" class="badge-mini confirmation-tag">
-                    {{ $t(`paymentTypes.${attention.paymentType}`) }}
-                  </span>
-                  <span v-if="attention.paymentMethod" class="badge-mini confirmation-tag">
-                    {{ $t(`paymentClientMethods.${attention.paymentMethod}`) }}
-                  </span>
-                  <span
-                    v-if="attention.paymentAmount"
-                    class="badge-mini confirmation-tag payment-amount"
+                <div class="attention-context-info-compact">
+                  <div
+                    v-if="attention.paymentConfirmationData?.paymentType"
+                    class="attention-context-item-inline"
+                  >
+                    <i class="bi bi-credit-card"></i>
+                    <span class="attention-context-label-inline">{{
+                      $t('collaboratorBookingsView.paymentType') || 'Tipo de Pago'
+                    }}</span>
+                    <span class="attention-context-value-inline">{{
+                      $t(`paymentTypes.${attention.paymentConfirmationData.paymentType}`)
+                    }}</span>
+                  </div>
+                  <div
+                    v-if="attention.paymentConfirmationData?.paymentMethod"
+                    class="attention-context-item-inline"
+                  >
+                    <i class="bi bi-wallet2"></i>
+                    <span class="attention-context-label-inline">{{
+                      $t('collaboratorBookingsView.paymentMethod') || 'Método de Pago'
+                    }}</span>
+                    <span class="attention-context-value-inline">{{
+                      $t(`paymentClientMethods.${attention.paymentConfirmationData.paymentMethod}`)
+                    }}</span>
+                  </div>
+                  <div
+                    v-if="attention.paymentConfirmationData?.paymentFiscalNote"
+                    class="attention-context-item-inline"
+                  >
+                    <i class="bi bi-receipt"></i>
+                    <span class="attention-context-label-inline">{{
+                      $t('collaboratorBookingsView.fiscalNote') || 'Nota Fiscal'
+                    }}</span>
+                    <span class="attention-context-value-inline">{{
+                      attention.paymentConfirmationData.paymentFiscalNote
+                    }}</span>
+                  </div>
+                  <div
+                    v-if="attention.paymentConfirmationData?.paymentAmount"
+                    class="attention-context-item-inline"
                   >
                     <i class="bi bi-coin"></i>
-                    {{ attention.paymentAmount }}
-                  </span>
-                  <span
-                    v-if="attention.paymentCommission"
-                    class="badge-mini confirmation-tag payment-commission"
+                    <span class="attention-context-label-inline">{{
+                      $t('collaboratorBookingsView.paymentAmount') || 'Valor Pagado'
+                    }}</span>
+                    <span class="attention-context-value-inline payment-amount-value">{{
+                      attention.paymentConfirmationData.paymentAmount
+                    }}</span>
+                  </div>
+                  <div
+                    v-if="attention.paymentConfirmationData?.totalAmount"
+                    class="attention-context-item-inline"
                   >
-                    <i class="bi bi-coin"></i>
-                    {{ attention.paymentCommission }}
-                  </span>
+                    <i class="bi bi-cash-stack"></i>
+                    <span class="attention-context-label-inline">{{
+                      $t('collaboratorBookingsView.totalAmount') || 'Total'
+                    }}</span>
+                    <span class="attention-context-value-inline">{{
+                      attention.paymentConfirmationData.totalAmount
+                    }}</span>
+                  </div>
+                  <div
+                    v-if="attention.paymentConfirmationData?.paymentCommission"
+                    class="attention-context-item-inline"
+                  >
+                    <i class="bi bi-percent"></i>
+                    <span class="attention-context-label-inline">{{
+                      $t('collaboratorBookingsView.commission') || 'Comissão'
+                    }}</span>
+                    <span class="attention-context-value-inline payment-commission-value">{{
+                      attention.paymentConfirmationData.paymentCommission
+                    }}</span>
+                  </div>
+                  <div
+                    v-if="
+                      attention.paymentConfirmationData?.installments &&
+                      attention.paymentConfirmationData.installments > 1
+                    "
+                    class="attention-context-item-inline"
+                  >
+                    <i class="bi bi-calendar-check"></i>
+                    <span class="attention-context-label-inline">{{
+                      $t('collaboratorBookingsView.installments') || 'Parcelas'
+                    }}</span>
+                    <span class="attention-context-value-inline">{{
+                      attention.paymentConfirmationData.installments
+                    }}</span>
+                  </div>
+                  <div
+                    v-if="attention.paymentConfirmationData?.packageId && attention.packageName"
+                    class="attention-context-item-inline"
+                  >
+                    <i class="bi bi-box-seam"></i>
+                    <span class="attention-context-label-inline">{{
+                      $t('package.package') || 'Pacote'
+                    }}</span>
+                    <span class="attention-context-value-inline">{{ attention.packageName }}</span>
+                  </div>
                 </div>
               </div>
 
@@ -1243,77 +1515,16 @@ export default {
                 </div>
               </div>
 
-              <!-- Stage History Section -->
-              <div
-                v-if="
-                  getActiveFeature(commerce, 'attention-stages-enabled', 'PRODUCT') &&
-                  attention.stageHistory &&
-                  Array.isArray(attention.stageHistory) &&
-                  attention.stageHistory.length > 0
-                "
-                class="attention-stage-history-section"
-              >
-                <div class="attention-confirmation-header">
-                  <i class="bi bi-clock-history"></i>
-                  <span>{{ $t('attention.stageHistory') || 'Historial de Etapas' }}</span>
-                </div>
-                <div class="stage-history-timeline">
-                  <div
-                    v-for="(historyEntry, index) in attention.stageHistory"
-                    :key="index"
-                    class="stage-history-item"
-                    :class="{
-                      'stage-history-active':
-                        historyEntry.stage === attention.currentStage && !historyEntry.exitedAt,
-                    }"
-                  >
-                    <div class="stage-history-dot"></div>
-                    <div class="stage-history-content">
-                      <div class="stage-history-stage">
-                        <span class="badge-mini stage-badge-history">{{
-                          $t(`attention.stage.${historyEntry.stage}`)
-                        }}</span>
-                        <span
-                          v-if="historyEntry.stage === attention.currentStage"
-                          class="stage-current-indicator"
-                        >
-                          {{ $t('attention.current') || 'Actual' }}
-                        </span>
-                      </div>
-                      <div class="stage-history-details">
-                        <span v-if="historyEntry.enteredAt" class="stage-history-time">
-                          <i class="bi bi-calendar-event"></i>
-                          {{ getDate(historyEntry.enteredAt) }}
-                        </span>
-                        <span v-if="historyEntry.enteredBy" class="stage-history-user">
-                          <i class="bi bi-person-fill"></i>
-                          {{ historyEntry.enteredBy }}
-                        </span>
-                        <span
-                          v-if="
-                            historyEntry.duration !== undefined && historyEntry.duration !== null
-                          "
-                          class="stage-history-duration"
-                        >
-                          <i class="bi bi-stopwatch"></i>
-                          {{ Math.round(historyEntry.duration) }} min
-                        </span>
-                      </div>
-                      <div v-if="historyEntry.notes" class="stage-history-notes">
-                        <i class="bi bi-chat-left-text"></i>
-                        {{ historyEntry.notes }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               <!-- Action Buttons -->
               <div class="attention-actions-tabs">
                 <button
                   v-if="getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')"
                   class="attention-action-tab"
-                  :class="{ 'attention-action-tab-active': extendedPaymentEntity }"
+                  :class="{
+                    'attention-action-tab-active': extendedPaymentEntity,
+                    'attention-action-tab-disabled': isAttentionTerminatedOrCancelled,
+                  }"
+                  :disabled="isAttentionTerminatedOrCancelled"
                   @click.prevent="showPaymentDetails()"
                 >
                   <i class="bi bi-cash-coin"></i>
@@ -1325,54 +1536,35 @@ export default {
                 <button
                   v-if="getActiveFeature(commerce, 'professional-assignment-enabled', 'PRODUCT')"
                   class="attention-action-tab"
-                  :class="{ 'attention-action-tab-active': extendedProfessionalEntity }"
+                  :class="{
+                    'attention-action-tab-active': extendedProfessionalEntity,
+                    'attention-action-tab-disabled': isAttentionTerminatedOrCancelled,
+                  }"
+                  :disabled="isAttentionTerminatedOrCancelled"
                   @click.prevent="showProfessionalDetails()"
                 >
                   <i class="bi bi-person-badge"></i>
                   <span>{{ $t('professionals.assignProfessional') }}</span>
                   <i
-                    :class="`bi ${extendedProfessionalEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
+                    :class="`bi ${
+                      extendedProfessionalEntity ? 'bi-chevron-up' : 'bi-chevron-down'
+                    }`"
                   ></i>
                 </button>
                 <button
                   v-if="getActiveFeature(commerce, 'attention-transfer-queue', 'PRODUCT')"
                   class="attention-action-tab"
-                  :class="{ 'attention-action-tab-active': extendedTransferEntity }"
+                  :class="{
+                    'attention-action-tab-active': extendedTransferEntity,
+                    'attention-action-tab-disabled': isAttentionTerminatedOrCancelled,
+                  }"
+                  :disabled="isAttentionTerminatedOrCancelled"
                   @click.prevent="showTransferDetails()"
                 >
                   <i class="bi bi-arrow-left-right"></i>
                   <span>{{ $t('collaboratorBookingsView.transferQueue') }}</span>
                   <i
                     :class="`bi ${extendedTransferEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-                  ></i>
-                </button>
-                <button
-                  v-if="
-                    getActiveFeature(commerce, 'attention-stages-enabled', 'PRODUCT') &&
-                    attention.currentStage &&
-                    getNextStages(attention.currentStage).length > 0
-                  "
-                  class="attention-action-tab"
-                  :class="{
-                    'attention-action-tab-active': goToAdvanceStage,
-                    'attention-action-tab-disabled': hasBlockingConsents(),
-                  }"
-                  :disabled="hasBlockingConsents()"
-                  @click.prevent="goAdvanceStage()"
-                  :title="
-                    hasBlockingConsents()
-                      ? $t('attention.lgpd.cannotAdvanceStage', {
-                          count: getBlockingConsentsCount(),
-                        })
-                      : ''
-                  "
-                >
-                  <i class="bi bi-arrow-right-circle"></i>
-                  <span>{{ $t('attention.advanceStage') || 'Avanzar Etapa' }}</span>
-                  <i v-if="hasBlockingConsents()" class="bi bi-shield-exclamation text-danger"></i>
-                  <i
-                    v-else
-                    :class="`bi ${goToAdvanceStage ? 'bi-chevron-up' : 'bi-chevron-down'}`"
                   ></i>
                 </button>
               </div>
@@ -1401,21 +1593,27 @@ export default {
                             ? attention.servicesId[0]
                             : undefined
                         "
+                        :service-ids="attention.servicesId || []"
+                        :services="attention.servicesDetails || []"
                         :confirm-payment="
                           getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')
                         "
                         :errors-add="errorsAdd"
                         :receive-data="receiveData"
                         :professional-name="getAssignedProfessionalCommissionData().name"
-                        :professional-commission="getAssignedProfessionalCommissionData().commission"
-                        :suggested-commission-amount="getAssignedProfessionalCommissionData().suggestedAmount"
+                        :professional-commission="
+                          getAssignedProfessionalCommissionData().commission
+                        "
+                        :suggested-commission-amount="
+                          getAssignedProfessionalCommissionData().suggestedAmount
+                        "
                       >
                       </PaymentForm>
                       <div class="attention-action-buttons">
                         <button
                           class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
                           @click="goConfirm()"
-                          :disabled="!canConfirmPayment()"
+                          :disabled="!canConfirmPayment() || isAttentionTerminatedOrCancelled"
                         >
                           <i class="bi bi-person-check-fill"></i>
                           {{ $t('collaboratorBookingsView.confirm') }}
@@ -1423,8 +1621,14 @@ export default {
                       </div>
                       <AreYouSure
                         :show="goToConfirm"
-                        :yes-disabled="(togglesLoaded && !toggles['collaborator.attentions.confirm'])"
-                        :no-disabled="(togglesLoaded && !toggles['collaborator.attentions.confirm'])"
+                        :yes-disabled="
+                          isAttentionTerminatedOrCancelled ||
+                          (togglesLoaded && !hasCollaboratorAttentionPermission('confirm'))
+                        "
+                        :no-disabled="
+                          isAttentionTerminatedOrCancelled ||
+                          (togglesLoaded && !hasCollaboratorAttentionPermission('confirm'))
+                        "
                         @actionYes="confirm()"
                         @actionNo="confirmCancel()"
                       >
@@ -1459,15 +1663,13 @@ export default {
                         <div v-if="attention.professionalName" class="professional-assigned-alert">
                           <i class="bi bi-person-badge-fill"></i>
                           <span class="alert-text">
-                            {{
-                              $t('professionals.alreadyAssigned') || 'Profesional ya asignado'
-                            }}:
+                            {{ $t('professionals.alreadyAssigned') || 'Profesional ya asignado' }}:
                             <strong>{{ attention.professionalName }}</strong>
                           </span>
                           <small class="alert-action">
                             {{
                               $t('professionals.canReplace') ||
-                                'Puede reemplazarlo seleccionando otro.'
+                              'Puede reemplazarlo seleccionando otro.'
                             }}
                           </small>
                         </div>
@@ -1489,7 +1691,9 @@ export default {
                           "
                           class="payment-form-field"
                         >
-                          <label class="payment-form-label">{{ $t('professionals.commission') }}</label>
+                          <label class="payment-form-label">{{
+                            $t('professionals.commission')
+                          }}</label>
                           <div class="d-flex align-items-center gap-2">
                             <input
                               v-model="professionalCommission"
@@ -1510,7 +1714,7 @@ export default {
                           <button
                             class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
                             @click="goAssignProfessional()"
-                            :disabled="!selectedProfessional || loading"
+                            :disabled="!selectedProfessional || loading || isAttentionTerminatedOrCancelled"
                           >
                             <i class="bi bi-person-check-fill"></i>
                             {{ $t('professionals.assignProfessional') }}
@@ -1518,8 +1722,12 @@ export default {
                         </div>
                         <AreYouSure
                           :show="goToAssignProfessional"
-                          :yes-disabled="!selectedProfessional || loading"
-                          :no-disabled="!selectedProfessional || loading"
+                          :yes-disabled="
+                            !selectedProfessional || loading || isAttentionTerminatedOrCancelled
+                          "
+                          :no-disabled="
+                            !selectedProfessional || loading || isAttentionTerminatedOrCancelled
+                          "
                           @actionYes="confirmAssignProfessional()"
                           @actionNo="cancelAssignProfessional()"
                         >
@@ -1579,8 +1787,8 @@ export default {
                           :disabled="
                             !queueToTransfer ||
                             loading ||
-                            !toggles ||
-                            !toggles['collaborator.attentions.transfer']
+                            isAttentionTerminatedOrCancelled ||
+                            (togglesLoaded && !hasCollaboratorAttentionPermission('transfer'))
                           "
                         >
                           <i class="bi bi-person-check-fill"></i>
@@ -1589,8 +1797,14 @@ export default {
                       </div>
                       <AreYouSure
                         :show="goToTransfer"
-                        :yes-disabled="(togglesLoaded && !toggles['collaborator.attentions.transfer'])"
-                        :no-disabled="(togglesLoaded && !toggles['collaborator.attentions.transfer'])"
+                        :yes-disabled="
+                          isAttentionTerminatedOrCancelled ||
+                          (togglesLoaded && !hasCollaboratorAttentionPermission('transfer'))
+                        "
+                        :no-disabled="
+                          isAttentionTerminatedOrCancelled ||
+                          (togglesLoaded && !hasCollaboratorAttentionPermission('transfer'))
+                        "
                         @actionYes="transfer()"
                         @actionNo="cancelTransfer()"
                       >
@@ -1600,121 +1814,6 @@ export default {
                       <Message
                         :title="$t('collaboratorBookingsView.message.6.title')"
                         :content="$t('collaboratorBookingsView.message.6.content')"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </Transition>
-
-              <!-- ADVANCE STAGE -->
-              <Transition name="slide-fade">
-                <div
-                  v-if="
-                    goToAdvanceStage &&
-                    getActiveFeature(commerce, 'attention-stages-enabled', 'PRODUCT') &&
-                    attention.currentStage
-                  "
-                  class="attention-action-section"
-                >
-                  <div class="attention-action-content">
-                    <div
-                      v-if="getNextStages(attention.currentStage).length > 0"
-                      class="attention-action-form"
-                    >
-                      <div class="attention-action-header">
-                        <i class="bi bi-arrow-right-circle"></i>
-                        <span>{{ $t('attention.advanceStage') || 'Avanzar Etapa' }}</span>
-                      </div>
-                      <div class="attention-stage-selector">
-                        <div class="attention-stage-info">
-                          <span class="attention-stage-label">{{
-                            $t('attention.advanceStage.selectNext') ||
-                            'Selecciona la siguiente etapa'
-                          }}</span>
-                          <div class="attention-stage-current">
-                            <i class="bi bi-arrow-right"></i>
-                            <span class="fw-bold">{{
-                              $t(`attention.stage.${attention.currentStage}`)
-                            }}</span>
-                          </div>
-                        </div>
-                        <select
-                          class="attention-select-modern"
-                          aria-label="Select next stage"
-                          v-model="selectedNextStage"
-                        >
-                          <option value="">
-                            {{ $t('attention.advanceStage.select') || 'Selecciona...' }}
-                          </option>
-                          <option
-                            v-for="stage in getNextStages(attention.currentStage)"
-                            :key="stage"
-                            :value="stage"
-                          >
-                            {{ $t(`attention.stage.${stage}`) }}
-                          </option>
-                        </select>
-                        <div class="attention-stage-notes mt-2">
-                          <label class="form-label">{{
-                            $t('attention.advanceStage.notes') || 'Notas (opcional)'
-                          }}</label>
-                          <textarea
-                            class="form-control"
-                            v-model="stageNotes"
-                            :placeholder="
-                              $t('attention.advanceStage.notesPlaceholder') ||
-                              'Agregar notas sobre esta transición...'
-                            "
-                            rows="3"
-                          ></textarea>
-                        </div>
-                      </div>
-                      <div class="attention-action-buttons">
-                        <button
-                          class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
-                          :class="{ 'btn-danger': hasBlockingConsents() }"
-                          @click="confirmAdvanceStage()"
-                          :disabled="!selectedNextStage || loading || hasBlockingConsents()"
-                          :title="
-                            hasBlockingConsents()
-                              ? $t('attention.lgpd.cannotAdvanceStage', {
-                                  count: getBlockingConsentsCount(),
-                                })
-                              : ''
-                          "
-                        >
-                          <i class="bi bi-arrow-right-circle-fill"></i>
-                          {{ $t('attention.advanceStage.confirm') || 'Avanzar' }}
-                        </button>
-                        <div v-if="hasBlockingConsents()" class="alert alert-danger mt-2 mb-0">
-                          <i class="bi bi-shield-exclamation"></i>
-                          {{
-                            $t('attention.lgpd.cannotAdvanceStage', {
-                              count: getBlockingConsentsCount(),
-                            }) ||
-                            `No se puede avanzar: faltan ${getBlockingConsentsCount()} consentimiento(s) bloqueante(s)`
-                          }}
-                        </div>
-                      </div>
-                      <AreYouSure
-                        :show="goToAdvanceStage && selectedNextStage"
-                        :yes-disabled="!selectedNextStage || loading"
-                        :no-disabled="!selectedNextStage || loading"
-                        @actionYes="confirmAdvanceStage()"
-                        @actionNo="cancelAdvanceStage()"
-                      >
-                      </AreYouSure>
-                    </div>
-                    <div v-else class="attention-action-message">
-                      <Message
-                        :title="
-                          $t('attention.advanceStage.noNextStages.title') ||
-                          'No hay siguientes etapas'
-                        "
-                        :content="
-                          $t('attention.advanceStage.noNextStages.content') ||
-                          'Esta atención ya está en la etapa final o no hay etapas siguientes disponibles.'
-                        "
                       />
                     </div>
                   </div>
@@ -1739,8 +1838,8 @@ export default {
                 <div class="attention-actions-confirmations">
                   <AreYouSure
                     :show="goToCancel"
-                    :yes-disabled="(togglesLoaded && !toggles['collaborator.attentions.cancel'])"
-                    :no-disabled="(togglesLoaded && !toggles['collaborator.attentions.cancel'])"
+                    :yes-disabled="togglesLoaded && !hasCollaboratorAttentionPermission('cancel')"
+                    :no-disabled="togglesLoaded && !hasCollaboratorAttentionPermission('cancel')"
                     @actionYes="cancel()"
                     @actionNo="cancelCancel()"
                   >
@@ -1754,7 +1853,10 @@ export default {
                   ><strong>Id:</strong> {{ attention.attentionId || attention.id }}</span
                 >
                 <span class="metric-card-details"
-                  ><strong>Date:</strong> {{ getDate(attention.createdDate) }}</span
+                  ><strong>Date:</strong>
+                  {{
+                    getDate(attention.createdAt || attention.createdDate || attention.date)
+                  }}</span
                 >
               </div>
             </div>
@@ -1907,6 +2009,29 @@ export default {
   letter-spacing: -0.01em;
   flex: 1;
   min-width: 0;
+}
+
+.attention-paid-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+  border-radius: 12px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.attention-paid-badge i {
+  font-size: 0.75rem;
+}
+
+.attention-paid-badge .paid-text {
+  line-height: 1;
 }
 
 .btn-copy-mini {
@@ -2159,6 +2284,17 @@ export default {
 .metric-card-details strong {
   font-weight: 600;
   color: rgba(0, 0, 0, 0.7);
+}
+
+/* Payment amount and commission value styling */
+.attention-context-value-inline.payment-amount-value {
+  color: #00c2cb;
+  font-weight: 700;
+}
+
+.attention-context-value-inline.payment-commission-value {
+  color: #f9c322;
+  font-weight: 700;
 }
 
 /* Icon Colors */
@@ -2523,151 +2659,6 @@ export default {
   font-weight: 700;
 }
 
-/* Stage History Section */
-.attention-stage-history-section {
-  margin-bottom: 0.5rem;
-  padding: 0.625rem 0.75rem;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(169, 169, 169, 0.2);
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.stage-history-timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-  position: relative;
-  padding-left: 1.5rem;
-}
-
-.stage-history-timeline::before {
-  content: '';
-  position: absolute;
-  left: 0.5rem;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: rgba(0, 194, 203, 0.2);
-}
-
-.stage-history-item {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-
-.stage-history-dot {
-  position: absolute;
-  left: -1.75rem;
-  top: 0.25rem;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: rgba(0, 194, 203, 0.3);
-  border: 2px solid rgba(0, 194, 203, 0.5);
-  z-index: 1;
-}
-
-.stage-history-active .stage-history-dot {
-  background: #00c2cb;
-  border-color: #004aad;
-  box-shadow: 0 0 0 3px rgba(0, 194, 203, 0.2);
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-
-@keyframes pulse-dot {
-  0%,
-  100% {
-    box-shadow: 0 0 0 3px rgba(0, 194, 203, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 0 6px rgba(0, 194, 203, 0);
-  }
-}
-
-.stage-history-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.stage-history-stage {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.stage-badge-history {
-  background: rgba(0, 194, 203, 0.15);
-  color: #00c2cb;
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  border: 1px solid rgba(0, 194, 203, 0.3);
-}
-
-.stage-history-active .stage-badge-history {
-  background: linear-gradient(135deg, rgba(0, 194, 203, 0.9) 0%, rgba(0, 74, 173, 0.9) 100%);
-  color: white;
-  border-color: rgba(0, 194, 203, 0.5);
-}
-
-.stage-current-indicator {
-  font-size: 0.625rem;
-  font-weight: 700;
-  color: #00c2cb;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.stage-history-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  font-size: 0.6875rem;
-  color: rgba(0, 0, 0, 0.6);
-}
-
-.stage-history-time,
-.stage-history-user,
-.stage-history-duration {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.stage-history-time i,
-.stage-history-user i,
-.stage-history-duration i {
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.4);
-}
-
-.stage-history-notes {
-  padding: 0.375rem 0.5rem;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 6px;
-  font-size: 0.6875rem;
-  color: rgba(0, 0, 0, 0.7);
-  font-style: italic;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.375rem;
-  border-left: 3px solid rgba(0, 194, 203, 0.3);
-}
-
-.stage-history-notes i {
-  color: rgba(0, 194, 203, 0.6);
-  font-size: 0.75rem;
-  margin-top: 0.125rem;
-  flex-shrink: 0;
-}
 
 .professional-assigned-alert {
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);

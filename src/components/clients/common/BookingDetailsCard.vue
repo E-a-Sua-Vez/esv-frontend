@@ -347,7 +347,10 @@ export default {
         <div class="status-badge-wrapper">
           <Popper :class="'dark'" arrow disable-click-away hover>
             <template #content>
-              <div>{{ $t('dashboard.clientCard.tooltip.status') || 'Estado do agendamento' }}: {{ getStatusText(booking?.status) }}</div>
+              <div>
+                {{ $t('dashboard.clientCard.tooltip.status') || 'Estado do agendamento' }}:
+                {{ getStatusText(booking?.status) }}
+              </div>
             </template>
             <span class="badge-mini status-badge" :class="getStatusBadgeClass(booking?.status)">
               <i :class="`bi ${clasifyStatus(booking?.status)}`"></i>

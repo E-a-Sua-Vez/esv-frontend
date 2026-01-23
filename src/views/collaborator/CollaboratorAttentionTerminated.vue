@@ -101,6 +101,13 @@
                     >
                     <span class="info-value">{{ attentionInfo.collaborator }}</span>
                   </div>
+                  <div v-if="attentionInfo.professional" class="attention-info-item">
+                    <i class="bi bi-person-badge"></i>
+                    <span class="info-label"
+                      >{{ $t('professionals.professional') || 'Profesional' }}:</span
+                    >
+                    <span class="info-value">{{ attentionInfo.professional }}</span>
+                  </div>
                   <div v-if="attentionInfo.bookingDate" class="attention-info-item">
                     <i class="bi bi-calendar-check"></i>
                     <span class="info-label"
@@ -255,6 +262,24 @@
 
         <!-- Success Message -->
 
+        <!-- Gestão de Atendimento (homologado con /atender y /checkout) -->
+        <div class="client-management-section my-3">
+          <h5 class="client-management-title">
+            {{
+              $t('collaboratorQueueAttentions.attentionManagement') ||
+              'Gestão de Atendimento:'
+            }}
+          </h5>
+
+          <!-- Payment / Transfer Card (reusable component) -->
+          <AttentionPaymentActionsCard
+            class="my-2"
+            :loading="loading"
+            :disabled="!state.attention || !state.attention.id"
+            @open="openAttentionModal()"
+          />
+        </div>
+
         <!-- Timeline Card (Collapsable) -->
         <div class="mb-4 timeline-wrapper">
           <AttentionTimeline
@@ -289,6 +314,17 @@
         :icon="'bi bi-emoji-expressionless'"
       />
     </div>
+
+    <!-- Attention Details Modal -->
+    <AttentionDetailsModal
+      :show="state.showAttentionModal"
+      :attention="state.selectedAttention || state.attention"
+      :commerce="state.commerce || commerce"
+      :queues="state.commerce?.queues || state.queue ? [state.queue] : []"
+      :toggles="state.toggles"
+      @close="closeAttentionModal"
+      @attention-updated="handleAttentionUpdatedFromModal"
+    />
   </div>
 </template>
 
@@ -324,6 +360,8 @@ import {
 } from '../../application/firebase';
 import AttentionStepBar from '../../components/attentions/common/AttentionStepBar.vue';
 import AttentionTimeline from '../../components/attentions/common/AttentionTimeline.vue';
+import AttentionDetailsModal from '../../components/attentions/common/AttentionDetailsModal.vue';
+import AttentionPaymentActionsCard from '../../components/attentions/common/AttentionPaymentActionsCard.vue';
 import QueueName from '../../components/common/QueueName.vue';
 import AttentionNumber from '../../components/common/AttentionNumber.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
@@ -338,6 +376,8 @@ export default {
   components: {
     AttentionStepBar,
     AttentionTimeline,
+    AttentionDetailsModal,
+    AttentionPaymentActionsCard,
     QueueName,
     AttentionNumber,
     ComponentMenu,
@@ -377,6 +417,8 @@ export default {
       queueProcessingDetails: [],
       queueTerminatedDetails: [],
       listUpdateKey: 0, // Key to force component re-render
+      showAttentionModal: false,
+      selectedAttention: undefined,
     });
 
     const collaboratorsMap = ref({});
@@ -992,6 +1034,14 @@ export default {
         info.collaborator = state.attention.collaboratorId;
       }
 
+      // Format professional
+      if (state.attention.professionalName) {
+        info.professional = state.attention.professionalName;
+      } else if (state.attention.professionalId) {
+        // If we only have the ID, show it
+        info.professional = state.attention.professionalId;
+      }
+
       // Format booking date if comes from booking
       if (state.attention.bookingId && state.booking) {
         const bookingDate = state.booking.date || state.booking.createdAt;
@@ -1288,6 +1338,41 @@ export default {
       }
     };
 
+    const openAttentionModal = () => {
+      state.selectedAttention = state.attention;
+      state.showAttentionModal = true;
+    };
+
+    const closeAttentionModal = () => {
+      state.showAttentionModal = false;
+      state.selectedAttention = undefined;
+    };
+
+    const handleAttentionUpdatedFromModal = async () => {
+      // Reload complete attention details to get updated status and all data
+      const updatedAttention = await getAttentionDetails(
+        state.attention.id,
+        state.currentUser?.id
+      );
+
+      // Update related state
+      if (updatedAttention.queue) {
+        state.queue = updatedAttention.queue;
+      }
+      if (updatedAttention.user) {
+        state.user = updatedAttention.user;
+      }
+      if (updatedAttention.commerce) {
+        state.commerce = updatedAttention.commerce;
+      }
+
+      // Update attention
+      state.attention = updatedAttention;
+
+      // Force stats update
+      statsUpdateTrigger.value++;
+    };
+
     return {
       state,
       loading,
@@ -1300,6 +1385,9 @@ export default {
       collaboratorsMap,
       goToQueue,
       getActiveFeature,
+      openAttentionModal,
+      closeAttentionModal,
+      handleAttentionUpdatedFromModal,
     };
   },
 };
@@ -1356,6 +1444,22 @@ export default {
 
 .attend-button i {
   font-size: 1.25rem;
+}
+
+/* Client Management Section Styles (homologado con /atender y /checkout) */
+.client-management-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.8);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(0, 74, 173, 0.2);
+}
+
+.client-management-section {
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  padding: 1rem;
 }
 
 /* Total Duration Card Styles */

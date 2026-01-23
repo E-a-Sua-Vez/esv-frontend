@@ -2,7 +2,11 @@
 import Popper from 'vue3-popper';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
-import { cancelBooking, confirmBooking, assignProfessional } from '../../../application/services/booking';
+import {
+  cancelBooking,
+  confirmBooking,
+  assignProfessional,
+} from '../../../application/services/booking';
 import { getActiveFeature } from '../../../shared/features';
 import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data.ts';
 import {
@@ -10,7 +14,10 @@ import {
   transferBooking,
   editBooking,
 } from '../../../application/services/booking';
-import { getActiveProfessionalsByCommerce } from '../../../application/services/professional';
+import {
+  getActiveProfessionalsByCommerce,
+  getProfessionalById,
+} from '../../../application/services/professional';
 import { getQueueById } from '../../../application/services/queue';
 import { getDate } from '../../../shared/utils/date';
 import { formatIdNumber } from '../../../shared/utils/idNumber';
@@ -23,7 +30,16 @@ import ProfessionalSelector from '../../professional/ProfessionalSelector.vue';
 
 export default {
   name: 'BookingDetailsCard',
-  components: { Popper, Spinner, Warning, AreYouSure, PaymentForm, Message, BookingDatePicker, ProfessionalSelector },
+  components: {
+    Popper,
+    Spinner,
+    Warning,
+    AreYouSure,
+    PaymentForm,
+    Message,
+    BookingDatePicker,
+    ProfessionalSelector,
+  },
   props: {
     show: { type: Boolean, default: true },
     booking: { type: Object, default: undefined },
@@ -88,11 +104,23 @@ export default {
   computed: {
     // Check if toggles have been loaded (not empty object)
     togglesLoaded() {
-      return this.toggles && typeof this.toggles === 'object' && Object.keys(this.toggles).length > 0;
+      return (
+        this.toggles && typeof this.toggles === 'object' && Object.keys(this.toggles).length > 0
+      );
     },
     // Check if booking is processed and cannot be modified
     isBookingProcessed() {
       return this.booking && (this.booking.processed || this.booking.status === 'PROCESSED');
+    },
+    // Check if booking is cancelled or processed (cannot perform actions)
+    isBookingCancelledOrProcessed() {
+      if (!this.booking) return false;
+      return (
+        this.booking.status === 'CANCELLED' ||
+        this.booking.status === 'USER_CANCELED' ||
+        this.booking.cancelled === true ||
+        this.isBookingProcessed
+      );
     },
   },
   methods: {
@@ -150,9 +178,12 @@ export default {
       }
 
       // 1. Primero intentar usar datos de confirmationData (guardados al asignar profesional)
-      if (this.booking?.confirmationData?.professionalCommissionType &&
-          this.booking?.confirmationData?.professionalCommissionValue) {
-        const { professionalCommissionType, professionalCommissionValue } = this.booking.confirmationData;
+      if (
+        this.booking?.confirmationData?.professionalCommissionType &&
+        this.booking?.confirmationData?.professionalCommissionValue
+      ) {
+        const { professionalCommissionType, professionalCommissionValue } =
+          this.booking.confirmationData;
         let suggestedAmount = 0;
         let commissionDisplay = '';
 
@@ -161,12 +192,16 @@ export default {
             commissionDisplay = `${professionalCommissionValue}%`;
             // Calculate percentage of payment amount if available
             if (this.newPaymentConfirmationData.paymentAmount) {
-              suggestedAmount = Math.round(this.newPaymentConfirmationData.paymentAmount * professionalCommissionValue / 100);
+              suggestedAmount = Math.round(
+                (this.newPaymentConfirmationData.paymentAmount * professionalCommissionValue) / 100,
+              );
             } else if (this.booking.confirmationData?.professionalCommissionAmount) {
               suggestedAmount = this.booking.confirmationData.professionalCommissionAmount;
             }
           } else {
-            commissionDisplay = `${professionalCommissionValue} ${this.commerce?.currency || 'BRL'}`;
+            commissionDisplay = `${professionalCommissionValue} ${
+              this.commerce?.currency || 'BRL'
+            }`;
             suggestedAmount = Number(professionalCommissionValue);
           }
         }
@@ -174,7 +209,7 @@ export default {
         return {
           name: this.booking.professionalName,
           commission: commissionDisplay,
-          suggestedAmount: suggestedAmount
+          suggestedAmount,
         };
       }
 
@@ -189,7 +224,9 @@ export default {
             commissionDisplay = `${commissionValue}%`;
             // Calculate percentage of payment amount if available
             if (this.newPaymentConfirmationData.paymentAmount) {
-              suggestedAmount = Math.round(this.newPaymentConfirmationData.paymentAmount * commissionValue / 100);
+              suggestedAmount = Math.round(
+                (this.newPaymentConfirmationData.paymentAmount * commissionValue) / 100,
+              );
             }
           } else {
             commissionDisplay = `${commissionValue} ${this.commerce?.currency || 'BRL'}`;
@@ -200,12 +237,16 @@ export default {
         return {
           name: this.booking.professionalName,
           commission: commissionDisplay,
-          suggestedAmount: suggestedAmount
+          suggestedAmount,
         };
       }
 
       // 3. Si hay professionalId pero no selectedProfessional, intentar cargar automáticamente
-      if (this.booking?.professionalId && !this.selectedProfessional && !this.loadingProfessionalData) {
+      if (
+        this.booking?.professionalId &&
+        !this.selectedProfessional &&
+        !this.loadingProfessionalData
+      ) {
         // Evitar loops infinitos con flag
         this.loadProfessionalDataIfNeeded();
       }
@@ -214,7 +255,7 @@ export default {
       return {
         name: this.booking.professionalName,
         commission: null,
-        suggestedAmount: 0
+        suggestedAmount: 0,
       };
     },
     async loadProfessionals() {
@@ -222,10 +263,17 @@ export default {
         console.log('[BookingDetailsCard] loadProfessionals - No booking or commerceId');
         return;
       }
-      console.log('[BookingDetailsCard] Loading professionals for commerce:', this.booking.commerceId);
+      console.log(
+        '[BookingDetailsCard] Loading professionals for commerce:',
+        this.booking.commerceId,
+      );
       try {
         this.professionals = await getActiveProfessionalsByCommerce(this.booking.commerceId);
-        console.log('[BookingDetailsCard] Professionals loaded:', this.professionals.length, this.professionals);
+        console.log(
+          '[BookingDetailsCard] Professionals loaded:',
+          this.professionals.length,
+          this.professionals,
+        );
       } catch (error) {
         console.error('[BookingDetailsCard] Error loading professionals:', error);
         this.professionals = [];
@@ -240,8 +288,14 @@ export default {
       this.loadingProfessionalData = true;
       try {
         // Solo cargar si existe professionalId pero no selectedProfessional
-        if (this.booking?.professionalId && !this.selectedProfessional) {
-          console.log('[BookingDetailsCard] Auto-loading professional data for:', this.booking.professionalId);
+        if (
+          this.booking?.professionalId &&
+          (!this.selectedProfessional || !this.selectedProfessional.financialInfo)
+        ) {
+          console.log(
+            '[BookingDetailsCard] Auto-loading professional data for:',
+            this.booking.professionalId,
+          );
 
           // Cargar profesionales si no están cargados
           if (this.professionals.length === 0) {
@@ -249,12 +303,21 @@ export default {
           }
 
           // Buscar el profesional asignado
-          const professional = this.professionals.find(p => p.id === this.booking.professionalId);
+          let professional =
+            this.professionals.find(p => p.id === this.booking.professionalId) || null;
+
+          // If not found or incomplete, fetch by id to ensure commission info is available
+          if (
+            !professional ||
+            !professional.financialInfo ||
+            professional.financialInfo.commissionValue === undefined
+          ) {
+            professional = await getProfessionalById(this.booking.professionalId);
+          }
+
           if (professional) {
             this.selectedProfessional = professional;
             console.log('[BookingDetailsCard] Professional data loaded:', professional);
-          } else {
-            console.warn('[BookingDetailsCard] Professional not found in loaded list:', this.booking.professionalId);
           }
         }
       } catch (error) {
@@ -265,7 +328,8 @@ export default {
     },
     goAssignProfessional() {
       if (!this.selectedProfessional) {
-        this.alertError = this.$t('professionals.selectProfessionalFirst') || 'Por favor seleccione un profesional';
+        this.alertError =
+          this.$t('professionals.selectProfessionalFirst') || 'Por favor seleccione un profesional';
         return;
       }
       this.goToAssignProfessional = !this.goToAssignProfessional;
@@ -275,14 +339,19 @@ export default {
     },
     async confirmAssignProfessional() {
       if (!this.selectedProfessional) {
-        this.alertError = this.$t('professionals.selectProfessionalFirst') || 'Por favor seleccione un profesional';
+        this.alertError =
+          this.$t('professionals.selectProfessionalFirst') || 'Por favor seleccione un profesional';
         return;
       }
       try {
         this.loading = true;
         this.alertError = '';
         if (this.booking && this.booking.id) {
-          await assignProfessional(this.booking.id, this.selectedProfessional.id, this.selectedProfessional.personalInfo?.name || this.selectedProfessional.name);
+          await assignProfessional(
+            this.booking.id,
+            this.selectedProfessional.id,
+            this.selectedProfessional.personalInfo?.name || this.selectedProfessional.name,
+          );
           this.$emit('booking-updated');
           this.goToAssignProfessional = false;
           this.extendedProfessionalEntity = false;
@@ -290,7 +359,11 @@ export default {
         this.loading = false;
       } catch (error) {
         this.loading = false;
-        this.alertError = error.response?.data?.message || error.message || this.$t('professionals.assignError') || 'Error al asignar profesional';
+        this.alertError =
+          error.response?.data?.message ||
+          error.message ||
+          this.$t('professionals.assignError') ||
+          'Error al asignar profesional';
       }
     },
     async showEditDetails() {
@@ -381,6 +454,11 @@ export default {
       return false;
     },
     async confirm() {
+      // Prevent action if booking is cancelled or processed
+      if (this.isBookingCancelledOrProcessed) {
+        this.alertError = 'No se puede confirmar el pago de una reserva cancelada o procesada';
+        return;
+      }
       try {
         this.loading = true;
         if (this.booking && this.booking.id) {
@@ -518,6 +596,11 @@ export default {
       }
     },
     async transfer() {
+      // Prevent action if booking is cancelled or processed
+      if (this.isBookingCancelledOrProcessed) {
+        this.alertError = 'No se puede transferir una reserva cancelada o procesada';
+        return;
+      }
       try {
         this.loading = true;
         if (!this.booking || !this.booking.id) {
@@ -676,7 +759,10 @@ export default {
           // AUTO-SUGGEST COMMISSION based on professional assigned and payment amount
           if (this.booking?.professionalName && data.paymentAmount > 0) {
             const commissionData = this.getAssignedProfessionalCommissionData();
-            if (commissionData.suggestedAmount > 0 && (!data.paymentCommission || data.paymentCommission === 0)) {
+            if (
+              commissionData.suggestedAmount > 0 &&
+              (!data.paymentCommission || data.paymentCommission === 0)
+            ) {
               this.newConfirmationData.paymentCommission = commissionData.suggestedAmount;
             }
           }
@@ -709,7 +795,8 @@ export default {
         }
         // Add the suggested commission amount (already calculated in PaymentForm)
         if (this.newConfirmationData.paymentCommission) {
-          this.newConfirmationData.professionalCommissionAmount = this.newConfirmationData.paymentCommission;
+          this.newConfirmationData.professionalCommissionAmount =
+            this.newConfirmationData.paymentCommission;
         }
         if (data.packagePaid !== undefined) {
           this.newConfirmationData.packagePaid = data.packagePaid;
@@ -908,7 +995,12 @@ export default {
                   <i class="bi bi-file-earmark-spreadsheet"></i>
                 </button>
                 <button
-                  v-if="booking && booking.status !== 'USER_CANCELED' && !booking.cancelled && !isBookingProcessed"
+                  v-if="
+                    booking &&
+                    booking.status !== 'USER_CANCELED' &&
+                    !booking.cancelled &&
+                    !isBookingProcessed
+                  "
                   class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3 card-action"
                   @click="goCancel()"
                   :disabled="
@@ -960,6 +1052,8 @@ export default {
         <div
           v-if="
             selectedQueue ||
+            (queue && queue.name) ||
+            (booking && booking.queueName) ||
             booking.block ||
             booking.professionalName ||
             (booking.services && booking.services.length > 0) ||
@@ -967,10 +1061,15 @@ export default {
           "
           class="attention-context-info-compact"
         >
-          <div v-if="selectedQueue" class="attention-context-item-inline">
+          <div
+            v-if="selectedQueue || (queue && queue.name) || (booking && booking.queueName)"
+            class="attention-context-item-inline"
+          >
             <i class="bi bi-person-lines-fill"></i>
             <span class="attention-context-label-inline">Fila</span>
-            <span class="attention-context-value-inline">{{ selectedQueue.name || 'N/I' }}</span>
+            <span class="attention-context-value-inline">{{
+              selectedQueue?.name || queue?.name || booking?.queueName || 'N/I'
+            }}</span>
           </div>
           <div v-if="booking.block" class="attention-context-item-inline">
             <i class="bi bi-clock-fill"></i>
@@ -982,7 +1081,9 @@ export default {
           </div>
           <div v-if="booking.professionalName" class="attention-context-item-inline">
             <i class="bi bi-person-badge"></i>
-            <span class="attention-context-label-inline">{{ $t('professionals.professional') || 'Profesional' }}</span>
+            <span class="attention-context-label-inline">{{
+              $t('professionals.professional') || 'Profesional'
+            }}</span>
             <span class="attention-context-value-inline">{{
               booking.professionalName || 'N/I'
             }}</span>
@@ -1149,22 +1250,22 @@ export default {
               <i class="bi bi-cash-coin"></i>
               {{
                 $t('collaboratorBookingsView.message.7.title') ||
-                  $t('collaboratorBookingsView.paymentConfirm')
+                $t('collaboratorBookingsView.paymentConfirm')
               }}
             </span>
           </div>
           <!-- Payment Details with Inline Labels Style -->
           <div class="attention-context-info-compact" v-if="booking.confirmationData">
-            <div
-              v-if="booking.confirmationData.paymentType"
-              class="attention-context-item-inline"
-            >
+            <div v-if="booking.confirmationData.paymentType" class="attention-context-item-inline">
               <i class="bi bi-credit-card"></i>
               <span class="attention-context-label-inline">
-                {{ $t('paymentDetails.paymentType') || 'Tipo de Pago' }}
+                {{ $t('collaboratorBookingsView.paymentType') || 'Tipo de Pago' }}
               </span>
               <span class="attention-context-value-inline">
-                {{ $t(`paymentTypes.${booking.confirmationData.paymentType}`) || booking.confirmationData.paymentType }}
+                {{
+                  $t(`paymentTypes.${booking.confirmationData.paymentType}`) ||
+                  booking.confirmationData.paymentType
+                }}
               </span>
             </div>
 
@@ -1174,10 +1275,26 @@ export default {
             >
               <i class="bi bi-wallet2"></i>
               <span class="attention-context-label-inline">
-                {{ $t('paymentDetails.paymentMethod') || 'Método de Pago' }}
+                {{ $t('collaboratorBookingsView.paymentMethod') || 'Método de Pago' }}
               </span>
               <span class="attention-context-value-inline">
-                {{ $t(`paymentClientMethods.${booking.confirmationData.paymentMethod}`) || booking.confirmationData.paymentMethod }}
+                {{
+                  $t(`paymentClientMethods.${booking.confirmationData.paymentMethod}`) ||
+                  booking.confirmationData.paymentMethod
+                }}
+              </span>
+            </div>
+
+            <div
+              v-if="booking.confirmationData.paymentFiscalNote"
+              class="attention-context-item-inline"
+            >
+              <i class="bi bi-receipt"></i>
+              <span class="attention-context-label-inline">
+                {{ $t('collaboratorBookingsView.fiscalNote') || 'Nota Fiscal' }}
+              </span>
+              <span class="attention-context-value-inline">
+                {{ booking.confirmationData.paymentFiscalNote }}
               </span>
             </div>
 
@@ -1187,10 +1304,20 @@ export default {
             >
               <i class="bi bi-coin"></i>
               <span class="attention-context-label-inline">
-                {{ $t('paymentDetails.paymentAmount') || 'Valor do Pagamento' }}
+                {{ $t('collaboratorBookingsView.paymentAmount') || 'Valor Pagado' }}
+              </span>
+              <span class="attention-context-value-inline payment-amount-value">
+                {{ booking.confirmationData.paymentAmount }}
+              </span>
+            </div>
+
+            <div v-if="booking.confirmationData.totalAmount" class="attention-context-item-inline">
+              <i class="bi bi-cash-stack"></i>
+              <span class="attention-context-label-inline">
+                {{ $t('collaboratorBookingsView.totalAmount') || 'Total' }}
               </span>
               <span class="attention-context-value-inline">
-                {{ booking.confirmationData.paymentAmount }}
+                {{ booking.confirmationData.totalAmount }}
               </span>
             </div>
 
@@ -1200,20 +1327,45 @@ export default {
             >
               <i class="bi bi-percent"></i>
               <span class="attention-context-label-inline">
-                {{ $t('paymentDetails.professionalCommission') || 'Comissão Profissional' }}
+                {{ $t('collaboratorBookingsView.commission') || 'Comissão' }}
               </span>
-              <span class="attention-context-value-inline">
+              <span class="attention-context-value-inline payment-commission-value">
                 {{ booking.confirmationData.paymentCommission }}
               </span>
             </div>
 
             <div
-              v-if="booking.confirmationData.paymentDate"
+              v-if="
+                booking.confirmationData.installments && booking.confirmationData.installments > 1
+              "
               class="attention-context-item-inline"
             >
               <i class="bi bi-calendar-check"></i>
               <span class="attention-context-label-inline">
-                {{ $t('paymentDetails.paymentDate') || 'Data do Pagamento' }}
+                {{ $t('collaboratorBookingsView.installments') || 'Parcelas' }}
+              </span>
+              <span class="attention-context-value-inline">
+                {{ booking.confirmationData.installments }}
+              </span>
+            </div>
+
+            <div
+              v-if="booking.confirmationData.packageId && booking.packageName"
+              class="attention-context-item-inline"
+            >
+              <i class="bi bi-box-seam"></i>
+              <span class="attention-context-label-inline">
+                {{ $t('package.package') || 'Pacote' }}
+              </span>
+              <span class="attention-context-value-inline">
+                {{ booking.packageName }}
+              </span>
+            </div>
+
+            <div v-if="booking.confirmationData.paymentDate" class="attention-context-item-inline">
+              <i class="bi bi-calendar-check"></i>
+              <span class="attention-context-label-inline">
+                {{ $t('collaboratorBookingsView.paymentDate') || 'Data do Pagamento' }}
               </span>
               <span class="attention-context-value-inline">
                 {{ getDate(booking.confirmationData.paymentDate) }}
@@ -1227,23 +1379,23 @@ export default {
         ></div>
 
         <!-- Action Buttons -->
-        <div class="attention-actions-tabs" v-if="!isBookingProcessed && booking.status !== 'USER_CANCELED' && !booking.cancelled">
+        <div
+          class="attention-actions-tabs"
+          v-if="!isBookingProcessed && booking.status !== 'USER_CANCELED' && !booking.cancelled"
+        >
           <button
             v-if="
               getActiveFeature(commerce, 'booking-confirm', 'PRODUCT') &&
-              toggles && toggles['collaborator.bookings.confirm'] &&
-              booking.status !== 'USER_CANCELED' && !booking.cancelled &&
+              toggles &&
+              toggles['collaborator.bookings.confirm'] &&
+              booking.status !== 'USER_CANCELED' &&
+              !booking.cancelled &&
               !isBookingProcessed
             "
             class="attention-action-tab"
             :class="{ 'booking-action-tab-active': extendedPaymentEntity }"
             @click.prevent="showPaymentDetails()"
-            :disabled="
-              booking.status === 'USER_CANCELED' ||
-              booking.cancelled ||
-              isBookingProcessed ||
-              booking.confirmed
-            "
+            :disabled="isBookingCancelledOrProcessed || booking.confirmed"
           >
             <i class="bi bi-cash-coin"></i>
             <span>{{ $t('collaboratorBookingsView.paymentConfirm') }}</span>
@@ -1252,36 +1404,32 @@ export default {
           <button
             v-if="
               getActiveFeature(commerce, 'professional-assignment-enabled', 'PRODUCT') &&
-              booking.status !== 'USER_CANCELED' && !booking.cancelled &&
+              booking.status !== 'USER_CANCELED' &&
+              !booking.cancelled &&
               !isBookingProcessed
             "
             class="attention-action-tab"
             :class="{ 'booking-action-tab-active': extendedProfessionalEntity }"
             @click.prevent="showProfessionalDetails()"
-            :disabled="
-              booking.status === 'USER_CANCELED' ||
-              booking.cancelled ||
-              isBookingProcessed
-            "
+            :disabled="isBookingCancelledOrProcessed"
           >
             <i class="bi bi-person-badge"></i>
             <span>{{ $t('professionals.assignProfessional') }}</span>
-            <i :class="`bi ${extendedProfessionalEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+            <i
+              :class="`bi ${extendedProfessionalEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
+            ></i>
           </button>
           <button
             v-if="
               getActiveFeature(commerce, 'booking-transfer-queue', 'PRODUCT') &&
-              booking.status !== 'USER_CANCELED' && !booking.cancelled &&
+              booking.status !== 'USER_CANCELED' &&
+              !booking.cancelled &&
               !isBookingProcessed
             "
             class="attention-action-tab"
             :class="{ 'booking-action-tab-active': extendedTransferEntity }"
             @click.prevent="showTransferDetails()"
-            :disabled="
-              booking.status === 'USER_CANCELED' ||
-              booking.cancelled ||
-              isBookingProcessed
-            "
+            :disabled="isBookingCancelledOrProcessed"
           >
             <i class="bi bi-arrow-left-right"></i>
             <span>{{ $t('collaboratorBookingsView.transferQueue') }}</span>
@@ -1290,17 +1438,14 @@ export default {
           <button
             v-if="
               getActiveFeature(commerce, 'booking-edit', 'PRODUCT') &&
-              booking.status !== 'USER_CANCELED' && !booking.cancelled &&
+              booking.status !== 'USER_CANCELED' &&
+              !booking.cancelled &&
               !isBookingProcessed
             "
             class="attention-action-tab"
             :class="{ 'booking-action-tab-active': extendedEditEntity }"
             @click.prevent="showEditDetails()"
-            :disabled="
-              booking.status === 'USER_CANCELED' ||
-              booking.cancelled ||
-              isBookingProcessed
-            "
+            :disabled="isBookingCancelledOrProcessed"
           >
             <i class="bi bi-pencil-fill"></i>
             <span>{{ $t('collaboratorBookingsView.edit') }}</span>
@@ -1333,6 +1478,8 @@ export default {
                       ? booking.servicesId[0]
                       : undefined
                   "
+                  :service-ids="booking.servicesId || []"
+                  :services="booking.servicesDetails || booking.services || []"
                   :confirm-payment="
                     getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT')
                   "
@@ -1340,7 +1487,9 @@ export default {
                   :receive-data="receiveData"
                   :professional-name="getAssignedProfessionalCommissionData().name"
                   :professional-commission="getAssignedProfessionalCommissionData().commission"
-                  :suggested-commission-amount="getAssignedProfessionalCommissionData().suggestedAmount"
+                  :suggested-commission-amount="
+                    getAssignedProfessionalCommissionData().suggestedAmount
+                  "
                 >
                 </PaymentForm>
                 <div class="booking-action-buttons">
@@ -1348,9 +1497,9 @@ export default {
                     class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
                     @click="goConfirm2()"
                     :disabled="
+                      isBookingCancelledOrProcessed ||
                       booking.status === 'CONFIRMED' ||
                       booking.confirmed ||
-                      isBookingProcessed ||
                       (togglesLoaded && !toggles['collaborator.bookings.confirm'])
                     "
                   >
@@ -1360,8 +1509,14 @@ export default {
                 </div>
                 <AreYouSure
                   :show="goToConfirm2"
-                  :yes-disabled="(togglesLoaded && !toggles['collaborator.bookings.confirm'])"
-                  :no-disabled="(togglesLoaded && !toggles['collaborator.bookings.confirm'])"
+                  :yes-disabled="
+                    isBookingCancelledOrProcessed ||
+                    (togglesLoaded && !toggles['collaborator.bookings.confirm'])
+                  "
+                  :no-disabled="
+                    isBookingCancelledOrProcessed ||
+                    (togglesLoaded && !toggles['collaborator.bookings.confirm'])
+                  "
                   @actionYes="confirm()"
                   @actionNo="confirmCancel2()"
                 >
@@ -1392,21 +1547,22 @@ export default {
                   <span>{{ $t('professionals.assignProfessional') }}</span>
                 </div>
                 <div class="payment-form-content">
-                  <div
-                    v-if="booking.professionalName"
-                    class="professional-assigned-alert"
-                  >
+                  <div v-if="booking.professionalName" class="professional-assigned-alert">
                     <i class="bi bi-person-badge-fill"></i>
                     <span class="alert-text">
                       {{ $t('professionals.alreadyAssigned') || 'Profesional ya asignado' }}:
                       <strong>{{ booking.professionalName }}</strong>
                     </span>
                     <small class="alert-action">
-                      {{ $t('professionals.canReplace') || 'Puede reemplazarlo seleccionando otro.' }}
+                      {{
+                        $t('professionals.canReplace') || 'Puede reemplazarlo seleccionando otro.'
+                      }}
                     </small>
                   </div>
                   <div class="payment-form-field">
-                    <label class="payment-form-label">{{ $t('professionals.selectProfessional') }}</label>
+                    <label class="payment-form-label">{{
+                      $t('professionals.selectProfessional')
+                    }}</label>
                     <ProfessionalSelector
                       :professionals="professionals"
                       :filter-by-service="booking.servicesId"
@@ -1458,7 +1614,9 @@ export default {
                   <button
                     class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
                     @click="goAssignProfessional()"
-                    :disabled="!selectedProfessional || isBookingProcessed"
+                    :disabled="
+                      !selectedProfessional || isBookingCancelledOrProcessed
+                    "
                   >
                     <i class="bi bi-person-check-fill"></i>
                     {{ $t('professionals.assignProfessional') }}
@@ -1533,25 +1691,34 @@ export default {
                   </select>
                 </div>
                 <div class="booking-action-buttons">
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
-                    @click="goTransfer()"
-                    :disabled="
-                      !queueToTransfer || loading || !toggles['collaborator.bookings.transfer'] || isBookingProcessed
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
+                      @click="goTransfer()"
+                      :disabled="
+                        !queueToTransfer ||
+                        loading ||
+                        isBookingCancelledOrProcessed ||
+                        (togglesLoaded && !toggles['collaborator.bookings.transfer'])
+                      "
+                    >
+                      <i class="bi bi-person-check-fill"></i>
+                      {{ $t('collaboratorBookingsView.transfer') }}
+                    </button>
+                  </div>
+                  <AreYouSure
+                    :show="goToTransfer"
+                    :yes-disabled="
+                      isBookingCancelledOrProcessed ||
+                      (togglesLoaded && !toggles['collaborator.bookings.transfer'])
                     "
+                    :no-disabled="
+                      isBookingCancelledOrProcessed ||
+                      (togglesLoaded && !toggles['collaborator.bookings.transfer'])
+                    "
+                    @actionYes="transfer()"
+                    @actionNo="cancelTransfer()"
                   >
-                    <i class="bi bi-person-check-fill"></i>
-                    {{ $t('collaboratorBookingsView.transfer') }}
-                  </button>
-                </div>
-                <AreYouSure
-                  :show="goToTransfer"
-                  :yes-disabled="(togglesLoaded && !toggles['collaborator.bookings.transfer'])"
-                  :no-disabled="(togglesLoaded && !toggles['collaborator.bookings.transfer'])"
-                  @actionYes="transfer()"
-                  @actionNo="cancelTransfer()"
-                >
-                </AreYouSure>
+                  </AreYouSure>
               </div>
               <div v-else class="booking-action-message">
                 <Message
@@ -1625,8 +1792,8 @@ export default {
                 </div>
                 <AreYouSure
                   :show="goToEdit"
-                  :yes-disabled="(togglesLoaded && !toggles['collaborator.bookings.edit'])"
-                  :no-disabled="(togglesLoaded && !toggles['collaborator.bookings.edit'])"
+                  :yes-disabled="togglesLoaded && !toggles['collaborator.bookings.edit']"
+                  :no-disabled="togglesLoaded && !toggles['collaborator.bookings.edit']"
                   @actionYes="edit()"
                   @actionNo="cancelEdit()"
                 >
@@ -1635,13 +1802,22 @@ export default {
             </div>
           </div>
         </Transition>
-        <div class="attention-actions-footer" v-if="!loading && !isBookingProcessed && booking.status !== 'USER_CANCELED' && !booking.cancelled">
+        <div
+          class="attention-actions-footer"
+          v-if="
+            !loading &&
+            !isBookingProcessed &&
+            booking.status !== 'USER_CANCELED' &&
+            !booking.cancelled
+          "
+        >
           <div class="attention-actions-buttons">
             <button
               v-if="
                 getActiveFeature(commerce, 'booking-confirm', 'PRODUCT') &&
                 !getActiveFeature(commerce, 'booking-confirm-payment', 'PRODUCT') &&
-                toggles && toggles['collaborator.bookings.confirm']
+                toggles &&
+                toggles['collaborator.bookings.confirm']
               "
               class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
               @click="goConfirm1()"
@@ -1666,8 +1842,8 @@ export default {
             </AreYouSure>
             <AreYouSure
               :show="goToConfirm1"
-              :yes-disabled="(togglesLoaded && !toggles['collaborator.bookings.confirm'])"
-              :no-disabled="(togglesLoaded && !toggles['collaborator.bookings.confirm'])"
+              :yes-disabled="togglesLoaded && !toggles['collaborator.bookings.confirm']"
+              :no-disabled="togglesLoaded && !toggles['collaborator.bookings.confirm']"
               @actionYes="confirm()"
               @actionNo="confirmCancel1()"
             >
@@ -1677,7 +1853,8 @@ export default {
         <div class="attention-metadata-footer">
           <span class="metric-card-details"><strong>Id:</strong> {{ booking.id }}</span>
           <span class="metric-card-details"
-            ><strong>Date:</strong> {{ getDate(booking.createdAt) }}</span
+            ><strong>Date:</strong>
+            {{ getDate(booking.createdAt || booking.createdDate || booking.date) }}</span
           >
         </div>
       </div>
@@ -2685,6 +2862,17 @@ export default {
 .booking-metadata-footer .metric-card-details strong {
   font-weight: 600;
   color: rgba(0, 0, 0, 0.7);
+}
+
+/* Payment amount and commission value styling */
+.attention-context-value-inline.payment-amount-value {
+  color: #00c2cb;
+  font-weight: 700;
+}
+
+.attention-context-value-inline.payment-commission-value {
+  color: #f9c322;
+  font-weight: 700;
 }
 
 /* Booking Context Info - Reservation Details (Compact Horizontal) */

@@ -29,7 +29,11 @@ export default {
   <div class="desktop-page-header">
     <div class="row align-items-center mb-1 desktop-header-row">
       <div class="col-auto desktop-logo-wrapper">
-        <CommerceLogo :commerce-id="commerceId" :business-id="businessId" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :commerce-id="commerceId"
+          :business-id="businessId"
+          :loading="loading"
+        ></CommerceLogo>
       </div>
       <div class="col desktop-menu-wrapper" style="flex: 1 1 auto; min-width: 0">
         <ComponentMenu

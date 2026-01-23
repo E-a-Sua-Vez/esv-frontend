@@ -119,7 +119,7 @@ export default {
         template =>
           template.section === props.section &&
           (!template.documentType || template.documentType === props.documentType),
-      ),
+      )
     );
 
     const selectTemplate = templateId => {

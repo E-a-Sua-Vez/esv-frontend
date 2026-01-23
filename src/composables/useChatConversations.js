@@ -71,7 +71,6 @@ const totalUnreadChats = computed(() => {
 });
 
 export function useChatConversations() {
-
   /**
    * Inicializar listener de conversaciones del usuario
    */
@@ -313,11 +312,7 @@ export function useChatConversations() {
       if (Array.isArray(data.participants) && data.participants.length > 0) {
         participants = data.participants.map(p => {
           const baseId = p.userId || p.id;
-          const name =
-            p.userName ||
-            p.name ||
-            p.email ||
-            baseId;
+          const name = p.userName || p.name || p.email || baseId;
           const email = p.email || null;
           const type = p.userType || p.type || 'unknown';
 
@@ -348,15 +343,8 @@ export function useChatConversations() {
                 userId: id,
                 id,
                 userName:
-                  data.lastMessageSenderId.name ||
-                  data.lastMessageSenderId.email ||
-                  name ||
-                  id,
-                name:
-                  data.lastMessageSenderId.name ||
-                  data.lastMessageSenderId.email ||
-                  name ||
-                  id,
+                  data.lastMessageSenderId.name || data.lastMessageSenderId.email || name || id,
+                name: data.lastMessageSenderId.name || data.lastMessageSenderId.email || name || id,
                 email: data.lastMessageSenderId.email || email,
                 userType: 'unknown',
                 type: 'unknown',
@@ -490,10 +478,19 @@ export function useChatConversations() {
     }
 
     async function enrichConversationParticipants(list) {
-      console.log('[DEBUG] enrichConversationParticipants called with', list.length, 'conversations');
+      console.log(
+        '[DEBUG] enrichConversationParticipants called with',
+        list.length,
+        'conversations'
+      );
       const updates = [];
       for (const conv of list) {
-        console.log('[DEBUG] Processing conversation:', conv.id, 'with participants:', conv.participants);
+        console.log(
+          '[DEBUG] Processing conversation:',
+          conv.id,
+          'with participants:',
+          conv.participants
+        );
         if (!conv.participants) continue;
         for (const p of conv.participants) {
           console.log('[DEBUG] Processing participant:', p);
@@ -718,8 +715,12 @@ export function useChatConversations() {
               conversationId: m.conversationId,
               read: Boolean(m.read),
               status: m.status,
-              senderId: typeof m.senderId === 'object' ? m.senderId.id || m.senderId.userId : m.senderId,
-              recipientId: typeof m.recipientId === 'object' ? m.recipientId.id || m.recipientId.userId : m.recipientId,
+              senderId:
+                typeof m.senderId === 'object' ? m.senderId.id || m.senderId.userId : m.senderId,
+              recipientId:
+                typeof m.recipientId === 'object'
+                  ? m.recipientId.id || m.recipientId.userId
+                  : m.recipientId,
               createdAt: m.createdAt,
             }));
             console.groupCollapsed('[Chat] Mensajes recibidos en conversación', conversationId);
@@ -738,7 +739,9 @@ export function useChatConversations() {
             const isMine = recipientId => {
               if (!recipientId) return false;
               if (typeof recipientId === 'string') return ids.includes(recipientId);
-              const candidates = [recipientId.id, recipientId.userId, recipientId.uid].filter(Boolean);
+              const candidates = [recipientId.id, recipientId.userId, recipientId.uid].filter(
+                Boolean
+              );
               return candidates.some(v => ids.includes(v));
             };
             const toMark = updatedMessages
@@ -789,9 +792,12 @@ export function useChatConversations() {
                   // no volvemos a intentar por mensaje para evitar spam de errores.
                   if (res && res.skipped) {
                     if (import.meta.env && import.meta.env.DEV) {
-                      console.warn('[Chat] bulkMarkAsRead skipped by backend, no per-message retries', {
-                        count: toMark.length,
-                      });
+                      console.warn(
+                        '[Chat] bulkMarkAsRead skipped by backend, no per-message retries',
+                        {
+                          count: toMark.length,
+                        }
+                      );
                     }
                     return;
                   }

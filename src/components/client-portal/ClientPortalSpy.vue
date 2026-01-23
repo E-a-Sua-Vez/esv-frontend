@@ -24,7 +24,9 @@
               <i class="bi bi-clock-fill text-primary"></i>
             </div>
             <div class="spy-item-content">
-              <div class="spy-item-title">{{ booking.serviceName || $t('clientPortal.spy.service') }}</div>
+              <div class="spy-item-title">
+                {{ booking.serviceName || $t('clientPortal.spy.service') }}
+              </div>
               <div class="spy-item-subtitle">
                 {{ formatDate(booking.date) }} - {{ booking.time }}
               </div>
@@ -45,7 +47,9 @@
               <i class="bi bi-check-circle-fill text-success"></i>
             </div>
             <div class="spy-item-content">
-              <div class="spy-item-title">{{ lastAttention.serviceName || $t('clientPortal.spy.service') }}</div>
+              <div class="spy-item-title">
+                {{ lastAttention.serviceName || $t('clientPortal.spy.service') }}
+              </div>
               <div class="spy-item-subtitle">
                 {{ formatDate(lastAttention.date) }}
               </div>
@@ -179,7 +183,9 @@ export default {
       }
 
       if (commerceIdentifier) {
-        const minisiteUrl = `${import.meta.env.VITE_URL}/publico/comercio/${commerceIdentifier}/filas`;
+        const minisiteUrl = `${
+          import.meta.env.VITE_URL
+        }/publico/comercio/${commerceIdentifier}/filas`;
         window.open(minisiteUrl, '_blank');
       } else {
         console.error('Cannot open minisite: no commerce identifier available');

@@ -89,11 +89,7 @@
             Próximas Atenciones
           </h6>
           <div class="upcoming-cards">
-            <div
-              v-for="attention in upcomingAttentions"
-              :key="attention.id"
-              class="upcoming-card"
-            >
+            <div v-for="attention in upcomingAttentions" :key="attention.id" class="upcoming-card">
               <div class="upcoming-icon">
                 <i class="bi bi-calendar-event"></i>
               </div>
@@ -145,10 +141,7 @@
               </div>
 
               <!-- Timeline line -->
-              <div
-                v-if="index < filteredAttentions.length - 1"
-                class="timeline-line-history"
-              ></div>
+              <div v-if="index < filteredAttentions.length - 1" class="timeline-line-history"></div>
 
               <!-- Attention card -->
               <div class="attention-card-modern">
@@ -183,10 +176,7 @@
                     </div>
                   </div>
 
-                  <div
-                    class="attention-info-row"
-                    v-if="attention.endAt || attention.duration"
-                  >
+                  <div class="attention-info-row" v-if="attention.endAt || attention.duration">
                     <div class="info-item-modern" v-if="attention.endAt">
                       <i class="bi bi-clock-history"></i>
                       <span>Fin: {{ formatTime(attention.endAt) }}</span>
@@ -259,11 +249,13 @@ export default {
     // Identificar próximas atenciones (pendientes en el futuro)
     const upcomingAttentions = computed(() => {
       const now = new Date();
-      return attentions.value.filter(attention => {
-        if (attention.status?.toLowerCase() !== 'pending') return false;
-        const attentionDate = new Date(attention.createdAt);
-        return attentionDate >= now;
-      }).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      return attentions.value
+        .filter(attention => {
+          if (attention.status?.toLowerCase() !== 'pending') return false;
+          const attentionDate = new Date(attention.createdAt);
+          return attentionDate >= now;
+        })
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     });
 
     const filteredAttentions = computed(() => {
@@ -354,7 +346,10 @@ export default {
         const storedCommerce = localStorage.getItem('clientPortalCommerce');
 
         if (!storedClient || !storedCommerce) {
-          router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
+          router.push({
+            name: 'client-portal-login',
+            params: { commerceSlug: commerceSlug.value },
+          });
           return;
         }
 
@@ -875,6 +870,3 @@ export default {
   }
 }
 </style>
-
-
-

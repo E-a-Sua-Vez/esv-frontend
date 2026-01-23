@@ -381,7 +381,7 @@ export default {
                   >
                     <div class="col">
                       <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
+                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                         @click="update(outcomeType)"
                         v-if="state.toggles['outcome-types.admin.update']"
                       >
@@ -474,7 +474,7 @@ export default {
                 />
                 <div class="col mt-3">
                   <button
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                     @click="add(state.newOutcomeType)"
                   >
                     {{ $t('businessOutcomeTypesAdmin.add') }} <i class="bi bi-save"></i>

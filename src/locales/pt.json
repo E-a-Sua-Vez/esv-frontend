@@ -232,6 +232,25 @@
     "PROMOTION": "Promoção",
     "RETURN": "Retorno"
   },
+  "paymentForm": {
+    "servicePrice": "Preço do serviço",
+    "servicePriceNote": "Usado como sugestão para o total (editável).",
+    "packagePaid": "Pacote Pago",
+    "packagePaidMessage": "Esta sessão está incluída no pacote pré-pago. Não é necessário pagamento adicional.",
+    "packagePendingIncomes": "Pagamentos pendentes: {count}",
+    "includedInPackage": "(Incluído no pacote)",
+    "tooltip": {
+      "totalAmount": "Total do Procedimento: Preço do serviço para esta sessão específica. Se for um pacote, mostra o preço do serviço desta sessão (não o total do pacote). Se for um serviço normal, mostra o preço do serviço. Este campo é editável.",
+      "paymentAmount": "Valor Pago: Valor que está sendo pago nesta transação. É calculado automaticamente como Total do Procedimento dividido pelo Número de Parcelas. Este campo é editável e você pode modificá-lo manualmente se necessário.",
+      "installments": "Número de Parcelas: Quantidade de parcelas em que o pagamento será dividido. O Valor Pago é calculado automaticamente como Total do Procedimento / Número de Parcelas. Exemplo: Se o total é 1000 e as parcelas são 4, cada parcela será de 250.",
+      "confirmInstallments": "Confirmar Parcela: Se estiver ativado (por padrão), todas as parcelas são criadas como CONFIRMADAS (pagas) imediatamente. Se estiver desativado, as parcelas são criadas como PENDENTES e requerem confirmação manual posterior.",
+      "paymentType": "Tipo de Pagamento: TOTALMENTE significa que está pagando o valor completo. PARCIAL significa que está pagando apenas uma parte do total.",
+      "paymentMethod": "Método de Pagamento: Forma em que o pagamento foi realizado (Dinheiro, Cartão de Crédito, Cartão de Débito, Transferência Bancária, Convênio de Saúde, etc.).",
+      "paymentFiscalNote": "Nota Fiscal: Tipo de documento fiscal que será emitido. NOTA_FISCAL é uma nota fiscal oficial. GERENCIAL é um documento gerencial interno.",
+      "paymentCommission": "Comissão de Pagamento: Valor da comissão associada a este pagamento. Pode ser uma porcentagem ou um valor fixo de acordo com a configuração do profissional.",
+      "paymentComment": "Comentário de Pagamento: Notas adicionais sobre este pagamento. Pode incluir informações relevantes sobre o método de pagamento, condições especiais ou qualquer outra observação (opcional)."
+    }
+  },
   "incomeTypes": {
     "FIRST_PAYMENT": "Primeiro Pagamento",
     "INSTALLMENT": "Parcelas",
@@ -2131,6 +2150,12 @@
     "totalAmount": "Total Procedimiento:",
     "installments": "Parcelas:",
     "paymentCommission": "Comissão:",
+    "commission": "Comissão",
+    "paymentType": "Tipo de Pagamento",
+    "paymentMethod": "Método de Pagamento",
+    "paymentAmount": "Valor Pago",
+    "paymentDate": "Data do Pagamento",
+    "fiscalNote": "Nota Fiscal",
     "paymentComment": "Comentário (Opcional)",
     "transferQueue": "Transferir Fila",
     "transfer": "Transferir",
@@ -2290,7 +2315,7 @@
       "noNextAttention": "Não há mais próximas atenções pendentes"
     },
     "clientManagement": "Gestão do Cliente:",
-    "attentionManagement": "Gestão da Atenção:",
+    "attentionManagement": "Gestão de Atendimento:",
     "capacitiesList": {
       "collaborator": {
         "attention": {
@@ -7076,6 +7101,18 @@
     "cancelledPackages": "Pacotes Cancelados",
     "noPackages": "Não há pacotes",
     "noPackagesMessage": "Não foram encontrados pacotes com os filtros selecionados",
+    "paymentInfo": "Informação de Pagamento",
+    "paidAmount": "Pago",
+    "remainingAmount": "Pendente",
+    "fullyPaid": "Completamente Pago",
+    "payRemaining": "Pagar Restante",
+    "prepayComplete": "Preparar Todo o Pacote",
+    "paymentHistory": "Histórico de Pagamentos",
+    "confirmed": "Confirmado",
+    "pending": "Pendente",
+    "installment": "Parcela",
+    "prepayCompleteMessage": "Será aberto o formulário de pagamento para preparar todo o pacote.",
+    "payRemainingMessage": "Será aberto o formulário de pagamento para pagar o valor restante.",
     "copy": "Copiar",
     "details": "Detalhes",
     "services": "Serviços",

@@ -1,5 +1,14 @@
 <script>
-import { ref, reactive, onBeforeMount, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
+import {
+  ref,
+  reactive,
+  onBeforeMount,
+  onMounted,
+  onUnmounted,
+  computed,
+  watch,
+  nextTick,
+} from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getBusinesses, updateBusiness, addBusiness } from '../../application/services/business';
@@ -1331,7 +1340,10 @@ export default {
                       @openLogoUpload="openLogoUpload"
                       @loadLogo="loadBusinessLogoPreview"
                     />
-                    <div class="col" v-if="state.extendedEntity === index && toggles['businesses.admin.read']">
+                    <div
+                      class="col"
+                      v-if="state.extendedEntity === index && toggles['businesses.admin.read']"
+                    >
                       <div class="d-flex gap-2 flex-wrap justify-content-center">
                         <button
                           class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
@@ -1349,7 +1361,11 @@ export default {
                           {{ $t('businessAdmin.viewAsBusiness') }}
                         </button>
                       </div>
-                      <div class="row g-1 errors mt-2" id="feedback" v-if="state.errorsUpdate.length > 0">
+                      <div
+                        class="row g-1 errors mt-2"
+                        id="feedback"
+                        v-if="state.errorsUpdate.length > 0"
+                      >
                         <Warning>
                           <template v-slot:message>
                             <li v-for="(error, errorIndex) in state.errorsUpdate" :key="errorIndex">
@@ -1798,7 +1814,10 @@ export default {
                       @openLogoUpload="openLogoUpload"
                       @loadLogo="loadBusinessLogoPreview"
                     />
-                    <div class="col" v-if="state.extendedEntity === index && toggles['businesses.admin.read']">
+                    <div
+                      class="col"
+                      v-if="state.extendedEntity === index && toggles['businesses.admin.read']"
+                    >
                       <div class="d-flex gap-2 flex-wrap justify-content-center">
                         <button
                           class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
@@ -1816,7 +1835,11 @@ export default {
                           {{ $t('businessAdmin.viewAsBusiness') }}
                         </button>
                       </div>
-                      <div class="row g-1 errors mt-2" id="feedback" v-if="state.errorsUpdate.length > 0">
+                      <div
+                        class="row g-1 errors mt-2"
+                        id="feedback"
+                        v-if="state.errorsUpdate.length > 0"
+                      >
                         <Warning>
                           <template v-slot:message>
                             <li v-for="(error, errorIndex) in state.errorsUpdate" :key="errorIndex">
@@ -2259,7 +2282,6 @@ export default {
   font-size: 1.5rem;
 }
 
-
 .section-toggle-button {
   width: 100%;
   display: flex;
@@ -2297,6 +2319,4 @@ export default {
 .section-toggle-button[aria-expanded='true']:hover {
   background: rgba(0, 0, 0, 0.95);
 }
-
 </style>
-

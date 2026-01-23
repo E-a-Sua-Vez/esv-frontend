@@ -72,13 +72,13 @@ defineEmits(['select', 'archive']);
 
 const { t } = useI18n();
 
-const looksLikeId = (s) => typeof s === 'string' && /^[A-Za-z0-9_-]{16,}$/.test(s);
+const looksLikeId = s => typeof s === 'string' && /^[A-Za-z0-9_-]{16,}$/.test(s);
 
-const getParticipantName = (conversation) => {
+const getParticipantName = conversation => {
   console.log('[DEBUG ChatConversationList] getParticipantName called with:', {
-    conversation: conversation,
+    conversation,
     participants: conversation.participants,
-    currentUserId: props.currentUserId
+    currentUserId: props.currentUserId,
   });
 
   if (!conversation.participants || conversation.participants.length < 2) {
@@ -113,7 +113,7 @@ const getParticipantName = (conversation) => {
 
     // 2) Buscar en participantIds si hay objeto con nombre/email
     if (!candidate && Array.isArray(conversation.participantIds)) {
-      const match = conversation.participantIds.find((entry) => {
+      const match = conversation.participantIds.find(entry => {
         const entryId = typeof entry === 'object' ? entry.id || entry.userId : entry;
         const otherId = otherParticipant?.userId || otherParticipant?.id;
         return entryId && otherId && entryId === otherId && typeof entry === 'object';
@@ -135,7 +135,7 @@ const getParticipantName = (conversation) => {
 
 // Eliminado el indicador por actividad reciente para evitar confusión.
 
-const formatTime = (timestamp) => {
+const formatTime = timestamp => {
   if (!timestamp) return '';
 
   const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -187,7 +187,9 @@ const formatTime = (timestamp) => {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .conversations {

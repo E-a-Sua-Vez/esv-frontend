@@ -411,7 +411,7 @@ export default {
                       <ModuleFormEdit :module="module" :toggles="state.toggles" :errors="{}" />
                       <div class="col">
                         <button
-                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
+                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                           @click="update(module)"
                           v-if="state.toggles['modules.admin.update']"
                         >

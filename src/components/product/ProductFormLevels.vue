@@ -38,9 +38,9 @@ export default {
           <i class="bi bi-info-circle-fill form-help-icon"></i>
         </Popper>
       </label>
-        <input
-          :id="`${prefix}product-actuallevel-form`"
-          :disabled="isAdd ? false : !toggles['products.admin.edit']"
+      <input
+        :id="`${prefix}product-actuallevel-form`"
+        :disabled="isAdd ? false : !toggles['products.admin.edit']"
         :min="0"
         type="number"
         class="form-control-modern"
@@ -59,9 +59,9 @@ export default {
           <i class="bi bi-info-circle-fill form-help-icon"></i>
         </Popper>
       </label>
-        <input
-          :id="`${prefix}product-optimumLevel-form`"
-          :disabled="isAdd ? false : !toggles['products.admin.edit']"
+      <input
+        :id="`${prefix}product-optimumLevel-form`"
+        :disabled="isAdd ? false : !toggles['products.admin.edit']"
         :min="0"
         type="number"
         class="form-control-modern"
@@ -80,9 +80,9 @@ export default {
           <i class="bi bi-info-circle-fill form-help-icon"></i>
         </Popper>
       </label>
-        <input
-          :id="`${prefix}product-replacementLevel-form`"
-          :disabled="isAdd ? false : !toggles['products.admin.edit']"
+      <input
+        :id="`${prefix}product-replacementLevel-form`"
+        :disabled="isAdd ? false : !toggles['products.admin.edit']"
         :min="0"
         type="number"
         class="form-control-modern"
@@ -101,9 +101,9 @@ export default {
           <i class="bi bi-info-circle-fill form-help-icon"></i>
         </Popper>
       </label>
-        <input
-          :id="`${prefix}product-maximumLevel-form`"
-          :disabled="isAdd ? false : !toggles['products.admin.edit']"
+      <input
+        :id="`${prefix}product-maximumLevel-form`"
+        :disabled="isAdd ? false : !toggles['products.admin.edit']"
         :min="0"
         type="number"
         class="form-control-modern"

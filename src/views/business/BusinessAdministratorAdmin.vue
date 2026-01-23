@@ -298,10 +298,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo
-          :business-id="state.business?.id"
-          :loading="loading"
-        ></CommerceLogo>
+        <CommerceLogo :business-id="state.business?.id" :loading="loading"></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessAdministratorAdmin.title`)"
           :toggles="state.toggles"
@@ -692,4 +689,3 @@ export default {
   height: 0em !important;
 }
 </style>
-

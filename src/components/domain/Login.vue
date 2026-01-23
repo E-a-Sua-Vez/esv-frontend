@@ -225,7 +225,9 @@ export default {
                 type="button"
                 class="password-toggle-btn"
                 @click="togglePasswordVisibility"
-                :aria-label="showPassword ? $t('loginData.hidePassword') : $t('loginData.showPassword')"
+                :aria-label="
+                  showPassword ? $t('loginData.hidePassword') : $t('loginData.showPassword')
+                "
               >
                 <i :class="showPassword ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'"></i>
               </button>

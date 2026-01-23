@@ -59,8 +59,8 @@ export default {
     const { t } = useI18n();
     const requesting = ref(false);
     let refreshIntervalId = null;
-    let currentInterval = ref(props.refreshInterval);
-    let errorCount = ref(0);
+    const currentInterval = ref(props.refreshInterval);
+    const errorCount = ref(0);
     const MAX_ERRORS = 3;
     const MAX_INTERVAL = 300000; // 5 minutos máximo
 
@@ -175,7 +175,6 @@ export default {
           clearInterval(refreshIntervalId);
           startPolling();
         }
-
       } catch (error) {
         console.error('Error refreshing consent status:', error);
 
@@ -255,7 +254,7 @@ export default {
     // Watch for changes in autoRefresh prop
     watch(
       () => props.autoRefresh,
-      (newValue) => {
+      newValue => {
         if (newValue) {
           startPolling();
         } else {

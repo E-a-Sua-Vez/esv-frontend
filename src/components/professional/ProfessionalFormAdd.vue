@@ -193,7 +193,11 @@ export default {
             v-if="services && services.length > 0"
             class="form-control-modern form-select-modern"
             @change="
-              onSelectService && onSelectService(professional, services.find(s => s.id === $event.target.value));
+              onSelectService &&
+                onSelectService(
+                  professional,
+                  services.find(s => s.id === $event.target.value)
+                );
               $event.target.value = '';
             "
           >
@@ -202,7 +206,13 @@ export default {
               {{ service.tag }}
             </option>
           </select>
-          <div v-if="professional.professionalInfo?.servicesId && professional.professionalInfo.servicesId.length > 0" class="selected-items-modern">
+          <div
+            v-if="
+              professional.professionalInfo?.servicesId &&
+              professional.professionalInfo.servicesId.length > 0
+            "
+            class="selected-items-modern"
+          >
             <span
               v-for="serviceId in professional.professionalInfo.servicesId"
               :key="serviceId"
@@ -271,11 +281,7 @@ export default {
             <i class="bi bi-info-circle-fill h7"></i>
           </Popper>
         </label>
-        <Toggle
-          v-model="localProfessional.active"
-          on-label=" "
-          off-label=" "
-        />
+        <Toggle v-model="localProfessional.active" on-label=" " off-label=" " />
       </div>
 
       <div class="form-group-modern form-group-toggle">
@@ -288,11 +294,7 @@ export default {
             <i class="bi bi-info-circle-fill h7"></i>
           </Popper>
         </label>
-        <Toggle
-          v-model="localProfessional.available"
-          on-label=" "
-          off-label=" "
-        />
+        <Toggle v-model="localProfessional.available" on-label=" " off-label=" " />
       </div>
     </div>
   </div>
@@ -392,7 +394,7 @@ export default {
   display: inline-flex;
   align-items: center;
   padding: 0.35rem 0.625rem;
-  background: linear-gradient(135deg, #004AAD 0%, #004AAD 100%);
+  background: linear-gradient(135deg, #004aad 0%, #004aad 100%);
   color: white;
   border-radius: 12px;
   font-size: 0.75rem;

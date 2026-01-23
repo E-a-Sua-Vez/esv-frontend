@@ -216,7 +216,7 @@ export default {
           component-name="businessConfiguration"
           @go-back="goBack"
         />
-         <div id="dashboard">
+        <div id="dashboard">
           <div v-if="isActiveBusiness()">
             <div v-if="!commerce" class="control-box">
               <Message

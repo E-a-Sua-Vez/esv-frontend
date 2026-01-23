@@ -144,7 +144,9 @@ export default {
     const isActiveBusiness = () => commerce.value && commerce.value.active === true;
     const getCommerceLink = () => {
       const commerceKeyName = commerce.value?.keyName;
-      return commerceKeyName ? `${import.meta.env.VITE_URL}/interno/comercio/${commerceKeyName}` : '';
+      return commerceKeyName
+        ? `${import.meta.env.VITE_URL}/interno/comercio/${commerceKeyName}`
+        : '';
     };
 
     const getClientPortalLink = () => {
@@ -325,7 +327,7 @@ export default {
         <div class="row align-items-center mb-1 desktop-header-row justify-content-start">
           <div class="col-auto desktop-logo-wrapper">
             <div class="desktop-commerce-logo">
-           <div id="commerce-logo-desktop">
+              <div id="commerce-logo-desktop">
                 <CommerceLogo
                   :business-id="business?.id"
                   :commerce-id="commerce?.id"

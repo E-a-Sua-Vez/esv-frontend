@@ -555,7 +555,11 @@ export default {
       const dateParts = birthday.split('-');
       if (dateParts.length !== 3) return '';
 
-      const birthDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+      const birthDate = new Date(
+        parseInt(dateParts[0]),
+        parseInt(dateParts[1]) - 1,
+        parseInt(dateParts[2]),
+      );
       const today = new Date();
 
       let years = today.getFullYear() - birthDate.getFullYear();

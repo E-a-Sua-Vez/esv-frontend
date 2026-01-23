@@ -76,7 +76,7 @@ export default {
             <div>
               {{
                 $t('businessCollaboratorsAdmin.commercesHelp') ||
-                  'Lista de comercios/unidades donde el colaborador puede atender. Selecciona uno o varios para asignar cobertura.'
+                'Lista de comercios/unidades donde el colaborador puede atender. Selecciona uno o varios para asignar cobertura.'
               }}
             </div>
           </template>
@@ -125,7 +125,7 @@ export default {
             <div>
               {{
                 $t('businessCollaboratorsAdmin.servicesHelp') ||
-                  'Servicios específicos que este colaborador puede prestar. Usa los íconos para agregar o quitar servicios asignados.'
+                'Servicios específicos que este colaborador puede prestar. Usa los íconos para agregar o quitar servicios asignados.'
               }}
             </div>
           </template>

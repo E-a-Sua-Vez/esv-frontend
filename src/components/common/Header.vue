@@ -1,13 +1,5 @@
 <script>
-import {
-  ref,
-  reactive,
-  onBeforeMount,
-  watch,
-  computed,
-  onMounted,
-  onBeforeUnmount,
-} from 'vue';
+import { ref, reactive, onBeforeMount, watch, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores/index';
 import { signOut, signInInvited } from '../../application/services/auth';
@@ -66,7 +58,7 @@ export default {
       permissionsLoaded,
       canSendMessages,
       canStartChats,
-      canSendMassMessages
+      canSendMassMessages,
     } = usePermissions();
 
     // Initialize message inbox for real-time count
@@ -310,11 +302,7 @@ export default {
       try {
         const user = state.currentUser;
         if (user && user.id && !chatListenerStarted.value && canAccessChatComponents.value) {
-          const role = user.master
-            ? 'master'
-            : user.businessId
-            ? 'administrator'
-            : 'collaborator';
+          const role = user.master ? 'master' : user.businessId ? 'administrator' : 'collaborator';
           const commerceId = user.commerceId || user.commerce?.id || null;
           startConversationsListener(user.id, role, commerceId);
           chatListenerStarted.value = true;
@@ -574,8 +562,12 @@ export default {
     // Watch for route changes to reload client photo and permissions
     watch(
       () => router.currentRoute.value.path,
-      (newPath) => {
-        if (newPath.startsWith('/portal/') || newPath.startsWith('/public/portal/') || newPath.startsWith('/publico/portal/')) {
+      newPath => {
+        if (
+          newPath.startsWith('/portal/') ||
+          newPath.startsWith('/public/portal/') ||
+          newPath.startsWith('/publico/portal/')
+        ) {
           // Eliminado: permisos ahora se actualizan vía watcher y localStorage
         } else {
           state.clientPortalPermissions = {};
@@ -654,7 +646,11 @@ export default {
     // Check if current route is a client portal route
     const isClientPortalRoute = computed(() => {
       const path = router.currentRoute.value.path;
-      return path.startsWith('/portal/') || path.startsWith('/public/portal/') || path.startsWith('/publico/portal/');
+      return (
+        path.startsWith('/portal/') ||
+        path.startsWith('/public/portal/') ||
+        path.startsWith('/publico/portal/')
+      );
     });
 
     // Get client portal data from localStorage
@@ -769,9 +765,11 @@ export default {
       if (isClientPortalRoute.value) {
         const options = [];
         if (state.clientPortalPermissions['client-portal.menu.consents']) options.push('consents');
-        if (state.clientPortalPermissions['client-portal.menu.telemedicine']) options.push('telemedicine');
+        if (state.clientPortalPermissions['client-portal.menu.telemedicine'])
+          options.push('telemedicine');
         if (state.clientPortalPermissions['client-portal.menu.profile']) options.push('profile');
-        if (state.clientPortalPermissions['client-portal.menu.documents']) options.push('documents');
+        if (state.clientPortalPermissions['client-portal.menu.documents'])
+          options.push('documents');
         if (state.clientPortalPermissions['client-portal.menu.history']) options.push('history');
         return options;
       }
@@ -793,7 +791,15 @@ export default {
           'client-portal',
         ];
       } else if (userType === USER_TYPES.COLLABORATOR) {
-        return ['queue-manage', 'booking-manage', 'tracing', 'product-stock', 'dashboard', 'go-minisite', 'client-portal'];
+        return [
+          'queue-manage',
+          'booking-manage',
+          'tracing',
+          'product-stock',
+          'dashboard',
+          'go-minisite',
+          'client-portal',
+        ];
       } else if (userType === USER_TYPES.MASTER) {
         return [
           'business-master-admin',
@@ -873,11 +879,11 @@ export default {
           const commerceSlug = routeParams.commerceSlug;
 
           const routeMap = {
-            'consents': 'client-portal-consents',
-            'telemedicine': 'client-portal-telemedicine',
-            'profile': 'client-portal-profile',
-            'documents': 'client-portal-documents',
-            'history': 'client-portal-history',
+            consents: 'client-portal-consents',
+            telemedicine: 'client-portal-telemedicine',
+            profile: 'client-portal-profile',
+            documents: 'client-portal-documents',
+            history: 'client-portal-history',
           };
 
           const routeName = routeMap[option];
@@ -1065,7 +1071,6 @@ export default {
 
       // Message count for menu
       menuUnreadCount,
-
     };
   },
 };
@@ -1150,7 +1155,9 @@ export default {
 
             <!-- Client Portal User Info -->
             <div
-              v-else-if="isClientPortalRoute && !isPublicCommerceQueueRoute() && getClientPortalData().client"
+              v-else-if="
+                isClientPortalRoute && !isPublicCommerceQueueRoute() && getClientPortalData().client
+              "
               class="user-info"
             >
               <a class="user-name-link" data-bs-toggle="modal" :data-bs-target="`#userModal`">
@@ -1228,7 +1235,9 @@ export default {
           </button>
           <!-- Client Portal Mobile Menu Toggle -->
           <button
-            v-else-if="isClientPortalRoute && !isPublicCommerceQueueRoute() && getClientPortalData().client"
+            v-else-if="
+              isClientPortalRoute && !isPublicCommerceQueueRoute() && getClientPortalData().client
+            "
             class="mobile-menu-toggle d-lg-none"
             @click="toggleMobileMenu"
             :aria-expanded="mobileMenuOpen"
@@ -2138,32 +2147,31 @@ export default {
     <!-- Internal Messages and Chat Inboxes -->
     <MessageInbox
       v-if="state.currentUser && state.currentUser.name !== 'invitado' && canAccessInbox"
-      :isOpen="inboxOpen"
+      :is-open="inboxOpen"
       :user-role="state.currentUserType || 'collaborator'"
       :user-data="{
         id: state.currentUser?.id,
         businessId: state.currentUser?.businessId,
         commerceId: state.currentUser?.commerceId,
         commerceIds: state.currentUser?.commerceIds,
-        commercesId: state.currentUser?.commercesId
+        commercesId: state.currentUser?.commercesId,
       }"
       @close="closeInbox"
     />
 
     <ChatInbox
       v-if="state.currentUser && state.currentUser.name !== 'invitado' && canAccessInbox"
-      :isOpen="chatInboxOpen"
+      :is-open="chatInboxOpen"
       :user-role="state.currentUserType || 'collaborator'"
       :user-data="{
         id: state.currentUser?.id,
         businessId: state.currentUser?.businessId,
         commerceId: state.currentUser?.commerceId,
         commerceIds: state.currentUser?.commerceIds,
-        commercesId: state.currentUser?.commercesId
+        commercesId: state.currentUser?.commercesId,
       }"
       @close="closeChatInbox"
     />
-
   </div>
 </template>
 

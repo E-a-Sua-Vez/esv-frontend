@@ -2504,16 +2504,21 @@ export default {
     });
 
     // Pagination functions
-    const getTotalPages = (stage) => {
-      const stageLeads = searchText.value && searchText.value.trim() !== ''
-        ? leads[stage].filter(lead => {
-            const searchTerm = searchText.value.toLowerCase().trim();
-            const name = (lead.name || '').toLowerCase();
-            const company = (lead.company || '').toLowerCase();
-            const email = (lead.email || '').toLowerCase();
-            return name.includes(searchTerm) || company.includes(searchTerm) || email.includes(searchTerm);
-          })
-        : leads[stage];
+    const getTotalPages = stage => {
+      const stageLeads =
+        searchText.value && searchText.value.trim() !== ''
+          ? leads[stage].filter(lead => {
+              const searchTerm = searchText.value.toLowerCase().trim();
+              const name = (lead.name || '').toLowerCase();
+              const company = (lead.company || '').toLowerCase();
+              const email = (lead.email || '').toLowerCase();
+              return (
+                name.includes(searchTerm) ||
+                company.includes(searchTerm) ||
+                email.includes(searchTerm)
+              );
+            })
+          : leads[stage];
       return Math.ceil(stageLeads.length / pageSize.value);
     };
 
@@ -2524,14 +2529,14 @@ export default {
       }
     };
 
-    const nextPage = (stage) => {
+    const nextPage = stage => {
       const totalPages = getTotalPages(stage);
       if (currentPages[stage] < totalPages) {
         currentPages[stage]++;
       }
     };
 
-    const prevPage = (stage) => {
+    const prevPage = stage => {
       if (currentPages[stage] > 1) {
         currentPages[stage]--;
       }
@@ -2898,233 +2903,264 @@ export default {
           </div>
 
           <!-- Mobile Filters Content (Collapsible) -->
-          <div class="d-block d-lg-none mobile-filters-wrapper" :class="{ 'collapsed': !showMobileFilters }">
+          <div
+            class="d-block d-lg-none mobile-filters-wrapper"
+            :class="{ collapsed: !showMobileFilters }"
+          >
             <div class="mobile-filters-content">
-          <!-- Search Filter Row -->
-          <div class="filters-row mb-3">
-            <div class="filter-group flex-grow-1">
-              <div class="input-with-info">
-                <div class="d-flex gap-2 align-items-center">
-                  <div class="input-icon-wrapper flex-grow-1">
-                    <i class="bi bi-search input-icon"></i>
-                    <input
-                      type="text"
-                      class="form-control form-control-sm"
-                      v-model="searchText"
-                      :placeholder="$t('leadPipeline.searchPlaceholder') || 'Buscar por nombre, empresa o email...'"
-                    />
+              <!-- Search Filter Row -->
+              <div class="filters-row mb-3">
+                <div class="filter-group flex-grow-1">
+                  <div class="input-with-info">
+                    <div class="d-flex gap-2 align-items-center">
+                      <div class="input-icon-wrapper flex-grow-1">
+                        <i class="bi bi-search input-icon"></i>
+                        <input
+                          type="text"
+                          class="form-control form-control-sm"
+                          v-model="searchText"
+                          :placeholder="
+                            $t('leadPipeline.searchPlaceholder') ||
+                            'Buscar por nombre, empresa o email...'
+                          "
+                        />
+                      </div>
+                      <button
+                        v-if="searchText"
+                        class="btn btn-sm btn-outline-secondary"
+                        @click="searchText = ''"
+                        :title="$t('leadPipeline.clearSearch') || 'Limpar busca'"
+                      >
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    </div>
+                    <Popper
+                      class="filter-info-tooltip dark"
+                      arrow
+                      :content="$t('leadPipeline.searchLeads') || 'Buscar Leads'"
+                    >
+                      <i class="bi bi-info-circle filter-info-icon"></i>
+                    </Popper>
                   </div>
-                  <button
-                    v-if="searchText"
-                    class="btn btn-sm btn-outline-secondary"
-                    @click="searchText = ''"
-                    :title="$t('leadPipeline.clearSearch') || 'Limpar busca'"
-                  >
-                    <i class="bi bi-x-lg"></i>
-                  </button>
                 </div>
-                <Popper
-                  class="filter-info-tooltip dark"
-                  arrow
-                  :content="$t('leadPipeline.searchLeads') || 'Buscar Leads'"
-                >
-                  <i class="bi bi-info-circle filter-info-icon"></i>
-                </Popper>
               </div>
-            </div>
-          </div>
 
-          <!-- Date Filters Row -->
-          <div class="filters-row mb-3">
-            <div class="filter-group">
-              <div class="input-with-info">
-                <div class="input-icon-wrapper">
-                  <i class="bi bi-calendar-event input-icon"></i>
-                  <input
-                    id="filterFromDate"
-                    class="form-control form-control-sm compact-date-input"
-                    type="date"
-                    v-model="dateFilterFrom"
-                    @change="loadLeads(true)"
-                  />
+              <!-- Date Filters Row -->
+              <div class="filters-row mb-3">
+                <div class="filter-group">
+                  <div class="input-with-info">
+                    <div class="input-icon-wrapper">
+                      <i class="bi bi-calendar-event input-icon"></i>
+                      <input
+                        id="filterFromDate"
+                        class="form-control form-control-sm compact-date-input"
+                        type="date"
+                        v-model="dateFilterFrom"
+                        @change="loadLeads(true)"
+                      />
+                    </div>
+                    <Popper
+                      class="filter-info-tooltip dark"
+                      arrow
+                      :content="$t('leadPipeline.filterFromDate') || 'Data De'"
+                    >
+                      <i class="bi bi-info-circle filter-info-icon"></i>
+                    </Popper>
+                  </div>
                 </div>
-                <Popper
-                  class="filter-info-tooltip dark"
-                  arrow
-                  :content="$t('leadPipeline.filterFromDate') || 'Data De'"
-                >
-                  <i class="bi bi-info-circle filter-info-icon"></i>
-                </Popper>
-              </div>
-            </div>
-            <div class="filter-group">
-              <div class="input-with-info">
-                <div class="input-icon-wrapper">
-                  <i class="bi bi-calendar-check input-icon"></i>
-                  <input
-                    id="filterToDate"
-                    class="form-control form-control-sm compact-date-input"
-                    type="date"
-                    v-model="dateFilterTo"
-                    @change="loadLeads(true)"
-                  />
+                <div class="filter-group">
+                  <div class="input-with-info">
+                    <div class="input-icon-wrapper">
+                      <i class="bi bi-calendar-check input-icon"></i>
+                      <input
+                        id="filterToDate"
+                        class="form-control form-control-sm compact-date-input"
+                        type="date"
+                        v-model="dateFilterTo"
+                        @change="loadLeads(true)"
+                      />
+                    </div>
+                    <Popper
+                      class="filter-info-tooltip dark"
+                      arrow
+                      :content="$t('leadPipeline.filterToDate') || 'Data Até'"
+                    >
+                      <i class="bi bi-info-circle filter-info-icon"></i>
+                    </Popper>
+                  </div>
                 </div>
-                <Popper
-                  class="filter-info-tooltip dark"
-                  arrow
-                  :content="$t('leadPipeline.filterToDate') || 'Data Até'"
-                >
-                  <i class="bi bi-info-circle filter-info-icon"></i>
-                </Popper>
-              </div>
-            </div>
-            <div class="filter-group-action">
-              <Popper
-                class="filter-info-tooltip dark"
-                arrow
-                :content="$t('leadPipeline.clearFilter') || 'Limpar Filtro'"
-              >
-                <button
-                  class="btn btn-sm btn-outline-dark clear-filter-btn"
-                  @click="resetDateFilters"
-                  :disabled="loading"
-                >
-                  <i class="bi bi-eraser-fill"></i>
-                </button>
-              </Popper>
-            </div>
-          </div>
-
-          <!-- Status Filters -->
-          <div class="filters-row mb-3">
-            <div class="filter-section-header">
-              <i class="bi bi-funnel-fill filter-section-icon-info"></i>
-              <span class="filter-section-label">Status</span>
-              <Popper
-                class="filter-info-tooltip dark"
-                arrow
-                :content="$t('leadPipeline.filterByStatus') || 'Filtrar por Status'"
-              >
-                <i class="bi bi-info-circle filter-info-icon"></i>
-              </Popper>
-            </div>
-            <div class="filter-buttons-group">
-              <Popper
-                v-for="status in Object.values(LEAD_STATUS)"
-                :key="status"
-                class="filter-info-tooltip dark"
-                arrow
-                :content="getStatusLabel(status)"
-              >
-                <button
-                  class="btn btn-sm filter-option-btn"
-                  :class="statusFilter.includes(status) ? 'btn-primary active' : 'btn-outline-primary'"
-                  @click="toggleStatusFilter(status)"
-                >
-                  <i :class="getStatusIcon(status)"></i>
-                </button>
-              </Popper>
-            </div>
-          </div>
-
-<!-- Compact Time Indicator Filters -->
-          <div class="row mb-2">
-            <div class="col-12">
-              <div class="compact-filter-section">
-                <Popper
-                  class="filter-tooltip dark"
-                  arrow
-                  :content="$t('leadPipeline.filterByTime') || 'Filtrar por Tempo desde Criação'"
-                >
-                  <span class="filter-section-icon">
-                    <i class="bi bi-clock-fill"></i>
-                  </span>
-                </Popper>
-                <div class="compact-filter-buttons">
+                <div class="filter-group-action">
                   <Popper
-                    class="filter-tooltip dark"
+                    class="filter-info-tooltip dark"
                     arrow
-                    :content="getTimeIndicatorLabel('green')"
+                    :content="$t('leadPipeline.clearFilter') || 'Limpar Filtro'"
                   >
                     <button
-                      class="btn btn-sm compact-filter-btn"
-                      :class="timeIndicatorFilter.includes('green') ? 'btn-success' : 'btn-outline-success'"
-                      @click="toggleTimeIndicatorFilter('green')"
+                      class="btn btn-sm btn-outline-dark clear-filter-btn"
+                      @click="resetDateFilters"
+                      :disabled="loading"
                     >
-                      <i class="bi bi-circle-fill" style="color: #28a745; font-size: 0.8rem"></i>
-                    </button>
-                  </Popper>
-                  <Popper
-                    class="filter-tooltip dark"
-                    arrow
-                    :content="getTimeIndicatorLabel('yellow')"
-                  >
-                    <button
-                      class="btn btn-sm compact-filter-btn"
-                      :class="timeIndicatorFilter.includes('yellow') ? 'btn-warning' : 'btn-outline-warning'"
-                      @click="toggleTimeIndicatorFilter('yellow')"
-                    >
-                      <i class="bi bi-circle-fill" style="color: #ffc107; font-size: 0.8rem"></i>
-                    </button>
-                  </Popper>
-                  <Popper
-                    class="filter-tooltip dark"
-                    arrow
-                    :content="getTimeIndicatorLabel('red')"
-                  >
-                    <button
-                      class="btn btn-sm compact-filter-btn"
-                      :class="timeIndicatorFilter.includes('red') ? 'btn-danger' : 'btn-outline-danger'"
-                      @click="toggleTimeIndicatorFilter('red')"
-                    >
-                      <i class="bi bi-circle-fill" style="color: #dc3545; font-size: 0.8rem"></i>
+                      <i class="bi bi-eraser-fill"></i>
                     </button>
                   </Popper>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <!-- Temperature Filters -->
-          <div class="row my-2">
-            <div class="col-12">
-              <label class="form-label small fw-bold mb-2">{{
-                $t('leadPipeline.filterByTemperature') || 'Filtrar por Prioridade'
-              }}</label>
-              <div class="d-flex flex-wrap gap-2 justify-content-center">
-                <button
-                  class="btn btn-sm rounded-pill"
-                  :class="
-                    temperatureFilter.includes('QUENTE') ? 'btn-danger' : 'btn-outline-danger'
-                  "
-                  @click="toggleTemperatureFilter('QUENTE')"
-                >
-                  <i class="bi bi-thermometer-half me-1"></i>
-                  {{ getTemperatureLabel('QUENTE') }}
-                </button>
-                <button
-                  class="btn btn-sm rounded-pill"
-                  :class="
-                    temperatureFilter.includes('MORNO') ? 'btn-success' : 'btn-outline-success'
-                  "
-                  @click="toggleTemperatureFilter('MORNO')"
-                >
-                  <i class="bi bi-thermometer-half me-1"></i>
-                  {{ getTemperatureLabel('MORNO') }}
-                </button>
-                <button
-                  class="btn btn-sm rounded-pill"
-                  :class="
-                    temperatureFilter.includes('FRIO') ? 'btn-primary' : 'btn-outline-primary'
-                  "
-                  @click="toggleTemperatureFilter('FRIO')"
-                >
-                  <i class="bi bi-thermometer-half me-1"></i>
-                  {{ getTemperatureLabel('FRIO') }}
-                </button>
+              <!-- Status Filters -->
+              <div class="filters-row mb-3">
+                <div class="filter-section-header">
+                  <i class="bi bi-funnel-fill filter-section-icon-info"></i>
+                  <span class="filter-section-label">Status</span>
+                  <Popper
+                    class="filter-info-tooltip dark"
+                    arrow
+                    :content="$t('leadPipeline.filterByStatus') || 'Filtrar por Status'"
+                  >
+                    <i class="bi bi-info-circle filter-info-icon"></i>
+                  </Popper>
+                </div>
+                <div class="filter-buttons-group">
+                  <Popper
+                    v-for="status in Object.values(LEAD_STATUS)"
+                    :key="status"
+                    class="filter-info-tooltip dark"
+                    arrow
+                    :content="getStatusLabel(status)"
+                  >
+                    <button
+                      class="btn btn-sm filter-option-btn"
+                      :class="
+                        statusFilter.includes(status) ? 'btn-primary active' : 'btn-outline-primary'
+                      "
+                      @click="toggleStatusFilter(status)"
+                    >
+                      <i :class="getStatusIcon(status)"></i>
+                    </button>
+                  </Popper>
+                </div>
               </div>
-            </div>
-          </div>
+
+              <!-- Compact Time Indicator Filters -->
+              <div class="row mb-2">
+                <div class="col-12">
+                  <div class="compact-filter-section">
+                    <Popper
+                      class="filter-tooltip dark"
+                      arrow
+                      :content="
+                        $t('leadPipeline.filterByTime') || 'Filtrar por Tempo desde Criação'
+                      "
+                    >
+                      <span class="filter-section-icon">
+                        <i class="bi bi-clock-fill"></i>
+                      </span>
+                    </Popper>
+                    <div class="compact-filter-buttons">
+                      <Popper
+                        class="filter-tooltip dark"
+                        arrow
+                        :content="getTimeIndicatorLabel('green')"
+                      >
+                        <button
+                          class="btn btn-sm compact-filter-btn"
+                          :class="
+                            timeIndicatorFilter.includes('green')
+                              ? 'btn-success'
+                              : 'btn-outline-success'
+                          "
+                          @click="toggleTimeIndicatorFilter('green')"
+                        >
+                          <i
+                            class="bi bi-circle-fill"
+                            style="color: #28a745; font-size: 0.8rem"
+                          ></i>
+                        </button>
+                      </Popper>
+                      <Popper
+                        class="filter-tooltip dark"
+                        arrow
+                        :content="getTimeIndicatorLabel('yellow')"
+                      >
+                        <button
+                          class="btn btn-sm compact-filter-btn"
+                          :class="
+                            timeIndicatorFilter.includes('yellow')
+                              ? 'btn-warning'
+                              : 'btn-outline-warning'
+                          "
+                          @click="toggleTimeIndicatorFilter('yellow')"
+                        >
+                          <i
+                            class="bi bi-circle-fill"
+                            style="color: #ffc107; font-size: 0.8rem"
+                          ></i>
+                        </button>
+                      </Popper>
+                      <Popper
+                        class="filter-tooltip dark"
+                        arrow
+                        :content="getTimeIndicatorLabel('red')"
+                      >
+                        <button
+                          class="btn btn-sm compact-filter-btn"
+                          :class="
+                            timeIndicatorFilter.includes('red')
+                              ? 'btn-danger'
+                              : 'btn-outline-danger'
+                          "
+                          @click="toggleTimeIndicatorFilter('red')"
+                        >
+                          <i
+                            class="bi bi-circle-fill"
+                            style="color: #dc3545; font-size: 0.8rem"
+                          ></i>
+                        </button>
+                      </Popper>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Temperature Filters -->
+              <div class="row my-2">
+                <div class="col-12">
+                  <label class="form-label small fw-bold mb-2">{{
+                    $t('leadPipeline.filterByTemperature') || 'Filtrar por Prioridade'
+                  }}</label>
+                  <div class="d-flex flex-wrap gap-2 justify-content-center">
+                    <button
+                      class="btn btn-sm rounded-pill"
+                      :class="
+                        temperatureFilter.includes('QUENTE') ? 'btn-danger' : 'btn-outline-danger'
+                      "
+                      @click="toggleTemperatureFilter('QUENTE')"
+                    >
+                      <i class="bi bi-thermometer-half me-1"></i>
+                      {{ getTemperatureLabel('QUENTE') }}
+                    </button>
+                    <button
+                      class="btn btn-sm rounded-pill"
+                      :class="
+                        temperatureFilter.includes('MORNO') ? 'btn-success' : 'btn-outline-success'
+                      "
+                      @click="toggleTemperatureFilter('MORNO')"
+                    >
+                      <i class="bi bi-thermometer-half me-1"></i>
+                      {{ getTemperatureLabel('MORNO') }}
+                    </button>
+                    <button
+                      class="btn btn-sm rounded-pill"
+                      :class="
+                        temperatureFilter.includes('FRIO') ? 'btn-primary' : 'btn-outline-primary'
+                      "
+                      @click="toggleTemperatureFilter('FRIO')"
+                    >
+                      <i class="bi bi-thermometer-half me-1"></i>
+                      {{ getTemperatureLabel('FRIO') }}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -3199,7 +3235,11 @@ export default {
                   class="btn btn-sm btn-dark mobile-action-btn"
                   @click="refreshLeads"
                   :disabled="loading"
-                  :title="loading ? ($t('leadPipeline.refreshing') || 'Refreshing...') : ($t('leadPipeline.refresh') || 'Refresh')"
+                  :title="
+                    loading
+                      ? $t('leadPipeline.refreshing') || 'Refreshing...'
+                      : $t('leadPipeline.refresh') || 'Refresh'
+                  "
                 >
                   <i class="bi bi-arrow-clockwise" :class="{ spinning: loading }"></i>
                 </button>
@@ -3369,7 +3409,9 @@ export default {
                     <h5>
                       <i class="bi bi-chat-dots-fill"></i>
                       {{ $t('leadPipeline.inContact') || 'In Contact' }}
-                      <span class="badge bg-warning text-dark">{{ leads.IN_CONTACT?.length || 0 }}</span>
+                      <span class="badge bg-warning text-dark">{{
+                        leads.IN_CONTACT?.length || 0
+                      }}</span>
                     </h5>
                     <!-- Pagination Controls -->
                     <div v-if="!showAll" class="pagination-controls">
@@ -3992,7 +4034,7 @@ export default {
           <!-- Desktop Filters Row -->
           <div class="desktop-filters-row">
             <!-- Search Filter -->
-            <div class="filter-group" style="max-width: 280px;">
+            <div class="filter-group" style="max-width: 280px">
               <div class="input-with-info">
                 <div class="input-icon-wrapper">
                   <i class="bi bi-search input-icon"></i>
@@ -4000,7 +4042,10 @@ export default {
                     type="text"
                     class="form-control form-control-sm compact-search-input"
                     v-model="searchText"
-                    :placeholder="$t('leadPipeline.searchPlaceholder') || 'Buscar por nombre, empresa o email...'"
+                    :placeholder="
+                      $t('leadPipeline.searchPlaceholder') ||
+                      'Buscar por nombre, empresa o email...'
+                    "
                   />
                   <button
                     v-if="searchText"
@@ -4103,7 +4148,9 @@ export default {
                 >
                   <button
                     class="btn btn-sm filter-option-btn"
-                    :class="statusFilter.includes(status) ? 'btn-primary active' : 'btn-outline-primary'"
+                    :class="
+                      statusFilter.includes(status) ? 'btn-primary active' : 'btn-outline-primary'
+                    "
                     @click="toggleStatusFilter(status)"
                   >
                     <i :class="getStatusIcon(status)"></i>
@@ -4132,7 +4179,11 @@ export default {
                   >
                     <button
                       class="btn btn-sm compact-filter-btn"
-                      :class="timeIndicatorFilter.includes('green') ? 'btn-success' : 'btn-outline-success'"
+                      :class="
+                        timeIndicatorFilter.includes('green')
+                          ? 'btn-success'
+                          : 'btn-outline-success'
+                      "
                       @click="toggleTimeIndicatorFilter('green')"
                     >
                       <i class="bi bi-circle-fill" style="color: #28a745; font-size: 0.8rem"></i>
@@ -4145,20 +4196,22 @@ export default {
                   >
                     <button
                       class="btn btn-sm compact-filter-btn"
-                      :class="timeIndicatorFilter.includes('yellow') ? 'btn-warning' : 'btn-outline-warning'"
+                      :class="
+                        timeIndicatorFilter.includes('yellow')
+                          ? 'btn-warning'
+                          : 'btn-outline-warning'
+                      "
                       @click="toggleTimeIndicatorFilter('yellow')"
                     >
                       <i class="bi bi-circle-fill" style="color: #ffc107; font-size: 0.8rem"></i>
                     </button>
                   </Popper>
-                  <Popper
-                    class="filter-tooltip dark"
-                    arrow
-                    :content="getTimeIndicatorLabel('red')"
-                  >
+                  <Popper class="filter-tooltip dark" arrow :content="getTimeIndicatorLabel('red')">
                     <button
                       class="btn btn-sm compact-filter-btn"
-                      :class="timeIndicatorFilter.includes('red') ? 'btn-danger' : 'btn-outline-danger'"
+                      :class="
+                        timeIndicatorFilter.includes('red') ? 'btn-danger' : 'btn-outline-danger'
+                      "
                       @click="toggleTimeIndicatorFilter('red')"
                     >
                       <i class="bi bi-circle-fill" style="color: #dc3545; font-size: 0.8rem"></i>
@@ -4188,33 +4241,31 @@ export default {
                   >
                     <button
                       class="btn btn-sm compact-filter-btn"
-                      :class="temperatureFilter.includes('QUENTE') ? 'btn-danger' : 'btn-outline-danger'"
+                      :class="
+                        temperatureFilter.includes('QUENTE') ? 'btn-danger' : 'btn-outline-danger'
+                      "
                       @click="toggleTemperatureFilter('QUENTE')"
                     >
                       <i class="bi bi-thermometer-high"></i>
                     </button>
                   </Popper>
-                  <Popper
-                    class="filter-tooltip dark"
-                    arrow
-                    :content="getTemperatureLabel('MORNO')"
-                  >
+                  <Popper class="filter-tooltip dark" arrow :content="getTemperatureLabel('MORNO')">
                     <button
                       class="btn btn-sm compact-filter-btn"
-                      :class="temperatureFilter.includes('MORNO') ? 'btn-success' : 'btn-outline-success'"
+                      :class="
+                        temperatureFilter.includes('MORNO') ? 'btn-success' : 'btn-outline-success'
+                      "
                       @click="toggleTemperatureFilter('MORNO')"
                     >
                       <i class="bi bi-thermometer-half"></i>
                     </button>
                   </Popper>
-                  <Popper
-                    class="filter-tooltip dark"
-                    arrow
-                    :content="getTemperatureLabel('FRIO')"
-                  >
+                  <Popper class="filter-tooltip dark" arrow :content="getTemperatureLabel('FRIO')">
                     <button
                       class="btn btn-sm compact-filter-btn"
-                      :class="temperatureFilter.includes('FRIO') ? 'btn-primary' : 'btn-outline-primary'"
+                      :class="
+                        temperatureFilter.includes('FRIO') ? 'btn-primary' : 'btn-outline-primary'
+                      "
                       @click="toggleTemperatureFilter('FRIO')"
                     >
                       <i class="bi bi-thermometer-snow"></i>
@@ -4268,10 +4319,18 @@ export default {
                   class="btn btn-sm btn-outline-primary rounded-pill px-3 py-2"
                   @click="toggleShowAll"
                   :disabled="loading"
-                  :title="showAll ? ($t('leadPipeline.showLimited') || 'Show Limited (20 per page)') : ($t('leadPipeline.showAll') || 'Show All Leads')"
+                  :title="
+                    showAll
+                      ? $t('leadPipeline.showLimited') || 'Show Limited (20 per page)'
+                      : $t('leadPipeline.showAll') || 'Show All Leads'
+                  "
                 >
                   <i class="bi me-1" :class="showAll ? 'bi-dash-circle' : 'bi-plus-circle'"></i>
-                  {{ showAll ? ($t('leadPipeline.showLimited') || 'Show Limited') : ($t('leadPipeline.showAll') || 'Show All') }}
+                  {{
+                    showAll
+                      ? $t('leadPipeline.showLimited') || 'Show Limited'
+                      : $t('leadPipeline.showAll') || 'Show All'
+                  }}
                 </button>
               </div>
             </div>
@@ -4422,7 +4481,10 @@ export default {
                     </div>
                     <div class="lead-card-accent"></div>
                   </div>
-                  <div v-if="!filteredLeads.NEW || filteredLeads.NEW.length === 0" class="empty-state">
+                  <div
+                    v-if="!filteredLeads.NEW || filteredLeads.NEW.length === 0"
+                    class="empty-state"
+                  >
                     <Message
                       :icon="'inbox'"
                       :title="$t('leadPipeline.noLeads') || 'No new leads'"
@@ -4437,7 +4499,9 @@ export default {
                 <div class="pipeline-header">
                   <h5>
                     <i class="bi bi-chat-dots-fill"></i> {{ $t('leadPipeline.inContact') }}
-                    <span class="badge bg-warning text-dark">{{ leads.IN_CONTACT?.length || 0 }}</span>
+                    <span class="badge bg-warning text-dark">{{
+                      leads.IN_CONTACT?.length || 0
+                    }}</span>
                   </h5>
                   <!-- Pagination Controls -->
                   <div v-if="!showAll" class="pagination-controls">
@@ -5384,7 +5448,7 @@ export default {
                           class="form-control-modern flex-grow-1"
                           v-model="tempMessage"
                           rows="5"
-                          style="min-width: 400px;"
+                          style="min-width: 400px"
                           :placeholder="$t('leadPipeline.messagePlaceholder') || 'Enter message...'"
                         ></textarea>
                         <div
@@ -5398,10 +5462,7 @@ export default {
                           v-if="selectedLead.id"
                           class="btn btn-sm btn-dark rounded-pill px-3"
                           @click="saveMessage"
-                          :disabled="
-                            loading ||
-                            tempMessage === (selectedLead?.message || '')
-                          "
+                          :disabled="loading || tempMessage === (selectedLead?.message || '')"
                           :title="
                             tempMessage === (selectedLead?.message || '')
                               ? 'No changes to save'
@@ -7965,8 +8026,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Enhanced Tooltip Styles */
@@ -7987,19 +8052,19 @@ export default {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-:deep(.filter-info-tooltip.dark .popper[data-popper-placement^="top"] > .popper__arrow) {
+:deep(.filter-info-tooltip.dark .popper[data-popper-placement^='top'] > .popper__arrow) {
   border-top-color: #2d3748;
 }
 
-:deep(.filter-info-tooltip.dark .popper[data-popper-placement^="bottom"] > .popper__arrow) {
+:deep(.filter-info-tooltip.dark .popper[data-popper-placement^='bottom'] > .popper__arrow) {
   border-bottom-color: #2d3748;
 }
 
-:deep(.filter-info-tooltip.dark .popper[data-popper-placement^="left"] > .popper__arrow) {
+:deep(.filter-info-tooltip.dark .popper[data-popper-placement^='left'] > .popper__arrow) {
   border-left-color: #2d3748;
 }
 
-:deep(.filter-info-tooltip.dark .popper[data-popper-placement^="right"] > .popper__arrow) {
+:deep(.filter-info-tooltip.dark .popper[data-popper-placement^='right'] > .popper__arrow) {
   border-right-color: #2d3748;
 }
 

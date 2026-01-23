@@ -38,7 +38,7 @@ export default {
     ComponentMenu,
     DesktopPageHeader,
     Popper,
-    CommerceLogo
+    CommerceLogo,
   },
   async setup() {
     const router = useRouter();
@@ -482,15 +482,13 @@ export default {
 
           if (collaboratorType === 'STANDARD') {
             // STANDARD: Only sees their own professional queues + non-professional queues
-            const professionalQueues = (state.groupedQueues['PROFESSIONAL'] || []).filter(
-              queue => {
-                // Use professionalId if available, otherwise fallback to collaboratorId
-                if (state.professional && state.professional.id) {
-                  return queue.professionalId === state.professional.id;
-                }
-                return queue.collaboratorId === state.collaborator.id;
+            const professionalQueues = (state.groupedQueues['PROFESSIONAL'] || []).filter(queue => {
+              // Use professionalId if available, otherwise fallback to collaboratorId
+              if (state.professional && state.professional.id) {
+                return queue.professionalId === state.professional.id;
               }
-            );
+              return queue.collaboratorId === state.collaborator.id;
+            });
             const otherQueues = allQueues.filter(queue => queue.type !== 'PROFESSIONAL');
             state.queues = [...professionalQueues, ...otherQueues];
           } else if (collaboratorType === 'ASSISTANT') {
@@ -834,33 +832,31 @@ export default {
       const activeQueues = state.queues.filter(queue => queue && queue.active && queue.id);
 
       // 1. PROFESSIONAL queues - logic should match initQueues filtering
-      const collaboratorQueues = activeQueues.filter(
-        queue => {
-          if (queue.type !== 'PROFESSIONAL') return false;
+      const collaboratorQueues = activeQueues.filter(queue => {
+        if (queue.type !== 'PROFESSIONAL') return false;
 
-          // For FULL type collaborators: show all PROFESSIONAL queues
-          if (state.collaborator?.type === 'FULL') {
-            return true;
-          }
-
-          // For STANDARD type: show only their professional queues
-          if (state.collaborator?.type === 'STANDARD') {
-            // Use professionalId if available, otherwise fallback to collaboratorId
-            if (state.professional && state.professional.id) {
-              return queue.professionalId === state.professional.id;
-            }
-            return queue.collaboratorId === state.collaborator?.id;
-          }
-
-          // For ASSISTANT: no professional queues (handled in initQueues)
-          if (state.collaborator?.type === 'ASSISTANT') {
-            return false;
-          }
-
-          // For other types: show all PROFESSIONAL queues
+        // For FULL type collaborators: show all PROFESSIONAL queues
+        if (state.collaborator?.type === 'FULL') {
           return true;
         }
-      );
+
+        // For STANDARD type: show only their professional queues
+        if (state.collaborator?.type === 'STANDARD') {
+          // Use professionalId if available, otherwise fallback to collaboratorId
+          if (state.professional && state.professional.id) {
+            return queue.professionalId === state.professional.id;
+          }
+          return queue.collaboratorId === state.collaborator?.id;
+        }
+
+        // For ASSISTANT: no professional queues (handled in initQueues)
+        if (state.collaborator?.type === 'ASSISTANT') {
+          return false;
+        }
+
+        // For other types: show all PROFESSIONAL queues
+        return true;
+      });
 
       // 2. General queues (SELECT_SERVICE type)
       const generalQueues = activeQueues.filter(queue => queue.type === 'SELECT_SERVICE');
@@ -909,7 +905,8 @@ export default {
         <CommerceLogo
           :commerce-id="commerce?.id"
           :business-id="state.business?.id"
-          :loading="loading"></CommerceLogo>
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`collaboratorQueuesView.welcome`)"
           :toggles="state.toggles"

@@ -6,11 +6,14 @@
       <div class="inbox-header">
         <h3>{{ $t('messages.inbox') }}</h3>
         <div class="header-actions">
-
           <!-- Botón ‘Nuevo mensaje’ para no-master (toma label según pestaña) -->
 
           <button
-            v-if="(canSendMessages || canStartChats) && activeTab !== 'sent' && currentUserType.value !== 'master'"
+            v-if="
+              (canSendMessages || canStartChats) &&
+              activeTab !== 'sent' &&
+              currentUserType.value !== 'master'
+            "
             @click="openComposer"
             class="compose-button"
             :title="activeTab === 'chat' ? $t('chat.newChat') : $t('messages.compose.newMessage')"
@@ -117,9 +120,9 @@
           <div class="chat-layout">
             <ChatConversationList
               :conversations="conversations"
-              :activeId="activeConversationId"
+              :active-id="activeConversationId"
               :loading="chatLoading"
-              :currentUserId="currentUserId"
+              :current-user-id="currentUserId"
               @select="handleSelectConversation"
               @archive="handleArchiveConversation"
             />
@@ -128,7 +131,7 @@
                 v-if="activeConversationId"
                 :conversation="activeConversation"
                 :messages="chatMessages"
-                :currentUserId="currentUserId"
+                :current-user-id="currentUserId"
                 @send="handleSendChatMessage"
                 @markRead="markChatMessageAsRead"
               />
@@ -142,7 +145,11 @@
 
         <!-- Regular messages view (for other tabs) -->
         <div v-else-if="loading" class="loading-state">
-          <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #004aad;"></div>
+          <div
+            class="spinner-border"
+            role="status"
+            style="width: 3rem; height: 3rem; color: #004aad"
+          ></div>
           <p>{{ $t('messages.loading') }}</p>
         </div>
 
@@ -186,7 +193,10 @@
       :mass-mode="composerMode === 'mass'"
       :user-role="userRole"
       :user-data="userData"
-      @close="composerOpen = false; composerMode = 'single'"
+      @close="
+        composerOpen = false;
+        composerMode = 'single';
+      "
       @sent="handleMessageSent"
     />
   </div>
@@ -307,7 +317,7 @@ const baseCountMessages = computed(() => {
   let msgs = filteredMessages.value;
   if (isMasterUser?.value) {
     const uid = store.getCurrentUser?.id;
-    const matchesSender = (m) => {
+    const matchesSender = m => {
       const s = m?.senderId;
       if (!uid || !s) return false;
       if (typeof s === 'string') return s === uid;
@@ -322,7 +332,9 @@ const baseCountMessages = computed(() => {
 // Tabs
 const tabs = computed(() => {
   if (userRole.value === 'master') {
-    const massCount = filteredMessages.value.filter(m => m.mass === true || m.metadata?.mass === true).length;
+    const massCount = filteredMessages.value.filter(
+      m => m.mass === true || m.metadata?.mass === true,
+    ).length;
     return [
       {
         value: 'sent',
@@ -365,7 +377,7 @@ const tabs = computed(() => {
 const tabFilteredMessages = computed(() => {
   let messages = filteredMessages.value;
   const uid = store.getCurrentUser?.id;
-  const matchesSender = (m) => {
+  const matchesSender = m => {
     const s = m?.senderId;
     if (!uid || !s) return false;
     if (typeof s === 'string') return s === uid;
@@ -405,9 +417,7 @@ const displayedMessages = computed(() => {
   return tabFilteredMessages.value.slice(0, endIndex);
 });
 
-const hasMore = computed(() => {
-  return displayedMessages.value.length < tabFilteredMessages.value.length;
-});
+const hasMore = computed(() => displayedMessages.value.length < tabFilteredMessages.value.length);
 
 // Mass message composer functions
 function openMassMessageComposer() {
@@ -432,7 +442,7 @@ watch(activeTab, () => {
 
 watch(
   () => props.isOpen,
-  (newVal) => {
+  newVal => {
     if (newVal) {
       // Ajustar tab inicial según rol
       if (userRole.value === 'master') {
@@ -548,10 +558,11 @@ function handleMessageSent(data) {
 }
 
 // Chat computed
-const currentUserId = computed(() => {
-  // Para Chat, usar el ID que el listener determinó (participantId efectivo)
-  return chatCurrentUser?.value?.id || getAuth().currentUser?.uid || store.getCurrentUser?.id;
-});
+const currentUserId = computed(
+  () =>
+    // Para Chat, usar el ID que el listener determinó (participantId efectivo)
+    chatCurrentUser?.value?.id || getAuth().currentUser?.uid || store.getCurrentUser?.id,
+);
 const userRole = computed(() => {
   const user = store.getCurrentUser;
   if (!user) return 'collaborator';
@@ -560,9 +571,9 @@ const userRole = computed(() => {
   return 'collaborator';
 });
 
-const activeConversation = computed(() => {
-  return conversations.value.find(c => c.id === activeConversationId.value);
-});
+const activeConversation = computed(() =>
+  conversations.value.find(c => c.id === activeConversationId.value)
+);
 
 const currentUserType = computed(() => store.getCurrentUserType);
 
@@ -619,18 +630,21 @@ async function handleArchiveConversation(conversationId) {
 }
 
 // Lifecycle - Start chat listener when modal opens
-watch(() => props.isOpen, (newVal) => {
-  if (newVal) {
-    const user = store.getCurrentUser;
-    if (user?.id) {
-      const commerceId = user.commerceId || user.commerce?.id;
-      startConversationsListener(user.id, userRole.value, commerceId);
+watch(
+  () => props.isOpen,
+  newVal => {
+    if (newVal) {
+      const user = store.getCurrentUser;
+      if (user?.id) {
+        const commerceId = user.commerceId || user.commerce?.id;
+        startConversationsListener(user.id, userRole.value, commerceId);
+      }
     }
-  }
-});
+  },
+);
 
 // Start chat listener when switching to chat tab
-watch(activeTab, (newTab) => {
+watch(activeTab, newTab => {
   if (newTab === 'chat' && props.isOpen) {
     const user = store.getCurrentUser;
     if (user?.id && conversations.value.length === 0) {
@@ -673,8 +687,12 @@ onUnmounted(() => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .inbox-container {

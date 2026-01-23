@@ -1518,154 +1518,161 @@ export default {
           </div>
         </div>
       </div>
-  </div>
+    </div>
 
-  <!-- Modal de Histórico de Versões -->
-  <div
-    v-if="showHistoryModal"
-    class="modal fade show"
-    style="display: block; background-color: rgba(0, 0, 0, 0.5)"
-    @click.self="closeHistoryModal"
-  >
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">{{ $t('lgpd.consent.admin.history') }}</h5>
-          <button type="button" class="btn-close" @click="closeHistoryModal"></button>
-        </div>
-        <div class="modal-body">
-          <div v-if="requirementVersions.length === 0" class="text-center py-4">
-            <p>{{ $t('lgpd.consent.admin.noHistory') }}</p>
+    <!-- Modal de Histórico de Versões -->
+    <div
+      v-if="showHistoryModal"
+      class="modal fade show"
+      style="display: block; background-color: rgba(0, 0, 0, 0.5)"
+      @click.self="closeHistoryModal"
+    >
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">{{ $t('lgpd.consent.admin.history') }}</h5>
+            <button type="button" class="btn-close" @click="closeHistoryModal"></button>
           </div>
-          <div v-else>
-            <div v-for="version in requirementVersions" :key="version.id" class="card mb-3">
-              <div class="card-header d-flex justify-content-between align-items-center">
-                <div>
-                  <strong>{{ $t('lgpd.consent.admin.version') }} {{ version.version }}</strong>
-                  <span
-                    class="badge ms-2"
-                    :class="{
-                      'bg-success': version.action === 'CREATE',
-                      'bg-primary': version.action === 'UPDATE',
-                      'bg-danger': version.action === 'DELETE',
-                    }"
-                  >
-                    {{ $t(`lgpd.consent.admin.action.${version.action}`) }}
-                  </span>
+          <div class="modal-body">
+            <div v-if="requirementVersions.length === 0" class="text-center py-4">
+              <p>{{ $t('lgpd.consent.admin.noHistory') }}</p>
+            </div>
+            <div v-else>
+              <div v-for="version in requirementVersions" :key="version.id" class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{{ $t('lgpd.consent.admin.version') }} {{ version.version }}</strong>
+                    <span
+                      class="badge ms-2"
+                      :class="{
+                        'bg-success': version.action === 'CREATE',
+                        'bg-primary': version.action === 'UPDATE',
+                        'bg-danger': version.action === 'DELETE',
+                      }"
+                    >
+                      {{ $t(`lgpd.consent.admin.action.${version.action}`) }}
+                    </span>
+                  </div>
+                  <small class="text-muted">
+                    {{ new Date(version.changedAt).toLocaleString() }}
+                  </small>
                 </div>
-                <small class="text-muted">
-                  {{ new Date(version.changedAt).toLocaleString() }}
-                </small>
-              </div>
-              <div class="card-body">
-                <div v-if="version.changedFields && version.changedFields.length > 0">
-                  <strong>{{ $t('lgpd.consent.admin.changedFields') }}:</strong>
-                  <ul class="mb-2">
-                    <li v-for="field in version.changedFields" :key="field">
-                      {{ $t(`lgpd.consent.admin.field.${field}`) || field }}
-                    </li>
-                  </ul>
+                <div class="card-body">
+                  <div v-if="version.changedFields && version.changedFields.length > 0">
+                    <strong>{{ $t('lgpd.consent.admin.changedFields') }}:</strong>
+                    <ul class="mb-2">
+                      <li v-for="field in version.changedFields" :key="field">
+                        {{ $t(`lgpd.consent.admin.field.${field}`) || field }}
+                      </li>
+                    </ul>
+                  </div>
+                  <div v-if="version.changeDescription">
+                    <strong>{{ $t('lgpd.consent.admin.description') }}:</strong>
+                    <p>{{ version.changeDescription }}</p>
+                  </div>
+                  <small class="text-muted">
+                    {{ $t('lgpd.consent.admin.changedBy') }}: {{ version.changedBy }}
+                  </small>
                 </div>
-                <div v-if="version.changeDescription">
-                  <strong>{{ $t('lgpd.consent.admin.description') }}:</strong>
-                  <p>{{ version.changeDescription }}</p>
-                </div>
-                <small class="text-muted">
-                  {{ $t('lgpd.consent.admin.changedBy') }}: {{ version.changedBy }}
-                </small>
               </div>
             </div>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="closeHistoryModal">
-            {{ $t('close') }}
-          </button>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeHistoryModal">
+              {{ $t('close') }}
+            </button>
+          </div>
         </div>
       </div>
-  </div>
 
-  <!-- Modal de Preview de Template -->
-  <div
-    v-if="showPreviewModal && previewRequirement"
-    class="modal fade show"
-    style="display: block; background-color: rgba(0, 0, 0, 0.5)"
-    @click.self="closePreviewModal"
-  >
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">{{ $t('lgpd.consent.admin.preview') }}</h5>
-          <button type="button" class="btn-close" @click="closePreviewModal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <h6>{{ $t('lgpd.consent.admin.previewChannel') }}</h6>
-            <div class="btn-group" role="group">
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-primary"
-                @click="previewChannel = 'web'"
-                :class="{ active: previewChannel === 'web' }"
+      <!-- Modal de Preview de Template -->
+      <div
+        v-if="showPreviewModal && previewRequirement"
+        class="modal fade show"
+        style="display: block; background-color: rgba(0, 0, 0, 0.5)"
+        @click.self="closePreviewModal"
+      >
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">{{ $t('lgpd.consent.admin.preview') }}</h5>
+              <button type="button" class="btn-close" @click="closePreviewModal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <h6>{{ $t('lgpd.consent.admin.previewChannel') }}</h6>
+                <div class="btn-group" role="group">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    @click="previewChannel = 'web'"
+                    :class="{ active: previewChannel === 'web' }"
+                  >
+                    {{ $t('lgpd.consent.admin.previewWeb') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    @click="previewChannel = 'whatsapp'"
+                    :class="{ active: previewChannel === 'whatsapp' }"
+                  >
+                    {{ $t('lgpd.consent.admin.previewWhatsApp') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    @click="previewChannel = 'email'"
+                    :class="{ active: previewChannel === 'email' }"
+                  >
+                    {{ $t('lgpd.consent.admin.previewEmail') }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Preview Web Form -->
+              <div v-if="previewChannel === 'web'" class="preview-container border rounded p-4">
+                <h5 class="mb-3">{{ $t('lgpd.consent.admin.previewWebForm') }}</h5>
+                <div
+                  v-html="formatMarkdown(previewRequirement.templates?.formIntroText || '')"
+                ></div>
+                <hr />
+                <div v-html="formatMarkdown(previewRequirement.templates?.fullTerms || '')"></div>
+                <div class="mt-3">
+                  <button class="btn btn-primary">{{ $t('lgpd.consent.admin.accept') }}</button>
+                  <button class="btn btn-secondary ms-2">
+                    {{ $t('lgpd.consent.admin.decline') }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Preview WhatsApp -->
+              <div
+                v-if="previewChannel === 'whatsapp'"
+                class="preview-container border rounded p-4"
               >
-                {{ $t('lgpd.consent.admin.previewWeb') }}
-              </button>
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-primary"
-                @click="previewChannel = 'whatsapp'"
-                :class="{ active: previewChannel === 'whatsapp' }"
-              >
-                {{ $t('lgpd.consent.admin.previewWhatsApp') }}
-              </button>
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-primary"
-                @click="previewChannel = 'email'"
-                :class="{ active: previewChannel === 'email' }"
-              >
-                {{ $t('lgpd.consent.admin.previewEmail') }}
-              </button>
-            </div>
-          </div>
+                <h5 class="mb-3">{{ $t('lgpd.consent.admin.previewWhatsAppMessage') }}</h5>
+                <div class="whatsapp-preview bg-light p-3 rounded">
+                  <div v-html="formatMarkdown(previewRequirement.templates?.whatsapp || '')"></div>
+                </div>
+              </div>
 
-          <!-- Preview Web Form -->
-          <div v-if="previewChannel === 'web'" class="preview-container border rounded p-4">
-            <h5 class="mb-3">{{ $t('lgpd.consent.admin.previewWebForm') }}</h5>
-            <div v-html="formatMarkdown(previewRequirement.templates?.formIntroText || '')"></div>
-            <hr />
-            <div v-html="formatMarkdown(previewRequirement.templates?.fullTerms || '')"></div>
-            <div class="mt-3">
-              <button class="btn btn-primary">{{ $t('lgpd.consent.admin.accept') }}</button>
-              <button class="btn btn-secondary ms-2">{{ $t('lgpd.consent.admin.decline') }}</button>
+              <!-- Preview Email -->
+              <div v-if="previewChannel === 'email'" class="preview-container border rounded p-4">
+                <h5 class="mb-3">{{ $t('lgpd.consent.admin.previewEmailMessage') }}</h5>
+                <div class="email-preview border p-3 rounded">
+                  <div v-html="formatMarkdown(previewRequirement.templates?.email || '')"></div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" @click="closePreviewModal">
+                {{ $t('close') }}
+              </button>
             </div>
           </div>
-
-          <!-- Preview WhatsApp -->
-          <div v-if="previewChannel === 'whatsapp'" class="preview-container border rounded p-4">
-            <h5 class="mb-3">{{ $t('lgpd.consent.admin.previewWhatsAppMessage') }}</h5>
-            <div class="whatsapp-preview bg-light p-3 rounded">
-              <div v-html="formatMarkdown(previewRequirement.templates?.whatsapp || '')"></div>
-            </div>
-          </div>
-
-          <!-- Preview Email -->
-          <div v-if="previewChannel === 'email'" class="preview-container border rounded p-4">
-            <h5 class="mb-3">{{ $t('lgpd.consent.admin.previewEmailMessage') }}</h5>
-            <div class="email-preview border p-3 rounded">
-              <div v-html="formatMarkdown(previewRequirement.templates?.email || '')"></div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="closePreviewModal">
-            {{ $t('close') }}
-          </button>
         </div>
       </div>
     </div>
-  </div>
-  </div>
   </div>
 </template>
 

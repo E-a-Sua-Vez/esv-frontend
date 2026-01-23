@@ -349,7 +349,11 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :src="state.business?.logo" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :src="state.business?.logo"
+          :business-id="state.business?.id"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessMedicalTemplatesAdmin.title`)"
           :toggles="state.toggles"

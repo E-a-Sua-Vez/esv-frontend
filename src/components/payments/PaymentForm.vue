@@ -1,5 +1,6 @@
 <script>
-import { ref, reactive, onBeforeMount, toRefs, watch } from 'vue';
+import { ref, reactive, onBeforeMount, toRefs, watch, computed } from 'vue';
+import Popper from 'vue3-popper';
 import Warning from '../../components/common/Warning.vue';
 import {
   getPaymentFiscalNoteTypes,
@@ -11,16 +12,22 @@ import {
   getActivePackagesByClient,
 } from '../../application/services/package';
 import { getPendingIncomeByPackage } from '../../application/services/income';
+import { getServicesById } from '../../application/services/service';
+import { getAttentionDetails } from '../../application/services/attention';
+import { getBookingDetails } from '../../application/services/booking';
 import Message from '../common/Message.vue';
 
 export default {
   name: 'PaymentForm',
-  components: { Warning, Message },
+  components: { Warning, Message, Popper },
   props: {
     id: { type: String, default: undefined },
     commerce: { type: Object, default: {} },
     clientId: { type: String, default: undefined },
-    serviceId: { type: String, default: undefined }, // NEW: Service ID to filter packages
+    serviceId: { type: String, default: undefined }, // Service ID to filter packages (legacy/single)
+    // NEW: robust multi-service support
+    serviceIds: { type: Array, default: () => [] }, // Array of service IDs (booking/attention)
+    services: { type: Array, default: () => [] }, // Array of service objects/details (optional)
     confirmPayment: { type: Boolean, default: false },
     errorsAdd: { type: Array, default: [] },
     receiveData: { type: Function, default: () => {} },
@@ -28,11 +35,36 @@ export default {
     professionalName: { type: String, default: undefined },
     professionalCommission: { type: [Number, String], default: undefined },
     suggestedCommissionAmount: { type: Number, default: undefined },
+    // DEPRECATED: single service price hint (keep for backward compatibility)
+    servicePrice: { type: Number, default: undefined },
+    // NEW: Optional props to pre-populate package info if already available
+    existingPackageId: { type: String, default: undefined },
+    existingPackageProcedureNumber: { type: Number, default: undefined },
+    existingPackageProceduresTotalNumber: { type: Number, default: undefined },
+    // NEW: Type of entity (to know if we should fetch attention or booking)
+    entityType: { type: String, default: 'attention' }, // 'attention' or 'booking'
   },
   async setup(props) {
     const loading = ref(false);
 
-    const { id, commerce, clientId, serviceId, errorsAdd, confirmPayment, professionalName, professionalCommission, suggestedCommissionAmount } = toRefs(props);
+    const {
+      id,
+      commerce,
+      clientId,
+      serviceId,
+      serviceIds,
+      services,
+      errorsAdd,
+      confirmPayment,
+      professionalName,
+      professionalCommission,
+      suggestedCommissionAmount,
+      servicePrice,
+      existingPackageId,
+      existingPackageProcedureNumber,
+      existingPackageProceduresTotalNumber,
+      entityType,
+    } = toRefs(props);
 
     const { receiveData } = props;
 
@@ -41,7 +73,16 @@ export default {
         procedureNumber: 1,
         proceduresTotalNumber: 1,
         processPaymentNow: !confirmPayment.value || false,
+        // Default selection when payment fields are shown
+        paymentType: 'TOTALLY',
+        // Initialize these so confirm logic can evaluate consistently
+        paymentMethod: '',
+        paymentAmount: null,
+        totalAmount: null,
+        installments: 1,
         packagePaid: false,
+        paymentFiscalNote: 'NOTA_FISCAL',
+        confirmInstallments: true, // Default: true - todas las cuotas se crean como confirmadas
       },
       paymentTypes: [],
       paymentMethods: [],
@@ -56,26 +97,319 @@ export default {
       pendingIncomes: [],
     });
 
+    const userEditedTotalAmount = ref(false);
+    const userEditedPaymentAmount = ref(false);
+    const loadedServices = ref([]); // Services fetched from backend when details are missing
+    const loadingServices = ref(false);
+
+    const normalizeServicePrice = s => {
+      if (!s) return 0;
+      // Prefer serviceInfo.price (canonical entity)
+      const p = s.serviceInfo?.price ?? s.price ?? s.amount ?? s.value;
+      const n = Number(p);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const hasServicePriceData = s => {
+      if (!s) return false;
+      // Check if service has price information
+      return (
+        (s.serviceInfo && s.serviceInfo.price !== undefined && s.serviceInfo.price !== null) ||
+        s.price !== undefined ||
+        s.amount !== undefined ||
+        s.value !== undefined
+      );
+    };
+
+    const loadServicesIfNeeded = async () => {
+      // Only fetch if we have serviceIds but no complete service details
+      const ids =
+        Array.isArray(serviceIds.value) && serviceIds.value.length > 0 ? serviceIds.value : [];
+      const providedServices = Array.isArray(services.value) ? services.value : [];
+
+      // If we have IDs but no services, or services without price data, fetch
+      const needsFetch =
+        ids.length > 0 &&
+        (providedServices.length === 0 || providedServices.some(s => !hasServicePriceData(s)));
+
+      if (needsFetch && !loadingServices.value && commerce.value?.id) {
+        try {
+          loadingServices.value = true;
+          const fetched = await getServicesById(ids);
+          if (Array.isArray(fetched) && fetched.length > 0) {
+            loadedServices.value = fetched;
+          }
+        } catch (error) {
+          console.error('[PaymentForm] Error loading services:', error);
+          loadedServices.value = [];
+        } finally {
+          loadingServices.value = false;
+        }
+      } else if (
+        providedServices.length > 0 &&
+        providedServices.every(s => hasServicePriceData(s))
+      ) {
+        // Clear loaded services if we now have complete data from props
+        loadedServices.value = [];
+      }
+    };
+
+    const servicePriceSuggestion = computed(() => {
+      // Priority 1: Use loaded services (from backend fetch)
+      if (Array.isArray(loadedServices.value) && loadedServices.value.length > 0) {
+        const total = loadedServices.value.reduce((sum, s) => sum + normalizeServicePrice(s), 0);
+        if (total > 0) return total;
+      }
+
+      // Priority 2: Use provided services array (from props)
+      const list = Array.isArray(services.value) ? services.value : [];
+      if (list.length > 0) {
+        const total = list.reduce((sum, s) => sum + normalizeServicePrice(s), 0);
+        if (total > 0) return total;
+      }
+
+      // Priority 3: Fallback to deprecated single servicePrice
+      const single = Number(servicePrice.value);
+      if (Number.isFinite(single) && single > 0) return single;
+
+      return 0;
+    });
+
+    // Computed para determinar qué mostrar en "Total Procedimiento"
+    // Si es PAQUETE: precio del servicio de esta sesión (no el total del paquete)
+    // Si es SERVICIO NORMAL: precio del servicio
+    const totalAmountSuggestion = computed(() => {
+      // Si hay paquete seleccionado, usar el precio del servicio (no el total del paquete)
+      // porque el total del paquete ya fue pagado en la primera sesión
+      if (state.selectedPackage && state.selectedPackage.id) {
+        // Para paquetes, mostrar el precio del servicio de esta sesión específica
+        return servicePriceSuggestion.value;
+      }
+      // Para servicios normales, mostrar el precio del servicio
+      return servicePriceSuggestion.value;
+    });
+
+    const formattedServicePrice = computed(() => {
+      const total = servicePriceSuggestion.value;
+      if (!total || total <= 0) return '';
+      const currency = commerce.value?.currency || 'BRL';
+      try {
+        return `${Number(total).toLocaleString('de-DE')} ${currency}`;
+      } catch (e) {
+        return `${total} ${currency}`;
+      }
+    });
+
+    // Computed para estado de pago del paquete
+    const packagePaymentStatus = computed(() => {
+      if (!state.selectedPackage || !state.selectedPackage.id) return null;
+
+      const pack = state.selectedPackage;
+      const isPaid = pack.paid === true || state.newConfirmationData.packagePaid === true;
+      const hasPendingIncomes = state.pendingIncomes && state.pendingIncomes.length > 0;
+
+      return {
+        isPaid: isPaid && !hasPendingIncomes,
+        hasPendingIncomes,
+        pendingIncomesCount: hasPendingIncomes ? state.pendingIncomes.length : 0,
+        packageName: pack.name || 'Paquete',
+        totalAmount: pack.totalAmount || 0,
+      };
+    });
+
+    // Calcular automáticamente el valor pagado basado en totalAmount e installments
+    // NOTA: Este cálculo es solo una ayuda/sugerencia. El usuario siempre puede editar
+    // el campo "Valor Pagado" libremente, y una vez editado manualmente, este cálculo
+    // no se ejecutará automáticamente para no sobrescribir el valor del usuario.
+    const calculatePaymentAmount = () => {
+      // Solo calcular si el usuario no ha editado manualmente paymentAmount
+      // Si el usuario ya editó el campo, respetamos su valor y no lo sobrescribimos
+      if (
+        !userEditedPaymentAmount.value &&
+        state.newConfirmationData.totalAmount &&
+        state.newConfirmationData.installments &&
+        state.newConfirmationData.installments > 0
+      ) {
+        const total = Number(state.newConfirmationData.totalAmount);
+        const installments = Number(state.newConfirmationData.installments);
+        if (total > 0 && installments > 0) {
+          const calculatedAmount = total / installments;
+          state.newConfirmationData.paymentAmount = Math.round(calculatedAmount * 100) / 100; // Redondear a 2 decimales
+        }
+      }
+    };
+
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.paymentTypes = getPaymentTypes();
         state.paymentMethods = getPaymentMethods();
         state.paymentFicalNoteTypes = getPaymentFiscalNoteTypes();
+
+        // Load services from backend if needed (before package loading)
+        await loadServicesIfNeeded();
+
+        // Cargar información de procedimiento si la atención/reserva ya tiene un paquete asociado
+        let loadedPackageId = existingPackageId.value;
+        let loadedProcedureNumber = existingPackageProcedureNumber.value;
+        let loadedProceduresTotalNumber = existingPackageProceduresTotalNumber.value;
+
+        // Si no se pasaron los valores como props, intentar cargarlos desde el backend
+        if (
+          id.value &&
+          (!loadedPackageId || !loadedProcedureNumber || !loadedProceduresTotalNumber)
+        ) {
+          try {
+            let entityData = null;
+            if (entityType.value === 'booking') {
+              entityData = await getBookingDetails(id.value);
+            } else {
+              entityData = await getAttentionDetails(id.value);
+            }
+
+            if (entityData) {
+              // Si la entidad ya tiene un paquete asociado, usar esa información
+              if (entityData.packageId) {
+                loadedPackageId = entityData.packageId;
+                // Usar packageProcedureNumber y packageProceduresTotalNumber si están disponibles
+                if (
+                  entityData.packageProcedureNumber !== undefined &&
+                  entityData.packageProcedureNumber !== null
+                ) {
+                  loadedProcedureNumber = entityData.packageProcedureNumber;
+                }
+                if (
+                  entityData.packageProceduresTotalNumber !== undefined &&
+                  entityData.packageProceduresTotalNumber !== null
+                ) {
+                  loadedProceduresTotalNumber = entityData.packageProceduresTotalNumber;
+                }
+              }
+            }
+          } catch (error) {
+            console.warn('[PaymentForm] Error loading entity details for package info:', error);
+            // Continuar sin la información del paquete
+          }
+        }
+
+        // Inicializar valores de procedimiento si se encontró información del paquete
+        if (loadedPackageId && loadedProcedureNumber && loadedProceduresTotalNumber) {
+          state.newConfirmationData.packageId = loadedPackageId;
+          state.newConfirmationData.procedureNumber = loadedProcedureNumber;
+          state.newConfirmationData.proceduresTotalNumber = loadedProceduresTotalNumber;
+        }
+
         if (confirmPayment.value === true && commerce.value.id && clientId.value) {
           // Intelligent package loading: filter by service if provided
-          if (serviceId.value) {
+          const firstServiceId =
+            (Array.isArray(serviceIds.value) &&
+              serviceIds.value.length > 0 &&
+              serviceIds.value[0]) ||
+            serviceId.value;
+          if (firstServiceId) {
             state.packages = await getAvailablePackagesForService(
               commerce.value.id,
-              serviceId.value,
+              firstServiceId,
               clientId.value
             );
           } else {
             // Load all active packages for client
             state.packages = await getActivePackagesByClient(commerce.value.id, clientId.value);
           }
+
+          // Si hay un paquete cargado, marcarlo como seleccionado
+          if (loadedPackageId && state.packages && state.packages.length > 0) {
+            const foundPackage = state.packages.find(pkg => pkg.id === loadedPackageId);
+            if (foundPackage) {
+              state.selectedPackage = foundPackage;
+              state.newConfirmationData.packageId = foundPackage.id;
+              // Cargar ingresos pendientes del paquete
+              state.pendingIncomes = await getPendingIncomeByPackage(
+                commerce.value.id,
+                foundPackage.id,
+              );
+              // Verificar si el paquete está pagado (tanto por el flag paid como por la ausencia de ingresos pendientes)
+              const isPackagePaid =
+                foundPackage.paid === true ||
+                (state.pendingIncomes && state.pendingIncomes.length === 0);
+              state.newConfirmationData.packagePaid = isPackagePaid;
+
+              // Si el paquete está pagado, establecer montos en 0 para indicar que está incluido
+              if (isPackagePaid && !userEditedTotalAmount.value && !userEditedPaymentAmount.value) {
+                state.newConfirmationData.totalAmount = 0;
+                state.newConfirmationData.paymentAmount = 0;
+              }
+            }
+          } else if (existingPackageId.value && state.packages && state.packages.length > 0) {
+            // Si hay un existingPackageId pero no se encontró en loadedPackageId, buscarlo
+            const foundPackage = state.packages.find(pkg => pkg.id === existingPackageId.value);
+            if (foundPackage) {
+              state.selectedPackage = foundPackage;
+              state.newConfirmationData.packageId = foundPackage.id;
+              // Cargar ingresos pendientes del paquete
+              state.pendingIncomes = await getPendingIncomeByPackage(
+                commerce.value.id,
+                foundPackage.id,
+              );
+              const isPackagePaid =
+                foundPackage.paid === true ||
+                (state.pendingIncomes && state.pendingIncomes.length === 0);
+              state.newConfirmationData.packagePaid = isPackagePaid;
+
+              if (isPackagePaid && !userEditedTotalAmount.value && !userEditedPaymentAmount.value) {
+                state.newConfirmationData.totalAmount = 0;
+                state.newConfirmationData.paymentAmount = 0;
+              }
+            }
+          }
         }
         loading.value = false;
+
+        // Prefill totals (editable) if we can compute a suggested total
+        // BUT: Skip if package is paid (amounts should be 0)
+        const isPackagePaid =
+          state.newConfirmationData.packagePaid === true ||
+          (state.selectedPackage && state.selectedPackage.paid === true);
+
+        // Use nextTick to ensure computed has updated after services load
+        await new Promise(resolve => setTimeout(resolve, 100));
+        if (servicePriceSuggestion.value > 0 && !isPackagePaid) {
+          const price = Number(servicePriceSuggestion.value);
+          if (
+            !userEditedTotalAmount.value &&
+            (state.newConfirmationData.totalAmount === null ||
+              state.newConfirmationData.totalAmount === undefined)
+          ) {
+            state.newConfirmationData.totalAmount = price;
+            // Calcular paymentAmount automáticamente basado en installments
+            calculatePaymentAmount();
+          }
+          if (
+            state.newConfirmationData.processPaymentNow === true &&
+            !userEditedPaymentAmount.value &&
+            (state.newConfirmationData.paymentAmount === null ||
+              state.newConfirmationData.paymentAmount === undefined)
+          ) {
+            // Usar calculatePaymentAmount en lugar de establecer directamente
+            calculatePaymentAmount();
+            // Si calculatePaymentAmount no calculó (porque no hay installments válido), usar el precio total
+            if (
+              !state.newConfirmationData.paymentAmount ||
+              state.newConfirmationData.paymentAmount === null
+            ) {
+              state.newConfirmationData.paymentAmount = price;
+            }
+          }
+          sendData();
+        } else if (isPackagePaid && state.newConfirmationData.processPaymentNow) {
+          // If package is paid, ensure amounts are 0
+          if (!userEditedTotalAmount.value && !userEditedPaymentAmount.value) {
+            state.newConfirmationData.totalAmount = 0;
+            state.newConfirmationData.paymentAmount = 0;
+            state.newConfirmationData.paymentMethod = 'PAID';
+          }
+          sendData();
+        }
 
         // Inicializar comisión si suggestedCommissionAmount está disponible
         if (suggestedCommissionAmount.value && suggestedCommissionAmount.value > 0) {
@@ -86,6 +420,58 @@ export default {
         loading.value = false;
       }
     });
+
+    // Watch for changes in serviceIds or services to reload if needed
+    watch(
+      [serviceIds, services, () => commerce.value?.id],
+      async () => {
+        await loadServicesIfNeeded();
+        // Re-prefill if price suggestion changed and user hasn't edited
+        // BUT: Skip if package is paid
+        const isPackagePaid =
+          state.newConfirmationData.packagePaid === true ||
+          (state.selectedPackage && state.selectedPackage.paid === true);
+
+        if (
+          servicePriceSuggestion.value > 0 &&
+          !isPackagePaid &&
+          !userEditedTotalAmount.value &&
+          !userEditedPaymentAmount.value
+        ) {
+          const price = Number(servicePriceSuggestion.value);
+          if (
+            state.newConfirmationData.totalAmount === null ||
+            state.newConfirmationData.totalAmount === undefined
+          ) {
+            state.newConfirmationData.totalAmount = price;
+            calculatePaymentAmount();
+          }
+          if (
+            state.newConfirmationData.processPaymentNow === true &&
+            (state.newConfirmationData.paymentAmount === null ||
+              state.newConfirmationData.paymentAmount === undefined)
+          ) {
+            calculatePaymentAmount();
+            // Si calculatePaymentAmount no calculó, usar el precio total
+            if (
+              !state.newConfirmationData.paymentAmount ||
+              state.newConfirmationData.paymentAmount === null
+            ) {
+              state.newConfirmationData.paymentAmount = price;
+            }
+          }
+          sendData();
+        } else if (isPackagePaid && state.newConfirmationData.processPaymentNow) {
+          // If package is paid, ensure amounts are 0
+          if (!userEditedTotalAmount.value && !userEditedPaymentAmount.value) {
+            state.newConfirmationData.totalAmount = 0;
+            state.newConfirmationData.paymentAmount = 0;
+          }
+          sendData();
+        }
+      },
+      { deep: true },
+    );
 
     // AUTO-CALCULATE COMMISSION based on professional data
     const calculateSuggestedCommission = () => {
@@ -103,7 +489,7 @@ export default {
         // This is a heuristic; ideally we'd have the type passed separately
         if (commission > 0 && commission <= 100) {
           // Treat as percentage
-          return Math.round(amount * commission / 100);
+          return Math.round((amount * commission) / 100);
         } else {
           // Treat as fixed amount
           return commission;
@@ -113,49 +499,64 @@ export default {
     };
 
     // WATCHER for professional commission auto-calculation
-    watch([professionalName, professionalCommission, suggestedCommissionAmount, () => state.newConfirmationData.paymentAmount], () => {
-      console.log('[PaymentForm] Main watcher triggered:', {
-        professionalName: professionalName.value,
-        professionalCommission: professionalCommission.value,
-        suggestedCommissionAmount: suggestedCommissionAmount.value,
-        paymentAmount: state.newConfirmationData.paymentAmount,
-        currentCommission: state.newConfirmationData.paymentCommission
-      });
+    watch(
+      [
+        professionalName,
+        professionalCommission,
+        suggestedCommissionAmount,
+        () => state.newConfirmationData.paymentAmount,
+      ],
+      () => {
+        console.log('[PaymentForm] Main watcher triggered:', {
+          professionalName: professionalName.value,
+          professionalCommission: professionalCommission.value,
+          suggestedCommissionAmount: suggestedCommissionAmount.value,
+          paymentAmount: state.newConfirmationData.paymentAmount,
+          currentCommission: state.newConfirmationData.paymentCommission,
+        });
 
-      // Auto-set commission when professional is assigned
-      if (professionalName.value) {
-        const suggested = calculateSuggestedCommission();
-        console.log('[PaymentForm] Calculated suggested:', suggested);
+        // Auto-set commission when professional is assigned
+        if (professionalName.value) {
+          const suggested = calculateSuggestedCommission();
+          console.log('[PaymentForm] Calculated suggested:', suggested);
 
-        if (suggested > 0) {
-          // Siempre usar suggestedCommissionAmount si está disponible (viene del backend)
-          if (suggestedCommissionAmount.value && suggestedCommissionAmount.value > 0) {
-            const newValue = Number(suggestedCommissionAmount.value);
-            console.log('[PaymentForm] Using suggestedCommissionAmount:', newValue);
-            state.newConfirmationData.paymentCommission = newValue;
-            sendData();
-          }
-          // Solo calcular automáticamente si el campo está vacío/cero Y hay paymentAmount
-          else if (state.newConfirmationData.paymentAmount > 0 &&
-                  (!state.newConfirmationData.paymentCommission || state.newConfirmationData.paymentCommission === 0)) {
-            console.log('[PaymentForm] Auto-calculating commission:', suggested);
-            state.newConfirmationData.paymentCommission = suggested;
-            sendData();
+          if (suggested > 0) {
+            // Siempre usar suggestedCommissionAmount si está disponible (viene del backend)
+            if (suggestedCommissionAmount.value && suggestedCommissionAmount.value > 0) {
+              const newValue = Number(suggestedCommissionAmount.value);
+              console.log('[PaymentForm] Using suggestedCommissionAmount:', newValue);
+              state.newConfirmationData.paymentCommission = newValue;
+              sendData();
+            }
+            // Solo calcular automáticamente si el campo está vacío/cero Y hay paymentAmount
+            else if (
+              state.newConfirmationData.paymentAmount > 0 &&
+              (!state.newConfirmationData.paymentCommission ||
+                state.newConfirmationData.paymentCommission === 0)
+            ) {
+              console.log('[PaymentForm] Auto-calculating commission:', suggested);
+              state.newConfirmationData.paymentCommission = suggested;
+              sendData();
+            }
           }
         }
-      }
-    });
+      },
+    );
 
     // WATCHER específico para suggestedCommissionAmount - actualizar inmediatamente
-    watch(suggestedCommissionAmount, (newValue) => {
-      console.log('[PaymentForm] suggestedCommissionAmount changed:', newValue, typeof newValue);
-      if (newValue && newValue > 0 && professionalName.value) {
-        const numValue = Number(newValue);
-        console.log('[PaymentForm] Setting paymentCommission to:', numValue);
-        state.newConfirmationData.paymentCommission = numValue;
-        sendData();
-      }
-    }, { immediate: true });
+    watch(
+      suggestedCommissionAmount,
+      newValue => {
+        console.log('[PaymentForm] suggestedCommissionAmount changed:', newValue, typeof newValue);
+        if (newValue && newValue > 0 && professionalName.value) {
+          const numValue = Number(newValue);
+          console.log('[PaymentForm] Setting paymentCommission to:', numValue);
+          state.newConfirmationData.paymentCommission = numValue;
+          sendData();
+        }
+      },
+      { immediate: true },
+    );
 
     const sendData = () => {
       receiveData(state.newConfirmationData);
@@ -165,9 +566,10 @@ export default {
       if ($event && $event.target) {
         const paymentType = $event.target.value;
         // Preservar comisión del profesional si está asignado
-        const currentProfessionalCommission = (professionalName.value && state.newConfirmationData.paymentCommission)
-          ? state.newConfirmationData.paymentCommission
-          : null;
+        const currentProfessionalCommission =
+          professionalName.value && state.newConfirmationData.paymentCommission
+            ? state.newConfirmationData.paymentCommission
+            : null;
 
         if (['PAID', 'RETURN', 'EVALUATION', 'PROMOTION', 'TRIAL'].includes(paymentType)) {
           state.newConfirmationData.paymentMethod = 'PAID';
@@ -230,10 +632,15 @@ export default {
         }
 
         state.pendingIncomes = await getPendingIncomeByPackage(commerce.value.id, pack.id);
-        if (state.pendingIncomes && state.pendingIncomes.length === 0) {
-          state.newConfirmationData.packagePaid = true;
-        } else {
-          state.newConfirmationData.packagePaid = false;
+        // Verificar si el paquete está pagado (tanto por el flag paid como por la ausencia de ingresos pendientes)
+        const isPackagePaid =
+          pack.paid === true || (state.pendingIncomes && state.pendingIncomes.length === 0);
+        state.newConfirmationData.packagePaid = isPackagePaid;
+
+        // Si el paquete está pagado y el usuario no ha editado los montos, establecer en 0
+        if (isPackagePaid && !userEditedTotalAmount.value && !userEditedPaymentAmount.value) {
+          state.newConfirmationData.totalAmount = 0;
+          state.newConfirmationData.paymentAmount = 0;
         }
         sendData();
       } else if (pack === 'NEW') {
@@ -260,9 +667,10 @@ export default {
     const selectPayment = payment => {
       if (payment && payment.id) {
         // Preservar comisión del profesional si está asignado
-        const currentProfessionalCommission = (professionalName.value && state.newConfirmationData.paymentCommission)
-          ? state.newConfirmationData.paymentCommission
-          : 0;
+        const currentProfessionalCommission =
+          professionalName.value && state.newConfirmationData.paymentCommission
+            ? state.newConfirmationData.paymentCommission
+            : 0;
 
         state.newConfirmationData.paymentType = 'PARTIAL';
         state.newConfirmationData.paymentMethod = payment.paymentMethod || undefined;
@@ -278,21 +686,58 @@ export default {
 
     const processPaymentNow = async event => {
       // Preservar comisión del profesional si está asignado
-      const currentProfessionalCommission = (professionalName.value && state.newConfirmationData.paymentCommission)
-        ? state.newConfirmationData.paymentCommission
-        : undefined;
+      const currentProfessionalCommission =
+        professionalName.value && state.newConfirmationData.paymentCommission
+          ? state.newConfirmationData.paymentCommission
+          : undefined;
 
       state.newConfirmationData.processPaymentNow = event.target.checked;
       if (state.newConfirmationData.processPaymentNow) {
-        state.newConfirmationData.paymentType = undefined;
-        state.newConfirmationData.paymentMethod = undefined;
-        state.newConfirmationData.paymentAmount = undefined;
-        state.newConfirmationData.totalAmount = undefined;
-        state.newConfirmationData.paymentCommission = currentProfessionalCommission;
-        state.newConfirmationData.paymentFiscalNote = undefined;
-        state.newConfirmationData.installments = undefined;
-        state.newConfirmationData.pendingPaymentId = undefined;
-        state.selectedPayment = undefined;
+        // Check if package is paid
+        const isPackagePaid = packagePaymentStatus.value && packagePaymentStatus.value.isPaid;
+
+        if (isPackagePaid) {
+          // If package is paid, set amounts to 0 to indicate it's included
+          state.newConfirmationData.paymentType = 'TOTALLY';
+          state.newConfirmationData.paymentMethod = 'PAID'; // Mark as paid
+          state.newConfirmationData.paymentAmount = 0;
+          state.newConfirmationData.totalAmount = 0;
+          state.newConfirmationData.paymentCommission = currentProfessionalCommission || 0;
+          state.newConfirmationData.paymentFiscalNote = 'NOTA_FISCAL';
+          state.newConfirmationData.installments = 1;
+          state.newConfirmationData.pendingPaymentId = undefined;
+          state.selectedPayment = undefined;
+        } else {
+          // Default to TOTALLY when user enables payment
+          state.newConfirmationData.paymentType = 'TOTALLY';
+          state.newConfirmationData.paymentMethod = '';
+          state.newConfirmationData.paymentAmount = null;
+          state.newConfirmationData.totalAmount = null;
+          state.newConfirmationData.paymentCommission = currentProfessionalCommission;
+          state.newConfirmationData.paymentFiscalNote = 'NOTA_FISCAL';
+          state.newConfirmationData.installments = 1;
+          state.newConfirmationData.pendingPaymentId = undefined;
+          state.selectedPayment = undefined;
+
+          // Prefill amounts from suggested total if available
+          if (
+            servicePriceSuggestion.value > 0 &&
+            !userEditedTotalAmount.value &&
+            !userEditedPaymentAmount.value
+          ) {
+            const price = Number(servicePriceSuggestion.value);
+            state.newConfirmationData.totalAmount = price;
+            // Calcular paymentAmount automáticamente basado en installments
+            calculatePaymentAmount();
+            // Si calculatePaymentAmount no calculó, usar el precio total
+            if (
+              !state.newConfirmationData.paymentAmount ||
+              state.newConfirmationData.paymentAmount === null
+            ) {
+              state.newConfirmationData.paymentAmount = price;
+            }
+          }
+        }
       }
       sendData();
     };
@@ -324,6 +769,15 @@ export default {
       processPaymentNow,
       confirmInstallments,
       paidPackage,
+      serviceId,
+      serviceIds,
+      services,
+      servicePriceSuggestion,
+      formattedServicePrice,
+      userEditedTotalAmount,
+      userEditedPaymentAmount,
+      calculatePaymentAmount,
+      packagePaymentStatus,
     };
   },
 };
@@ -368,6 +822,29 @@ export default {
           </select>
           <!-- Intelligent Package Info Display -->
           <div v-if="state.selectedPackage && state.selectedPackage.id" class="package-info-card">
+            <!-- Package Payment Status Badge -->
+            <div
+              v-if="packagePaymentStatus && packagePaymentStatus.isPaid"
+              class="package-paid-badge"
+            >
+              <i class="bi bi-check-circle-fill"></i>
+              <span>{{
+                $t('paymentForm.packagePaid') || 'Paquete Pagado - Esta sesión está incluida'
+              }}</span>
+            </div>
+            <div
+              v-if="packagePaymentStatus && packagePaymentStatus.hasPendingIncomes"
+              class="package-pending-badge"
+            >
+              <i class="bi bi-clock-history"></i>
+              <span>
+                {{
+                  $t('paymentForm.packagePendingIncomes', {
+                    count: packagePaymentStatus.pendingIncomesCount,
+                  }) || `Pagos pendientes: ${packagePaymentStatus.pendingIncomesCount}`
+                }}
+              </span>
+            </div>
             <div class="package-info-row">
               <span class="package-info-label"
                 >{{ $t('package.sessionsRemaining') || 'Sesiones' }}:</span
@@ -480,9 +957,57 @@ export default {
             v-if="state.newConfirmationData.processPaymentNow === true && !paidPackage()"
             class="payment-form-payment-fields"
           >
+            <!-- Package Paid Notice -->
+            <div
+              v-if="packagePaymentStatus && packagePaymentStatus.isPaid"
+              class="package-paid-notice"
+            >
+              <div class="package-paid-notice-content">
+                <i class="bi bi-info-circle-fill"></i>
+                <div class="package-paid-notice-text">
+                  <strong>{{ $t('paymentForm.packagePaid') || 'Paquete Pagado' }}</strong>
+                  <span>{{
+                    $t('paymentForm.packagePaidMessage') ||
+                    'Esta sesión está incluida en el paquete prepagado. No se requiere pago adicional.'
+                  }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- SERVICE PRICE HINT -->
+            <div
+              v-if="servicePriceSuggestion && Number(servicePriceSuggestion) > 0"
+              class="payment-form-field service-price-hint"
+            >
+              <div class="service-price-header">
+                <label class="payment-form-label">
+                  <i class="bi bi-tag-fill"></i>
+                  {{ $t('paymentForm.servicePrice') || 'Precio del servicio' }}
+                </label>
+                <div class="service-price-info">
+                  <span class="service-price-value">{{ formattedServicePrice }}</span>
+                  <small class="service-price-note">
+                    {{
+                      $t('paymentForm.servicePriceNote') ||
+                      'Se usa como sugerencia para el total (editable).'
+                    }}
+                  </small>
+                </div>
+              </div>
+            </div>
             <div class="payment-form-field">
               <label class="payment-form-label">
                 {{ $t('collaboratorBookingsView.paymentType') }}
+                <Popper :class="'dark'" arrow hover>
+                  <template #content>
+                    <div>
+                      {{
+                        $t('paymentForm.tooltip.paymentType') ||
+                        'Tipo de Pago: TOTALMENTE (pago completo) o PARCIAL (pago parcial).'
+                      }}
+                    </div>
+                  </template>
+                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                </Popper>
               </label>
               <select
                 class="payment-form-select"
@@ -499,6 +1024,17 @@ export default {
             <div class="payment-form-field">
               <label class="payment-form-label">
                 {{ $t('collaboratorBookingsView.paymentMethod') }}
+                <Popper :class="'dark'" arrow hover>
+                  <template #content>
+                    <div>
+                      {{
+                        $t('paymentForm.tooltip.paymentMethod') ||
+                        'Método de Pago: Forma en que se realizó el pago (Efectivo, Tarjeta, Transferencia, etc.).'
+                      }}
+                    </div>
+                  </template>
+                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                </Popper>
               </label>
               <select
                 class="payment-form-select"
@@ -515,6 +1051,17 @@ export default {
             <div class="payment-form-field">
               <label class="payment-form-label">
                 {{ $t('collaboratorBookingsView.paymentFiscalNote') }}
+                <Popper :class="'dark'" arrow hover>
+                  <template #content>
+                    <div>
+                      {{
+                        $t('paymentForm.tooltip.paymentFiscalNote') ||
+                        'Nota Fiscal: Tipo de documento fiscal (Nota Fiscal o Gerencial).'
+                      }}
+                    </div>
+                  </template>
+                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                </Popper>
               </label>
               <select
                 class="payment-form-select"
@@ -530,35 +1077,96 @@ export default {
             <div class="payment-form-field">
               <label class="payment-form-label">
                 {{ $t('collaboratorBookingsView.totalAmount') }}
+                <Popper :class="'dark'" arrow hover>
+                  <template #content>
+                    <div>
+                      {{
+                        $t('paymentForm.tooltip.totalAmount') ||
+                        'Total del procedimiento: Precio del servicio para esta sesión (editable).'
+                      }}
+                    </div>
+                  </template>
+                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                </Popper>
+                <span
+                  v-if="packagePaymentStatus && packagePaymentStatus.isPaid"
+                  class="package-paid-indicator"
+                >
+                  <i class="bi bi-check-circle-fill"></i>
+                  {{ $t('paymentForm.includedInPackage') || '(Incluido en paquete)' }}
+                </span>
               </label>
               <input
                 min="1"
                 type="number"
                 class="payment-form-input"
-                :class="{ 'is-invalid': state.totalAmountError }"
+                :class="{
+                  'is-invalid': state.totalAmountError,
+                  'package-paid-input': packagePaymentStatus && packagePaymentStatus.isPaid,
+                }"
                 v-model="state.newConfirmationData.totalAmount"
                 placeholder="100"
-                @keyup="sendData"
+                :disabled="packagePaymentStatus && packagePaymentStatus.isPaid"
+                @input="
+                  userEditedTotalAmount = true;
+                  calculatePaymentAmount();
+                  sendData();
+                "
               />
             </div>
             <div class="payment-form-field">
               <label class="payment-form-label">
                 {{ $t('collaboratorBookingsView.paymentAmount') }}
+                <Popper :class="'dark'" arrow hover>
+                  <template #content>
+                    <div>
+                      {{
+                        $t('paymentForm.tooltip.paymentAmount') ||
+                        'Valor Pagado: Monto que se está pagando en esta transacción. Se calcula automáticamente como Total / Parcelas (editable).'
+                      }}
+                    </div>
+                  </template>
+                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                </Popper>
+                <span
+                  v-if="packagePaymentStatus && packagePaymentStatus.isPaid"
+                  class="package-paid-indicator"
+                >
+                  <i class="bi bi-check-circle-fill"></i>
+                  {{ $t('paymentForm.includedInPackage') || '(Incluido en paquete)' }}
+                </span>
               </label>
               <input
                 min="1"
                 type="number"
                 class="payment-form-input"
-                :class="{ 'is-invalid': state.paymentAmountError }"
+                :class="{
+                  'is-invalid': state.paymentAmountError,
+                  'package-paid-input': packagePaymentStatus && packagePaymentStatus.isPaid,
+                }"
                 v-model="state.newConfirmationData.paymentAmount"
                 placeholder="100"
-                @keyup="sendData"
-                @input="sendData"
+                :disabled="packagePaymentStatus && packagePaymentStatus.isPaid"
+                @input="
+                  userEditedPaymentAmount = true;
+                  sendData();
+                "
               />
             </div>
             <div class="payment-form-field">
               <label class="payment-form-label">
                 {{ $t('collaboratorBookingsView.installments') }}
+                <Popper :class="'dark'" arrow hover>
+                  <template #content>
+                    <div>
+                      {{
+                        $t('paymentForm.tooltip.installments') ||
+                        'Número de Parcelas: Cantidad de cuotas en las que se dividirá el pago. El valor pagado se calcula automáticamente como Total / Parcelas.'
+                      }}
+                    </div>
+                  </template>
+                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                </Popper>
               </label>
               <input
                 min="1"
@@ -567,6 +1175,10 @@ export default {
                 :class="{ 'is-invalid': state.installmentsError }"
                 v-model="state.newConfirmationData.installments"
                 placeholder="100"
+                @input="
+                  calculatePaymentAmount();
+                  sendData();
+                "
                 @keyup="sendData"
               />
             </div>
@@ -583,10 +1195,14 @@ export default {
                     {{ $t('professionals.suggestedCommission') || 'Comisión Sugerida' }}:
                     <strong>{{ professionalCommission }}</strong>
                   </span>
-                  <span v-if="suggestedCommissionAmount && state.newConfirmationData.paymentAmount"
-                        class="calculated-commission">
+                  <span
+                    v-if="suggestedCommissionAmount && state.newConfirmationData.paymentAmount"
+                    class="calculated-commission"
+                  >
                     {{ $t('professionals.calculatedAmount') || 'Monto Calculado' }}:
-                    <strong>{{ suggestedCommissionAmount }} {{ commerce?.currency || 'BRL' }}</strong>
+                    <strong
+                      >{{ suggestedCommissionAmount }} {{ commerce?.currency || 'BRL' }}</strong
+                    >
                   </span>
                 </div>
               </div>
@@ -594,6 +1210,17 @@ export default {
             <div class="payment-form-field">
               <label class="payment-form-label">
                 {{ $t('collaboratorBookingsView.paymentCommission') }}
+                <Popper :class="'dark'" arrow hover>
+                  <template #content>
+                    <div>
+                      {{
+                        $t('paymentForm.tooltip.paymentCommission') ||
+                        'Comisión de Pago: Monto de comisión asociado a este pago (opcional).'
+                      }}
+                    </div>
+                  </template>
+                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                </Popper>
               </label>
               <input
                 min="1"
@@ -608,6 +1235,17 @@ export default {
             <div class="payment-form-field payment-form-switch">
               <label class="payment-form-label">
                 {{ $t('collaboratorBookingsView.confirmInstallments') }}
+                <Popper :class="'dark'" arrow hover>
+                  <template #content>
+                    <div>
+                      {{
+                        $t('paymentForm.tooltip.confirmInstallments') ||
+                        'Confirmar Parcela: Si está activado, todas las cuotas se crean como CONFIRMADAS (pagadas). Si está desactivado, se crean como PENDIENTES (requieren confirmación manual).'
+                      }}
+                    </div>
+                  </template>
+                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                </Popper>
               </label>
               <div class="form-check form-switch">
                 <input
@@ -623,6 +1261,17 @@ export default {
             <div class="payment-form-field">
               <label class="payment-form-label">
                 {{ $t('collaboratorBookingsView.paymentComment') }}
+                <Popper :class="'dark'" arrow hover>
+                  <template #content>
+                    <div>
+                      {{
+                        $t('paymentForm.tooltip.paymentComment') ||
+                        'Comentario de Pago: Notas adicionales sobre este pago (opcional).'
+                      }}
+                    </div>
+                  </template>
+                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                </Popper>
               </label>
               <textarea
                 class="payment-form-textarea"
@@ -864,6 +1513,37 @@ export default {
   color: rgba(0, 0, 0, 0.6);
 }
 
+/* SERVICE PRICE HINT */
+.service-price-hint {
+  background: rgba(31, 63, 146, 0.06);
+  border: 1px solid rgba(31, 63, 146, 0.15);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.service-price-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.service-price-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.service-price-value {
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.service-price-note {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
 /* PROFESSIONAL COMMISSION STYLES */
 .payment-commission-section {
   background: rgba(74, 144, 226, 0.08);
@@ -909,5 +1589,132 @@ export default {
 .calculated-commission strong {
   color: #4a90e2;
   font-weight: 600;
+}
+
+/* PACKAGE PAYMENT STATUS BADGES */
+.package-paid-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem;
+  background: rgba(0, 194, 203, 0.1);
+  border: 1px solid rgba(0, 194, 203, 0.3);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #00c2cb;
+}
+
+.package-paid-badge i {
+  font-size: 0.875rem;
+  color: #00c2cb;
+}
+
+.package-pending-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem;
+  background: rgba(249, 195, 34, 0.1);
+  border: 1px solid rgba(249, 195, 34, 0.3);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #f9c322;
+}
+
+.package-pending-badge i {
+  font-size: 0.875rem;
+  color: #f9c322;
+}
+
+.package-paid-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #00c2cb;
+}
+
+.package-paid-indicator i {
+  font-size: 0.75rem;
+}
+
+.package-paid-input {
+  background: rgba(0, 194, 203, 0.05);
+  border-color: rgba(0, 194, 203, 0.2);
+  color: rgba(0, 0, 0, 0.5);
+  cursor: not-allowed;
+}
+
+.package-paid-input:disabled {
+  opacity: 0.7;
+}
+
+/* Package Paid Notice */
+.package-paid-notice {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(0, 194, 203, 0.08);
+  border: 1px solid rgba(0, 194, 203, 0.2);
+  border-radius: 8px;
+}
+
+.package-paid-notice-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+.package-paid-notice-content i {
+  font-size: 1rem;
+  color: #00c2cb;
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+.package-paid-notice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.package-paid-notice-text strong {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #00c2cb;
+}
+
+.package-paid-notice-text span {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.7);
+  line-height: 1.4;
+}
+
+/* Payment Field Info Icon */
+.payment-field-info-icon {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin-left: 0.375rem;
+  cursor: help;
+  transition: color 0.2s ease;
+}
+
+.payment-field-info-icon:hover {
+  color: #00c2cb;
+}
+
+/* Popper tooltip styles for payment form */
+:deep(.popper),
+:deep(.popper-dark),
+:deep([data-popper-placement]),
+:deep([data-popper-placement] > div) {
+  z-index: 10000 !important;
+  max-width: 320px !important;
 }
 </style>

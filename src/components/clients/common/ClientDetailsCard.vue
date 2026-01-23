@@ -424,6 +424,76 @@ export default {
       // Open the modal
       this.showAttentionCreationModal = true;
     },
+    handleOpenPaymentFormFromPackage(paymentData) {
+      // Open attention creation modal with package pre-selected for payment
+      // The user will need to create an attention/booking first, then PaymentForm will open automatically
+
+      // Find the client object
+      const clientForModal = this.client;
+
+      // Prepare client data for modal
+      this.attentionCreationClientData = {
+        queryStackClientId: clientForModal?.id,
+        firebaseClientId: undefined,
+        sendingClientId: false,
+        hasIdNumber: !!clientForModal?.userIdNumber,
+        hasEmail: !!clientForModal?.userEmail,
+        hasPhone: !!clientForModal?.userPhone,
+        userIdNumber: clientForModal?.userIdNumber,
+        name: clientForModal?.name,
+        lastName: clientForModal?.lastName,
+        email: clientForModal?.userEmail,
+        phone: clientForModal?.userPhone,
+      };
+
+      // Store preselected package data for payment
+      // Find queue that has the package serviceId
+      let preselectedQueue = null;
+      if (paymentData.packageId && this.queuesArray && this.queuesArray.length > 0) {
+        // Try to find a queue that matches the package's services
+        preselectedQueue = this.queuesArray.find(
+          queue =>
+            queue.serviceId === paymentData.serviceId ||
+            (queue.servicesId &&
+              Array.isArray(queue.servicesId) &&
+              queue.servicesId.includes(paymentData.serviceId))
+        );
+      }
+
+      this.preselectedQueueForModal = preselectedQueue;
+      this.preselectedServiceIdForModal = paymentData.serviceId || null;
+      this.preselectedPackageIdForModal = paymentData.packageId || null;
+
+      // Store payment data to be used when PaymentForm opens
+      this.preselectedPaymentData = {
+        packageId: paymentData.packageId,
+        totalAmount: paymentData.prepayComplete
+          ? paymentData.totalAmount
+          : paymentData.remainingAmount,
+        paymentAmount: paymentData.prepayComplete
+          ? paymentData.totalAmount
+          : paymentData.remainingAmount,
+        procedureNumber: paymentData.procedureNumber || 1,
+        proceduresTotalNumber: paymentData.proceduresTotalNumber,
+        prepayComplete: paymentData.prepayComplete || false,
+      };
+
+      // Open the modal
+      this.showAttentionCreationModal = true;
+
+      // Show message to user
+      const message = paymentData.prepayComplete
+        ? this.$t('package.prepayCompleteMessage') ||
+          'Se abrirá el formulario de pago para preparar todo el paquete.'
+        : this.$t('package.payRemainingMessage') ||
+          `Se abrirá el formulario de pago para pagar ${paymentData.remainingAmount} ${
+            this.commerce?.currency || 'BRL'
+          } restantes.`;
+
+      // Note: The actual PaymentForm will open when the attention/booking is created
+      // This is a limitation - PaymentForm requires an attention/booking ID
+      // For now, we open the attention creation modal and the user can proceed from there
+    },
     handleAttentionCreationError(errors) {
       // Handle errors as needed
     },
@@ -1038,6 +1108,20 @@ export default {
     visible() {
       const { showClientData } = this;
       return showClientData;
+    },
+    clientCreatedDateLabel() {
+      // Try common date fields across query-stack / firestore / legacy payloads.
+      const raw =
+        this.client?.clientCreatedDate ||
+        this.client?.createdDate ||
+        this.client?.createdAt ||
+        this.client?.created ||
+        this.client?.userCreatedDate ||
+        // fallback: last/most relevant attention date if that's what the list provides
+        this.client?.attentionCreatedDate;
+
+      const formatted = raw ? this.getDate(raw) : undefined;
+      return formatted || 'N/I';
     },
     // ✅ Combine dashboard toggles with prop toggles for child components
     combinedToggles() {
@@ -1926,9 +2010,7 @@ export default {
               <span class="metadata-label"
                 >{{ $t('dashboard.clientCard.date') || $t('dashboard.date') || 'Fecha' }}:</span
               >
-              <span class="metadata-value">{{
-                getDate(client.attentionCreatedDate || client.clientCreatedDate)
-              }}</span>
+              <span class="metadata-value">{{ clientCreatedDateLabel }}</span>
             </div>
           </div>
         </div>
@@ -2141,6 +2223,7 @@ export default {
                 :commerces="commerces"
                 :queues="queuesArray"
                 @open-attention-modal="handleOpenAttentionModalFromPackage"
+                @open-payment-form="handleOpenPaymentFormFromPackage"
               >
               </ClientPackagesManagement>
             </div>

@@ -9,7 +9,9 @@
           {{
             massMode && userRole !== 'administrator' && userRole !== 'business'
               ? $t('messages.compose.massMessage')
-              : (chatMode ? $t('chat.newChat') : $t('messages.compose.newMessage'))
+              : chatMode
+              ? $t('chat.newChat')
+              : $t('messages.compose.newMessage')
           }}
         </h3>
         <button @click="close" class="close-btn">
@@ -19,11 +21,16 @@
 
       <div class="modal-body">
         <!-- Pickers jerárquicos para iniciar Chat -->
-        <div v-if="chatMode" class="mass-filters-section compact" style="margin-bottom: 10px;">
+        <div v-if="chatMode" class="mass-filters-section compact" style="margin-bottom: 10px">
           <h4><i class="bi bi-funnel"></i> Selección de destinatario (Chat)</h4>
           <div class="compact-pickers chat-pickers">
             <!-- Business (single) - solo para master -->
-            <div v-if="userRole === 'master'" class="picker" :class="{ open: showBusinessPicker }" ref="businessPickerRef">
+            <div
+              v-if="userRole === 'master'"
+              class="picker"
+              :class="{ open: showBusinessPicker }"
+              ref="businessPickerRef"
+            >
               <button type="button" class="picker-button" @click="toggleBusinessPicker">
                 <i class="bi bi-building"></i>
                 Negocio
@@ -32,13 +39,24 @@
               </button>
               <transition name="fade-slide">
                 <div v-if="showBusinessPicker" class="picker-panel">
-                  <input v-model="businessSearch" type="text" class="picker-search" placeholder="Buscar negocios..." />
+                  <input
+                    v-model="businessSearch"
+                    type="text"
+                    class="picker-search"
+                    placeholder="Buscar negocios..."
+                  />
                   <div class="picker-actions">
                     <button type="button" class="link" @click="clearChatBusiness">Limpiar</button>
                   </div>
                   <div class="picker-list">
                     <label v-for="b in filteredBusinessList" :key="b.id" class="checkbox-item">
-                      <input type="radio" name="chat-business" :value="b.id" :checked="chatSelectedBusiness === b.id" @change="selectChatBusiness(b)" />
+                      <input
+                        type="radio"
+                        name="chat-business"
+                        :value="b.id"
+                        :checked="chatSelectedBusiness === b.id"
+                        @change="selectChatBusiness(b)"
+                      />
                       <span>{{ b.name || b.tag }}</span>
                     </label>
                   </div>
@@ -47,22 +65,50 @@
             </div>
 
             <!-- Commerce (single) - solo para master -->
-            <div v-if="userRole === 'master'" class="picker" :class="{ disabled: !chatCanPickCommerces, open: showCommercesPicker }" ref="commercesPickerRef">
-              <button type="button" class="picker-button" :disabled="!chatCanPickCommerces" @click="toggleCommercesPicker">
+            <div
+              v-if="userRole === 'master'"
+              class="picker"
+              :class="{ disabled: !chatCanPickCommerces, open: showCommercesPicker }"
+              ref="commercesPickerRef"
+            >
+              <button
+                type="button"
+                class="picker-button"
+                :disabled="!chatCanPickCommerces"
+                @click="toggleCommercesPicker"
+              >
                 <i class="bi bi-shop"></i>
                 Comercio
                 <span class="badge">{{ chatSelectedCommerceName || '—' }}</span>
-                <i class="bi" :class="showCommercesPicker ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                <i
+                  class="bi"
+                  :class="showCommercesPicker ? 'bi-chevron-up' : 'bi-chevron-down'"
+                ></i>
               </button>
               <transition name="fade-slide">
                 <div v-if="showCommercesPicker" class="picker-panel">
-                  <input v-model="commerceSearch" type="text" class="picker-search" placeholder="Buscar comercios..." />
+                  <input
+                    v-model="commerceSearch"
+                    type="text"
+                    class="picker-search"
+                    placeholder="Buscar comercios..."
+                  />
                   <div class="picker-actions">
                     <button type="button" class="link" @click="clearChatCommerce">Limpiar</button>
                   </div>
                   <div class="picker-list">
-                    <label v-for="c in chatFilteredCommercesBySearch" :key="c.id" class="checkbox-item">
-                      <input type="radio" name="chat-commerce" :value="c.id" :checked="chatSelectedCommerce === c.id" @change="selectChatCommerce(c)" />
+                    <label
+                      v-for="c in chatFilteredCommercesBySearch"
+                      :key="c.id"
+                      class="checkbox-item"
+                    >
+                      <input
+                        type="radio"
+                        name="chat-commerce"
+                        :value="c.id"
+                        :checked="chatSelectedCommerce === c.id"
+                        @change="selectChatCommerce(c)"
+                      />
                       <span>{{ c.name || c.tag }}</span>
                     </label>
                   </div>
@@ -73,33 +119,70 @@
             <!-- Tipo (single) -->
             <div class="picker types">
               <div class="segmented">
-                <button type="button" :class="{ active: chatRecipientType === 'collaborator' }" @click="selectChatRecipientType('collaborator')">
+                <button
+                  type="button"
+                  :class="{ active: chatRecipientType === 'collaborator' }"
+                  @click="selectChatRecipientType('collaborator')"
+                >
                   <i class="bi bi-person"></i> Colaborador
                 </button>
-                <button type="button" :class="{ active: chatRecipientType === 'administrator' }" @click="selectChatRecipientType('administrator')">
+                <button
+                  type="button"
+                  :class="{ active: chatRecipientType === 'administrator' }"
+                  @click="selectChatRecipientType('administrator')"
+                >
                   <i class="bi bi-person-gear"></i> Administrador
                 </button>
               </div>
             </div>
 
             <!-- Persona (single) -->
-            <div class="picker" :class="{ disabled: !chatCanPickRecipients, open: showRecipientsPicker }" ref="recipientsPickerRef">
-              <button type="button" class="picker-button" :disabled="!chatCanPickRecipients" @click="toggleRecipientsPicker">
+            <div
+              class="picker"
+              :class="{ disabled: !chatCanPickRecipients, open: showRecipientsPicker }"
+              ref="recipientsPickerRef"
+            >
+              <button
+                type="button"
+                class="picker-button"
+                :disabled="!chatCanPickRecipients"
+                @click="toggleRecipientsPicker"
+              >
                 <i class="bi bi-people"></i>
                 Persona
                 <span class="badge">{{ chatSelectedRecipientName || '—' }}</span>
-                <i class="bi" :class="showRecipientsPicker ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                <i
+                  class="bi"
+                  :class="showRecipientsPicker ? 'bi-chevron-up' : 'bi-chevron-down'"
+                ></i>
               </button>
               <transition name="fade-slide">
                 <div v-if="showRecipientsPicker" class="picker-panel">
-                  <input v-model="recipientSearch" type="text" class="picker-search" placeholder="Buscar personas..." />
+                  <input
+                    v-model="recipientSearch"
+                    type="text"
+                    class="picker-search"
+                    placeholder="Buscar personas..."
+                  />
                   <div class="picker-actions">
                     <button type="button" class="link" @click="clearChatRecipient">Limpiar</button>
                   </div>
                   <div class="picker-list">
-                    <label v-for="r in chatFilteredRecipientsBySearch" :key="r.id" class="checkbox-item">
-                      <input type="radio" name="chat-recipient" :value="r.id" :checked="chatSelectedRecipient === r.id" @change="selectChatRecipient(r)" />
-                      <span>{{ r.name }} <small class="muted">{{ r.email }}</small></span>
+                    <label
+                      v-for="r in chatFilteredRecipientsBySearch"
+                      :key="r.id"
+                      class="checkbox-item"
+                    >
+                      <input
+                        type="radio"
+                        name="chat-recipient"
+                        :value="r.id"
+                        :checked="chatSelectedRecipient === r.id"
+                        @change="selectChatRecipient(r)"
+                      />
+                      <span
+                        >{{ r.name }} <small class="muted">{{ r.email }}</small></span
+                      >
                     </label>
                   </div>
                 </div>
@@ -120,18 +203,30 @@
           </div>
 
           <div class="form-field">
-            <label for="message-category"><i class="bi bi-folder"></i> {{ $t('messages.compose.category') }} *</label>
+            <label for="message-category"
+              ><i class="bi bi-folder"></i> {{ $t('messages.compose.category') }} *</label
+            >
             <select id="message-category" v-model="form.category" class="form-select">
               <option value="direct_message">{{ $t('messages.categories.direct_message') }}</option>
               <option value="announcement">{{ $t('messages.categories.announcement') }}</option>
-              <option value="attention_reminder">{{ $t('messages.categories.attention_reminder') }}</option>
-              <option value="booking_reminder">{{ $t('messages.categories.booking_reminder') }}</option>
-              <option value="booking_confirmed">{{ $t('messages.categories.booking_confirmed') }}</option>
+              <option value="attention_reminder">
+                {{ $t('messages.categories.attention_reminder') }}
+              </option>
+              <option value="booking_reminder">
+                {{ $t('messages.categories.booking_reminder') }}
+              </option>
+              <option value="booking_confirmed">
+                {{ $t('messages.categories.booking_confirmed') }}
+              </option>
               <option value="task_assigned">{{ $t('messages.categories.task_assigned') }}</option>
               <option value="stock">{{ $t('messages.categories.stock') }}</option>
               <option value="low_stock">{{ $t('messages.categories.low_stock') }}</option>
-              <option value="payment_received">{{ $t('messages.categories.payment_received') }}</option>
-              <option value="payment_pending">{{ $t('messages.categories.payment_pending') }}</option>
+              <option value="payment_received">
+                {{ $t('messages.categories.payment_received') }}
+              </option>
+              <option value="payment_pending">
+                {{ $t('messages.categories.payment_pending') }}
+              </option>
             </select>
           </div>
         </div>
@@ -141,7 +236,12 @@
           <h4><i class="bi bi-funnel"></i> Filtros de Destinatarios</h4>
           <div class="compact-pickers">
             <!-- Picker: Business (solo master; para business/admin se usa implícitamente su próprio business) -->
-            <div v-if="userRole === 'master'" class="picker" :class="{ open: showBusinessPicker }" ref="businessPickerRef">
+            <div
+              v-if="userRole === 'master'"
+              class="picker"
+              :class="{ open: showBusinessPicker }"
+              ref="businessPickerRef"
+            >
               <button type="button" class="picker-button" @click="toggleBusinessPicker">
                 <i class="bi bi-building"></i>
                 Negocios
@@ -151,51 +251,107 @@
               </button>
               <transition name="fade-slide">
                 <div v-if="showBusinessPicker" class="picker-panel">
-                <input v-model="businessSearch" type="text" class="picker-search" placeholder="Buscar negocios..." />
-                <div class="picker-actions">
-                  <button type="button" class="link" @click="selectAllFilteredBusiness">Seleccionar todo (filtrados)</button>
-                  <button type="button" class="link" @click="clearSelectedBusiness">Limpiar</button>
-                </div>
-                <div class="picker-list">
-                  <label class="checkbox-item">
-                    <input type="checkbox" v-model="massFilters.selectAllBusiness" @change="toggleSelectAllBusiness">
-                    <span>Todos los negocios</span>
-                  </label>
-                  <label v-for="business in filteredBusinessList" :key="business.id" class="checkbox-item">
-                    <input type="checkbox" :value="business.id" v-model="massFilters.selectedBusiness" @change="handleBusinessChange">
-                    <span>{{ business.name }}</span>
-                  </label>
-                </div>
+                  <input
+                    v-model="businessSearch"
+                    type="text"
+                    class="picker-search"
+                    placeholder="Buscar negocios..."
+                  />
+                  <div class="picker-actions">
+                    <button type="button" class="link" @click="selectAllFilteredBusiness">
+                      Seleccionar todo (filtrados)
+                    </button>
+                    <button type="button" class="link" @click="clearSelectedBusiness">
+                      Limpiar
+                    </button>
+                  </div>
+                  <div class="picker-list">
+                    <label class="checkbox-item">
+                      <input
+                        type="checkbox"
+                        v-model="massFilters.selectAllBusiness"
+                        @change="toggleSelectAllBusiness"
+                      />
+                      <span>Todos los negocios</span>
+                    </label>
+                    <label
+                      v-for="business in filteredBusinessList"
+                      :key="business.id"
+                      class="checkbox-item"
+                    >
+                      <input
+                        type="checkbox"
+                        :value="business.id"
+                        v-model="massFilters.selectedBusiness"
+                        @change="handleBusinessChange"
+                      />
+                      <span>{{ business.name }}</span>
+                    </label>
+                  </div>
                 </div>
               </transition>
             </div>
 
             <!-- Picker: Comercios -->
-            <div class="picker" :class="{ disabled: !canPickCommerces, open: showCommercesPicker }" ref="commercesPickerRef">
-              <button type="button" class="picker-button" :disabled="!canPickCommerces" @click="toggleCommercesPicker">
+            <div
+              class="picker"
+              :class="{ disabled: !canPickCommerces, open: showCommercesPicker }"
+              ref="commercesPickerRef"
+            >
+              <button
+                type="button"
+                class="picker-button"
+                :disabled="!canPickCommerces"
+                @click="toggleCommercesPicker"
+              >
                 <i class="bi bi-shop"></i>
                 Comercios
                 <span v-if="massFilters.selectAllCommerces" class="badge">Todos</span>
                 <span v-else class="badge">{{ massFilters.selectedCommerces.length }}</span>
-                <i class="bi" :class="showCommercesPicker ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                <i
+                  class="bi"
+                  :class="showCommercesPicker ? 'bi-chevron-up' : 'bi-chevron-down'"
+                ></i>
               </button>
               <transition name="fade-slide">
                 <div v-if="showCommercesPicker" class="picker-panel">
-                <input v-model="commerceSearch" type="text" class="picker-search" placeholder="Buscar comercios..." />
-                <div class="picker-actions">
-                  <button type="button" class="link" @click="selectAllFilteredCommerces">Seleccionar todo (filtrados)</button>
-                  <button type="button" class="link" @click="clearSelectedCommerces">Limpiar</button>
-                </div>
-                <div class="picker-list">
-                  <label class="checkbox-item">
-                    <input type="checkbox" v-model="massFilters.selectAllCommerces" @change="toggleSelectAllCommerces">
-                    <span>Todos los comercios</span>
-                  </label>
-                  <label v-for="commerce in filteredCommercesBySearch" :key="commerce.id" class="checkbox-item">
-                    <input type="checkbox" :value="commerce.id" v-model="massFilters.selectedCommerces" @change="handleCommerceChange">
-                    <span>{{ commerce.name }}</span>
-                  </label>
-                </div>
+                  <input
+                    v-model="commerceSearch"
+                    type="text"
+                    class="picker-search"
+                    placeholder="Buscar comercios..."
+                  />
+                  <div class="picker-actions">
+                    <button type="button" class="link" @click="selectAllFilteredCommerces">
+                      Seleccionar todo (filtrados)
+                    </button>
+                    <button type="button" class="link" @click="clearSelectedCommerces">
+                      Limpiar
+                    </button>
+                  </div>
+                  <div class="picker-list">
+                    <label class="checkbox-item">
+                      <input
+                        type="checkbox"
+                        v-model="massFilters.selectAllCommerces"
+                        @change="toggleSelectAllCommerces"
+                      />
+                      <span>Todos los comercios</span>
+                    </label>
+                    <label
+                      v-for="commerce in filteredCommercesBySearch"
+                      :key="commerce.id"
+                      class="checkbox-item"
+                    >
+                      <input
+                        type="checkbox"
+                        :value="commerce.id"
+                        v-model="massFilters.selectedCommerces"
+                        @change="handleCommerceChange"
+                      />
+                      <span>{{ commerce.name }}</span>
+                    </label>
+                  </div>
                 </div>
               </transition>
             </div>
@@ -203,40 +359,85 @@
             <!-- Tipos: Colaboradores / Administradores -->
             <div class="picker types">
               <div class="segmented">
-                <button type="button" :class="{ active: massFilters.recipientTypes.includes('collaborator') }" @click="toggleRecipientType('collaborator')">
+                <button
+                  type="button"
+                  :class="{ active: massFilters.recipientTypes.includes('collaborator') }"
+                  @click="toggleRecipientType('collaborator')"
+                >
                   <i class="bi bi-person"></i> Colaboradores
                 </button>
-                <button type="button" :class="{ active: massFilters.recipientTypes.includes('administrator') }" @click="toggleRecipientType('administrator')">
+                <button
+                  type="button"
+                  :class="{ active: massFilters.recipientTypes.includes('administrator') }"
+                  @click="toggleRecipientType('administrator')"
+                >
                   <i class="bi bi-person-gear"></i> Administradores
                 </button>
               </div>
             </div>
 
             <!-- Picker: Destinatarios -->
-            <div class="picker" :class="{ disabled: !canPickRecipients, open: showRecipientsPicker }" ref="recipientsPickerRef">
-              <button type="button" class="picker-button" :disabled="!canPickRecipients" @click="toggleRecipientsPicker">
+            <div
+              class="picker"
+              :class="{ disabled: !canPickRecipients, open: showRecipientsPicker }"
+              ref="recipientsPickerRef"
+            >
+              <button
+                type="button"
+                class="picker-button"
+                :disabled="!canPickRecipients"
+                @click="toggleRecipientsPicker"
+              >
                 <i class="bi bi-people"></i>
                 Personas
                 <span class="badge">{{ massFilters.selectedRecipients.length }}</span>
-                <i class="bi" :class="showRecipientsPicker ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                <i
+                  class="bi"
+                  :class="showRecipientsPicker ? 'bi-chevron-up' : 'bi-chevron-down'"
+                ></i>
               </button>
               <transition name="fade-slide">
                 <div v-if="showRecipientsPicker" class="picker-panel">
-                <input v-model="recipientSearch" type="text" class="picker-search" placeholder="Buscar personas..." />
-                <div class="picker-actions">
-                  <button type="button" class="link" @click="selectAllFilteredRecipients">Seleccionar todo (filtrados)</button>
-                  <button type="button" class="link" @click="clearSelectedRecipients">Limpiar</button>
-                </div>
-                <div class="picker-list">
-                  <label class="checkbox-item">
-                    <input type="checkbox" v-model="massFilters.selectAllRecipients" @change="toggleSelectAllRecipients">
-                    <span>Seleccionar todos</span>
-                  </label>
-                  <label v-for="recipient in filteredRecipientsBySearch" :key="recipient.id" class="checkbox-item">
-                    <input type="checkbox" :value="recipient.id" v-model="massFilters.selectedRecipients" @change="handleRecipientChange">
-                    <span>{{ recipient.name }} <small class="muted">{{ recipient.email }}</small></span>
-                  </label>
-                </div>
+                  <input
+                    v-model="recipientSearch"
+                    type="text"
+                    class="picker-search"
+                    placeholder="Buscar personas..."
+                  />
+                  <div class="picker-actions">
+                    <button type="button" class="link" @click="selectAllFilteredRecipients">
+                      Seleccionar todo (filtrados)
+                    </button>
+                    <button type="button" class="link" @click="clearSelectedRecipients">
+                      Limpiar
+                    </button>
+                  </div>
+                  <div class="picker-list">
+                    <label class="checkbox-item">
+                      <input
+                        type="checkbox"
+                        v-model="massFilters.selectAllRecipients"
+                        @change="toggleSelectAllRecipients"
+                      />
+                      <span>Seleccionar todos</span>
+                    </label>
+                    <label
+                      v-for="recipient in filteredRecipientsBySearch"
+                      :key="recipient.id"
+                      class="checkbox-item"
+                    >
+                      <input
+                        type="checkbox"
+                        :value="recipient.id"
+                        v-model="massFilters.selectedRecipients"
+                        @change="handleRecipientChange"
+                      />
+                      <span
+                        >{{ recipient.name }}
+                        <small class="muted">{{ recipient.email }}</small></span
+                      >
+                    </label>
+                  </div>
                 </div>
               </transition>
             </div>
@@ -244,30 +445,55 @@
 
           <!-- Resumen compacto -->
           <div v-if="hasAnySelection" class="selection-summary compact">
-            <span class="chip"><i class="bi bi-building"></i> {{ massFilters.selectAllBusiness ? 'Todos' : massFilters.selectedBusiness.length }} negocios</span>
-            <span class="chip"><i class="bi bi-shop"></i> {{ massFilters.selectAllCommerces ? 'Todos' : massFilters.selectedCommerces.length }} comercios</span>
-            <span class="chip" v-if="massFilters.recipientTypes.length"><i class="bi bi-people"></i> {{ massFilters.recipientTypes.join(', ') }}</span>
-            <span class="chip primary"><i class="bi bi-person-check"></i> {{ massFilters.selectedRecipients.length }} destinatarios</span>
+            <span class="chip"
+              ><i class="bi bi-building"></i>
+              {{ massFilters.selectAllBusiness ? 'Todos' : massFilters.selectedBusiness.length }}
+              negocios</span
+            >
+            <span class="chip"
+              ><i class="bi bi-shop"></i>
+              {{ massFilters.selectAllCommerces ? 'Todos' : massFilters.selectedCommerces.length }}
+              comercios</span
+            >
+            <span class="chip" v-if="massFilters.recipientTypes.length"
+              ><i class="bi bi-people"></i> {{ massFilters.recipientTypes.join(', ') }}</span
+            >
+            <span class="chip primary"
+              ><i class="bi bi-person-check"></i>
+              {{ massFilters.selectedRecipients.length }} destinatarios</span
+            >
           </div>
         </div>
 
         <!-- Selector de destinatario para mensajes normales -->
-        <div class="form-field" v-if="form.recipientType && !massMode && !chatMode && userRole !== 'master'">
-          <label for="recipient-id"><i class="bi bi-people"></i> {{ $t('messages.compose.selectRecipient') }} *</label>
-          <select id="recipient-id" v-model="form.recipientId" class="form-select" :disabled="loadingRecipients">
-            <option value="">{{ loadingRecipients ? $t('common.loading') : $t('messages.compose.chooseRecipient') }}</option>
-            <option
-              v-for="recipient in recipients"
-              :key="recipient.id"
-              :value="recipient.id"
-            >
+        <div
+          class="form-field"
+          v-if="form.recipientType && !massMode && !chatMode && userRole !== 'master'"
+        >
+          <label for="recipient-id"
+            ><i class="bi bi-people"></i> {{ $t('messages.compose.selectRecipient') }} *</label
+          >
+          <select
+            id="recipient-id"
+            v-model="form.recipientId"
+            class="form-select"
+            :disabled="loadingRecipients"
+          >
+            <option value="">
+              {{
+                loadingRecipients ? $t('common.loading') : $t('messages.compose.chooseRecipient')
+              }}
+            </option>
+            <option v-for="recipient in recipients" :key="recipient.id" :value="recipient.id">
               {{ recipient.name || recipient.email }}
             </option>
           </select>
         </div>
 
         <div class="form-field" v-if="!chatMode">
-          <label for="message-title"><i class="bi bi-card-heading"></i> {{ $t('messages.compose.title') }} *</label>
+          <label for="message-title"
+            ><i class="bi bi-card-heading"></i> {{ $t('messages.compose.title') }} *</label
+          >
           <input
             id="message-title"
             v-model="form.title"
@@ -279,7 +505,9 @@
         </div>
 
         <div class="form-field">
-          <label for="message-content"><i class="bi bi-text-paragraph"></i> {{ $t('messages.compose.content') }} *</label>
+          <label for="message-content"
+            ><i class="bi bi-text-paragraph"></i> {{ $t('messages.compose.content') }} *</label
+          >
           <textarea
             id="message-content"
             v-model="form.content"
@@ -300,7 +528,9 @@
 
         <div class="form-row" v-if="!chatMode && (showActions || form.actionLink)">
           <div class="form-field">
-            <label for="action-link"><i class="bi bi-link-45deg"></i> {{ $t('messages.compose.actionLink') }}</label>
+            <label for="action-link"
+              ><i class="bi bi-link-45deg"></i> {{ $t('messages.compose.actionLink') }}</label
+            >
             <input
               id="action-link"
               v-model="form.actionLink"
@@ -311,7 +541,9 @@
           </div>
 
           <div class="form-field">
-            <label for="action-label"><i class="bi bi-tag"></i> {{ $t('messages.compose.actionLabel') }}</label>
+            <label for="action-label"
+              ><i class="bi bi-tag"></i> {{ $t('messages.compose.actionLabel') }}</label
+            >
             <input
               id="action-label"
               v-model="form.actionLabel"
@@ -421,13 +653,15 @@ const chatSelectedRecipient = ref('');
 
 const chatSelectedBusinessName = computed(() => {
   const b = availableBusiness.value.find(b => b.id === chatSelectedBusiness.value);
-  return (b?.name || b?.tag || '');
+  return b?.name || b?.tag || '';
 });
 const chatSelectedCommerceName = computed(() => {
   const c = availableCommerces.value.find(c => c.id === chatSelectedCommerce.value);
-  return (c?.name || c?.tag || '');
+  return c?.name || c?.tag || '';
 });
-const chatSelectedRecipientName = computed(() => (allRecipients.value.find(r => r.id === chatSelectedRecipient.value)?.name) || '');
+const chatSelectedRecipientName = computed(
+  () => allRecipients.value.find(r => r.id === chatSelectedRecipient.value)?.name || '',
+);
 
 const chatFilteredCommerces = computed(() => {
   if (!chatSelectedBusiness.value) return [];
@@ -481,7 +715,9 @@ const chatFilteredRecipientsBySearch = computed(() => {
   const base = chatFilteredRecipients.value;
   const q = recipientSearch.value.trim().toLowerCase();
   if (!q) return base;
-  return base.filter(r => (r.name || '').toLowerCase().includes(q) || (r.email || '').toLowerCase().includes(q));
+  return base.filter(
+    r => (r.name || '').toLowerCase().includes(q) || (r.email || '').toLowerCase().includes(q),
+  );
 });
 
 const chatCanPickCommerces = computed(() => !!chatSelectedBusiness.value);
@@ -492,7 +728,7 @@ const chatCanPickRecipients = computed(() => {
     console.log('[DEBUG MessageComposer] chatCanPickRecipients (master):', {
       chatSelectedCommerce: chatSelectedCommerce.value,
       chatRecipientType: chatRecipientType.value,
-      result
+      result,
     });
     return result;
   }
@@ -501,7 +737,7 @@ const chatCanPickRecipients = computed(() => {
   console.log('[DEBUG MessageComposer] chatCanPickRecipients (no-master):', {
     chatRecipientType: chatRecipientType.value,
     userRole: props.userRole,
-    result
+    result,
   });
   return result;
 });
@@ -517,7 +753,9 @@ function selectChatBusiness(biz) {
   // Abrir el picker de comercios para que el usuario elija
   showCommercesPicker.value = true;
 }
-function clearChatBusiness() { selectChatBusiness({ id: '' }); }
+function clearChatBusiness() {
+  selectChatBusiness({ id: '' });
+}
 
 function selectChatCommerce(com) {
   chatSelectedCommerce.value = com.id;
@@ -527,13 +765,15 @@ function selectChatCommerce(com) {
   // Abrir el picker de personas para que el usuario elija
   showRecipientsPicker.value = true;
 }
-function clearChatCommerce() { selectChatCommerce({ id: '' }); }
+function clearChatCommerce() {
+  selectChatCommerce({ id: '' });
+}
 
 function selectChatRecipientType(type) {
   console.log('[DEBUG MessageComposer] selectChatRecipientType called:', {
     type,
     userRole: props.userRole,
-    currentChatRecipientType: chatRecipientType.value
+    currentChatRecipientType: chatRecipientType.value,
   });
 
   chatRecipientType.value = type;
@@ -610,7 +850,10 @@ const filteredRecipients = computed(() => {
   }
 
   // Para usuarios business/administrator, asegurar que los administradores pertenezcan a su business
-  if ((props.userRole === 'business' || props.userRole === 'administrator') && props.userData.businessId) {
+  if (
+    (props.userRole === 'business' || props.userRole === 'administrator') &&
+    props.userData.businessId
+  ) {
     const currentBizId = String(props.userData.businessId);
     filtered = filtered.filter(recipient => {
       if (recipient.type !== 'administrator') return true; // colaboradores ya están restringidos por comercios
@@ -639,7 +882,9 @@ const filteredRecipientsBySearch = computed(() => {
   const base = filteredRecipients.value;
   const q = recipientSearch.value.trim().toLowerCase();
   if (!q) return base;
-  return base.filter(r => (r.name || '').toLowerCase().includes(q) || (r.email || '').toLowerCase().includes(q));
+  return base.filter(
+    r => (r.name || '').toLowerCase().includes(q) || (r.email || '').toLowerCase().includes(q),
+  );
 });
 
 // Habilitaciones y resumen
@@ -651,15 +896,20 @@ const canPickCommerces = computed(() => {
   }
   return massFilters.value.selectAllBusiness || massFilters.value.selectedBusiness.length > 0;
 });
-const canPickRecipients = computed(() => (massFilters.value.selectAllCommerces || massFilters.value.selectedCommerces.length > 0) && massFilters.value.recipientTypes.length > 0);
-const hasAnySelection = computed(() => (
-  massFilters.value.selectAllBusiness ||
-  massFilters.value.selectedBusiness.length > 0 ||
-  massFilters.value.selectAllCommerces ||
-  massFilters.value.selectedCommerces.length > 0 ||
-  massFilters.value.recipientTypes.length > 0 ||
-  massFilters.value.selectedRecipients.length > 0
-));
+const canPickRecipients = computed(
+  () =>
+    (massFilters.value.selectAllCommerces || massFilters.value.selectedCommerces.length > 0) &&
+    massFilters.value.recipientTypes.length > 0,
+);
+const hasAnySelection = computed(
+  () =>
+    massFilters.value.selectAllBusiness ||
+    massFilters.value.selectedBusiness.length > 0 ||
+    massFilters.value.selectAllCommerces ||
+    massFilters.value.selectedCommerces.length > 0 ||
+    massFilters.value.recipientTypes.length > 0 ||
+    massFilters.value.selectedRecipients.length > 0,
+);
 
 // Determina qué tipos de destinatarios puede seleccionar según el rol
 const availableRecipientTypes = computed(() => {
@@ -679,20 +929,18 @@ const availableRecipientTypes = computed(() => {
   }
 });
 
-const canSendNotifications = computed(() => {
-  return props.userRole === 'master' || props.userRole === 'administrator';
-});
+const canSendNotifications = computed(
+  () => props.userRole === 'master' || props.userRole === 'administrator'
+);
 
 const canSend = computed(() => {
   // En chat mode no se requiere title
   if (props.chatMode) {
-    const hasRecipient = props.userRole === 'master'
-      ? chatSelectedRecipient.value  // Para master se usa el selector completo
-      : chatSelectedRecipient.value; // Para no-master se usa el selector simple
-    return (
-      hasRecipient &&
-      form.value.content.trim()
-    );
+    const hasRecipient =
+      props.userRole === 'master'
+        ? chatSelectedRecipient.value // Para master se usa el selector completo
+        : chatSelectedRecipient.value; // Para no-master se usa el selector simple
+    return hasRecipient && form.value.content.trim();
   }
 
   // En modo masivo, no se requiere recipientId específico, pero sí recipientType
@@ -715,40 +963,46 @@ const canSend = computed(() => {
   );
 });
 
-watch(() => props.isOpen, (newVal) => {
-  if (newVal) {
-    resetForm();
-    // En chat mode, preconfigurar valores DESPUÉS del reset
-    if (props.chatMode) {
-      form.value.type = 'chat';
-      form.value.category = 'direct_message';
-      form.value.priority = 'normal';
-      if (props.userRole === 'master') {
+watch(
+  () => props.isOpen,
+  newVal => {
+    if (newVal) {
+      resetForm();
+      // En chat mode, preconfigurar valores DESPUÉS del reset
+      if (props.chatMode) {
+        form.value.type = 'chat';
+        form.value.category = 'direct_message';
+        form.value.priority = 'normal';
+        if (props.userRole === 'master') {
+          loadAvailableBusiness();
+          loadAvailableCommerces();
+          loadAllRecipients();
+        } else {
+          // Para usuarios no-master en chat mode, configurar tipo por defecto y cargar recipients
+          chatRecipientType.value = 'collaborator';
+          form.value.recipientType = 'collaborator';
+          console.log(
+            '[DEBUG MessageComposer] Configured chatRecipientType for no-master:',
+            chatRecipientType.value,
+          );
+          loadRecipients();
+        }
+      }
+      // En modo masivo, cargar datos iniciales
+      if (props.massMode) {
         loadAvailableBusiness();
         loadAvailableCommerces();
         loadAllRecipients();
-      } else {
-        // Para usuarios no-master en chat mode, configurar tipo por defecto y cargar recipients
-        chatRecipientType.value = 'collaborator';
-        form.value.recipientType = 'collaborator';
-        console.log('[DEBUG MessageComposer] Configured chatRecipientType for no-master:', chatRecipientType.value);
+      }
+      // Para no-master, establecer tipo por defecto para habilitar selección de destinatario
+      if (!props.chatMode && props.userRole !== 'master') {
+        form.value.type = 'chat';
+        form.value.recipientType = form.value.recipientType || 'collaborator';
         loadRecipients();
       }
     }
-    // En modo masivo, cargar datos iniciales
-    if (props.massMode) {
-      loadAvailableBusiness();
-      loadAvailableCommerces();
-      loadAllRecipients();
-    }
-    // Para no-master, establecer tipo por defecto para habilitar selección de destinatario
-    if (!props.chatMode && props.userRole !== 'master') {
-      form.value.type = 'chat';
-      form.value.recipientType = form.value.recipientType || 'collaborator';
-      loadRecipients();
-    }
-  }
-});
+  },
+);
 
 // Función para cargar business disponibles
 async function loadAvailableBusiness() {
@@ -759,10 +1013,12 @@ async function loadAvailableBusiness() {
       endpoint = '/business';
     } else if (props.userData.businessId) {
       // Otros usuarios solo ven su business
-      availableBusiness.value = [{
-        id: props.userData.businessId,
-        name: props.userData.businessName || 'Mi Negocio'
-      }];
+      availableBusiness.value = [
+        {
+          id: props.userData.businessId,
+          name: props.userData.businessName || 'Mi Negocio',
+        },
+      ];
       return;
     } else {
       return;
@@ -823,11 +1079,10 @@ async function loadAllRecipients() {
 
       // Obtener administrators de cada business
       const administratorsPromises = businesses.map(business =>
-        requestBackend.get(`/administrator/businessId/${business.id}`)
-          .catch(error => {
-            console.warn(`Error loading administrators for business ${business.id}:`, error);
-            return { data: [] }; // Return empty array if fails
-          })
+        requestBackend.get(`/administrator/businessId/${business.id}`).catch(error => {
+          console.warn(`Error loading administrators for business ${business.id}:`, error);
+          return { data: [] }; // Return empty array if fails
+        })
       );
 
       const administratorsResponses = await Promise.all(administratorsPromises);
@@ -840,7 +1095,10 @@ async function loadAllRecipients() {
         if (!uniqueAdministrators.has(admin.id)) {
           uniqueAdministrators.set(admin.id, {
             id: admin.id,
-            name: admin.name || admin.businessName || `${admin.firstName || ''} ${admin.lastName || ''}`.trim(),
+            name:
+              admin.name ||
+              admin.businessName ||
+              `${admin.firstName || ''} ${admin.lastName || ''}`.trim(),
             email: admin.email,
             type: 'administrator',
             businessId: admin.businessId,
@@ -851,7 +1109,6 @@ async function loadAllRecipients() {
       });
 
       administrators = Array.from(uniqueAdministrators.values());
-
     } catch (error) {
       console.error('Error loading administrators:', error);
       // Si falla, continúa solo con collaborators
@@ -863,7 +1120,6 @@ async function loadAllRecipients() {
     if (props.userData.id) {
       allRecipients.value = allRecipients.value.filter(item => item.id !== props.userData.id);
     }
-
   } catch (error) {
     console.error('Error loading all recipients:', error);
     allRecipients.value = [];
@@ -951,7 +1207,7 @@ async function loadRecipients() {
   console.log('[MessageComposer] Loading recipients for:', {
     recipientType: form.value.recipientType,
     userRole: props.userRole,
-    userData: props.userData
+    userData: props.userData,
   });
 
   loadingRecipients.value = true;
@@ -966,13 +1222,25 @@ async function loadRecipients() {
           // MASTER puede ver TODOS los collaborators
           endpoint = '/collaborator';
           response = await requestBackend.get(endpoint);
-          console.log('[MessageComposer] All collaborators (master):', response.data.length, 'items');
+          console.log(
+            '[MessageComposer] All collaborators (master):',
+            response.data.length,
+            'items',
+          );
           data = response.data;
-        } else if ((props.userRole === 'business' || props.userRole === 'administrator') && props.userData.businessId) {
+        } else if (
+          (props.userRole === 'business' || props.userRole === 'administrator') &&
+          props.userData.businessId
+        ) {
           // ADMINISTRATOR/BUSINESS puede enviar a collaborators de los commerces de su negocio
           // 1. Primero obtener los commerces del businessId
-          console.log('[MessageComposer] Fetching commerces for businessId:', props.userData.businessId);
-          const commercesResponse = await requestBackend.get(`/commerce/businessId/${props.userData.businessId}`);
+          console.log(
+            '[MessageComposer] Fetching commerces for businessId:',
+            props.userData.businessId,
+          );
+          const commercesResponse = await requestBackend.get(
+            `/commerce/businessId/${props.userData.businessId}`,
+          );
           const commerces = commercesResponse.data;
           const commercesIds = commerces.map(c => c.id);
           console.log('[MessageComposer] Found commerces:', commercesIds);
@@ -980,7 +1248,11 @@ async function loadRecipients() {
           // 2. Luego obtener todos los collaborators y filtrar por commerceId
           endpoint = '/collaborator';
           response = await requestBackend.get(endpoint);
-          console.log('[MessageComposer] All collaborators before filter:', response.data.length, 'items');
+          console.log(
+            '[MessageComposer] All collaborators before filter:',
+            response.data.length,
+            'items',
+          );
 
           // Filtrar collaborators cuyo commerceId esté en la lista de commerces del business
           data = response.data.filter(collab => {
@@ -999,7 +1271,11 @@ async function loadRecipients() {
           // COLLABORATOR solo puede enviar a otros de su mismo commerceId
           endpoint = `/collaborator/commerceId/${props.userData.commerceId}`;
           response = await requestBackend.get(endpoint);
-          console.log('[MessageComposer] Collaborators (commerceId filter):', response.data.length, 'items');
+          console.log(
+            '[MessageComposer] Collaborators (commerceId filter):',
+            response.data.length,
+            'items',
+          );
           data = response.data;
         } else {
           // Fallback: traer todos
@@ -1025,17 +1301,18 @@ async function loadRecipients() {
 
             // Obtener administrators de cada business
             const administratorsPromises = businesses.map(business =>
-              requestBackend.get(`/administrator/businessId/${business.id}`)
-                .catch(error => {
-                  console.warn(`Error loading administrators for business ${business.id}:`, error);
-                  return { data: [] }; // Return empty array if fails
-                })
+              requestBackend.get(`/administrator/businessId/${business.id}`).catch(error => {
+                console.warn(`Error loading administrators for business ${business.id}:`, error);
+                return { data: [] }; // Return empty array if fails
+              })
             );
 
             const administratorsResponses = await Promise.all(administratorsPromises);
 
             // Combinar todos los administrators y eliminar duplicados por ID
-            const allAdministrators = administratorsResponses.flatMap(response => response.data || []);
+            const allAdministrators = administratorsResponses.flatMap(
+              response => response.data || [],
+            );
             const uniqueAdministrators = new Map();
 
             allAdministrators.forEach(admin => {
@@ -1046,16 +1323,22 @@ async function loadRecipients() {
 
             data = Array.from(uniqueAdministrators.values());
             console.log('[MessageComposer] All administrators (master):', data.length, 'items');
-
           } catch (error) {
             console.error('[MessageComposer] Error loading all administrators for master:', error);
             data = [];
           }
-        } else if ((props.userRole === 'business' || props.userRole === 'administrator') && props.userData.businessId) {
+        } else if (
+          (props.userRole === 'business' || props.userRole === 'administrator') &&
+          props.userData.businessId
+        ) {
           // ADMINISTRATOR/BUSINESS puede enviar a otros administrators de su businessId
           endpoint = `/administrator/businessId/${props.userData.businessId}`;
           response = await requestBackend.get(endpoint);
-          console.log('[MessageComposer] Administrators by businessId:', response.data.length, 'items');
+          console.log(
+            '[MessageComposer] Administrators by businessId:',
+            response.data.length,
+            'items',
+          );
           data = response.data;
         } else if (props.userRole === 'collaborator') {
           // COLLABORATOR puede enviar a administrators de su businessId
@@ -1064,7 +1347,9 @@ async function loadRecipients() {
 
           if (!businessId && props.userData.commerceId) {
             try {
-              const commerceResponse = await requestBackend.get(`/commerce/${props.userData.commerceId}`);
+              const commerceResponse = await requestBackend.get(
+                `/commerce/${props.userData.commerceId}`,
+              );
               businessId = commerceResponse.data?.businessId;
               console.log('[MessageComposer] Got businessId from commerce:', businessId);
             } catch (error) {
@@ -1075,10 +1360,16 @@ async function loadRecipients() {
           if (businessId) {
             endpoint = `/administrator/businessId/${businessId}`;
             response = await requestBackend.get(endpoint);
-            console.log('[MessageComposer] Administrators by businessId (collaborator):', response.data.length, 'items');
+            console.log(
+              '[MessageComposer] Administrators by businessId (collaborator):',
+              response.data.length,
+              'items',
+            );
             data = response.data;
           } else {
-            console.warn('[MessageComposer] Collaborator without businessId - cannot list administrators');
+            console.warn(
+              '[MessageComposer] Collaborator without businessId - cannot list administrators',
+            );
             data = [];
           }
         } else {
@@ -1096,7 +1387,8 @@ async function loadRecipients() {
 
     const mappedData = data.map(item => ({
       id: item.id,
-      name: item.name || item.businessName || `${item.firstName || ''} ${item.lastName || ''}`.trim(),
+      name:
+        item.name || item.businessName || `${item.firstName || ''} ${item.lastName || ''}`.trim(),
       email: item.email,
       type: form.value.recipientType, // Agregar el tipo basado en recipientType
       commerceId: item.commerceId || item.commerce?.id, // Guardar commerceId del destinatario
@@ -1114,7 +1406,11 @@ async function loadRecipients() {
     }
 
     // Cargar comercios disponibles para usuarios con permisos
-    if (props.userRole === 'master' || props.userRole === 'administrator' || props.userRole === 'business') {
+    if (
+      props.userRole === 'master' ||
+      props.userRole === 'administrator' ||
+      props.userRole === 'business'
+    ) {
       await loadAvailableCommerces();
     }
   } catch (error) {
@@ -1132,7 +1428,11 @@ async function send() {
   try {
     if (props.massMode) {
       // Modo masivo: enviar a todos los destinatarios seleccionados
-      console.log('[MessageComposer] Sending mass message to', massFilters.value.selectedRecipients.length, 'recipients');
+      console.log(
+        '[MessageComposer] Sending mass message to',
+        massFilters.value.selectedRecipients.length,
+        'recipients',
+      );
 
       const selectedRecipients = allRecipients.value.filter(r =>
         massFilters.value.selectedRecipients.includes(r.id)
@@ -1189,7 +1489,6 @@ async function send() {
 
       await Promise.all(promises);
       console.log('[MessageComposer] Mass message sent to all selected recipients');
-
     } else if (props.chatMode) {
       // Chat mode: crear conversación y enviar mensaje
       console.log('[MessageComposer] ========================================');
@@ -1202,14 +1501,15 @@ async function send() {
       });
 
       // Determinar el recipiente según el rol del usuario
-      const recipientId = props.userRole === 'master' ? chatSelectedRecipient.value : chatSelectedRecipient.value;
+      const recipientId =
+        props.userRole === 'master' ? chatSelectedRecipient.value : chatSelectedRecipient.value;
       const selectedRecipient = allRecipients.value.find(r => r.id === recipientId);
       const recipientType = selectedRecipient?.type || 'collaborator';
 
       console.log('[MessageComposer] Recipient:', {
         id: recipientId,
         type: recipientType,
-        selectedRecipient: selectedRecipient,
+        selectedRecipient,
       });
       console.log('[MessageComposer] ========================================');
 
@@ -1218,21 +1518,18 @@ async function send() {
       }
 
       // Obtener commerceId: priorizar comercio seleccionado en pickers; si no, usar del destinatario o del usuario
-      const commerceId = chatSelectedCommerce.value
-        || selectedRecipient?.commerceId
-        || props.userData.commerceId
-        || props.userData.commerce?.id;
+      const commerceId =
+        chatSelectedCommerce.value ||
+        selectedRecipient?.commerceId ||
+        props.userData.commerceId ||
+        props.userData.commerce?.id;
 
       if (!commerceId) {
         throw new Error('commerceId is required for chat');
       }
 
       // Crear o obtener conversación
-      const conversation = await getOrCreateConversation(
-        recipientId,
-        recipientType,
-        commerceId
-      );
+      const conversation = await getOrCreateConversation(recipientId, recipientType, commerceId);
 
       // Enviar mensaje en la conversación
       await sendChatMessage(
@@ -1334,7 +1631,9 @@ function toggleSelectAllBusiness() {
 }
 
 function handleBusinessChange() {
-  massFilters.value.selectAllBusiness = filteredBusinessList.value.length > 0 && massFilters.value.selectedBusiness.length === filteredBusinessList.value.length;
+  massFilters.value.selectAllBusiness =
+    filteredBusinessList.value.length > 0 &&
+    massFilters.value.selectedBusiness.length === filteredBusinessList.value.length;
   massFilters.value.selectedCommerces = [];
   massFilters.value.selectAllCommerces = false;
   massFilters.value.selectedRecipients = [];
@@ -1357,7 +1656,9 @@ function toggleSelectAllCommerces() {
 }
 
 function handleCommerceChange() {
-  massFilters.value.selectAllCommerces = filteredCommercesBySearch.value.length > 0 && massFilters.value.selectedCommerces.length === filteredCommercesBySearch.value.length;
+  massFilters.value.selectAllCommerces =
+    filteredCommercesBySearch.value.length > 0 &&
+    massFilters.value.selectedCommerces.length === filteredCommercesBySearch.value.length;
   massFilters.value.selectedRecipients = [];
   massFilters.value.selectAllRecipients = false;
 }
@@ -1377,7 +1678,9 @@ function toggleSelectAllRecipients() {
 }
 
 function handleRecipientChange() {
-  massFilters.value.selectAllRecipients = filteredRecipientsBySearch.value.length > 0 && massFilters.value.selectedRecipients.length === filteredRecipientsBySearch.value.length;
+  massFilters.value.selectAllRecipients =
+    filteredRecipientsBySearch.value.length > 0 &&
+    massFilters.value.selectedRecipients.length === filteredRecipientsBySearch.value.length;
 }
 
 // Pickers (abrir/cerrar)
@@ -1408,7 +1711,9 @@ function toggleRecipientsPicker() {
 // Acciones seleccionar todo (filtrados) y limpiar
 function selectAllFilteredBusiness() {
   massFilters.value.selectedBusiness = filteredBusinessList.value.map(b => b.id);
-  massFilters.value.selectAllBusiness = massFilters.value.selectedBusiness.length === filteredBusinessList.value.length && filteredBusinessList.value.length > 0;
+  massFilters.value.selectAllBusiness =
+    massFilters.value.selectedBusiness.length === filteredBusinessList.value.length &&
+    filteredBusinessList.value.length > 0;
   handleBusinessChange();
 }
 function clearSelectedBusiness() {
@@ -1418,7 +1723,9 @@ function clearSelectedBusiness() {
 }
 function selectAllFilteredCommerces() {
   massFilters.value.selectedCommerces = filteredCommercesBySearch.value.map(c => c.id);
-  massFilters.value.selectAllCommerces = massFilters.value.selectedCommerces.length === filteredCommercesBySearch.value.length && filteredCommercesBySearch.value.length > 0;
+  massFilters.value.selectAllCommerces =
+    massFilters.value.selectedCommerces.length === filteredCommercesBySearch.value.length &&
+    filteredCommercesBySearch.value.length > 0;
   handleCommerceChange();
 }
 function clearSelectedCommerces() {
@@ -1428,7 +1735,9 @@ function clearSelectedCommerces() {
 }
 function selectAllFilteredRecipients() {
   massFilters.value.selectedRecipients = filteredRecipientsBySearch.value.map(r => r.id);
-  massFilters.value.selectAllRecipients = massFilters.value.selectedRecipients.length === filteredRecipientsBySearch.value.length && filteredRecipientsBySearch.value.length > 0;
+  massFilters.value.selectAllRecipients =
+    massFilters.value.selectedRecipients.length === filteredRecipientsBySearch.value.length &&
+    filteredRecipientsBySearch.value.length > 0;
 }
 function clearSelectedRecipients() {
   massFilters.value.selectedRecipients = [];
@@ -1492,13 +1801,25 @@ function close() {
 // Cerrar pickers al hacer click fuera
 function onDocumentClick(e) {
   const target = e.target;
-  if (showBusinessPicker.value && businessPickerRef.value && !businessPickerRef.value.contains(target)) {
+  if (
+    showBusinessPicker.value &&
+    businessPickerRef.value &&
+    !businessPickerRef.value.contains(target)
+  ) {
     showBusinessPicker.value = false;
   }
-  if (showCommercesPicker.value && commercesPickerRef.value && !commercesPickerRef.value.contains(target)) {
+  if (
+    showCommercesPicker.value &&
+    commercesPickerRef.value &&
+    !commercesPickerRef.value.contains(target)
+  ) {
     showCommercesPicker.value = false;
   }
-  if (showRecipientsPicker.value && recipientsPickerRef.value && !recipientsPickerRef.value.contains(target)) {
+  if (
+    showRecipientsPicker.value &&
+    recipientsPickerRef.value &&
+    !recipientsPickerRef.value.contains(target)
+  ) {
     showRecipientsPicker.value = false;
   }
 }
@@ -1546,7 +1867,9 @@ async function ensureCommercesForBusiness(businessId) {
     const items = resp.data || [];
     // Merge únicos por id
     const map = new Map((availableCommerces.value || []).map(c => [c.id, c]));
-    items.forEach(c => { if (c?.id && !map.has(c.id)) map.set(c.id, c); });
+    items.forEach(c => {
+      if (c?.id && !map.has(c.id)) map.set(c.id, c);
+    });
     availableCommerces.value = Array.from(map.values());
   } catch (e) {
     console.warn('[Composer] ensureCommercesForBusiness failed', e);
@@ -1836,8 +2159,12 @@ async function ensureCommercesForBusiness(businessId) {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Mass filters styling */
@@ -1878,7 +2205,7 @@ async function ensureCommercesForBusiness(businessId) {
   background: #f1f5f9;
 }
 
-.checkbox-item input[type="checkbox"] {
+.checkbox-item input[type='checkbox'] {
   margin: 0;
 }
 
@@ -1989,7 +2316,7 @@ async function ensureCommercesForBusiness(businessId) {
 .picker-button:hover:not(:disabled) {
   background: #eef2ff;
   border-color: #c7d2fe;
-  box-shadow: 0 1px 0 rgba(99,102,241,.15);
+  box-shadow: 0 1px 0 rgba(99, 102, 241, 0.15);
 }
 
 .picker.disabled .picker-button {
@@ -2020,7 +2347,7 @@ async function ensureCommercesForBusiness(businessId) {
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   padding: 10px;
 }
 
@@ -2145,7 +2472,7 @@ async function ensureCommercesForBusiness(businessId) {
   .picker-panel {
     position: relative;
     top: 6px;
-    box-shadow: 0 6px 18px rgba(0,0,0,.06);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
   }
 }
 

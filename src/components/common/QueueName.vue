@@ -173,7 +173,11 @@ export default {
         () => this.processingAttentionsRef?.value,
         newVal => {
           if (Array.isArray(newVal)) {
-            this.internalProcessingDetails.splice(0, this.internalProcessingDetails.length, ...newVal);
+            this.internalProcessingDetails.splice(
+              0,
+              this.internalProcessingDetails.length,
+              ...newVal,
+            );
           }
         },
         { immediate: true, deep: true }
@@ -183,7 +187,11 @@ export default {
         () => this.terminatedAttentionsRef?.value,
         newVal => {
           if (Array.isArray(newVal)) {
-            this.internalTerminatedDetails.splice(0, this.internalTerminatedDetails.length, ...newVal);
+            this.internalTerminatedDetails.splice(
+              0,
+              this.internalTerminatedDetails.length,
+              ...newVal,
+            );
           }
         },
         { immediate: true, deep: true }

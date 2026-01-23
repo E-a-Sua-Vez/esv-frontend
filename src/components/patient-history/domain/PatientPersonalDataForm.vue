@@ -232,7 +232,7 @@ export default {
     // Sync calculated age with newPersonalData.age whenever birthday changes
     watch(
       () => state.newPersonalData.birthday,
-      (newBirthday) => {
+      newBirthday => {
         if (newBirthday) {
           state.newPersonalData.age = calculateAge(newBirthday);
           sendData();
@@ -307,9 +307,9 @@ export default {
           if (commerce.value && commerce.value.localeInfo.country) {
             state.newPersonalData.phoneCode = findPhoneCode(commerce.value.localeInfo.country);
           }
-          const defaultBirthday = new Date(
-            new Date().setFullYear(new Date().getFullYear() - 18)
-          ).toISOString().slice(0, 10);
+          const defaultBirthday = new Date(new Date().setFullYear(new Date().getFullYear() - 18))
+            .toISOString()
+            .slice(0, 10);
           state.newPersonalData.birthday = defaultBirthday;
           state.newPersonalData.age = calculateAge(defaultBirthday);
           state.newPersonalData.font = true;

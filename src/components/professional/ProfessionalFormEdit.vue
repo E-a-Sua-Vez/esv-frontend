@@ -64,7 +64,9 @@ export default {
       },
     },
     professionalTypeName() {
-      const type = this.types.find(t => t.id === this.professional.professionalInfo?.professionalType);
+      const type = this.types.find(
+        t => t.id === this.professional.professionalInfo?.professionalType,
+      );
       return type ? type.name : '';
     },
     isMedicalProfessional() {
@@ -79,7 +81,7 @@ export default {
         'PSYCHOLOGIST',
         'NUTRITIONIST',
         'PHARMACIST',
-        'TECHNICIAN'
+        'TECHNICIAN',
       ];
       return medicalTypes.includes(this.professional.professionalInfo?.professionalType);
     },
@@ -114,7 +116,7 @@ export default {
     handlePhotoUpdated(partial) {
       // Acepta payloads del componente de foto que envían un objeto parcial
       const updated = { ...this.professional };
-      
+
       // Si viene con estructura profilePhoto.file, extraer y guardar en personalInfo
       if (partial.profilePhoto && partial.profilePhoto.file instanceof File) {
         if (!updated.personalInfo) updated.personalInfo = {};
@@ -124,7 +126,7 @@ export default {
         if (!updated.personalInfo) updated.personalInfo = {};
         updated.personalInfo.profilePhoto = partial.profilePhoto;
       }
-      
+
       this.$emit('update:professional', updated);
     },
     triggerSignatureFileSelect() {
@@ -152,7 +154,7 @@ export default {
 
       // Create preview URL for display
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         const updated = { ...this.professional };
         // Store the File object in personalInfo so updateProfessional can detect and upload it
         if (!updated.personalInfo) updated.personalInfo = {};
@@ -173,7 +175,10 @@ export default {
       if (!updated.financialInfo) updated.financialInfo = {};
 
       // Si paymentAccount no existe o es string, crear/actualizar como objeto
-      if (!updated.financialInfo.paymentAccount || typeof updated.financialInfo.paymentAccount === 'string') {
+      if (
+        !updated.financialInfo.paymentAccount ||
+        typeof updated.financialInfo.paymentAccount === 'string'
+      ) {
         updated.financialInfo.paymentAccount = {
           accountNumber: value,
           bank: '',
@@ -208,7 +213,8 @@ export default {
 
 <template>
   <div class="professional-form-edit">
-    <!-- Form content starts here -->    <div class="form-fields-container">
+    <!-- Form content starts here -->
+    <div class="form-fields-container">
       <!-- Información Personal -->
       <div class="form-group-modern">
         <label class="form-label-modern">
@@ -348,7 +354,11 @@ export default {
             v-if="services && services.length > 0"
             class="form-control-modern form-select-modern"
             @change="
-              onSelectService && onSelectService(professional, services.find(s => s.id === $event.target.value));
+              onSelectService &&
+                onSelectService(
+                  professional,
+                  services.find(s => s.id === $event.target.value)
+                );
               $event.target.value = '';
             "
           >
@@ -357,7 +367,13 @@ export default {
               {{ service.tag }}
             </option>
           </select>
-          <div v-if="professional.professionalInfo?.servicesId && professional.professionalInfo.servicesId.length > 0" class="selected-items-modern">
+          <div
+            v-if="
+              professional.professionalInfo?.servicesId &&
+              professional.professionalInfo.servicesId.length > 0
+            "
+            class="selected-items-modern"
+          >
             <span
               v-for="serviceId in professional.professionalInfo.servicesId"
               :key="serviceId"
@@ -429,7 +445,11 @@ export default {
         <input
           type="text"
           class="form-control-modern"
-          :value="typeof professional.financialInfo?.paymentAccount === 'string' ? professional.financialInfo.paymentAccount : professional.financialInfo?.paymentAccount?.accountNumber"
+          :value="
+            typeof professional.financialInfo?.paymentAccount === 'string'
+              ? professional.financialInfo.paymentAccount
+              : professional.financialInfo?.paymentAccount?.accountNumber
+          "
           @input="updatePaymentAccount($event.target.value)"
           :placeholder="$t('professionals.paymentAccountPlaceholder')"
         />
@@ -445,11 +465,7 @@ export default {
             <i class="bi bi-info-circle-fill h7"></i>
           </Popper>
         </label>
-        <Toggle
-          v-model="localProfessional.active"
-          on-label=" "
-          off-label=" "
-        />
+        <Toggle v-model="localProfessional.active" on-label=" " off-label=" " />
       </div>
 
       <div class="form-group-modern form-group-toggle">
@@ -462,11 +478,7 @@ export default {
             <i class="bi bi-info-circle-fill h7"></i>
           </Popper>
         </label>
-        <Toggle
-          v-model="localProfessional.available"
-          on-label=" "
-          off-label=" "
-        />
+        <Toggle v-model="localProfessional.available" on-label=" " off-label=" " />
       </div>
     </div>
 
@@ -481,7 +493,9 @@ export default {
 
         <div class="form-group-modern">
           <label class="form-label-modern">
-            {{ $t('professionals.medicalLicense') || 'Permiso/Colegiatura Médica' }} ({{ $t('required') }}):
+            {{ $t('professionals.medicalLicense') || 'Permiso/Colegiatura Médica' }} ({{
+              $t('required')
+            }}):
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
                 <div>{{ $t('professionals.medicalLicenseHelp') }}</div>
@@ -500,7 +514,9 @@ export default {
 
         <div class="form-group-modern">
           <label class="form-label-modern">
-            {{ $t('professionals.medicalLicenseState') || 'Estado del Permiso' }} ({{ $t('optional') }}):
+            {{ $t('professionals.medicalLicenseState') || 'Estado del Permiso' }} ({{
+              $t('optional')
+            }}):
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
                 <div>{{ $t('professionals.medicalLicenseStateHelp') }}</div>
@@ -538,7 +554,9 @@ export default {
 
         <div class="form-group-modern">
           <label class="form-label-modern">
-            {{ $t('professionals.subspecialization') || 'Sub-especialización' }} ({{ $t('optional') }}):
+            {{ $t('professionals.subspecialization') || 'Sub-especialización' }} ({{
+              $t('optional')
+            }}):
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
                 <div>{{ $t('professionals.subspecializationHelp') }}</div>
@@ -557,7 +575,9 @@ export default {
 
         <div class="form-group-modern">
           <label class="form-label-modern">
-            {{ $t('professionals.medicalSchool') || 'Universidad de Medicina' }} ({{ $t('optional') }}):
+            {{ $t('professionals.medicalSchool') || 'Universidad de Medicina' }} ({{
+              $t('optional')
+            }}):
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
                 <div>{{ $t('professionals.medicalSchoolHelp') }}</div>
@@ -588,7 +608,12 @@ export default {
             type="number"
             class="form-control-modern"
             :value="professional.medicalData?.graduationYear"
-            @input="updateMedicalData('graduationYear', $event.target.value ? parseInt($event.target.value) : null)"
+            @input="
+              updateMedicalData(
+                'graduationYear',
+                $event.target.value ? parseInt($event.target.value) : null
+              )
+            "
             :placeholder="$t('professionals.graduationYearPlaceholder')"
           />
         </div>
@@ -603,7 +628,9 @@ export default {
 
         <div class="form-group-modern">
           <label class="form-label-modern">
-            {{ $t('professionals.professionalAddress') || 'Dirección Profesional' }} ({{ $t('required') }}):
+            {{ $t('professionals.professionalAddress') || 'Dirección Profesional' }} ({{
+              $t('required')
+            }}):
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
                 <div>{{ $t('professionals.professionalAddressHelp') }}</div>
@@ -622,7 +649,9 @@ export default {
 
         <div class="form-group-modern">
           <label class="form-label-modern">
-            {{ $t('professionals.professionalPhone') || 'Teléfono Profesional' }} ({{ $t('required') }}):
+            {{ $t('professionals.professionalPhone') || 'Teléfono Profesional' }} ({{
+              $t('required')
+            }}):
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
                 <div>{{ $t('professionals.professionalPhoneHelp') }}</div>
@@ -641,7 +670,9 @@ export default {
 
         <div class="form-group-modern">
           <label class="form-label-modern">
-            {{ $t('professionals.professionalMobile') || 'Móvil Profesional' }} ({{ $t('optional') }}):
+            {{ $t('professionals.professionalMobile') || 'Móvil Profesional' }} ({{
+              $t('optional')
+            }}):
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
                 <div>{{ $t('professionals.professionalMobileHelp') }}</div>
@@ -660,7 +691,9 @@ export default {
 
         <div class="form-group-modern">
           <label class="form-label-modern">
-            {{ $t('professionals.professionalEmail') || 'Email Profesional' }} ({{ $t('optional') }}):
+            {{ $t('professionals.professionalEmail') || 'Email Profesional' }} ({{
+              $t('optional')
+            }}):
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
                 <div>{{ $t('professionals.professionalEmailHelp') }}</div>
@@ -679,7 +712,9 @@ export default {
 
         <div class="form-group-modern">
           <label class="form-label-modern">
-            {{ $t('professionals.emergencyPhone') || 'Teléfono de Emergencias' }} ({{ $t('optional') }}):
+            {{ $t('professionals.emergencyPhone') || 'Teléfono de Emergencias' }} ({{
+              $t('optional')
+            }}):
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
                 <div>{{ $t('professionals.emergencyPhoneHelp') }}</div>
@@ -731,11 +766,7 @@ export default {
               <i class="bi bi-info-circle-fill h7"></i>
             </Popper>
           </label>
-          <Toggle
-            v-model="localProfessional.medicalData.homeVisits"
-            on-label=" "
-            off-label=" "
-          />
+          <Toggle v-model="localProfessional.medicalData.homeVisits" on-label=" " off-label=" " />
         </div>
 
         <div class="form-group-modern form-group-toggle">
@@ -748,11 +779,7 @@ export default {
               <i class="bi bi-info-circle-fill h7"></i>
             </Popper>
           </label>
-          <Toggle
-            v-model="localProfessional.medicalData.telemedicine"
-            on-label=" "
-            off-label=" "
-          />
+          <Toggle v-model="localProfessional.medicalData.telemedicine" on-label=" " off-label=" " />
         </div>
 
         <div class="form-group-modern">
@@ -769,14 +796,21 @@ export default {
             type="text"
             class="form-control-modern"
             :value="professional.medicalData?.languages?.join(', ')"
-            @input="updateMedicalData('languages', $event.target.value ? $event.target.value.split(',').map(l => l.trim()) : [])"
+            @input="
+              updateMedicalData(
+                'languages',
+                $event.target.value ? $event.target.value.split(',').map(l => l.trim()) : []
+              )
+            "
             :placeholder="$t('professionals.languagesPlaceholder')"
           />
         </div>
 
         <div class="form-group-modern">
           <label class="form-label-modern">
-            {{ $t('professionals.insuranceProviders') || 'Planes de Salud Aceptados' }} ({{ $t('optional') }}):
+            {{ $t('professionals.insuranceProviders') || 'Planes de Salud Aceptados' }} ({{
+              $t('optional')
+            }}):
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
                 <div>{{ $t('professionals.insuranceProvidersHelp') }}</div>
@@ -788,7 +822,12 @@ export default {
             type="text"
             class="form-control-modern"
             :value="professional.medicalData?.insuranceProviders?.join(', ')"
-            @input="updateMedicalData('insuranceProviders', $event.target.value ? $event.target.value.split(',').map(p => p.trim()) : [])"
+            @input="
+              updateMedicalData(
+                'insuranceProviders',
+                $event.target.value ? $event.target.value.split(',').map(p => p.trim()) : []
+              )
+            "
             :placeholder="$t('professionals.insuranceProvidersPlaceholder')"
           />
         </div>
@@ -843,11 +882,18 @@ export default {
           <!-- Signature Preview -->
           <div class="signature-preview">
             <img
-              v-if="localProfessional.digitalSignaturePreview || (localProfessional.personalInfo?.digitalSignature && typeof localProfessional.personalInfo.digitalSignature === 'string')"
-              :src="localProfessional.digitalSignaturePreview || localProfessional.personalInfo?.digitalSignature"
+              v-if="
+                localProfessional.digitalSignaturePreview ||
+                (localProfessional.personalInfo?.digitalSignature &&
+                  typeof localProfessional.personalInfo.digitalSignature === 'string')
+              "
+              :src="
+                localProfessional.digitalSignaturePreview ||
+                localProfessional.personalInfo?.digitalSignature
+              "
               :alt="$t('professionals.digitalSignature')"
               class="signature-preview-img"
-            >
+            />
             <div v-else class="signature-placeholder">
               <i class="bi bi-pen"></i>
             </div>
@@ -861,7 +907,12 @@ export default {
               @click="triggerSignatureFileSelect"
             >
               <i class="bi bi-upload me-1"></i>
-              <span>{{ (localProfessional.digitalSignaturePreview || (typeof localProfessional.personalInfo?.digitalSignature === 'string')) ? $t('collaborator.profilePhoto.update') : $t('collaborator.profilePhoto.upload') }}</span>
+              <span>{{
+                localProfessional.digitalSignaturePreview ||
+                typeof localProfessional.personalInfo?.digitalSignature === 'string'
+                  ? $t('collaborator.profilePhoto.update')
+                  : $t('collaborator.profilePhoto.upload')
+              }}</span>
             </button>
             <small class="text-muted">{{ $t('collaborator.profilePhoto.fileFormats') }}</small>
           </div>
@@ -996,7 +1047,7 @@ export default {
   display: inline-flex;
   align-items: center;
   padding: 0.35rem 0.625rem;
-  background: linear-gradient(135deg, #004AAD 0%, #004AAD 100%);
+  background: linear-gradient(135deg, #004aad 0%, #004aad 100%);
   color: white;
   border-radius: 12px;
   font-size: 0.75rem;

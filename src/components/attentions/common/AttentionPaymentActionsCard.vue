@@ -6,17 +6,14 @@
       </div>
       <div class="requirement-info">
         <div class="requirement-title">
-          {{
-            $t('collaboratorAttentionValidate.paymentActions') ||
-              'Acciones de Atención'
-          }}
+          {{ $t('collaboratorAttentionValidate.paymentActions') || 'Acciones de Atención' }}
         </div>
         <div class="requirement-status">
           <i class="bi bi-info-circle-fill"></i>
           <span>
             {{
               $t('collaboratorAttentionValidate.paymentActionsSubtitle') ||
-                'Confirmar pago, transferir o cancelar'
+              'Confirmar pago, transferir o cancelar'
             }}
           </span>
         </div>
@@ -29,9 +26,7 @@
     >
       <i class="bi bi-arrow-right-circle"></i>
       <span>
-        {{
-          $t('collaboratorAttentionValidate.manage') || 'Gestionar'
-        }}
+        {{ $t('collaboratorAttentionValidate.manage') || 'Gestionar' }}
       </span>
     </button>
   </div>
@@ -54,6 +49,7 @@ export default {
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
   border: 1px solid rgba(169, 169, 169, 0.15);
+  border-left: 4px solid #0ea5e9;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
   display: flex;
@@ -72,6 +68,7 @@ export default {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.5rem 0.75rem;
+  border-left: 4px solid #0ea5e9 !important;
 }
 
 .requirement-card-header {
@@ -86,12 +83,13 @@ export default {
 .requirement-icon {
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 1.1rem;
+  font-size: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .payment-icon {
@@ -108,12 +106,15 @@ export default {
 }
 
 .requirement-title {
-  font-size: 0.8125rem;
-  font-weight: 700;
+  font-size: 0.875rem;
+  font-weight: 600;
   color: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
 }
 
 .requirement-status {
@@ -131,6 +132,7 @@ export default {
 
 .requirement-action-btn-compact {
   width: auto;
+  min-width: fit-content;
   padding: 0.4rem 0.875rem;
   border: none;
   border-radius: 8px;
@@ -145,6 +147,10 @@ export default {
   margin-top: 0;
   flex-shrink: 0;
   white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  min-height: auto;
+  height: auto;
+  line-height: 1.2;
 }
 
 .payment-btn {

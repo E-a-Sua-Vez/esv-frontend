@@ -33,9 +33,7 @@ const badgeCount = computed(() => {
   }
 });
 
-const displayCount = computed(() => {
-  return badgeCount.value > 99 ? '99+' : badgeCount.value;
-});
+const displayCount = computed(() => (badgeCount.value > 99 ? '99+' : badgeCount.value));
 
 const toggleChatInbox = () => {
   emit('toggle-chat-inbox');

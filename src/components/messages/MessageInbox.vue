@@ -6,7 +6,6 @@
       <div class="inbox-header">
         <h3>{{ $t('messages.inbox') }}</h3>
         <div class="header-actions">
-
           <!-- Botón 'Nuevo mensaje' para business y collaborator (todos salvo master) -->
           <button
             v-if="activeTab !== 'sent' && userRole !== 'master'"
@@ -93,7 +92,11 @@
       <div class="inbox-content">
         <!-- Regular messages view -->
         <div v-if="loading" class="loading-state">
-          <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #004aad;"></div>
+          <div
+            class="spinner-border"
+            role="status"
+            style="width: 3rem; height: 3rem; color: #004aad"
+          ></div>
           <p>{{ $t('messages.loading') }}</p>
         </div>
 
@@ -137,7 +140,10 @@
       :mass-mode="composerMode === 'mass'"
       :user-role="userRole"
       :user-data="userData"
-      @close="composerOpen = false; composerMode = 'single'"
+      @close="
+        composerOpen = false;
+        composerMode = 'single';
+      "
       @sent="handleMessageSent"
     />
   </div>
@@ -187,12 +193,7 @@ const {
 } = useMessageInbox();
 
 // Permissions composable
-const {
-  canSendMessages,
-  canSendMassMessages,
-  isMasterUser,
-  loadPermissions,
-} = usePermissions();
+const { canSendMessages, canSendMassMessages, isMasterUser, loadPermissions } = usePermissions();
 
 const activeTab = ref('all');
 const selectedCategory = ref(null);
@@ -228,7 +229,7 @@ const baseCountMessages = computed(() => {
   let msgs = filteredMessages.value;
   if (isMasterUser?.value) {
     const uid = store.getCurrentUser?.id;
-    const matchesSender = (m) => {
+    const matchesSender = m => {
       const s = m?.senderId;
       if (!uid || !s) return false;
       if (typeof s === 'string') return s === uid;
@@ -243,7 +244,9 @@ const baseCountMessages = computed(() => {
 // Tabs (sin chat)
 const tabs = computed(() => {
   if (userRole.value === 'master') {
-    const massCount = filteredMessages.value.filter(m => m.mass === true || m.metadata?.mass === true).length;
+    const massCount = filteredMessages.value.filter(
+      m => m.mass === true || m.metadata?.mass === true,
+    ).length;
     return [
       {
         value: 'sent',
@@ -276,7 +279,7 @@ const tabs = computed(() => {
 const tabFilteredMessages = computed(() => {
   let messages = filteredMessages.value;
   const uid = store.getCurrentUser?.id;
-  const matchesSender = (m) => {
+  const matchesSender = m => {
     const s = m?.senderId;
     if (!uid || !s) return false;
     if (typeof s === 'string') return s === uid;
@@ -313,9 +316,7 @@ const displayedMessages = computed(() => {
   return tabFilteredMessages.value.slice(0, endIndex);
 });
 
-const hasMore = computed(() => {
-  return displayedMessages.value.length < tabFilteredMessages.value.length;
-});
+const hasMore = computed(() => displayedMessages.value.length < tabFilteredMessages.value.length);
 
 const currentUserType = computed(() => store.getCurrentUserType);
 
@@ -347,7 +348,7 @@ watch(activeTab, () => {
 
 watch(
   () => props.isOpen,
-  (newVal) => {
+  newVal => {
     if (newVal) {
       // Ajustar tab inicial según rol
       if (userRole.value === 'master') {
@@ -465,8 +466,12 @@ function handleMessageSent() {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .inbox-container {

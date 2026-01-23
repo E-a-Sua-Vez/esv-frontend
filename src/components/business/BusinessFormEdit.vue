@@ -92,20 +92,14 @@
                 class="logo-loading-placeholder d-flex flex-column align-items-center justify-content-center p-3"
               >
                 <i class="bi bi-hourglass-split mb-2"></i>
-                <span class="small text-muted">{{
-                  $t('common.loading') || 'Cargando...'
-                }}</span>
+                <span class="small text-muted">{{ $t('common.loading') || 'Cargando...' }}</span>
               </div>
             </div>
             <div
               v-else-if="business.logo && !business.logo.startsWith('/business-logos/')"
               class="logo-preview-small"
             >
-              <img
-                :src="business.logo"
-                :alt="$t('businessAdmin.logo')"
-                class="logo-preview-img"
-              />
+              <img :src="business.logo" :alt="$t('businessAdmin.logo')" class="logo-preview-img" />
             </div>
             <!-- Logo por defecto cuando no hay logo -->
             <div v-else class="logo-preview-small">
@@ -130,10 +124,7 @@
                     : $t('businessAdmin.logoUpload.selectLogo')
                 }}
               </button>
-              <span
-                v-if="business.logo || businessLogos[business.id]"
-                class="small text-muted"
-              >
+              <span v-if="business.logo || businessLogos[business.id]" class="small text-muted">
                 <i class="bi bi-check-circle text-success"></i>
               </span>
             </div>
@@ -173,10 +164,7 @@
           </Popper>
         </div>
         <div class="col-8">
-          <Toggle
-            v-model="business.active"
-            :disabled="!toggles['businesses.admin.edit']"
-          />
+          <Toggle v-model="business.active" :disabled="!toggles['businesses.admin.edit']" />
         </div>
       </div>
 
@@ -709,11 +697,7 @@
           v-if="business.serviceInfo.personalized"
           class="row g-1"
         >
-          <div
-            class="row g-1"
-            v-for="day in business.serviceInfo.attentionDays"
-            :key="day"
-          >
+          <div class="row g-1" v-for="day in business.serviceInfo.attentionDays" :key="day">
             <div class="col-4 text-label">
               {{ $t(`days.${day}`) }}
             </div>
@@ -895,9 +879,8 @@ export default {
             };
           }
         } else {
-          props.business.serviceInfo.attentionDays = props.business.serviceInfo.attentionDays.filter(
-            el => el !== day
-          );
+          props.business.serviceInfo.attentionDays =
+            props.business.serviceInfo.attentionDays.filter(el => el !== day);
           // Remove from personalizedHours if it exists
           if (
             props.business.serviceInfo.personalizedHours &&
@@ -910,7 +893,7 @@ export default {
       }
     };
 
-    const initializedPersonalizedHours = (value) => {
+    const initializedPersonalizedHours = value => {
       if (value === true) {
         if (!props.business.serviceInfo.personalizedHours) {
           props.business.serviceInfo.personalizedHours = {};

@@ -45,8 +45,7 @@ export default {
         const productFeatures = allFeatures.filter(f => f.type === 'PRODUCT');
 
         // Log all feature names for debugging
-        productFeatures.forEach((f, index) => {
-        });
+        productFeatures.forEach((f, index) => {});
 
         // Log features containing 'checkout' or 'stages' (case insensitive)
         const checkoutRelated = allFeatures.filter(

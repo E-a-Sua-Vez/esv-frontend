@@ -602,7 +602,7 @@ export default {
       }
     };
 
-    const onAddQueueTypeChanged = (event) => {
+    const onAddQueueTypeChanged = event => {
       console.log('[BusinessQueuesAdmin] onAddQueueTypeChanged called with event:', event);
       if (event && event.queue) {
         selectType(event.queue, event.type);
@@ -1981,7 +1981,10 @@ export default {
                           :class="'dark p-1'"
                           arrow
                           :disable-click-away="false"
-                          :content="$t('businessQueuesAdmin.professionalHelp') || $t('businessQueuesAdmin.collaboratorHelp')"
+                          :content="
+                            $t('businessQueuesAdmin.professionalHelp') ||
+                            $t('businessQueuesAdmin.collaboratorHelp')
+                          "
                         >
                           <i class="bi bi-info-circle-fill h7"></i>
                         </Popper>
@@ -2014,10 +2017,14 @@ export default {
                               >
                                 <div class="col-12">
                                   <div>
-                                    <span class="item-title fw-bold"> {{ prof.personalInfo?.name }} </span>
+                                    <span class="item-title fw-bold">
+                                      {{ prof.personalInfo?.name }}
+                                    </span>
                                   </div>
                                   <div v-if="prof !== undefined">
-                                    <span class="item-subtitle text-break"> {{ prof.personalInfo?.email }} </span>
+                                    <span class="item-subtitle text-break">
+                                      {{ prof.personalInfo?.email }}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -2469,7 +2476,6 @@ export default {
               </button>
             </div>
           </div>
-
         </div>
       </div>
     </Teleport>

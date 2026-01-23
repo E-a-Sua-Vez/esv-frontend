@@ -52,11 +52,8 @@ const photoCache = {
 };
 
 // Helper to generate cache keys
-const getCacheKey = (commerceId, clientId, photoId = null) => {
-  return photoId
-    ? `${commerceId}_${clientId}_${photoId}`
-    : `${commerceId}_${clientId}`;
-};
+const getCacheKey = (commerceId, clientId, photoId = null) =>
+  photoId ? `${commerceId}_${clientId}_${photoId}` : `${commerceId}_${clientId}`;
 
 // Clear cache for a specific client (useful after upload/delete)
 export const clearClientPhotoCache = (commerceId, clientId) => {
@@ -81,7 +78,6 @@ export const clearClientPhotoCache = (commerceId, clientId) => {
       photoCache.fullPhotos.delete(key);
     }
   }
-
 };
 
 // Upload patient photo (from camera capture or file upload)
@@ -115,7 +111,6 @@ export const uploadPatientPhoto = async (commerceId, clientId, photoData) => {
         timeout: 30000, // 30 seconds timeout for photo upload
       },
     );
-
 
     // Clear cache after successful upload
     clearClientPhotoCache(commerceId, clientId);

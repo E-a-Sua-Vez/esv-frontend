@@ -47,4 +47,3 @@ export default {
     />
   </div>
 </template>
-

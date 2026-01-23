@@ -31,17 +31,17 @@ export function usePermissions() {
     }
   };
 
-  const hasPermission = (permission) => {
+  const hasPermission = permission => {
     if (!permissionsLoaded.value) return false;
     return !!userPermissions.value[permission];
   };
 
-  const hasAnyPermission = (permissions) => {
+  const hasAnyPermission = permissions => {
     if (!permissionsLoaded.value) return false;
     return permissions.some(permission => !!userPermissions.value[permission]);
   };
 
-  const hasAllPermissions = (permissions) => {
+  const hasAllPermissions = permissions => {
     if (!permissionsLoaded.value) return false;
     return permissions.every(permission => !!userPermissions.value[permission]);
   };
@@ -51,7 +51,11 @@ export function usePermissions() {
     const store = globalStore();
     // Usuario MASTER siempre puede enviar mensajes
     if (store.getCurrentUserType === USER_TYPES.MASTER) return true;
-    return hasPermission('messages.admin.send') || hasPermission('messages.admin.send-mass') || hasPermission('messages.admin.send-cross-business');
+    return (
+      hasPermission('messages.admin.send') ||
+      hasPermission('messages.admin.send-mass') ||
+      hasPermission('messages.admin.send-cross-business')
+    );
   });
 
   const canSendMassMessages = computed(() => {
@@ -116,17 +120,14 @@ export function usePermissions() {
     return hasAllPermissions([
       'messages.admin.send-mass',
       'messages.admin.send-cross-business',
-      'chats.admin.start-cross-business'
+      'chats.admin.start-cross-business',
     ]);
   });
 
   const isAdminUser = computed(() => {
     const store = globalStore();
     if (store.getCurrentUserType === USER_TYPES.MASTER) return true;
-    return hasAnyPermission([
-      'messages.admin.send',
-      'chats.admin.start'
-    ]);
+    return hasAnyPermission(['messages.admin.send', 'chats.admin.start']);
   });
 
   // Computed properties para mostrar componentes basado en permisos
@@ -167,7 +168,7 @@ export function usePermissions() {
       // Permisos de negocio que incluirían mensajes
       'business.main-menu.messages',
       'business.main-menu.chats',
-      'business.main-menu.notifications'
+      'business.main-menu.notifications',
     ];
 
     // Si tiene algún permiso relacionado, permitir acceso
@@ -183,7 +184,7 @@ export function usePermissions() {
       'messages.admin.view',
       'messages.admin.read',
       'messages.admin.send-mass',
-      'messages.admin.send-cross-business'
+      'messages.admin.send-cross-business',
     ]);
   });
 
@@ -196,7 +197,7 @@ export function usePermissions() {
       'chats.admin.view',
       'chats.admin.participate',
       'chats.admin.start-cross-business',
-      'chats.admin.moderate'
+      'chats.admin.moderate',
     ]);
   });
 

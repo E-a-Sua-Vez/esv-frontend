@@ -34,9 +34,11 @@ const testMessaging = {
   // Obtener el userId actual del store
   getUserId() {
     // Ajusta según tu store
-    return window.__VUE_APP__?.config?.globalProperties?.$store?.state?.user?.uid ||
-           localStorage.getItem('userId') ||
-           'TEST_USER_ID';
+    return (
+      window.__VUE_APP__?.config?.globalProperties?.$store?.state?.user?.uid ||
+      localStorage.getItem('userId') ||
+      'TEST_USER_ID'
+    );
   },
 
   // Enviar notificación de prueba básica
@@ -46,7 +48,7 @@ const testMessaging = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
           recipientId: this.getUserId(),
@@ -69,7 +71,7 @@ const testMessaging = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
           recipientId: this.getUserId(),
@@ -90,7 +92,7 @@ const testMessaging = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
           recipientId: this.getUserId(),
@@ -114,7 +116,7 @@ const testMessaging = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
           recipientId: this.getUserId(),
@@ -137,11 +139,11 @@ const testMessaging = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
           recipientId: this.getUserId(),
-          amount: 150.50,
+          amount: 150.5,
           currency: 'USD',
         }),
       });
@@ -160,7 +162,7 @@ const testMessaging = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
           recipientId: this.getUserId(),

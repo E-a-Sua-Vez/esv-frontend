@@ -199,8 +199,6 @@ export default {
       state.showCommissionPaymentsModal = false;
     };
 
-
-
     const handleFiltersToggle = () => {
       // Handle filters toggle if needed
     };
@@ -213,16 +211,19 @@ export default {
     };
 
     // Shared filter functions
-    const setSharedIncomeStatus = (value) => {
-      console.log('BusinessFinancial.setSharedIncomeStatus:', { oldValue: state.sharedIncomeFilters.incomeStatus, newValue: value });
+    const setSharedIncomeStatus = value => {
+      console.log('BusinessFinancial.setSharedIncomeStatus:', {
+        oldValue: state.sharedIncomeFilters.incomeStatus,
+        newValue: value,
+      });
       state.sharedIncomeFilters.incomeStatus = value;
     };
 
-    const setSharedFiscalNote = (value) => {
+    const setSharedFiscalNote = value => {
       state.sharedIncomeFilters.fiscalNote = value;
     };
 
-    const setSharedAutomatic = (value) => {
+    const setSharedAutomatic = value => {
       state.sharedIncomeFilters.automatic = value;
     };
 
@@ -254,10 +255,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo
-          :src="state.business?.logo"
-          :loading="loading"
-        ></CommerceLogo>
+        <CommerceLogo :src="state.business?.logo" :loading="loading"></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessFinancial.title`)"
           :toggles="state.toggles"
@@ -317,7 +315,6 @@ export default {
                     <i class="bi bi-arrow-up-circle-fill"></i>
                   </button>
                 </div>
-
               </div>
               <div>
                 <ResumeFinancialManagement
@@ -606,7 +603,9 @@ export default {
                               <input
                                 type="radio"
                                 class="btn-check btn-sm"
-                                :checked="!filterProps.incomeStatus || filterProps.incomeStatus === ''"
+                                :checked="
+                                  !filterProps.incomeStatus || filterProps.incomeStatus === ''
+                                "
                                 @change="setSharedIncomeStatus('')"
                                 name="income-status-type"
                                 id="income-status-all"
@@ -702,8 +701,14 @@ export default {
                                   type="number"
                                   class="form-control form-control-sm"
                                   :value="filterProps.minAmount"
-                                  @input="e => { filterProps.minAmount = e.target.value; }"
-                                  :placeholder="$t('businessFinancial.filters.minAmount') || 'Valor Mínimo'"
+                                  @input="
+                                    e => {
+                                      filterProps.minAmount = e.target.value;
+                                    }
+                                  "
+                                  :placeholder="
+                                    $t('businessFinancial.filters.minAmount') || 'Valor Mínimo'
+                                  "
                                   min="0"
                                   step="0.01"
                                 />
@@ -713,8 +718,14 @@ export default {
                                   type="number"
                                   class="form-control form-control-sm"
                                   :value="filterProps.maxAmount"
-                                  @input="e => { filterProps.maxAmount = e.target.value; }"
-                                  :placeholder="$t('businessFinancial.filters.maxAmount') || 'Valor Máximo'"
+                                  @input="
+                                    e => {
+                                      filterProps.maxAmount = e.target.value;
+                                    }
+                                  "
+                                  :placeholder="
+                                    $t('businessFinancial.filters.maxAmount') || 'Valor Máximo'
+                                  "
                                   min="0"
                                   step="0.01"
                                 />
@@ -741,33 +752,60 @@ export default {
                                 <select
                                   class="form-control form-control-sm"
                                   :value="filterProps.incomeTypeFilter"
-                                  @change="e => { filterProps.incomeTypeFilter = e.target.value; filterProps.refresh(); }"
+                                  @change="
+                                    e => {
+                                      filterProps.incomeTypeFilter = e.target.value;
+                                      filterProps.refresh();
+                                    }
+                                  "
                                 >
                                   <option :value="undefined">
                                     {{ $t('businessFinancial.filters.all') || 'Todos' }}
                                   </option>
-                                  <option value="STANDARD">{{ $t('incomeTypes.STANDARD') || 'Padrão' }}</option>
-                                  <option value="FUND_INCREASE">{{ $t('incomeTypes.FUND_INCREASE') || 'Aumento de Fundo' }}</option>
-                                  <option value="PACKAGE">{{ $t('incomeTypes.PACKAGE') || 'Pacote' }}</option>
+                                  <option value="STANDARD">
+                                    {{ $t('incomeTypes.STANDARD') || 'Padrão' }}
+                                  </option>
+                                  <option value="FUND_INCREASE">
+                                    {{ $t('incomeTypes.FUND_INCREASE') || 'Aumento de Fundo' }}
+                                  </option>
+                                  <option value="PACKAGE">
+                                    {{ $t('incomeTypes.PACKAGE') || 'Pacote' }}
+                                  </option>
                                 </select>
                               </div>
                               <div class="col-6">
                                 <label class="form-label fw-bold mb-2">{{
-                                  $t('businessFinancial.filters.paymentMethod') || 'Método de Pagamento'
+                                  $t('businessFinancial.filters.paymentMethod') ||
+                                  'Método de Pagamento'
                                 }}</label>
                                 <select
                                   class="form-control form-control-sm"
                                   :value="filterProps.paymentMethodFilter"
-                                  @change="e => { filterProps.paymentMethodFilter = e.target.value; filterProps.refresh(); }"
+                                  @change="
+                                    e => {
+                                      filterProps.paymentMethodFilter = e.target.value;
+                                      filterProps.refresh();
+                                    }
+                                  "
                                 >
                                   <option :value="undefined">
                                     {{ $t('businessFinancial.filters.all') || 'Todos' }}
                                   </option>
-                                  <option value="CASH">{{ $t('paymentClientMethods.CASH') || 'Dinheiro' }}</option>
-                                  <option value="CARD">{{ $t('paymentClientMethods.CARD') || 'Cartão' }}</option>
-                                  <option value="TRANSFER">{{ $t('paymentClientMethods.TRANSFER') || 'Transferência' }}</option>
-                                  <option value="CHECK">{{ $t('paymentClientMethods.CHECK') || 'Cheque' }}</option>
-                                  <option value="OTHER">{{ $t('paymentClientMethods.OTHER') || 'Outro' }}</option>
+                                  <option value="CASH">
+                                    {{ $t('paymentClientMethods.CASH') || 'Dinheiro' }}
+                                  </option>
+                                  <option value="CARD">
+                                    {{ $t('paymentClientMethods.CARD') || 'Cartão' }}
+                                  </option>
+                                  <option value="TRANSFER">
+                                    {{ $t('paymentClientMethods.TRANSFER') || 'Transferência' }}
+                                  </option>
+                                  <option value="CHECK">
+                                    {{ $t('paymentClientMethods.CHECK') || 'Cheque' }}
+                                  </option>
+                                  <option value="OTHER">
+                                    {{ $t('paymentClientMethods.OTHER') || 'Outro' }}
+                                  </option>
                                 </select>
                               </div>
                             </div>
@@ -775,14 +813,24 @@ export default {
 
                           <!-- Professional Filter -->
                           <div class="mb-3">
-                            <label class="form-label fw-bold mb-2">{{
-                              $t('businessFinancial.filters.professional') || 'Profissional'
-                            }} ({{ filterProps.professionals?.length || 0 }})</label>
+                            <label class="form-label fw-bold mb-2"
+                              >{{
+                                $t('businessFinancial.filters.professional') || 'Profissional'
+                              }}
+                              ({{ filterProps.professionals?.length || 0 }})</label
+                            >
                             <select
                               class="form-control form-control-sm"
                               :value="filterProps.professionalFilter"
-                              @change="e => { filterProps.professionalFilter = e.target.value; filterProps.refresh(); }"
-                              :disabled="!filterProps.professionals || filterProps.professionals.length === 0"
+                              @change="
+                                e => {
+                                  filterProps.professionalFilter = e.target.value;
+                                  filterProps.refresh();
+                                }
+                              "
+                              :disabled="
+                                !filterProps.professionals || filterProps.professionals.length === 0
+                              "
                             >
                               <option :value="undefined">
                                 {{ $t('businessFinancial.filters.all') || 'Todos' }}
@@ -979,7 +1027,6 @@ export default {
                       <i class="bi bi-arrow-up-circle-fill"></i>
                     </button>
                   </div>
-
                 </div>
 
                 <!-- Main content components -->
@@ -1011,7 +1058,7 @@ export default {
                   :commerces="selectedCommerces"
                   :business="state.business"
                   filters-location="slot"
-                  @open-commission-payments="() => state.showCommissionPaymentsModal = true"
+                  @open-commission-payments="() => (state.showCommissionPaymentsModal = true)"
                 >
                 </OutcomesFinancialManagement>
               </template>
@@ -1032,7 +1079,7 @@ export default {
       v-if="state.showCommissionPaymentsModal"
       class="modal fade show d-block"
       tabindex="-1"
-      style="background-color: rgba(0,0,0,0.5);"
+      style="background-color: rgba(0, 0, 0, 0.5)"
     >
       <div class="modal-dialog modal-xl">
         <div class="modal-content">

@@ -67,7 +67,9 @@ export default {
     <Popper v-if="email" :class="'dark'" arrow hover>
       <template #content>
         <div>
-          {{ $t('businessProfessionalsAdmin.tooltip.professionalEmail') || 'Email do profissional' }}
+          {{
+            $t('businessProfessionalsAdmin.tooltip.professionalEmail') || 'Email do profissional'
+          }}
         </div>
       </template>
       <span class="professional-email">

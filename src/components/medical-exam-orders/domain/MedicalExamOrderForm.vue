@@ -174,7 +174,9 @@ export default {
 
       // Fallback final: usar usuario actual del store
       if (!state.examOrder.doctorId) {
-        console.warn('⚠️ No professional/collaborator ID found in attention, using current user from store');
+        console.warn(
+          '⚠️ No professional/collaborator ID found in attention, using current user from store',
+        );
         try {
           const currentUser = await store.getCurrentUser;
           if (currentUser && currentUser.id) {

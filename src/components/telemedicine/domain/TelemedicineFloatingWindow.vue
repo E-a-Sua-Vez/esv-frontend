@@ -264,20 +264,6 @@ export default {
       startDrag(e);
     };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     onUnmounted(() => {
       stopDrag();
     });
@@ -491,8 +477,6 @@ export default {
   pointer-events: none;
   z-index: -1;
 }
-
-
 
 @keyframes pulse {
   0%,

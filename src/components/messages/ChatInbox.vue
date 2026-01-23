@@ -7,11 +7,7 @@
         <h3>{{ $t('chat.inbox') }}</h3>
         <div class="header-actions">
           <!-- Botón de Nuevo chat -->
-          <button
-            @click="openChatComposer"
-            class="compose-button"
-            :title="$t('chat.newChat')"
-          >
+          <button @click="openChatComposer" class="compose-button" :title="$t('chat.newChat')">
             <i class="bi bi-plus-circle"></i>
             <span>{{ $t('chat.newChat') }}</span>
           </button>
@@ -30,9 +26,9 @@
             <div class="conversations-section">
               <ChatConversationList
                 :conversations="conversations"
-                :activeId="activeConversationId"
+                :active-id="activeConversationId"
                 :loading="chatLoading"
-                :currentUserId="currentUserId"
+                :current-user-id="currentUserId"
                 @select="handleSelectConversation"
                 @archive="handleArchiveConversation"
               />
@@ -51,8 +47,8 @@
                 v-else-if="activeConversationId"
                 :conversation="activeConversation"
                 :messages="chatMessages"
-                :currentUserId="currentUserId"
-                :myUserIds="myUserIds"
+                :current-user-id="currentUserId"
+                :my-user-ids="myUserIds"
                 @send="handleSendChatMessage"
                 @markRead="markChatMessageAsRead"
                 @close="handleCloseConversation"
@@ -115,10 +111,7 @@ const { t } = useI18n();
 const store = globalStore();
 
 // Message inbox composable (solo para contadores)
-const {
-  markAllChatAsRead,
-  chatUnreadCount,
-} = useMessageInbox();
+const { markAllChatAsRead, chatUnreadCount } = useMessageInbox();
 
 // Chat composable
 const {
@@ -139,16 +132,14 @@ const {
 } = useChatConversations();
 
 // Permissions composable
-const {
-  canStartChats,
-} = usePermissions();
+const { canStartChats } = usePermissions();
 
 const composerOpen = ref(false);
 
 // Chat computed
 const currentUserId = computed(() => {
   // Preferir IDs canonizados que useChatConversations ya resolvió (myUserIds)
-  const canonicalId = (myUserIds?.value && myUserIds.value.length) ? myUserIds.value[0] : null;
+  const canonicalId = myUserIds?.value && myUserIds.value.length ? myUserIds.value[0] : null;
   const result =
     canonicalId ||
     chatCurrentUser?.value?.id ||
@@ -165,9 +156,9 @@ const userRole = computed(() => {
   return 'collaborator';
 });
 
-const activeConversation = computed(() => {
-  return conversations.value.find(c => c.id === activeConversationId.value);
-});
+const activeConversation = computed(() =>
+  conversations.value.find(c => c.id === activeConversationId.value)
+);
 
 // Lifecycle hooks
 const conversationsListenerStarted = ref(false);
@@ -176,7 +167,7 @@ onMounted(() => {
   // Inicializar listener de conversaciones al montar el componente (una sola vez)
   const user = store.getCurrentUser;
   if (user?.id && !conversationsListenerStarted.value) {
-    const role = user.master ? 'master' : (user.businessId ? 'administrator' : 'collaborator');
+    const role = user.master ? 'master' : user.businessId ? 'administrator' : 'collaborator';
     const commerceId = user.commerceId || user.commerce?.id;
     startConversationsListener(user.id, role, commerceId);
     conversationsListenerStarted.value = true;
@@ -190,7 +181,7 @@ onUnmounted(() => {
 // Watchers
 watch(
   () => conversations.value,
-  (newConversations) => {},
+  newConversations => {},
   { immediate: true }
 );
 
@@ -201,12 +192,12 @@ watch(
 
 watch(
   () => props.isOpen,
-  (newVal) => {
+  newVal => {
     if (newVal) {
       // Chat panel abierto - asegurar que el listener está activo
       const user = store.getCurrentUser;
       if (user?.id && conversations.value.length === 0 && !conversationsListenerStarted.value) {
-        const role = user.master ? 'master' : (user.businessId ? 'administrator' : 'collaborator');
+        const role = user.master ? 'master' : user.businessId ? 'administrator' : 'collaborator';
         const commerceId = user.commerceId || user.commerce?.id;
         startConversationsListener(user.id, role, commerceId);
         conversationsListenerStarted.value = true;
@@ -344,8 +335,12 @@ function handleCloseConversation() {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .inbox-container {

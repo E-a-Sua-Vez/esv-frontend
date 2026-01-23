@@ -25,11 +25,7 @@
     <div class="chat-messages-container" ref="messagesContainer">
       <div class="messages-list">
         <!-- Date Separator -->
-        <div
-          v-for="(group, date) in groupedMessages"
-          :key="date"
-          class="message-group"
-        >
+        <div v-for="(group, date) in groupedMessages" :key="date" class="message-group">
           <div class="date-separator">
             <span>{{ formatDate(date) }}</span>
           </div>
@@ -39,8 +35,10 @@
             v-for="message in group"
             :key="message.id"
             class="message-wrapper"
-            :class="{ 'sent': isSentByMe(message), 'received': !isSentByMe(message) }"
-            :data-debug="`sent: ${isSentByMe(message)}, sender: ${message.senderId}, current: ${currentUserId}`"
+            :class="{ sent: isSentByMe(message), received: !isSentByMe(message) }"
+            :data-debug="`sent: ${isSentByMe(message)}, sender: ${
+              message.senderId
+            }, current: ${currentUserId}`"
           >
             <div class="message-bubble">
               <p class="message-content">{{ message.content }}</p>
@@ -58,11 +56,7 @@
                     class="bi bi-check2-all"
                     :title="$t('chat.status.delivered')"
                   ></i>
-                  <i
-                    v-else
-                    class="bi bi-check2"
-                    :title="$t('chat.status.sent')"
-                  ></i>
+                  <i v-else class="bi bi-check2" :title="$t('chat.status.sent')"></i>
                 </span>
               </div>
             </div>
@@ -107,14 +101,14 @@ const emit = defineEmits(['send', 'markRead', 'close']);
 const { t } = useI18n();
 const messagesContainer = ref(null);
 
-const looksLikeId = (s) => typeof s === 'string' && /^[A-Za-z0-9_-]{16,}$/.test(s);
+const looksLikeId = s => typeof s === 'string' && /^[A-Za-z0-9_-]{16,}$/.test(s);
 
 const participantName = computed(() => {
   console.log('[ChatMessageThread] participantName debug:', {
     conversation: props.conversation,
     lastMessageSenderId: props.conversation?.lastMessageSenderId,
     participants: props.conversation?.participants,
-    currentUserId: props.currentUserId
+    currentUserId: props.currentUserId,
   });
 
   // Intentar usar lastMessageSenderId si tiene información del usuario
@@ -144,15 +138,15 @@ const participantName = computed(() => {
     // Extraer nombre usando múltiples estrategias
     let candidate = null;
     if (other) {
-      candidate = (
+      candidate =
         other.userName ||
         other.name ||
         other.email ||
         other.displayName ||
-        (typeof other === 'object' && other.id && typeof other.id === 'object' ?
-          (other.id.name || other.id.email || other.id.userName) : null) ||
-        null
-      );
+        (typeof other === 'object' && other.id && typeof other.id === 'object'
+          ? other.id.name || other.id.email || other.id.userName
+          : null) ||
+        null;
     }
 
     // Si el candidato parece un ID crudo, crear una representación más amigable
@@ -190,13 +184,19 @@ const participantType = computed(() => {
 const groupedMessages = computed(() => {
   console.log('[DEBUG ChatMessageThread] Grouping messages:', {
     totalMessages: props.messages.length,
-    messages: props.messages.map(m => ({ id: m.id, content: m.content?.substring(0, 30), senderId: m.senderId }))
+    messages: props.messages.map(m => ({
+      id: m.id,
+      content: m.content?.substring(0, 30),
+      senderId: m.senderId,
+    })),
   });
 
   const groups = {};
 
-  props.messages.forEach((message) => {
-    const date = message.createdAt?.toDate ? message.createdAt.toDate() : new Date(message.createdAt);
+  props.messages.forEach(message => {
+    const date = message.createdAt?.toDate
+      ? message.createdAt.toDate()
+      : new Date(message.createdAt);
     const dateKey = date.toDateString();
 
     if (!groups[dateKey]) {
@@ -209,11 +209,20 @@ const groupedMessages = computed(() => {
   return groups;
 });
 
-const normalizeId = (id) => {
+const normalizeId = id => {
   if (!id) return null;
   if (typeof id === 'object') {
     // Intentar todas las propiedades comunes para IDs
-    return id.id || id.userId || id.uid || id._id || id.objectId || id.docId || String(id.valueOf()) || null;
+    return (
+      id.id ||
+      id.userId ||
+      id.uid ||
+      id._id ||
+      id.objectId ||
+      id.docId ||
+      String(id.valueOf()) ||
+      null
+    );
   }
   return String(id);
 };
@@ -223,13 +232,11 @@ const buildMyIds = () => {
   if (props.currentUserId) base.push(props.currentUserId);
   if (Array.isArray(props.myUserIds)) base.push(...props.myUserIds);
   // Normalizar y deduplicar
-  const normalized = base
-    .map(v => normalizeId(v))
-    .filter(v => !!v);
+  const normalized = base.map(v => normalizeId(v)).filter(v => !!v);
   return Array.from(new Set(normalized));
 };
 
-const isSentByMe = (message) => {
+const isSentByMe = message => {
   const meIds = buildMyIds();
   if (!meIds.length) {
     console.log('[ChatMessageThread] ERROR: No myUserIds/currentUserId available:', {
@@ -261,13 +268,13 @@ const isSentByMe = (message) => {
     originalSender: message.senderId,
     senderType: typeof message.senderId,
     senderKeys: typeof message.senderId === 'object' ? Object.keys(message.senderId) : 'not object',
-    originalCurrentUser: props.currentUserId
+    originalCurrentUser: props.currentUserId,
   });
 
   return result;
 };
 
-const formatDate = (dateString) => {
+const formatDate = dateString => {
   const date = new Date(dateString);
   const today = new Date();
   const yesterday = new Date(today);
@@ -283,14 +290,14 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString();
 };
 
-const formatMessageTime = (timestamp) => {
+const formatMessageTime = timestamp => {
   if (!timestamp) return '';
 
   const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-const handleSend = (content) => {
+const handleSend = content => {
   emit('send', content);
 
   // Scroll to bottom after sending
@@ -306,18 +313,25 @@ const scrollToBottom = () => {
 };
 
 // Watch for new messages and scroll
-watch(() => props.messages.length, () => {
-  nextTick(() => {
-    scrollToBottom();
-  });
-});
+watch(
+  () => props.messages.length,
+  () => {
+    nextTick(() => {
+      scrollToBottom();
+    });
+  },
+);
 
 // Scroll on mount
-watch(() => props.conversation?.id, () => {
-  nextTick(() => {
-    scrollToBottom();
-  });
-}, { immediate: true });
+watch(
+  () => props.conversation?.id,
+  () => {
+    nextTick(() => {
+      scrollToBottom();
+    });
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped>

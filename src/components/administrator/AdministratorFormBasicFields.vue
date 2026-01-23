@@ -37,7 +37,7 @@ export default {
             <div>
               {{
                 $t('businessAdministratorAdmin.nameHelp') ||
-                  'Nombre completo del administrador tal como aparecerá en el panel y reportes.'
+                'Nombre completo del administrador tal como aparecerá en el panel y reportes.'
               }}
             </div>
           </template>
@@ -66,9 +66,9 @@ export default {
             <div>
               {{
                 $t('businessAdministratorAdmin.emailHelp') ||
-                  (isAdd
-                    ? 'Correo de acceso del administrador. Se usa para iniciar sesión y recibir notificaciones.'
-                    : 'Correo de acceso registrado del administrador; no se puede editar desde aquí.')
+                (isAdd
+                  ? 'Correo de acceso del administrador. Se usa para iniciar sesión y recibir notificaciones.'
+                  : 'Correo de acceso registrado del administrador; no se puede editar desde aquí.')
               }}
             </div>
           </template>
@@ -96,19 +96,15 @@ export default {
             <div>
               {{
                 $t('businessAdministratorAdmin.activeHelp') ||
-                  'Si está activo, el administrador puede acceder al sistema y gestionar los comercios asignados.'
+                'Si está activo, el administrador puede acceder al sistema y gestionar los comercios asignados.'
               }}
             </div>
           </template>
           <i class="bi bi-info-circle-fill h7"></i>
         </Popper>
       </label>
-      <Toggle
-        v-model="administrator.active"
-        :disabled="!toggles['administrators.admin.edit']"
-      />
+      <Toggle v-model="administrator.active" :disabled="!toggles['administrators.admin.edit']" />
     </div>
-
   </div>
 </template>
 

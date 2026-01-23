@@ -175,7 +175,7 @@ export default {
       }
     };
 
-    const getCommerceLogo = (commerce) => {
+    const getCommerceLogo = commerce => {
       if (!commerce) return null;
       // Si el logo del commerce está roto, devolver null para que intente el business logo
       if (state.brokenLogos.has(commerce.id)) {
@@ -191,7 +191,7 @@ export default {
       return state.business?.logo || null;
     };
 
-    const hasValidLogo = (commerce) => {
+    const hasValidLogo = commerce => {
       const commerceLogo = getCommerceLogo(commerce);
       const businessLogo = getBusinessLogo();
       return commerceLogo || businessLogo;
@@ -218,10 +218,7 @@ export default {
       const dLon = toRad(lon2 - lon1);
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(toRad(lat1)) *
-          Math.cos(toRad(lat2)) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     };
@@ -443,11 +440,7 @@ export default {
               </div>
               <i class="bi bi-chevron-down unit-select-arrow"></i>
             </button>
-            <ul
-              v-if="showDropdown"
-              class="unit-dropdown"
-              aria-labelledby="select-commerce"
-            >
+            <ul v-if="showDropdown" class="unit-dropdown" aria-labelledby="select-commerce">
               <li v-for="com in visibleCommerces" :key="com.id" :value="com" class="list-item">
                 <div class="unit-option" @click="selectCommerce(com)">
                   <div class="unit-option-logo">
@@ -461,10 +454,7 @@ export default {
                   <div class="unit-option-info">
                     <div class="unit-option-header-row">
                       <div class="unit-option-name">{{ com.tag }}</div>
-                      <div
-                        v-if="clientLocation && hasDistance(com.id)"
-                        class="unit-option-badges"
-                      >
+                      <div v-if="clientLocation && hasDistance(com.id)" class="unit-option-badges">
                         <span class="distance-badge">{{ getDistanceLabel(com.id) }}</span>
                         <span
                           v-if="nearestCommerce && nearestCommerce.id === com.id"
@@ -1243,7 +1233,7 @@ export default {
   color: var(--azul-turno);
   font-size: 0.7rem;
   font-weight: 500;
-  line-height: .8rem;
+  line-height: 0.8rem;
 }
 
 .nearest-badge {
@@ -1253,7 +1243,7 @@ export default {
   color: var(--azul-es);
   font-size: 0.7rem;
   font-weight: 600;
-  line-height: .8rem;
+  line-height: 0.8rem;
 }
 
 /* Animations */

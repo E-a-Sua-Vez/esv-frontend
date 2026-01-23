@@ -344,9 +344,7 @@ export default {
                       <span>
                         <i class="bi bi-stopwatch-fill"></i>
                         {{ $t('commerceQueuesView.duration') }}
-                        {{
-                          service.serviceInfo.blockTime || service.serviceInfo.estimatedTime
-                        }}'
+                        {{ service.serviceInfo.blockTime || service.serviceInfo.estimatedTime }}'
                         <span class="ms-2 service-channel-icons">
                           <i
                             v-if="queue && queue.presentialEnabled !== false"
@@ -435,7 +433,7 @@ export default {
 }
 .data-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  padding: 2rem .5rem;
+  padding: 2rem 0.5rem;
   margin-bottom: 1.5rem;
   border-radius: 1rem;
   border: 1px solid rgba(0, 0, 0, 0.05);

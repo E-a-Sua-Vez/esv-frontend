@@ -952,11 +952,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo
-          :commerce-id="commerce?.id"
-          :business-id="business?.id"
-          :loading="loading"
-        />
+        <CommerceLogo :commerce-id="commerce?.id" :business-id="business?.id" :loading="loading" />
         <ComponentMenu
           :title="$t(`dashboard.title`)"
           :toggles="state.toggles"

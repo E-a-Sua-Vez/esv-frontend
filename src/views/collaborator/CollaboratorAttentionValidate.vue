@@ -106,6 +106,11 @@ export default {
     const loading = ref(false);
     const alertError = ref('');
     const telemedicineVideoCallRef = ref(null);
+    const isAttendPage = computed(
+      () =>
+        route?.name === 'collaborator-attention-attend' ||
+        (typeof route?.path === 'string' && route.path.includes('/atender')),
+    );
 
     // Use global commerce and module from store
     const globalCommerce = computed(() => store.getCurrentCommerce);
@@ -1708,6 +1713,7 @@ export default {
       comment,
       loading,
       alertError,
+      isAttendPage,
       getPatientHistory,
       openPatientHistoryModal,
       finishCurrentAttention,
@@ -1970,7 +1976,7 @@ export default {
             "
             class="d-grid gap-2 my-2 mx-2"
           >
-            <div class="actions">
+            <div class="actions text-center">
               <span
                 ><strong>{{ $t('collaboratorAttentionValidate.readyQuestion') }}</strong></span
               >
@@ -2002,54 +2008,119 @@ export default {
             "
             class="d-grid gap-2 my-2"
           >
-            <!-- Estoque Card -->
-            <div
-              v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')"
-              class="estoque-card-compact my-3"
-            >
-              <div class="requirement-card-compact estoque-card">
-                <div class="requirement-icon-compact estoque-icon">
-                  <i class="bi bi-eyedropper"></i>
-                </div>
-                <div class="requirement-info-compact">
-                  <div class="requirement-title-compact">{{ $t('dashboard.stock') }}</div>
-                  <div class="requirement-subtitle-compact">
-                    {{ $t('products.attentionProducts') }}
+            <!-- Gestión de la Atención (homologado con Check-In en /atender) -->
+            <div v-if="isAttendPage" class="client-management-section my-3">
+              <h5 class="client-management-title">
+                {{
+                  $t('collaboratorQueueAttentions.attentionManagement') || 'Gestión de la Atención:'
+                }}
+              </h5>
+
+              <!-- Estoque Card -->
+              <div
+                v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')"
+                class="estoque-card-compact my-2"
+              >
+                <div class="requirement-card-compact estoque-card">
+                  <div class="requirement-icon-compact estoque-icon">
+                    <i class="bi bi-eyedropper"></i>
                   </div>
+                  <div class="requirement-info-compact">
+                    <div class="requirement-title-compact">{{ $t('dashboard.stock') }}</div>
+                    <div class="requirement-subtitle-compact">
+                      <i class="bi bi-info-circle-fill"></i>
+                      <span>{{ $t('products.attentionProducts') }}</span>
+                    </div>
+                  </div>
+                  <button
+                    class="requirement-action-btn-compact estoque-btn"
+                    :disabled="loading"
+                    @click="loadStockData()"
+                    data-bs-toggle="modal"
+                    :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
+                  >
+                    <i class="bi bi-box-seam"></i>
+                    <span>{{ $t('collaboratorAttentionValidate.actions.3.action') }}</span>
+                  </button>
                 </div>
-                <button
-                  class="requirement-action-btn-compact estoque-btn"
-                  :disabled="loading"
-                  @click="loadStockData()"
-                  data-bs-toggle="modal"
-                  :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
+              </div>
+
+              <!-- Payment / Transfer Card (reusable component) -->
+              <AttentionPaymentActionsCard
+                class="my-2"
+                :loading="loading"
+                :disabled="!state.attention || !state.attention.id"
+                @open="openAttentionModal()"
+              />
+
+              <!-- Comment -->
+              <div class="mb-2">
+                <label for="comment" class="form-label mt-2 comment-title">{{
+                  $t('collaboratorAttentionValidate.comment.label')
+                }}</label>
+                <textarea
+                  class="form-control"
+                  id="comment"
+                  rows="3"
+                  v-model="comment"
+                  :placeholder="$t('collaboratorAttentionValidate.comment.placeholder')"
                 >
-                  <i class="bi bi-box-seam"></i>
-                  <span>{{ $t('collaboratorAttentionValidate.actions.3.action') }}</span>
-                </button>
+                </textarea>
               </div>
             </div>
-            <!-- Payment / Transfer Card (reusable component) -->
-            <AttentionPaymentActionsCard
-              class="my-3"
-              :loading="loading"
-              :disabled="!state.attention || !state.attention.id"
-              @open="openAttentionModal()"
-            />
-            <div class="mb-2">
-              <label for="comment" class="form-label mt-2 comment-title">{{
-                $t('collaboratorAttentionValidate.comment.label')
-              }}</label>
-              <textarea
-                class="form-control"
-                id="comment"
-                rows="3"
-                v-model="comment"
-                :placeholder="$t('collaboratorAttentionValidate.comment.placeholder')"
+
+            <!-- Layout previo (mantener en /validar) -->
+            <template v-else>
+              <!-- Estoque Card -->
+              <div
+                v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')"
+                class="estoque-card-compact my-3"
               >
-              </textarea>
-            </div>
-            <div class="actions">
+                <div class="requirement-card-compact estoque-card">
+                  <div class="requirement-icon-compact estoque-icon">
+                    <i class="bi bi-eyedropper"></i>
+                  </div>
+                  <div class="requirement-info-compact">
+                    <div class="requirement-title-compact">{{ $t('dashboard.stock') }}</div>
+                    <div class="requirement-subtitle-compact">
+                      <i class="bi bi-info-circle-fill"></i>
+                      <span>{{ $t('products.attentionProducts') }}</span>
+                    </div>
+                  </div>
+                  <button
+                    class="requirement-action-btn-compact estoque-btn"
+                    :disabled="loading"
+                    @click="loadStockData()"
+                    data-bs-toggle="modal"
+                    :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
+                  >
+                    <i class="bi bi-box-seam"></i>
+                    <span>{{ $t('collaboratorAttentionValidate.actions.3.action') }}</span>
+                  </button>
+                </div>
+              </div>
+              <!-- Payment / Transfer Card (reusable component) -->
+              <AttentionPaymentActionsCard
+                class="my-3"
+                :loading="loading"
+                :disabled="!state.attention || !state.attention.id"
+                @open="openAttentionModal()"
+              />
+              <div class="mb-2">
+                <label for="comment" class="form-label mt-2 comment-title">{{
+                  $t('collaboratorAttentionValidate.comment.label')
+                }}</label>
+                <textarea
+                  class="form-control"
+                  id="comment"
+                  rows="3"
+                  v-model="comment"
+                  :placeholder="$t('collaboratorAttentionValidate.comment.placeholder')"
+                >
+                </textarea>
+              </div>
+            </template>
+            <div class="actions text-center">
               <span
                 ><strong>{{ $t('collaboratorAttentionValidate.readyQuestion') }}</strong></span
               >
@@ -2064,29 +2135,24 @@ export default {
                 <i class="bi bi-check-all"></i>
               </button>
             </div>
-            <div class="actions">
-              <span
-                ><strong>{{ $t('collaboratorQueueAttentions.actions.2.title.1') }}</strong></span
-              >
-            </div>
-            <button
-              class="btn btn-lg btn-block btn-size fw-bold btn-danger rounded-pill mb-1"
-              :disabled="
-                !state.toggles['collaborator.attention.skip'] || isReactivated() || loading
-              "
-              @click="skipAttention()"
-            >
-              {{ $t('collaboratorQueueAttentions.actions.2.action') }}
-              <i class="bi bi-skip-forward"></i>
-            </button>
-            <div class="d-grid gap-2 my-1">
+            <div class="d-flex gap-2 my-1">
               <button
-                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill flex-fill"
                 @click="queueAttentions()"
                 :disabled="loading"
               >
                 {{ $t('collaboratorAttentionValidate.actions.2.action') }}
                 <i class="bi bi-arrow-left-circle"></i>
+              </button>
+              <button
+                class="btn btn-lg btn-size fw-bold btn-outline-primary rounded-pill flex-fill"
+                :disabled="
+                  !state.toggles['collaborator.attention.skip'] || isReactivated() || loading
+                "
+                @click="skipAttention()"
+              >
+                {{ $t('collaboratorQueueAttentions.actions.2.action') }}
+                <i class="bi bi-skip-forward"></i>
               </button>
             </div>
           </div>
@@ -2182,7 +2248,9 @@ export default {
           :commerce-id="state.commerce?.id"
           :business-id="state.business?.id"
           :loading="loading"
-          :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${state.currentUser.alias || state.currentUser.name}!`"
+          :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
+            state.currentUser.alias || state.currentUser.name
+          }!`"
           :toggles="state.toggles"
           component-name="collaboratorAttentionValidate"
           @go-back="queueAttentions"
@@ -2386,7 +2454,7 @@ export default {
             "
             class="d-grid gap-2 my-2 mx-2"
           >
-            <div class="actions">
+            <div class="actions text-center">
               <span
                 ><strong>{{ $t('collaboratorAttentionValidate.readyQuestion') }}</strong></span
               >
@@ -2418,54 +2486,119 @@ export default {
             "
             class="d-grid gap-2 my-2"
           >
-            <!-- Estoque Card -->
-            <div
-              v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')"
-              class="estoque-card-compact my-3"
-            >
-              <div class="requirement-card-compact estoque-card">
-                <div class="requirement-icon-compact estoque-icon">
-                  <i class="bi bi-eyedropper"></i>
-                </div>
-                <div class="requirement-info-compact">
-                  <div class="requirement-title-compact">{{ $t('dashboard.stock') }}</div>
-                  <div class="requirement-subtitle-compact">
-                    {{ $t('products.attentionProducts') }}
+            <!-- Gestión de la Atención (homologado con Check-In en /atender) -->
+            <div v-if="isAttendPage" class="client-management-section my-3">
+              <h5 class="client-management-title">
+                {{
+                  $t('collaboratorQueueAttentions.attentionManagement') || 'Gestión de la Atención:'
+                }}
+              </h5>
+
+              <!-- Estoque Card -->
+              <div
+                v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')"
+                class="estoque-card-compact my-2"
+              >
+                <div class="requirement-card-compact estoque-card">
+                  <div class="requirement-icon-compact estoque-icon">
+                    <i class="bi bi-eyedropper"></i>
                   </div>
+                  <div class="requirement-info-compact">
+                    <div class="requirement-title-compact">{{ $t('dashboard.stock') }}</div>
+                    <div class="requirement-subtitle-compact">
+                      <i class="bi bi-info-circle-fill"></i>
+                      <span>{{ $t('products.attentionProducts') }}</span>
+                    </div>
+                  </div>
+                  <button
+                    class="requirement-action-btn-compact estoque-btn"
+                    :disabled="loading"
+                    @click="loadStockData()"
+                    data-bs-toggle="modal"
+                    :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
+                  >
+                    <i class="bi bi-box-seam"></i>
+                    <span>{{ $t('collaboratorAttentionValidate.actions.3.action') }}</span>
+                  </button>
                 </div>
-                <button
-                  class="requirement-action-btn-compact estoque-btn"
-                  :disabled="loading"
-                  @click="loadStockData()"
-                  data-bs-toggle="modal"
-                  :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
+              </div>
+
+              <!-- Payment / Transfer Card (reusable component) -->
+              <AttentionPaymentActionsCard
+                class="my-2"
+                :loading="loading"
+                :disabled="!state.attention || !state.attention.id"
+                @open="openAttentionModal()"
+              />
+
+              <!-- Comment -->
+              <div class="mb-2">
+                <label for="comment" class="form-label mt-2 comment-title">{{
+                  $t('collaboratorAttentionValidate.comment.label')
+                }}</label>
+                <textarea
+                  class="form-control"
+                  id="comment"
+                  rows="3"
+                  v-model="comment"
+                  :placeholder="$t('collaboratorAttentionValidate.comment.placeholder')"
                 >
-                  <i class="bi bi-box-seam"></i>
-                  <span>{{ $t('collaboratorAttentionValidate.actions.3.action') }}</span>
-                </button>
+                </textarea>
               </div>
             </div>
-            <!-- Payment / Transfer Card (reusable component) -->
-            <AttentionPaymentActionsCard
-              class="my-3"
-              :loading="loading"
-              :disabled="!state.attention || !state.attention.id"
-              @open="openAttentionModal()"
-            />
-            <div class="mb-2">
-              <label for="comment" class="form-label mt-2 comment-title">{{
-                $t('collaboratorAttentionValidate.comment.label')
-              }}</label>
-              <textarea
-                class="form-control"
-                id="comment"
-                rows="3"
-                v-model="comment"
-                :placeholder="$t('collaboratorAttentionValidate.comment.placeholder')"
+
+            <!-- Layout previo (mantener en /validar) -->
+            <template v-else>
+              <!-- Estoque Card -->
+              <div
+                v-if="getActiveFeature(state.commerce, 'attention-stock-register', 'PRODUCT')"
+                class="estoque-card-compact my-3"
               >
-              </textarea>
-            </div>
-            <div class="actions">
+                <div class="requirement-card-compact estoque-card">
+                  <div class="requirement-icon-compact estoque-icon">
+                    <i class="bi bi-eyedropper"></i>
+                  </div>
+                  <div class="requirement-info-compact">
+                    <div class="requirement-title-compact">{{ $t('dashboard.stock') }}</div>
+                    <div class="requirement-subtitle-compact">
+                      <i class="bi bi-info-circle-fill"></i>
+                      <span>{{ $t('products.attentionProducts') }}</span>
+                    </div>
+                  </div>
+                  <button
+                    class="requirement-action-btn-compact estoque-btn"
+                    :disabled="loading"
+                    @click="loadStockData()"
+                    data-bs-toggle="modal"
+                    :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
+                  >
+                    <i class="bi bi-box-seam"></i>
+                    <span>{{ $t('collaboratorAttentionValidate.actions.3.action') }}</span>
+                  </button>
+                </div>
+              </div>
+              <!-- Payment / Transfer Card (reusable component) -->
+              <AttentionPaymentActionsCard
+                class="my-3"
+                :loading="loading"
+                :disabled="!state.attention || !state.attention.id"
+                @open="openAttentionModal()"
+              />
+              <div class="mb-2">
+                <label for="comment" class="form-label mt-2 comment-title">{{
+                  $t('collaboratorAttentionValidate.comment.label')
+                }}</label>
+                <textarea
+                  class="form-control"
+                  id="comment"
+                  rows="3"
+                  v-model="comment"
+                  :placeholder="$t('collaboratorAttentionValidate.comment.placeholder')"
+                >
+                </textarea>
+              </div>
+            </template>
+            <div class="actions text-center">
               <span
                 ><strong>{{ $t('collaboratorAttentionValidate.readyQuestion') }}</strong></span
               >
@@ -2622,29 +2755,24 @@ export default {
                 <i class="bi bi-check-all"></i>
               </button>
             </div>
-            <div class="actions">
-              <span
-                ><strong>{{ $t('collaboratorQueueAttentions.actions.2.title.1') }}</strong></span
-              >
-            </div>
-            <button
-              class="btn btn-lg btn-block btn-size fw-bold btn-danger rounded-pill mb-1"
-              :disabled="
-                !state.toggles['collaborator.attention.skip'] || isReactivated() || loading
-              "
-              @click="skipAttention()"
-            >
-              {{ $t('collaboratorQueueAttentions.actions.2.action') }}
-              <i class="bi bi-skip-forward"></i>
-            </button>
-            <div class="d-grid gap-2 my-1">
+            <div class="d-flex gap-2 my-1">
               <button
-                class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mb-2"
+                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill flex-fill"
                 @click="queueAttentions()"
                 :disabled="loading"
               >
                 {{ $t('collaboratorAttentionValidate.actions.2.action') }}
                 <i class="bi bi-arrow-left-circle"></i>
+              </button>
+              <button
+                class="btn btn-lg btn-size fw-bold btn-outline-primary rounded-pill flex-fill"
+                :disabled="
+                  !state.toggles['collaborator.attention.skip'] || isReactivated() || loading
+                "
+                @click="skipAttention()"
+              >
+                {{ $t('collaboratorQueueAttentions.actions.2.action') }}
+                <i class="bi bi-skip-forward"></i>
               </button>
             </div>
           </div>
@@ -3468,10 +3596,20 @@ export default {
 
 .estoque-btn {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
 }
 
-.estoque-btn:hover {
+.estoque-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.estoque-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
 }
 
 /* Compact Estoque Card - Single Line Layout */
@@ -3530,11 +3668,16 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: left;
 }
 
 .requirement-subtitle-compact {
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #6c757d;
   margin: 0;
   line-height: 1.2;
   white-space: nowrap;
@@ -3542,24 +3685,34 @@ export default {
   text-overflow: ellipsis;
 }
 
+.requirement-subtitle-compact i {
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
 .requirement-action-btn-compact {
+  width: auto;
+  min-width: fit-content;
+  padding: 0.4rem 0.875rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.75rem;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  color: white;
-  background: var(--card-button-bg, #3b82f6);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  gap: 0.375rem;
+  margin-top: 0;
   flex-shrink: 0;
   white-space: nowrap;
+  text-decoration: none;
+  color: white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  min-height: auto;
+  height: auto;
+  line-height: 1.2;
 }
 
 .requirement-action-btn-compact:hover {
@@ -3649,6 +3802,13 @@ export default {
   border-bottom: 2px solid rgba(0, 74, 173, 0.2);
 }
 
+/* Homologación con Check-In */
+.client-management-section {
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
 /* Attend Button - Same size as check-in page */
 .attend-button {
   width: 100% !important;
@@ -3672,5 +3832,29 @@ export default {
 
 .attend-button i {
   font-size: 1.25rem;
+}
+
+/* Botón outline-primary para Pular */
+.btn-outline-primary {
+  background: white;
+  border: 2px solid #0d6efd;
+  color: #0d6efd;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+  background: #0d6efd;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.btn-outline-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  background: white;
+  border-color: #6c757d;
+  color: #6c757d;
 }
 </style>

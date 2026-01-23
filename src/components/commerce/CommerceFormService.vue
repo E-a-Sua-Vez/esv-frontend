@@ -258,13 +258,15 @@ export default {
           </label>
           <div
             class="form-fields-container days-container"
-            style="padding: 0.375rem; gap: 0.75rem; flex-direction: row; flex-wrap: wrap; align-items: center"
+            style="
+              padding: 0.375rem;
+              gap: 0.75rem;
+              flex-direction: row;
+              flex-wrap: wrap;
+              align-items: center;
+            "
           >
-            <div
-              v-for="day in [1, 2, 3, 4, 5, 6, 7]"
-              :key="day"
-              class="day-toggle-container"
-            >
+            <div v-for="day in [1, 2, 3, 4, 5, 6, 7]" :key="day" class="day-toggle-container">
               <label class="form-check-label day-label">{{ $t(`days.${day}`) }}</label>
               <input
                 type="checkbox"

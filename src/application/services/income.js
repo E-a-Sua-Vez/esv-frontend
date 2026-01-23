@@ -13,5 +13,13 @@ export const getPendingIncomeByPackage = async (commerceId, packageId) =>
     )
   ).data;
 
+export const getAllIncomesByPackage = async (commerceId, packageId) =>
+  (
+    await requestBackend.get(
+      `/${entity}/commerceId/${commerceId}/packageId/${packageId}/all`,
+      await getHeaders()
+    )
+  ).data;
+
 export const confirmPendingIncome = async id =>
   (await requestBackend.patch(`/${entity}/confirm/${id}`, {}, await getHeaders())).data;

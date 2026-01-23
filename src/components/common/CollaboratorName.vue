@@ -14,7 +14,7 @@ export default {
   },
   methods: {
     formatIdNumber(idNumber) {
-      return formatIdNumberBr(`br`, idNumber);
+      return formatIdNumberBr('br', idNumber);
     },
   },
   computed: {

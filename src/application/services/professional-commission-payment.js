@@ -10,12 +10,8 @@ export const getCommissionPaymentsByCommerce = async commerceId =>
   (await requestQuery.get(`/${queryEntity}/commerce/${commerceId}`, await getHeaders())).data;
 
 export const getCommissionPaymentsByProfessional = async professionalId =>
-  (
-    await requestQuery.get(
-      `/${queryEntity}/professional/${professionalId}`,
-      await getHeaders(),
-    )
-  ).data;
+  (await requestQuery.get(`/${queryEntity}/professional/${professionalId}`, await getHeaders()))
+    .data;
 
 export const getCommissionPaymentsByStatus = async (commerceId, status) =>
   (

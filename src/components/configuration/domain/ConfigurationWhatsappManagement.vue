@@ -361,7 +361,9 @@ export default {
                               : 'health-inactive'
                           "
                         >
-                          {{ state.whatsappConnectionStatus.connected ? 'Connected' : 'Disconnected' }}
+                          {{
+                            state.whatsappConnectionStatus.connected ? 'Connected' : 'Disconnected'
+                          }}
                         </span>
                       </div>
                       <div class="health-metric-details mb-2">
@@ -436,18 +438,18 @@ export default {
       >
         <div class="modal-dialog modal-xl">
           <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold">
-              <i class="bi bi-plugin"></i> {{ $t('businessConfiguration.connect') }}
-            </h5>
-            <button
-              id="close-modal"
-              class="btn-close"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
+            <div class="modal-header border-0 centered active-name">
+              <h5 class="modal-title fw-bold">
+                <i class="bi bi-plugin"></i> {{ $t('businessConfiguration.connect') }}
+              </h5>
+              <button
+                id="close-modal"
+                class="btn-close"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
             <div class="modal-body text-center mb-0" id="attentions-component">
               <Spinner :show="loading"></Spinner>
               <Alert :show="loading" :stack="alertError"></Alert>
@@ -456,42 +458,42 @@ export default {
                 v-if="state.showAdd && state.toggles['configuration.admin.whatsapps']"
               >
                 <div class="row g-1">
-                <div id="attention-phone-form-add" class="row g-1">
-                  <div class="col-3 form-floating">
-                    <select
-                      class="form-control form-select btn btn-lg btn-light fw-bold text-dark select"
-                      v-model.trim="state.phoneCode"
-                      id="attention-phoneCode-input-add"
-                    >
-                      <option v-for="code in state.phoneCodes" :key="code.id" :value="code.code">
-                        {{ code.label }}
-                      </option>
-                    </select>
-                    <label for="attention-phoneCode-input-add">
-                      {{ $t('commerceQueuesView.phoneCode') }}</label
-                    >
-                  </div>
-                  <div class="col-9 form-floating">
-                    <input
-                      id="attention-phone-input-add"
-                      maxlength="15"
-                      type="tel"
-                      class="form-control"
-                      v-model="state.phone"
-                      placeholder="Ex.: 56233445533"
-                      @keypress="onlyNumber"
-                    />
-                    <label for="attention-phone-input-add"
-                      >{{ $t('commerceQueuesView.phone') }} <i class="bi bi-phone-vibrate"></i>
+                  <div id="attention-phone-form-add" class="row g-1">
+                    <div class="col-3 form-floating">
+                      <select
+                        class="form-control form-select btn btn-lg btn-light fw-bold text-dark select"
+                        v-model.trim="state.phoneCode"
+                        id="attention-phoneCode-input-add"
+                      >
+                        <option v-for="code in state.phoneCodes" :key="code.id" :value="code.code">
+                          {{ code.label }}
+                        </option>
+                      </select>
+                      <label for="attention-phoneCode-input-add">
+                        {{ $t('commerceQueuesView.phoneCode') }}</label
+                      >
+                    </div>
+                    <div class="col-9 form-floating">
+                      <input
+                        id="attention-phone-input-add"
+                        maxlength="15"
+                        type="tel"
+                        class="form-control"
+                        v-model="state.phone"
+                        placeholder="Ex.: 56233445533"
+                        @keypress="onlyNumber"
+                      />
+                      <label for="attention-phone-input-add"
+                        >{{ $t('commerceQueuesView.phone') }} <i class="bi bi-phone-vibrate"></i>
+                      </label>
+                    </div>
+                    <label v-if="!state.phoneCode" class="examples mt-2">
+                      {{ $t('clientNotifyData.validate.cellphone.example') }}
+                    </label>
+                    <label v-else class="examples mt-1">
+                      {{ $t(`clientNotifyData.validate.cellphone.examples.${state.phoneCode}`) }}
                     </label>
                   </div>
-                  <label v-if="!state.phoneCode" class="examples mt-2">
-                    {{ $t('clientNotifyData.validate.cellphone.example') }}
-                  </label>
-                  <label v-else class="examples mt-1">
-                    {{ $t(`clientNotifyData.validate.cellphone.examples.${state.phoneCode}`) }}
-                  </label>
-                </div>
                   <div class="col">
                     <button
                       class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"

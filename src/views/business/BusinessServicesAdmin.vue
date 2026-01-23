@@ -520,7 +520,7 @@ export default {
                     />
                     <div class="col" v-if="state.extendedEntity === index">
                       <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
+                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                         @click="update(service)"
                         :disabled="!state.toggles['services.admin.update']"
                       >
@@ -748,7 +748,7 @@ export default {
               />
               <div class="col">
                 <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
+                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                   @click="add(state.newService)"
                 >
                   {{ $t('businessServicesAdmin.add') }} <i class="bi bi-save"></i>

@@ -52,7 +52,9 @@ export default {
       },
     },
     isMedicalRole() {
-      return ['DOCTOR', 'SPECIALIST', 'NURSE', 'MEDICAL_ASSISTANT'].includes(this.collaborator.role);
+      return ['DOCTOR', 'SPECIALIST', 'NURSE', 'MEDICAL_ASSISTANT'].includes(
+        this.collaborator.role,
+      );
     },
     canSignDocuments() {
       return ['DOCTOR', 'SPECIALIST'].includes(this.collaborator.role);
@@ -75,7 +77,9 @@ export default {
         // No actualizar collaborator con estos campos deprecados
         if (updated.isProfessional) {
           // Si tiene Professional asociado, mostrar mensaje
-          console.info('Collaborator has associated Professional. Update signature in Professional profile.');
+          console.info(
+            'Collaborator has associated Professional. Update signature in Professional profile.',
+          );
         }
       } else if (field === 'profilePhoto') {
         updated.profilePhoto = value;
@@ -100,7 +104,7 @@ export default {
       const updated = {
         ...this.collaborator,
         isProfessional: true,
-        professionalId: result.professional.id
+        professionalId: result.professional.id,
       };
       this.$emit('update:collaborator', updated);
       this.$emit('professional-created', result);
@@ -119,7 +123,7 @@ export default {
       :modules="modules"
       :toggles="toggles"
       :errors="errors"
-      :showRole="true"
+      :show-role="true"
       prefix="update-"
       :is-add="false"
     />
@@ -152,7 +156,6 @@ export default {
       />
     </div>
 
-
     <!-- Modal para crear perfil profesional -->
     <CreateAssociatedProfessionalModal
       v-if="showCreateProfessionalModal"
@@ -162,7 +165,7 @@ export default {
       @close="showCreateProfessionalModal = false"
     />
 
-     <div
+    <div
       v-if="localCollaborator && localCollaborator.id"
       id="collaborator-id-form"
       class="row -2 mb-g3 mt-2"

@@ -20,9 +20,9 @@
       <div class="conversations-panel">
         <ChatConversationList
           :conversations="conversations"
-          :activeId="activeConversationId"
+          :active-id="activeConversationId"
           :loading="loading"
-          :currentUserId="currentUserId"
+          :current-user-id="currentUserId"
           @select="handleSelectConversation"
           @archive="handleArchiveConversation"
         />
@@ -40,8 +40,8 @@
           v-else-if="activeConversationId"
           :conversation="activeConversation"
           :messages="messages"
-          :currentUserId="currentUserId"
-          :myUserIds="myUserIds"
+          :current-user-id="currentUserId"
+          :my-user-ids="myUserIds"
           @send="handleSendMessage"
           @markRead="markMessageAsRead"
         />
@@ -97,12 +97,8 @@ const showNewChatModal = ref(false);
 
 const currentUserComputed = computed(() => store.getCurrentUser || {});
 const currentUserId = computed(() => {
-  const canonicalId = (myUserIds?.value && myUserIds.value.length) ? myUserIds.value[0] : null;
-  return (
-    canonicalId ||
-    currentUser.value?.id ||
-    currentUserComputed.value?.id
-  );
+  const canonicalId = myUserIds?.value && myUserIds.value.length ? myUserIds.value[0] : null;
+  return canonicalId || currentUser.value?.id || currentUserComputed.value?.id;
 });
 const userRole = computed(() => {
   const user = store.getCurrentUser;
@@ -121,9 +117,9 @@ const userData = computed(() => {
   };
 });
 
-const activeConversation = computed(() => {
-  return conversations.value.find(c => c.id === activeConversationId.value);
-});
+const activeConversation = computed(() =>
+  conversations.value.find(c => c.id === activeConversationId.value)
+);
 
 onMounted(() => {
   const user = store.getCurrentUser;
@@ -138,7 +134,7 @@ onUnmounted(() => {
   cleanup();
 });
 
-const handleSelectConversation = async (conversationId) => {
+const handleSelectConversation = async conversationId => {
   startMessagesListener(conversationId);
 
   // Marcar como leído
@@ -147,7 +143,7 @@ const handleSelectConversation = async (conversationId) => {
   }, 1000);
 };
 
-const handleSendMessage = async (content) => {
+const handleSendMessage = async content => {
   if (!activeConversation.value) return;
 
   const otherParticipant = getOtherParticipant(activeConversation.value);
@@ -176,7 +172,7 @@ const handleSendMessage = async (content) => {
   }
 };
 
-const handleArchiveConversation = async (conversationId) => {
+const handleArchiveConversation = async conversationId => {
   if (confirm('¿Estás seguro de que deseas archivar esta conversación?')) {
     await archiveConversation(conversationId);
   }
@@ -186,7 +182,7 @@ const openNewChat = () => {
   showNewChatModal.value = true;
 };
 
-const handleChatCreated = async (data) => {
+const handleChatCreated = async data => {
   showNewChatModal.value = false;
 
   // Si se creó una conversación, seleccionarla

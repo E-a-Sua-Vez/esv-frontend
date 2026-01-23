@@ -255,9 +255,7 @@ export default {
                   </div>
                   <div
                     class="config-tree-container"
-                    v-if="
-                      state.toggles['configuration.admin.edit']
-                    "
+                    v-if="state.toggles['configuration.admin.edit']"
                   >
                     <div class="config-tree-section">
                       <a
@@ -284,7 +282,9 @@ export default {
                             class="toggle-checkbox group-toggle-checkbox"
                             :checked="isGroupFullyActive('EMAIL')"
                             @click.stop="toggleGroupActive('EMAIL')"
-                            :title="isGroupFullyActive('EMAIL') ? 'Desactivar todas' : 'Activar todas'"
+                            :title="
+                              isGroupFullyActive('EMAIL') ? 'Desactivar todas' : 'Activar todas'
+                            "
                           />
                         </div>
                       </a>
@@ -350,7 +350,9 @@ export default {
                             class="toggle-checkbox group-toggle-checkbox"
                             :checked="isGroupFullyActive('PRODUCT')"
                             @click.stop="toggleGroupActive('PRODUCT')"
-                            :title="isGroupFullyActive('PRODUCT') ? 'Desactivar todas' : 'Activar todas'"
+                            :title="
+                              isGroupFullyActive('PRODUCT') ? 'Desactivar todas' : 'Activar todas'
+                            "
                           />
                         </div>
                       </a>
@@ -404,9 +406,7 @@ export default {
                           }}</span>
                           <span class="config-tree-badge">
                             {{ getTypeStats('USER').total }}
-                            ({{ getTypeStats('USER').active }}/{{
-                              getTypeStats('USER').inactive
-                            }})
+                            ({{ getTypeStats('USER').active }}/{{ getTypeStats('USER').inactive }})
                           </span>
                         </div>
                         <div class="config-tree-right-controls">
@@ -416,7 +416,9 @@ export default {
                             class="toggle-checkbox group-toggle-checkbox"
                             :checked="isGroupFullyActive('USER')"
                             @click.stop="toggleGroupActive('USER')"
-                            :title="isGroupFullyActive('USER') ? 'Desactivar todas' : 'Activar todas'"
+                            :title="
+                              isGroupFullyActive('USER') ? 'Desactivar todas' : 'Activar todas'
+                            "
                           />
                         </div>
                       </a>
@@ -482,7 +484,9 @@ export default {
                             class="toggle-checkbox group-toggle-checkbox"
                             :checked="isGroupFullyActive('WHATSAPP')"
                             @click.stop="toggleGroupActive('WHATSAPP')"
-                            :title="isGroupFullyActive('WHATSAPP') ? 'Desactivar todas' : 'Activar todas'"
+                            :title="
+                              isGroupFullyActive('WHATSAPP') ? 'Desactivar todas' : 'Activar todas'
+                            "
                           />
                         </div>
                       </a>
@@ -550,7 +554,9 @@ export default {
                             class="toggle-checkbox group-toggle-checkbox"
                             :checked="isGroupFullyActive('MESSAGE')"
                             @click.stop="toggleGroupActive('MESSAGE')"
-                            :title="isGroupFullyActive('MESSAGE') ? 'Desactivar todas' : 'Activar todas'"
+                            :title="
+                              isGroupFullyActive('MESSAGE') ? 'Desactivar todas' : 'Activar todas'
+                            "
                           />
                         </div>
                       </a>

@@ -95,7 +95,9 @@
               <h6>{{ $t('clientPortal.profile.personalInfo') }}</h6>
             </div>
             <div class="info-card-body">
-              <template v-if="profile.idNumber || profile.email || profile.phone || profile.country">
+              <template
+                v-if="profile.idNumber || profile.email || profile.phone || profile.country"
+              >
                 <div class="info-row-modern" v-if="profile.idNumber">
                   <div class="info-row-label">
                     <i class="bi bi-card-heading"></i>
@@ -139,7 +141,14 @@
               <h6>{{ $t('clientPortal.profile.additionalInfo') }}</h6>
             </div>
             <div class="info-card-body">
-              <template v-if="profile.personalInfo && (profile.personalInfo.code1 || profile.personalInfo.code2 || profile.personalInfo.code3)">
+              <template
+                v-if="
+                  profile.personalInfo &&
+                  (profile.personalInfo.code1 ||
+                    profile.personalInfo.code2 ||
+                    profile.personalInfo.code3)
+                "
+              >
                 <div class="info-row-modern" v-if="profile.personalInfo.code1">
                   <div class="info-row-label">
                     <i class="bi bi-code"></i>
@@ -216,7 +225,10 @@ import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { getClientProfile } from '../../application/services/client-portal';
 import { getClientPortalPermissions } from '../../application/services/client-portal-permissions';
-import { getPatientPhoto, getPatientPhotoThumbnailUrl } from '../../application/services/patient-photo';
+import {
+  getPatientPhoto,
+  getPatientPhotoThumbnailUrl,
+} from '../../application/services/patient-photo';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 
@@ -283,7 +295,10 @@ export default {
         const storedCommerce = localStorage.getItem('clientPortalCommerce');
 
         if (!storedClient || !storedCommerce) {
-          router.push({ name: 'client-portal-login', params: { commerceSlug: commerceSlug.value } });
+          router.push({
+            name: 'client-portal-login',
+            params: { commerceSlug: commerceSlug.value },
+          });
           return;
         }
 
@@ -678,6 +693,3 @@ export default {
   }
 }
 </style>
-
-
-

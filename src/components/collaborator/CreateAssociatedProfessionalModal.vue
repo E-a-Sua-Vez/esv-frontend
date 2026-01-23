@@ -10,152 +10,214 @@
       <div class="modal-content">
         <div class="modal-header border-0 centered active-name">
           <h5 class="modal-title fw-bold">
-            <i class="bi bi-person-plus"></i> 
+            <i class="bi bi-person-plus"></i>
             {{ $t('collaborator.createProfessional.title') || 'Criar Perfil Profissional' }}
           </h5>
-          <button 
-            class="btn-close" 
+          <button
+            class="btn-close"
             type="button"
-            @click="$emit('close')" 
+            @click="$emit('close')"
             aria-label="Close"
           ></button>
         </div>
-        
+
         <div class="modal-body text-center mb-0">
           <Spinner :show="loading"></Spinner>
           <div class="result-card mb-4">
             <p class="text-muted mb-3">
-              {{ $t('collaborator.createProfessional.description') || 
-                 'Crie um perfil profissional para que este colaborador possa executar serviços.' }}
+              {{
+                $t('collaborator.createProfessional.description') ||
+                'Crie um perfil profissional para que este colaborador possa executar serviços.'
+              }}
             </p>
-        
-        <!-- Información del colaborador -->
-        <div class="alert alert-light mb-3">
-          <strong>{{ $t('collaborator.name') || 'Nome' }}:</strong> {{ collaborator.name }}
-          <br />
-          <strong>{{ $t('collaborator.email') || 'E-mail' }}:</strong> {{ collaborator.email }}
-        </div>
 
-        <!-- Form Fields Container -->
-        <div class="form-fields-container">
-        <div class="form-group-modern">
-          <label class="form-label-modern">
-            {{ $t('professional.role.label') || 'Función Profesional' }} <span class="text-danger">*</span>
-          </label>
-          <select v-model="form.role" class="form-control-modern form-select-modern" :class="{ 'is-invalid': errors.role }" required>
-            <option value="">{{ $t('professional.selectRole') || 'Seleccionar rol' }}</option>
-            <optgroup :label="$t('professional.role.categories.beauty') || 'Belleza'">
-              <option value="STYLIST">{{ $t('professional.role.types.STYLIST') || 'Estilista' }}</option>
-              <option value="BARBER">{{ $t('professional.role.types.BARBER') || 'Barbero' }}</option>
-            </optgroup>
-            <optgroup :label="$t('professional.role.categories.medical') || 'Médico'">
-              <option value="DOCTOR">{{ $t('professional.role.types.DOCTOR') || 'Médico General' }}</option>
-              <option value="SPECIALIST">{{ $t('professional.role.types.SPECIALIST') || 'Especialista' }}</option>
-              <option value="NURSE">{{ $t('professional.role.types.NURSE') || 'Enfermero/a' }}</option>
-              <option value="MEDICAL_ASSISTANT">{{ $t('professional.role.types.MEDICAL_ASSISTANT') || 'Asistente Médico' }}</option>
-            </optgroup>
-            <optgroup :label="$t('professional.role.categories.general') || 'General'">
-              <option value="STANDARD">{{ $t('professional.role.types.STANDARD') || 'Estándar' }}</option>
-              <option value="ASSISTANT">{{ $t('professional.role.types.ASSISTANT') || 'Asistente' }}</option>
-              <option value="RECEPTIONIST">{{ $t('professional.role.types.RECEPTIONIST') || 'Recepcionista' }}</option>
-            </optgroup>
-          </select>
-          <div v-if="errors.role" class="invalid-feedback d-block">
-            {{ errors.role }}
-          </div>
-        </div>
+            <!-- Información del colaborador -->
+            <div class="alert alert-light mb-3">
+              <strong>{{ $t('collaborator.name') || 'Nome' }}:</strong> {{ collaborator.name }}
+              <br />
+              <strong>{{ $t('collaborator.email') || 'E-mail' }}:</strong> {{ collaborator.email }}
+            </div>
 
-        <!-- Especialidades (opcional) -->
-        <div class="form-group-modern">
-          <label class="form-label-modern">{{ $t('professional.specialties') || 'Especialidades' }}</label>
-          <input 
-            v-model="form.specialties" 
-            type="text" 
-            class="form-control-modern"
-            :placeholder="$t('professional.specialtiesPlaceholder') || 'Ej: Cardiologia, Dermatologia'"
-          />
-          <small class="form-text text-muted">
-            {{ $t('professional.specialtiesHelp') || 'Separar múltiplas especialidades com vírgulas' }}
-          </small>
-        </div>
+            <!-- Form Fields Container -->
+            <div class="form-fields-container">
+              <div class="form-group-modern">
+                <label class="form-label-modern">
+                  {{ $t('professional.role.label') || 'Función Profesional' }}
+                  <span class="text-danger">*</span>
+                </label>
+                <select
+                  v-model="form.role"
+                  class="form-control-modern form-select-modern"
+                  :class="{ 'is-invalid': errors.role }"
+                  required
+                >
+                  <option value="">{{ $t('professional.selectRole') || 'Seleccionar rol' }}</option>
+                  <optgroup :label="$t('professional.role.categories.beauty') || 'Belleza'">
+                    <option value="STYLIST">
+                      {{ $t('professional.role.types.STYLIST') || 'Estilista' }}
+                    </option>
+                    <option value="BARBER">
+                      {{ $t('professional.role.types.BARBER') || 'Barbero' }}
+                    </option>
+                  </optgroup>
+                  <optgroup :label="$t('professional.role.categories.medical') || 'Médico'">
+                    <option value="DOCTOR">
+                      {{ $t('professional.role.types.DOCTOR') || 'Médico General' }}
+                    </option>
+                    <option value="SPECIALIST">
+                      {{ $t('professional.role.types.SPECIALIST') || 'Especialista' }}
+                    </option>
+                    <option value="NURSE">
+                      {{ $t('professional.role.types.NURSE') || 'Enfermero/a' }}
+                    </option>
+                    <option value="MEDICAL_ASSISTANT">
+                      {{ $t('professional.role.types.MEDICAL_ASSISTANT') || 'Asistente Médico' }}
+                    </option>
+                  </optgroup>
+                  <optgroup :label="$t('professional.role.categories.general') || 'General'">
+                    <option value="STANDARD">
+                      {{ $t('professional.role.types.STANDARD') || 'Estándar' }}
+                    </option>
+                    <option value="ASSISTANT">
+                      {{ $t('professional.role.types.ASSISTANT') || 'Asistente' }}
+                    </option>
+                    <option value="RECEPTIONIST">
+                      {{ $t('professional.role.types.RECEPTIONIST') || 'Recepcionista' }}
+                    </option>
+                  </optgroup>
+                </select>
+                <div v-if="errors.role" class="invalid-feedback d-block">
+                  {{ errors.role }}
+                </div>
+              </div>
 
-        <!-- Servicios que puede ejecutar -->
-        <div class="form-group-modern" v-if="services && services.length > 0">
-          <label class="form-label-modern">{{ $t('professional.services') || 'Serviços' }}</label>
-          <select v-model="form.servicesId" class="form-control-modern form-select-modern" multiple size="5">
-            <option v-for="service in services" :key="service.id" :value="service.id">
-              {{ service.name }}
-            </option>
-          </select>
-          <small class="form-text text-muted">
-            {{ $t('professional.servicesHelp') || 'Mantenha Ctrl/Cmd pressionado para selecionar múltiplos' }}
-          </small>
-        </div>
+              <!-- Especialidades (opcional) -->
+              <div class="form-group-modern">
+                <label class="form-label-modern">{{
+                  $t('professional.specialties') || 'Especialidades'
+                }}</label>
+                <input
+                  v-model="form.specialties"
+                  type="text"
+                  class="form-control-modern"
+                  :placeholder="
+                    $t('professional.specialtiesPlaceholder') || 'Ej: Cardiologia, Dermatologia'
+                  "
+                />
+                <small class="form-text text-muted">
+                  {{
+                    $t('professional.specialtiesHelp') ||
+                    'Separar múltiplas especialidades com vírgulas'
+                  }}
+                </small>
+              </div>
 
-        <!-- Campos médicos (solo si rol es DOCTOR, SPECIALIST, NURSE, MEDICAL_ASSISTANT) -->
-        <div v-if="isMedicalRole" class="medical-fields">
-          <h6 class="mb-3">
-            <i class="bi bi-heart-pulse"></i>
-            {{ $t('professional.medicalData.title') || 'Dados Médicos' }}
-          </h6>
-          
-          <div class="form-group-modern">
-            <label class="form-label-modern">{{ $t('professional.crm') || 'Registro Profissional (CRM)' }}</label>
-            <input v-model="form.medicalData.crm" type="text" class="form-control-modern" />
-          </div>
-          
-          <div class="form-group-modern">
-            <label class="form-label-modern">{{ $t('professional.crmState') || 'Estado do CRM' }}</label>
-            <input v-model="form.medicalData.crmState" type="text" class="form-control-modern" />
-          </div>
-          
-          <div class="form-group-modern">
-            <label class="form-label-modern">{{ $t('professional.professionalTitle') || 'Título Profissional' }}</label>
-            <input v-model="form.medicalData.professionalTitle" type="text" class="form-control-modern" />
-          </div>
+              <!-- Servicios que puede ejecutar -->
+              <div class="form-group-modern" v-if="services && services.length > 0">
+                <label class="form-label-modern">{{
+                  $t('professional.services') || 'Serviços'
+                }}</label>
+                <select
+                  v-model="form.servicesId"
+                  class="form-control-modern form-select-modern"
+                  multiple
+                  size="5"
+                >
+                  <option v-for="service in services" :key="service.id" :value="service.id">
+                    {{ service.name }}
+                  </option>
+                </select>
+                <small class="form-text text-muted">
+                  {{
+                    $t('professional.servicesHelp') ||
+                    'Mantenha Ctrl/Cmd pressionado para selecionar múltiplos'
+                  }}
+                </small>
+              </div>
 
-          <div class="form-group-modern">
-            <label class="form-label-modern">{{ $t('professional.department') || 'Departamento' }}</label>
-            <input v-model="form.medicalData.department" type="text" class="form-control-modern" />
-          </div>
-          
-          <div class="form-check mb-2">
-            <input 
-              v-model="form.medicalData.canSignDocuments" 
-              type="checkbox" 
-              class="form-check-input"
-              id="canSignDocuments"
-            />
-            <label class="form-check-label" for="canSignDocuments">
-              {{ $t('professional.canSignDocuments') || 'Pode assinar documentos médicos' }}
-            </label>
-          </div>
-        </div>
-        </div>
-        <!-- End Form Fields Container -->
+              <!-- Campos médicos (solo si rol es DOCTOR, SPECIALIST, NURSE, MEDICAL_ASSISTANT) -->
+              <div v-if="isMedicalRole" class="medical-fields">
+                <h6 class="mb-3">
+                  <i class="bi bi-heart-pulse"></i>
+                  {{ $t('professional.medicalData.title') || 'Dados Médicos' }}
+                </h6>
 
-        <!-- Botón de crear -->
-        <div class="col">
-          <button 
-            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4" 
-            @click="createProfessional"
-            :disabled="!form.role || loading"
-          >
-            <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
-            <i v-else class="bi bi-person-plus me-2"></i>
-            {{ $t('common.create') || 'Crear' }}
-          </button>
-        </div>
-        
-        <!-- Mensajes de error -->
-        <div class="row g-1 errors" id="feedback" v-if="errorMessage">
-          <div class="alert alert-danger" role="alert">
-            <i class="bi bi-exclamation-triangle"></i>
-            {{ errorMessage }}
+                <div class="form-group-modern">
+                  <label class="form-label-modern">{{
+                    $t('professional.crm') || 'Registro Profissional (CRM)'
+                  }}</label>
+                  <input v-model="form.medicalData.crm" type="text" class="form-control-modern" />
+                </div>
+
+                <div class="form-group-modern">
+                  <label class="form-label-modern">{{
+                    $t('professional.crmState') || 'Estado do CRM'
+                  }}</label>
+                  <input
+                    v-model="form.medicalData.crmState"
+                    type="text"
+                    class="form-control-modern"
+                  />
+                </div>
+
+                <div class="form-group-modern">
+                  <label class="form-label-modern">{{
+                    $t('professional.professionalTitle') || 'Título Profissional'
+                  }}</label>
+                  <input
+                    v-model="form.medicalData.professionalTitle"
+                    type="text"
+                    class="form-control-modern"
+                  />
+                </div>
+
+                <div class="form-group-modern">
+                  <label class="form-label-modern">{{
+                    $t('professional.department') || 'Departamento'
+                  }}</label>
+                  <input
+                    v-model="form.medicalData.department"
+                    type="text"
+                    class="form-control-modern"
+                  />
+                </div>
+
+                <div class="form-check mb-2">
+                  <input
+                    v-model="form.medicalData.canSignDocuments"
+                    type="checkbox"
+                    class="form-check-input"
+                    id="canSignDocuments"
+                  />
+                  <label class="form-check-label" for="canSignDocuments">
+                    {{ $t('professional.canSignDocuments') || 'Pode assinar documentos médicos' }}
+                  </label>
+                </div>
+              </div>
+            </div>
+            <!-- End Form Fields Container -->
+
+            <!-- Botón de crear -->
+            <div class="col">
+              <button
+                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                @click="createProfessional"
+                :disabled="!form.role || loading"
+              >
+                <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+                <i v-else class="bi bi-person-plus me-2"></i>
+                {{ $t('common.create') || 'Crear' }}
+              </button>
+            </div>
+
+            <!-- Mensajes de error -->
+            <div class="row g-1 errors" id="feedback" v-if="errorMessage">
+              <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle"></i>
+                {{ errorMessage }}
+              </div>
+            </div>
           </div>
-        </div>
-        
-        </div>
         </div>
         <div class="mx-2 mb-4 text-center">
           <a
@@ -202,13 +264,13 @@ export default {
       },
     });
 
-    const isMedicalRole = computed(() => 
+    const isMedicalRole = computed(() =>
       ['DOCTOR', 'SPECIALIST', 'NURSE', 'MEDICAL_ASSISTANT'].includes(form.value.role)
     );
 
     const validate = () => {
       errors.value = {};
-      
+
       if (!form.value.role) {
         errors.value.role = 'El rol profesional es obligatorio';
         return false;
@@ -219,14 +281,14 @@ export default {
 
     const createProfessional = async () => {
       errorMessage.value = '';
-      
+
       if (!validate()) {
         return;
       }
 
       try {
         loading.value = true;
-        
+
         const payload = {
           role: form.value.role,
         };
@@ -252,7 +314,7 @@ export default {
           if (form.value.medicalData.crmState) {
             payload.crmState = form.value.medicalData.crmState;
           }
-          
+
           const medicalData = {};
           if (form.value.medicalData.professionalTitle) {
             medicalData.professionalTitle = form.value.medicalData.professionalTitle;
@@ -260,7 +322,7 @@ export default {
           if (form.value.medicalData.department) {
             medicalData.department = form.value.medicalData.department;
           }
-          
+
           if (Object.keys(medicalData).length > 0) {
             payload.medicalData = medicalData;
           }
@@ -271,14 +333,15 @@ export default {
         console.log('Creating associated professional with payload:', payload);
         const result = await createAssociatedProfessional(props.collaborator.id, payload);
         console.log('Professional created successfully:', result);
-        
+
         emit('created', result);
         emit('close');
       } catch (error) {
         console.error('Error creating professional:', error);
-        errorMessage.value = error.response?.data?.message || 
-                            error.message || 
-                            'Error al crear perfil profesional. Por favor intenta nuevamente.';
+        errorMessage.value =
+          error.response?.data?.message ||
+          error.message ||
+          'Error al crear perfil profesional. Por favor intenta nuevamente.';
       } finally {
         loading.value = false;
       }

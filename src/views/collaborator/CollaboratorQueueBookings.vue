@@ -293,7 +293,10 @@ export default {
           return;
         }
 
-        if (Object.keys(state.groupedQueues).length > 0 && state.collaborator.type === 'ASSISTANT') {
+        if (
+          Object.keys(state.groupedQueues).length > 0 &&
+          state.collaborator.type === 'ASSISTANT'
+        ) {
           const otherQueues = currentQueues.filter(queue => queue.type !== 'PROFESSIONAL');
           const queues = [...otherQueues];
           state.queues = queues;
@@ -486,7 +489,7 @@ export default {
             true,
             undefined,
             'PENDING'
-          )
+          ),
         );
         const pendingBookingsArrays = await Promise.all(pendingBookingsPromises);
         const allPendingBookings = pendingBookingsArrays.flat().filter(Boolean);
@@ -504,7 +507,7 @@ export default {
             undefined,
             queueId,
             true
-          )
+          ),
         );
         const upcomingBookingsArrays = await Promise.all(upcomingBookingsPromises);
         const allUpcomingBookings = upcomingBookingsArrays.flat().filter(Boolean);
@@ -524,7 +527,7 @@ export default {
             true,
             undefined,
             'CONFIRMED'
-          )
+          ),
         );
         const confirmedBookingsArrays = await Promise.all(confirmedBookingsPromises);
         const allConfirmedBookings = confirmedBookingsArrays.flat().filter(Boolean);
@@ -542,7 +545,7 @@ export default {
             undefined,
             queueId,
             false
-          )
+          ),
         );
         const recentBookingsArrays = await Promise.all(recentBookingsPromises);
         // Combine and sort by date, then take first 5
@@ -762,7 +765,7 @@ export default {
             true,
             undefined,
             'PENDING'
-          )
+          ),
         );
         const bookingsArrays = await Promise.all(pendingBookingsPromises);
         const allBookings = bookingsArrays.flat().filter(Boolean);
@@ -800,7 +803,11 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo :commerce-id="commerce?.id" :business-id="state.business?.id" :loading="loading"></CommerceLogo>
+        <CommerceLogo
+          :commerce-id="commerce?.id"
+          :business-id="state.business?.id"
+          :loading="loading"
+        ></CommerceLogo>
         <ComponentMenu
           :title="$t(`collaboratorBookingsView.welcome`)"
           :toggles="state.toggles"

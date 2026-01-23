@@ -209,108 +209,108 @@ export default {
           <Alert :show="false" :stack="alertError"></Alert>
         </div>
         <div id="businessPlan">
-        <div v-if="state.toggles['plan.admin.view']">
-          <div v-if="!loading" id="businessPlan-result" class="mt-4">
-            <div>
-              <div class="mb-4">
-                <div v-if="state.plan.id && state.toggles['plan.admin.edit']">
-                  <div class="plan-card">
-                    <SimplePlanCard
-                      :show="true"
-                      :can-update="state.toggles[`plan.admin.update`]"
-                      :plan="state.plan"
-                      :show-tooltip="false"
-                      :plan-activation="state.currentPlanActivation"
-                    >
-                    </SimplePlanCard>
-                  </div>
-                  <PlanStatus
-                    :show="true"
-                    :plan-activation="state.currentPlanActivation"
-                    :can-renew="true"
-                    @renew="validateAdd()"
-                  >
-                  </PlanStatus>
-                </div>
-                <div v-else>
-                  <Message
-                    :title="$t('businessPlan.message.2.title')"
-                    :content="$t('businessPlan.message.2.content')"
-                  />
-                </div>
-              </div>
-              <div
-                v-if="
-                  !state.currentPlanActivationRequested.id && state.toggles['plan.admin.update']
-                "
-              >
-                <div v-if="!state.plan.id" class="plan-select-title m-2">
-                  <span class="fw-bold"> {{ $t('businessPlan.selectAPlan.1') }}</span>
-                  {{ $t('businessPlan.selectAPlan.2') }}
-                </div>
-                <div v-else class="plan-select-title m-2">
-                  <span class="fw-bold"> {{ $t('businessPlan.upgradePlan.1') }}</span>
-                  {{ $t('businessPlan.upgradePlan.2') }}
-                </div>
-                <div class="plan-card my-3">
-                  <div class="row row-cols-1 row-cols-md-1 g-1 m-2">
-                    <div v-for="(plan, index) in state.plans" :key="index">
-                      <Plan
-                        :plan="plan"
-                        :selected-plan="state.planSelected"
-                        @click="selectPlan(plan)"
+          <div v-if="state.toggles['plan.admin.view']">
+            <div v-if="!loading" id="businessPlan-result" class="mt-4">
+              <div>
+                <div class="mb-4">
+                  <div v-if="state.plan.id && state.toggles['plan.admin.edit']">
+                    <div class="plan-card">
+                      <SimplePlanCard
+                        :show="true"
+                        :can-update="state.toggles[`plan.admin.update`]"
+                        :plan="state.plan"
+                        :show-tooltip="false"
+                        :plan-activation="state.currentPlanActivation"
                       >
-                      </Plan>
+                      </SimplePlanCard>
+                    </div>
+                    <PlanStatus
+                      :show="true"
+                      :plan-activation="state.currentPlanActivation"
+                      :can-renew="true"
+                      @renew="validateAdd()"
+                    >
+                    </PlanStatus>
+                  </div>
+                  <div v-else>
+                    <Message
+                      :title="$t('businessPlan.message.2.title')"
+                      :content="$t('businessPlan.message.2.content')"
+                    />
+                  </div>
+                </div>
+                <div
+                  v-if="
+                    !state.currentPlanActivationRequested.id && state.toggles['plan.admin.update']
+                  "
+                >
+                  <div v-if="!state.plan.id" class="plan-select-title m-2">
+                    <span class="fw-bold"> {{ $t('businessPlan.selectAPlan.1') }}</span>
+                    {{ $t('businessPlan.selectAPlan.2') }}
+                  </div>
+                  <div v-else class="plan-select-title m-2">
+                    <span class="fw-bold"> {{ $t('businessPlan.upgradePlan.1') }}</span>
+                    {{ $t('businessPlan.upgradePlan.2') }}
+                  </div>
+                  <div class="plan-card my-3">
+                    <div class="row row-cols-1 row-cols-md-1 g-1 m-2">
+                      <div v-for="(plan, index) in state.plans" :key="index">
+                        <Plan
+                          :plan="plan"
+                          :selected-plan="state.planSelected"
+                          @click="selectPlan(plan)"
+                        >
+                        </Plan>
+                      </div>
+                    </div>
+                    <div class="col">
+                      <a
+                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill my-2 px-4"
+                        @click="validateAdd()"
+                        ><i class="bi bi-emoji-heart-eyes"></i> {{ $t('businessPlan.iwantit') }}</a
+                      >
+                      <button
+                        id="openPlanModal"
+                        href="#planSelectModal"
+                        data-bs-toggle="modal"
+                        data-bs-target="#planSelectModal"
+                        hidden
+                      ></button>
+                    </div>
+                    <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
+                      <Warning>
+                        <template v-slot:message>
+                          <li v-for="(error, index) in state.errorsAdd" :key="index">
+                            {{ $t(error) }}
+                          </li>
+                        </template>
+                      </Warning>
                     </div>
                   </div>
-                  <div class="col">
-                    <a
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill my-2 px-4"
-                      @click="validateAdd()"
-                      ><i class="bi bi-emoji-heart-eyes"></i> {{ $t('businessPlan.iwantit') }}</a
-                    >
-                    <button
-                      id="openPlanModal"
-                      href="#planSelectModal"
-                      data-bs-toggle="modal"
-                      data-bs-target="#planSelectModal"
-                      hidden
-                    ></button>
-                  </div>
-                  <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
-                    <Warning>
-                      <template v-slot:message>
-                        <li v-for="(error, index) in state.errorsAdd" :key="index">
-                          {{ $t(error) }}
-                        </li>
-                      </template>
-                    </Warning>
-                  </div>
                 </div>
-              </div>
-              <div class="plan-card" v-if="state.currentPlanActivationRequested.id">
-                <Message
-                  :title="$t('businessPlan.message.3.title')"
-                  :content="$t('businessPlan.message.3.content')"
-                />
-                <span>{{ $t('businessPlan.request') }}</span>
-                <Plan
-                  :plan="state.currentPlanActivationRequested.planPayedCopy"
-                  :selected-plan="state.currentPlanActivationRequested.planPayedCopy"
-                  @click="undefined"
-                >
-                </Plan>
+                <div class="plan-card" v-if="state.currentPlanActivationRequested.id">
+                  <Message
+                    :title="$t('businessPlan.message.3.title')"
+                    :content="$t('businessPlan.message.3.content')"
+                  />
+                  <span>{{ $t('businessPlan.request') }}</span>
+                  <Plan
+                    :plan="state.currentPlanActivationRequested.planPayedCopy"
+                    :selected-plan="state.currentPlanActivationRequested.planPayedCopy"
+                    @click="undefined"
+                  >
+                  </Plan>
+                </div>
               </div>
             </div>
           </div>
+          <div v-if="!state.toggles['plan.admin.view'] && !loading">
+            <Message
+              :title="$t('businessPlan.message.1.title')"
+              :content="$t('businessPlan.message.1.content')"
+            />
+          </div>
         </div>
-        <div v-if="!state.toggles['plan.admin.view'] && !loading">
-          <Message
-            :title="$t('businessPlan.message.1.title')"
-            :content="$t('businessPlan.message.1.content')"
-          />
-        </div>
-      </div>
       </div>
     </div>
 
@@ -446,11 +446,39 @@ export default {
       aria-labelledby="staticBackdropLabel"
       aria-hidden="true"
     >
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <button
+              id="closePlanSelectModal"
+              class="btn-close"
+              type="button"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body text-center pb-5">
+            <PlanSelection :plan="state.planSelected" @select="select"> </PlanSelection>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Data Conditions - Use Teleport to render outside component to avoid overflow/position issues -->
+    <Teleport to="body">
+      <div
+        class="modal fade"
+        id="conditionsModal"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
         <div class="modal-dialog modal-xl">
           <div class="modal-content">
             <div class="modal-header border-0">
               <button
-                id="closePlanSelectModal"
                 class="btn-close"
                 type="button"
                 data-bs-dismiss="modal"
@@ -458,80 +486,52 @@ export default {
               ></button>
             </div>
             <div class="modal-body text-center pb-5">
-              <PlanSelection :plan="state.planSelected" @select="select"> </PlanSelection>
+              <NotificationConditions></NotificationConditions>
+              <a
+                class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
+                data-bs-toggle="modal"
+                data-bs-target="#conditionsModal"
+                >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
+              ></a>
             </div>
           </div>
         </div>
-    </div>
-
-    <!-- Modal Data Conditions - Use Teleport to render outside component to avoid overflow/position issues -->
-    <Teleport to="body">
-        <div
-          class="modal fade"
-          id="conditionsModal"
-          data-bs-backdrop="static"
-          data-bs-keyboard="false"
-          tabindex="-1"
-          aria-labelledby="staticBackdropLabel"
-          aria-hidden="true"
-        >
-          <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-              <div class="modal-header border-0">
-                <button
-                  class="btn-close"
-                  type="button"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div class="modal-body text-center pb-5">
-                <NotificationConditions></NotificationConditions>
-                <a
-                  class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
-                  data-bs-toggle="modal"
-                  data-bs-target="#conditionsModal"
-                  >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
-                ></a>
-              </div>
-            </div>
-          </div>
-        </div>
+      </div>
     </Teleport>
 
     <!-- Modal Use Conditions - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
-        <div
-          class="modal fade"
-          id="useConditionsModal"
-          data-bs-backdrop="static"
-          data-bs-keyboard="false"
-          tabindex="-1"
-          aria-labelledby="staticBackdropLabel"
-          aria-hidden="true"
-        >
-          <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-              <div class="modal-header border-0">
-                <button
-                  class="btn-close"
-                  type="button"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div class="modal-body text-center pb-5">
-                <NotificationConditions></NotificationConditions>
-                <a
-                  class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
-                  data-bs-toggle="modal"
-                  data-bs-target="#useConditionsModal"
-                  >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
-                ></a>
-              </div>
+      <div
+        class="modal fade"
+        id="useConditionsModal"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header border-0">
+              <button
+                class="btn-close"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body text-center pb-5">
+              <NotificationConditions></NotificationConditions>
+              <a
+                class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4"
+                data-bs-toggle="modal"
+                data-bs-target="#useConditionsModal"
+                >{{ $t('notificationConditions.action') }} <i class="bi bi-check-lg"></i
+              ></a>
             </div>
           </div>
         </div>
+      </div>
     </Teleport>
   </div>
 </template>

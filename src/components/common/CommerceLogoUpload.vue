@@ -196,7 +196,11 @@ export default {
         <!-- Existing Logo Preview -->
         <div v-if="existingLogoUrl && !uploadedLogo" class="existing-logo-preview">
           <h5 class="preview-title">
-            {{ isUsingBusinessLogo ? $t('commerceAdmin.logoUpload.businessLogo') : $t('commerceAdmin.logoUpload.currentLogo') }}
+            {{
+              isUsingBusinessLogo
+                ? $t('commerceAdmin.logoUpload.businessLogo')
+                : $t('commerceAdmin.logoUpload.currentLogo')
+            }}
           </h5>
           <div v-if="isUsingBusinessLogo" class="business-logo-hint">
             <i class="bi bi-info-circle me-1"></i>
@@ -205,7 +209,11 @@ export default {
           <div class="preview-container">
             <img
               :src="existingLogoUrl"
-              :alt="isUsingBusinessLogo ? $t('commerceAdmin.logoUpload.businessLogo') : $t('commerceAdmin.logoUpload.currentLogo')"
+              :alt="
+                isUsingBusinessLogo
+                  ? $t('commerceAdmin.logoUpload.businessLogo')
+                  : $t('commerceAdmin.logoUpload.currentLogo')
+              "
               class="preview-image"
             />
           </div>

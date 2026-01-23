@@ -706,7 +706,9 @@ export default {
           :commerce-id="state.commerce?.id"
           :business-id="business?.id"
           :loading="loading"
-          :title="`${$t('collaboratorQueueAttentions.hello-user')}, ${state.currentUser.alias || state.currentUser.name}!`"
+          :title="`${$t('collaboratorQueueAttentions.hello-user')}, ${
+            state.currentUser.alias || state.currentUser.name
+          }!`"
           :toggles="state.toggles"
           component-name="collaboratorQueueAttentions"
           @go-back="collaboratorQueues"

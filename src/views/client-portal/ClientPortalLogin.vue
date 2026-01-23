@@ -42,7 +42,16 @@
               </div>
 
               <!-- Request Access Form -->
-              <div v-else-if="(!codeRequested && !showCodeForm) && !authenticated && !loadingCommerce && !commerceNotFound" class="request-access-form">
+              <div
+                v-else-if="
+                  !codeRequested &&
+                  !showCodeForm &&
+                  !authenticated &&
+                  !loadingCommerce &&
+                  !commerceNotFound
+                "
+                class="request-access-form"
+              >
                 <div class="alert alert-info mb-3" v-if="commerce">
                   <i class="bi bi-info-circle-fill me-2"></i>
                   <strong>{{ commerce.name }}</strong>
@@ -90,7 +99,9 @@
                     class="btn btn-lg fw-bold btn-dark text-white rounded-pill modern-submit-btn"
                     :disabled="requesting || (!idNumber && !email && !phone) || !canRequestCode"
                   >
-                    <span v-if="!requesting && canRequestCode">{{ $t('clientPortal.login.sendCode') }}</span>
+                    <span v-if="!requesting && canRequestCode">{{
+                      $t('clientPortal.login.sendCode')
+                    }}</span>
                     <span v-else-if="!canRequestCode">
                       {{ $t('clientPortal.login.waitToRequestAgain', { seconds: cooldownText }) }}
                     </span>
@@ -104,17 +115,27 @@
                   </button>
 
                   <!-- Cooldown Display -->
-                  <div v-if="!canRequestCode && cooldownTime > 0" class="cooldown-display mt-3 text-center">
+                  <div
+                    v-if="!canRequestCode && cooldownTime > 0"
+                    class="cooldown-display mt-3 text-center"
+                  >
                     <div class="alert alert-info d-flex align-items-center justify-content-center">
                       <i class="bi bi-clock me-2"></i>
-                      <span>{{ $t('clientPortal.login.waitToRequestAgain', { seconds: cooldownText }) }}</span>
+                      <span>{{
+                        $t('clientPortal.login.waitToRequestAgain', { seconds: cooldownText })
+                      }}</span>
                     </div>
                   </div>
 
                   <!-- Ya tengo código button -->
                   <div class="mt-3">
-                    <a :disabled="!hasInputData" class="btn actions-link" @click="toggleCodeForm"  style="cursor: pointer;">
-                       {{ $t('clientPortal.login.alreadyHaveCode') }}
+                    <a
+                      :disabled="!hasInputData"
+                      class="btn actions-link"
+                      @click="toggleCodeForm"
+                      style="cursor: pointer"
+                    >
+                      {{ $t('clientPortal.login.alreadyHaveCode') }}
                       <i class="bi bi-arrow-right ms-1"></i>
                     </a>
                   </div>
@@ -122,7 +143,10 @@
               </div>
 
               <!-- Code Validation Form -->
-              <div v-else-if="(codeRequested || showCodeForm) && !authenticated" class="code-validation-form">
+              <div
+                v-else-if="(codeRequested || showCodeForm) && !authenticated"
+                class="code-validation-form"
+              >
                 <div class="form-group">
                   <label for="accessCode" class="form-label">
                     {{ $t('clientPortal.login.accessCode') }}
@@ -230,7 +254,12 @@ import { ref, onMounted, computed, nextTick, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { VueRecaptcha } from 'vue-recaptcha';
-import { requestPortalAccess, validatePortalCode, validatePortalSession, getCommerceBySlug } from '../../application/services/client-portal';
+import {
+  requestPortalAccess,
+  validatePortalCode,
+  validatePortalSession,
+  getCommerceBySlug,
+} from '../../application/services/client-portal';
 import { globalStore } from '../../stores';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Message from '../../components/common/Message.vue';
@@ -275,14 +304,12 @@ export default {
     const isDevelopment = computed(() => import.meta.env.DEV);
 
     // Computed para verificar si hay datos ingresados
-    const hasInputData = computed(() => {
-      return idNumber.value.trim() || email.value.trim() || phone.value.trim();
-    });
+    const hasInputData = computed(
+      () => idNumber.value.trim() || email.value.trim() || phone.value.trim()
+    );
 
     // Rate limiting computed
-    const canRequestCode = computed(() => {
-      return cooldownTime.value === 0;
-    });
+    const canRequestCode = computed(() => cooldownTime.value === 0);
 
     const cooldownText = computed(() => {
       if (cooldownTime.value === 0) return '';
@@ -294,13 +321,13 @@ export default {
       return `${seconds}s`;
     });
 
-    const validateCaptchaOk = (response) => {
+    const validateCaptchaOk = response => {
       if (response) {
         captcha.value = true;
       }
     };
 
-    const validateCaptchaError = (err) => {
+    const validateCaptchaError = err => {
       console.warn('reCAPTCHA error:', err);
       // In development, we can be more lenient with reCAPTCHA errors
       if (import.meta.env.DEV) {
@@ -407,15 +434,16 @@ export default {
           error.value = t('clientPortal.login.errorSendingCode');
         }
       } catch (err) {
-
         if (err.code === 'ECONNABORTED' && err.message.includes('timeout')) {
-          error.value = 'El servidor no está respondiendo. Por favor, verifica que el backend esté funcionando.';
+          error.value =
+            'El servidor no está respondiendo. Por favor, verifica que el backend esté funcionando.';
         } else if (err.response?.status === 404) {
           error.value = t('clientPortal.login.clientNotFound');
         } else if (err.response?.status === 400) {
           error.value = err.response?.data?.message || t('clientPortal.login.invalidRequest');
         } else if (err.message?.includes('Network Error') || err.code === 'ECONNREFUSED') {
-          error.value = 'No se puede conectar al servidor. Verifica que el backend esté corriendo en puerto 3000.';
+          error.value =
+            'No se puede conectar al servidor. Verifica que el backend esté corriendo en puerto 3000.';
         } else {
           error.value = err.response?.data?.message || t('clientPortal.login.errorRequestingCode');
         }
@@ -459,7 +487,10 @@ export default {
           authenticated.value = true;
 
           try {
-            await router.push({ name: 'client-portal-menu', params: { commerceSlug: commerceSlug.value } });
+            await router.push({
+              name: 'client-portal-menu',
+              params: { commerceSlug: commerceSlug.value },
+            });
           } catch (navError) {
             console.error('Error navegando a client-portal-menu:', navError);
           }
@@ -528,7 +559,10 @@ export default {
               await store.setCurrentCommerce(response.commerce);
             }
             try {
-              await router.push({ name: 'client-portal-consents', params: { commerceSlug: commerceSlug.value } });
+              await router.push({
+                name: 'client-portal-consents',
+                params: { commerceSlug: commerceSlug.value },
+              });
             } catch (navError) {
               console.error('🔥 Error navegando desde sesión existente:', navError);
             }
@@ -556,7 +590,7 @@ export default {
     });
 
     // Watcher para enfocar el input de código cuando se muestra
-    watch([codeRequested, showCodeForm], async (newValues) => {
+    watch([codeRequested, showCodeForm], async newValues => {
       if (newValues[0] || newValues[1]) {
         await nextTick();
         const accessCodeInput = document.getElementById('accessCode');
@@ -841,5 +875,3 @@ export default {
   }
 }
 </style>
-
-

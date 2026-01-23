@@ -65,24 +65,17 @@ export const uploadProfilePhoto = async (id, photoFile) => {
   const formData = new FormData();
   formData.append('photo', photoFile);
 
-  const response = await requestBackend.post(
-    `/${entity}/${id}/profile-photo`,
-    formData,
-    {
-      ...await getHeaders(),
-      'Content-Type': 'multipart/form-data'
-    }
-  );
+  const response = await requestBackend.post(`/${entity}/${id}/profile-photo`, formData, {
+    ...(await getHeaders()),
+    'Content-Type': 'multipart/form-data',
+  });
 
   return response.data.photoUrl;
 };
 
-export const getProfilePhotoSignedUrl = async (id) => {
+export const getProfilePhotoSignedUrl = async id => {
   try {
-    const response = await requestBackend.get(
-      `/${entity}/${id}/profile-photo`,
-      await getHeaders()
-    );
+    const response = await requestBackend.get(`/${entity}/${id}/profile-photo`, await getHeaders());
     return response.data.photoUrl;
   } catch (error) {
     console.error('Error getting signed photo URL:', error);
@@ -103,8 +96,12 @@ export const addCollaborator = async collaborator => {
 };
 
 export const getCollaboratorByCommerceIdEmail = async (commerceId, email) =>
-  (await requestBackend.get(`/${entity}/commerceId/${commerceId}/email/${email}`, await getHeaders()))
-    .data;
+  (
+    await requestBackend.get(
+      `/${entity}/commerceId/${commerceId}/email/${email}`,
+      await getHeaders(),
+    )
+  ).data;
 
 export const updateCollaboratorPermission = async (id, permission) =>
   (
@@ -122,7 +119,8 @@ export const updateModule = async (id, body) =>
       { moduleId: body.module || body.moduleId },
       await getHeaders()
     )
-  ).data;/**
+  ).data;
+/**
  * Crear perfil profesional asociado a un colaborador
  * @param {string} collaboratorId - ID del colaborador
  * @param {Object} professionalData - Datos del profesional a crear

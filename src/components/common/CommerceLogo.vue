@@ -275,7 +275,7 @@ export default {
 };
 </script>
 <template>
-  <div id="commerce-logo" style="cursor: pointer;" @click="$emit('click', $event)">
+  <div id="commerce-logo" style="cursor: pointer" @click="$emit('click', $event)">
     <LogoSkeleton v-if="(loading || logoLoading) && src === undefined && !logoUrl"></LogoSkeleton>
     <img
       v-else-if="logoUrl"
@@ -284,7 +284,7 @@ export default {
         'img-fluid',
         'logo',
         { 'desktop-size': desktopSize, 'large-size': largeSize, 'mx-auto': !desktopSize },
-        $attrs.class
+        $attrs.class,
       ]"
       :alt="this.$t('logoAlt')"
       :src="logoUrl"
@@ -299,7 +299,7 @@ export default {
         'img-fluid',
         'logo',
         { 'desktop-size': desktopSize, 'large-size': largeSize, 'mx-auto': !desktopSize },
-        $attrs.class
+        $attrs.class,
       ]"
       :alt="this.$t('logoAlt')"
       :src="fallbackSrc || this.$t('logo')"
@@ -313,7 +313,7 @@ export default {
         'logo',
         'logo-fallback',
         { 'desktop-size': desktopSize, 'large-size': largeSize, 'mx-auto': !desktopSize },
-        $attrs.class
+        $attrs.class,
       ]"
     >
       <i class="bi bi-shop"></i>

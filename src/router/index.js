@@ -109,7 +109,6 @@ router.beforeEach(async (to, from, next) => {
 
   // Limpiar toda la sesión al llegar a la página root
   if (to.name === 'home') {
-
     await store.resetSession();
   }
 
@@ -141,7 +140,11 @@ router.beforeEach(async (to, from, next) => {
       } else {
         // Si intenta acceder a una ruta protegida sin estar autenticado como CLIENT,
         // redirigir al login del portal
-        next({ name: 'client-portal-login', params: { commerceSlug: to.params.commerceSlug }, replace: true });
+        next({
+          name: 'client-portal-login',
+          params: { commerceSlug: to.params.commerceSlug },
+          replace: true,
+        });
         return;
       }
     }
@@ -171,7 +174,6 @@ router.beforeEach(async (to, from, next) => {
   if (publicMasterRoutes.includes(to.name)) {
     if (userNotExists) {
       if (to.name === 'master-login') {
-
         await store.resetSession();
         await store.setCurrentUserType(USER_TYPES.MASTER);
         next();
@@ -201,7 +203,6 @@ router.beforeEach(async (to, from, next) => {
   if (publicCollaboratorViews.includes(to.name)) {
     if (userNotExists) {
       if (to.name === 'collaborator-login') {
-
         await store.resetSession();
         await store.setCurrentUserType(USER_TYPES.COLLABORATOR);
         next();
@@ -231,7 +232,6 @@ router.beforeEach(async (to, from, next) => {
   if (publicBusinessViews.includes(to.name)) {
     if (userNotExists) {
       if (to.name === 'business-login') {
-
         await store.resetSession();
         await store.setCurrentUserType(USER_TYPES.BUSINESS);
         next();

@@ -16,7 +16,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.license.numberHelp') ||
-                      'Número oficial de la licencia médica registrada en el colegio/CRM. Se usa para validar la identidad profesional.'
+                    'Número oficial de la licencia médica registrada en el colegio/CRM. Se usa para validar la identidad profesional.'
                   }}
                 </div>
               </template>
@@ -39,7 +39,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.license.stateHelp') ||
-                      'Estado o provincia donde fue emitida la licencia (por ejemplo, SP, RJ, etc.).'
+                    'Estado o provincia donde fue emitida la licencia (por ejemplo, SP, RJ, etc.).'
                   }}
                 </div>
               </template>
@@ -61,7 +61,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.specializationHelp') ||
-                      'Área principal de actuación médica del profesional (por ejemplo, Cardiología, Pediatría).'
+                    'Área principal de actuación médica del profesional (por ejemplo, Cardiología, Pediatría).'
                   }}
                 </div>
               </template>
@@ -83,7 +83,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.subspecializationHelp') ||
-                      'Sub-área específica dentro de la especialidad principal (por ejemplo, Cardiología Intervencionista). Campo opcional.'
+                    'Sub-área específica dentro de la especialidad principal (por ejemplo, Cardiología Intervencionista). Campo opcional.'
                   }}
                 </div>
               </template>
@@ -116,7 +116,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.education.schoolHelp') ||
-                      'Nombre de la facultad o universidad donde el profesional obtuvo el título de medicina.'
+                    'Nombre de la facultad o universidad donde el profesional obtuvo el título de medicina.'
                   }}
                 </div>
               </template>
@@ -138,7 +138,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.education.graduationYearHelp') ||
-                      'Año en que el profesional se graduó en medicina. Se usa para fines de contexto y experiencia.'
+                    'Año en que el profesional se graduó en medicina. Se usa para fines de contexto y experiencia.'
                   }}
                 </div>
               </template>
@@ -173,7 +173,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.contact.addressHelp') ||
-                      'Dirección profesional donde atiende el colaborador (consultorio o centro médico principal).'
+                    'Dirección profesional donde atiende el colaborador (consultorio o centro médico principal).'
                   }}
                 </div>
               </template>
@@ -195,7 +195,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.contact.phoneHelp') ||
-                      'Teléfono fijo o principal del consultorio para contacto profesional.'
+                    'Teléfono fijo o principal del consultorio para contacto profesional.'
                   }}
                 </div>
               </template>
@@ -217,7 +217,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.contact.mobileHelp') ||
-                      'Celular profesional del colaborador (por ejemplo, teléfono corporativo o de guardia).'
+                    'Celular profesional del colaborador (por ejemplo, teléfono corporativo o de guardia).'
                   }}
                 </div>
               </template>
@@ -239,7 +239,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.contact.emailHelp') ||
-                      'Email de uso profesional donde el colaborador recibe comunicaciones clínicas o administrativas.'
+                    'Email de uso profesional donde el colaborador recibe comunicaciones clínicas o administrativas.'
                   }}
                 </div>
               </template>
@@ -261,7 +261,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.contact.emergencyPhoneHelp') ||
-                      'Teléfono de contacto en casos de emergencia relacionados con la práctica profesional.'
+                    'Teléfono de contacto en casos de emergencia relacionados con la práctica profesional.'
                   }}
                 </div>
               </template>
@@ -294,7 +294,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.clinic.nameHelp') ||
-                      'Nombre comercial de la clínica u hospital principal asociado al colaborador.'
+                    'Nombre comercial de la clínica u hospital principal asociado al colaborador.'
                   }}
                 </div>
               </template>
@@ -316,7 +316,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.clinic.phoneHelp') ||
-                      'Teléfono de contacto de la clínica/hospital donde atiende el colaborador.'
+                    'Teléfono de contacto de la clínica/hospital donde atiende el colaborador.'
                   }}
                 </div>
               </template>
@@ -338,7 +338,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.clinic.addressHelp') ||
-                      'Dirección completa de la clínica u hospital donde atiende el colaborador.'
+                    'Dirección completa de la clínica u hospital donde atiende el colaborador.'
                   }}
                 </div>
               </template>
@@ -371,7 +371,7 @@
                 <div>
                   {{
                     $t('collaborator.medicalData.additional.workingHoursHelp') ||
-                      'Horario habitual de atención del profesional (por ejemplo, días de la semana y franja horaria).'
+                    'Horario habitual de atención del profesional (por ejemplo, días de la semana y franja horaria).'
                   }}
                 </div>
               </template>
@@ -386,7 +386,9 @@
           />
         </div>
         <div class="col-md-6">
-          <label class="form-label-modern">{{ $t('collaborator.medicalData.additional.languages') }}</label>
+          <label class="form-label-modern">{{
+            $t('collaborator.medicalData.additional.languages')
+          }}</label>
           <input
             v-model="languagesText"
             type="text"
@@ -394,10 +396,14 @@
             :placeholder="$t('collaborator.medicalData.additional.languagesPlaceholder')"
             @input="updateLanguages"
           />
-          <small class="form-text text-muted">{{ $t('collaborator.medicalData.additional.languagesHelp') }}</small>
+          <small class="form-text text-muted">{{
+            $t('collaborator.medicalData.additional.languagesHelp')
+          }}</small>
         </div>
         <div class="col-md-6">
-          <label class="form-label-modern">{{ $t('collaborator.medicalData.additional.insurance') }}</label>
+          <label class="form-label-modern">{{
+            $t('collaborator.medicalData.additional.insurance')
+          }}</label>
           <input
             v-model="insuranceText"
             type="text"
@@ -405,7 +411,9 @@
             :placeholder="$t('collaborator.medicalData.additional.insurancePlaceholder')"
             @input="updateInsurance"
           />
-          <small class="form-text text-muted">{{ $t('collaborator.medicalData.additional.insuranceHelp') }}</small>
+          <small class="form-text text-muted">{{
+            $t('collaborator.medicalData.additional.insuranceHelp')
+          }}</small>
         </div>
       </div>
     </div>
@@ -457,9 +465,9 @@ const languagesText = ref('');
 const insuranceText = ref('');
 
 // Computed
-const isValid = computed(() => {
-  return medicalData.value.medicalLicense && medicalData.value.medicalLicense.length > 0;
-});
+const isValid = computed(
+  () => medicalData.value.medicalLicense && medicalData.value.medicalLicense.length > 0
+);
 
 // Métodos
 const updateLanguages = () => {
@@ -477,9 +485,13 @@ const updateInsurance = () => {
 };
 
 // Watcher para emitir cambios automáticamente
-watch(medicalData, (newValue) => {
-  emit('change', { field: 'medicalData', value: newValue });
-}, { deep: true });
+watch(
+  medicalData,
+  newValue => {
+    emit('change', { field: 'medicalData', value: newValue });
+  },
+  { deep: true },
+);
 
 // Inicialización
 onMounted(() => {

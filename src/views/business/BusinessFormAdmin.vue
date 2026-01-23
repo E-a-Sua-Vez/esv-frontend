@@ -746,7 +746,6 @@ export default {
           </div>
         </div>
       </div>
-
     </div>
 
     <!-- Desktop Layout -->
@@ -877,11 +876,7 @@ export default {
                                 id="types"
                                 :class="{ 'is-invalid': state.typeError }"
                               >
-                                <option
-                                  v-for="typ in state.question_types"
-                                  :key="typ"
-                                  :value="typ"
-                                >
+                                <option v-for="typ in state.question_types" :key="typ" :value="typ">
                                   {{ $t(`forms.question_types.${typ}`) }}
                                 </option>
                               </select>
@@ -919,8 +914,7 @@ export default {
                           </div>
                           <div
                             v-if="
-                              question.type === 'OPEN_OPTIONS' ||
-                              question.type === 'CHOOSE_OPTION'
+                              question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION'
                             "
                             class="row g-1 mt-1"
                           >
@@ -978,8 +972,7 @@ export default {
                           <div
                             class="row g-1 mt-1"
                             v-if="
-                              question.type === 'OPEN_OPTIONS' ||
-                              question.type === 'CHOOSE_OPTION'
+                              question.type === 'OPEN_OPTIONS' || question.type === 'CHOOSE_OPTION'
                             "
                           >
                             <div class="col-4 text-label">
@@ -1196,11 +1189,7 @@ export default {
                           @change="selectTypeItem(question)"
                           :class="{ 'is-invalid': state.typeError }"
                         >
-                          <option
-                            v-for="typ in state.patientHistoryItems"
-                            :key="typ"
-                            :value="typ"
-                          >
+                          <option v-for="typ in state.patientHistoryItems" :key="typ" :value="typ">
                             {{ typ.name }}
                           </option>
                         </select>

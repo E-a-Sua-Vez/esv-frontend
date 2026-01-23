@@ -306,8 +306,8 @@ export default {
                 top: 10,
                 bottom: 10,
                 left: 10,
-                right: 10
-              }
+                right: 10,
+              },
             },
             plugins: {
               legend: {
@@ -2014,7 +2014,7 @@ export default {
                         <div class="fw-bold mb-2">
                           <span>{{ $t('businessFinancial.evolution') }} </span>
                         </div>
-                        <div style="height: 280px; width: 100%; margin: 1rem 0;">
+                        <div style="height: 280px; width: 100%; margin: 1rem 0">
                           <LineChart
                             :chart-data="financialResume.evolution.chartData"
                             :options="financialResume.evolution.options"
@@ -2037,7 +2037,7 @@ export default {
                         <div class="fw-bold mb-2">
                           <span>{{ $t('businessFinancial.distribution.title') }} </span>
                         </div>
-                        <div style="height: 280px; width: 100%; margin: 1rem 0;">
+                        <div style="height: 280px; width: 100%; margin: 1rem 0">
                           <DoughnutChart
                             :chart-data="financialResume.incomeDistribution.chartData"
                             :options="financialResume.incomeDistribution.options"
@@ -2078,10 +2078,7 @@ export default {
                   </div>
 
                   <!-- Trends Section -->
-                  <div
-                    v-if="trends && trends.averageIncomes !== undefined"
-                    class="row mb-3"
-                  >
+                  <div v-if="trends && trends.averageIncomes !== undefined" class="row mb-3">
                     <div class="col-12">
                       <div class="modern-card p-4">
                         <div class="fw-bold mb-3">
@@ -2198,7 +2195,9 @@ export default {
                         <!-- Average Metrics -->
                         <div class="row mb-3">
                           <div class="col-6 col-md-3 mb-2 d-flex">
-                            <div class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center">
+                            <div
+                              class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center"
+                            >
                               <div class="small text-muted">
                                 {{ $t('businessFinancial.trends.averageIncomes') }}
                               </div>
@@ -2215,7 +2214,9 @@ export default {
                             </div>
                           </div>
                           <div class="col-6 col-md-3 mb-2 d-flex">
-                            <div class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center">
+                            <div
+                              class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center"
+                            >
                               <div class="small text-muted">
                                 {{ $t('businessFinancial.trends.averageOutcomes') }}
                               </div>
@@ -2232,7 +2233,9 @@ export default {
                             </div>
                           </div>
                           <div class="col-6 col-md-3 mb-2 d-flex">
-                            <div class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center">
+                            <div
+                              class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center"
+                            >
                               <div class="small text-muted">
                                 {{ $t('businessFinancial.trends.averageProfit') }}
                               </div>
@@ -2249,7 +2252,9 @@ export default {
                             </div>
                           </div>
                           <div class="col-6 col-md-3 mb-2 d-flex">
-                            <div class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center">
+                            <div
+                              class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center"
+                            >
                               <div class="small text-muted">
                                 {{ $t('businessFinancial.trends.averageMargin') }}
                               </div>

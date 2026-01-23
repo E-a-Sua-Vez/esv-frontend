@@ -144,7 +144,7 @@ export default {
           a =>
             a?.currentStage === 'TERMINATED' ||
             (['TERMINATED', 'RATED', 'SKIPED'].includes(a?.status) && !a?.currentStage)
-        )
+        ),
       );
     },
   },
@@ -291,7 +291,6 @@ export default {
             updateFromFirebase();
           }, 100);
         });
-
       } catch (error) {
         // Error initializing Firebase listeners
       }

@@ -180,7 +180,13 @@ export default {
         console.log('OutcomesFinancialManagement.refresh - API Response:', {
           count: this.financialOutcomes?.length || 0,
           firstOutcome: this.financialOutcomes?.[0],
-          hasClientSideFilters: !!(this.minAmount || this.maxAmount || this.outcomeTypeFilter || this.paymentMethodFilter || this.professionalFilter),
+          hasClientSideFilters: !!(
+            this.minAmount ||
+            this.maxAmount ||
+            this.outcomeTypeFilter ||
+            this.paymentMethodFilter ||
+            this.professionalFilter
+          ),
         });
 
         // Load professionals if there are outcomes with professional data
@@ -719,7 +725,11 @@ export default {
                           <option :value="undefined">
                             {{ $t('businessFinancial.filters.all') }}
                           </option>
-                          <option v-for="professional in professionals" :key="professional.id" :value="professional.id">
+                          <option
+                            v-for="professional in professionals"
+                            :key="professional.id"
+                            :value="professional.id"
+                          >
                             {{ professional.personalInfo?.name || professional.name || '-' }}
                           </option>
                         </select>

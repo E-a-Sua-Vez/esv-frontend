@@ -300,11 +300,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo
-          :commerce-id="commerce?.id"
-          :business-id="business?.id"
-          :loading="loading"
-        />
+        <CommerceLogo :commerce-id="commerce?.id" :business-id="business?.id" :loading="loading" />
         <ComponentMenu
           :title="$t(`businessProductStockAdmin.title`)"
           :toggles="state.toggles"
@@ -412,7 +408,12 @@ export default {
               />
             </div>
           </div>
-          <div v-else-if="!state.toggles['products-stock.products.view'] && !state.toggles['products-stock.attentions.view']">
+          <div
+            v-else-if="
+              !state.toggles['products-stock.products.view'] &&
+              !state.toggles['products-stock.attentions.view']
+            "
+          >
             <div v-if="!loading" class="control-box mt-4">
               <Message
                 :title="$t('businessProductStockAdmin.message.4.title')"

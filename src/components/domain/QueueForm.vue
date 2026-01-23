@@ -72,7 +72,10 @@ export default {
                     queue.collaborator = collaboratorsAux[0];
                     // Fix tag if it's undefined - regenerate from professional info
                     if (queue.tag === 'undefined' || !queue.tag) {
-                      queue.tag = collaboratorsAux[0].personalInfo?.email || collaboratorsAux[0].personalInfo?.name || 'Profesional';
+                      queue.tag =
+                        collaboratorsAux[0].personalInfo?.email ||
+                        collaboratorsAux[0].personalInfo?.name ||
+                        'Profesional';
                     }
                     // For PROFESSIONAL queues, get services from queue.servicesId
                     if (queue.servicesId && queue.servicesId.length > 0) {
@@ -115,7 +118,10 @@ export default {
                     queue.collaborator = collaboratorsAux[0];
                     // Fix tag if it's undefined - regenerate from professional info
                     if (queue.tag === 'undefined' || !queue.tag) {
-                      queue.tag = collaboratorsAux[0].personalInfo?.email || collaboratorsAux[0].personalInfo?.name || 'Profesional';
+                      queue.tag =
+                        collaboratorsAux[0].personalInfo?.email ||
+                        collaboratorsAux[0].personalInfo?.name ||
+                        'Profesional';
                     }
                     // For PROFESSIONAL queues, get services from queue.servicesId
                     if (queue.servicesId && queue.servicesId.length > 0) {
@@ -630,7 +636,7 @@ export default {
 }
 .data-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  padding: 2rem .5rem;
+  padding: 2rem 0.5rem;
   margin-bottom: 1.5rem;
   border-radius: 1rem;
   border: 1px solid rgba(0, 0, 0, 0.05);

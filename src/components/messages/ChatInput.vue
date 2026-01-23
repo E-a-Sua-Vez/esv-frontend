@@ -33,9 +33,7 @@ const emit = defineEmits(['send']);
 const message = ref('');
 const textarea = ref(null);
 
-const canSend = computed(() => {
-  return message.value.trim().length > 0;
-});
+const canSend = computed(() => message.value.trim().length > 0);
 
 const handleSend = () => {
   if (!canSend.value) return;
@@ -49,7 +47,7 @@ const handleSend = () => {
   });
 };
 
-const handleNewLine = (event) => {
+const handleNewLine = event => {
   // Permitir nueva línea con Shift+Enter
   message.value += '\n';
 };

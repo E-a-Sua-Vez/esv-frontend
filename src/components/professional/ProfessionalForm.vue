@@ -57,13 +57,13 @@ const commissionTypes = [
 const toggleService = serviceId => {
   const servicesId = professional.value.professionalInfo?.servicesId || [];
   const index = servicesId.indexOf(serviceId);
-  
+
   if (index > -1) {
     servicesId.splice(index, 1);
   } else {
     servicesId.push(serviceId);
   }
-  
+
   if (!professional.value.professionalInfo) {
     professional.value.professionalInfo = {};
   }
@@ -84,7 +84,7 @@ const isServiceSelected = serviceId => {
         <i class="bi bi-person"></i>
         {{ t('professionals.personalInfo') }}
       </h5>
-      
+
       <div class="form-group-modern">
         <label class="form-label-modern required">
           {{ t('professionals.name') }}
@@ -155,7 +155,7 @@ const isServiceSelected = serviceId => {
         <i class="bi bi-briefcase"></i>
         {{ t('professionals.professionalInfo') }}
       </h5>
-      
+
       <div class="row">
         <div class="col-md-6">
           <div class="form-group-modern">
@@ -168,11 +168,7 @@ const isServiceSelected = serviceId => {
               :class="{ 'is-invalid': errors.professionalType }"
             >
               <option :value="null">{{ t('professionals.selectType') }}</option>
-              <option
-                v-for="type in professionalTypes"
-                :key="type.id"
-                :value="type.id"
-              >
+              <option v-for="type in professionalTypes" :key="type.id" :value="type.id">
                 {{ type.name }}
               </option>
             </select>
@@ -207,11 +203,7 @@ const isServiceSelected = serviceId => {
           </Popper>
         </label>
         <div class="services-list">
-          <div
-            v-for="service in services"
-            :key="service.id"
-            class="service-item"
-          >
+          <div v-for="service in services" :key="service.id" class="service-item">
             <input
               :id="`service-${service.id}`"
               type="checkbox"
@@ -230,7 +222,7 @@ const isServiceSelected = serviceId => {
         <i class="bi bi-currency-dollar"></i>
         {{ t('professionals.financialInfo') }}
       </h5>
-      
+
       <div class="row">
         <div class="col-md-4">
           <div class="form-group-modern">
@@ -242,11 +234,7 @@ const isServiceSelected = serviceId => {
               class="form-control-modern form-select-modern"
             >
               <option :value="null">{{ t('professionals.selectCommissionType') }}</option>
-              <option
-                v-for="type in commissionTypes"
-                :key="type.id"
-                :value="type.id"
-              >
+              <option v-for="type in commissionTypes" :key="type.id" :value="type.id">
                 {{ type.name }}
               </option>
             </select>
@@ -263,7 +251,9 @@ const isServiceSelected = serviceId => {
               step="0.01"
               min="0"
               class="form-control-modern"
-              :placeholder="professional.financialInfo?.commissionType === 'PERCENTAGE' ? '0-100' : '0.00'"
+              :placeholder="
+                professional.financialInfo?.commissionType === 'PERCENTAGE' ? '0-100' : '0.00'
+              "
             />
           </div>
         </div>
@@ -289,7 +279,7 @@ const isServiceSelected = serviceId => {
         <i class="bi bi-toggle-on"></i>
         {{ t('professionals.status') }}
       </h5>
-      
+
       <div class="row">
         <div class="col-md-6">
           <div class="form-group-modern form-group-toggle">
@@ -312,19 +302,11 @@ const isServiceSelected = serviceId => {
 
     <!-- Actions -->
     <div class="form-actions">
-      <button
-        type="button"
-        class="btn btn-secondary"
-        @click="emit('cancel')"
-      >
+      <button type="button" class="btn btn-secondary" @click="emit('cancel')">
         <i class="bi bi-x-circle"></i>
         {{ t('common.cancel') }}
       </button>
-      <button
-        type="button"
-        class="btn btn-primary"
-        @click="emit('submit')"
-      >
+      <button type="button" class="btn btn-primary" @click="emit('submit')">
         <i class="bi bi-check-circle"></i>
         {{ t('common.save') }}
       </button>
@@ -428,7 +410,7 @@ const isServiceSelected = serviceId => {
   padding: 0.5rem;
 }
 
-.service-item input[type="checkbox"] {
+.service-item input[type='checkbox'] {
   cursor: pointer;
 }
 

@@ -95,10 +95,7 @@ export default {
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
-        <CommerceLogo
-          :business-id="state.business?.id"
-          :loading="loading"
-        ></CommerceLogo>
+        <CommerceLogo :business-id="state.business?.id" :loading="loading"></CommerceLogo>
         <ComponentMenu
           :title="$t(`businessPermissionsAdmin.title`)"
           :toggles="state.toggles"

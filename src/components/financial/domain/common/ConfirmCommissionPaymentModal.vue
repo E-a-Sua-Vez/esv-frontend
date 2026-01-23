@@ -29,7 +29,7 @@ export default {
     const confirm = async () => {
       try {
         loading.value = true;
-        
+
         await confirmCommissionPayment(
           props.payment.id,
           paymentMethod.value,
@@ -45,7 +45,8 @@ export default {
       }
     };
 
-    const formatCurrency = (amount) => Number(parseFloat(amount || 0).toFixed(2)).toLocaleString('de-DE');
+    const formatCurrency = amount =>
+      Number(parseFloat(amount || 0).toFixed(2)).toLocaleString('de-DE');
 
     return {
       loading,
@@ -61,7 +62,7 @@ export default {
 </script>
 
 <template>
-  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5)">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header bg-success text-white">
@@ -70,7 +71,7 @@ export default {
           </h5>
           <button type="button" class="btn-close btn-close-white" @click="$emit('close')"></button>
         </div>
-        
+
         <div class="modal-body">
           <Spinner :show="loading" />
           <Alert :show="alertError !== ''" :message="alertError" />
@@ -88,7 +89,9 @@ export default {
                 <p class="mb-2 fw-bold">${{ formatCurrency(payment.totalAmount) }}</p>
               </div>
               <div class="col-12 mt-2">
-                <small class="text-muted d-block">{{ $t('commissionPayments.totalCommission') }}</small>
+                <small class="text-muted d-block">{{
+                  $t('commissionPayments.totalCommission')
+                }}</small>
                 <h4 class="text-success mb-0">${{ formatCurrency(payment.totalCommission) }}</h4>
               </div>
             </div>
@@ -115,7 +118,7 @@ export default {
           <!-- Notas del Pago -->
           <div class="mb-3">
             <label class="form-label fw-bold">{{ $t('commissionPayments.paymentNotes') }}</label>
-            <textarea 
+            <textarea
               v-model="paymentNotes"
               class="form-control"
               rows="3"
@@ -123,14 +126,14 @@ export default {
             ></textarea>
           </div>
         </div>
-        
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" @click="$emit('close')">
             {{ $t('commissionPayments.cancel') }}
           </button>
-          <button 
-            type="button" 
-            class="btn btn-success" 
+          <button
+            type="button"
+            class="btn btn-success"
             @click="confirm"
             :disabled="loading || !paymentMethod"
           >

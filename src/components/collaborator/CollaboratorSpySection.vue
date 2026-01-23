@@ -577,7 +577,9 @@ export default {
           // Load professional data if collaborator has professionalId
           if (state.collaborator && state.collaborator.professionalId && !state.professional) {
             try {
-              const { getProfessionalById } = await import('../../application/services/professional');
+              const { getProfessionalById } = await import(
+                '../../application/services/professional'
+              );
               state.professional = await getProfessionalById(state.collaborator.professionalId);
             } catch (error) {
               console.warn('Could not load professional data, falling back to collaborator', error);
@@ -591,15 +593,13 @@ export default {
 
             if (collaboratorType === 'STANDARD') {
               // STANDARD: Their own professional queues + non-professional queues
-              const professionalQueues = (groupedQueues['PROFESSIONAL'] || []).filter(
-                queue => {
-                  // Use professionalId if available, otherwise fallback to collaboratorId
-                  if (state.professional && state.professional.id) {
-                    return queue.professionalId === state.professional.id;
-                  }
-                  return queue.collaboratorId === state.collaborator.id;
+              const professionalQueues = (groupedQueues['PROFESSIONAL'] || []).filter(queue => {
+                // Use professionalId if available, otherwise fallback to collaboratorId
+                if (state.professional && state.professional.id) {
+                  return queue.professionalId === state.professional.id;
                 }
-              );
+                return queue.collaboratorId === state.collaborator.id;
+              });
               const otherQueues = allQueues.filter(queue => queue.type !== 'PROFESSIONAL');
               queues = [...professionalQueues, ...otherQueues];
             } else if (collaboratorType === 'ASSISTANT') {
@@ -616,7 +616,8 @@ export default {
           if (collaboratorType === 'STANDARD') {
             // Filter queues where type is PROFESSIONAL and collaboratorId matches
             queues = queues.filter(
-              queue => queue.type === 'PROFESSIONAL' && queue.collaboratorId === state.collaborator.id
+              queue =>
+                queue.type === 'PROFESSIONAL' && queue.collaboratorId === state.collaborator.id
             );
           } else if (collaboratorType === 'ASSISTANT') {
             // ASSISTANT: No professional queues
@@ -695,18 +696,16 @@ export default {
         }
 
         // Filter by queue IDs and status PENDING
-        const todayAttentions = (attentions || []).filter(
-          att => {
-            // Always check status first
-            if (att.status !== 'PENDING') return false;
+        const todayAttentions = (attentions || []).filter(att => {
+          // Always check status first
+          if (att.status !== 'PENDING') return false;
 
-            // If single queue, it's already filtered by API
-            if (queueIds.length === 1) return true;
+          // If single queue, it's already filtered by API
+          if (queueIds.length === 1) return true;
 
-            // If multiple queues, filter by all queueIds
-            return att.queueId && queueIds.includes(att.queueId);
-          }
-        );
+          // If multiple queues, filter by all queueIds
+          return att.queueId && queueIds.includes(att.queueId);
+        });
 
         // Format attentions
         state.todayAttentions = todayAttentions.map(att => {

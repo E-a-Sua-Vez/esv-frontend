@@ -30,7 +30,9 @@
 
         <!-- Personal Info -->
         <div class="info-section">
-          <h4 class="section-title">{{ $t('professional.profile.personalInfo') || 'Personal Information' }}</h4>
+          <h4 class="section-title">
+            {{ $t('professional.profile.personalInfo') || 'Personal Information' }}
+          </h4>
           <div class="info-item">
             <span class="label">{{ $t('professional.profile.name') || 'Name' }}:</span>
             <span class="value">{{ professionalFullName }}</span>
@@ -51,15 +53,29 @@
 
         <!-- Professional Info -->
         <div class="info-section" v-if="professional.professionalInfo">
-          <h4 class="section-title">{{ $t('professional.profile.professionalInfo') || 'Professional Information' }}</h4>
+          <h4 class="section-title">
+            {{ $t('professional.profile.professionalInfo') || 'Professional Information' }}
+          </h4>
           <div class="info-item" v-if="professional.professionalInfo.crm">
             <span class="label">{{ $t('professional.profile.crm') || 'CRM' }}:</span>
             <span class="value">{{ professional.professionalInfo.crm }}</span>
           </div>
-          <div class="info-item" v-if="professional.professionalInfo.specialties && professional.professionalInfo.specialties.length">
-            <span class="label">{{ $t('professional.profile.specialties') || 'Specialties' }}:</span>
+          <div
+            class="info-item"
+            v-if="
+              professional.professionalInfo.specialties &&
+              professional.professionalInfo.specialties.length
+            "
+          >
+            <span class="label"
+              >{{ $t('professional.profile.specialties') || 'Specialties' }}:</span
+            >
             <div class="specialties-list">
-              <span v-for="specialty in professional.professionalInfo.specialties" :key="specialty" class="specialty-badge">
+              <span
+                v-for="specialty in professional.professionalInfo.specialties"
+                :key="specialty"
+                class="specialty-badge"
+              >
                 {{ specialty }}
               </span>
             </div>
@@ -72,29 +88,63 @@
 
         <!-- Medical Data -->
         <div class="info-section" v-if="professional.medicalData">
-          <h4 class="section-title">{{ $t('professional.profile.medicalData') || 'Medical Data' }}</h4>
+          <h4 class="section-title">
+            {{ $t('professional.profile.medicalData') || 'Medical Data' }}
+          </h4>
           <div class="medical-toggles">
-            <div class="toggle-item" v-if="typeof professional.medicalData.acceptsEmergencies === 'boolean'">
-              <span class="toggle-label">{{ $t('professional.profile.acceptsEmergencies') || 'Accepts Emergencies' }}</span>
-              <span class="toggle-value" :class="{ 'is-true': professional.medicalData.acceptsEmergencies }">
+            <div
+              class="toggle-item"
+              v-if="typeof professional.medicalData.acceptsEmergencies === 'boolean'"
+            >
+              <span class="toggle-label">{{
+                $t('professional.profile.acceptsEmergencies') || 'Accepts Emergencies'
+              }}</span>
+              <span
+                class="toggle-value"
+                :class="{ 'is-true': professional.medicalData.acceptsEmergencies }"
+              >
                 {{ professional.medicalData.acceptsEmergencies ? '✓' : '✗' }}
               </span>
             </div>
-            <div class="toggle-item" v-if="typeof professional.medicalData.homeVisits === 'boolean'">
-              <span class="toggle-label">{{ $t('professional.profile.homeVisits') || 'Home Visits' }}</span>
-              <span class="toggle-value" :class="{ 'is-true': professional.medicalData.homeVisits }">
+            <div
+              class="toggle-item"
+              v-if="typeof professional.medicalData.homeVisits === 'boolean'"
+            >
+              <span class="toggle-label">{{
+                $t('professional.profile.homeVisits') || 'Home Visits'
+              }}</span>
+              <span
+                class="toggle-value"
+                :class="{ 'is-true': professional.medicalData.homeVisits }"
+              >
                 {{ professional.medicalData.homeVisits ? '✓' : '✗' }}
               </span>
             </div>
-            <div class="toggle-item" v-if="typeof professional.medicalData.telemedicine === 'boolean'">
-              <span class="toggle-label">{{ $t('professional.profile.telemedicine') || 'Telemedicine' }}</span>
-              <span class="toggle-value" :class="{ 'is-true': professional.medicalData.telemedicine }">
+            <div
+              class="toggle-item"
+              v-if="typeof professional.medicalData.telemedicine === 'boolean'"
+            >
+              <span class="toggle-label">{{
+                $t('professional.profile.telemedicine') || 'Telemedicine'
+              }}</span>
+              <span
+                class="toggle-value"
+                :class="{ 'is-true': professional.medicalData.telemedicine }"
+              >
                 {{ professional.medicalData.telemedicine ? '✓' : '✗' }}
               </span>
             </div>
-            <div class="toggle-item" v-if="typeof professional.medicalData.canSignDocuments === 'boolean'">
-              <span class="toggle-label">{{ $t('professional.profile.canSignDocuments') || 'Can Sign Documents' }}</span>
-              <span class="toggle-value" :class="{ 'is-true': professional.medicalData.canSignDocuments }">
+            <div
+              class="toggle-item"
+              v-if="typeof professional.medicalData.canSignDocuments === 'boolean'"
+            >
+              <span class="toggle-label">{{
+                $t('professional.profile.canSignDocuments') || 'Can Sign Documents'
+              }}</span>
+              <span
+                class="toggle-value"
+                :class="{ 'is-true': professional.medicalData.canSignDocuments }"
+              >
                 {{ professional.medicalData.canSignDocuments ? '✓' : '✗' }}
               </span>
             </div>
@@ -120,7 +170,9 @@
       <!-- Empty State -->
       <div v-if="!loading && !error && !professional" class="empty-state">
         <i class="bi bi-person-slash"></i>
-        <p>{{ $t('professional.profile.noProfessional') || 'No professional profile available' }}</p>
+        <p>
+          {{ $t('professional.profile.noProfessional') || 'No professional profile available' }}
+        </p>
       </div>
     </div>
   </div>
@@ -158,8 +210,11 @@ export default {
     const professionalFullName = computed(() => {
       if (!professional.value) return '';
       // Intentar obtener el nombre de personalInfo.name o de personalInfo firstName/lastName
-      const name = professional.value.personalInfo?.name ||
-        `${professional.value.personalInfo?.firstName || ''} ${professional.value.personalInfo?.lastName || ''}`.trim();
+      const name =
+        professional.value.personalInfo?.name ||
+        `${professional.value.personalInfo?.firstName || ''} ${
+          professional.value.personalInfo?.lastName || ''
+        }`.trim();
       return name;
     });
 
@@ -168,7 +223,7 @@ export default {
       emit('close');
     };
 
-    const getPhotoSignedUrl = async (professionalId) => {
+    const getPhotoSignedUrl = async professionalId => {
       if (!professionalId) {
         return null;
       }
@@ -182,7 +237,6 @@ export default {
     };
 
     const loadProfile = async (retry = 0) => {
-
       if (!props.collaboratorId) {
         return;
       }
@@ -212,9 +266,11 @@ export default {
         }
         retryCount.value = 0; // Reset retry count on success
       } catch (e) {
-
         // Detectar error 404 o "not found"
-        const is404 = e.response?.status === 404 || e.message?.includes('404') || e.message?.includes('not found');
+        const is404 =
+          e.response?.status === 404 ||
+          e.message?.includes('404') ||
+          e.message?.includes('not found');
 
         // Reintentar automáticamente si no hemos alcanzado el máximo (excepto para 404)
         if (retry < MAX_RETRIES && !is404) {
@@ -241,11 +297,15 @@ export default {
     };
 
     // Observar cuando el modal se abre
-    watch(() => props.isOpen, (newVal) => {
-      if (newVal) {
-        loadProfile();
-      }
-    }, { immediate: true });
+    watch(
+      () => props.isOpen,
+      newVal => {
+        if (newVal) {
+          loadProfile();
+        }
+      },
+      { immediate: true },
+    );
 
     return {
       professional,

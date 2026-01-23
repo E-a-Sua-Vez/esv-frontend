@@ -17,7 +17,9 @@
           <option value="DOCTOR">{{ $t('collaborator.role.types.DOCTOR') }}</option>
           <option value="SPECIALIST">{{ $t('collaborator.role.types.SPECIALIST') }}</option>
           <option value="NURSE">{{ $t('collaborator.role.types.NURSE') }}</option>
-          <option value="MEDICAL_ASSISTANT">{{ $t('collaborator.role.types.MEDICAL_ASSISTANT') }}</option>
+          <option value="MEDICAL_ASSISTANT">
+            {{ $t('collaborator.role.types.MEDICAL_ASSISTANT') }}
+          </option>
           <option value="TECHNICIAN">{{ $t('collaborator.role.types.TECHNICIAN') }}</option>
           <option value="PHARMACIST">{{ $t('collaborator.role.types.PHARMACIST') }}</option>
           <option value="THERAPIST">{{ $t('collaborator.role.types.THERAPIST') }}</option>
@@ -110,7 +112,7 @@ const ROLE_PERMISSIONS = {
     canGenerateDocuments: true,
     canSignDocuments: true,
     hasDigitalSignature: true,
-    requiresMedicalLicense: true
+    requiresMedicalLicense: true,
   },
   SPECIALIST: {
     canPrescribe: true,
@@ -121,7 +123,7 @@ const ROLE_PERMISSIONS = {
     canGenerateDocuments: true,
     canSignDocuments: true,
     hasDigitalSignature: true,
-    requiresMedicalLicense: true
+    requiresMedicalLicense: true,
   },
   NURSE: {
     canPrescribe: false,
@@ -132,7 +134,7 @@ const ROLE_PERMISSIONS = {
     canGenerateDocuments: false,
     canSignDocuments: false,
     hasDigitalSignature: false,
-    requiresMedicalLicense: true
+    requiresMedicalLicense: true,
   },
   SECRETARY: {
     canPrescribe: false,
@@ -143,7 +145,7 @@ const ROLE_PERMISSIONS = {
     canGenerateDocuments: true,
     canSignDocuments: false,
     hasDigitalSignature: false,
-    requiresMedicalLicense: false
+    requiresMedicalLicense: false,
   },
   RECEPTIONIST: {
     canPrescribe: false,
@@ -154,7 +156,7 @@ const ROLE_PERMISSIONS = {
     canGenerateDocuments: false,
     canSignDocuments: false,
     hasDigitalSignature: false,
-    requiresMedicalLicense: false
+    requiresMedicalLicense: false,
   },
   // ... otros roles
 };
@@ -174,7 +176,7 @@ const roleIcon = computed(() => {
     ADMINISTRATOR: 'bi bi-building',
     STANDARD: 'bi bi-person',
     ASSISTANT: 'bi bi-person-check',
-    FULL: 'bi bi-person-fill-gear'
+    FULL: 'bi bi-person-fill-gear',
   };
   return iconMap[selectedRole.value] || 'bi bi-person';
 });
@@ -187,7 +189,7 @@ const rolePermissions = computed(() => {
   const permissions = ROLE_PERMISSIONS[selectedRole.value];
   return Object.entries(permissions).map(([key, value]) => ({
     key,
-    value
+    value,
   }));
 });
 
@@ -214,14 +216,17 @@ const handleRoleChange = () => {
   emit('roleChanged', {
     role: selectedRole.value,
     permissions: rolePermissions.value,
-    requirements: roleRequirements.value
+    requirements: roleRequirements.value,
   });
 };
 
 // Watchers
-watch(() => props.modelValue, (newValue) => {
-  selectedRole.value = newValue;
-});
+watch(
+  () => props.modelValue,
+  newValue => {
+    selectedRole.value = newValue;
+  },
+);
 </script>
 
 <style scoped>

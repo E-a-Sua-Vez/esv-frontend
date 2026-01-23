@@ -21,7 +21,9 @@ export const useProfessionalProfileStore = defineStore('professionalProfile', {
     getProfessionalFullName: state => {
       const professional = state.professional || getStorageItem(STORAGE_KEY_PROFESSIONAL);
       if (!professional) return '';
-      return `${professional.personalInfo?.firstName || ''} ${professional.personalInfo?.lastName || ''}`.trim();
+      return `${professional.personalInfo?.firstName || ''} ${
+        professional.personalInfo?.lastName || ''
+      }`.trim();
     },
 
     getProfessionalSpecialties: state => {

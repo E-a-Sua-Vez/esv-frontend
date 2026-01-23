@@ -4,7 +4,7 @@ import Popper from 'vue3-popper';
 
 export default {
   name: 'FormFormBasicFields',
-    components: { Toggle, Popper },
+  components: { Toggle, Popper },
   props: {
     modelValue: { type: Object, required: true },
     types: { type: Array, default: () => [] },

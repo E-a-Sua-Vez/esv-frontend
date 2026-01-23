@@ -163,7 +163,7 @@ export default {
         }
 
         // Llamada optimizada a la API
-        let incomes = await getIncomesDetails(
+        const incomes = await getIncomesDetails(
           this.business?.id,
           this.commerce?.id,
           this.startDate,
@@ -180,7 +180,7 @@ export default {
           this.maxAmount,
           this.incomeTypeFilter,
           this.paymentMethodFilter,
-          this.professionalFilter
+          this.professionalFilter,
         );
 
         this.financialIncomes = Array.isArray(incomes) ? incomes : [];
@@ -215,7 +215,11 @@ export default {
     // Método optimizado para cargar profesionales con cache
     async loadProfessionalsIfNeeded() {
       // Verificar si hay ingresos con profesionalId
-      const professionalIds = [...new Set((this.financialIncomes || []).filter(i => i.professionalId).map(i => i.professionalId))];
+      const professionalIds = [
+        ...new Set(
+          (this.financialIncomes || []).filter(i => i.professionalId).map(i => i.professionalId),
+        ),
+      ];
 
       if (professionalIds.length > 0 && this.commerce?.id) {
         const commerceId = this.commerce.id;
@@ -407,7 +411,7 @@ export default {
         maxAmount,
         incomeTypeFilter,
         paymentMethodFilter,
-        professionalFilter
+        professionalFilter,
       } = this;
       return {
         page,
@@ -423,7 +427,7 @@ export default {
         maxAmount,
         incomeTypeFilter,
         paymentMethodFilter,
-        professionalFilter
+        professionalFilter,
       };
     },
   },
@@ -862,7 +866,9 @@ export default {
                     <div class="row mt-2">
                       <div class="col-12">
                         <label class="form-label metric-card-subtitle fw-bold">
-                          {{ $t('businessFinancial.filters.professional') }} ({{ professionals.length }})
+                          {{ $t('businessFinancial.filters.professional') }} ({{
+                            professionals.length
+                          }})
                         </label>
                         <select
                           class="form-control metric-controls"
@@ -873,8 +879,17 @@ export default {
                           <option :value="undefined">
                             {{ $t('businessFinancial.filters.all') }}
                           </option>
-                          <option v-for="professional in professionals" :key="professional.id" :value="professional.id">
-                            {{ professional.personalInfo?.name || professional.name || professional.professionalName || '-' }}
+                          <option
+                            v-for="professional in professionals"
+                            :key="professional.id"
+                            :value="professional.id"
+                          >
+                            {{
+                              professional.personalInfo?.name ||
+                              professional.name ||
+                              professional.professionalName ||
+                              '-'
+                            }}
                           </option>
                         </select>
                       </div>

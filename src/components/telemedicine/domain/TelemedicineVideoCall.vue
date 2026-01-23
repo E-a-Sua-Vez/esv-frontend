@@ -1157,13 +1157,13 @@ export default {
 
         // Add event listeners to prevent videos from pausing when hidden
         if (localVideo.value) {
-          localVideo.value.addEventListener('pause', (e) => {
+          localVideo.value.addEventListener('pause', e => {
             e.target.play().catch(() => {});
           });
         }
 
         if (remoteVideo.value) {
-          remoteVideo.value.addEventListener('pause', (e) => {
+          remoteVideo.value.addEventListener('pause', e => {
             e.target.play().catch(() => {});
           });
         }
@@ -1247,7 +1247,7 @@ export default {
           newVal.srcObject = localStream.value;
 
           // Add pause listener to prevent auto-pause
-          newVal.addEventListener('pause', (e) => {
+          newVal.addEventListener('pause', e => {
             e.target.play().catch(() => {});
           });
 
@@ -1269,7 +1269,7 @@ export default {
           newVal.srcObject = remoteStream.value;
 
           // Add pause listener to prevent auto-pause
-          newVal.addEventListener('pause', (e) => {
+          newVal.addEventListener('pause', e => {
             e.target.play().catch(() => {});
           });
 

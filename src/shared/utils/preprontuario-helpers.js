@@ -8,7 +8,6 @@
  * @returns {Object} - Personal data object ready for PatientPersonalDataForm
  */
 export const extractPersonalDataFromForm = form => {
-
   if (!form || !form.answers || form.answers.length === 0) {
     return null;
   }
@@ -57,7 +56,6 @@ export const extractPersonalDataFromForm = form => {
  * @returns {Object} - Habits aux object ready for PatientAnamneseForm
  */
 export const extractAnamneseDataFromForm = form => {
-
   if (!form || !form.answers || form.answers.length === 0) {
     return {};
   }

@@ -494,7 +494,8 @@ export default {
             <span class="datetime-text">
               <span class="datetime-separator"></span>
               <span class="datetime-time">
-              {{ nextSlot.formattedDate }}, {{ nextSlot.block.hourFrom }} - {{ nextSlot.block.hourTo }}
+                {{ nextSlot.formattedDate }}, {{ nextSlot.block.hourFrom }} -
+                {{ nextSlot.block.hourTo }}
               </span>
             </span>
             <!-- Distance indicator for far dates -->
@@ -681,7 +682,7 @@ export default {
   font-size: 0.875rem;
   color: #666;
   line-height: 1rem;
-  margin-top: .5rem;
+  margin-top: 0.5rem;
 }
 
 .next-slot-service i {
@@ -835,5 +836,4 @@ export default {
     transform: translateX(5px);
   }
 }
-
 </style>

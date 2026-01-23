@@ -25,11 +25,8 @@ export default {
 
       try {
         loading.value = true;
-        
-        await cancelCommissionPayment(
-          props.payment.id,
-          cancellationReason.value
-        );
+
+        await cancelCommissionPayment(props.payment.id, cancellationReason.value);
 
         loading.value = false;
         emit('close');
@@ -51,7 +48,7 @@ export default {
 </script>
 
 <template>
-  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5)">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header bg-danger text-white">
@@ -60,7 +57,7 @@ export default {
           </h5>
           <button type="button" class="btn-close btn-close-white" @click="$emit('close')"></button>
         </div>
-        
+
         <div class="modal-body">
           <Spinner :show="loading" />
           <Alert :show="alertError !== ''" :message="alertError" />
@@ -76,7 +73,7 @@ export default {
             <label class="form-label fw-bold">
               {{ $t('commissionPayments.cancellationReason') }} *
             </label>
-            <textarea 
+            <textarea
               v-model="cancellationReason"
               class="form-control"
               rows="4"
@@ -85,14 +82,14 @@ export default {
             ></textarea>
           </div>
         </div>
-        
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" @click="$emit('close')">
             {{ $t('commissionPayments.back') }}
           </button>
-          <button 
-            type="button" 
-            class="btn btn-danger" 
+          <button
+            type="button"
+            class="btn btn-danger"
             @click="cancel"
             :disabled="loading || !cancellationReason.trim()"
           >

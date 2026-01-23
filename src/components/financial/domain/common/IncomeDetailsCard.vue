@@ -88,7 +88,9 @@ export default {
         return professionalId;
       }
       const professional = this.professionals.find(p => p.id === professionalId);
-      return professional ? (professional.personalInfo?.name || professional.name || '-') : professionalId;
+      return professional
+        ? professional.personalInfo?.name || professional.name || '-'
+        : professionalId;
     },
     // New methods for modernized component
     formatAmount(amount) {
@@ -155,7 +157,9 @@ export default {
   },
   computed: {
     togglesLoaded() {
-      return this.toggles && typeof this.toggles === 'object' && Object.keys(this.toggles).length > 0;
+      return (
+        this.toggles && typeof this.toggles === 'object' && Object.keys(this.toggles).length > 0
+      );
     },
     clientFullName() {
       if (!this.income) return 'N/I';
@@ -165,7 +169,7 @@ export default {
       const firstName = this.income?.userName?.trim() || '';
       const lastName = this.income?.userLastName?.trim() || '';
       return `${firstName} ${lastName}`.trim().toUpperCase() || 'N/I';
-    }
+    },
   },
   watch: {
     detailsOpened: {
@@ -248,16 +252,23 @@ export default {
 
         <!-- Date Badge -->
         <div class="status-inline">
-          <span class="date-badge-inline">{{ formatDate(income?.paidAt || income?.paymentDate) }}</span>
+          <span class="date-badge-inline">{{
+            formatDate(income?.paidAt || income?.paymentDate)
+          }}</span>
         </div>
 
         <!-- Details Toggle -->
         <Popper :class="'dark'" arrow disable-click-away hover>
           <template #content>
-            <div>{{ extendedEntity ? $t('dashboard.hideDetails') : $t('dashboard.showDetails') }}</div>
+            <div>
+              {{ extendedEntity ? $t('dashboard.hideDetails') : $t('dashboard.showDetails') }}
+            </div>
           </template>
           <div class="collapse-icon-wrapper" @click.stop="showDetails()">
-            <i class="collapse-icon" :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+            <i
+              class="collapse-icon"
+              :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
+            ></i>
           </div>
         </Popper>
       </div>
@@ -277,13 +288,23 @@ export default {
               <!-- Contact Information Grid - Horizontal layout -->
               <div class="contact-items-horizontal">
                 <div class="contact-item-compact" v-if="income?.userPhone">
-                  <a :href="'https://wa.me/' + income.userPhone" target="_blank" @click.stop class="contact-link whatsapp">
+                  <a
+                    :href="'https://wa.me/' + income.userPhone"
+                    target="_blank"
+                    @click.stop
+                    class="contact-link whatsapp"
+                  >
                     <i class="bi bi-whatsapp"></i>
                     <span>{{ income.userPhone }}</span>
                   </a>
                 </div>
                 <div class="contact-item-compact" v-if="income?.userEmail">
-                  <a :href="'mailto:' + income.userEmail" target="_blank" @click.stop class="contact-link email">
+                  <a
+                    :href="'mailto:' + income.userEmail"
+                    target="_blank"
+                    @click.stop
+                    class="contact-link email"
+                  >
                     <i class="bi bi-envelope"></i>
                     <span>{{ income.userEmail }}</span>
                   </a>
@@ -337,7 +358,9 @@ export default {
 
             <span v-if="income?.paymentMethod" class="info-badge">
               <span class="badge-label">{{ $t('paymentData.paymentMethod') }}:</span>
-              <span class="badge-value">{{ $t(`paymentClientMethods.${income.paymentMethod}`) }}</span>
+              <span class="badge-value">{{
+                $t(`paymentClientMethods.${income.paymentMethod}`)
+              }}</span>
             </span>
 
             <span v-if="income?.amount" class="info-badge warning">
@@ -376,16 +399,6 @@ export default {
                 {{ getProfessionalName(income.professionalId) }}
               </span>
             </span>
-
-            <!-- Debug: Always show professional info for debugging -->
-            <span v-if="income?.professionalId || income?.professionalName" class="info-badge warning">
-              <span class="badge-label">Prof Debug:</span>
-              <span class="badge-value">
-                ID: {{ income.professionalId || 'N/A' }} | 
-                Name: {{ income.professionalName || 'N/A' }} |
-                Count: {{ professionals?.length || 0 }}
-              </span>
-            </span>
           </div>
         </div>
 
@@ -400,7 +413,7 @@ export default {
             <!-- Services -->
             <div v-if="income.bookingServicesDetails || income.attentionServicesDetails">
               <span
-                v-for="serv in (income.bookingServicesDetails || income.attentionServicesDetails)"
+                v-for="serv in income.bookingServicesDetails || income.attentionServicesDetails"
                 :key="serv.id"
                 class="info-badge"
               >
@@ -457,8 +470,8 @@ export default {
     <!-- Confirmation Modal -->
     <AreYouSure
       :show="goToConfirm"
-      :yes-disabled="(togglesLoaded && !toggles['financial.incomes.confirm'])"
-      :no-disabled="(togglesLoaded && !toggles['financial.incomes.confirm'])"
+      :yes-disabled="togglesLoaded && !toggles['financial.incomes.confirm']"
+      :no-disabled="togglesLoaded && !toggles['financial.incomes.confirm']"
       @actionYes="confirmPayment()"
       @actionNo="cancelConfirm()"
     >

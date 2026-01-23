@@ -117,7 +117,9 @@ export default {
                   :class="'dark'"
                   arrow
                   hover
-                  :content="$t('commerceQueuesView.telemedicineAvailable') || 'Telemedicina disponible'"
+                  :content="
+                    $t('commerceQueuesView.telemedicineAvailable') || 'Telemedicina disponible'
+                  "
                 >
                   <span class="telemedicine-badge" aria-label="Telemedicina disponible">
                     <i class="bi bi-camera-video"></i>
@@ -202,11 +204,15 @@ export default {
                 :class="'dark'"
                 arrow
                 hover
-                :content="$t('commerceQueuesView.telemedicineAvailable') || 'Telemedicina disponible'"
+                :content="
+                  $t('commerceQueuesView.telemedicineAvailable') || 'Telemedicina disponible'
+                "
               >
                 <span
                   class="telemedicine-badge"
-                  :aria-label="$t('commerceQueuesView.telemedicineAvailable') || 'Telemedicina disponible'"
+                  :aria-label="
+                    $t('commerceQueuesView.telemedicineAvailable') || 'Telemedicina disponible'
+                  "
                 >
                   <div class="telemedicine-avatar">
                     <i class="bi bi-camera-video"></i>

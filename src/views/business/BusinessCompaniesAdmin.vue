@@ -460,121 +460,119 @@ export default {
           component-name="businessCompaniesAdmin"
           @go-back="goBack"
         />
-          </div>
-        </div>
-        <div id="businessCompaniesAdmin">
-          <div v-if="isActiveBusiness && state.toggles['companies.admin.view']">
-            <div class="control-box my-4"></div>
-            <div v-if="!loading" id="businessCompaniesAdmin-result" class="mt-4">
-              <div>
-                <div v-if="state.companies.length === 0">
-                  <Message
-                    :title="$t('businessCompaniesAdmin.message.2.title')"
-                    :content="$t('businessCompaniesAdmin.message.2.content')"
-                  />
+      </div>
+    </div>
+    <div id="businessCompaniesAdmin">
+      <div v-if="isActiveBusiness && state.toggles['companies.admin.view']">
+        <div class="control-box my-4"></div>
+        <div v-if="!loading" id="businessCompaniesAdmin-result" class="mt-4">
+          <div>
+            <div v-if="state.companies.length === 0">
+              <Message
+                :title="$t('businessCompaniesAdmin.message.2.title')"
+                :content="$t('businessCompaniesAdmin.message.2.content')"
+              />
+            </div>
+            <div v-if="commerce && commerce.id" class="row mb-2">
+              <div class="col lefted">
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
+                  @click="showAdd(service)"
+                  data-bs-toggle="modal"
+                  :data-bs-target="`#add-service`"
+                  :disabled="!state.toggles['companies.admin.add']"
+                >
+                  <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                </button>
+              </div>
+            </div>
+            <div>
+              <SearchAdminItem
+                :business-items="state.companies"
+                :type="'companies'"
+                :receive-filtered-items="receiveFilteredItems"
+              >
+              </SearchAdminItem>
+              <div v-for="(service, index) in state.filtered" :key="index" class="result-card">
+                <div class="row">
+                  <div class="col-10">
+                    <ServiceSimpleName :service="service"></ServiceSimpleName>
+                  </div>
+                  <div class="col-2">
+                    <a href="#" @click.prevent="showUpdateForm(index)">
+                      <i
+                        :id="index"
+                        :class="`bi ${
+                          state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                    </a>
+                  </div>
                 </div>
-                <div v-if="commerce && commerce.id" class="row mb-2">
-                  <div class="col lefted">
+                <CompanyFormEdit
+                  v-if="state.toggles['companies.admin.read']"
+                  :class="{ show: state.extendedEntity === index }"
+                  :company="service"
+                  :types="state.types"
+                  :toggles="state.toggles"
+                  :errors="{
+                    tagError: state.tagError,
+                    orderError: state.orderUpdateError,
+                    errorsUpdate: state.errorsUpdate,
+                  }"
+                  :max-order="state.companies.length"
+                  @update:company="service = $event"
+                />
+                <div
+                  v-if="state.toggles['companies.admin.read'] && state.extendedEntity === index"
+                  class="row g-1 mt-2"
+                >
+                  <div class="col">
                     <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 pulse-btn"
-                      @click="showAdd(service)"
-                      data-bs-toggle="modal"
-                      :data-bs-target="`#add-service`"
-                      :disabled="!state.toggles['companies.admin.add']"
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      @click="update(service)"
+                      :disabled="!state.toggles['companies.admin.update']"
                     >
-                      <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                      {{ $t('businessCompaniesAdmin.update') }} <i class="bi bi-save"></i>
                     </button>
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
+                      @click="goToUnavailable()"
+                      v-if="state.toggles['companies.admin.unavailable']"
+                    >
+                      {{ $t('businessQueuesAdmin.unavailable') }}
+                      <i class="bi bi-trash-fill"></i>
+                    </button>
+                    <AreYouSure
+                      :show="state.goToUnavailable"
+                      :yes-disabled="state.toggles['companies.admin.unavailable']"
+                      :no-disabled="state.toggles['companies.admin.unavailable']"
+                      @actionYes="unavailable(service)"
+                      @actionNo="unavailableCancel()"
+                    >
+                    </AreYouSure>
                   </div>
                 </div>
-                <div>
-                  <SearchAdminItem
-                    :business-items="state.companies"
-                    :type="'companies'"
-                    :receive-filtered-items="receiveFilteredItems"
-                  >
-                  </SearchAdminItem>
-                  <div v-for="(service, index) in state.filtered" :key="index" class="result-card">
-                    <div class="row">
-                      <div class="col-10">
-                        <ServiceSimpleName :service="service"></ServiceSimpleName>
-                      </div>
-                      <div class="col-2">
-                        <a href="#" @click.prevent="showUpdateForm(index)">
-                          <i
-                            :id="index"
-                            :class="`bi ${
-                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                            }`"
-                          ></i>
-                        </a>
-                      </div>
-                    </div>
-                    <CompanyFormEdit
-                      v-if="state.toggles['companies.admin.read']"
-                      :class="{ show: state.extendedEntity === index }"
-                      :company="service"
-                      :types="state.types"
-                      :toggles="state.toggles"
-                      :errors="{
-                        tagError: state.tagError,
-                        orderError: state.orderUpdateError,
-                        errorsUpdate: state.errorsUpdate,
-                      }"
-                      :max-order="state.companies.length"
-                      @update:company="service = $event"
-                    />
-                    <div
-                      v-if="state.toggles['companies.admin.read'] && state.extendedEntity === index"
-                      class="row g-1 mt-2"
-                    >
-                      <div class="col">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(service)"
-                          :disabled="!state.toggles['companies.admin.update']"
-                        >
-                          {{ $t('businessCompaniesAdmin.update') }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                          @click="goToUnavailable()"
-                          v-if="state.toggles['companies.admin.unavailable']"
-                        >
-                          {{ $t('businessQueuesAdmin.unavailable') }}
-                          <i class="bi bi-trash-fill"></i>
-                        </button>
-                        <AreYouSure
-                          :show="state.goToUnavailable"
-                          :yes-disabled="state.toggles['companies.admin.unavailable']"
-                          :no-disabled="state.toggles['companies.admin.unavailable']"
-                          @actionYes="unavailable(service)"
-                          @actionNo="unavailableCancel()"
-                        >
-                        </AreYouSure>
-                      </div>
-                    </div>
-                    <div
-                      v-if="
-                        (!isActiveBusiness() || !state.toggles['companies.admin.read']) && !loading
-                      "
-                    >
-                      <Message
-                        :title="$t('businessCompaniesAdmin.message.1.title')"
-                        :content="$t('businessCompaniesAdmin.message.1.content')"
-                      />
-                    </div>
-                  </div>
+                <div
+                  v-if="(!isActiveBusiness() || !state.toggles['companies.admin.read']) && !loading"
+                >
+                  <Message
+                    :title="$t('businessCompaniesAdmin.message.1.title')"
+                    :content="$t('businessCompaniesAdmin.message.1.content')"
+                  />
                 </div>
               </div>
             </div>
           </div>
-          <div v-if="(!isActiveBusiness() || !state.toggles['companies.admin.view']) && !loading">
-            <Message
-              :title="$t('businessCompaniesAdmin.message.1.title')"
-              :content="$t('businessCompaniesAdmin.message.1.content')"
-            />
-          </div>
         </div>
+      </div>
+      <div v-if="(!isActiveBusiness() || !state.toggles['companies.admin.view']) && !loading">
+        <Message
+          :title="$t('businessCompaniesAdmin.message.1.title')"
+          :content="$t('businessCompaniesAdmin.message.1.content')"
+        />
+      </div>
+    </div>
     <!-- Modal Add -->
     <div
       class="modal fade"
@@ -620,7 +618,7 @@ export default {
                 />
                 <div class="col mt-3">
                   <button
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
+                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4 pulse-btn"
                     @click="add(state.newCompany)"
                   >
                     {{ $t('businessCompaniesAdmin.add') }} <i class="bi bi-save"></i>

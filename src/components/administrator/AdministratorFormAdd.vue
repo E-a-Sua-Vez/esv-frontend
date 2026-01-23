@@ -54,7 +54,11 @@ export default {
       :on-delete-commerce="onDeleteCommerce"
       :show-commerce="showCommerce"
     />
-    <div class="row g-1 errors" id="feedback" v-if="errors.errorsAdd && errors.errorsAdd.length > 0">
+    <div
+      class="row g-1 errors"
+      id="feedback"
+      v-if="errors.errorsAdd && errors.errorsAdd.length > 0"
+    >
       <Warning>
         <template #message>
           <li v-for="(error, index) in errors.errorsAdd" :key="index">

@@ -47,7 +47,11 @@
           </div>
           <div class="mobile-content-wrapper">
             <Transition name="slide" mode="out-in">
-              <div v-if="showMobileMenuSide === true" id="menu-side-mobile" :key="`menu-side-mobile`">
+              <div
+                v-if="showMobileMenuSide === true"
+                id="menu-side-mobile"
+                :key="`menu-side-mobile`"
+              >
                 <div class="choose-attention my-3 mt-4">
                   <span>{{ $t('clientPortal.menu.choose') }}</span>
                 </div>
@@ -356,14 +360,20 @@ export default {
       }
     };
 
-    const loadPermissions = async (clientPortalSessionToken) => {
+    const loadPermissions = async clientPortalSessionToken => {
       try {
         // Asegurar token válido: usar argumento o el almacenado
         const token = clientPortalSessionToken || localStorage.getItem('clientPortalSessionToken');
-        const clientPermissions = await getClientPortalPermissions('client-portal', 'menu', undefined, token);
+        const clientPermissions = await getClientPortalPermissions(
+          'client-portal',
+          'menu',
+          undefined,
+          token,
+        );
 
         // Si la respuesta viene vacía o sin permisos verdaderos, aplicamos default
-        const hasAnyPermission = clientPermissions && Object.values(clientPermissions).some(v => !!v);
+        const hasAnyPermission =
+          clientPermissions && Object.values(clientPermissions).some(v => !!v);
         if (!clientPermissions || !hasAnyPermission) {
           const defaultPermissions = {
             'client-portal.menu.consents': true,

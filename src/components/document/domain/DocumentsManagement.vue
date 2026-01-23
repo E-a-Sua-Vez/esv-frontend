@@ -277,246 +277,183 @@ export default {
       class="row"
       v-if="showClientManagement === true && toggles['document-commerce.admin.view']"
     >
-    <div class="col">
-      <div id="attention-management-component">
-        <Spinner :show="loading"></Spinner>
-        <div v-if="!loading">
-          <div>
-            <div class="row my-2">
-              <div class="col lefted">
-                <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-                  @click="showAddModal()"
-                  data-bs-toggle="modal"
-                  :data-bs-target="`#add-document`"
-                  :disabled="!toggles['document-commerce.admin.add']"
-                >
-                  <i class="bi bi-plus-lg"></i> {{ $t('add') }}
-                </button>
-              </div>
-            </div>
-            <!-- Filters Section - Can be shown in component or exposed via slot -->
-            <div v-if="filtersLocation === 'component'" class="my-2 row metric-card">
-              <div class="col-12">
-                <span class="metric-card-subtitle">
-                  <span
-                    class="form-check-label metric-keyword-subtitle mx-1"
-                    @click="showFilters()"
+      <div class="col">
+        <div id="attention-management-component">
+          <Spinner :show="loading"></Spinner>
+          <div v-if="!loading">
+            <div>
+              <div class="row my-2">
+                <div class="col lefted">
+                  <button
+                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+                    @click="showAddModal()"
+                    data-bs-toggle="modal"
+                    :data-bs-target="`#add-document`"
+                    :disabled="!toggles['document-commerce.admin.add']"
                   >
-                    <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
-                    <i
-                      :class="`bi ${
-                        showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                      }`"
-                    ></i>
+                    <i class="bi bi-plus-lg"></i> {{ $t('add') }}
+                  </button>
+                </div>
+              </div>
+              <!-- Filters Section - Can be shown in component or exposed via slot -->
+              <div v-if="filtersLocation === 'component'" class="my-2 row metric-card">
+                <div class="col-12">
+                  <span class="metric-card-subtitle">
+                    <span
+                      class="form-check-label metric-keyword-subtitle mx-1"
+                      @click="showFilters()"
+                    >
+                      <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
+                      <i
+                        :class="`bi ${
+                          showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                    </span>
                   </span>
-                </span>
-                <button
-                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
-                  @click="clear()"
-                >
-                  <span><i class="bi bi-eraser-fill"></i></span>
-                </button>
-              </div>
-              <div v-if="showFilterOptions">
-                <div class="row my-1">
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getToday()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.today') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getCurrentMonth()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.thisMonth') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getLastMonth()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.lastMonth') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getLastThreeMonths()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.lastThreeMonths') }}
-                    </button>
-                  </div>
+                  <button
+                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
+                    @click="clear()"
+                  >
+                    <span><i class="bi bi-eraser-fill"></i></span>
+                  </button>
                 </div>
-                <div class="m-1">
-                  <div class="row">
-                    <div class="col-5">
-                      <input
-                        id="startDate"
-                        class="form-control metric-controls"
-                        type="date"
-                        v-model="startDate"
-                      />
-                    </div>
-                    <div class="col-5">
-                      <input
-                        id="endDate"
-                        class="form-control metric-controls"
-                        type="date"
-                        v-model="endDate"
-                      />
-                    </div>
-                    <div class="col-2">
+                <div v-if="showFilterOptions">
+                  <div class="row my-1">
+                    <div class="col-3">
                       <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                        @click="refresh(1)"
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getToday()"
+                        :disabled="loading"
                       >
-                        <span><i class="bi bi-search"></i></span>
+                        {{ $t('dashboard.today') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getCurrentMonth()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.thisMonth') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getLastMonth()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.lastMonth') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getLastThreeMonths()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.lastThreeMonths') }}
                       </button>
                     </div>
                   </div>
-                </div>
-                <div class="m-1">
-                  <div class="row">
-                    <div class="col-10">
-                      <input
-                        min="1"
-                        max="50"
-                        type="text"
-                        class="form-control"
-                        v-model="searchText"
-                        :placeholder="$t('dashboard.search')"
-                      />
+                  <div class="m-1">
+                    <div class="row">
+                      <div class="col-5">
+                        <input
+                          id="startDate"
+                          class="form-control metric-controls"
+                          type="date"
+                          v-model="startDate"
+                        />
+                      </div>
+                      <div class="col-5">
+                        <input
+                          id="endDate"
+                          class="form-control metric-controls"
+                          type="date"
+                          v-model="endDate"
+                        />
+                      </div>
+                      <div class="col-2">
+                        <button
+                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                          @click="refresh(1)"
+                        >
+                          <span><i class="bi bi-search"></i></span>
+                        </button>
+                      </div>
                     </div>
-                    <div class="col-2">
-                      <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                        @click="refresh(1)"
+                  </div>
+                  <div class="m-1">
+                    <div class="row">
+                      <div class="col-10">
+                        <input
+                          min="1"
+                          max="50"
+                          type="text"
+                          class="form-control"
+                          v-model="searchText"
+                          :placeholder="$t('dashboard.search')"
+                        />
+                      </div>
+                      <div class="col-2">
+                        <button
+                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                          @click="refresh(1)"
+                        >
+                          <span><i class="bi bi-search"></i></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md my-1 filter-card" v-if="types && types.length > 1">
+                    <label class="metric-card-subtitle mx-2" for="select-queue">
+                      {{ $t('dashboard.type') }}
+                    </label>
+                    <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="type">
+                      <option
+                        v-for="typ in types"
+                        :key="typ.name"
+                        :value="typ.id"
+                        id="select-queue"
                       >
-                        <span><i class="bi bi-search"></i></span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-12 col-md my-1 filter-card" v-if="types && types.length > 1">
-                  <label class="metric-card-subtitle mx-2" for="select-queue">
-                    {{ $t('dashboard.type') }}
-                  </label>
-                  <select class="btn btn-sm btn-light fw-bold text-dark select" v-model="type">
-                    <option v-for="typ in types" :key="typ.name" :value="typ.id" id="select-queue">
-                      {{ $t(`documents.types.${typ.name}`) }}
-                    </option>
-                  </select>
-                </div>
-                <div class="row">
-                  <div class="col-12">
-                    <div class="form-check form-switch centered">
-                      <input
-                        class="form-check-input m-1"
-                        :class="asc === false ? 'bg-danger' : ''"
-                        type="checkbox"
-                        name="asc"
-                        id="asc"
-                        v-model="asc"
-                        @click="checkAsc($event)"
-                      />
-                      <label class="form-check-label metric-card-subtitle" for="asc">{{
-                        asc ? $t('dashboard.asc') : $t('dashboard.desc')
-                      }}</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="my-3 d-flex justify-content-center align-items-center flex-wrap gap-2">
-              <span class="badge bg-secondary px-3 py-2 m-1"
-                >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
-              </span>
-              <span class="badge bg-secondary px-3 py-2 m-1">
-                {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
-              </span>
-              <select class="btn btn-sm btn-light fw-bold text-dark select mx-1" v-model="limit">
-                <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
-                  {{ lim }}
-                </option>
-              </select>
-            </div>
-            <div class="centered mt-2">
-              <nav>
-                <ul class="pagination">
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="First"
-                      @click="setPage(1)"
-                      :disabled="page === 1 || totalPages === 0"
-                    >
-                      <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
-                    </button>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Previous"
-                      @click="setPage(page - 1)"
-                      :disabled="page === 1 || totalPages === 0"
-                    >
-                      <span aria-hidden="true">&laquo;</span>
-                    </button>
-                  </li>
-                  <li>
-                    <select
-                      class="btn btn-md btn-light fw-bold text-dark select mx-1"
-                      v-model="page"
-                      :disabled="totalPages === 0"
-                    >
-                      <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">
-                        {{ pag }}
+                        {{ $t(`documents.types.${typ.name}`) }}
                       </option>
                     </select>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Next"
-                      @click="setPage(page + 1)"
-                      :disabled="page === totalPages || totalPages === 0"
-                    >
-                      <span aria-hidden="true">&raquo;</span>
-                    </button>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="First"
-                      @click="setPage(totalPages)"
-                      :disabled="page === totalPages || totalPages === 0"
-                    >
-                      <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-            <div v-if="documents && documents.length > 0">
-              <div class="row" v-for="(document, index) in documents" :key="`documents-${index}`">
-                <SimpleDocumentCard
-                  :show="true"
-                  :commerce="commerce"
-                  :can-update="toggles[`document-commerce.admin.${document.name}`]"
-                  :document="document"
-                  :show-tooltip="true"
-                >
-                </SimpleDocumentCard>
+                  </div>
+                  <div class="row">
+                    <div class="col-12">
+                      <div class="form-check form-switch centered">
+                        <input
+                          class="form-check-input m-1"
+                          :class="asc === false ? 'bg-danger' : ''"
+                          type="checkbox"
+                          name="asc"
+                          id="asc"
+                          v-model="asc"
+                          @click="checkAsc($event)"
+                        />
+                        <label class="form-check-label metric-card-subtitle" for="asc">{{
+                          asc ? $t('dashboard.asc') : $t('dashboard.desc')
+                        }}</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="my-3 d-flex justify-content-center align-items-center flex-wrap gap-2">
+                <span class="badge bg-secondary px-3 py-2 m-1"
+                  >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
+                </span>
+                <span class="badge bg-secondary px-3 py-2 m-1">
+                  {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
+                </span>
+                <select class="btn btn-sm btn-light fw-bold text-dark select mx-1" v-model="limit">
+                  <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
+                    {{ lim }}
+                  </option>
+                </select>
               </div>
               <div class="centered mt-2">
                 <nav>
@@ -575,135 +512,208 @@ export default {
                   </ul>
                 </nav>
               </div>
-            </div>
-            <div v-else>
-              <Message
-                :icon="'bi-graph-up-arrow'"
-                :title="$t('dashboard.message.2.title')"
-                :content="$t('dashboard.message.2.content')"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Modal Add -->
-    <div
-      class="modal fade"
-      :id="`add-document`"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="staticBackdropLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
-            <button
-              id="close-modal-document"
-              class="btn-close"
-              type="button"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="modal-body text-center mb-0" id="attentions-component">
-            <Spinner :show="loading"></Spinner>
-            <Alert :show="loading" :stack="alertError"></Alert>
-            <div
-              id="add-document"
-              class="document-card mb-4"
-              v-if="this.showAdd && this.toggles['document-commerce.admin.add']"
-            >
-              <div class="row g-1">
-                <div id="document-feature-form-add" class="row g-1">
-                  <div class="col-4 text-label">
-                    {{ $t('businessDocument.feature') }}
-                  </div>
-                  <div class="col-8">
-                    <select
-                      class="btn btn-md btn-light fw-bold text-dark select mx-2"
-                      v-model="this.optionSelected"
-                      id="features"
-                    >
-                      <option v-for="opt in this.commerceTypes" :key="opt.name" :value="opt.name">
-                        {{ $t(`document.commerceTypes.${opt.name}`) }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-                <div id="document-file-form-add" class="row g-1">
-                  <div class="col-4 text-label">
-                    {{ $t('businessDocument.file') }}
-                  </div>
-                  <div class="col-8">
-                    <input
-                      id="document-fileUpload"
-                      ref="file"
-                      data-cy="document-fileUpload"
-                      type="file"
-                      hidden
-                      @change="getFile($event)"
-                    />
-                    <button
-                      id="document-upload-button"
-                      :disabled="!this.toggles['document-commerce.admin.edit']"
-                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-1 px-4"
-                      @click="showPopUpFile()"
-                    >
-                      {{ $t('businessDocument.upload') }} <i class="bi bi-cloud-upload-fill"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="row g-1" v-if="this.newDocument.file">
-                  <div class="col-12 examples mt-2">
-                    <span class="">
-                      <span class="fw-bold"> File: </span>{{ this.newDocument.file.name }} ({{
-                        (this.newDocument.file.size / 1000000).toFixed(2)
-                      }}
-                      MB)
-                    </span>
-                  </div>
-                </div>
-                <div class="col">
-                  <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                    @click="add(this.newDocument)"
+              <div v-if="documents && documents.length > 0">
+                <div class="row" v-for="(document, index) in documents" :key="`documents-${index}`">
+                  <SimpleDocumentCard
+                    :show="true"
+                    :commerce="commerce"
+                    :can-update="toggles[`document-commerce.admin.${document.name}`]"
+                    :document="document"
+                    :show-tooltip="true"
                   >
-                    {{ $t('businessDocument.add') }} <i class="bi bi-save"></i>
-                  </button>
+                  </SimpleDocumentCard>
                 </div>
-                <div class="row g-1 errors" id="feedback" v-if="this.errorsAdd.length > 0">
-                  <Warning>
-                    <template v-slot:message>
-                      <li v-for="(error, index) in this.errorsAdd" :key="index">
-                        {{ $t(error) }}
+                <div class="centered mt-2">
+                  <nav>
+                    <ul class="pagination">
+                      <li class="page-item">
+                        <button
+                          class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                          aria-label="First"
+                          @click="setPage(1)"
+                          :disabled="page === 1 || totalPages === 0"
+                        >
+                          <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
+                        </button>
                       </li>
-                    </template>
-                  </Warning>
+                      <li class="page-item">
+                        <button
+                          class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                          aria-label="Previous"
+                          @click="setPage(page - 1)"
+                          :disabled="page === 1 || totalPages === 0"
+                        >
+                          <span aria-hidden="true">&laquo;</span>
+                        </button>
+                      </li>
+                      <li>
+                        <select
+                          class="btn btn-md btn-light fw-bold text-dark select mx-1"
+                          v-model="page"
+                          :disabled="totalPages === 0"
+                        >
+                          <option
+                            v-for="pag in totalPages"
+                            :key="pag"
+                            :value="pag"
+                            id="select-queue"
+                          >
+                            {{ pag }}
+                          </option>
+                        </select>
+                      </li>
+                      <li class="page-item">
+                        <button
+                          class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                          aria-label="Next"
+                          @click="setPage(page + 1)"
+                          :disabled="page === totalPages || totalPages === 0"
+                        >
+                          <span aria-hidden="true">&raquo;</span>
+                        </button>
+                      </li>
+                      <li class="page-item">
+                        <button
+                          class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                          aria-label="First"
+                          @click="setPage(totalPages)"
+                          :disabled="page === totalPages || totalPages === 0"
+                        >
+                          <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
+                        </button>
+                      </li>
+                    </ul>
+                  </nav>
                 </div>
+              </div>
+              <div v-else>
+                <Message
+                  :icon="'bi-graph-up-arrow'"
+                  :title="$t('dashboard.message.2.title')"
+                  :content="$t('dashboard.message.2.content')"
+                />
               </div>
             </div>
           </div>
-          <div class="mx-2 mb-4 text-center">
-            <a
-              class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-              >{{ $t('close') }} <i class="bi bi-check-lg"></i
-            ></a>
+        </div>
+      </div>
+      <!-- Modal Add -->
+      <div
+        class="modal fade"
+        :id="`add-document`"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header border-0 centered active-name">
+              <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
+              <button
+                id="close-modal-document"
+                class="btn-close"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body text-center mb-0" id="attentions-component">
+              <Spinner :show="loading"></Spinner>
+              <Alert :show="loading" :stack="alertError"></Alert>
+              <div
+                id="add-document"
+                class="document-card mb-4"
+                v-if="this.showAdd && this.toggles['document-commerce.admin.add']"
+              >
+                <div class="row g-1">
+                  <div id="document-feature-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t('businessDocument.feature') }}
+                    </div>
+                    <div class="col-8">
+                      <select
+                        class="btn btn-md btn-light fw-bold text-dark select mx-2"
+                        v-model="this.optionSelected"
+                        id="features"
+                      >
+                        <option v-for="opt in this.commerceTypes" :key="opt.name" :value="opt.name">
+                          {{ $t(`document.commerceTypes.${opt.name}`) }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="document-file-form-add" class="row g-1">
+                    <div class="col-4 text-label">
+                      {{ $t('businessDocument.file') }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        id="document-fileUpload"
+                        ref="file"
+                        data-cy="document-fileUpload"
+                        type="file"
+                        hidden
+                        @change="getFile($event)"
+                      />
+                      <button
+                        id="document-upload-button"
+                        :disabled="!this.toggles['document-commerce.admin.edit']"
+                        class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-1 px-4"
+                        @click="showPopUpFile()"
+                      >
+                        {{ $t('businessDocument.upload') }} <i class="bi bi-cloud-upload-fill"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="row g-1" v-if="this.newDocument.file">
+                    <div class="col-12 examples mt-2">
+                      <span class="">
+                        <span class="fw-bold"> File: </span>{{ this.newDocument.file.name }} ({{
+                          (this.newDocument.file.size / 1000000).toFixed(2)
+                        }}
+                        MB)
+                      </span>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      @click="add(this.newDocument)"
+                    >
+                      {{ $t('businessDocument.add') }} <i class="bi bi-save"></i>
+                    </button>
+                  </div>
+                  <div class="row g-1 errors" id="feedback" v-if="this.errorsAdd.length > 0">
+                    <Warning>
+                      <template v-slot:message>
+                        <li v-for="(error, index) in this.errorsAdd" :key="index">
+                          {{ $t(error) }}
+                        </li>
+                      </template>
+                    </Warning>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mx-2 mb-4 text-center">
+              <a
+                class="nav-link btn btn-sm fw-bold btn-dark text-white rounded-pill p-1 px-4 mt-4"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+                >{{ $t('close') }} <i class="bi bi-check-lg"></i
+              ></a>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <div v-if="showClientManagement === true && !toggles['document-commerce.admin.view']">
-      <Message
-        :icon="'bi-graph-up-arrow'"
-        :title="$t('dashboard.message.1.title')"
-        :content="$t('dashboard.message.1.content')"
-      />
-    </div>
+      <div v-if="showClientManagement === true && !toggles['document-commerce.admin.view']">
+        <Message
+          :icon="'bi-graph-up-arrow'"
+          :title="$t('dashboard.message.1.title')"
+          :content="$t('dashboard.message.1.content')"
+        />
+      </div>
     </div>
   </div>
 </template>

@@ -10,13 +10,13 @@ const data = JSON.parse(content);
 // Agregar la sección incomeCard
 if (!data.dashboard.incomeCard) {
   data.dashboard.incomeCard = {
-    "contactInfo": "Información de Contacto",
-    "tooltip": {
-      "type": "Tipo de Ingreso",
-      "copy": "Copiar información del ingreso",
-      "paymentType": "Método de Pago",
-      "status": "Estado del Pago"
-    }
+    contactInfo: 'Información de Contacto',
+    tooltip: {
+      type: 'Tipo de Ingreso',
+      copy: 'Copiar información del ingreso',
+      paymentType: 'Método de Pago',
+      status: 'Estado del Pago',
+    },
   };
 }
 

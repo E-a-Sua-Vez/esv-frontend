@@ -36,7 +36,12 @@ export default {
         {{ $t('businessCollaboratorsAdmin.name') }}
         <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
-            <div>{{ $t('businessCollaboratorsAdmin.nameHelp') || 'Nombre completo del colaborador tal como se mostrará en el producto y en reportes.' }}</div>
+            <div>
+              {{
+                $t('businessCollaboratorsAdmin.nameHelp') ||
+                'Nombre completo del colaborador tal como se mostrará en el producto y en reportes.'
+              }}
+            </div>
           </template>
           <i class="bi bi-info-circle-fill h7"></i>
         </Popper>
@@ -77,7 +82,12 @@ export default {
         {{ $t('collaborator.idNumber') || 'Documento de Identidad' }}
         <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
-            <div>{{ $t('collaborator.idNumberHelp') || 'Número de documento de identidad del colaborador' }}</div>
+            <div>
+              {{
+                $t('collaborator.idNumberHelp') ||
+                'Número de documento de identidad del colaborador'
+              }}
+            </div>
           </template>
           <i class="bi bi-info-circle-fill h7"></i>
         </Popper>
@@ -98,7 +108,12 @@ export default {
         {{ $t('businessCollaboratorsAdmin.email') }}
         <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
-            <div>{{ $t('businessCollaboratorsAdmin.emailHelp') || 'Correo que usará el colaborador para ingresar y recibir notificaciones.' }}</div>
+            <div>
+              {{
+                $t('businessCollaboratorsAdmin.emailHelp') ||
+                'Correo que usará el colaborador para ingresar y recibir notificaciones.'
+              }}
+            </div>
           </template>
           <i class="bi bi-info-circle-fill h7"></i>
         </Popper>
@@ -118,7 +133,12 @@ export default {
         {{ $t('businessCollaboratorsAdmin.email') }}
         <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
-            <div>{{ $t('businessCollaboratorsAdmin.emailHelp') || 'Correo registrado del colaborador; no puede editarse desde aquí.' }}</div>
+            <div>
+              {{
+                $t('businessCollaboratorsAdmin.emailHelp') ||
+                'Correo registrado del colaborador; no puede editarse desde aquí.'
+              }}
+            </div>
           </template>
           <i class="bi bi-info-circle-fill h7"></i>
         </Popper>
@@ -162,7 +182,7 @@ export default {
             <div>
               {{
                 $t('businessCollaboratorsAdmin.typeHelp') ||
-                  'Define el tipo de colaborador y su nivel de acceso: STANDARD (funciones básicas), ASSISTANT (apoyo operativo) y FULL (acceso completo).'
+                'Define el tipo de colaborador y su nivel de acceso: STANDARD (funciones básicas), ASSISTANT (apoyo operativo) y FULL (acceso completo).'
               }}
             </div>
           </template>
@@ -189,7 +209,12 @@ export default {
         {{ $t('businessCollaboratorsAdmin.phone') }}
         <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
-            <div>{{ $t('businessCollaboratorsAdmin.phoneHelp') || 'Teléfono de contacto del colaborador en formato internacional (código de país + número).' }}</div>
+            <div>
+              {{
+                $t('businessCollaboratorsAdmin.phoneHelp') ||
+                'Teléfono de contacto del colaborador en formato internacional (código de país + número).'
+              }}
+            </div>
           </template>
           <i class="bi bi-info-circle-fill h7"></i>
         </Popper>
@@ -210,7 +235,12 @@ export default {
         {{ $t('businessCollaboratorsAdmin.module') }}
         <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
-            <div>{{ $t('businessCollaboratorsAdmin.moduleHelp') || 'Módulo principal donde opera el colaborador (p. ej. agendas, colas, encuestas). Define en qué parte del producto aparece.' }}</div>
+            <div>
+              {{
+                $t('businessCollaboratorsAdmin.moduleHelp') ||
+                'Módulo principal donde opera el colaborador (p. ej. agendas, colas, encuestas). Define en qué parte del producto aparece.'
+              }}
+            </div>
           </template>
           <i class="bi bi-info-circle-fill h7"></i>
         </Popper>
@@ -240,7 +270,7 @@ export default {
             <div>
               {{
                 $t('businessCollaboratorsAdmin.roleHelp') ||
-                  'Rol profesional o administrativo del colaborador. Algunos roles habilitan funciones adicionales como firma de documentos.'
+                'Rol profesional o administrativo del colaborador. Algunos roles habilitan funciones adicionales como firma de documentos.'
               }}
             </div>
           </template>
@@ -258,18 +288,34 @@ export default {
           {{ $t('businessCollaboratorsAdmin.selectRole') || 'Seleccionar rol' }}
         </option>
         <optgroup :label="$t('collaborator.role.categories.medical') || 'Personal Médico'">
-          <option value="DOCTOR">{{ $t('collaborator.role.types.DOCTOR') || 'Médico General' }}</option>
-          <option value="SPECIALIST">{{ $t('collaborator.role.types.SPECIALIST') || 'Médico Especialista' }}</option>
+          <option value="DOCTOR">
+            {{ $t('collaborator.role.types.DOCTOR') || 'Médico General' }}
+          </option>
+          <option value="SPECIALIST">
+            {{ $t('collaborator.role.types.SPECIALIST') || 'Médico Especialista' }}
+          </option>
           <option value="NURSE">{{ $t('collaborator.role.types.NURSE') || 'Enfermero/a' }}</option>
-          <option value="MEDICAL_ASSISTANT">{{ $t('collaborator.role.types.MEDICAL_ASSISTANT') || 'Asistente Médico' }}</option>
+          <option value="MEDICAL_ASSISTANT">
+            {{ $t('collaborator.role.types.MEDICAL_ASSISTANT') || 'Asistente Médico' }}
+          </option>
         </optgroup>
-        <optgroup :label="$t('collaborator.role.categories.administrative') || 'Personal Administrativo'">
-          <option value="SECRETARY">{{ $t('collaborator.role.types.SECRETARY') || 'Secretaria' }}</option>
-          <option value="RECEPTIONIST">{{ $t('collaborator.role.types.RECEPTIONIST') || 'Recepcionista' }}</option>
+        <optgroup
+          :label="$t('collaborator.role.categories.administrative') || 'Personal Administrativo'"
+        >
+          <option value="SECRETARY">
+            {{ $t('collaborator.role.types.SECRETARY') || 'Secretaria' }}
+          </option>
+          <option value="RECEPTIONIST">
+            {{ $t('collaborator.role.types.RECEPTIONIST') || 'Recepcionista' }}
+          </option>
         </optgroup>
         <optgroup :label="$t('collaborator.role.categories.general') || 'Roles Generales'">
-          <option value="STANDARD">{{ $t('collaborator.role.types.STANDARD') || 'Estándar' }}</option>
-          <option value="ASSISTANT">{{ $t('collaborator.role.types.ASSISTANT') || 'Asistente' }}</option>
+          <option value="STANDARD">
+            {{ $t('collaborator.role.types.STANDARD') || 'Estándar' }}
+          </option>
+          <option value="ASSISTANT">
+            {{ $t('collaborator.role.types.ASSISTANT') || 'Asistente' }}
+          </option>
           <option value="FULL">{{ $t('collaborator.role.types.FULL') || 'Completo' }}</option>
         </optgroup>
       </select>
@@ -280,7 +326,12 @@ export default {
         {{ $t('businessCollaboratorsAdmin.active') }}
         <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
-            <div>{{ $t('businessCollaboratorsAdmin.activeHelp') || 'Si está activo, el colaborador puede usar la plataforma y aparecerá en las listas de selección.' }}</div>
+            <div>
+              {{
+                $t('businessCollaboratorsAdmin.activeHelp') ||
+                'Si está activo, el colaborador puede usar la plataforma y aparecerá en las listas de selección.'
+              }}
+            </div>
           </template>
           <i class="bi bi-info-circle-fill h7"></i>
         </Popper>
@@ -295,7 +346,12 @@ export default {
         {{ $t('businessCollaboratorsAdmin.bot') }}
         <Popper :class="'dark p-1'" arrow :disable-click-away="false">
           <template #content>
-            <div>{{ $t('businessCollaboratorsAdmin.botHelp') || 'Marca este colaborador como bot cuando representa una automatización o integración y no una persona.' }}</div>
+            <div>
+              {{
+                $t('businessCollaboratorsAdmin.botHelp') ||
+                'Marca este colaborador como bot cuando representa una automatización o integración y no una persona.'
+              }}
+            </div>
           </template>
           <i class="bi bi-info-circle-fill h7"></i>
         </Popper>

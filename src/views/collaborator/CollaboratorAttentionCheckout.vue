@@ -6,11 +6,7 @@
     <div class="content text-center">
       <!-- Mobile/Tablet Header -->
       <div class="d-block d-lg-none">
-        <CommerceLogo
-          :commerce-id="commerce?.id"
-          :business-id="business?.id"
-          :loading="loading"
-        />
+        <CommerceLogo :commerce-id="commerce?.id" :business-id="business?.id" :loading="loading" />
         <ComponentMenu
           :title="`${$t('collaboratorAttentionValidate.hello-user')}, ${
             state.currentUser?.alias || state.currentUser?.name
@@ -60,46 +56,71 @@
         <template #content>
           <!-- Checkout Specific Content -->
           <div class="checkout-content my-4">
-            <!-- Gestión de Stock (si aplica) -->
-            <div
-              v-if="getActiveFeature(state.commerce || commerce, 'attention-stock-register', 'PRODUCT')"
-              class="estoque-card-compact my-3"
-            >
-              <div class="requirement-card-compact estoque-card">
-                <div class="requirement-icon-compact estoque-icon">
-                  <i class="bi bi-eyedropper"></i>
-                </div>
-                <div class="requirement-info-compact">
-                  <div class="requirement-title-compact">{{ $t('dashboard.stock') }}</div>
-                  <div class="requirement-subtitle-compact">
-                    {{ $t('products.attentionProducts') }}
-                  </div>
-                </div>
-                <button
-                  class="requirement-action-btn-compact estoque-btn"
-                  :disabled="loading"
-                  @click="loadStockData()"
-                  data-bs-toggle="modal"
-                  :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
-                >
-                  <i class="bi bi-box-seam"></i>
-                  <span>{{ $t('collaboratorAttentionValidate.actions.3.action') }}</span>
-                </button>
-              </div>
-            </div>
+            <!-- Gestão de Atendimento (homologado con /atender) -->
+            <div class="client-management-section my-3">
+              <h5 class="client-management-title">
+                {{
+                  $t('collaboratorQueueAttentions.attentionManagement') ||
+                  'Gestão de Atendimento:'
+                }}
+              </h5>
 
-            <!-- Comment Section -->
-            <div class="mb-3">
-              <label for="checkout-comment" class="form-label comment-title">
-                {{ $t('collaboratorAttentionValidate.comment.label') }}
-              </label>
-              <textarea
-                class="form-control"
-                id="checkout-comment"
-                rows="3"
-                v-model="comment"
-                :placeholder="$t('collaboratorAttentionValidate.comment.placeholder')"
-              ></textarea>
+              <!-- Estoque Card -->
+              <div
+                v-if="
+                  getActiveFeature(
+                    state.commerce || commerce,
+                    'attention-stock-register',
+                    'PRODUCT'
+                  )
+                "
+                class="estoque-card-compact my-2"
+              >
+                <div class="requirement-card-compact estoque-card">
+                  <div class="requirement-icon-compact estoque-icon">
+                    <i class="bi bi-eyedropper"></i>
+                  </div>
+                  <div class="requirement-info-compact">
+                    <div class="requirement-title-compact">{{ $t('dashboard.stock') }}</div>
+                    <div class="requirement-subtitle-compact">
+                      <i class="bi bi-info-circle-fill"></i>
+                      <span>{{ $t('products.attentionProducts') }}</span>
+                    </div>
+                  </div>
+                  <button
+                    class="requirement-action-btn-compact estoque-btn"
+                    :disabled="loading"
+                    @click="loadStockData()"
+                    data-bs-toggle="modal"
+                    :data-bs-target="`#attentionsProductsModal-${state.attention.id}`"
+                  >
+                    <i class="bi bi-box-seam"></i>
+                    <span>{{ $t('collaboratorAttentionValidate.actions.3.action') }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Payment / Transfer Card (reusable component) -->
+              <AttentionPaymentActionsCard
+                class="my-2"
+                :loading="loading"
+                :disabled="!state.attention || !state.attention.id"
+                @open="openAttentionModal()"
+              />
+
+              <!-- Comment -->
+              <div class="mb-2">
+                <label for="checkout-comment" class="form-label mt-2 comment-title">
+                  {{ $t('collaboratorAttentionValidate.comment.label') }}
+                </label>
+                <textarea
+                  class="form-control"
+                  id="checkout-comment"
+                  rows="3"
+                  v-model="comment"
+                  :placeholder="$t('collaboratorAttentionValidate.comment.placeholder')"
+                ></textarea>
+              </div>
             </div>
 
             <!-- Checkout Actions -->
@@ -181,6 +202,17 @@
         </div>
       </div>
     </div>
+
+    <!-- Attention Details Modal -->
+    <AttentionDetailsModal
+      :show="state.showAttentionModal"
+      :attention="state.selectedAttention || state.attention"
+      :commerce="state.commerce || commerce"
+      :queues="state.commerce?.queues || state.queue ? [state.queue] : []"
+      :toggles="state.toggles"
+      @close="closeAttentionModal"
+      @attention-updated="handleAttentionUpdatedFromModal"
+    />
   </div>
 </template>
 
@@ -219,6 +251,8 @@ import {
 } from '../../application/firebase';
 import AttentionBasePage from '../../components/attentions/common/AttentionBasePage.vue';
 import ProductAttentionManagement from '../../components/products/domain/ProductAttentionManagement.vue';
+import AttentionDetailsModal from '../../components/attentions/common/AttentionDetailsModal.vue';
+import AttentionPaymentActionsCard from '../../components/attentions/common/AttentionPaymentActionsCard.vue';
 import QueueName from '../../components/common/QueueName.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import Spinner from '../../components/common/Spinner.vue';
@@ -232,6 +266,8 @@ export default {
   components: {
     AttentionBasePage,
     ProductAttentionManagement,
+    AttentionDetailsModal,
+    AttentionPaymentActionsCard,
     QueueName,
     ComponentMenu,
     Spinner,
@@ -272,6 +308,8 @@ export default {
       queueProcessingDetails: [],
       queueTerminatedDetails: [],
       listUpdateKey: 0, // Key to force component re-render
+      showAttentionModal: false,
+      selectedAttention: undefined,
     });
 
     // Live update interval for stats
@@ -817,6 +855,41 @@ export default {
       }
     };
 
+    const openAttentionModal = () => {
+      state.selectedAttention = state.attention;
+      state.showAttentionModal = true;
+    };
+
+    const closeAttentionModal = () => {
+      state.showAttentionModal = false;
+      state.selectedAttention = undefined;
+    };
+
+    const handleAttentionUpdatedFromModal = async () => {
+      // Reload complete attention details to get updated status and all data
+      const updatedAttention = await getAttentionDetails(
+        state.attention.id,
+        state.currentUser?.id
+      );
+
+      // Update related state
+      if (updatedAttention.queue) {
+        state.queue = updatedAttention.queue;
+      }
+      if (updatedAttention.user) {
+        state.user = updatedAttention.user;
+      }
+      if (updatedAttention.commerce) {
+        state.commerce = updatedAttention.commerce;
+      }
+
+      // Update attention
+      state.attention = updatedAttention;
+
+      // Force stats update
+      statsUpdateTrigger.value++;
+    };
+
     return {
       state,
       comment,
@@ -832,6 +905,9 @@ export default {
       goBack,
       getActiveFeature,
       errorMessage,
+      openAttentionModal,
+      closeAttentionModal,
+      handleAttentionUpdatedFromModal,
     };
   },
 };
@@ -1057,5 +1133,112 @@ export default {
 
 .attend-button i {
   font-size: 1.25rem;
+}
+
+/* Client Management Section Styles (homologado con /atender) */
+.client-management-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.8);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(0, 74, 173, 0.2);
+}
+
+.client-management-section {
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.requirement-subtitle-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #6c757d;
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.requirement-subtitle-compact i {
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.requirement-title-compact {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.requirement-action-btn-compact {
+  width: auto;
+  min-width: fit-content;
+  padding: 0.4rem 0.875rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  margin-top: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  text-decoration: none;
+  color: white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  min-height: auto;
+  height: auto;
+  line-height: 1.2;
+}
+
+.requirement-icon-compact {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.requirement-icon-compact.estoque-icon {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.estoque-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.estoque-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.estoque-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
 }
 </style>

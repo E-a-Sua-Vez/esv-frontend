@@ -159,9 +159,10 @@ export default {
 
     const getClientPortalLink = () => {
       // Use commerce keyName for client portal, fallback to business if no commerce selected
-      const keyName = state.commerces.length > 0 && store.getCurrentCommerce?.keyName
-        ? store.getCurrentCommerce.keyName
-        : state.business.keyName;
+      const keyName =
+        state.commerces.length > 0 && store.getCurrentCommerce?.keyName
+          ? store.getCurrentCommerce.keyName
+          : state.business.keyName;
       return `/public/portal/${keyName}/login`;
     };
 

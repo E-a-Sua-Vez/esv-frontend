@@ -21,7 +21,12 @@ export const getProfessionalsById = async ids => {
 };
 
 export const getAvailableProfessionalsForService = async (serviceId, commerceId) =>
-  (await requestBackend.get(`/${entity}/service/${serviceId}/available?commerceId=${commerceId}`, await getHeaders())).data;
+  (
+    await requestBackend.get(
+      `/${entity}/service/${serviceId}/available?commerceId=${commerceId}`,
+      await getHeaders(),
+    )
+  ).data;
 
 export const createProfessional = async professional =>
   (await requestBackend.post(`/${entity}`, professional, await getHeaders())).data;
@@ -31,9 +36,15 @@ export const addProfessional = async professional =>
 
 export const updateProfessional = async professional => {
   // Si hay profilePhoto con File en personalInfo, primero hacer upload separado
-  if (professional.personalInfo?.profilePhoto && professional.personalInfo.profilePhoto instanceof File) {
+  if (
+    professional.personalInfo?.profilePhoto &&
+    professional.personalInfo.profilePhoto instanceof File
+  ) {
     try {
-      const response = await uploadProfilePhoto(professional.id, professional.personalInfo.profilePhoto);
+      const response = await uploadProfilePhoto(
+        professional.id,
+        professional.personalInfo.profilePhoto,
+      );
       professional.personalInfo.profilePhoto = response.photoUrl;
     } catch (e) {
       console.error('Error uploading profile photo:', e);
@@ -42,9 +53,15 @@ export const updateProfessional = async professional => {
   }
 
   // Si hay digitalSignature con File en personalInfo, primero hacer upload separado
-  if (professional.personalInfo?.digitalSignature && professional.personalInfo.digitalSignature instanceof File) {
+  if (
+    professional.personalInfo?.digitalSignature &&
+    professional.personalInfo.digitalSignature instanceof File
+  ) {
     try {
-      const response = await uploadDigitalSignature(professional.id, professional.personalInfo.digitalSignature);
+      const response = await uploadDigitalSignature(
+        professional.id,
+        professional.personalInfo.digitalSignature,
+      );
       professional.personalInfo.digitalSignature = response.signatureUrl;
     } catch (e) {
       console.error('Error uploading digital signature:', e);
@@ -52,7 +69,9 @@ export const updateProfessional = async professional => {
     }
   }
 
-  return (await requestBackend.patch(`/${entity}/${professional.id}`, professional, await getHeaders())).data;
+  return (
+    await requestBackend.patch(`/${entity}/${professional.id}`, professional, await getHeaders())
+  ).data;
 };
 
 export const getProfessionalsByCommerceId = async commerceId =>
@@ -98,7 +117,8 @@ export const getProfilePhotoUrl = async professionalId =>
  * Get signed URL for digital signature
  */
 export const getDigitalSignatureUrl = async professionalId =>
-  (await requestBackend.get(`/${entity}/${professionalId}/digital-signature`, await getHeaders())).data;
+  (await requestBackend.get(`/${entity}/${professionalId}/digital-signature`, await getHeaders()))
+    .data;
 
 /**
  * Actualizar datos médicos del profesional
@@ -115,32 +135,18 @@ export const updateMedicalData = async (professionalId, medicalData) =>
 /**
  * Obtener profesionales médicos de un commerce
  */
-export const getMedicalProfessionalsByCommerceId = async (commerceId) =>
-  (
-    await requestBackend.get(
-      `/${entity}/medical/commerce/${commerceId}`,
-      await getHeaders()
-    )
-  ).data;
+export const getMedicalProfessionalsByCommerceId = async commerceId =>
+  (await requestBackend.get(`/${entity}/medical/commerce/${commerceId}`, await getHeaders())).data;
 
 /**
  * Obtener profesional para documentos médicos
  */
-export const getProfessionalForMedicalDocuments = async (professionalId) =>
-  (
-    await requestBackend.get(
-      `/${entity}/${professionalId}/for-documents`,
-      await getHeaders()
-    )
-  ).data;
+export const getProfessionalForMedicalDocuments = async professionalId =>
+  (await requestBackend.get(`/${entity}/${professionalId}/for-documents`, await getHeaders())).data;
 
 /**
  * Obtener profesional por collaborador ID
  */
-export const getProfessionalByCollaboratorId = async (collaboratorId) =>
-  (
-    await requestBackend.get(
-      `/${entity}/by-collaborator/${collaboratorId}`,
-      await getHeaders()
-    )
-  ).data;
+export const getProfessionalByCollaboratorId = async collaboratorId =>
+  (await requestBackend.get(`/${entity}/by-collaborator/${collaboratorId}`, await getHeaders()))
+    .data;

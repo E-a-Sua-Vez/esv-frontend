@@ -1848,9 +1848,7 @@ export default {
                 }
               });
 
-              availableBlocks = queueBlocks.filter(
-                block => !blockedBlocks.includes(block.number)
-              );
+              availableBlocks = queueBlocks.filter(block => !blockedBlocks.includes(block.number));
             } else {
               availableBlocks = queueBlocks;
             }
@@ -1905,9 +1903,7 @@ export default {
             }
 
             console.log('📊 Reserved blocks from bookings (SELECT_SERVICE):', bookingsReserved);
-            availableBlocks = queueBlocks.filter(
-              block => !bookingsReserved.includes(block.number)
-            );
+            availableBlocks = queueBlocks.filter(block => !bookingsReserved.includes(block.number));
           } else {
             availableBlocks = queueBlocks;
           }
@@ -3461,10 +3457,7 @@ export default {
         try {
           if (!queueId) return;
 
-          const base =
-            currentDate && currentDate !== 'TODAY'
-              ? new Date(currentDate)
-              : new Date();
+          const base = currentDate && currentDate !== 'TODAY' ? new Date(currentDate) : new Date();
           const year = base.getFullYear();
           const month = base.getMonth() + 1;
 
@@ -3625,426 +3618,432 @@ export default {
 
       <!-- Step 2: Queue and Service Selection -->
       <div v-if="state.currentStep === 2" class="step-container">
-      <!-- Show preselected queue info if exists and is valid -->
-      <div
-        v-if="preselectedQueue && isPreselectedQueueValid()"
-        class="preselected-queue-display mb-4"
-      >
-        <div class="preselected-queue-card">
-          <div class="preselected-header">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <span class="preselected-title">{{
-              $t('attentionCreation.preselectedQueue') || 'Fila Pré-selecionada'
-            }}</span>
-          </div>
-          <div class="preselected-content">
-            <div class="queue-name">{{ preselectedQueue.name }}</div>
-            <small class="change-hint">
-              {{
-                $t('attentionCreation.canChangeBelow') ||
-                'Você pode alterar a seleção abaixo se necessário'
-              }}
-            </small>
+        <!-- Show preselected queue info if exists and is valid -->
+        <div
+          v-if="preselectedQueue && isPreselectedQueueValid()"
+          class="preselected-queue-display mb-4"
+        >
+          <div class="preselected-queue-card">
+            <div class="preselected-header">
+              <i class="bi bi-check-circle-fill me-2"></i>
+              <span class="preselected-title">{{
+                $t('attentionCreation.preselectedQueue') || 'Fila Pré-selecionada'
+              }}</span>
+            </div>
+            <div class="preselected-content">
+              <div class="queue-name">{{ preselectedQueue.name }}</div>
+              <small class="change-hint">
+                {{
+                  $t('attentionCreation.canChangeBelow') ||
+                  'Você pode alterar a seleção abaixo se necessário'
+                }}
+              </small>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- QUEUES SELECTOR (always show to allow changes) -->
-      <QueueForm
-        :commerce="commerce"
-        :queues="queues"
-        :grouped-queues="groupedQueues"
-        :queue-id="undefined"
-        :accept="state.accept"
-        :collaborators="collaborators"
-        :receive-queue="receiveQueue"
-        :receive-services="receiveServices"
-        :preselected-service-id="preselectedServiceId"
-      />
-
-      <!-- SERVICES SELECTOR (show when queue is selected) -->
-      <div v-if="state.queue?.id">
-        <ServiceForm
-          :key="state.queue?.id"
+        <!-- QUEUES SELECTOR (always show to allow changes) -->
+        <QueueForm
           :commerce="commerce"
-          :queue="state.queue"
-          :selected-services="state.selectedServices"
-          :receive-selected-services="receiveSelectedServices"
+          :queues="queues"
+          :grouped-queues="groupedQueues"
+          :queue-id="undefined"
+          :accept="state.accept"
+          :collaborators="collaborators"
+          :receive-queue="receiveQueue"
+          :receive-services="receiveServices"
           :preselected-service-id="preselectedServiceId"
         />
-      </div>
-    </div>
 
-    <!-- Step 2b: Queue Display (if preselected) -->
-    <div v-else-if="false" class="step-container">
-      <div class="selected-queue-display">
-        <div class="queue-card">
-          <div class="queue-card-header">
-            <div class="queue-icon-wrapper">
-              <i class="bi bi-person-lines-fill"></i>
-            </div>
-            <div class="queue-card-content">
-              <h5 class="queue-card-label">
-                {{ $t('commerceQueuesView.queue') || 'Fila' }}
-              </h5>
-              <p class="queue-card-name">{{ state.queue?.name }}</p>
-            </div>
-          </div>
-          <div
-            v-if="state.selectedServices && state.selectedServices.length > 0"
-            class="queue-card-services"
-          >
-            <div class="queue-card-services-label">
-              <i class="bi bi-list-check me-2"></i>
-              {{ $t('commerceQueuesView.services') || 'Serviços' }}
-            </div>
-            <div class="queue-card-services-list">
-              <span
-                v-for="service in state.selectedServices"
-                :key="service.id"
-                class="service-badge"
-              >
-                {{ service.name }}
-              </span>
-            </div>
-          </div>
-          <div v-if="state.queue?.description" class="queue-card-description">
-            <i class="bi bi-info-circle me-2"></i>
-            <span>{{ state.queue.description }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 3: Procedure Amount Selection (if needed) -->
-    <div v-if="state.currentStep === 3 && needsProcedureAmountSelection" class="step-container">
-      <div class="procedure-selection-container">
-        <div class="choose-attention py-2 mb-3">
-          <i class="bi bi-list-check h5 m-1"></i>
-          <span class="fw-bold h6">{{
-            $t('attentionCreation.selectProcedureAmount') || 'Selecciona la cantidad de sesiones'
-          }}</span>
-        </div>
-
-        <div
-          v-if="state.selectedServices && state.selectedServices.length > 0"
-          class="selected-service-info mb-3"
-        >
-          <div class="service-info-card">
-            <i class="bi bi-tags-fill me-2"></i>
-            <span class="fw-bold">{{ state.selectedServices[0].name }}</span>
-          </div>
-        </div>
-
-        <div class="procedure-amount-grid">
-          <button
-            v-for="amount in availableProcedureAmounts"
-            :key="amount"
-            type="button"
-            class="procedure-amount-button"
-            :class="{ 'procedure-amount-selected': state.selectedProcedureAmount === amount }"
-            @click="handleProcedureAmountSelection(amount)"
-          >
-            <div class="procedure-amount-value">{{ amount }}</div>
-            <div class="procedure-amount-label">
-              {{ $t('attentionCreation.sessions') || 'sesiones' }}
-            </div>
-          </button>
-        </div>
-
-        <div v-if="state.selectedProcedureAmount" class="selected-procedure-info mt-3">
-          <div class="alert alert-info d-flex align-items-center">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <div>
-              <strong
-                >{{ $t('attentionCreation.selectedAmount') || 'Cantidad seleccionada' }}:</strong
-              >
-              {{ state.selectedProcedureAmount }}
-              {{ $t('attentionCreation.sessions') || 'sesiones' }}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 4: Date/Block Selection -->
-    <div v-if="state.currentStep === 4" class="step-container">
-      <!-- Next Available Slot Component -->
-      <div v-if="state.queue && state.queue.id && commerce && commerce.id" class="row g-1 m-2">
-        <div class="col">
-          <NextAvailableSlot
+        <!-- SERVICES SELECTOR (show when queue is selected) -->
+        <div v-if="state.queue?.id">
+          <ServiceForm
+            :key="state.queue?.id"
             :commerce="commerce"
             :queue="state.queue"
             :selected-services="state.selectedServices"
-            @slot-selected="handleQuickSlotSelection"
-            @show-manual-selection="handleShowManualSelection"
+            :receive-selected-services="receiveSelectedServices"
+            :preselected-service-id="preselectedServiceId"
           />
         </div>
       </div>
 
-      <!-- Manual date/block selector -->
-      <div class="date-block-selector">
-        <!-- Always show date selection -->
-        <div class="date-selection mb-4 text-center">
-          <div class="choose-attention py-2 mb-3 d-inline-flex align-items-center">
-            <i class="bi bi-calendar3 h5 m-1"></i>
-            <span class="fw-bold h6">{{
-              $t('commerceQueuesView.selectDay') || 'Selecionar Data'
-            }}</span>
-          </div>
-          <div class="d-flex justify-content-center">
-            <div class="d-inline-block">
-              <VDatePicker
-                :locale="commerce?.localeInfo?.language || 'pt'"
-                :view="'monthly'"
-                :model-value="state.date || preselectedDate || null"
-                :min-date="minDate"
-                :max-date="maxDate"
-                :disabled-dates="calendarDisabledDates"
-                :attributes="calendarAttributes"
-                @dayclick="handleCalendarDayClick"
-                @did-move="getAvailableDatesByCalendarMonth"
-              />
+      <!-- Step 2b: Queue Display (if preselected) -->
+      <div v-else-if="false" class="step-container">
+        <div class="selected-queue-display">
+          <div class="queue-card">
+            <div class="queue-card-header">
+              <div class="queue-icon-wrapper">
+                <i class="bi bi-person-lines-fill"></i>
+              </div>
+              <div class="queue-card-content">
+                <h5 class="queue-card-label">
+                  {{ $t('commerceQueuesView.queue') || 'Fila' }}
+                </h5>
+                <p class="queue-card-name">{{ state.queue?.name }}</p>
+              </div>
+            </div>
+            <div
+              v-if="state.selectedServices && state.selectedServices.length > 0"
+              class="queue-card-services"
+            >
+              <div class="queue-card-services-label">
+                <i class="bi bi-list-check me-2"></i>
+                {{ $t('commerceQueuesView.services') || 'Serviços' }}
+              </div>
+              <div class="queue-card-services-list">
+                <span
+                  v-for="service in state.selectedServices"
+                  :key="service.id"
+                  class="service-badge"
+                >
+                  {{ service.name }}
+                </span>
+              </div>
+            </div>
+            <div v-if="state.queue?.description" class="queue-card-description">
+              <i class="bi bi-info-circle me-2"></i>
+              <span>{{ state.queue.description }}</span>
             </div>
           </div>
-          <div v-if="state.date || preselectedDate" class="selected-date-info mt-2">
-            <small class="text-muted">
-              <i class="bi bi-calendar-check me-1"></i>
-              {{ t('attentionCreation.selectedDate') || 'Data selecionada' }}:
-              <strong>{{ formatDateForDisplay(state.date || preselectedDate) }}</strong>
-            </small>
-          </div>
         </div>
+      </div>
 
-        <!-- Always show block selection when we have a date -->
-        <div v-if="state.date || preselectedDate" class="block-selection">
-          <div class="choose-attention py-2 mb-3 text-center">
-            <i class="bi bi-clock-fill h5 m-1"></i>
+      <!-- Step 3: Procedure Amount Selection (if needed) -->
+      <div v-if="state.currentStep === 3 && needsProcedureAmountSelection" class="step-container">
+        <div class="procedure-selection-container">
+          <div class="choose-attention py-2 mb-3">
+            <i class="bi bi-list-check h5 m-1"></i>
             <span class="fw-bold h6">{{
-              $t('commerceQueuesView.selectBlock') || 'Selecione o Horário'
+              $t('attentionCreation.selectProcedureAmount') || 'Selecciona la cantidad de sesiones'
             }}</span>
           </div>
 
-          <div v-if="loadingHours">
-            <Spinner :show="true"></Spinner>
-            <p class="text-center text-muted mt-2">
-              {{
-                t('attentionCreation.loadingAvailableHours') || 'Carregando horários disponíveis...'
-              }}
-            </p>
+          <div
+            v-if="state.selectedServices && state.selectedServices.length > 0"
+            class="selected-service-info mb-3"
+          >
+            <div class="service-info-card">
+              <i class="bi bi-tags-fill me-2"></i>
+              <span class="fw-bold">{{ state.selectedServices[0].name }}</span>
+            </div>
           </div>
 
-          <!-- Misma organización visual que CommerceQueuesView: mañana / tarde / noche -->
-          <div v-else>
-            <template v-if="getAllAvailableBlocks.length > 0">
-              <!-- Decidir fuente de bloques según TODAY vs futuro -->
-              <template v-if="(state.date || preselectedDate) === 'TODAY' || (state.date || preselectedDate) === new Date().toISOString().slice(0, 10)">
-                <!-- Hoy: usar groupedAttentionBlocks -->
-                <div v-if="groupedAttentionBlocks.morning.length" class="mb-2">
-                  <div class="options-connector">
-                    <div class="connector-line"></div>
-                    <span class="connector-text fw-bold">
-                      {{ $t('commerceQueuesView.timeOfDay.morning') }}
-                    </span>
-                    <div class="connector-line"></div>
-                  </div>
-                  <div class="time-slot-grid">
-                    <button
-                      v-for="block in groupedAttentionBlocks.morning"
-                      :key="block.number"
-                      type="button"
-                      class="time-slot-button"
-                      :class="{
-                        'time-slot-selected': isBlockSelected(block),
-                        'time-slot-preselected': isBlockPreselected(block),
-                      }"
-                      @click="handleBlockSelection(block)"
-                    >
-                      <div class="time-start">{{ block.hourFrom }}</div>
-                      <div class="time-end">{{ block.hourTo }}</div>
-                    </button>
-                  </div>
-                </div>
-                <div v-if="groupedAttentionBlocks.afternoon.length" class="mb-2">
-                  <div class="options-connector">
-                    <div class="connector-line"></div>
-                    <span class="connector-text fw-bold">
-                      {{ $t('commerceQueuesView.timeOfDay.afternoon') }}
-                    </span>
-                    <div class="connector-line"></div>
-                  </div>
-                  <div class="time-slot-grid">
-                    <button
-                      v-for="block in groupedAttentionBlocks.afternoon"
-                      :key="block.number"
-                      type="button"
-                      class="time-slot-button"
-                      :class="{
-                        'time-slot-selected': isBlockSelected(block),
-                        'time-slot-preselected': isBlockPreselected(block),
-                      }"
-                      @click="handleBlockSelection(block)"
-                    >
-                      <div class="time-start">{{ block.hourFrom }}</div>
-                      <div class="time-end">{{ block.hourTo }}</div>
-                    </button>
-                  </div>
-                </div>
-                <div v-if="groupedAttentionBlocks.night.length" class="mb-2">
-                  <div class="options-connector">
-                    <div class="connector-line"></div>
-                    <span class="connector-text fw-bold">
-                      {{ $t('commerceQueuesView.timeOfDay.night') }}
-                    </span>
-                    <div class="connector-line"></div>
-                  </div>
-                  <div class="time-slot-grid">
-                    <button
-                      v-for="block in groupedAttentionBlocks.night"
-                      :key="block.number"
-                      type="button"
-                      class="time-slot-button"
-                      :class="{
-                        'time-slot-selected': isBlockSelected(block),
-                        'time-slot-preselected': isBlockPreselected(block),
-                      }"
-                      @click="handleBlockSelection(block)"
-                    >
-                      <div class="time-start">{{ block.hourFrom }}</div>
-                      <div class="time-end">{{ block.hourTo }}</div>
-                    </button>
-                  </div>
-                </div>
-              </template>
-              <template v-else>
-                <!-- Futuro: usar groupedBookingBlocks -->
-                <div v-if="groupedBookingBlocks.morning.length" class="mb-2">
-                  <div class="options-connector">
-                    <div class="connector-line"></div>
-                    <span class="connector-text fw-bold">
-                      {{ $t('commerceQueuesView.timeOfDay.morning') }}
-                    </span>
-                    <div class="connector-line"></div>
-                  </div>
-                  <div class="time-slot-grid">
-                    <button
-                      v-for="block in groupedBookingBlocks.morning"
-                      :key="block.number"
-                      type="button"
-                      class="time-slot-button"
-                      :class="{
-                        'time-slot-selected': isBlockSelected(block),
-                        'time-slot-preselected': isBlockPreselected(block),
-                      }"
-                      @click="handleBlockSelection(block)"
-                    >
-                      <div class="time-start">{{ block.hourFrom }}</div>
-                      <div class="time-end">{{ block.hourTo }}</div>
-                    </button>
-                  </div>
-                </div>
-                <div v-if="groupedBookingBlocks.afternoon.length" class="mb-2">
-                  <div class="options-connector">
-                    <div class="connector-line"></div>
-                    <span class="connector-text fw-bold">
-                      {{ $t('commerceQueuesView.timeOfDay.afternoon') }}
-                    </span>
-                    <div class="connector-line"></div>
-                  </div>
-                  <div class="time-slot-grid">
-                    <button
-                      v-for="block in groupedBookingBlocks.afternoon"
-                      :key="block.number"
-                      type="button"
-                      class="time-slot-button"
-                      :class="{
-                        'time-slot-selected': isBlockSelected(block),
-                        'time-slot-preselected': isBlockPreselected(block),
-                      }"
-                      @click="handleBlockSelection(block)"
-                    >
-                      <div class="time-start">{{ block.hourFrom }}</div>
-                      <div class="time-end">{{ block.hourTo }}</div>
-                    </button>
-                  </div>
-                </div>
-                <div v-if="groupedBookingBlocks.night.length" class="mb-2">
-                  <div class="options-connector">
-                    <div class="connector-line"></div>
-                    <span class="connector-text fw-bold">
-                      {{ $t('commerceQueuesView.timeOfDay.night') }}
-                    </span>
-                    <div class="connector-line"></div>
-                  </div>
-                  <div class="time-slot-grid">
-                    <button
-                      v-for="block in groupedBookingBlocks.night"
-                      :key="block.number"
-                      type="button"
-                      class="time-slot-button"
-                      :class="{
-                        'time-slot-selected': isBlockSelected(block),
-                        'time-slot-preselected': isBlockPreselected(block),
-                      }"
-                      @click="handleBlockSelection(block)"
-                    >
-                      <div class="time-start">{{ block.hourFrom }}</div>
-                      <div class="time-end">{{ block.hourTo }}</div>
-                    </button>
-                  </div>
-                </div>
-              </template>
-            </template>
+          <div class="procedure-amount-grid">
+            <button
+              v-for="amount in availableProcedureAmounts"
+              :key="amount"
+              type="button"
+              class="procedure-amount-button"
+              :class="{ 'procedure-amount-selected': state.selectedProcedureAmount === amount }"
+              @click="handleProcedureAmountSelection(amount)"
+            >
+              <div class="procedure-amount-value">{{ amount }}</div>
+              <div class="procedure-amount-label">
+                {{ $t('attentionCreation.sessions') || 'sesiones' }}
+              </div>
+            </button>
+          </div>
 
-            <div v-else class="no-blocks-available">
-              <div class="alert alert-warning d-flex align-items-center">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                <div>
-                  <strong>{{
-                    t('commerceQueuesView.noAvailableHours') || 'Nenhum horário disponível'
-                  }}</strong
-                  ><br />
-                  <small>{{
-                    t('commerceQueuesView.tryAnotherDate') || 'Tente selecionar outra data'
-                  }}</small>
-                </div>
+          <div v-if="state.selectedProcedureAmount" class="selected-procedure-info mt-3">
+            <div class="alert alert-info d-flex align-items-center">
+              <i class="bi bi-check-circle-fill me-2"></i>
+              <div>
+                <strong
+                  >{{ $t('attentionCreation.selectedAmount') || 'Cantidad seleccionada' }}:</strong
+                >
+                {{ state.selectedProcedureAmount }}
+                {{ $t('attentionCreation.sessions') || 'sesiones' }}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Telemedicine Option (only if commerce feature is active AND queue has telemedicineEnabled) -->
-      <div v-if="showTelemedicineOption" class="telemedicine-option mb-4">
-        <div class="form-check form-switch mt-2">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            :id="`telemedicine-${Date.now()}`"
-            v-model="state.isTelemedicine"
-            :disabled="state.queue && state.queue.presentialEnabled === false"
-            @change="handleTelemedicineToggle"
-          />
-          <label class="form-check-label" :for="`telemedicine-${Date.now()}`">
-            <i class="bi bi-camera-video me-2"></i>
-            <strong>{{
-              $t('attentionCreation.telemedicineConsultation') || 'Consulta por Telemedicina'
-            }}</strong>
-          </label>
+      <!-- Step 4: Date/Block Selection -->
+      <div v-if="state.currentStep === 4" class="step-container">
+        <!-- Next Available Slot Component -->
+        <div v-if="state.queue && state.queue.id && commerce && commerce.id" class="row g-1 m-2">
+          <div class="col">
+            <NextAvailableSlot
+              :commerce="commerce"
+              :queue="state.queue"
+              :selected-services="state.selectedServices"
+              @slot-selected="handleQuickSlotSelection"
+              @show-manual-selection="handleShowManualSelection"
+            />
+          </div>
         </div>
-        <p
-          class="telemedicine-disclaimer mt-2"
-          v-html="
-            state.isTelemedicine
-              ? $t('attentionCreation.telemedicineSelectedDisclaimer') ||
-                'Ao desativar a telemedicina, o atendimento será <strong>presencial</strong>.'
-              : $t('attentionCreation.telemedicineDisclaimer') ||
-                'Quando a telemedicina não estiver selecionada, o atendimento será <strong>presencial</strong>.'
-          "
-        ></p>
-        <!-- Telemedicine Configuration removed - not needed in modal -->
+
+        <!-- Manual date/block selector -->
+        <div class="date-block-selector">
+          <!-- Always show date selection -->
+          <div class="date-selection mb-4 text-center">
+            <div class="choose-attention py-2 mb-3 d-inline-flex align-items-center">
+              <i class="bi bi-calendar3 h5 m-1"></i>
+              <span class="fw-bold h6">{{
+                $t('commerceQueuesView.selectDay') || 'Selecionar Data'
+              }}</span>
+            </div>
+            <div class="d-flex justify-content-center">
+              <div class="d-inline-block">
+                <VDatePicker
+                  :locale="commerce?.localeInfo?.language || 'pt'"
+                  :view="'monthly'"
+                  :model-value="state.date || preselectedDate || null"
+                  :min-date="minDate"
+                  :max-date="maxDate"
+                  :disabled-dates="calendarDisabledDates"
+                  :attributes="calendarAttributes"
+                  @dayclick="handleCalendarDayClick"
+                  @did-move="getAvailableDatesByCalendarMonth"
+                />
+              </div>
+            </div>
+            <div v-if="state.date || preselectedDate" class="selected-date-info mt-2">
+              <small class="text-muted">
+                <i class="bi bi-calendar-check me-1"></i>
+                {{ t('attentionCreation.selectedDate') || 'Data selecionada' }}:
+                <strong>{{ formatDateForDisplay(state.date || preselectedDate) }}</strong>
+              </small>
+            </div>
+          </div>
+
+          <!-- Always show block selection when we have a date -->
+          <div v-if="state.date || preselectedDate" class="block-selection">
+            <div class="choose-attention py-2 mb-3 text-center">
+              <i class="bi bi-clock-fill h5 m-1"></i>
+              <span class="fw-bold h6">{{
+                $t('commerceQueuesView.selectBlock') || 'Selecione o Horário'
+              }}</span>
+            </div>
+
+            <div v-if="loadingHours">
+              <Spinner :show="true"></Spinner>
+              <p class="text-center text-muted mt-2">
+                {{
+                  t('attentionCreation.loadingAvailableHours') ||
+                  'Carregando horários disponíveis...'
+                }}
+              </p>
+            </div>
+
+            <!-- Misma organización visual que CommerceQueuesView: mañana / tarde / noche -->
+            <div v-else>
+              <template v-if="getAllAvailableBlocks.length > 0">
+                <!-- Decidir fuente de bloques según TODAY vs futuro -->
+                <template
+                  v-if="
+                    (state.date || preselectedDate) === 'TODAY' ||
+                    (state.date || preselectedDate) === new Date().toISOString().slice(0, 10)
+                  "
+                >
+                  <!-- Hoy: usar groupedAttentionBlocks -->
+                  <div v-if="groupedAttentionBlocks.morning.length" class="mb-2">
+                    <div class="options-connector">
+                      <div class="connector-line"></div>
+                      <span class="connector-text fw-bold">
+                        {{ $t('commerceQueuesView.timeOfDay.morning') }}
+                      </span>
+                      <div class="connector-line"></div>
+                    </div>
+                    <div class="time-slot-grid">
+                      <button
+                        v-for="block in groupedAttentionBlocks.morning"
+                        :key="block.number"
+                        type="button"
+                        class="time-slot-button"
+                        :class="{
+                          'time-slot-selected': isBlockSelected(block),
+                          'time-slot-preselected': isBlockPreselected(block),
+                        }"
+                        @click="handleBlockSelection(block)"
+                      >
+                        <div class="time-start">{{ block.hourFrom }}</div>
+                        <div class="time-end">{{ block.hourTo }}</div>
+                      </button>
+                    </div>
+                  </div>
+                  <div v-if="groupedAttentionBlocks.afternoon.length" class="mb-2">
+                    <div class="options-connector">
+                      <div class="connector-line"></div>
+                      <span class="connector-text fw-bold">
+                        {{ $t('commerceQueuesView.timeOfDay.afternoon') }}
+                      </span>
+                      <div class="connector-line"></div>
+                    </div>
+                    <div class="time-slot-grid">
+                      <button
+                        v-for="block in groupedAttentionBlocks.afternoon"
+                        :key="block.number"
+                        type="button"
+                        class="time-slot-button"
+                        :class="{
+                          'time-slot-selected': isBlockSelected(block),
+                          'time-slot-preselected': isBlockPreselected(block),
+                        }"
+                        @click="handleBlockSelection(block)"
+                      >
+                        <div class="time-start">{{ block.hourFrom }}</div>
+                        <div class="time-end">{{ block.hourTo }}</div>
+                      </button>
+                    </div>
+                  </div>
+                  <div v-if="groupedAttentionBlocks.night.length" class="mb-2">
+                    <div class="options-connector">
+                      <div class="connector-line"></div>
+                      <span class="connector-text fw-bold">
+                        {{ $t('commerceQueuesView.timeOfDay.night') }}
+                      </span>
+                      <div class="connector-line"></div>
+                    </div>
+                    <div class="time-slot-grid">
+                      <button
+                        v-for="block in groupedAttentionBlocks.night"
+                        :key="block.number"
+                        type="button"
+                        class="time-slot-button"
+                        :class="{
+                          'time-slot-selected': isBlockSelected(block),
+                          'time-slot-preselected': isBlockPreselected(block),
+                        }"
+                        @click="handleBlockSelection(block)"
+                      >
+                        <div class="time-start">{{ block.hourFrom }}</div>
+                        <div class="time-end">{{ block.hourTo }}</div>
+                      </button>
+                    </div>
+                  </div>
+                </template>
+                <template v-else>
+                  <!-- Futuro: usar groupedBookingBlocks -->
+                  <div v-if="groupedBookingBlocks.morning.length" class="mb-2">
+                    <div class="options-connector">
+                      <div class="connector-line"></div>
+                      <span class="connector-text fw-bold">
+                        {{ $t('commerceQueuesView.timeOfDay.morning') }}
+                      </span>
+                      <div class="connector-line"></div>
+                    </div>
+                    <div class="time-slot-grid">
+                      <button
+                        v-for="block in groupedBookingBlocks.morning"
+                        :key="block.number"
+                        type="button"
+                        class="time-slot-button"
+                        :class="{
+                          'time-slot-selected': isBlockSelected(block),
+                          'time-slot-preselected': isBlockPreselected(block),
+                        }"
+                        @click="handleBlockSelection(block)"
+                      >
+                        <div class="time-start">{{ block.hourFrom }}</div>
+                        <div class="time-end">{{ block.hourTo }}</div>
+                      </button>
+                    </div>
+                  </div>
+                  <div v-if="groupedBookingBlocks.afternoon.length" class="mb-2">
+                    <div class="options-connector">
+                      <div class="connector-line"></div>
+                      <span class="connector-text fw-bold">
+                        {{ $t('commerceQueuesView.timeOfDay.afternoon') }}
+                      </span>
+                      <div class="connector-line"></div>
+                    </div>
+                    <div class="time-slot-grid">
+                      <button
+                        v-for="block in groupedBookingBlocks.afternoon"
+                        :key="block.number"
+                        type="button"
+                        class="time-slot-button"
+                        :class="{
+                          'time-slot-selected': isBlockSelected(block),
+                          'time-slot-preselected': isBlockPreselected(block),
+                        }"
+                        @click="handleBlockSelection(block)"
+                      >
+                        <div class="time-start">{{ block.hourFrom }}</div>
+                        <div class="time-end">{{ block.hourTo }}</div>
+                      </button>
+                    </div>
+                  </div>
+                  <div v-if="groupedBookingBlocks.night.length" class="mb-2">
+                    <div class="options-connector">
+                      <div class="connector-line"></div>
+                      <span class="connector-text fw-bold">
+                        {{ $t('commerceQueuesView.timeOfDay.night') }}
+                      </span>
+                      <div class="connector-line"></div>
+                    </div>
+                    <div class="time-slot-grid">
+                      <button
+                        v-for="block in groupedBookingBlocks.night"
+                        :key="block.number"
+                        type="button"
+                        class="time-slot-button"
+                        :class="{
+                          'time-slot-selected': isBlockSelected(block),
+                          'time-slot-preselected': isBlockPreselected(block),
+                        }"
+                        @click="handleBlockSelection(block)"
+                      >
+                        <div class="time-start">{{ block.hourFrom }}</div>
+                        <div class="time-end">{{ block.hourTo }}</div>
+                      </button>
+                    </div>
+                  </div>
+                </template>
+              </template>
+
+              <div v-else class="no-blocks-available">
+                <div class="alert alert-warning d-flex align-items-center">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  <div>
+                    <strong>{{
+                      t('commerceQueuesView.noAvailableHours') || 'Nenhum horário disponível'
+                    }}</strong
+                    ><br />
+                    <small>{{
+                      t('commerceQueuesView.tryAnotherDate') || 'Tente selecionar outra data'
+                    }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemedicine Option (only if commerce feature is active AND queue has telemedicineEnabled) -->
+        <div v-if="showTelemedicineOption" class="telemedicine-option mb-4">
+          <div class="form-check form-switch mt-2">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              :id="`telemedicine-${Date.now()}`"
+              v-model="state.isTelemedicine"
+              :disabled="state.queue && state.queue.presentialEnabled === false"
+              @change="handleTelemedicineToggle"
+            />
+            <label class="form-check-label" :for="`telemedicine-${Date.now()}`">
+              <i class="bi bi-camera-video me-2"></i>
+              <strong>{{
+                $t('attentionCreation.telemedicineConsultation') || 'Consulta por Telemedicina'
+              }}</strong>
+            </label>
+          </div>
+          <p
+            class="telemedicine-disclaimer mt-2"
+            v-html="
+              state.isTelemedicine
+                ? $t('attentionCreation.telemedicineSelectedDisclaimer') ||
+                  'Ao desativar a telemedicina, o atendimento será <strong>presencial</strong>.'
+                : $t('attentionCreation.telemedicineDisclaimer') ||
+                  'Quando a telemedicina não estiver selecionada, o atendimento será <strong>presencial</strong>.'
+            "
+          ></p>
+          <!-- Telemedicine Configuration removed - not needed in modal -->
+        </div>
       </div>
-    </div>
     </div>
 
     <!-- NotificationConditions Checkbox - if required (before buttons) -->

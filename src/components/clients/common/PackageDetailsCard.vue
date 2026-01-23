@@ -7,6 +7,7 @@ import AreYouSure from '../../common/AreYouSure.vue';
 import { pausePackage, resumePackage, cancelPackage } from '../../../application/services/package';
 import { getAttentionsDetails } from '../../../application/services/query-stack';
 import { getBookingsDetails } from '../../../application/services/query-stack';
+import { getAllIncomesByPackage } from '../../../application/services/income';
 
 export default {
   name: 'PackageDetailsCard',
@@ -19,7 +20,7 @@ export default {
     disableClick: { type: Boolean, default: false },
     queues: { type: Array, default: () => [] },
   },
-  emits: ['package-updated', 'refresh', 'open-attention-modal'],
+  emits: ['package-updated', 'refresh', 'open-attention-modal', 'open-payment-form'],
   data() {
     return {
       loading: false,
@@ -29,6 +30,10 @@ export default {
       loadingAttentions: false,
       loadingBookings: false,
       showCancelConfirm: false,
+      packageIncomes: [],
+      loadingIncomes: false,
+      paidAmount: 0,
+      remainingAmount: 0,
     };
   },
   computed: {
@@ -110,6 +115,22 @@ export default {
     canCreateNewReservation() {
       return this.canBookNextSession && this.sessionsRemaining > 0;
     },
+    paymentInfo() {
+      if (!this.pkg) return null;
+      const totalAmount = this.pkg.totalAmount || 0;
+      const paid = this.paidAmount || 0;
+      const remaining = Math.max(0, totalAmount - paid);
+      const paymentPercentage = totalAmount > 0 ? Math.round((paid / totalAmount) * 100) : 0;
+
+      return {
+        totalAmount,
+        paidAmount: paid,
+        remainingAmount: remaining,
+        paymentPercentage,
+        isFullyPaid: this.pkg.paid === true || remaining <= 0,
+        hasPayment: totalAmount > 0,
+      };
+    },
   },
   methods: {
     async showDetails() {
@@ -118,7 +139,46 @@ export default {
         // Load data when details are expanded
         await this.loadPackageAttentions();
         await this.loadPackageBookings();
+        await this.loadPackageIncomes();
       }
+    },
+    async loadPackageIncomes() {
+      if (!this.pkg?.id || !this.commerce?.id) return;
+      if (this.loadingIncomes) return;
+      try {
+        this.loadingIncomes = true;
+        const incomes = await getAllIncomesByPackage(this.commerce.id, this.pkg.id);
+        this.packageIncomes = incomes || [];
+
+        // Calcular monto pagado (sumar todos los incomes confirmados)
+        this.paidAmount = this.packageIncomes
+          .filter(income => income.status === 'CONFIRMED')
+          .reduce((sum, income) => sum + (Number(income.amount) || 0), 0);
+
+        // Calcular monto pendiente
+        const totalAmount = this.pkg.totalAmount || 0;
+        this.remainingAmount = Math.max(0, totalAmount - this.paidAmount);
+      } catch (error) {
+        console.error('Error loading package incomes:', error);
+        this.packageIncomes = [];
+        this.paidAmount = 0;
+        this.remainingAmount = 0;
+      } finally {
+        this.loadingIncomes = false;
+      }
+    },
+    openPaymentForm(prepayComplete = false) {
+      // Emitir evento para abrir PaymentForm con el paquete preseleccionado
+      this.$emit('open-payment-form', {
+        packageId: this.pkg.id,
+        packageName: this.pkg.name,
+        totalAmount: this.pkg.totalAmount,
+        paidAmount: this.paidAmount,
+        remainingAmount: this.remainingAmount,
+        prepayComplete, // true = preparar todo, false = pagar restante
+        procedureNumber: this.calculatedProceduresUsed + 1,
+        proceduresTotalNumber: this.pkg.proceduresAmount,
+      });
     },
     getDate(dateIn, timeZoneIn) {
       return getDate(dateIn, timeZoneIn);
@@ -205,7 +265,6 @@ export default {
               .then(res => {
                 const att = res?.[0] || null;
                 if (att) {
-
                 }
                 return att;
               })
@@ -216,7 +275,6 @@ export default {
           );
           const attentions = await Promise.all(attentionPromises);
           this.packageAttentions = attentions.filter(att => att !== null);
-
         } else {
           // Fallback: load all attentions for client and filter by packageId
           const allAttentions = await getAttentionsDetails(
@@ -251,7 +309,6 @@ export default {
             const pkgId = String(this.pkg.id || '').trim();
             const matches = attPackageId === pkgId && attPackageId !== '';
             if (att.packageId || this.pkg.id) {
-
             }
             return matches;
           });
@@ -440,6 +497,7 @@ export default {
           // Load data immediately when package is available
           await this.loadPackageAttentions();
           await this.loadPackageBookings();
+          await this.loadPackageIncomes();
         }
       },
     },
@@ -470,6 +528,7 @@ export default {
       this.$nextTick(() => {
         this.loadPackageAttentions();
         this.loadPackageBookings();
+        this.loadPackageIncomes();
       });
     }
   },
@@ -798,6 +857,160 @@ export default {
                 <span>{{
                   $t('package.maxSessionsReached') || 'Se alcanzó el máximo de sesiones del paquete'
                 }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Package Payment Information Section -->
+          <div v-if="paymentInfo && paymentInfo.hasPayment" class="info-section">
+            <div class="info-section-header">
+              <i class="bi bi-credit-card-fill"></i>
+              <span class="info-section-title">{{
+                $t('package.paymentInfo') || 'Información de Pago'
+              }}</span>
+            </div>
+            <div class="package-payment-grid">
+              <!-- Total Amount Card -->
+              <div class="package-payment-card">
+                <div class="payment-card-header">
+                  <i class="bi bi-coin"></i>
+                  <span class="payment-card-label">{{
+                    $t('package.totalAmount') || 'Monto Total'
+                  }}</span>
+                </div>
+                <div class="payment-card-value">
+                  {{ paymentInfo.totalAmount }} {{ commerce?.currency || 'BRL' }}
+                </div>
+              </div>
+
+              <!-- Paid Amount Card -->
+              <div class="package-payment-card">
+                <div class="payment-card-header">
+                  <i class="bi bi-check-circle-fill green-icon"></i>
+                  <span class="payment-card-label">{{ $t('package.paidAmount') || 'Pagado' }}</span>
+                </div>
+                <div class="payment-card-value">
+                  {{ paymentInfo.paidAmount }} {{ commerce?.currency || 'BRL' }}
+                </div>
+                <div class="payment-card-progress">
+                  <div class="progress-bar-full">
+                    <div
+                      class="progress-bar-fill"
+                      :style="{
+                        width: `${paymentInfo.paymentPercentage}%`,
+                        backgroundColor: paymentInfo.isFullyPaid ? '#00c2cb' : '#004aad',
+                      }"
+                    ></div>
+                  </div>
+                </div>
+                <div class="payment-card-footer">
+                  <span class="payment-footer-text">{{ paymentInfo.paymentPercentage }}%</span>
+                </div>
+              </div>
+
+              <!-- Remaining Amount Card -->
+              <div class="package-payment-card" :class="{ 'fully-paid': paymentInfo.isFullyPaid }">
+                <div class="payment-card-header">
+                  <i
+                    class="bi"
+                    :class="
+                      paymentInfo.isFullyPaid
+                        ? 'bi-check-circle-fill green-icon'
+                        : 'bi-clock-history'
+                    "
+                  ></i>
+                  <span class="payment-card-label">{{
+                    $t('package.remainingAmount') || 'Pendiente'
+                  }}</span>
+                </div>
+                <div
+                  class="payment-card-value"
+                  :class="{ 'fully-paid-value': paymentInfo.isFullyPaid }"
+                >
+                  {{ paymentInfo.remainingAmount }} {{ commerce?.currency || 'BRL' }}
+                </div>
+                <div v-if="paymentInfo.isFullyPaid" class="payment-card-footer">
+                  <span class="payment-footer-text fully-paid-text">
+                    <i class="bi bi-check-circle-fill"></i>
+                    {{ $t('package.fullyPaid') || 'Completamente Pagado' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Payment Actions -->
+            <div v-if="!paymentInfo.isFullyPaid" class="package-payment-actions">
+              <button
+                class="btn btn-sm btn-dark rounded-pill px-3"
+                @click.stop="openPaymentForm(false)"
+                :disabled="loadingIncomes"
+              >
+                <i class="bi bi-credit-card"></i>
+                {{ $t('package.payRemaining') || 'Pagar Restante' }} ({{
+                  paymentInfo.remainingAmount
+                }}
+                {{ commerce?.currency || 'BRL' }})
+              </button>
+              <button
+                class="btn btn-sm btn-outline-dark rounded-pill px-3"
+                @click.stop="openPaymentForm(true)"
+                :disabled="loadingIncomes"
+              >
+                <i class="bi bi-wallet2"></i>
+                {{ $t('package.prepayComplete') || 'Preparar Todo el Paquete' }} ({{
+                  paymentInfo.totalAmount
+                }}
+                {{ commerce?.currency || 'BRL' }})
+              </button>
+            </div>
+
+            <!-- Payment History -->
+            <div v-if="packageIncomes.length > 0" class="package-payment-history">
+              <div class="payment-history-header">
+                <i class="bi bi-list-ul"></i>
+                <span class="payment-history-title">{{
+                  $t('package.paymentHistory') || 'Historial de Pagos'
+                }}</span>
+                <span class="payment-history-count">({{ packageIncomes.length }})</span>
+              </div>
+              <div class="payment-history-list">
+                <div
+                  v-for="(income, idx) in packageIncomes"
+                  :key="`income-${idx}`"
+                  class="payment-history-item"
+                  :class="{ pending: income.status === 'PENDING' }"
+                >
+                  <div class="payment-history-item-main">
+                    <span
+                      class="payment-history-status"
+                      :class="`status-${income.status?.toLowerCase()}`"
+                    >
+                      {{
+                        income.status === 'CONFIRMED'
+                          ? $t('package.confirmed') || 'Confirmado'
+                          : $t('package.pending') || 'Pendiente'
+                      }}
+                    </span>
+                    <span class="payment-history-amount">
+                      {{ income.amount }} {{ commerce?.currency || 'BRL' }}
+                    </span>
+                    <span v-if="income.installments > 1" class="payment-history-installment">
+                      {{ $t('package.installment') || 'Cuota' }} {{ income.installmentNumber }}/{{
+                        income.installments
+                      }}
+                    </span>
+                  </div>
+                  <div class="payment-history-item-details">
+                    <span v-if="income.paymentMethod" class="payment-history-method">
+                      {{
+                        $t(`paymentClientMethods.${income.paymentMethod}`) || income.paymentMethod
+                      }}
+                    </span>
+                    <span v-if="income.createdAt" class="payment-history-date">
+                      {{ getDate(income.createdAt) }}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1788,6 +2001,215 @@ export default {
 .package-item-time,
 .package-item-blocks,
 .package-item-service {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Package Payment Information */
+.package-payment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.package-payment-card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.package-payment-card:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(169, 169, 169, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.package-payment-card.fully-paid {
+  background: rgba(0, 194, 203, 0.05);
+  border-color: rgba(0, 194, 203, 0.2);
+}
+
+.payment-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.5rem;
+}
+
+.payment-card-header i {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.payment-card-header .green-icon {
+  color: #00c2cb;
+}
+
+.payment-card-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.payment-card-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 0.5rem;
+}
+
+.payment-card-value.fully-paid-value {
+  color: #00c2cb;
+}
+
+.payment-card-progress {
+  margin-bottom: 0.5rem;
+}
+
+.payment-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.payment-footer-text {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.payment-footer-text.fully-paid-text {
+  color: #00c2cb;
+  font-weight: 700;
+}
+
+.package-payment-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.package-payment-actions .btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.package-payment-history {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(169, 169, 169, 0.15);
+}
+
+.payment-history-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.payment-history-header i {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.payment-history-title {
+  flex: 1;
+}
+
+.payment-history-count {
+  font-size: 0.6875rem;
+  color: rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+}
+
+.payment-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.payment-history-item {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 6px;
+  padding: 0.625rem;
+  transition: all 0.2s ease;
+}
+
+.payment-history-item:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(169, 169, 169, 0.3);
+  transform: translateX(2px);
+}
+
+.payment-history-item.pending {
+  border-left: 3px solid #f9c322;
+}
+
+.payment-history-item-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.375rem;
+}
+
+.payment-history-status {
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.payment-history-status.status-confirmed {
+  background: rgba(0, 194, 203, 0.15);
+  color: #00c2cb;
+}
+
+.payment-history-status.status-pending {
+  background: rgba(249, 195, 34, 0.15);
+  color: #f9c322;
+}
+
+.payment-history-amount {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.payment-history-installment {
+  font-size: 0.6875rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 600;
+}
+
+.payment-history-item-details {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.6875rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.payment-history-method,
+.payment-history-date {
   display: flex;
   align-items: center;
   gap: 0.25rem;
