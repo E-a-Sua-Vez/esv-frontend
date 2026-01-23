@@ -10,11 +10,13 @@ import {
   transferAttention,
   getPendingCommerceAttentions,
   advanceStage,
+  assignProfessional,
 } from '../../../application/services/attention';
 import { getActiveFeature } from '../../../shared/features';
 import { getPaymentMethods, getPaymentTypes } from '../../../shared/utils/data.ts';
 import { getQueueById } from '../../../application/services/queue';
 import { getBookingDetails } from '../../../application/services/booking';
+import { getActiveProfessionalsByCommerce } from '../../../application/services/professional';
 import { getCollaboratorById } from '../../../application/services/collaborator';
 import { getAttentionDetails } from '../../../application/services/attention';
 import { getConsentStatus } from '../../../application/services/consent';
@@ -24,10 +26,11 @@ import AreYouSure from '../../common/AreYouSure.vue';
 import PaymentForm from '../../payments/PaymentForm.vue';
 import Message from '../../common/Message.vue';
 import AttentionTimeline from './AttentionTimeline.vue';
+import ProfessionalSelector from '../../professional/ProfessionalSelector.vue';
 
 export default {
   name: 'AttentionDetailsModal',
-  components: { Popper, Spinner, Warning, AreYouSure, PaymentForm, Message, AttentionTimeline },
+  components: { Popper, Spinner, Warning, AreYouSure, PaymentForm, Message, AttentionTimeline, ProfessionalSelector },
   props: {
     show: { type: Boolean, default: false },
     attention: { type: Object, default: undefined },
@@ -41,6 +44,7 @@ export default {
       loading: false,
       extendedPaymentEntity: false,
       extendedTransferEntity: false,
+      extendedProfessionalEntity: false,
       newPaymentConfirmationData: {},
       paymentTypes: [],
       paymentMethods: [],
@@ -52,6 +56,7 @@ export default {
       goToCancel: false,
       goToConfirm: false,
       goToAdvanceStage: false,
+      goToAssignProfessional: false,
       selectedNextStage: '',
       stageNotes: '',
       queuesToTransfer: [],
@@ -64,6 +69,9 @@ export default {
       loadingConsentStatus: false,
       consentStatusInterval: null,
       alertError: '',
+      selectedProfessional: null,
+      professionalCommission: null,
+      professionals: [],
     };
   },
   beforeMount() {
@@ -89,6 +97,10 @@ export default {
     },
   },
   computed: {
+    // Check if toggles have been loaded (not empty object)
+    togglesLoaded() {
+      return this.toggles && typeof this.toggles === 'object' && Object.keys(this.toggles).length > 0;
+    },
     attentionFullName() {
       if (!this.attention) return '';
       // Check for nested user object first (like bookings), then fall back to flat fields
@@ -138,6 +150,7 @@ export default {
     showPaymentDetails() {
       this.extendedPaymentEntity = !this.extendedPaymentEntity;
       this.extendedTransferEntity = false;
+      this.extendedProfessionalEntity = false;
       this.newPaymentConfirmationData = {
         processPaymentNow: true,
       };
@@ -145,8 +158,143 @@ export default {
     async showTransferDetails() {
       this.extendedTransferEntity = !this.extendedTransferEntity;
       this.extendedPaymentEntity = false;
+      this.extendedProfessionalEntity = false;
       if (this.extendedTransferEntity === true) {
         await this.toTransfer();
+      }
+    },
+    showProfessionalDetails() {
+      this.extendedProfessionalEntity = !this.extendedProfessionalEntity;
+      this.extendedPaymentEntity = false;
+      this.extendedTransferEntity = false;
+      // Cargar profesionales solo cuando se abre la sección
+      if (this.extendedProfessionalEntity && this.professionals.length === 0) {
+        this.loadProfessionals();
+      }
+    },
+    async loadProfessionals() {
+      if (!this.attention || !this.attention.commerceId) {
+        return;
+      }
+      try {
+        this.professionals = await getActiveProfessionalsByCommerce(this.attention.commerceId);
+      } catch (error) {
+        console.error('[AttentionDetailsModal] Error loading professionals:', error);
+        this.professionals = [];
+      }
+    },
+    handleProfessionalSelected(professional) {
+      this.selectedProfessional = professional;
+      if (professional && professional.financialInfo) {
+        const { commissionValue } = professional.financialInfo;
+        if (commissionValue !== undefined && commissionValue !== null) {
+          this.professionalCommission = commissionValue;
+        }
+      }
+    },
+    getSuggestedCommission() {
+      if (!this.selectedProfessional || !this.selectedProfessional.financialInfo) {
+        return '';
+      }
+      const { commissionType, commissionValue } = this.selectedProfessional.financialInfo;
+      if (!commissionType || commissionValue === undefined || commissionValue === null) {
+        return '';
+      }
+      return commissionType === 'PERCENTAGE' ? `${commissionValue}%` : `${commissionValue}`;
+    },
+    // PROFESSIONAL PAYMENT COMMISSION DATA (used by PaymentForm)
+    getAssignedProfessionalCommissionData() {
+      if (!this.attention?.professionalName) {
+        return { name: null, commission: null, suggestedAmount: 0 };
+      }
+
+      // 1) Prefer persisted confirmation data (if backend already stored it)
+      const confirmationData = this.attention?.paymentConfirmationData;
+      if (confirmationData?.professionalCommissionType && confirmationData?.professionalCommissionValue) {
+        const { professionalCommissionType, professionalCommissionValue } = confirmationData;
+        let suggestedAmount = 0;
+        let commissionDisplay = '';
+
+        if (professionalCommissionValue && professionalCommissionValue > 0) {
+          if (professionalCommissionType === 'PERCENTAGE') {
+            commissionDisplay = `${professionalCommissionValue}%`;
+            if (this.newPaymentConfirmationData?.paymentAmount) {
+              suggestedAmount = Math.round(
+                (this.newPaymentConfirmationData.paymentAmount * professionalCommissionValue) / 100
+              );
+            } else if (confirmationData?.professionalCommissionAmount) {
+              suggestedAmount = confirmationData.professionalCommissionAmount;
+            }
+          } else {
+            commissionDisplay = `${professionalCommissionValue} ${this.commerce?.currency || 'BRL'}`;
+            suggestedAmount = Number(professionalCommissionValue);
+          }
+        }
+
+        return {
+          name: this.attention.professionalName,
+          commission: commissionDisplay,
+          suggestedAmount,
+        };
+      }
+
+      // 2) Use selectedProfessional (if available)
+      if (this.selectedProfessional?.financialInfo) {
+        const { commissionType, commissionValue } = this.selectedProfessional.financialInfo;
+        let suggestedAmount = 0;
+        let commissionDisplay = '';
+
+        if (commissionValue) {
+          if (commissionType === 'PERCENTAGE') {
+            commissionDisplay = `${commissionValue}%`;
+            if (this.newPaymentConfirmationData?.paymentAmount) {
+              suggestedAmount = Math.round((this.newPaymentConfirmationData.paymentAmount * commissionValue) / 100);
+            }
+          } else {
+            commissionDisplay = `${commissionValue} ${this.commerce?.currency || 'BRL'}`;
+            suggestedAmount = Number(commissionValue);
+          }
+        }
+
+        return {
+          name: this.attention.professionalName,
+          commission: commissionDisplay,
+          suggestedAmount,
+        };
+      }
+
+      // Fallback: name only
+      return {
+        name: this.attention.professionalName,
+        commission: null,
+        suggestedAmount: 0,
+      };
+    },
+    goAssignProfessional() {
+      this.goToAssignProfessional = !this.goToAssignProfessional;
+    },
+    cancelAssignProfessional() {
+      this.goToAssignProfessional = false;
+    },
+    async confirmAssignProfessional() {
+      if (!this.attention || !this.attention.id || !this.selectedProfessional) {
+        return;
+      }
+      try {
+        this.loading = true;
+        const name =
+          this.selectedProfessional.personalInfo?.name ||
+          this.selectedProfessional.name ||
+          this.selectedProfessional.id;
+        await assignProfessional(this.attention.id, this.selectedProfessional.id, name);
+        this.$emit('attention-updated');
+        this.extendedProfessionalEntity = false;
+        this.goToAssignProfessional = false;
+      } catch (error) {
+        console.error('Error assigning professional:', error);
+        this.alertError = error.message || 'Error al asignar profesional';
+      } finally {
+        this.loading = false;
       }
     },
     async cancel() {
@@ -606,6 +754,18 @@ export default {
         }
         if (data.paymentAmount !== undefined && data.paymentAmount >= 0) {
           this.newPaymentConfirmationData.paymentAmount = data.paymentAmount;
+
+          // Auto-suggest commission when possible (mirrors BookingDetailsCard behavior)
+          if (this.attention?.professionalName && data.paymentAmount > 0) {
+            const commissionData = this.getAssignedProfessionalCommissionData();
+            if (
+              commissionData.suggestedAmount > 0 &&
+              (this.newPaymentConfirmationData.paymentCommission === undefined ||
+                this.newPaymentConfirmationData.paymentCommission === null)
+            ) {
+              this.newPaymentConfirmationData.paymentCommission = commissionData.suggestedAmount;
+            }
+          }
         }
         if (data.totalAmount !== undefined && data.totalAmount >= 0) {
           this.newPaymentConfirmationData.totalAmount = data.totalAmount;
@@ -634,6 +794,16 @@ export default {
         if (data.confirmInstallments !== undefined) {
           this.newPaymentConfirmationData.confirmInstallments = data.confirmInstallments;
         }
+
+        // Attach professionalId/commission amount when applicable (used by income creation)
+        if (this.attention?.professionalId) {
+          this.newPaymentConfirmationData.professionalId = this.attention.professionalId;
+        }
+        if (this.newPaymentConfirmationData.paymentCommission !== undefined) {
+          this.newPaymentConfirmationData.professionalCommissionAmount =
+            this.newPaymentConfirmationData.paymentCommission;
+        }
+
         if (data.processPaymentNow === false) {
           this.errorsAdd = [];
         }
@@ -914,6 +1084,9 @@ export default {
                     </div>
                     <div class="attention-client-details">
                       <span class="attention-client-name">{{ attentionFullName }}</span>
+                      <span v-if="attention && attention.number" class="attention-number-badge-inline">
+                        #{{ attention.number }}
+                      </span>
                       <button class="btn-copy-mini" @click="copyAttention()" title="Copiar datos">
                         <i class="bi bi-file-earmark-spreadsheet"></i>
                       </button>
@@ -1150,6 +1323,18 @@ export default {
                   ></i>
                 </button>
                 <button
+                  v-if="getActiveFeature(commerce, 'professional-assignment-enabled', 'PRODUCT')"
+                  class="attention-action-tab"
+                  :class="{ 'attention-action-tab-active': extendedProfessionalEntity }"
+                  @click.prevent="showProfessionalDetails()"
+                >
+                  <i class="bi bi-person-badge"></i>
+                  <span>{{ $t('professionals.assignProfessional') }}</span>
+                  <i
+                    :class="`bi ${extendedProfessionalEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
+                  ></i>
+                </button>
+                <button
                   v-if="getActiveFeature(commerce, 'attention-transfer-queue', 'PRODUCT')"
                   class="attention-action-tab"
                   :class="{ 'attention-action-tab-active': extendedTransferEntity }"
@@ -1221,6 +1406,9 @@ export default {
                         "
                         :errors-add="errorsAdd"
                         :receive-data="receiveData"
+                        :professional-name="getAssignedProfessionalCommissionData().name"
+                        :professional-commission="getAssignedProfessionalCommissionData().commission"
+                        :suggested-commission-amount="getAssignedProfessionalCommissionData().suggestedAmount"
                       >
                       </PaymentForm>
                       <div class="attention-action-buttons">
@@ -1235,8 +1423,8 @@ export default {
                       </div>
                       <AreYouSure
                         :show="goToConfirm"
-                        :yes-disabled="toggles && toggles['collaborator.attentions.confirm']"
-                        :no-disabled="toggles && toggles['collaborator.attentions.confirm']"
+                        :yes-disabled="(togglesLoaded && !toggles['collaborator.attentions.confirm'])"
+                        :no-disabled="(togglesLoaded && !toggles['collaborator.attentions.confirm'])"
                         @actionYes="confirm()"
                         @actionNo="confirmCancel()"
                       >
@@ -1247,6 +1435,96 @@ export default {
                         :title="$t('collaboratorBookingsView.message.8.title')"
                         :content="$t('collaboratorBookingsView.message.8.content')"
                       />
+                    </div>
+                  </div>
+                </div>
+              </Transition>
+
+              <!-- PROFESSIONAL ASSIGNMENT -->
+              <Transition name="slide-fade">
+                <div
+                  v-if="
+                    extendedProfessionalEntity &&
+                    getActiveFeature(commerce, 'professional-assignment-enabled', 'PRODUCT')
+                  "
+                  class="attention-action-section"
+                >
+                  <div class="attention-action-content">
+                    <div class="attention-action-form payment-form-modern">
+                      <div class="attention-action-header">
+                        <i class="bi bi-person-badge"></i>
+                        <span>{{ $t('professionals.assignProfessional') }}</span>
+                      </div>
+                      <div class="payment-form-content">
+                        <div v-if="attention.professionalName" class="professional-assigned-alert">
+                          <i class="bi bi-person-badge-fill"></i>
+                          <span class="alert-text">
+                            {{
+                              $t('professionals.alreadyAssigned') || 'Profesional ya asignado'
+                            }}:
+                            <strong>{{ attention.professionalName }}</strong>
+                          </span>
+                          <small class="alert-action">
+                            {{
+                              $t('professionals.canReplace') ||
+                                'Puede reemplazarlo seleccionando otro.'
+                            }}
+                          </small>
+                        </div>
+                        <div class="payment-form-field">
+                          <label class="payment-form-label">{{
+                            $t('professionals.selectProfessional')
+                          }}</label>
+                          <ProfessionalSelector
+                            :professionals="professionals"
+                            :filter-by-service="attention.servicesId"
+                            :show-commission="false"
+                            @professional-selected="handleProfessionalSelected"
+                          />
+                        </div>
+                        <div
+                          v-if="
+                            selectedProfessional &&
+                            getActiveFeature(commerce, 'professional-commission-enabled', 'PRODUCT')
+                          "
+                          class="payment-form-field"
+                        >
+                          <label class="payment-form-label">{{ $t('professionals.commission') }}</label>
+                          <div class="d-flex align-items-center gap-2">
+                            <input
+                              v-model="professionalCommission"
+                              type="number"
+                              class="payment-form-input"
+                              :placeholder="getSuggestedCommission()"
+                            />
+                            <span class="text-muted">
+                              {{
+                                selectedProfessional.financialInfo?.commissionType === 'PERCENTAGE'
+                                  ? '%'
+                                  : commerce.currency || 'BRL'
+                              }}
+                            </span>
+                          </div>
+                        </div>
+                        <div class="attention-action-buttons">
+                          <button
+                            class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
+                            @click="goAssignProfessional()"
+                            :disabled="!selectedProfessional || loading"
+                          >
+                            <i class="bi bi-person-check-fill"></i>
+                            {{ $t('professionals.assignProfessional') }}
+                          </button>
+                        </div>
+                        <AreYouSure
+                          :show="goToAssignProfessional"
+                          :yes-disabled="!selectedProfessional || loading"
+                          :no-disabled="!selectedProfessional || loading"
+                          @actionYes="confirmAssignProfessional()"
+                          @actionNo="cancelAssignProfessional()"
+                        >
+                        </AreYouSure>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1311,8 +1589,8 @@ export default {
                       </div>
                       <AreYouSure
                         :show="goToTransfer"
-                        :yes-disabled="toggles && toggles['collaborator.attentions.transfer']"
-                        :no-disabled="toggles && toggles['collaborator.attentions.transfer']"
+                        :yes-disabled="(togglesLoaded && !toggles['collaborator.attentions.transfer'])"
+                        :no-disabled="(togglesLoaded && !toggles['collaborator.attentions.transfer'])"
                         @actionYes="transfer()"
                         @actionNo="cancelTransfer()"
                       >
@@ -1461,8 +1739,8 @@ export default {
                 <div class="attention-actions-confirmations">
                   <AreYouSure
                     :show="goToCancel"
-                    :yes-disabled="toggles && toggles['collaborator.attentions.cancel']"
-                    :no-disabled="toggles && toggles['collaborator.attentions.cancel']"
+                    :yes-disabled="(togglesLoaded && !toggles['collaborator.attentions.cancel'])"
+                    :no-disabled="(togglesLoaded && !toggles['collaborator.attentions.cancel'])"
                     @actionYes="cancel()"
                     @actionNo="cancelCancel()"
                   >
@@ -1538,6 +1816,22 @@ export default {
 .modal-title i {
   color: white !important;
   font-size: 1.125rem !important;
+}
+
+.attention-number-badge-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
+  border: 1px solid rgba(0, 194, 203, 0.3);
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+  margin-left: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 194, 203, 0.2);
+  flex-shrink: 0;
 }
 
 .btn-close {
@@ -2373,6 +2667,92 @@ export default {
   font-size: 0.75rem;
   margin-top: 0.125rem;
   flex-shrink: 0;
+}
+
+.professional-assigned-alert {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 1px solid #90caf9;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.3;
+  color: #1565c0;
+}
+
+.professional-assigned-alert i {
+  color: #1976d2;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.professional-assigned-alert .alert-text {
+  flex: 1;
+  margin: 0;
+}
+
+.professional-assigned-alert .alert-action {
+  display: block;
+  color: #1976d2;
+  font-size: 11px;
+  margin-top: 2px;
+  font-style: italic;
+}
+
+.professional-assigned-alert strong {
+  color: #0d47a1;
+  font-weight: 600;
+}
+
+.payment-form-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.payment-form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.payment-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.payment-form-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+  letter-spacing: -0.01em;
+}
+
+.payment-form-input {
+  padding: 0.375rem 0.625rem;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.payment-form-input:hover {
+  border-color: rgba(0, 194, 203, 0.3);
+  background: rgba(255, 255, 255, 1);
+}
+
+.payment-form-input:focus {
+  outline: none;
+  border-color: #00c2cb;
+  box-shadow: 0 0 0 3px rgba(0, 194, 203, 0.1);
 }
 
 /* Responsive */

@@ -892,6 +892,9 @@ export default {
                 <span class="attention-client-name"
                   >{{ booking.user.name || 'N/I' }} {{ booking.user.lastName || '' }}</span
                 >
+                <span v-if="booking && booking.number" class="attention-number-badge-inline">
+                  #{{ booking.number }}
+                </span>
                 <!-- Paid Status Badge -->
                 <div
                   v-if="booking.confirmationData?.paid || booking.confirmed"
@@ -2448,6 +2451,22 @@ export default {
 }
 
 /* Paid Badge Styles */
+.attention-number-badge-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
+  border: 1px solid rgba(0, 194, 203, 0.3);
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+  margin-left: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 194, 203, 0.2);
+  flex-shrink: 0;
+}
+
 .attention-paid-badge {
   display: inline-flex;
   align-items: center;

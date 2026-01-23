@@ -55,6 +55,8 @@ import AttentionDetailsCard from '../../components/clients/common/AttentionDetai
 import ClientDetailsCard from '../../components/clients/common/ClientDetailsCard.vue';
 import AttentionDetailsNumber from '../../components/common/AttentionDetailsNumber.vue';
 import AttentionStepBar from '../../components/attentions/common/AttentionStepBar.vue';
+import AttentionDetailsModal from '../../components/attentions/common/AttentionDetailsModal.vue';
+import AttentionPaymentActionsCard from '../../components/attentions/common/AttentionPaymentActionsCard.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import Popper from 'vue3-popper';
 import TelemedicineSessionStarter from '../../components/telemedicine/domain/TelemedicineSessionStarter.vue';
@@ -84,6 +86,8 @@ export default {
     ClientDetailsCard,
     AttentionDetailsNumber,
     AttentionStepBar,
+    AttentionDetailsModal,
+    AttentionPaymentActionsCard,
     DesktopPageHeader,
     Popper,
     TelemedicineSessionStarter,
@@ -136,6 +140,8 @@ export default {
       queueProcessingDetails: [],
       queueTerminatedDetails: [],
       listUpdateKey: 0, // Key to force component re-render
+      showAttentionModal: false,
+      selectedAttention: undefined,
     });
 
     // Helper function to validate attention status/stage and redirect if needed (for /atender page)
@@ -505,6 +511,51 @@ export default {
 
       // Force component re-render by updating key
       state.listUpdateKey++;
+    };
+
+    const openAttentionModal = () => {
+      state.selectedAttention = state.attention;
+      state.showAttentionModal = true;
+    };
+
+    const closeAttentionModal = () => {
+      state.showAttentionModal = false;
+      state.selectedAttention = undefined;
+    };
+
+    const handleAttentionUpdatedFromModal = async () => {
+      // Reload complete attention details to get updated status and all data
+      const updatedAttention = await getAttentionDetails(state.attention.id, state.currentUser?.id);
+
+      // Update related state similar to finishCurrentAttention
+      if (updatedAttention.queue) {
+        state.queue = updatedAttention.queue;
+      }
+      if (updatedAttention.user) {
+        state.user = updatedAttention.user;
+      }
+      if (updatedAttention.commerce) {
+        state.commerce = updatedAttention.commerce;
+        if (
+          state.commerce &&
+          state.commerce.id &&
+          (!state.commerce.features || !Array.isArray(state.commerce.features))
+        ) {
+          try {
+            const fullCommerce = await getCommerceById(state.commerce.id);
+            if (fullCommerce && fullCommerce.features) {
+              state.commerce = fullCommerce;
+              await store.setCurrentCommerce(fullCommerce);
+            }
+          } catch (error) {
+            console.warn('Could not fetch full commerce with features (modal update):', error);
+          }
+        }
+      }
+
+      state.attention = updatedAttention;
+
+      closeAttentionModal();
     };
 
     const loadQueueDetailsForModal = async () => {
@@ -1688,6 +1739,9 @@ export default {
       isStagesEnabled,
       getNextStages,
       advanceToNextStage,
+      openAttentionModal,
+      closeAttentionModal,
+      handleAttentionUpdatedFromModal,
     };
   },
 };
@@ -1716,6 +1770,10 @@ export default {
           :queue="state.queue"
           :commerce="state.commerce"
           :details="true"
+          :queue-pending-details="state.queuePendingDetails"
+          :queue-processing-details="state.queueProcessingDetails"
+          :queue-terminated-details="state.queueTerminatedDetails"
+          :list-update-key="state.listUpdateKey"
         >
         </QueueName>
         <div id="page-header" class="text-center">
@@ -1971,6 +2029,13 @@ export default {
                 </button>
               </div>
             </div>
+            <!-- Payment / Transfer Card (reusable component) -->
+            <AttentionPaymentActionsCard
+              class="my-3"
+              :loading="loading"
+              :disabled="!state.attention || !state.attention.id"
+              @open="openAttentionModal()"
+            />
             <div class="mb-2">
               <label for="comment" class="form-label mt-2 comment-title">{{
                 $t('collaboratorAttentionValidate.comment.label')
@@ -2126,6 +2191,10 @@ export default {
           :queue="state.queue"
           :commerce="state.commerce"
           :details="true"
+          :queue-pending-details="state.queuePendingDetails"
+          :queue-processing-details="state.queueProcessingDetails"
+          :queue-terminated-details="state.queueTerminatedDetails"
+          :list-update-key="state.listUpdateKey"
         >
         </QueueName>
         <div
@@ -2376,6 +2445,13 @@ export default {
                 </button>
               </div>
             </div>
+            <!-- Payment / Transfer Card (reusable component) -->
+            <AttentionPaymentActionsCard
+              class="my-3"
+              :loading="loading"
+              :disabled="!state.attention || !state.attention.id"
+              @open="openAttentionModal()"
+            />
             <div class="mb-2">
               <label for="comment" class="form-label mt-2 comment-title">{{
                 $t('collaboratorAttentionValidate.comment.label')
@@ -2718,6 +2794,16 @@ export default {
         </div>
       </TelemedicineFloatingWindow>
     </div>
+    <!-- Attention Details Modal -->
+    <AttentionDetailsModal
+      :show="state.showAttentionModal"
+      :attention="state.selectedAttention || state.attention"
+      :commerce="state.commerce"
+      :queues="state.commerce?.queues || state.queue ? [state.queue] : []"
+      :toggles="state.toggles"
+      @close="closeAttentionModal"
+      @attention-updated="handleAttentionUpdatedFromModal"
+    />
     <!-- Modal Products -->
     <div
       class="modal fade"

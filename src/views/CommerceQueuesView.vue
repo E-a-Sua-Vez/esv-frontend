@@ -294,7 +294,7 @@ export default {
             state.queue = await getQueueById(queue || queueId);
             const queueType = state.queue.type;
             state.groupedQueues = {};
-            if (queueType === 'COLLABORATOR') {
+            if (queueType === 'PROFESSIONAL') {
               const collaborator = await getCollaboratorDetailsById(state.queue.collaboratorId);
               if (collaborator && collaborator.id) {
                 state.queue.collaborator = collaborator;
@@ -330,10 +330,10 @@ export default {
             state.collaborators = collaborators;
             if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
               state.groupedQueues = groupedQueues;
-              const queues = state.groupedQueues['COLLABORATOR'];
+              const queues = state.groupedQueues['PROFESSIONAL'] || [];
               const queueAux = [];
               queues.forEach(queue => {
-                if (queue.type === 'COLLABORATOR') {
+                if (queue.type === 'PROFESSIONAL') {
                   const collaboratorsAux = state.collaborators.filter(
                     collaborator => collaborator.id === queue.collaboratorId
                   );
@@ -347,7 +347,7 @@ export default {
                   queueAux.push(queue);
                 }
               });
-              state.groupedQueues['COLLABORATOR'] = queueAux;
+              state.groupedQueues['PROFESSIONAL'] = queueAux;
             }
           }
         }
@@ -1541,23 +1541,41 @@ export default {
       state.specificCalendarDate = undefined;
       state.showToday = false;
       state.showReserve = true;
+
+      // Después de abrir la sección de reserva, desplazar y enfocar el selector de fecha
+      nextTick(() => {
+        setTimeout(() => {
+          const bookingDateSection = document.querySelector('#booking-date');
+          if (bookingDateSection) {
+            bookingDateSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Intentar enfocar el primer día habilitado del calendario
+            const firstAvailableDay = bookingDateSection.querySelector(
+              '.vc-day-content[aria-disabled="false"]'
+            );
+            if (firstAvailableDay) {
+              firstAvailableDay.focus();
+            }
+          }
+        }, 200);
+      });
     };
 
     const validateCaptchaOk = async response => {
       if (response) {
         captcha = true;
-        // For COLLABORATOR queues, check if they have services that need to be selected
+        // For PROFESSIONAL queues, check if they have services that need to be selected
         const isCollaboratorWithServices =
           state.queue &&
-          state.queue.type === 'COLLABORATOR' &&
+          state.queue.type === 'PROFESSIONAL' &&
           ((state.queue.services && state.queue.services.length > 0) ||
             (state.queue.servicesId && state.queue.servicesId.length > 0) ||
             (state.queue.collaborator &&
               state.queue.collaborator.services &&
               state.queue.collaborator.services.length > 0));
 
-        // Don't auto-create attention for COLLABORATOR queues that have services - user must select services first
-        // Only auto-create if it's not a COLLABORATOR queue with services, and booking is disabled or it's a walkin queue
+        // Don't auto-create attention for PROFESSIONAL queues that have services - user must select services first
+        // Only auto-create if it's not a PROFESSIONAL queue with services, and booking is disabled or it's a walkin queue
         if (
           !isCollaboratorWithServices &&
           (!getActiveFeature(state.commerce, 'booking-active', 'PRODUCT') || isQueueWalkin())
@@ -1652,11 +1670,11 @@ export default {
           const candidateQueues = [];
           if (
             state.groupedQueues &&
-            state.groupedQueues['COLLABORATOR'] &&
-            state.groupedQueues['COLLABORATOR'].length > 0
+            state.groupedQueues['PROFESSIONAL'] &&
+            state.groupedQueues['PROFESSIONAL'].length > 0
           ) {
             const services = state.selectedServices.map(serv => serv.id);
-            state.groupedQueues['COLLABORATOR'].forEach(queue => {
+            state.groupedQueues['PROFESSIONAL'].forEach(queue => {
               if (queue.services && queue.services.length > 0) {
                 const availableServices = queue.services.map(serv => serv.id);
                 if (services.every(serv => availableServices.includes(serv))) {
@@ -1804,11 +1822,11 @@ export default {
           const candidateQueues = [];
           if (
             state.groupedQueues &&
-            state.groupedQueues['COLLABORATOR'] &&
-            state.groupedQueues['COLLABORATOR'].length > 0
+            state.groupedQueues['PROFESSIONAL'] &&
+            state.groupedQueues['PROFESSIONAL'].length > 0
           ) {
             const services = state.selectedServices.map(serv => serv.id);
-            state.groupedQueues['COLLABORATOR'].forEach(queue => {
+            state.groupedQueues['PROFESSIONAL'].forEach(queue => {
               if (queue.services && queue.services.length > 0) {
                 const availableServices = queue.services.map(serv => serv.id);
                 if (services.every(serv => availableServices.includes(serv))) {
@@ -2318,13 +2336,8 @@ export default {
 
     // Handle show manual selection
     const handleShowManualSelection = () => {
-      // Just scroll to the manual selection area
-      setTimeout(() => {
-        const manualSelection = document.querySelector('#booking .data-card');
-        if (manualSelection) {
-          manualSelection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
+      // Abrir la sección de reserva; showReserve se encarga de hacer scroll/enfocar el calendario
+      showReserve();
     };
 
     const showFormStep = () => {
@@ -2968,6 +2981,11 @@ export default {
             const timeCard = document.querySelector('.time-slot-grid');
             if (timeCard) {
               timeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+              const firstTimeButton = timeCard.querySelector('.time-slot-button');
+              if (firstTimeButton) {
+                firstTimeButton.focus();
+              }
             }
           }, 600);
         });
@@ -3019,6 +3037,11 @@ export default {
             const timeCard = document.querySelector('.time-slot-grid');
             if (timeCard) {
               timeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+              const firstTimeButton = timeCard.querySelector('.time-slot-button');
+              if (firstTimeButton) {
+                firstTimeButton.focus();
+              }
             }
           }, 600);
         });
@@ -5169,11 +5192,11 @@ export default {
                     <i class="bi bi-arrow-right-circle-fill ms-2"></i>
                   </button>
 
-                  <!-- For walkin COLLABORATOR queues with services selected, show Confirm button -->
+                  <!-- For walkin PROFESSIONAL queues with services selected, show Confirm button -->
                   <button
                     v-else-if="
                       state.showPickQueue &&
-                      state.queue.type === 'COLLABORATOR' &&
+                      state.queue.type === 'PROFESSIONAL' &&
                       isQueueWalkin() &&
                       state.canBook
                     "

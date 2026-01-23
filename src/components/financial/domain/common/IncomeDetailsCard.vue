@@ -154,6 +154,9 @@ export default {
     },
   },
   computed: {
+    togglesLoaded() {
+      return this.toggles && typeof this.toggles === 'object' && Object.keys(this.toggles).length > 0;
+    },
     clientFullName() {
       if (!this.income) return 'N/I';
       if (this.manualIncome() && this.income.incomeInfo?.user) {
@@ -454,8 +457,8 @@ export default {
     <!-- Confirmation Modal -->
     <AreYouSure
       :show="goToConfirm"
-      :yes-disabled="!toggles['financial.incomes.confirm']"
-      :no-disabled="!toggles['financial.incomes.confirm']"
+      :yes-disabled="(togglesLoaded && !toggles['financial.incomes.confirm'])"
+      :no-disabled="(togglesLoaded && !toggles['financial.incomes.confirm'])"
       @actionYes="confirmPayment()"
       @actionNo="cancelConfirm()"
     >

@@ -125,6 +125,10 @@ export default {
     async refresh() {
       try {
         this.loading = true;
+        if (!this.business?.id || !this.commerce?.id) {
+          this.loading = false;
+          return;
+        }
         let commerceIds = [this.commerce.id];
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
@@ -143,7 +147,7 @@ export default {
           professionalFilter: this.professionalFilter,
         });
 
-        this.financialOutcomes = await getOutcomesDetails(
+        let outcomes = await getOutcomesDetails(
           this.business.id,
           this.commerce.id,
           this.startDate,
@@ -153,14 +157,25 @@ export default {
           this.limit,
           this.searchText,
           this.asc,
-          this.incomeStatus,
-          this.fiscalNote,
-          this.automatic,
+          undefined,
+          undefined,
+          undefined,
           this.minAmount,
           this.maxAmount,
           this.outcomeTypeFilter,
           this.paymentMethodFilter
         );
+
+        // Client-side filter by professional (API doesn't support this for outcomes)
+        if (this.professionalFilter) {
+          outcomes = (outcomes || []).filter(o => {
+            const professionalId =
+              o?.professionalId || o?.incomeInfo?.professionalId || o?.paymentInfo?.professionalId;
+            return professionalId === this.professionalFilter;
+          });
+        }
+
+        this.financialOutcomes = outcomes;
 
         console.log('OutcomesFinancialManagement.refresh - API Response:', {
           count: this.financialOutcomes?.length || 0,
@@ -208,9 +223,13 @@ export default {
     async exportToCSV() {
       try {
         this.loading = true;
+        if (!this.business?.id || !this.commerce?.id) {
+          this.loading = false;
+          return;
+        }
         let csvAsBlob = [];
         const commerceIds = [this.commerce.id];
-        const result = await getOutcomesDetails(
+        let result = await getOutcomesDetails(
           this.business.id,
           this.commerce.id,
           this.startDate,
@@ -220,14 +239,21 @@ export default {
           undefined,
           this.searchText,
           this.asc,
-          this.incomeStatus,
-          this.fiscalNote,
-          this.automatic,
+          undefined,
+          undefined,
+          undefined,
           this.minAmount,
           this.maxAmount,
           this.outcomeTypeFilter,
           this.paymentMethodFilter
         );
+        if (this.professionalFilter) {
+          result = (result || []).filter(o => {
+            const professionalId =
+              o?.professionalId || o?.incomeInfo?.professionalId || o?.paymentInfo?.professionalId;
+            return professionalId === this.professionalFilter;
+          });
+        }
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }

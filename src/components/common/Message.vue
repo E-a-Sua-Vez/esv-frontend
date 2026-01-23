@@ -12,6 +12,35 @@ export default {
     upgrade: { type: Boolean, default: false },
     closable: { type: Boolean, default: false },
   },
+  computed: {
+    /**
+     * Backwards compatible icon handling:
+     * - If caller passes 'bi bi-inbox' or 'bi-inbox', we keep it.
+     * - If caller passes 'inbox' (without prefix), we convert to 'bi bi-inbox'.
+     */
+    iconClass() {
+      const raw = (this.icon || '').trim();
+      if (!raw) return ['message-icon', 'bi', 'bi-chat'];
+
+      const parts = raw.split(/\s+/).filter(Boolean);
+      const hasBiToken = parts.includes('bi');
+      const hasBiPrefix = parts.some(p => p.startsWith('bi-'));
+
+      if (hasBiPrefix) {
+        // Ensure 'bi' is present once
+        const withoutBi = parts.filter(p => p !== 'bi');
+        return ['message-icon', 'bi', ...withoutBi];
+      }
+
+      if (hasBiToken) {
+        // Already includes 'bi' token (and maybe other classes)
+        return ['message-icon', ...parts];
+      }
+
+      // Assume it's a Bootstrap icon name without prefix (e.g. 'inbox', 'file-earmark-pdf')
+      return ['message-icon', 'bi', `bi-${raw}`];
+    },
+  },
   data() {
     return {};
   },
@@ -23,7 +52,7 @@ export default {
     <div class="message-content">
       <div class="message-header">
         <div class="message-title-section">
-          <i :class="`message-icon bi ${icon}`"></i>
+          <i :class="iconClass"></i>
           <span class="message-title-text">{{ title }}</span>
           <button
             v-if="closable"

@@ -59,89 +59,162 @@
         :estimated-time="estimatedTime"
       >
         <template #content>
-          <!-- Client Requirements Cards -->
+          <!-- Client Requirements Cards & Check-In Call -->
           <div v-if="state.user?.id" class="client-requirements-section mt-3">
-            <!-- Consent Status Widget -->
-            <ConsentStatusWidget
-              v-if="state.clientConsentsLoaded && state.commerce?.id && state.client?.id"
-              :commerce-id="state.commerce.id"
-              :client-id="state.client.id"
-              :consents="state.clientConsents"
-              :requirements="state.consentRequirements"
-              @refresh="loadConsentStatus"
-              @open-manager="openConsentManager"
-            />
+            <!-- Gestión de la Atención -->
+            <div v-if="state.attention && state.attention.id" class="client-management-section my-3">
+              <h5 class="client-management-title">
+                {{
+                  $t('collaboratorQueueAttentions.attentionManagement') || 'Gestión de la Atención:'
+                }}
+              </h5>
 
-            <!-- Preprontuario Status Card -->
-            <div v-if="isPreprontuarioActive()">
-              <div class="requirement-card requirement-card-compact">
-                <div class="requirement-card-header">
-                  <div class="requirement-icon">
-                    <i class="bi bi-clipboard2-pulse-fill"></i>
-                  </div>
-                  <div class="requirement-info">
-                    <div class="requirement-title">
-                      {{ $t('dashboard.preprontuario') || 'Pré-Prontuário' }}
-                      <a
-                        href="#"
-                        @click.prevent="checkPreprontuarioCompletion(true)"
-                        :class="{ loading: state.loadingPreprontuario }"
-                        class="refresh-link"
-                        :title="$t('dashboard.refreshStatus') || 'Atualizar status'"
-                      >
-                        <i
-                          class="bi bi-arrow-clockwise"
-                          :class="{ spinning: state.loadingPreprontuario }"
-                        ></i>
-                      </a>
-                    </div>
-                    <div
-                      class="requirement-status"
-                      :class="
-                        state.preprontuarioStatus?.completed ? 'status-completed' : 'status-pending'
-                      "
-                    >
-                      <i
-                        class="bi"
-                        :class="
-                          state.preprontuarioStatus?.completed
-                            ? 'bi-check-circle-fill'
-                            : 'bi-exclamation-circle-fill'
-                        "
-                      ></i>
-                      <span>
+              <!-- WhatsApp Call to Client for Check-In -->
+              <div class="call-client-banner" v-if="state.attention && state.attention.id">
+                <div class="call-client-text">
+                  <i class="bi bi-whatsapp me-2"></i>
+                  <span>
+                    {{
+                      $t('collaboratorAttentionCheckIn.callClient') ||
+                        'Enviar mensaje de WhatsApp al cliente para hacer el check-in'
+                    }}
+                  </span>
+                  <Popper :class="'dark p-1'" arrow placement="top">
+                    <template #content>
+                      <div>
                         {{
-                          state.preprontuarioStatus?.completed
-                            ? $t('dashboard.preprontuarioDetails.completed') ||
-                              $t('dashboard.completed') ||
-                              'Concluído'
-                            : $t('dashboard.preprontuarioDetails.pending') ||
-                              $t('dashboard.pending') ||
-                              'Pendente'
+                          $t('collaboratorAttentionCheckIn.callClientHelp') ||
+                            'Se enviará un mensaje de WhatsApp al número del cliente indicándole que se acerque a tu módulo para realizar su check-in. Solo se enviará una vez por atención.'
                         }}
-                      </span>
-                    </div>
-                  </div>
+                      </div>
+                    </template>
+                    <i class="bi bi-info-circle ms-2 call-client-help-icon"></i>
+                  </Popper>
                 </div>
                 <button
-                  v-if="!state.preprontuarioStatus?.completed"
-                  @click="sendPreprontuarioReminder()"
-                  :disabled="state.loadingPreprontuario || state.preprontuarioMessageSent"
                   class="requirement-action-btn-compact whatsapp-btn"
-                  :class="{ disabled: state.preprontuarioMessageSent }"
+                  :disabled="
+                    loading ||
+                    state.loadingCheckInCall ||
+                    state.attention?.notificationCheckInSent ||
+                    state.checkInCallSent
+                  "
+                  @click="sendCheckInCall"
                 >
-                  <i
-                    class="bi"
-                    :class="state.preprontuarioMessageSent ? 'bi-check-circle-fill' : 'bi-whatsapp'"
-                  ></i>
-                  <span v-if="state.loadingPreprontuario">{{
-                    $t('dashboard.sending') || 'Enviando...'
-                  }}</span>
-                  <span v-else-if="state.preprontuarioMessageSent">{{
-                    $t('dashboard.messageAlreadySent') || 'Mensaje ya enviado'
-                  }}</span>
-                  <span v-else>{{ $t('dashboard.sendReminder') || 'Enviar Lembrete' }}</span>
+                  <i class="bi bi-whatsapp"></i>
+                  <span v-if="state.loadingCheckInCall">
+                    {{ $t('dashboard.sending') || 'Enviando...' }}
+                  </span>
+                  <span
+                    v-else-if="state.attention?.notificationCheckInSent || state.checkInCallSent"
+                  >
+                    {{ $t('collaboratorAttentionCheckIn.callAlreadySent') || 'Llamado ya enviado' }}
+                  </span>
+                  <span v-else>
+                    {{
+                      $t('collaboratorAttentionCheckIn.callClientAction') ||
+                        'Enviar mensaje de WhatsApp'
+                    }}
+                  </span>
                 </button>
+              </div>
+
+              <!-- Payment / Transfer Actions (reusable component) -->
+              <div class="col-12" v-if="state.attention && state.attention.id">
+                <AttentionPaymentActionsCard
+                  class="my-2"
+                  :loading="loading"
+                  :disabled="!state.attention || !state.attention.id"
+                  @open="openAttentionModal()"
+                />
+              </div>
+
+              <!-- Consent Status Widget -->
+              <ConsentStatusWidget
+                v-if="state.clientConsentsLoaded && state.commerce?.id && state.client?.id"
+                :commerce-id="state.commerce.id"
+                :client-id="state.client.id"
+                :consents="state.clientConsents"
+                :requirements="state.consentRequirements"
+                @refresh="loadConsentStatus"
+                @open-manager="openConsentManager"
+              />
+
+              <!-- Preprontuario Status Card -->
+              <div v-if="isPreprontuarioActive()">
+                <div class="requirement-card requirement-card-compact">
+                  <div class="requirement-card-header">
+                    <div class="requirement-icon">
+                      <i class="bi bi-clipboard2-pulse-fill"></i>
+                    </div>
+                    <div class="requirement-info">
+                      <div class="requirement-title">
+                        {{ $t('dashboard.preprontuario') || 'Pré-Prontuário' }}
+                        <a
+                          href="#"
+                          @click.prevent="checkPreprontuarioCompletion(true)"
+                          :class="{ loading: state.loadingPreprontuario }"
+                          class="refresh-link"
+                          :title="$t('dashboard.refreshStatus') || 'Atualizar status'"
+                        >
+                          <i
+                            class="bi bi-arrow-clockwise"
+                            :class="{ spinning: state.loadingPreprontuario }"
+                          ></i>
+                        </a>
+                      </div>
+                      <div
+                        class="requirement-status"
+                        :class="
+                          state.preprontuarioStatus?.completed
+                            ? 'status-completed'
+                            : 'status-pending'
+                        "
+                      >
+                        <i
+                          class="bi"
+                          :class="
+                            state.preprontuarioStatus?.completed
+                              ? 'bi-check-circle-fill'
+                              : 'bi-exclamation-circle-fill'
+                          "
+                        ></i>
+                        <span>
+                          {{
+                            state.preprontuarioStatus?.completed
+                              ? $t('dashboard.preprontuarioDetails.completed') ||
+                                $t('dashboard.completed') ||
+                                'Concluído'
+                              : $t('dashboard.preprontuarioDetails.pending') ||
+                                $t('dashboard.pending') ||
+                                'Pendente'
+                          }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    v-if="!state.preprontuarioStatus?.completed"
+                    @click="sendPreprontuarioReminder()"
+                    :disabled="state.loadingPreprontuario || state.preprontuarioMessageSent"
+                    class="requirement-action-btn-compact whatsapp-btn"
+                    :class="{ disabled: state.preprontuarioMessageSent }"
+                  >
+                    <i
+                      class="bi"
+                      :class="
+                        state.preprontuarioMessageSent ? 'bi-check-circle-fill' : 'bi-whatsapp'
+                      "
+                    ></i>
+                    <span v-if="state.loadingPreprontuario">{{
+                      $t('dashboard.sending') || 'Enviando...'
+                    }}</span>
+                    <span v-else-if="state.preprontuarioMessageSent">{{
+                      $t('dashboard.messageAlreadySent') || 'Mensaje ya enviado'
+                    }}</span>
+                    <span v-else>{{ $t('dashboard.sendReminder') || 'Enviar Lembrete' }}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -238,6 +311,17 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Attention Details Modal -->
+    <AttentionDetailsModal
+      :show="state.showAttentionModal"
+      :attention="state.selectedAttention || state.attention"
+      :commerce="state.commerce"
+      :queues="state.commerce?.queues || state.queue ? [state.queue] : []"
+      :toggles="state.toggles"
+      @close="closeAttentionModal"
+      @attention-updated="handleAttentionUpdatedFromModal"
+    />
   </div>
 </template>
 
@@ -258,6 +342,7 @@ import {
   trackAttentionAccess,
   advanceStage,
   attend,
+  sendCheckInWhatsappCall,
 } from '../../application/services/attention';
 import { getClientById } from '../../application/services/client';
 import {
@@ -292,6 +377,9 @@ import Message from '../../components/common/Message.vue';
 import ConsentStatusWidget from '../../components/lgpd/ConsentStatusWidget.vue';
 import LgpdConsentManager from '../../components/lgpd/LgpdConsentManager.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
+import AttentionDetailsModal from '../../components/attentions/common/AttentionDetailsModal.vue';
+import AttentionPaymentActionsCard from '../../components/attentions/common/AttentionPaymentActionsCard.vue';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'CollaboratorAttentionCheckIn',
@@ -306,6 +394,9 @@ export default {
     ConsentStatusWidget,
     LgpdConsentManager,
     DesktopPageHeader,
+    AttentionDetailsModal,
+    AttentionPaymentActionsCard,
+    Popper,
   },
   setup() {
     const route = useRoute();
@@ -347,6 +438,10 @@ export default {
       clientConsents: [],
       consentRequirements: [],
       clientConsentsLoaded: false,
+      loadingCheckInCall: false,
+      checkInCallSent: false,
+      showAttentionModal: false,
+      selectedAttention: undefined,
     });
 
     // Live update interval for stats
@@ -735,6 +830,11 @@ export default {
             state.queue = attentionDetails.queue;
           }
 
+          // Inicializar flag de llamada de check-in según backend
+          if (attentionDetails.notificationCheckInSent) {
+            state.checkInCallSent = true;
+          }
+
           // Load commerce first to ensure it's available for validation
           if (attentionDetails.commerce) {
             // Update store commerce - load features lazily if needed
@@ -956,6 +1056,79 @@ export default {
         errorMessage.value = Array.isArray(msg) ? msg[0] : msg;
         alertError.value = error?.response?.status || 500;
         loading.value = false;
+      }
+    };
+
+    const sendCheckInCall = async () => {
+      if (!state.attention?.id || !state.queue?.id || !state.currentUser?.id) {
+        return;
+      }
+
+      try {
+        state.loadingCheckInCall = true;
+        const commerceLanguage =
+          state.commerce?.localeInfo?.language || state.commerce?.language || 'es';
+
+        await sendCheckInWhatsappCall(state.attention.id, {
+          collaboratorId: state.currentUser.id,
+          commerceLanguage,
+        });
+
+        state.checkInCallSent = true;
+        if (state.attention) {
+          state.attention.notificationCheckInSent = true;
+        }
+      } catch (error) {
+        console.error('Error sending check-in WhatsApp call:', error);
+      } finally {
+        state.loadingCheckInCall = false;
+      }
+    };
+
+    const openAttentionModal = () => {
+      state.selectedAttention = state.attention;
+      state.showAttentionModal = true;
+    };
+
+    const closeAttentionModal = () => {
+      state.showAttentionModal = false;
+      state.selectedAttention = undefined;
+    };
+
+    const handleAttentionUpdatedFromModal = async () => {
+      if (!state.attention?.id) return;
+
+      try {
+        const updatedAttention = await getAttentionDetails(state.attention.id, state.currentUser?.id);
+
+        if (updatedAttention.queue) {
+          state.queue = updatedAttention.queue;
+        }
+        if (updatedAttention.user) {
+          state.user = updatedAttention.user;
+        }
+        if (updatedAttention.commerce) {
+          state.commerce = updatedAttention.commerce;
+          if (
+            state.commerce &&
+            state.commerce.id &&
+            (!state.commerce.features || !Array.isArray(state.commerce.features))
+          ) {
+            try {
+              const fullCommerce = await getCommerceById(state.commerce.id);
+              if (fullCommerce && fullCommerce.features) {
+                state.commerce = fullCommerce;
+                await store.setCurrentCommerce(fullCommerce);
+              }
+            } catch (error) {
+              console.warn('Could not fetch full commerce with features (modal update):', error);
+            }
+          }
+        }
+
+        state.attention = updatedAttention;
+      } finally {
+        closeAttentionModal();
       }
     };
 
@@ -1191,6 +1364,10 @@ export default {
       loadPreprontuarioData,
       loadConsentStatus,
       openConsentManager,
+      sendCheckInCall,
+      openAttentionModal,
+      closeAttentionModal,
+      handleAttentionUpdatedFromModal,
     };
   },
 };
@@ -1225,6 +1402,44 @@ export default {
   flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+.call-client-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(37, 211, 102, 0.08), rgba(37, 211, 102, 0.02));
+  border: 1px dashed rgba(37, 211, 102, 0.4);
+}
+
+.call-client-text {
+  display: flex;
+  align-items: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.call-client-help-icon {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.client-management-section {
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.client-management-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.8);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(0, 74, 173, 0.2);
 }
 
 .requirement-card {

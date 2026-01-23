@@ -44,6 +44,7 @@ export const getBusinessLogo = async businessId => {
     // Mark request as _silent to suppress noisy network error logs in interceptor
     const response = await requestBackend.get(`/business-logos/${businessId}`, {
       _silent: true,
+      _skipAuthLogout: true,
       ...headers,
     });
     const relativePath = response.data;
@@ -86,6 +87,7 @@ export const getBusinessLogoUrl = async (businessId, logoId) => {
     // Make an authenticated request to get the logo blob
     const response = await requestBackend.get(`/business-logos/${businessId}/${logoId}`, {
       responseType: 'blob',
+      _skipAuthLogout: true,
       ...headers,
     });
 
@@ -119,6 +121,8 @@ export const getBusinessLogoThumbnailUrl = async (businessId, logoId) => {
     // Make an authenticated request to get the thumbnail blob
     const response = await requestBackend.get(`/business-logos/${businessId}/${logoId}/thumbnail`, {
       responseType: 'blob',
+      _skipAuthLogout: true,
+      ...headers,
     });
 
     // Create a blob URL that can be used in img src

@@ -123,7 +123,12 @@ const setupResponseInterceptor = (instance, apiName) => {
       const originalRequest = error.config;
 
       // Handle 401 Unauthorized - Token expired or invalid
-      if (error.response?.status === 401 && !originalRequest._retry) {
+      // Allow specific requests to opt out of global logout/redirect flow
+      if (
+        error.response?.status === 401 &&
+        !originalRequest._retry &&
+        !originalRequest._skipAuthLogout
+      ) {
         if (isRefreshing) {
           // If already refreshing, queue this request
           return new Promise((resolve, reject) => {

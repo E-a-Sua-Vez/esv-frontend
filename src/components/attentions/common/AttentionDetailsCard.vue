@@ -258,7 +258,7 @@ export default {
           }
         }
 
-        const queuesToTransfer = this.queues; //this.queues.filter(queue => queue.type === 'COLLABORATOR');
+        const queuesToTransfer = this.queues;
         if (!queuesToTransfer || queuesToTransfer.length === 0) {
           this.loading = false;
           return;
@@ -806,6 +806,50 @@ export default {
       return this.consentStatus.missing.filter(req => req.blockingForAttention && req.required)
         .length;
     },
+    getStatusIcon() {
+      if (this.attention.status === ATTENTION_STATUS.PENDING) {
+        if (!this.attention.paid || this.attention.paid === false) {
+          return 'bi bi-clock-fill';
+        }
+        return 'bi bi-check-circle-fill';
+      }
+      if (this.attention.status === ATTENTION_STATUS.TERMINATED) return 'bi bi-check-circle-fill';
+      if (this.attention.status === ATTENTION_STATUS.CANCELLED) return 'bi bi-x-circle-fill';
+      return 'bi bi-calendar-check-fill';
+    },
+    getStatusIconClass() {
+      if (this.attention.status === ATTENTION_STATUS.TERMINATED) return 'icon-success';
+      if (this.attention.status === ATTENTION_STATUS.PENDING) {
+        if (this.attention.paid || this.attention.paid === true) {
+          return 'icon-success';
+        }
+        return 'icon-warning';
+      }
+      if (this.attention.status === ATTENTION_STATUS.CANCELLED) return 'icon-error';
+      return 'icon-info';
+    },
+    getStatusTooltip() {
+      if (this.attention.status === ATTENTION_STATUS.PENDING) {
+        if (!this.attention.paid || this.attention.paid === false) {
+          return 'Atención pendiente';
+        }
+        return 'Atención confirmada';
+      }
+      if (this.attention.status === ATTENTION_STATUS.TERMINATED) return 'Atención terminada';
+      if (this.attention.status === ATTENTION_STATUS.CANCELLED) return 'Atención cancelada';
+      return 'Estado de la atención';
+    },
+    getCardTypeClass() {
+      if (this.attention.status === ATTENTION_STATUS.TERMINATED) return 'booking-card-success';
+      if (this.attention.status === ATTENTION_STATUS.PENDING) {
+        if (this.attention.paid || this.attention.paid === true) {
+          return 'booking-card-success';
+        }
+        return 'booking-card-warning';
+      }
+      if (this.attention.status === ATTENTION_STATUS.CANCELLED) return 'booking-card-error';
+      return 'booking-card-info';
+    },
   },
 };
 </script>
@@ -813,110 +857,149 @@ export default {
 <template>
   <div v-if="show && attention">
     <div
-      class="row metric-card"
-      :class="disableClick ? '' : 'attention-link'"
-      :href="disableClick ? undefined : `#data-attention-${attention.number}`"
+      class="booking-row-card"
+      :class="getCardTypeClass()"
       @click.prevent="disableClick ? null : showDetails()"
     >
-      <div v-if="attention.servicesDetails" class="idNumber-title lefted">
-        <span
-          v-for="serv in attention.servicesDetails"
-          :key="serv.id"
-          class="badge service-badge bg-primary p-1"
-        >
-          {{ serv.name }}
-        </span>
-        <span v-if="attention.packageId" class="badge bg-secondary service-badge">
-          <i class="bi bi-box-fill"></i> <span> {{ attention.packageProcedureNumber }} </span>
-        </span>
-      </div>
-      <div class="col-1 lefted">
-        <span class="badge rounded-pill bg-primary metric-keyword-tag mx-1 fw-bold">
-          {{ attention.number }}</span
-        >
-        <span
-          v-if="
-            getActiveFeature(commerce, 'attention-stages-enabled', 'PRODUCT') &&
-            attention.currentStage
-          "
-          class="badge rounded-pill bg-info stage-badge mx-1 fw-bold"
-          :title="$t(`attention.stage.${attention.currentStage}`)"
-        >
-          {{ $t(`attention.stage.${attention.currentStage}`) }}
-        </span>
-        <!-- LGPD Consent Indicator -->
-        <span
-          v-if="hasBlockingConsents()"
-          class="badge rounded-pill bg-danger mx-1 fw-bold cursor-pointer"
-          :title="
-            $t('attention.lgpd.blockingConsents', { count: getBlockingConsentsCount() }) +
-            ' - ' +
-            $t('attention.lgpd.clickToRequest')
-          "
-          @click.stop="openLgpdModal()"
-          style="cursor: pointer"
-        >
-          <i class="bi bi-shield-exclamation"></i>
-          {{ $t('attention.lgpd.blocking') }}
-        </span>
-        <span
-          v-else-if="getMissingConsentsCount() > 0"
-          class="badge rounded-pill bg-warning mx-1 fw-bold"
-          :title="$t('attention.lgpd.missingConsents', { count: getMissingConsentsCount() })"
-        >
-          <i class="bi bi-shield-check"></i>
-          {{ $t('attention.lgpd.missing') }}
-        </span>
-        <span
-          v-else-if="consentStatus && consentStatus.summary"
-          class="badge rounded-pill bg-success mx-1 fw-bold"
-          :title="$t('attention.lgpd.allConsentsGranted')"
-        >
-          <i class="bi bi-shield-check"></i>
-          {{ $t('attention.lgpd.compliant') }}
-        </span>
-      </div>
-      <div class="col lefted fw-bold" v-if="attention.user && attention.user.name">
-        {{ attention.user.name.split(' ')[0].toUpperCase() || 'N/I' }}
-        <i
-          v-if="
-            attention.status === ATTENTION_STATUS.PENDING &&
-            (!attention.paid || attention.paid === false)
-          "
-          class="bi bi-clock-fill icon yellow-icon"
-        >
-        </i>
-        <i
-          v-if="
-            attention.status === ATTENTION_STATUS.PENDING &&
-            (attention.paid || attention.paid === true)
-          "
-          class="bi bi-check-circle-fill icon green-icon"
-        >
-        </i>
-        <i
-          v-if="
-            attention.paymentConfirmationData !== undefined &&
-            attention.paymentConfirmationData.paid === true
-          "
-          class="bi bi-coin icon blue-icon"
-        >
-        </i>
-        <i v-if="attention.productCounter > 0" class="bi bi-eyedropper"> </i>
-        <i v-if="attention.termsConditionsAcceptedCode" class="bi bi-person-fill-check mx-1"></i>
-      </div>
-      <div class="col centered hour-title" v-if="attention.block && attention.block.hourFrom">
-        <span> {{ attention.block.hourFrom }} - {{ attention.block.hourTo }} </span>
-      </div>
-      <div class="col-1 centered date-title">
-        <div class="centered">
-          <span href="#" @click.prevent="showDetails()">
-            <span class="details-title"></span>
-            <i
-              class="dark"
-              :class="`bi ${extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-            ></i>
+      <div class="booking-row-content">
+        <!-- Status Icon -->
+        <Popper :class="'dark'" arrow disable-click-away hover>
+          <template #content>
+            <div>{{ getStatusTooltip() }}</div>
+          </template>
+          <div class="booking-icon-mini" :class="getStatusIconClass()" @click.stop>
+            <i :class="getStatusIcon()"></i>
+          </div>
+        </Popper>
+
+        <!-- Service Badges -->
+        <div v-if="attention.servicesDetails || attention.packageId" class="service-badges-inline">
+          <span
+            v-for="serv in attention.servicesDetails"
+            :key="serv.id"
+            class="badge-mini service-tag-mini"
+          >
+            {{ serv.name }}
           </span>
+          <span v-if="attention.packageId" class="badge-mini service-tag-mini bg-secondary">
+            <i class="bi bi-box-fill"></i> {{ attention.packageProcedureNumber }}
+          </span>
+        </div>
+
+        <!-- Client Info - Horizontal -->
+        <div class="booking-info-inline">
+          <div class="booking-name-inline">
+            <span class="booking-name-text">{{
+              attention.user?.name?.split(' ')[0].toUpperCase() || 'N/I'
+            }}</span>
+            <Popper :class="'dark'" arrow disable-click-away hover>
+              <template #content>
+                <div>Copiar dados da atenção</div>
+              </template>
+              <button class="btn-copy-mini" @click.stop="copyBooking()">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+              </button>
+            </Popper>
+          </div>
+          <div class="booking-meta-inline">
+            <span class="booking-time-inline" v-if="attention.block && attention.block.hourFrom">
+              {{ attention.block.hourFrom }} - {{ attention.block.hourTo }}
+            </span>
+            <span
+              v-if="attention.number"
+              class="badge-mini service-tag-mini"
+              style="background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);"
+            >
+              #{{ attention.number }}
+            </span>
+            <Popper
+              v-if="
+                getActiveFeature(commerce, 'attention-stages-enabled', 'PRODUCT') &&
+                attention.currentStage
+              "
+              :class="'dark'"
+              arrow
+              disable-click-away
+              hover
+            >
+              <template #content>
+                <div>{{ $t(`attention.stage.${attention.currentStage}`) }}</div>
+              </template>
+              <span class="badge-mini service-tag-mini" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);" @click.stop>
+                {{ $t(`attention.stage.${attention.currentStage}`) }}
+              </span>
+            </Popper>
+            <!-- LGPD Consent Indicators -->
+            <Popper
+              v-if="hasBlockingConsents()"
+              :class="'dark'"
+              arrow
+              disable-click-away
+              hover
+            >
+              <template #content>
+                <div>
+                  {{ $t('attention.lgpd.blockingConsents', { count: getBlockingConsentsCount() }) }}
+                  - {{ $t('attention.lgpd.clickToRequest') }}
+                </div>
+              </template>
+              <i
+                class="bi bi-shield-exclamation icon-mini-separated"
+                style="cursor: pointer; color: #dc3545;"
+                @click.stop="openLgpdModal()"
+              ></i>
+            </Popper>
+            <Popper
+              v-else-if="getMissingConsentsCount() > 0"
+              :class="'dark'"
+              arrow
+              disable-click-away
+              hover
+            >
+              <template #content>
+                <div>{{ $t('attention.lgpd.missingConsents', { count: getMissingConsentsCount() }) }}</div>
+              </template>
+              <i
+                class="bi bi-shield-check icon-mini-separated"
+                style="color: #ffc107;"
+                @click.stop
+              ></i>
+            </Popper>
+            <Popper
+              v-else-if="consentStatus && consentStatus.summary"
+              :class="'dark'"
+              arrow
+              disable-click-away
+              hover
+            >
+              <template #content>
+                <div>{{ $t('attention.lgpd.allConsentsGranted') }}</div>
+              </template>
+              <i
+                class="bi bi-shield-check icon-mini-separated"
+                style="color: #28a745;"
+                @click.stop
+              ></i>
+            </Popper>
+            <i
+              v-if="
+                attention.paymentConfirmationData !== undefined &&
+                attention.paymentConfirmationData.paid === true
+              "
+              class="bi bi-coin icon-mini-separated blue-icon"
+              @click.stop
+            ></i>
+            <i v-if="attention.productCounter > 0" class="bi bi-eyedropper icon-mini-separated" @click.stop></i>
+            <i v-if="attention.termsConditionsAcceptedCode" class="bi bi-person-fill-check icon-mini-separated" @click.stop></i>
+          </div>
+        </div>
+
+        <!-- Collapse Icon -->
+        <div class="collapse-icon-wrapper">
+          <i
+            class="bi collapse-icon"
+            :class="extendedEntity ? 'bi-chevron-up' : 'bi-chevron-down'"
+          ></i>
         </div>
       </div>
     </div>
@@ -1033,17 +1116,193 @@ export default {
 </template>
 
 <style scoped>
-.metric-card {
-  background-color: var(--color-background);
-  margin: 0.5rem;
-  margin-bottom: 0;
-  border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  border-bottom: 0;
-  line-height: 1.2rem;
+/* Modernized Booking Row Card */
+.booking-row-card {
+  background-color: #ffffff;
+  padding: 0.15rem 0.35rem;
+  margin: 0.25rem 0;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
+
+.booking-row-card:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  border-color: rgba(0, 194, 203, 0.2);
+}
+
+.booking-card-success {
+  border-left: 3px solid #10b981;
+}
+
+.booking-card-warning {
+  border-left: 3px solid #f59e0b;
+}
+
+.booking-card-error {
+  border-left: 3px solid #ef4444;
+}
+
+.booking-card-info {
+  border-left: 3px solid var(--azul-turno);
+}
+
+.booking-row-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.booking-icon-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+}
+
+.booking-icon-mini.icon-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.booking-icon-mini.icon-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.booking-icon-mini.icon-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.booking-icon-mini.icon-info {
+  background: rgba(0, 194, 203, 0.1);
+  color: var(--azul-turno);
+}
+
+.service-badges-inline {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.badge-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 0.35rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.badge-mini.bg-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+}
+
+.service-tag-mini {
+  background: linear-gradient(135deg, var(--azul-turno) 0%, #00b8c4 100%);
+}
+
+.booking-info-inline {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.booking-name-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.booking-name-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.btn-copy-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6c757d;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+}
+
+.btn-copy-mini:hover {
+  background: rgba(0, 194, 203, 0.08);
+  border-color: var(--azul-turno);
+  color: var(--azul-turno);
+}
+
+.booking-meta-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.booking-time-inline {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--azul-turno);
+  padding: 0.15rem 0.4rem;
+  background: rgba(0, 194, 203, 0.08);
+  border-radius: 0.3rem;
+  line-height: 1.2;
+}
+
+.icon-mini-separated {
+  font-size: 0.75rem;
+  color: #6c757d;
+  opacity: 0.8;
+}
+
+.icon-mini-separated.blue-icon {
+  color: var(--azul-turno);
+}
+
+.collapse-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.collapse-icon {
+  font-size: 0.75rem;
+  color: #6c757d;
+  transition: transform 0.2s ease;
+}
+
 .details-arrow {
   margin: 0.5rem;
   margin-top: 0;

@@ -680,8 +680,8 @@ export default {
                         </button>
                         <AreYouSure
                           :show="state.goToUnavailable"
-                          :yes-disabled="state.toggles['collaborators.admin.unavailable']"
-                          :no-disabled="state.toggles['collaborators.admin.unavailable']"
+                          :yes-disabled="!state.toggles['collaborators.admin.unavailable']"
+                          :no-disabled="!state.toggles['collaborators.admin.unavailable']"
                           @actionYes="unavailable(collaborator)"
                           @actionNo="unavailableCancel()"
                         >
@@ -873,8 +873,8 @@ export default {
                         </button>
                         <AreYouSure
                           :show="state.goToUnavailable"
-                          :yes-disabled="state.toggles['collaborators.admin.unavailable']"
-                          :no-disabled="state.toggles['collaborators.admin.unavailable']"
+                          :yes-disabled="!state.toggles['collaborators.admin.unavailable']"
+                          :no-disabled="!state.toggles['collaborators.admin.unavailable']"
                           @actionYes="unavailable(collaborator)"
                           @actionNo="unavailableCancel()"
                         >
