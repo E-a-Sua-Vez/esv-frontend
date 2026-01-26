@@ -10,8 +10,6 @@ import { globalStore } from '../../../stores';
 import { getDate } from '../../../shared/utils/date';
 import {
   downloadFormattedCSV,
-  formatCurrencyForCSV,
-  formatPercentageForCSV,
 } from '../../../shared/utils/excelExport';
 import SimpleCard from '../../dashboard/common/SimpleCard.vue';
 import { LineChart, DoughnutChart } from 'vue-chart-3';
@@ -28,7 +26,9 @@ import {
   getServiceProfitabilityReport,
   getMostProfitableClientsReport,
   getExpensesByProviderReport,
+  getIncomesDetails,
 } from '../../../application/services/query-stack';
+import { getProfessionalsByCommerce } from '../../../application/services/professional';
 import CollectionDetails from '../../dashboard/domain/CollectionDetails.vue';
 import IncomesCollectionDetails from '../../dashboard/domain/IncomesCollectionDetails.vue';
 import OutcomesCollectionDetails from '../../dashboard/domain/OutcomesCollectionDetails.vue';
@@ -84,6 +84,7 @@ export default {
         resume: {},
         evolution: {},
         incomeDistribution: {},
+        professionalIncomes: null,
       },
       newFinancialResume: {},
       showFilterOptions: false,
@@ -203,110 +204,217 @@ export default {
         };
 
         // Use LineChart for better trend visualization
-        const chartData = {
+        // Ensure we have valid data before creating chart
+        const incomesData = mapEvolutionData(
+          allLabels,
+          incomesEvolution.labels,
+          incomesEvolution.datasets,
+          'paymentAmountSum',
+        );
+        const commissionsData = mapEvolutionData(
+          allLabels,
+          incomesEvolution.labels,
+          incomesEvolution.datasets,
+          'paymentCommissionSum',
+        );
+        const outcomesData = mapEvolutionData(
+          allLabels,
+          outcomesEvolution.labels,
+          outcomesEvolution.datasets,
+          'paymentAmountSum',
+        );
+
+        // Only create chart if we have labels
+        const chartData = allLabels.length > 0 ? {
           labels: allLabels,
           datasets: [
             {
-              label: this.$t('dashboard.incomes'),
+              label: this.$t('dashboard.incomes') || 'Recebido',
               borderColor: '#004aad',
               backgroundColor: 'rgba(0, 74, 173, 0.1)',
-              data: mapEvolutionData(
-                allLabels,
-                incomesEvolution.labels,
-                incomesEvolution.datasets,
-                'paymentAmountSum',
-              ),
+              data: incomesData,
               fill: true,
               tension: 0.4,
-              pointRadius: 3,
-              pointHoverRadius: 5,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              pointBorderWidth: 2,
+              pointBackgroundColor: '#004aad',
+              pointBorderColor: '#ffffff',
+              borderWidth: 2,
             },
             {
-              label: this.$t('businessFinancial.commission'),
+              label: this.$t('businessFinancial.commission') || 'Comissão',
               borderColor: '#f9c322',
               backgroundColor: 'rgba(249, 195, 34, 0.1)',
               borderDash: [5, 5],
-              data: mapEvolutionData(
-                allLabels,
-                incomesEvolution.labels,
-                incomesEvolution.datasets,
-                'paymentCommissionSum',
-              ),
+              data: commissionsData,
               fill: false,
               tension: 0.4,
-              pointRadius: 3,
-              pointHoverRadius: 5,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              pointBorderWidth: 2,
+              pointBackgroundColor: '#f9c322',
+              pointBorderColor: '#ffffff',
+              borderWidth: 2,
             },
             {
-              label: this.$t('dashboard.outcomes'),
+              label: this.$t('dashboard.outcomes') || 'Despesas',
               borderColor: '#a52a2a',
               backgroundColor: 'rgba(165, 42, 42, 0.1)',
-              data: mapEvolutionData(
-                allLabels,
-                outcomesEvolution.labels,
-                outcomesEvolution.datasets,
-                'paymentAmountSum',
-              ),
+              data: outcomesData,
               fill: true,
               tension: 0.4,
-              pointRadius: 3,
-              pointHoverRadius: 5,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              pointBorderWidth: 2,
+              pointBackgroundColor: '#a52a2a',
+              pointBorderColor: '#ffffff',
+              borderWidth: 2,
             },
           ],
-        };
+        } : null;
         const chartOptions = {
           responsive: true,
           maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: 'index',
+          },
+          layout: {
+            padding: {
+              top: 5,
+              bottom: 10,
+              left: 5,
+              right: 5,
+            },
+          },
           plugins: {
             legend: {
               display: true,
               position: 'top',
+              labels: {
+                usePointStyle: true,
+                padding: 8,
+                font: {
+                  size: 10,
+                },
+                boxWidth: 10,
+                boxHeight: 10,
+              },
+            },
+            tooltip: {
+              enabled: true,
+              mode: 'index',
+              intersect: false,
             },
           },
           scales: {
+            x: {
+              display: true,
+              grid: {
+                display: true,
+                color: 'rgba(0, 0, 0, 0.05)',
+                drawBorder: false,
+              },
+              ticks: {
+                font: {
+                  size: 9,
+                },
+                maxRotation: 45,
+                minRotation: 0,
+                padding: 5,
+              },
+            },
             y: {
               beginAtZero: true,
+              display: true,
+              grid: {
+                display: true,
+                color: 'rgba(0, 0, 0, 0.05)',
+                drawBorder: false,
+              },
+              ticks: {
+                font: {
+                  size: 9,
+                },
+                padding: 5,
+                callback: function(value) {
+                  return value.toLocaleString('de-DE', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  });
+                },
+              },
+            },
+          },
+          elements: {
+            line: {
+              borderWidth: 2,
+            },
+            point: {
+              radius: 3,
+              hoverRadius: 5,
+              borderWidth: 1.5,
             },
           },
         };
-        this.financialResume.evolution = {
-          chartData,
-          options: chartOptions,
-        };
+        // Only set evolution chart if we have valid data
+        if (chartData && chartData.labels && chartData.labels.length > 0) {
+          this.financialResume.evolution = {
+            chartData,
+            options: chartOptions,
+          };
+        } else {
+          this.financialResume.evolution = null;
+        }
 
         // Calculate income distribution by type for donut chart
         const incomeTypeDistribution = incomes.paymentTypeDistribution || {};
         if (Object.keys(incomeTypeDistribution).length > 0) {
+          const distributionLabels = Object.keys(incomeTypeDistribution).map(
+            key => this.$t(`incomeTypes.${key}`) || key
+          );
+          const distributionData = Object.values(incomeTypeDistribution).map(item => +(item.totalAmount || 0));
+
+          // Color palette for distribution chart
+          const colorPalette = [
+            '#004aad', // Blue
+            '#00c2cb', // Cyan
+            '#f9c322', // Yellow
+            '#a52a2a', // Brown
+            '#7c91d9', // Light Blue
+            '#2f407a', // Dark Blue
+            '#b1bde6', // Light Purple
+            '#ff6b6b', // Red
+            '#4ecdc4', // Teal
+            '#ffe66d', // Light Yellow
+          ];
+
           const donutChartData = {
-            labels: Object.keys(incomeTypeDistribution).map(
-              key => this.$t(`incomeTypes.${key}`) || key
-            ),
+            labels: distributionLabels,
             datasets: [
               {
-                data: Object.values(incomeTypeDistribution).map(item => item.totalAmount || 0),
-                backgroundColor: [
-                  '#004aad',
-                  '#00c2cb',
-                  '#f9c322',
-                  '#a52a2a',
-                  '#7c91d9',
-                  '#2f407a',
-                  '#b1bde6',
-                ],
+                data: distributionData,
+                backgroundColor: distributionLabels.map((_, index) =>
+                  colorPalette[index % colorPalette.length]
+                ),
                 borderWidth: 2,
                 borderColor: '#ffffff',
+                hoverBorderWidth: 3,
+                hoverOffset: 4,
               },
             ],
           };
           const donutChartOptions = {
             responsive: true,
             maintainAspectRatio: false,
+            cutout: distributionLabels.length === 1 ? '50%' : '60%', // Smaller cutout for single category
             layout: {
               padding: {
-                top: 10,
-                bottom: 10,
-                left: 10,
-                right: 10,
+                top: 5,
+                bottom: 5,
+                left: 5,
+                right: 5,
               },
             },
             plugins: {
@@ -314,6 +422,7 @@ export default {
                 display: false,
               },
               tooltip: {
+                enabled: true,
                 callbacks: {
                   label: context => {
                     const label = context.label || '';
@@ -328,6 +437,13 @@ export default {
                 },
               },
             },
+            // Ensure proper rendering even with single category
+            animation: {
+              animateRotate: true,
+              animateScale: true,
+            },
+            // Better spacing for single category
+            spacing: distributionLabels.length === 1 ? 0 : 2,
           };
           this.financialResume.incomeDistribution = {
             chartData: donutChartData,
@@ -342,11 +458,12 @@ export default {
         const totalCommissions = +(incomes.paymentData?.paymentCommissionSum || 0);
         const totalOutcomes = +(outcomes.paymentData?.paymentAmountSum || 0);
         const netIncomes = totalIncomes - totalCommissions;
-        const diff = netIncomes - totalOutcomes; // Net profit
+        // Net profit = Total Incomes - Total Outcomes (comisiones ya están incluidas en las receitas)
+        const diff = totalIncomes - totalOutcomes; // Net profit
 
         this.financialResume.resume.diff = diff;
-        // Calculate margin: (profit / net incomes) * 100
-        const avg = netIncomes > 0 ? this.getPercentage(diff, netIncomes) : 0;
+        // Calculate margin: (profit / total incomes) * 100
+        const avg = totalIncomes > 0 ? this.getPercentage(diff, totalIncomes) : 0;
         this.financialResume.resume.avg = avg;
 
         // Calculate additional metrics
@@ -354,6 +471,9 @@ export default {
         // Use net incomes (after commissions) for average daily income
         this.financialResume.resume.averageDailyIncome =
           daysInPeriod > 0 ? netIncomes / daysInPeriod : 0;
+
+        // Calculate professional incomes
+        await this.calculateProfessionalIncomes();
         this.financialResume.resume.daysUntilMonthEnd = this.calculateDaysUntilMonthEnd();
 
         // Calculate alerts
@@ -519,6 +639,219 @@ export default {
       }
 
       this.alerts = alerts;
+    },
+    async calculateProfessionalIncomes() {
+      try {
+        console.log('[calculateProfessionalIncomes] Starting...', {
+          commerce: this.commerce?.id,
+          startDate: this.startDate,
+          endDate: this.endDate,
+        });
+
+        if (!this.commerce || !this.commerce.id || !this.startDate || !this.endDate) {
+          console.log('[calculateProfessionalIncomes] Missing required data, setting to null');
+          this.financialResume.professionalIncomes = null;
+          return;
+        }
+
+        // Get professionals to map IDs to names
+        let professionalsMap = {};
+        try {
+          const professionals = await getProfessionalsByCommerce(this.commerce.id);
+          if (Array.isArray(professionals)) {
+            professionals.forEach(prof => {
+              if (prof.id && prof.personalInfo) {
+                const firstName = prof.personalInfo.firstName || '';
+                const lastName = prof.personalInfo.lastName || '';
+                professionalsMap[prof.id] = `${firstName} ${lastName}`.trim() || prof.personalInfo.name || 'Sin Nombre';
+              }
+            });
+          }
+        } catch (error) {
+          console.warn('[calculateProfessionalIncomes] Could not fetch professionals:', error);
+        }
+
+        // Get all incomes for the date range
+        console.log('[calculateProfessionalIncomes] Fetching incomes...');
+        const incomesArray = await getIncomesDetails(
+          this.business?.id,
+          this.commerce.id,
+          this.startDate,
+          this.endDate,
+          [this.commerce.id],
+          1,
+          10000, // Large limit to get all incomes
+          undefined,
+          true,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined
+        );
+
+        console.log('[calculateProfessionalIncomes] Incomes data received:', {
+          hasData: !!incomesArray,
+          isArray: Array.isArray(incomesArray),
+          count: Array.isArray(incomesArray) ? incomesArray.length : 0,
+          firstItem: Array.isArray(incomesArray) && incomesArray.length > 0 ? incomesArray[0] : null,
+        });
+
+        if (!incomesArray || !Array.isArray(incomesArray) || incomesArray.length === 0) {
+          console.log('[calculateProfessionalIncomes] No valid incomes data, setting to null');
+          this.financialResume.professionalIncomes = null;
+          return;
+        }
+
+        // Group incomes by professional
+        const professionalMap = {};
+
+        incomesArray.forEach(income => {
+          const professionalId = income.professionalId || income.professionalIdFromJoin;
+
+          // Skip if no professional ID
+          if (!professionalId || professionalId === 'unknown') {
+            return;
+          }
+
+          // Get professional name - try multiple sources
+          let professionalName = income.professionalName;
+          if (!professionalName && professionalsMap[professionalId]) {
+            professionalName = professionalsMap[professionalId];
+          }
+          if (!professionalName) {
+            // Last resort: use a default
+            professionalName = this.$t('businessFinancial.filters.professional') || 'Profesional';
+          }
+
+          if (!professionalMap[professionalId]) {
+            professionalMap[professionalId] = {
+              id: professionalId,
+              name: professionalName,
+              totalAmount: 0,
+              totalCommission: 0,
+              count: 0,
+            };
+          }
+
+          const amount = +(income.totalAmount || income.amount || 0);
+          const commission = +(income.professionalCommission || 0);
+
+          professionalMap[professionalId].totalAmount += amount;
+          professionalMap[professionalId].totalCommission += commission;
+          professionalMap[professionalId].count += 1;
+        });
+
+        // Convert to array and sort by totalAmount (descending)
+        const professionalList = Object.values(professionalMap)
+          .filter(p => p.totalAmount > 0) // Only include professionals with income
+          .sort((a, b) => b.totalAmount - a.totalAmount);
+
+        console.log('[calculateProfessionalIncomes] Professional list:', {
+          count: professionalList.length,
+          list: professionalList,
+        });
+
+        if (professionalList.length === 0) {
+          console.log('[calculateProfessionalIncomes] No professionals with income, setting to null');
+          this.financialResume.professionalIncomes = null;
+          return;
+        }
+
+        // Prepare chart data
+        const chartLabels = professionalList.map(p => p.name);
+        const chartData = professionalList.map(p => p.totalAmount);
+
+        // Color palette for professional chart
+        const colorPalette = [
+          '#004aad', // Blue
+          '#00c2cb', // Cyan
+          '#f9c322', // Yellow
+          '#a52a2a', // Brown
+          '#7c91d9', // Light Blue
+          '#2f407a', // Dark Blue
+          '#b1bde6', // Light Purple
+          '#ff6b6b', // Red
+          '#4ecdc4', // Teal
+          '#ffe66d', // Light Yellow
+          '#95e1d3', // Mint
+          '#f38181', // Coral
+          '#aa96da', // Lavender
+          '#fcbad3', // Pink
+          '#a8d8ea', // Sky Blue
+        ];
+
+        const donutChartData = {
+          labels: chartLabels,
+          datasets: [
+            {
+              data: chartData,
+              backgroundColor: chartLabels.map((_, index) =>
+                colorPalette[index % colorPalette.length]
+              ),
+              borderWidth: 2,
+              borderColor: '#ffffff',
+              hoverBorderWidth: 3,
+              hoverOffset: 4,
+            },
+          ],
+        };
+
+        const donutChartOptions = {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: professionalList.length === 1 ? '50%' : '60%',
+          layout: {
+            padding: {
+              top: 5,
+              bottom: 5,
+              left: 5,
+              right: 5,
+            },
+          },
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: context => {
+                  const label = context.label || '';
+                  const value = context.parsed || 0;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
+                  return `${label}: ${value.toLocaleString('de-DE', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })} (${percentage}%)`;
+                },
+              },
+            },
+          },
+          animation: {
+            animateRotate: true,
+            animateScale: true,
+          },
+          spacing: professionalList.length === 1 ? 0 : 2,
+        };
+
+        this.financialResume.professionalIncomes = {
+          list: professionalList,
+          chartData: donutChartData,
+          options: donutChartOptions,
+        };
+
+        console.log('[calculateProfessionalIncomes] Successfully set professionalIncomes:', {
+          listCount: professionalList.length,
+          hasChartData: !!donutChartData,
+        });
+      } catch (error) {
+        console.error('[calculateProfessionalIncomes] Error calculating professional incomes:', error);
+        this.financialResume.professionalIncomes = null;
+      }
     },
     showFilters() {
       this.showFilterOptions = !this.showFilterOptions;
@@ -1003,9 +1336,11 @@ export default {
     calculateDaysInPeriod(startDate, endDate) {
       if (!startDate || !endDate) return 0;
       const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0); // Normalize to start of day
       const end = new Date(endDate);
-      const diffTime = Math.abs(end - start);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      end.setHours(23, 59, 59, 999); // Normalize to end of day
+      const diffTime = end - start;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       return diffDays + 1; // +1 to include both start and end dates
     },
     calculateDaysUntilMonthEnd() {
@@ -1101,7 +1436,7 @@ export default {
                 const value = context.parsed.y || 0;
                 return `${label}: ${value.toLocaleString('de-DE', {
                   style: 'currency',
-                  currency: 'USD',
+                  currency: 'BRL',
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}`;
@@ -1116,7 +1451,7 @@ export default {
               callback(value) {
                 return value.toLocaleString('de-DE', {
                   style: 'currency',
-                  currency: 'USD',
+                  currency: 'BRL',
                   minimumFractionDigits: 0,
                   maximumFractionDigits: 0,
                 });
@@ -1187,7 +1522,7 @@ export default {
                 const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
                 return `${label}: ${value.toLocaleString('de-DE', {
                   style: 'currency',
-                  currency: 'USD',
+                  currency: 'BRL',
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })} (${percentage}%)`;
@@ -1371,6 +1706,7 @@ export default {
 
 /* Modern Card - unified style for all cards without borders */
 .modern-card {
+  border-left: 4px solid #004aad;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
   backdrop-filter: blur(10px);
   border-radius: 12px;
@@ -1451,7 +1787,7 @@ export default {
               <div>
                 <div>
                   <!-- Reports Download Section - Collapsable -->
-                  <div id="admin-sub-menu" class="row mt-3 mx-0">
+                  <div id="admin-sub-menu" class="row mb-3 mx-0">
                     <div class="col-12">
                       <div class="modern-card p-2">
                         <div
@@ -1637,7 +1973,7 @@ export default {
                     </div>
                   </div>
                   <!-- Filters Section - Can be shown in component or exposed via slot -->
-                  <div v-if="filtersLocation === 'component'" class="my-2 row metric-card">
+                  <div v-if="filtersLocation === 'component'" class="my-2 row">
                     <div class="col-12">
                       <span class="metric-card-subtitle">
                         <span
@@ -1738,7 +2074,7 @@ export default {
                   <!-- KPIs Section - 2 per row with same height -->
                   <div
                     v-if="calculatedMetrics && Object.keys(calculatedMetrics).length > 0"
-                    class="row mb-3"
+                    class="row mb-3 kpi-cards-container"
                   >
                     <div class="col-12 col-md-6 mb-3 d-flex">
                       <FinancialKPICard
@@ -1752,6 +2088,8 @@ export default {
                         icon="bi-arrow-down-circle-fill"
                         icon-style-class="green-icon"
                         :format-currency="true"
+                        :show-tooltip="true"
+                        :description="$t('businessFinancial.kpis.tooltips.totalIncomes')"
                         class="w-100 h-100"
                       />
                     </div>
@@ -1767,6 +2105,8 @@ export default {
                         icon="bi-arrow-up-circle-fill"
                         icon-style-class="red-icon"
                         :format-currency="true"
+                        :show-tooltip="true"
+                        :description="$t('businessFinancial.kpis.tooltips.totalOutcomes')"
                         class="w-100 h-100"
                       />
                     </div>
@@ -1780,6 +2120,8 @@ export default {
                         icon="bi-graph-up-arrow"
                         icon-style-class="green-icon"
                         :format-currency="true"
+                        :show-tooltip="true"
+                        :description="$t('businessFinancial.kpis.tooltips.netProfit')"
                         class="w-100 h-100"
                       />
                     </div>
@@ -1794,6 +2136,8 @@ export default {
                         icon-style-class="blue-icon"
                         :format-currency="false"
                         :format-percentage="true"
+                        :show-tooltip="true"
+                        :description="$t('businessFinancial.kpis.tooltips.profitMargin')"
                         class="w-100 h-100"
                       />
                     </div>
@@ -1805,6 +2149,8 @@ export default {
                         icon="bi-calendar-day"
                         icon-style-class="blue-icon"
                         :format-currency="true"
+                        :show-tooltip="true"
+                        :description="$t('businessFinancial.kpis.tooltips.averageDailyIncome')"
                         class="w-100 h-100"
                       />
                     </div>
@@ -1816,6 +2162,8 @@ export default {
                         icon="bi-calendar-check"
                         icon-style-class="yellow-icon"
                         :format-currency="false"
+                        :show-tooltip="true"
+                        :description="$t('businessFinancial.kpis.tooltips.daysUntilMonthEnd')"
                         class="w-100 h-100"
                       />
                     </div>
@@ -1835,7 +2183,7 @@ export default {
                   <!-- Projected Cash Flow and Goal Progress -->
                   <div
                     v-if="financialResume.resume.projectedCashFlow !== undefined"
-                    class="row mb-3 mx-1"
+                    class="row mb-1 mx-0"
                   >
                     <div class="col-12 mb-3 d-flex">
                       <div class="card p-3 w-100 h-100 projected-cash-flow-card">
@@ -1866,7 +2214,7 @@ export default {
                                 'de-DE',
                                 {
                                   style: 'currency',
-                                  currency: 'USD',
+                                  currency: 'BRL',
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2,
                                 }
@@ -1929,7 +2277,7 @@ export default {
                               0
                             ).toLocaleString('de-DE', {
                               style: 'currency',
-                              currency: 'USD',
+                              currency: 'BRL',
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             })
@@ -1938,7 +2286,7 @@ export default {
                           {{
                             financialResume.resume.monthlyGoal.toLocaleString('de-DE', {
                               style: 'currency',
-                              currency: 'USD',
+                              currency: 'BRL',
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             })
@@ -1950,8 +2298,8 @@ export default {
 
                   <div class="row">
                     <div v-if="calculatedMetrics && Object.keys(calculatedMetrics).length > 0">
-                      <div class="metric-card" v-if="calculatedMetrics['incomes.created']">
-                        <div class="metric-card-title">
+                      <div class="modern-card m-2" v-if="calculatedMetrics['incomes.created']">
+                        <div class="fw-bold mb-2">
                           <span> {{ $t('dashboard.incomes') }} </span>
                         </div>
                         <IncomesCollectionDetails
@@ -1976,8 +2324,8 @@ export default {
                         >
                         </IncomesCollectionDetails>
                       </div>
-                      <div class="metric-card" v-if="calculatedMetrics['outcomes.created']">
-                        <div class="metric-card-title">
+                      <div class="modern-card m-2" v-if="calculatedMetrics['outcomes.created']">
+                        <div class="fw-bold mb-2">
                           <span> {{ $t('dashboard.outcomes') }} </span>
                         </div>
                         <OutcomesCollectionDetails
@@ -1999,7 +2347,7 @@ export default {
                     </div>
                   </div>
                   <!-- Charts Section -->
-                  <div class="row mx-2 mt-3">
+                  <div class="row mx-0 mt-3">
                     <!-- Evolution Chart -->
                     <div
                       class="col-12 col-lg-6 mb-3"
@@ -2010,11 +2358,11 @@ export default {
                         financialResume.evolution.chartData.datasets.length > 0
                       "
                     >
-                      <div class="modern-card p-4">
-                        <div class="fw-bold mb-2">
+                      <div class="modern-card p-3" style="min-height: 500px; max-height: 500px; display: flex; flex-direction: column;">
+                        <div class="fw-bold mb-2" style="flex-shrink: 0; font-size: 0.9rem;">
                           <span>{{ $t('businessFinancial.evolution') }} </span>
                         </div>
-                        <div style="height: 280px; width: 100%; margin: 1rem 0">
+                        <div>
                           <LineChart
                             :chart-data="financialResume.evolution.chartData"
                             :options="financialResume.evolution.options"
@@ -2033,26 +2381,27 @@ export default {
                         financialResume.incomeDistribution.chartData.labels.length > 0
                       "
                     >
-                      <div class="modern-card p-4">
-                        <div class="fw-bold mb-2">
+                      <div class="modern-card p-3" style="min-height: 500px; max-height: 500px; display: flex; flex-direction: column; overflow: hidden;">
+                        <div class="fw-bold mb-2" style="flex-shrink: 0; font-size: 0.9rem;">
                           <span>{{ $t('businessFinancial.distribution.title') }} </span>
                         </div>
-                        <div style="height: 280px; width: 100%; margin: 1rem 0">
+                        <div style="height: 300px; width: 100%; padding:1rem" class="centered">
                           <DoughnutChart
                             :chart-data="financialResume.incomeDistribution.chartData"
                             :options="financialResume.incomeDistribution.options"
                           />
                         </div>
-                        <div class="mt-4">
+                        <div class="mt-2" style="flex: 1; overflow-y: auto; min-height: 0;">
                           <div
                             v-for="(label, index) in financialResume.incomeDistribution.chartData
                               .labels"
                             :key="index"
-                            class="d-flex justify-content-between align-items-center mb-2"
+                            class="d-flex justify-content-between align-items-center mb-1"
                           >
                             <div class="d-flex align-items-center">
                               <div
                                 class="distribution-color-indicator me-2"
+                                style="width: 12px; height: 12px; border-radius: 2px;"
                                 :style="{
                                   backgroundColor:
                                     financialResume.incomeDistribution.chartData.datasets[0]
@@ -2075,10 +2424,99 @@ export default {
                         </div>
                       </div>
                     </div>
+
+                    <!-- Professional Incomes Card -->
+                    <div
+                      class="col-12 mb-3"
+                      v-if="
+                        financialResume.professionalIncomes &&
+                        financialResume.professionalIncomes.list &&
+                        financialResume.professionalIncomes.list.length > 0
+                      "
+                    >
+                      <div class="modern-card p-3" style="min-height: 400px; max-height: 400px; display: flex; flex-direction: column; overflow: hidden;">
+                        <div class="fw-bold mb-3" style="flex-shrink: 0; font-size: 0.9rem;">
+                          <span>{{ $t('businessFinancial.professionalIncomes.title') }} </span>
+                        </div>
+                        <div class="row g-3" style="flex: 1; min-height: 0; overflow: hidden;">
+                          <!-- Chart Section -->
+                          <div class="col-12 col-md-6 d-flex align-items-center justify-content-center" style="min-height: 300px;">
+                            <div style="width: 100%; max-width: 300px; height: 300px;">
+                              <DoughnutChart
+                                :chart-data="financialResume.professionalIncomes.chartData"
+                                :options="financialResume.professionalIncomes.options"
+                              />
+                            </div>
+                          </div>
+                          <!-- List Section -->
+                          <div class="col-12 col-md-6 d-flex flex-column" style="min-height: 0; overflow: hidden;">
+                            <!-- Header -->
+                            <div class="d-flex align-items-center py-2 px-2 fw-bold" style="border-bottom: 2px solid rgba(0, 0, 0, 0.1); font-size: 0.8rem; background-color: rgba(0, 0, 0, 0.02); flex-shrink: 0;">
+                              <div style="width: 10px; flex-shrink: 0;"></div>
+                              <div class="flex-grow-1 d-flex align-items-center justify-content-between" style="min-width: 0;">
+                                <div style="max-width: 40%;">
+                                  {{ $t('businessFinancial.filters.professional') || 'Profesional' }}
+                                </div>
+                                <div class="d-flex align-items-center gap-3" style="flex-shrink: 0;">
+                                  <div class="text-center" style="min-width: 100px;">
+                                    <span class="badge bg-primary" style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">
+                                      {{ $t('businessFinancial.professionalIncomes.grossIncome') }}
+                                    </span>
+                                  </div>
+                                  <div class="text-center" style="min-width: 100px;">
+                                    <span class="badge bg-warning text-dark" style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">
+                                      {{ $t('businessFinancial.commission') }}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <!-- List with scroll -->
+                            <div style="overflow-y: auto; max-height: 320px; min-height: 0; flex: 1;">
+                              <div
+                                v-for="(professional, index) in financialResume.professionalIncomes.list"
+                                :key="professional.id"
+                                class="d-flex align-items-center py-2 px-2"
+                                style="border-bottom: 1px solid rgba(0, 0, 0, 0.05); min-height: 40px;"
+                              >
+                                <div
+                                  class="distribution-color-indicator me-2"
+                                  style="width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;"
+                                  :style="{
+                                    backgroundColor:
+                                      financialResume.professionalIncomes.chartData.datasets[0]
+                                        .backgroundColor[index],
+                                  }"
+                                ></div>
+                                <div class="flex-grow-1 d-flex align-items-center justify-content-between" style="min-width: 0;">
+                                  <div class="fw-bold text-truncate me-2" style="font-size: 0.85rem; max-width: 40%;">
+                                    {{ professional.name }}
+                                  </div>
+                                  <div class="d-flex align-items-center gap-3" style="flex-shrink: 0;">
+                                    <div class="text-end fw-bold" style="font-size: 0.8rem; white-space: nowrap; min-width: 100px;">
+                                      {{ professional.totalAmount.toLocaleString('de-DE', {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      }) }}
+                                    </div>
+                                    <div class="text-end fw-bold" style="font-size: 0.8rem; white-space: nowrap; min-width: 100px;">
+                                      {{ professional.totalCommission.toLocaleString('de-DE', {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      }) }}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <!-- Trends Section -->
-                  <div v-if="trends && trends.averageIncomes !== undefined" class="row mb-3">
+                  <div v-if="trends && trends.averageIncomes !== undefined" class="row mb-3 mx-0">
                     <div class="col-12">
                       <div class="modern-card p-4">
                         <div class="fw-bold mb-3">
@@ -2205,7 +2643,7 @@ export default {
                                 {{
                                   trends.averageIncomes.toLocaleString('de-DE', {
                                     style: 'currency',
-                                    currency: 'USD',
+                                    currency: 'BRL',
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2,
                                   })
@@ -2224,7 +2662,7 @@ export default {
                                 {{
                                   trends.averageOutcomes.toLocaleString('de-DE', {
                                     style: 'currency',
-                                    currency: 'USD',
+                                    currency: 'BRL',
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2,
                                   })
@@ -2243,7 +2681,7 @@ export default {
                                 {{
                                   trends.averageProfit.toLocaleString('de-DE', {
                                     style: 'currency',
-                                    currency: 'USD',
+                                    currency: 'BRL',
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2,
                                   })
@@ -2281,7 +2719,7 @@ export default {
                       outcomesCategoryAnalysis.topCategories &&
                       outcomesCategoryAnalysis.topCategories.length > 0
                     "
-                    class="row mb-3"
+                    class="row mb-3 mx-0"
                   >
                     <div class="col-12">
                       <div class="modern-card p-4">
@@ -2295,7 +2733,7 @@ export default {
                             <h6 class="fw-bold mb-3">
                               {{ $t('businessFinancial.categories.distribution') }}
                             </h6>
-                            <div v-if="getCategoryChartData()" style="height: 300px">
+                            <div v-if="getCategoryChartData()" style="height: 80%">
                               <DoughnutChart
                                 :chart-data="getCategoryChartData()"
                                 :options="getCategoryChartOptions()"
@@ -2331,7 +2769,7 @@ export default {
                                     {{
                                       category.amount.toLocaleString('de-DE', {
                                         style: 'currency',
-                                        currency: 'USD',
+                                        currency: 'BRL',
                                         minimumFractionDigits: 2,
                                         maximumFractionDigits: 2,
                                       })
@@ -2392,7 +2830,7 @@ export default {
                                     {{
                                       comparison.currentAmount.toLocaleString('de-DE', {
                                         style: 'currency',
-                                        currency: 'USD',
+                                        currency: 'BRL',
                                         minimumFractionDigits: 2,
                                         maximumFractionDigits: 2,
                                       })
@@ -2402,7 +2840,7 @@ export default {
                                     {{
                                       comparison.previousAmount.toLocaleString('de-DE', {
                                         style: 'currency',
-                                        currency: 'USD',
+                                        currency: 'BRL',
                                         minimumFractionDigits: 2,
                                         maximumFractionDigits: 2,
                                       })
@@ -2449,6 +2887,7 @@ export default {
         />
       </div>
     </div>
+
   </div>
 </template>
 
@@ -2530,5 +2969,23 @@ export default {
   .row.mx-2.mt-3 > div {
     margin-bottom: 1rem;
   }
+}
+
+/* Ensure KPI cards container allows poppers to overflow */
+.kpi-cards-container {
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
+}
+
+.kpi-cards-container .row {
+  overflow: visible !important;
+}
+
+.kpi-cards-container .col-12,
+.kpi-cards-container .col-md-6 {
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
 }
 </style>

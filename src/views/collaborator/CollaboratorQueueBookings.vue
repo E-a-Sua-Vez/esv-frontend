@@ -24,6 +24,7 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import BookingDetailsCard from '../../components/clients/common/BookingDetailsCard.vue';
 import AttentionDetailsCard from '../../components/clients/common/AttentionDetailsCard.vue';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'CollaboratorQueueBookings',
@@ -38,6 +39,7 @@ export default {
     DesktopPageHeader,
     BookingDetailsCard,
     AttentionDetailsCard,
+    Popper,
   },
   async setup() {
     const router = useRouter();
@@ -164,8 +166,8 @@ export default {
         state.toggles = await getPermissions('collaborator');
         // Set up Firebase subscription for today's attentions
         setupTodayAttentionsSubscription();
-        // Load dashboard stats after queues are loaded
-        if (commerce.value && commerce.value.id && state.professional && state.professional.id) {
+        // Load dashboard stats after queues are loaded (filtered by commerce only)
+        if (commerce.value && commerce.value.id) {
           await loadDashboardStats();
         }
         alertError.value = '';
@@ -205,8 +207,8 @@ export default {
           await loadCommerceData();
           // Set up Firebase subscription for today's attentions
           setupTodayAttentionsSubscription();
-          // Reload dashboard stats after queues are loaded
-          if (newCommerce && newCommerce.id && state.professional && state.professional.id) {
+          // Reload dashboard stats after queues are loaded (filtered by commerce only)
+          if (newCommerce && newCommerce.id) {
             await loadDashboardStats();
           }
           alertError.value = '';
@@ -231,13 +233,8 @@ export default {
             await initQueues();
             // Set up Firebase subscription for today's attentions (queues might have changed)
             setupTodayAttentionsSubscription();
-            // Reload dashboard stats after queues are reloaded
-            if (
-              commerce.value &&
-              commerce.value.id &&
-              state.professional &&
-              state.professional.id
-            ) {
+            // Reload dashboard stats after queues are reloaded (filtered by commerce only)
+            if (commerce.value && commerce.value.id) {
               await loadDashboardStats();
             }
             loading.value = false;
@@ -350,13 +347,7 @@ export default {
         return;
       }
 
-      const professionalQueueIds = getProfessionalQueueIds();
-      if (professionalQueueIds.length === 0) {
-        state.stats.todayCount = 0;
-        return;
-      }
-
-      // Subscribe to all today's attentions for this commerce
+      // Subscribe to all today's attentions for this commerce (filtered by commerce only)
       const todayAttentionsRef = updatedTodayAttentionsByCommerce(commerce.value.id);
       state.todayAttentionsSubscription = todayAttentionsRef;
 
@@ -369,17 +360,12 @@ export default {
             return;
           }
 
-          // Filter by professional queue IDs and today's date
+          // Filter by today's date only (commerce filter is already applied by Firebase subscription)
           const today = new Date();
           today.setHours(0, 0, 0, 0);
           const todayStr = new DateModel().toString(); // Format: YYYY-MM-DD
 
           const filteredAttentions = attentions.filter(attention => {
-            // Filter by queue ID
-            if (!professionalQueueIds.includes(attention.queueId)) {
-              return false;
-            }
-
             // Filter by today's date
             const dateValue = attention.date || attention.createdAt || attention.createdDate;
             if (!dateValue) return false;
@@ -428,10 +414,8 @@ export default {
       );
     };
 
-    // Load dashboard stats filtered by professional queues
+    // Load dashboard stats filtered by commerce only
     const loadDashboardStats = async () => {
-      if (!state.professional || !state.professional.id) return;
-
       // Build commerceIds list from collaborator relations (all commerces where
       // this professional attends), defaulting to current commerce when needed.
       let commerceIds = [];
@@ -451,21 +435,6 @@ export default {
         }
       }
 
-      const professionalQueueIds = getProfessionalQueueIds();
-      if (professionalQueueIds.length === 0) {
-        // If no professional queues, reset stats
-        state.stats = {
-          todayCount: 0,
-          pendingCount: 0,
-          upcomingWeekCount: 0,
-          totalActiveCount: 0,
-        };
-        state.recentBookings = [];
-        state.recentAttentions = [];
-        state.showAttentions = false;
-        return;
-      }
-
       try {
         state.loadingStats = true;
         const today = new DateModel().toString();
@@ -475,87 +444,72 @@ export default {
         // Note: todayCount is now updated by Firebase subscription, so we don't need to fetch it here
         // But we still fetch other stats
 
-        // Get pending bookings for all professional queues across collaborator commerces
-        const pendingBookingsPromises = professionalQueueIds.map(queueId =>
-          getBookingsDetails(
-            commerce.value?.id || commerceIds[0],
-            today,
-            endOfMonth,
-            commerceIds,
-            1,
-            100,
-            undefined,
-            queueId,
-            true,
-            undefined,
-            'PENDING'
-          ),
+        // Get pending bookings filtered by commerce only (no queueId filter)
+        const pendingBookings = await getBookingsDetails(
+          commerce.value?.id || commerceIds[0],
+          today,
+          endOfMonth,
+          commerceIds,
+          1,
+          100,
+          undefined,
+          undefined, // No queueId filter - filter by commerce only
+          true,
+          undefined,
+          'PENDING'
         );
-        const pendingBookingsArrays = await Promise.all(pendingBookingsPromises);
-        const allPendingBookings = pendingBookingsArrays.flat().filter(Boolean);
-        state.stats.pendingCount = allPendingBookings.length;
+        state.stats.pendingCount = pendingBookings?.length || 0;
 
-        // Get upcoming week bookings for all professional queues across collaborator commerces
-        const upcomingBookingsPromises = professionalQueueIds.map(queueId =>
-          getBookingsDetails(
-            commerce.value?.id || commerceIds[0],
-            today,
-            endOfWeek,
-            commerceIds,
-            1,
-            100,
-            undefined,
-            queueId,
-            true
-          ),
+        // Get upcoming week bookings filtered by commerce only (no queueId filter)
+        const upcomingBookings = await getBookingsDetails(
+          commerce.value?.id || commerceIds[0],
+          today,
+          endOfWeek,
+          commerceIds,
+          1,
+          100,
+          undefined,
+          undefined, // No queueId filter - filter by commerce only
+          true
         );
-        const upcomingBookingsArrays = await Promise.all(upcomingBookingsPromises);
-        const allUpcomingBookings = upcomingBookingsArrays.flat().filter(Boolean);
-        state.stats.upcomingWeekCount = allUpcomingBookings.length;
+        state.stats.upcomingWeekCount = upcomingBookings?.length || 0;
 
-        // Get confirmed bookings for all professional queues across collaborator commerces
-        const confirmedBookingsPromises = professionalQueueIds.map(queueId =>
-          getBookingsDetails(
-            commerce.value?.id || commerceIds[0],
-            today,
-            endOfMonth,
-            commerceIds,
-            1,
-            100,
-            undefined,
-            queueId,
-            true,
-            undefined,
-            'CONFIRMED'
-          ),
+        // Get confirmed bookings filtered by commerce only (no queueId filter)
+        const confirmedBookings = await getBookingsDetails(
+          commerce.value?.id || commerceIds[0],
+          today,
+          endOfMonth,
+          commerceIds,
+          1,
+          100,
+          undefined,
+          undefined, // No queueId filter - filter by commerce only
+          true,
+          undefined,
+          'CONFIRMED'
         );
-        const confirmedBookingsArrays = await Promise.all(confirmedBookingsPromises);
-        const allConfirmedBookings = confirmedBookingsArrays.flat().filter(Boolean);
-        state.stats.totalActiveCount = allPendingBookings.length + allConfirmedBookings.length;
+        state.stats.totalActiveCount = (pendingBookings?.length || 0) + (confirmedBookings?.length || 0);
 
-        // Get recent bookings (last 5) from all professional queues across collaborator commerces
-        const recentBookingsPromises = professionalQueueIds.map(queueId =>
-          getBookingsDetails(
-            commerce.value?.id || commerceIds[0],
-            new DateModel().substractDays(7).toString(),
-            endOfMonth,
-            commerceIds,
-            1,
-            5,
-            undefined,
-            queueId,
-            false
-          ),
+        // Get recent bookings (last 5) filtered by commerce only (no queueId filter)
+        const recentBookings = await getBookingsDetails(
+          commerce.value?.id || commerceIds[0],
+          new DateModel().substractDays(7).toString(),
+          endOfMonth,
+          commerceIds,
+          1,
+          5,
+          undefined,
+          undefined, // No queueId filter - filter by commerce only
+          false
         );
-        const recentBookingsArrays = await Promise.all(recentBookingsPromises);
-        // Combine and sort by date, then take first 5
-        const allRecentBookings = recentBookingsArrays.flat().filter(Boolean);
-        allRecentBookings.sort((a, b) => {
+        // Sort by date, then take first 5
+        const sortedRecentBookings = (recentBookings || []).filter(Boolean);
+        sortedRecentBookings.sort((a, b) => {
           const dateA = new Date(a.date || a.createdDate);
           const dateB = new Date(b.date || b.createdDate);
           return dateB - dateA;
         });
-        state.recentBookings = allRecentBookings.slice(0, 5);
+        state.recentBookings = sortedRecentBookings.slice(0, 5);
 
         state.loadingStats = false;
       } catch (error) {
@@ -565,96 +519,72 @@ export default {
 
     const viewTodayBookings = async () => {
       if (!commerce.value || !commerce.value.id) return;
-      const professionalQueueIds = getProfessionalQueueIds();
-      if (professionalQueueIds.length === 0) {
-        state.recentAttentions = [];
-        state.recentBookings = [];
-        state.showAttentions = true;
-        return;
-      }
 
       try {
         loading.value = true;
         const today = new DateModel().toString();
 
-        // Get today's attentions for all professional queues (not bookings)
+        // Get today's attentions filtered by commerce only (no queueId filter)
         // Use getAttentionsDetails to get all attentions (not just pending) for today
-        const todayAttentionsPromises = professionalQueueIds.map(async queueId => {
-          try {
-            const attentions = await getAttentionsDetails(
-              commerce.value.id,
-              today,
-              today,
-              [commerce.value.id],
-              1,
-              1000, // Increased limit to get more results
-              undefined, // daysSinceType
-              undefined, // daysSinceContacted
-              undefined, // contactable
-              undefined, // contacted
-              undefined, // searchText
-              queueId,
-              undefined, // survey
-              true // asc
-            );
-            // API returns an array directly
-            return Array.isArray(attentions) ? attentions : [];
-          } catch (error) {
-            console.error('Error fetching attentions for queue:', queueId, error);
-            return [];
-          }
-        });
+        try {
+          const attentions = await getAttentionsDetails(
+            commerce.value.id,
+            today,
+            today,
+            [commerce.value.id],
+            1,
+            1000, // Increased limit to get more results
+            undefined, // daysSinceType
+            undefined, // daysSinceContacted
+            undefined, // contactable
+            undefined, // contacted
+            undefined, // searchText
+            undefined, // No queueId filter - filter by commerce only
+            undefined, // survey
+            true // asc
+          );
+          // API returns an array directly
+          const allAttentions = Array.isArray(attentions) ? attentions : [];
 
-        const attentionsArrays = await Promise.all(todayAttentionsPromises);
-        const allAttentions = attentionsArrays.flat().filter(Boolean);
+          // The API already filters by date range (today to today), so we trust it
+          // Only do minimal validation - ensure we have attentions with valid IDs
+          const validAttentions = allAttentions.filter(attention => attention && attention.id);
 
-        // The API already filters by date range (today to today), so we trust it
-        // Only do minimal validation - ensure we have attentions with valid IDs
-        const validAttentions = allAttentions.filter(attention => attention && attention.id);
+          // Sort by number (ascending) to show in order, then by creation date
+          validAttentions.sort((a, b) => {
+            const numA = a.number || 0;
+            const numB = b.number || 0;
+            if (numA !== numB) {
+              return numA - numB;
+            }
+            // If same number, sort by date
+            const dateA = a.date
+              ? new Date(a.date)
+              : a.createdDate
+              ? new Date(a.createdDate)
+              : new Date(0);
+            const dateB = b.date
+              ? new Date(b.date)
+              : b.createdDate
+              ? new Date(b.createdDate)
+              : new Date(0);
+            return dateA - dateB;
+          });
 
-        // Sort by number (ascending) to show in order, then by creation date
-        validAttentions.sort((a, b) => {
-          const numA = a.number || 0;
-          const numB = b.number || 0;
-          if (numA !== numB) {
-            return numA - numB;
-          }
-          // If same number, sort by date
-          const dateA = a.date
-            ? new Date(a.date)
-            : a.createdDate
-            ? new Date(a.createdDate)
-            : new Date(0);
-          const dateB = b.date
-            ? new Date(b.date)
-            : b.createdDate
-            ? new Date(b.createdDate)
-            : new Date(0);
-          return dateA - dateB;
-        });
-
-        // If API returned attentions, use them; otherwise try to use Firebase subscription data as fallback
-        if (validAttentions.length > 0) {
-          state.recentAttentions = validAttentions.slice(0, 100); // Show up to 100 attentions
-        } else {
+          state.recentAttentions = validAttentions.slice(0, 5); // Show only first 5 attentions
+        } catch (error) {
+          console.error('Error fetching attentions:', error);
           // Fallback to Firebase subscription data if API returns empty
           if (
             state.todayAttentionsSubscription &&
             Array.isArray(state.todayAttentionsSubscription.value)
           ) {
             const firebaseAttentions = state.todayAttentionsSubscription.value;
-            const collaboratorQueueIds = getCollaboratorQueueIds();
             const today = new DateModel().toString();
 
-            // Filter by collaborator queue IDs
-            // Note: Firebase already filters by createdAt >= today, so we mainly need to filter by queueId
+            // Filter by today's date only (commerce filter is already applied by Firebase subscription)
             const filteredFirebaseAttentions = firebaseAttentions
               .filter(attention => {
-                // Filter by queue ID
-                if (!attention.queueId || !collaboratorQueueIds.includes(attention.queueId)) {
-                  return false;
-                }
-
                 // Firebase query already filters by createdAt >= today, but let's verify date as well
                 const dateValue = attention.date || attention.createdAt || attention.createdDate;
                 if (!dateValue) return false;
@@ -679,11 +609,11 @@ export default {
                     return dateStr === today;
                   }
 
-                  // If date parsing fails, but we have queueId match and createdAt from today (Firebase filtered),
+                  // If date parsing fails, but createdAt is from today (Firebase filtered),
                   // include it (Firebase query already ensures createdAt >= today)
                   return true;
                 } catch (error) {
-                  // If date parsing fails, but queueId matches, include it (Firebase already filtered by date)
+                  // If date parsing fails, include it (Firebase already filtered by date and commerce)
                   return true;
                 }
               })
@@ -714,11 +644,7 @@ export default {
               return dateA - dateB;
             });
 
-            if (filteredFirebaseAttentions.length > 0) {
-              state.recentAttentions = filteredFirebaseAttentions.slice(0, 100);
-            } else {
-              state.recentAttentions = [];
-            }
+            state.recentAttentions = filteredFirebaseAttentions.slice(0, 5); // Show only first 5 attentions
           } else {
             state.recentAttentions = [];
           }
@@ -739,8 +665,6 @@ export default {
 
     const viewPendingBookings = async () => {
       if (!commerce.value || !commerce.value.id) return;
-      const professionalQueueIds = getProfessionalQueueIds();
-      if (professionalQueueIds.length === 0) return;
 
       try {
         loading.value = true;
@@ -749,26 +673,22 @@ export default {
         state.recentAttentions = [];
         const today = new DateModel().toString();
         const endOfMonth = new DateModel().endOfMonth().toString();
-        const allPendingBookings = [];
 
-        // Get pending bookings for all professional queues
-        const pendingBookingsPromises = professionalQueueIds.map(queueId =>
-          getBookingsDetails(
-            commerce.value.id,
-            today,
-            endOfMonth,
-            [commerce.value.id],
-            1,
-            50,
-            undefined,
-            queueId,
-            true,
-            undefined,
-            'PENDING'
-          ),
+        // Get pending bookings filtered by commerce only (no queueId filter)
+        const pendingBookings = await getBookingsDetails(
+          commerce.value.id,
+          today,
+          endOfMonth,
+          [commerce.value.id],
+          1,
+          50,
+          undefined,
+          undefined, // No queueId filter - filter by commerce only
+          true,
+          undefined,
+          'PENDING'
         );
-        const bookingsArrays = await Promise.all(pendingBookingsPromises);
-        const allBookings = bookingsArrays.flat().filter(Boolean);
+        const allBookings = (pendingBookings || []).filter(Boolean);
         allBookings.sort((a, b) => {
           const dateA = new Date(a.date || a.createdDate);
           const dateB = new Date(b.date || b.createdDate);
@@ -834,7 +754,17 @@ export default {
                   </div>
                   <div class="stat-content">
                     <div class="stat-value">{{ state.stats.todayCount }}</div>
-                    <div class="stat-label">{{ $t('collaboratorBookingsView.today') }}</div>
+                    <div class="stat-label">
+                      {{ $t('collaboratorBookingsView.today') }}
+                      <Popper :class="'dark'" arrow hover>
+                        <template #content>
+                          <div>
+                            {{ $t('collaboratorBookingsView.metrics.today.description') }}
+                          </div>
+                        </template>
+                        <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                      </Popper>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -845,7 +775,17 @@ export default {
                   </div>
                   <div class="stat-content">
                     <div class="stat-value">{{ state.stats.pendingCount }}</div>
-                    <div class="stat-label">{{ $t('collaboratorBookingsView.pending') }}</div>
+                    <div class="stat-label">
+                      {{ $t('collaboratorBookingsView.pending') }}
+                      <Popper :class="'dark'" arrow hover>
+                        <template #content>
+                          <div>
+                            {{ $t('collaboratorBookingsView.metrics.pending.description') }}
+                          </div>
+                        </template>
+                        <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                      </Popper>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -856,7 +796,17 @@ export default {
                   </div>
                   <div class="stat-content">
                     <div class="stat-value">{{ state.stats.upcomingWeekCount }}</div>
-                    <div class="stat-label">{{ $t('collaboratorBookingsView.upcomingWeek') }}</div>
+                    <div class="stat-label">
+                      {{ $t('collaboratorBookingsView.upcomingWeek') }}
+                      <Popper :class="'dark'" arrow hover>
+                        <template #content>
+                          <div>
+                            {{ $t('collaboratorBookingsView.metrics.upcomingWeek.description') }}
+                          </div>
+                        </template>
+                        <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                      </Popper>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -867,7 +817,17 @@ export default {
                   </div>
                   <div class="stat-content">
                     <div class="stat-value">{{ state.stats.totalActiveCount }}</div>
-                    <div class="stat-label">{{ $t('collaboratorBookingsView.totalActive') }}</div>
+                    <div class="stat-label">
+                      {{ $t('collaboratorBookingsView.totalActive') }}
+                      <Popper :class="'dark'" arrow hover>
+                        <template #content>
+                          <div>
+                            {{ $t('collaboratorBookingsView.metrics.totalActive.description') }}
+                          </div>
+                        </template>
+                        <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                      </Popper>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -969,7 +929,17 @@ export default {
                 </div>
                 <div class="stat-content">
                   <div class="stat-value">{{ state.stats.todayCount }}</div>
-                  <div class="stat-label">{{ $t('collaboratorBookingsView.today') }}</div>
+                  <div class="stat-label">
+                    {{ $t('collaboratorBookingsView.today') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{ $t('collaboratorBookingsView.metrics.today.description') }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                    </Popper>
+                  </div>
                 </div>
               </div>
             </div>
@@ -980,7 +950,17 @@ export default {
                 </div>
                 <div class="stat-content">
                   <div class="stat-value">{{ state.stats.pendingCount }}</div>
-                  <div class="stat-label">{{ $t('collaboratorBookingsView.pending') }}</div>
+                  <div class="stat-label">
+                    {{ $t('collaboratorBookingsView.pending') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{ $t('collaboratorBookingsView.metrics.pending.description') }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                    </Popper>
+                  </div>
                 </div>
               </div>
             </div>
@@ -991,7 +971,17 @@ export default {
                 </div>
                 <div class="stat-content">
                   <div class="stat-value">{{ state.stats.upcomingWeekCount }}</div>
-                  <div class="stat-label">{{ $t('collaboratorBookingsView.upcomingWeek') }}</div>
+                  <div class="stat-label">
+                    {{ $t('collaboratorBookingsView.upcomingWeek') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{ $t('collaboratorBookingsView.metrics.upcomingWeek.description') }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                    </Popper>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1002,7 +992,17 @@ export default {
                 </div>
                 <div class="stat-content">
                   <div class="stat-value">{{ state.stats.totalActiveCount }}</div>
-                  <div class="stat-label">{{ $t('collaboratorBookingsView.totalActive') }}</div>
+                  <div class="stat-label">
+                    {{ $t('collaboratorBookingsView.totalActive') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{ $t('collaboratorBookingsView.metrics.totalActive.description') }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                    </Popper>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1026,6 +1026,48 @@ export default {
             </div>
           </div>
         </div>
+         <!-- Recent Attentions (when clicking Hoje) -->
+         <div
+            class="recent-bookings-container mt-4"
+            v-if="state.showAttentions && state.recentAttentions.length > 0"
+          >
+            <div class="section-header">
+              <h5 class="section-title">
+                <i class="bi bi-clock-history"></i>
+                {{ $t('collaboratorBookingsView.todayAttentions') }}
+              </h5>
+            </div>
+            <div class="">
+              <div
+                class=""
+                v-for="(attention, index) in state.recentAttentions"
+                :key="`attention-${index}`"
+              >
+                <AttentionDetailsCard :show="true" :attention="attention" :commerce="commerce" />
+              </div>
+            </div>
+          </div>
+          <!-- Recent Bookings -->
+          <div
+            class="recent-bookings-container mt-4"
+            v-else-if="!state.showAttentions && state.recentBookings.length > 0"
+          >
+            <div class="section-header">
+              <h5 class="section-title">
+                <i class="bi bi-clock-history"></i>
+                {{ $t('collaboratorBookingsView.recentBookings') }}
+              </h5>
+            </div>
+            <div class="">
+              <div
+                class=""
+                v-for="(booking, index) in state.recentBookings"
+                :key="`booking-${index}`"
+              >
+                <BookingDetailsCard :show="true" :booking="booking" :commerce="commerce" />
+              </div>
+            </div>
+          </div>
       </div>
     </div>
     <!-- Modal Agenda - Use Teleport to render outside component to avoid overflow/position issues -->
@@ -1192,6 +1234,20 @@ export default {
   font-weight: 600;
   color: rgba(0, 0, 0, 0.6);
   line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.stat-info-icon {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.4);
+  cursor: help;
+  transition: color 0.2s ease;
+}
+
+.stat-info-icon:hover {
+  color: rgba(0, 194, 203, 0.8);
 }
 
 /* Quick Actions */

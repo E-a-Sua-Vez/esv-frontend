@@ -75,6 +75,7 @@ export default {
       incomeStatus: undefined,
       fiscalNote: undefined,
       automatic: undefined,
+      commissionPaid: undefined,
       incomeTypes: [],
       minAmount: undefined,
       maxAmount: undefined,
@@ -112,6 +113,7 @@ export default {
       this.incomeStatus = undefined;
       this.fiscalNote = undefined;
       this.automatic = undefined;
+      this.commissionPaid = undefined;
       this.minAmount = undefined;
       this.maxAmount = undefined;
       this.incomeTypeFilter = undefined;
@@ -140,6 +142,19 @@ export default {
         this.automatic = false;
       }
     },
+    async checkCommissionPaid(event) {
+      if (event.target.checked) {
+        this.commissionPaid = true;
+      } else {
+        this.commissionPaid = false;
+      }
+      // Force refresh when filter changes
+      if (this.filtersLocation === 'component') {
+        this.$nextTick(() => {
+          this.refresh();
+        });
+      }
+    },
     setIncomeStatus(value) {
       this.incomeStatus = value;
       // Force immediate refresh for slot-based filters
@@ -158,19 +173,19 @@ export default {
       } else {
         selectedValue = this.professionalFilter;
       }
-      
+
       // Convert empty string or "undefined" string to undefined
       const newValue = selectedValue === '' || selectedValue === 'undefined' ? undefined : selectedValue;
-      
+
       console.log('[handleProfessionalFilterChange] Selected value:', selectedValue);
       console.log('[handleProfessionalFilterChange] New value:', newValue);
       console.log('[handleProfessionalFilterChange] Type:', typeof newValue);
-      
+
       // Update the value
       this.professionalFilter = newValue;
-      
+
       console.log('[handleProfessionalFilterChange] After setting, professionalFilter is:', this.professionalFilter);
-      
+
       this.page = 1; // Reset to first page when filter changes
       this.refresh();
     },
@@ -179,7 +194,7 @@ export default {
       const newValue = value === '' || value === 'undefined' ? undefined : value;
       console.log('[setProfessionalFilter] Setting to:', newValue);
       console.log('[setProfessionalFilter] Current professionalFilter:', this.professionalFilter);
-      
+
       // Only update if value actually changed
       if (this.professionalFilter !== newValue) {
         this.professionalFilter = newValue;
@@ -188,10 +203,10 @@ export default {
         this.financialIncomes = [];
         this.counter = 0;
         this.totalPages = 0;
-        
+
         console.log('[setProfessionalFilter] After setting, professionalFilter is:', this.professionalFilter);
         console.log('[setProfessionalFilter] Calling refresh()...');
-        
+
         // Call refresh to get new data
         this.refresh();
       }
@@ -212,7 +227,7 @@ export default {
 
         // Debug: Log professional filter before API call
         console.log('Calling getIncomesDetails with professionalFilter:', this.professionalFilter);
-        
+
         // Llamada optimizada a la API
         const incomes = await getIncomesDetails(
           this.business?.id,
@@ -227,6 +242,7 @@ export default {
           this.incomeStatus,
           this.fiscalNote,
           this.automatic,
+          this.commissionPaid,
           this.minAmount,
           this.maxAmount,
           this.incomeTypeFilter,
@@ -242,13 +258,13 @@ export default {
         this.financialIncomes = [];
         this.counter = 0;
         this.totalPages = 0;
-        
+
         // Use nextTick to ensure UI updates before assigning new data
         await this.$nextTick();
-        
+
         // Force reactivity by creating a new array reference
         this.financialIncomes = Array.isArray(incomes) ? [...incomes] : [];
-        
+
         console.log('[refresh] financialIncomes after assignment:', this.financialIncomes.length);
         console.log('[refresh] financialIncomes content:', JSON.stringify(this.financialIncomes));
 
@@ -442,6 +458,7 @@ export default {
           this.incomeStatus,
           this.fiscalNote,
           this.automatic,
+          this.commissionPaid,
           this.minAmount,
           this.maxAmount,
           this.incomeTypeFilter,
@@ -582,7 +599,7 @@ export default {
           // Skip refresh if ONLY professionalFilter changed - let handleProfessionalFilterChange handle it
           // This prevents the watch from calling refresh() before the handler updates the value
           if (oldData && newData) {
-            const otherFiltersChanged = 
+            const otherFiltersChanged =
               oldData.asc !== newData.asc ||
               oldData.limit !== newData.limit ||
               oldData.incomeStatus !== newData.incomeStatus ||
@@ -595,11 +612,11 @@ export default {
               oldData.maxAmount !== newData.maxAmount ||
               oldData.incomeTypeFilter !== newData.incomeTypeFilter ||
               oldData.paymentMethodFilter !== newData.paymentMethodFilter;
-            
-            const onlyProfessionalFilterChanged = 
-              !otherFiltersChanged && 
+
+            const onlyProfessionalFilterChanged =
+              !otherFiltersChanged &&
               oldData.professionalFilter !== newData.professionalFilter;
-            
+
             // Only call refresh if other filters changed
             // If ONLY professionalFilter changed, skip - let handleProfessionalFilterChange handle it
             // OR if filtersLocation is 'slot', skip - let parent refreshIncomesContent handle it
@@ -642,7 +659,7 @@ export default {
     professionalFilter: {
       handler(newVal, oldVal) {
         console.log('[watch professionalFilter] Changed from:', oldVal, 'to:', newVal);
-        
+
         // When filters are in slot mode and value changes, ensure refresh is called
         if (this.filtersLocation === 'slot' && newVal !== oldVal && oldVal !== undefined) {
           console.log('[watch professionalFilter] Value changed in slot mode, ensuring refresh');
@@ -679,10 +696,12 @@ export default {
       :income-status="incomeStatus"
       :fiscal-note="fiscalNote"
       :automatic="automatic"
+      :commission-paid="commissionPaid"
       :asc="asc"
       :loading="loading"
       :check-fiscal-note="checkFiscalNote"
       :check-automatic="checkAutomatic"
+      :check-commission-paid="checkCommissionPaid"
       :check-asc="checkAsc"
       :set-income-status="setIncomeStatus"
       :min-amount="minAmount"
@@ -939,6 +958,24 @@ export default {
                           }}</label>
                         </div>
                       </div>
+                      <div class="col">
+                        <div class="form-check form-switch centered">
+                          <input
+                            class="form-check-input m-1"
+                            :class="commissionPaid === false ? 'bg-danger' : ''"
+                            type="checkbox"
+                            name="commissionPaid"
+                            id="commissionPaid"
+                            v-model="commissionPaid"
+                            @click="checkCommissionPaid($event)"
+                          />
+                          <label class="form-check-label metric-card-subtitle" for="commissionPaid">{{
+                            commissionPaid
+                              ? $t('commissionPayments.commissionPaid')
+                              : $t('commissionPayments.commissionUnpaid') || 'Comisión No Pagada'
+                          }}</label>
+                        </div>
+                      </div>
                     </div>
                     <div class="row">
                       <div class="col">
@@ -1183,14 +1220,26 @@ export default {
           </div>
         </div>
       </div>
-      <!-- Modal Add -->
-      <div
+
+    </div>
+    <div v-if="showIncomesFinancialManagement === true && !toggles['financial.incomes.view']">
+      <Message
+        :icon="'bi-graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
+    </div>
+
+     <!-- Modal Add -->
+     <Teleport to="body">
+     <div
         class="modal fade"
         :id="`add-income`"
         data-bs-keyboard="false"
         tabindex="-1"
         aria-labelledby="staticBackdropLabel"
         aria-hidden="true"
+        style="z-index: 1055;"
       >
         <div class="modal-dialog modal-xl">
           <div class="modal-content">
@@ -1320,14 +1369,7 @@ export default {
           </div>
         </div>
       </div>
-    </div>
-    <div v-if="showIncomesFinancialManagement === true && !toggles['financial.incomes.view']">
-      <Message
-        :icon="'bi-graph-up-arrow'"
-        :title="$t('dashboard.message.1.title')"
-        :content="$t('dashboard.message.1.content')"
-      />
-    </div>
+      </Teleport>
   </div>
 </template>
 
@@ -1392,5 +1434,14 @@ export default {
 }
 .form-control {
   font-size: 0.9rem;
+}
+
+/* Asegurar que el modal se muestre correctamente en desktop */
+.modal {
+  z-index: 1055 !important;
+}
+
+.modal-backdrop {
+  z-index: 1050 !important;
 }
 </style>

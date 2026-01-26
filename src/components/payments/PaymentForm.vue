@@ -72,7 +72,7 @@ export default {
       newConfirmationData: {
         procedureNumber: 1,
         proceduresTotalNumber: 1,
-        processPaymentNow: !confirmPayment.value || false,
+        processPaymentNow: true, // Default: true - procesar pago ahora por defecto
         // Default selection when payment fields are shown
         paymentType: 'TOTALLY',
         // Initialize these so confirm logic can evaluate consistently
@@ -994,293 +994,340 @@ export default {
                 </div>
               </div>
             </div>
-            <div class="payment-form-field">
-              <label class="payment-form-label">
-                {{ $t('collaboratorBookingsView.paymentType') }}
-                <Popper :class="'dark'" arrow hover>
-                  <template #content>
-                    <div>
-                      {{
-                        $t('paymentForm.tooltip.paymentType') ||
-                        'Tipo de Pago: TOTALMENTE (pago completo) o PARCIAL (pago parcial).'
-                      }}
-                    </div>
-                  </template>
-                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
-                </Popper>
-              </label>
-              <select
-                class="payment-form-select"
-                :class="{ 'is-invalid': state.paymentAmountError }"
-                v-model="state.newConfirmationData.paymentType"
-                id="types"
-                @change="selectPaymentType($event)"
-              >
-                <option v-for="typ in state.paymentTypes" :key="typ.name" :value="typ.id">
-                  {{ $t(`paymentTypes.${typ.name}`) }}
-                </option>
-              </select>
-            </div>
-            <div class="payment-form-field">
-              <label class="payment-form-label">
-                {{ $t('collaboratorBookingsView.paymentMethod') }}
-                <Popper :class="'dark'" arrow hover>
-                  <template #content>
-                    <div>
-                      {{
-                        $t('paymentForm.tooltip.paymentMethod') ||
-                        'Método de Pago: Forma en que se realizó el pago (Efectivo, Tarjeta, Transferencia, etc.).'
-                      }}
-                    </div>
-                  </template>
-                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
-                </Popper>
-              </label>
-              <select
-                class="payment-form-select"
-                :class="{ 'is-invalid': state.paymentMethodError }"
-                v-model="state.newConfirmationData.paymentMethod"
-                id="types"
-                @change="sendData"
-              >
-                <option v-for="typ in state.paymentMethods" :key="typ.name" :value="typ.id">
-                  {{ $t(`paymentClientMethods.${typ.name}`) }}
-                </option>
-              </select>
-            </div>
-            <div class="payment-form-field">
-              <label class="payment-form-label">
-                {{ $t('collaboratorBookingsView.paymentFiscalNote') }}
-                <Popper :class="'dark'" arrow hover>
-                  <template #content>
-                    <div>
-                      {{
-                        $t('paymentForm.tooltip.paymentFiscalNote') ||
-                        'Nota Fiscal: Tipo de documento fiscal (Nota Fiscal o Gerencial).'
-                      }}
-                    </div>
-                  </template>
-                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
-                </Popper>
-              </label>
-              <select
-                class="payment-form-select"
-                v-model="state.newConfirmationData.paymentFiscalNote"
-                @change="sendData"
-                id="types"
-              >
-                <option v-for="typ in state.paymentFicalNoteTypes" :key="typ.name" :value="typ.id">
-                  {{ $t(`paymentFiscalNotes.${typ.name}`) }}
-                </option>
-              </select>
-            </div>
-            <div class="payment-form-field">
-              <label class="payment-form-label">
-                {{ $t('collaboratorBookingsView.totalAmount') }}
-                <Popper :class="'dark'" arrow hover>
-                  <template #content>
-                    <div>
-                      {{
-                        $t('paymentForm.tooltip.totalAmount') ||
-                        'Total del procedimiento: Precio del servicio para esta sesión (editable).'
-                      }}
-                    </div>
-                  </template>
-                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
-                </Popper>
-                <span
-                  v-if="packagePaymentStatus && packagePaymentStatus.isPaid"
-                  class="package-paid-indicator"
-                >
-                  <i class="bi bi-check-circle-fill"></i>
-                  {{ $t('paymentForm.includedInPackage') || '(Incluido en paquete)' }}
-                </span>
-              </label>
-              <input
-                min="1"
-                type="number"
-                class="payment-form-input"
-                :class="{
-                  'is-invalid': state.totalAmountError,
-                  'package-paid-input': packagePaymentStatus && packagePaymentStatus.isPaid,
-                }"
-                v-model="state.newConfirmationData.totalAmount"
-                placeholder="100"
-                :disabled="packagePaymentStatus && packagePaymentStatus.isPaid"
-                @input="
-                  userEditedTotalAmount = true;
-                  calculatePaymentAmount();
-                  sendData();
-                "
-              />
-            </div>
-            <div class="payment-form-field">
-              <label class="payment-form-label">
-                {{ $t('collaboratorBookingsView.paymentAmount') }}
-                <Popper :class="'dark'" arrow hover>
-                  <template #content>
-                    <div>
-                      {{
-                        $t('paymentForm.tooltip.paymentAmount') ||
-                        'Valor Pagado: Monto que se está pagando en esta transacción. Se calcula automáticamente como Total / Parcelas (editable).'
-                      }}
-                    </div>
-                  </template>
-                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
-                </Popper>
-                <span
-                  v-if="packagePaymentStatus && packagePaymentStatus.isPaid"
-                  class="package-paid-indicator"
-                >
-                  <i class="bi bi-check-circle-fill"></i>
-                  {{ $t('paymentForm.includedInPackage') || '(Incluido en paquete)' }}
-                </span>
-              </label>
-              <input
-                min="1"
-                type="number"
-                class="payment-form-input"
-                :class="{
-                  'is-invalid': state.paymentAmountError,
-                  'package-paid-input': packagePaymentStatus && packagePaymentStatus.isPaid,
-                }"
-                v-model="state.newConfirmationData.paymentAmount"
-                placeholder="100"
-                :disabled="packagePaymentStatus && packagePaymentStatus.isPaid"
-                @input="
-                  userEditedPaymentAmount = true;
-                  sendData();
-                "
-              />
-            </div>
-            <div class="payment-form-field">
-              <label class="payment-form-label">
-                {{ $t('collaboratorBookingsView.installments') }}
-                <Popper :class="'dark'" arrow hover>
-                  <template #content>
-                    <div>
-                      {{
-                        $t('paymentForm.tooltip.installments') ||
-                        'Número de Parcelas: Cantidad de cuotas en las que se dividirá el pago. El valor pagado se calcula automáticamente como Total / Parcelas.'
-                      }}
-                    </div>
-                  </template>
-                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
-                </Popper>
-              </label>
-              <input
-                min="1"
-                type="number"
-                class="payment-form-input"
-                :class="{ 'is-invalid': state.installmentsError }"
-                v-model="state.newConfirmationData.installments"
-                placeholder="100"
-                @input="
-                  calculatePaymentAmount();
-                  sendData();
-                "
-                @keyup="sendData"
-              />
-            </div>
-            <!-- PROFESSIONAL COMMISSION SECTION -->
-            <div v-if="professionalName" class="payment-form-field payment-commission-section">
-              <div class="professional-commission-header">
-                <label class="payment-form-label">
-                  <i class="bi bi-person-badge"></i>
-                  {{ $t('professionals.assignedProfessional') || 'Profesional Asignado' }}
-                </label>
-                <div class="professional-commission-info">
-                  <span class="professional-name">{{ professionalName }}</span>
-                  <span v-if="professionalCommission" class="suggested-commission">
-                    {{ $t('professionals.suggestedCommission') || 'Comisión Sugerida' }}:
-                    <strong>{{ professionalCommission }}</strong>
-                  </span>
-                  <span
-                    v-if="suggestedCommissionAmount && state.newConfirmationData.paymentAmount"
-                    class="calculated-commission"
+            
+            <!-- Desktop: Organized in rows | Mobile: Vertical stack -->
+            <div class="payment-form-rows">
+              <!-- Row 1: Tipo de Pagamento | Método de Pagamento -->
+              <div class="payment-form-row">
+                <div class="payment-form-field">
+                  <label class="payment-form-label">
+                    {{ $t('collaboratorBookingsView.paymentType') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{
+                            $t('paymentForm.tooltip.paymentType') ||
+                            'Tipo de Pago: TOTALMENTE (pago completo) o PARCIAL (pago parcial).'
+                          }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                    </Popper>
+                  </label>
+                  <select
+                    class="payment-form-select"
+                    :class="{ 'is-invalid': state.paymentAmountError }"
+                    v-model="state.newConfirmationData.paymentType"
+                    id="types"
+                    @change="selectPaymentType($event)"
                   >
-                    {{ $t('professionals.calculatedAmount') || 'Monto Calculado' }}:
-                    <strong
-                      >{{ suggestedCommissionAmount }} {{ commerce?.currency || 'BRL' }}</strong
-                    >
-                  </span>
+                    <option v-for="typ in state.paymentTypes" :key="typ.name" :value="typ.id">
+                      {{ $t(`paymentTypes.${typ.name}`) }}
+                    </option>
+                  </select>
+                </div>
+                <div class="payment-form-field">
+                  <label class="payment-form-label">
+                    {{ $t('collaboratorBookingsView.paymentMethod') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{
+                            $t('paymentForm.tooltip.paymentMethod') ||
+                            'Método de Pago: Forma en que se realizó el pago (Efectivo, Tarjeta, Transferencia, etc.).'
+                          }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                    </Popper>
+                  </label>
+                  <select
+                    class="payment-form-select"
+                    :class="{ 'is-invalid': state.paymentMethodError }"
+                    v-model="state.newConfirmationData.paymentMethod"
+                    id="types"
+                    @change="sendData"
+                  >
+                    <option v-for="typ in state.paymentMethods" :key="typ.name" :value="typ.id">
+                      {{ $t(`paymentClientMethods.${typ.name}`) }}
+                    </option>
+                  </select>
                 </div>
               </div>
-            </div>
-            <div class="payment-form-field">
-              <label class="payment-form-label">
-                {{ $t('collaboratorBookingsView.paymentCommission') }}
-                <Popper :class="'dark'" arrow hover>
-                  <template #content>
-                    <div>
-                      {{
-                        $t('paymentForm.tooltip.paymentCommission') ||
-                        'Comisión de Pago: Monto de comisión asociado a este pago (opcional).'
-                      }}
-                    </div>
-                  </template>
-                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
-                </Popper>
-              </label>
-              <input
-                min="1"
-                type="number"
-                class="payment-form-input"
-                v-model.number="state.newConfirmationData.paymentCommission"
-                placeholder="100"
-                @input="sendData"
-                @change="sendData"
-              />
-            </div>
-            <div class="payment-form-field payment-form-switch">
-              <label class="payment-form-label">
-                {{ $t('collaboratorBookingsView.confirmInstallments') }}
-                <Popper :class="'dark'" arrow hover>
-                  <template #content>
-                    <div>
-                      {{
-                        $t('paymentForm.tooltip.confirmInstallments') ||
-                        'Confirmar Parcela: Si está activado, todas las cuotas se crean como CONFIRMADAS (pagadas). Si está desactivado, se crean como PENDIENTES (requieren confirmación manual).'
-                      }}
-                    </div>
-                  </template>
-                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
-                </Popper>
-              </label>
-              <div class="form-check form-switch">
-                <input
-                  class="form-check-input payment-switch-input"
-                  type="checkbox"
-                  id="confirm-installments"
-                  v-model="state.newConfirmationData.confirmInstallments"
-                  @click="confirmInstallments($event)"
-                  @keyup="sendData"
-                />
+
+              <!-- Row 2: Nota Fiscal | Total Procedimiento -->
+              <div class="payment-form-row">
+                <div class="payment-form-field">
+                  <label class="payment-form-label">
+                    {{ $t('collaboratorBookingsView.paymentFiscalNote') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{
+                            $t('paymentForm.tooltip.paymentFiscalNote') ||
+                            'Nota Fiscal: Tipo de documento fiscal (Nota Fiscal o Gerencial).'
+                          }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                    </Popper>
+                  </label>
+                  <select
+                    class="payment-form-select"
+                    v-model="state.newConfirmationData.paymentFiscalNote"
+                    @change="sendData"
+                    id="types"
+                  >
+                    <option v-for="typ in state.paymentFicalNoteTypes" :key="typ.name" :value="typ.id">
+                      {{ $t(`paymentFiscalNotes.${typ.name}`) }}
+                    </option>
+                  </select>
+                </div>
+                <div class="payment-form-field">
+                  <label class="payment-form-label">
+                    {{ $t('collaboratorBookingsView.totalAmount') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{
+                            $t('paymentForm.tooltip.totalAmount') ||
+                            'Total del procedimiento: Precio del servicio para esta sesión (editable).'
+                          }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                    </Popper>
+                    <span
+                      v-if="packagePaymentStatus && packagePaymentStatus.isPaid"
+                      class="package-paid-indicator"
+                    >
+                      <i class="bi bi-check-circle-fill"></i>
+                      {{ $t('paymentForm.includedInPackage') || '(Incluido en paquete)' }}
+                    </span>
+                  </label>
+                  <input
+                    min="1"
+                    type="number"
+                    class="payment-form-input"
+                    :class="{
+                      'is-invalid': state.totalAmountError,
+                      'package-paid-input': packagePaymentStatus && packagePaymentStatus.isPaid,
+                    }"
+                    v-model="state.newConfirmationData.totalAmount"
+                    placeholder="100"
+                    :disabled="packagePaymentStatus && packagePaymentStatus.isPaid"
+                    @input="
+                      userEditedTotalAmount = true;
+                      calculatePaymentAmount();
+                      sendData();
+                    "
+                  />
+                </div>
               </div>
-            </div>
-            <div class="payment-form-field">
-              <label class="payment-form-label">
-                {{ $t('collaboratorBookingsView.paymentComment') }}
-                <Popper :class="'dark'" arrow hover>
-                  <template #content>
-                    <div>
-                      {{
-                        $t('paymentForm.tooltip.paymentComment') ||
-                        'Comentario de Pago: Notas adicionales sobre este pago (opcional).'
-                      }}
+
+              <!-- Row 3: Valor Pago | Parcelas -->
+              <div class="payment-form-row">
+                <div class="payment-form-field">
+                  <label class="payment-form-label">
+                    {{ $t('collaboratorBookingsView.paymentAmount') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{
+                            $t('paymentForm.tooltip.paymentAmount') ||
+                            'Valor Pagado: Monto que se está pagando en esta transacción. Se calcula automáticamente como Total / Parcelas (editable).'
+                          }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                    </Popper>
+                    <span
+                      v-if="packagePaymentStatus && packagePaymentStatus.isPaid"
+                      class="package-paid-indicator"
+                    >
+                      <i class="bi bi-check-circle-fill"></i>
+                      {{ $t('paymentForm.includedInPackage') || '(Incluido en paquete)' }}
+                    </span>
+                  </label>
+                  <input
+                    min="1"
+                    type="number"
+                    class="payment-form-input"
+                    :class="{
+                      'is-invalid': state.paymentAmountError,
+                      'package-paid-input': packagePaymentStatus && packagePaymentStatus.isPaid,
+                    }"
+                    v-model="state.newConfirmationData.paymentAmount"
+                    placeholder="100"
+                    :disabled="packagePaymentStatus && packagePaymentStatus.isPaid"
+                    @input="
+                      userEditedPaymentAmount = true;
+                      sendData();
+                    "
+                  />
+                </div>
+                <div class="payment-form-field">
+                  <label class="payment-form-label">
+                    {{ $t('collaboratorBookingsView.installments') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{
+                            $t('paymentForm.tooltip.installments') ||
+                            'Número de Parcelas: Cantidad de cuotas en las que se dividirá el pago. El valor pagado se calcula automáticamente como Total / Parcelas.'
+                          }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                    </Popper>
+                  </label>
+                  <input
+                    min="1"
+                    type="number"
+                    class="payment-form-input"
+                    :class="{ 'is-invalid': state.installmentsError }"
+                    v-model="state.newConfirmationData.installments"
+                    placeholder="100"
+                    @input="
+                      calculatePaymentAmount();
+                      sendData();
+                    "
+                    @keyup="sendData"
+                  />
+                </div>
+              </div>
+
+              <!-- Row 4: Comissão (full width or can share with something) -->
+              <div class="payment-form-row payment-form-row-single">
+                <!-- PROFESSIONAL COMMISSION SECTION -->
+                <div v-if="professionalName" class="payment-form-field payment-commission-section">
+                  <div class="professional-commission-header">
+                    <label class="payment-form-label">
+                      <i class="bi bi-person-badge"></i>
+                      {{ $t('professionals.assignedProfessional') || 'Profesional Asignado' }}
+                    </label>
+                    <div class="professional-commission-info">
+                      <span class="professional-name">{{ professionalName }}</span>
+                      <span v-if="professionalCommission" class="suggested-commission">
+                        {{ $t('professionals.suggestedCommission') || 'Comisión Sugerida' }}:
+                        <strong>{{ professionalCommission }}</strong>
+                      </span>
+                      <span
+                        v-if="suggestedCommissionAmount && state.newConfirmationData.paymentAmount"
+                        class="calculated-commission"
+                      >
+                        {{ $t('professionals.calculatedAmount') || 'Monto Calculado' }}:
+                        <strong
+                          >{{ suggestedCommissionAmount }} {{ commerce?.currency || 'BRL' }}</strong
+                        >
+                      </span>
                     </div>
-                  </template>
-                  <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
-                </Popper>
-              </label>
-              <textarea
-                class="payment-form-textarea"
-                id="comment"
-                rows="3"
-                v-model="state.newConfirmationData.paymentComment"
-                :placeholder="$t('collaboratorBookingsView.paymentComment')"
-                @keyup="sendData"
-              ></textarea>
+                  </div>
+                </div>
+                <!-- Warning about suggested commission -->
+                <div
+                  v-if="professionalCommission || suggestedCommissionAmount"
+                  class="payment-form-field"
+                >
+                  <Warning>
+                    <div class="commission-warning-content">
+                      <i class="bi bi-info-circle-fill me-2"></i>
+                      <span>{{ $t('paymentForm.suggestedCommissionWarning.message') }}</span>
+                      <Popper :class="'dark'" arrow hover>
+                        <template #content>
+                          <div>
+                            {{ $t('paymentForm.suggestedCommissionWarning.tooltip') }}
+                          </div>
+                        </template>
+                        <i class="bi bi-question-circle-fill ms-2 commission-warning-icon"></i>
+                      </Popper>
+                    </div>
+                  </Warning>
+                </div>
+                <div class="payment-form-field">
+                  <label class="payment-form-label">
+                    {{ $t('collaboratorBookingsView.paymentCommission') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{
+                            $t('paymentForm.tooltip.paymentCommission') ||
+                            'Comisión de Pago: Monto de comisión asociado a este pago (opcional).'
+                          }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                    </Popper>
+                  </label>
+                  <input
+                    min="1"
+                    type="number"
+                    class="payment-form-input"
+                    v-model.number="state.newConfirmationData.paymentCommission"
+                    placeholder="100"
+                    @input="sendData"
+                    @change="sendData"
+                  />
+                </div>
+              </div>
+
+              <!-- Row 5: Confirmar Parcela (switch, full width) -->
+              <div class="payment-form-row payment-form-row-single">
+                <div class="payment-form-field payment-form-switch">
+                  <label class="payment-form-label">
+                    {{ $t('collaboratorBookingsView.confirmInstallments') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{
+                            $t('paymentForm.tooltip.confirmInstallments') ||
+                            'Confirmar Parcela: Si está activado, todas las cuotas se crean como CONFIRMADAS (pagadas). Si está desactivado, se crean como PENDIENTES (requieren confirmación manual).'
+                          }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                    </Popper>
+                  </label>
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input payment-switch-input"
+                      type="checkbox"
+                      id="confirm-installments"
+                      v-model="state.newConfirmationData.confirmInstallments"
+                      @click="confirmInstallments($event)"
+                      @keyup="sendData"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 6: Comentário (textarea, full width) -->
+              <div class="payment-form-row payment-form-row-single">
+                <div class="payment-form-field">
+                  <label class="payment-form-label">
+                    {{ $t('collaboratorBookingsView.paymentComment') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{
+                            $t('paymentForm.tooltip.paymentComment') ||
+                            'Comentario de Pago: Notas adicionales sobre este pago (opcional).'
+                          }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
+                    </Popper>
+                  </label>
+                  <textarea
+                    class="payment-form-textarea"
+                    id="comment"
+                    rows="3"
+                    v-model="state.newConfirmationData.paymentComment"
+                    :placeholder="$t('collaboratorBookingsView.paymentComment')"
+                    @keyup="sendData"
+                  ></textarea>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1421,6 +1468,40 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
+}
+
+/* Desktop: Organize fields in rows */
+.payment-form-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.payment-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.payment-form-row-single {
+  /* For single field rows (like textarea, switches) */
+}
+
+/* Desktop: 2 columns layout */
+@media (min-width: 768px) {
+  .payment-form-row {
+    flex-direction: row;
+    gap: 0.75rem;
+  }
+
+  .payment-form-row .payment-form-field {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .payment-form-row-single .payment-form-field {
+    flex: 1;
+  }
 }
 
 .payment-form-errors {
@@ -1589,6 +1670,25 @@ export default {
 .calculated-commission strong {
   color: #4a90e2;
   font-weight: 600;
+}
+
+/* COMMISSION WARNING STYLES */
+.commission-warning-content {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.commission-warning-icon {
+  font-size: 0.875rem;
+  color: rgba(255, 193, 7, 0.8);
+  cursor: help;
+  transition: color 0.2s ease;
+}
+
+.commission-warning-icon:hover {
+  color: rgba(255, 193, 7, 1);
 }
 
 /* PACKAGE PAYMENT STATUS BADGES */

@@ -51,7 +51,7 @@ export default {
     const outcomesContentRef = ref(null);
     const resumeFilterRef = ref(null);
     const resumeContentRef = ref(null);
-    
+
     // Refs for timeout management
     const timeoutRefIncomes = ref(null);
     const timeoutRefOutcomes = ref(null);
@@ -89,6 +89,7 @@ export default {
         incomeStatus: undefined,
         fiscalNote: undefined,
         automatic: undefined,
+        commissionPaid: undefined,
         asc: false,
         searchText: undefined,
         startDate: undefined,
@@ -212,6 +213,24 @@ export default {
       state.showCommissionPaymentsModal = false;
     };
 
+    const handleViewOutcome = (outcomeId) => {
+      // Close commission payments modal
+      state.showCommissionPaymentsModal = false;
+
+      // Switch to outcomes tab
+      showOutcomes();
+
+      // Refresh outcomes to show the new outcome
+      nextTick(() => {
+        if (outcomesContentRef.value && outcomesContentRef.value.refresh) {
+          outcomesContentRef.value.refresh();
+        }
+      });
+
+      // TODO: Scroll to or highlight the specific outcome
+      // This would require finding the outcome in the list and scrolling to it
+    };
+
     const handleFiltersToggle = () => {
       // Handle filters toggle if needed
     };
@@ -262,27 +281,30 @@ export default {
             contentInstance.endDate = normalizeString(getValue('endDate'));
             contentInstance.searchText = normalizeString(getValue('searchText'));
             contentInstance.incomeStatus = getValue('incomeStatus');
-            
+
             // Handle boolean values - ensure they are properly set (true/false or undefined)
             const fiscalNoteValue = getValue('fiscalNote');
             contentInstance.fiscalNote = fiscalNoteValue !== undefined ? fiscalNoteValue : undefined;
-            
+
             const automaticValue = getValue('automatic');
             contentInstance.automatic = automaticValue !== undefined ? automaticValue : undefined;
-            
+
+            const commissionPaidValue = getValue('commissionPaid');
+            contentInstance.commissionPaid = commissionPaidValue !== undefined ? commissionPaidValue : undefined;
+
             const ascValue = getValue('asc');
             contentInstance.asc = ascValue !== undefined ? ascValue : false;
-            
+
             contentInstance.minAmount = getValue('minAmount');
             contentInstance.maxAmount = getValue('maxAmount');
-            
+
             // Handle filter values - ensure undefined is properly handled
             const incomeTypeValue = getValue('incomeTypeFilter');
             contentInstance.incomeTypeFilter = incomeTypeValue !== undefined && incomeTypeValue !== null && incomeTypeValue !== '' ? incomeTypeValue : undefined;
-            
+
             const paymentMethodValue = getValue('paymentMethodFilter');
             contentInstance.paymentMethodFilter = paymentMethodValue !== undefined && paymentMethodValue !== null && paymentMethodValue !== '' ? paymentMethodValue : undefined;
-            
+
             const professionalValue = getValue('professionalFilter');
             contentInstance.professionalFilter = professionalValue !== undefined && professionalValue !== null && professionalValue !== '' ? professionalValue : undefined;
 
@@ -347,6 +369,7 @@ export default {
         minAmount: override.minAmount !== undefined ? override.minAmount : filterProps.minAmount,
         maxAmount: override.maxAmount !== undefined ? override.maxAmount : filterProps.maxAmount,
         outcomeTypeFilter: override.outcomeTypeFilter !== undefined ? override.outcomeTypeFilter : filterProps.outcomeTypeFilter,
+        outcomeSystemTypeFilter: override.outcomeSystemTypeFilter !== undefined ? override.outcomeSystemTypeFilter : filterProps.outcomeSystemTypeFilter,
         paymentMethodFilter: override.paymentMethodFilter !== undefined ? override.paymentMethodFilter : filterProps.paymentMethodFilter,
         professionalFilter: override.professionalFilter !== undefined ? override.professionalFilter : filterProps.professionalFilter,
       };
@@ -398,6 +421,8 @@ export default {
             contentInstance.maxAmount = getValue('maxAmount');
             const outcomeTypeValue = getValue('outcomeTypeFilter');
             contentInstance.outcomeTypeFilter = outcomeTypeValue !== undefined && outcomeTypeValue !== null && outcomeTypeValue !== '' ? outcomeTypeValue : undefined;
+            const outcomeSystemTypeValue = getValue('outcomeSystemTypeFilter');
+            contentInstance.outcomeSystemTypeFilter = outcomeSystemTypeValue !== undefined && outcomeSystemTypeValue !== null && outcomeSystemTypeValue !== '' ? outcomeSystemTypeValue : undefined;
             const paymentMethodValue = getValue('paymentMethodFilter');
             contentInstance.paymentMethodFilter = paymentMethodValue !== undefined && paymentMethodValue !== null && paymentMethodValue !== '' ? paymentMethodValue : undefined;
             const professionalValue = getValue('professionalFilter');
@@ -507,7 +532,7 @@ export default {
         newValue: value,
       });
       state.sharedIncomeFilters.incomeStatus = value;
-      
+
       // Update filter instance if available
       if (incomesFilterRef.value) {
         incomesFilterRef.value.incomeStatus = value === '' ? undefined : value;
@@ -532,7 +557,7 @@ export default {
 
     const setSharedFiscalNote = value => {
       state.sharedIncomeFilters.fiscalNote = value;
-      
+
       // Update filter instance if available
       if (incomesFilterRef.value) {
         incomesFilterRef.value.fiscalNote = value;
@@ -556,7 +581,7 @@ export default {
 
     const setSharedAutomatic = value => {
       state.sharedIncomeFilters.automatic = value;
-      
+
       // Update filter instance if available
       if (incomesFilterRef.value) {
         incomesFilterRef.value.automatic = value;
@@ -567,6 +592,32 @@ export default {
           incomeStatus: incomesFilterRef.value.incomeStatus,
           fiscalNote: incomesFilterRef.value.fiscalNote,
           automatic: value,
+          commissionPaid: incomesFilterRef.value.commissionPaid,
+          asc: incomesFilterRef.value.asc,
+          minAmount: incomesFilterRef.value.minAmount,
+          maxAmount: incomesFilterRef.value.maxAmount,
+          incomeTypeFilter: incomesFilterRef.value.incomeTypeFilter,
+          paymentMethodFilter: incomesFilterRef.value.paymentMethodFilter,
+          professionalFilter: incomesFilterRef.value.professionalFilter,
+        };
+        refreshIncomesContentDelayed(filterProps);
+      }
+    };
+
+    const setSharedCommissionPaid = value => {
+      state.sharedIncomeFilters.commissionPaid = value;
+
+      // Update filter instance if available
+      if (incomesFilterRef.value) {
+        incomesFilterRef.value.commissionPaid = value;
+        const filterProps = {
+          startDate: incomesFilterRef.value.startDate,
+          endDate: incomesFilterRef.value.endDate,
+          searchText: incomesFilterRef.value.searchText,
+          incomeStatus: incomesFilterRef.value.incomeStatus,
+          fiscalNote: incomesFilterRef.value.fiscalNote,
+          automatic: incomesFilterRef.value.automatic,
+          commissionPaid: value,
           asc: incomesFilterRef.value.asc,
           minAmount: incomesFilterRef.value.minAmount,
           maxAmount: incomesFilterRef.value.maxAmount,
@@ -590,12 +641,14 @@ export default {
       showIncomes,
       showOutcomes,
       closeCommissionPaymentsModal,
+      handleViewOutcome,
       getLocalHour,
       handleFiltersToggle,
       handleCommerceChanged,
       setSharedIncomeStatus,
       setSharedFiscalNote,
       setSharedAutomatic,
+      setSharedCommissionPaid,
       // Refs for filter and content instances
       incomesFilterRef,
       incomesContentRef,
@@ -1178,6 +1231,34 @@ export default {
                               <input
                                 class="form-check-input"
                                 type="checkbox"
+                                :checked="filterProps.commissionPaid"
+                                @change="
+                                  e => {
+                                    const newValue = e.target.checked;
+                                    // Update filterProps first
+                                    filterProps.commissionPaid = newValue;
+                                    if (filterProps.checkCommissionPaid) {
+                                      filterProps.checkCommissionPaid(e);
+                                    }
+                                    // Update filter instance
+                                    if (incomesFilterRef.value) {
+                                      incomesFilterRef.value.commissionPaid = newValue;
+                                    }
+                                    // Use the new value directly instead of filterProps
+                                    nextTick(() => {
+                                      refreshIncomesContentDelayed(getAllFilterValues(filterProps, { commissionPaid: newValue }));
+                                    });
+                                  }
+                                "
+                              />
+                              <label class="form-check-label">{{
+                                $t('commissionPayments.commissionPaid') || 'Comisión Pagada'
+                              }}</label>
+                            </div>
+                            <div class="form-check form-switch">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
                                 :checked="filterProps.asc"
                                 @change="
                                   e => {
@@ -1281,15 +1362,15 @@ export default {
                                       if (newValue === '' || newValue === 'undefined' || newValue === 'null') {
                                         newValue = undefined;
                                       }
-                                      
+
                                       // Update filterProps first
                                       filterProps.incomeTypeFilter = newValue;
-                                      
+
                                       // Update filter instance
                                       if (incomesFilterRef.value) {
                                         incomesFilterRef.value.incomeTypeFilter = newValue;
                                       }
-                                      
+
                                       // Use the new value directly
                                       nextTick(() => {
                                         refreshIncomesContentDelayed(getAllFilterValues(filterProps, { incomeTypeFilter: newValue }));
@@ -1332,15 +1413,15 @@ export default {
                                       if (newValue === '' || newValue === 'undefined' || newValue === 'null') {
                                         newValue = undefined;
                                       }
-                                      
+
                                       // Update filterProps first
                                       filterProps.paymentMethodFilter = newValue;
-                                      
+
                                       // Update filter instance
                                       if (incomesFilterRef.value) {
                                         incomesFilterRef.value.paymentMethodFilter = newValue;
                                       }
-                                      
+
                                       // Use the new value directly
                                       nextTick(() => {
                                         refreshIncomesContentDelayed(getAllFilterValues(filterProps, { paymentMethodFilter: newValue }));
@@ -1401,19 +1482,19 @@ export default {
                                   const newValue = selectedValue === '' ? undefined : selectedValue;
                                   console.log('[BusinessFinancial Desktop] Selected value:', selectedValue);
                                   console.log('[BusinessFinancial Desktop] Setting to:', newValue);
-                                  
+
                                   // Update filter instance directly
                                   if (filterProps.setProfessionalFilter) {
                                     filterProps.setProfessionalFilter(newValue);
                                   } else {
                                     filterProps.professionalFilter = newValue;
                                   }
-                                  
+
                                   // Also update the filter instance directly
                                   if (incomesFilterRef.value) {
                                     incomesFilterRef.value.professionalFilter = newValue;
                                   }
-                                  
+
                                   // Sync to content instance using the refresh function
                                   refreshIncomesContentDelayed({
                                     professionalFilter: newValue,
@@ -1456,10 +1537,10 @@ export default {
                                 async () => {
                                   // Call clear() method which resets all filters in the component
                                   await filterProps.clear();
-                                  
+
                                   // Wait for nextTick to ensure all values are updated
                                   await nextTick();
-                                  
+
                                   if (incomesFilterRef.value) {
                                     // Explicitly sync ALL cleared values to filter instance
                                     // This ensures both filter and content instances are in sync
@@ -1475,7 +1556,7 @@ export default {
                                     incomesFilterRef.value.incomeTypeFilter = undefined;
                                     incomesFilterRef.value.paymentMethodFilter = undefined;
                                     incomesFilterRef.value.professionalFilter = undefined;
-                                    
+
                                     // Also update filterProps to ensure consistency
                                     filterProps.startDate = undefined;
                                     filterProps.endDate = undefined;
@@ -1490,7 +1571,7 @@ export default {
                                     filterProps.paymentMethodFilter = undefined;
                                     filterProps.professionalFilter = undefined;
                                   }
-                                  
+
                                   // Refresh content with all cleared values
                                   await nextTick();
                                   refreshIncomesContentDelayed({
@@ -1697,6 +1778,151 @@ export default {
                             </div>
                           </div>
 
+                          <!-- Amount Range Filters -->
+                          <div class="mb-3">
+                            <label class="form-label fw-bold mb-2">{{
+                              $t('businessFinancial.filters.amountRange') || 'Faixa de Valores'
+                            }}</label>
+                            <div class="row">
+                              <div class="col-5">
+                                <input
+                                  type="number"
+                                  class="form-control form-control-sm"
+                                  :value="filterProps.minAmount"
+                                  @input="
+                                    e => {
+                                      const newValue = e.target.value;
+                                      filterProps.minAmount = newValue;
+                                      if (outcomesFilterRef.value) {
+                                        outcomesFilterRef.value.minAmount = newValue;
+                                      }
+                                    }
+                                  "
+                                  :placeholder="
+                                    $t('businessFinancial.filters.minAmount') || 'Valor Mínimo'
+                                  "
+                                  min="0"
+                                  step="0.01"
+                                />
+                              </div>
+                              <div class="col-5">
+                                <input
+                                  type="number"
+                                  class="form-control form-control-sm"
+                                  :value="filterProps.maxAmount"
+                                  @input="
+                                    e => {
+                                      const newValue = e.target.value;
+                                      filterProps.maxAmount = newValue;
+                                      if (outcomesFilterRef.value) {
+                                        outcomesFilterRef.value.maxAmount = newValue;
+                                      }
+                                    }
+                                  "
+                                  :placeholder="
+                                    $t('businessFinancial.filters.maxAmount') || 'Valor Máximo'
+                                  "
+                                  min="0"
+                                  step="0.01"
+                                />
+                              </div>
+                              <div class="col-2">
+                                <button
+                                  class="btn btn-sm btn-dark rounded-pill"
+                                  @click="
+                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps))
+                                  "
+                                  :disabled="filterProps.loading"
+                                >
+                                  <i class="bi bi-search"></i>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Outcome System Type Filter -->
+                          <div class="mb-3">
+                            <label class="form-label fw-bold mb-2">{{
+                              $t('businessFinancial.filters.outcomeSystemType') || 'Tipo de Despesa'
+                            }}</label>
+                            <select
+                              class="form-control form-select"
+                              :value="filterProps.outcomeSystemTypeFilter === undefined ? '' : filterProps.outcomeSystemTypeFilter"
+                              @change="
+                                e => {
+                                  const selectedValue = e.target.value;
+                                  const newValue = selectedValue === '' || selectedValue === 'undefined' || selectedValue === 'null' ? undefined : selectedValue;
+
+                                  filterProps.outcomeSystemTypeFilter = newValue;
+
+                                  if (outcomesFilterRef.value) {
+                                    outcomesFilterRef.value.outcomeSystemTypeFilter = newValue;
+                                  }
+
+                                  nextTick(() => {
+                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps, { outcomeSystemTypeFilter: newValue }));
+                                  });
+                                }
+                              "
+                            >
+                              <option :value="undefined">
+                                {{ $t('businessFinancial.filters.all') }}
+                              </option>
+                              <option value="PROFESSIONAL_COMMISSION">
+                                {{ $t('outcomeTypes.PROFESSIONAL_COMMISSION') || 'Comissão Profissional' }}
+                              </option>
+                              <option value="PRODUCT">
+                                {{ $t('outcomeTypes.PRODUCT') || 'Produto' }}
+                              </option>
+                              <option value="SERVICE">
+                                {{ $t('outcomeTypes.SERVICE') || 'Serviço' }}
+                              </option>
+                              <option value="OTHER">
+                                {{ $t('outcomeTypes.OTHER') || 'Outro' }}
+                              </option>
+                            </select>
+                          </div>
+
+                          <!-- Professional Filter for Outcomes -->
+                          <div class="mb-3" v-if="filterProps.professionals && filterProps.professionals.length > 0">
+                            <label class="form-label fw-bold mb-2">{{
+                              $t('businessFinancial.filters.professional') || 'Profissional'
+                            }}
+                            ({{ filterProps.professionals?.length || 0 }})</label>
+                            <select
+                              class="form-control form-select"
+                              :value="filterProps.professionalFilter === undefined ? '' : filterProps.professionalFilter"
+                              @change="
+                                e => {
+                                  const selectedValue = e.target.value;
+                                  const newValue = selectedValue === '' ? undefined : selectedValue;
+
+                                  filterProps.professionalFilter = newValue;
+
+                                  if (outcomesFilterRef.value) {
+                                    outcomesFilterRef.value.professionalFilter = newValue;
+                                  }
+
+                                  nextTick(() => {
+                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps, { professionalFilter: newValue }));
+                                  });
+                                }
+                              "
+                              :disabled="!filterProps.professionals || filterProps.professionals.length === 0"
+                            >
+                              <option :value="undefined">
+                                {{ $t('businessFinancial.filters.all') }}
+                              </option>
+                              <option
+                                v-for="professional in (filterProps.professionals || [])"
+                                :key="professional.id"
+                                :value="professional.id"
+                              >
+                                {{ professional.personalInfo?.name || professional.name || '-' }}
+                              </option>
+                            </select>
+                          </div>
+
                           <!-- Clear button -->
                           <div class="mb-3 mt-3">
                             <button
@@ -1710,10 +1936,18 @@ export default {
                                     outcomesFilterRef.value.endDate = undefined;
                                     outcomesFilterRef.value.searchText = undefined;
                                     outcomesFilterRef.value.asc = true;
+                                    outcomesFilterRef.value.minAmount = undefined;
+                                    outcomesFilterRef.value.maxAmount = undefined;
+                                    outcomesFilterRef.value.outcomeSystemTypeFilter = undefined;
+                                    outcomesFilterRef.value.professionalFilter = undefined;
                                     filterProps.startDate = undefined;
                                     filterProps.endDate = undefined;
                                     filterProps.searchText = undefined;
                                     filterProps.asc = true;
+                                    filterProps.minAmount = undefined;
+                                    filterProps.maxAmount = undefined;
+                                    filterProps.outcomeSystemTypeFilter = undefined;
+                                    filterProps.professionalFilter = undefined;
                                   }
                                   await nextTick();
                                   refreshOutcomesContentDelayed({
@@ -1721,6 +1955,10 @@ export default {
                                     endDate: undefined,
                                     searchText: undefined,
                                     asc: true,
+                                    minAmount: undefined,
+                                    maxAmount: undefined,
+                                    outcomeSystemTypeFilter: undefined,
+                                    professionalFilter: undefined,
                                   });
                                 }
                               "
@@ -1846,6 +2084,7 @@ export default {
               :commerce="commerce"
               :business="state.business"
               :toggles="state.toggles"
+              @view-outcome="handleViewOutcome"
             />
           </div>
         </div>

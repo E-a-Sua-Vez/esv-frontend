@@ -91,10 +91,20 @@ export default {
       blockToEdit: undefined,
       selectedProfessional: null,
       professionalCommission: null,
+      commissionManuallyEdited: false, // Bandera para rastrear si el usuario editó la comisión
       professionals: [],
       goToAssignProfessional: false,
       loadingProfessionalData: false,
     };
+  },
+  mounted() {
+    // Asegurar que los inputs sean interactivos después de montar
+    this.$nextTick(() => {
+      if (this.$refs.commissionInputRef) {
+        this.$refs.commissionInputRef.style.pointerEvents = 'auto';
+        this.$refs.commissionInputRef.style.userSelect = 'text';
+      }
+    });
   },
   beforeMount() {
     this.paymentTypes = getPaymentTypes();
@@ -142,6 +152,16 @@ export default {
     },
     showProfessionalDetails() {
       this.extendedProfessionalEntity = !this.extendedProfessionalEntity;
+      // Forzar focus en el input cuando se muestra la sección
+      if (this.extendedProfessionalEntity) {
+        this.$nextTick(() => {
+          if (this.$refs.commissionInputRef) {
+            setTimeout(() => {
+              this.$refs.commissionInputRef.focus();
+            }, 100);
+          }
+        });
+      }
       this.extendedPaymentEntity = false;
       this.extendedEditEntity = false;
       this.extendedTransferEntity = false;
@@ -152,12 +172,45 @@ export default {
     },
     handleProfessionalSelected(professional) {
       this.selectedProfessional = professional;
-      if (professional && professional.financialInfo) {
+      // Solo establecer la comisión por defecto si el usuario no ha editado el campo
+      // Usar una bandera para rastrear si el usuario ha editado manualmente
+      if (professional && professional.financialInfo && !this.commissionManuallyEdited) {
         const { commissionType, commissionValue } = professional.financialInfo;
-        if (commissionValue) {
+        if (commissionValue !== undefined && commissionValue !== null) {
           this.professionalCommission = commissionValue;
         }
       }
+    },
+    handleCommissionInput(event) {
+      // Marcar que el usuario ha editado manualmente la comisión
+      this.commissionManuallyEdited = true;
+      // Permitir escribir libremente, solo validar formato básico
+      let value = event.target.value;
+      // Remover caracteres no numéricos excepto punto decimal
+      value = value.replace(/[^0-9.]/g, '');
+      // Asegurar que solo haya un punto decimal
+      const parts = value.split('.');
+      if (parts.length > 2) {
+        value = parts[0] + '.' + parts.slice(1).join('');
+      }
+      // Actualizar el valor solo si cambió (para evitar loops)
+      if (this.professionalCommission !== value) {
+        this.professionalCommission = value;
+      }
+    },
+    handleInputClick(event) {
+      // Solo detener propagación, no prevenir el comportamiento por defecto
+      event.stopPropagation();
+      // Forzar focus en el input
+      this.$nextTick(() => {
+        if (this.$refs.commissionInputRef) {
+          this.$refs.commissionInputRef.focus();
+        }
+      });
+    },
+    handleInputMouseDown(event) {
+      // Solo detener propagación, no prevenir el comportamiento por defecto
+      event.stopPropagation();
     },
     getSuggestedCommission() {
       if (!this.selectedProfessional || !this.selectedProfessional.financialInfo) {
@@ -332,6 +385,7 @@ export default {
           this.$t('professionals.selectProfessionalFirst') || 'Por favor seleccione un profesional';
         return;
       }
+      // NO llamar handleProfessionalSelected aquí para evitar sobrescribir la comisión editada
       this.goToAssignProfessional = !this.goToAssignProfessional;
     },
     cancelAssignProfessional() {
@@ -347,14 +401,34 @@ export default {
         this.loading = true;
         this.alertError = '';
         if (this.booking && this.booking.id) {
+          // Usar la comisión editada por el usuario si existe, sino usar la del profesional
+          // Convertir a número si es string
+          let commissionToUse = null;
+          if (this.professionalCommission !== null && this.professionalCommission !== undefined && this.professionalCommission !== '') {
+            commissionToUse = typeof this.professionalCommission === 'string'
+              ? parseFloat(this.professionalCommission)
+              : this.professionalCommission;
+            // Validar que sea un número válido
+            if (isNaN(commissionToUse)) {
+              commissionToUse = null;
+            }
+          }
+          if (commissionToUse === null) {
+            commissionToUse = this.selectedProfessional.financialInfo?.commissionValue || null;
+          }
+          const commissionType = this.selectedProfessional.financialInfo?.commissionType || null;
+
           await assignProfessional(
             this.booking.id,
             this.selectedProfessional.id,
             this.selectedProfessional.personalInfo?.name || this.selectedProfessional.name,
+            commissionToUse,
+            commissionType,
           );
           this.$emit('booking-updated');
           this.goToAssignProfessional = false;
           this.extendedProfessionalEntity = false;
+          this.commissionManuallyEdited = false; // Reset flag
         }
         this.loading = false;
       } catch (error) {
@@ -1539,9 +1613,10 @@ export default {
               getActiveFeature(commerce, 'professional-assignment-enabled', 'PRODUCT')
             "
             class="attention-action-section"
+            style="position: relative; z-index: 1; pointer-events: auto;"
           >
-            <div class="attention-action-content">
-              <div class="booking-action-form payment-form-modern">
+            <div class="attention-action-content" style="position: relative; z-index: 1; pointer-events: auto;">
+              <div class="booking-action-form payment-form-modern" style="position: relative; z-index: 1; pointer-events: auto;">
                 <div class="booking-action-header">
                   <i class="bi bi-person-badge"></i>
                   <span>{{ $t('professionals.assignProfessional') }}</span>
@@ -1576,14 +1651,20 @@ export default {
                       getActiveFeature(commerce, 'professional-commission-enabled', 'PRODUCT')
                     "
                     class="payment-form-field"
+                    style="position: relative; z-index: 2; pointer-events: auto;"
                   >
                     <label class="payment-form-label">{{ $t('professionals.commission') }}</label>
                     <div class="d-flex align-items-center gap-2">
                       <input
+                        ref="commissionInputRef"
                         v-model="professionalCommission"
-                        type="number"
-                        class="payment-form-input"
+                        min="1"
+                        max="50"
+                        type="text"
+                        class="payment-form-input commission-input-fix"
                         :placeholder="getSuggestedCommission()"
+                        @input="handleCommissionInput"
+                        :value="professionalCommission"
                       />
                       <span class="text-muted">
                         {{
@@ -1593,10 +1674,19 @@ export default {
                         }}
                       </span>
                     </div>
-                    <small class="text-muted">
-                      {{ $t('professionals.suggestedCommission') }}:
-                      {{ getSuggestedCommission() }}
-                    </small>
+                    <!-- Warning about suggested commission -->
+                    <div v-if="getSuggestedCommission()" class="alert alert-warning mt-2">
+                      <i class="bi bi-info-circle me-2"></i>
+                      <span>{{ $t('professionals.suggestedCommission') }}: {{ getSuggestedCommission() }}</span>
+                      <Popper :class="'dark'" arrow hover>
+                        <template #content>
+                          <div>
+                            {{ $t('paymentForm.suggestedCommissionWarning.tooltip') }}
+                          </div>
+                        </template>
+                        <i class="bi bi-question-circle ms-2"></i>
+                      </Popper>
+                    </div>
                   </div>
                   <div
                     v-if="
@@ -2882,6 +2972,20 @@ export default {
   min-height: 180px;
   display: flex;
   flex-direction: column;
+  pointer-events: auto !important;
+}
+
+.attention-action-section * {
+  pointer-events: auto !important;
+}
+
+.attention-action-section input,
+.attention-action-section textarea,
+.attention-action-section select,
+.attention-action-section button {
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 .booking-action-section:last-child {
@@ -3192,12 +3296,18 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
+  pointer-events: auto !important;
 }
 
 .payment-form-field {
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
+  pointer-events: auto !important;
+}
+
+.payment-form-field * {
+  pointer-events: auto !important;
 }
 
 .payment-form-label {
@@ -3218,6 +3328,17 @@ export default {
   color: rgba(0, 0, 0, 0.7);
   transition: all 0.2s ease;
   width: 100%;
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+.payment-form-input[type="text"] {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
 }
 
 .payment-form-select:hover,
@@ -3236,5 +3357,88 @@ export default {
 .payment-form-select.is-invalid,
 .payment-form-input.is-invalid {
   border-color: #dc3545;
+}
+
+/* Fix para input de comisión bloqueado */
+.commission-input-fix {
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text !important;
+  z-index: 999999 !important;
+  position: relative !important;
+  background: white !important;
+  -webkit-touch-callout: default !important;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+  touch-action: manipulation !important;
+}
+
+.commission-input-fix:focus,
+.commission-input-fix:focus-visible,
+.commission-input-fix:focus-within {
+  pointer-events: auto !important;
+  user-select: text !important;
+  outline: 2px solid #00c2cb !important;
+  outline-offset: 2px !important;
+  background: white !important;
+  z-index: 999999 !important;
+  border-color: #00c2cb !important;
+}
+
+.commission-input-fix:focus {
+  pointer-events: auto !important;
+  user-select: text !important;
+  outline: 2px solid #00c2cb !important;
+  outline-offset: 2px !important;
+  background: white !important;
+  z-index: 999999 !important;
+}
+
+.commission-input-fix:hover {
+  pointer-events: auto !important;
+  cursor: text !important;
+  background: white !important;
+}
+
+.commission-input-fix:active {
+  pointer-events: auto !important;
+  user-select: text !important;
+}
+
+.commission-input-fix * {
+  pointer-events: auto !important;
+}
+
+/* Forzar interacción en TODO el formulario de profesional */
+.booking-action-form.payment-form-modern,
+.booking-action-form.payment-form-modern *,
+.payment-form-modern,
+.payment-form-modern * {
+  pointer-events: auto !important;
+}
+
+.booking-action-form.payment-form-modern input,
+.booking-action-form.payment-form-modern textarea,
+.booking-action-form.payment-form-modern select,
+.booking-action-form.payment-form-modern button {
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text !important;
+}
+
+
+.booking-action-form.payment-form-modern input[type="text"],
+.booking-action-form.payment-form-modern input[type="number"] {
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  cursor: text !important;
+  -webkit-touch-callout: default !important;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
 }
 </style>

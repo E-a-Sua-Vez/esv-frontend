@@ -125,10 +125,6 @@ export default {
     async refresh() {
       try {
         this.loading = true;
-        if (!this.business?.id || !this.commerce?.id) {
-          this.loading = false;
-          return;
-        }
         let commerceIds = [this.commerce.id];
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
@@ -147,7 +143,7 @@ export default {
           professionalFilter: this.professionalFilter,
         });
 
-        let outcomes = await getOutcomesDetails(
+        this.financialOutcomes = await getOutcomesDetails(
           this.business.id,
           this.commerce.id,
           this.startDate,
@@ -157,36 +153,19 @@ export default {
           this.limit,
           this.searchText,
           this.asc,
-          undefined,
-          undefined,
-          undefined,
+          this.incomeStatus,
+          this.fiscalNote,
+          this.automatic,
           this.minAmount,
           this.maxAmount,
           this.outcomeTypeFilter,
           this.paymentMethodFilter
         );
 
-        // Client-side filter by professional (API doesn't support this for outcomes)
-        if (this.professionalFilter) {
-          outcomes = (outcomes || []).filter(o => {
-            const professionalId =
-              o?.professionalId || o?.incomeInfo?.professionalId || o?.paymentInfo?.professionalId;
-            return professionalId === this.professionalFilter;
-          });
-        }
-
-        this.financialOutcomes = outcomes;
-
         console.log('OutcomesFinancialManagement.refresh - API Response:', {
           count: this.financialOutcomes?.length || 0,
           firstOutcome: this.financialOutcomes?.[0],
-          hasClientSideFilters: !!(
-            this.minAmount ||
-            this.maxAmount ||
-            this.outcomeTypeFilter ||
-            this.paymentMethodFilter ||
-            this.professionalFilter
-          ),
+          hasClientSideFilters: !!(this.minAmount || this.maxAmount || this.outcomeTypeFilter || this.paymentMethodFilter || this.professionalFilter),
         });
 
         // Load professionals if there are outcomes with professional data
@@ -229,13 +208,9 @@ export default {
     async exportToCSV() {
       try {
         this.loading = true;
-        if (!this.business?.id || !this.commerce?.id) {
-          this.loading = false;
-          return;
-        }
         let csvAsBlob = [];
         const commerceIds = [this.commerce.id];
-        let result = await getOutcomesDetails(
+        const result = await getOutcomesDetails(
           this.business.id,
           this.commerce.id,
           this.startDate,
@@ -245,21 +220,14 @@ export default {
           undefined,
           this.searchText,
           this.asc,
-          undefined,
-          undefined,
-          undefined,
+          this.incomeStatus,
+          this.fiscalNote,
+          this.automatic,
           this.minAmount,
           this.maxAmount,
           this.outcomeTypeFilter,
           this.paymentMethodFilter
         );
-        if (this.professionalFilter) {
-          result = (result || []).filter(o => {
-            const professionalId =
-              o?.professionalId || o?.incomeInfo?.professionalId || o?.paymentInfo?.professionalId;
-            return professionalId === this.professionalFilter;
-          });
-        }
         if (result && result.length > 0) {
           csvAsBlob = jsonToCsv(result);
         }
@@ -725,11 +693,7 @@ export default {
                           <option :value="undefined">
                             {{ $t('businessFinancial.filters.all') }}
                           </option>
-                          <option
-                            v-for="professional in professionals"
-                            :key="professional.id"
-                            :value="professional.id"
-                          >
+                          <option v-for="professional in professionals" :key="professional.id" :value="professional.id">
                             {{ professional.personalInfo?.name || professional.name || '-' }}
                           </option>
                         </select>
@@ -838,34 +802,36 @@ export default {
         </div>
       </div>
       <!-- Modal Add -->
-      <div
-        class="modal fade"
-        :id="`add-outcome`"
-        data-bs-keyboard="false"
-        tabindex="-1"
-        aria-labelledby="staticBackdropLabel"
-        aria-hidden="true"
-      >
-        <div class="modal-dialog modal-xl">
-          <div class="modal-content">
-            <div class="modal-header border-0 centered active-name">
-              <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
-              <button
-                id="close-modal"
-                class="btn-close"
-                type="button"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div class="modal-body text-center mb-0" id="attentions-component">
-              <Spinner :show="loading"></Spinner>
-              <Alert :show="loading" :stack="alertError"></Alert>
-              <div
-                id="add-outcome"
-                class="result-card mb-4"
-                v-if="showAdd && toggles['financial.outcomes.add']"
-              >
+      <Teleport to="body">
+        <div
+          class="modal fade"
+          :id="`add-outcome`"
+          data-bs-keyboard="false"
+          tabindex="-1"
+          aria-labelledby="staticBackdropLabel"
+          aria-hidden="true"
+          style="z-index: 1055;"
+        >
+          <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+              <div class="modal-header border-0 centered active-name">
+                <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
+                <button
+                  id="close-modal"
+                  class="btn-close"
+                  type="button"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div class="modal-body text-center mb-0" id="attentions-component">
+                <Spinner :show="loading"></Spinner>
+                <Alert :show="loading" :stack="alertError"></Alert>
+                <div
+                  id="add-outcome"
+                  class="result-card mb-4"
+                  v-if="showAdd && toggles['financial.outcomes.add']"
+                >
                 <div>
                   <div class="row mb-1">
                     <div id="outcome-type-form-add" class="row mt-1">
@@ -1054,6 +1020,7 @@ export default {
           </div>
         </div>
       </div>
+      </Teleport>
     </div>
     <div v-if="showOutcomesFinancialManagement === true && !toggles['financial.outcomes.view']">
       <Message
@@ -1126,5 +1093,14 @@ export default {
 }
 .form-control {
   font-size: 0.9rem;
+}
+
+/* Asegurar que el modal se muestre correctamente en desktop */
+.modal {
+  z-index: 1055 !important;
+}
+
+.modal-backdrop {
+  z-index: 1050 !important;
 }
 </style>

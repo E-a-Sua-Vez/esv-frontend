@@ -25,6 +25,7 @@ import QueueName from '../../common/QueueName.vue';
 import QueueSimpleName from '../../common/QueueSimpleName.vue';
 import Spinner from '../../common/Spinner.vue';
 import BookingDetailsCard from '../common/BookingDetailsCard.vue';
+import BookingDetailsModal from '../common/BookingDetailsModal.vue';
 import WaitlistDetailsCard from '../../waitlist/WaitlistDetailsCard.vue';
 import AttentionNumber from '../../common/AttentionNumber.vue';
 import Warning from '../../common/Warning.vue';
@@ -43,6 +44,7 @@ export default {
     QueueSimpleName,
     QueueName,
     BookingDetailsCard,
+    BookingDetailsModal,
     WaitlistDetailsCard,
     AttentionNumber,
     Warning,
@@ -134,6 +136,22 @@ export default {
 
     onMounted(() => {
       const handleClickOutside = event => {
+        // Ignorar clicks dentro del modal de booking - verificar también inputs y elementos interactivos
+        const target = event.target;
+        if (
+          target.closest('.booking-details-modal-overlay') ||
+          target.closest('.booking-details-modal-dialog') ||
+          target.closest('.booking-details-modal-content') ||
+          target.closest('.attention-modal-overlay') ||
+          target.closest('.attention-modal-dialog') ||
+          target.closest('.attention-modal-content') ||
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.closest('input, textarea, select')
+        ) {
+          return;
+        }
         if (state.showQueueSelector && !event.target.closest('.queue-badge-clickable')) {
           state.showQueueSelector = false;
         }
@@ -2332,7 +2350,7 @@ export default {
       <!-- MANAGEMENT AREA -->
       <div
         class="management-area-column d-flex flex-column h-100"
-        :style="{ width: 100 - state.calendarWidth + '%', minWidth: '25%', maxWidth: '75%' }"
+        :style="{ width: 100 - state.calendarWidth + '%', minWidth: '40%', maxWidth: '60%' }"
       >
         <div class="blocks-section">
           <div class="management-header">
@@ -2694,11 +2712,6 @@ export default {
               </div>
               <div v-if="state.client && state.client.id" class="client-details-wrapper">
                 <!-- Debug info -->
-                <div class="mb-2">
-                  <small class="text-muted">
-                    🔍 Client ID: {{ state.client.id }}, Name: {{ state.client.name }}
-                  </small>
-                </div>
                 <ClientDetailsCard
                   :show="true"
                   :client="state.client"
@@ -2797,57 +2810,21 @@ export default {
     </div>
 
     <!-- Booking Details Modal -->
-    <Teleport to="body">
-      <div
-        v-if="state.drawerOpen"
-        ref="modalRef"
-        class="modal fade show"
-        :id="modalId"
-        tabindex="-1"
-        aria-labelledby="bookingDetailsModalLabel"
-        aria-hidden="false"
-        data-bs-backdrop="true"
-        data-bs-keyboard="true"
-        style="display: block"
-        @click="closeModal"
-      >
-        <div class="modal-dialog modal-dialog-scrollable modal-lg" @click.stop>
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="bookingDetailsModalLabel">
-                <i class="bi bi-calendar-check-fill"></i>
-                Detalhes da Reserva
-              </h5>
-              <button
-                type="button"
-                class="btn-close"
-                @click="closeModal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div class="modal-body">
-              <BookingDetailsCard
-                v-if="state.selectedBooking"
-                :booking="state.selectedBooking"
-                :show="true"
-                :details-opened="true"
-                :toggles="toggles"
-                :commerce="commerce"
-                :queues="queues"
-                :disabled-dates="disabledDates"
-                :calendar-attributes="calendarAttributes"
-                :grouped-queues="state.groupedQueues"
-                :selected-queue="state.selectedQueue"
-                :selected-date="state.selectedDate"
-                @getAvailableDatesByCalendarMonth="getAvailableDatesByCalendarMonth"
-                @booking-updated="handleBookingUpdated"
-              >
-              </BookingDetailsCard>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <BookingDetailsModal
+      :show="state.drawerOpen"
+      :booking="state.selectedBooking"
+      :commerce="commerce"
+      :queues="queues"
+      :toggles="toggles"
+      :disabled-dates="disabledDates"
+      :calendar-attributes="calendarAttributes"
+      :grouped-queues="state.groupedQueues"
+      :selected-queue="state.selectedQueue"
+      :selected-date="state.selectedDate"
+      @close="closeBookingDrawer"
+      @booking-updated="handleBookingUpdated"
+      @getAvailableDatesByCalendarMonth="getAvailableDatesByCalendarMonth"
+    />
 
     <!-- Attention Creation Modal -->
     <AttentionCreationModal
@@ -2940,6 +2917,15 @@ export default {
   height: calc(100vh - 120px);
   padding: 0;
   overflow: visible;
+  /* Asegurar que no bloquee eventos de modales hijos */
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Asegurar que los modales con Teleport puedan recibir eventos */
+.modal-body-full-height ~ * {
+  pointer-events: auto !important;
 }
 
 .modal-body-full-height .row {
@@ -3009,7 +2995,7 @@ export default {
   height: 30px;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 1px;
-  pointer-events: none;
+  pointer-events: auto !important;
 }
 
 .resizer-bar:hover .resizer-handle,
@@ -3985,69 +3971,4 @@ export default {
   font-size: 0.875rem;
 }
 
-/* Booking Modal - Scrollable modal with proper height */
-/* Target the booking modal specifically */
-.modal-dialog.modal-lg {
-  max-width: 1200px !important;
-  width: 95vw !important;
-}
-
-.modal-content {
-  border-radius: 0.5rem !important;
-  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
-}
-
-/* Modal header with blue background and white text */
-.modal-header {
-  background: linear-gradient(
-    135deg,
-    var(--azul-turno, #004aad) 0%,
-    var(--verde-tu, #00c2cb) 100%
-  ) !important;
-  color: white !important;
-  border-bottom: none !important;
-  padding: 1rem 1.25rem !important;
-  border-radius: 0.5rem 0.5rem 0 0 !important;
-}
-
-.modal-title {
-  color: white !important;
-  font-weight: 700 !important;
-  margin: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.5rem !important;
-}
-
-.modal-title i {
-  color: white !important;
-  font-size: 1.125rem !important;
-}
-
-.btn-close {
-  filter: invert(1) grayscale(100%) brightness(200%) !important;
-  opacity: 0.9 !important;
-}
-
-.btn-close:hover {
-  opacity: 1 !important;
-}
-
-.modal-body {
-  background: #f8f9fa !important;
-  padding: 1.25rem !important;
-}
-
-/* Responsive adjustments for modal */
-@media (max-width: 768px) {
-  .modal-dialog.modal-lg {
-    max-width: 95vw !important;
-    width: 95vw !important;
-    margin: 1rem auto !important;
-  }
-
-  .modal-body {
-    padding: 0.75rem !important;
-  }
-}
 </style>

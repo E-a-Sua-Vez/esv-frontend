@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import Spinner from '../../common/Spinner.vue';
 import Alert from '../../common/Alert.vue';
 import Message from '../../common/Message.vue';
@@ -12,6 +12,7 @@ import {
   getCommissionPaymentsByCommerce,
   getUnpaidIncomesByProfessional,
   createCommissionPayment,
+  downloadCommissionPaymentPdf,
 } from '../../../application/services/professional-commission-payment';
 import { getDate } from '../../../shared/utils/date';
 
@@ -31,12 +32,43 @@ export default {
     business: { type: Object, required: true },
     toggles: { type: Object, default: undefined },
   },
-  setup(props) {
+  setup(props, { emit }) {
     const loading = ref(false);
     const alertError = ref(null);
     const activeTab = ref('create'); // create, created, paid, cancelled
     const professionals = ref([]);
     const allPayments = ref([]);
+
+    // Vista y paginación
+    const viewMode = ref('table'); // 'table' o 'cards'
+    const currentPage = ref(1);
+    const itemsPerPage = ref(10);
+    const searchProfessionalId = ref(null); // Filtro por profesional
+
+    // Inicializar fechas con inicio y fin del mes actual
+    const getCurrentMonthDates = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+
+      // Primer día del mes
+      const firstDay = new Date(year, month, 1);
+      const dateFrom = firstDay.toISOString().split('T')[0];
+
+      // Último día del mes
+      const lastDay = new Date(year, month + 1, 0);
+      const dateTo = lastDay.toISOString().split('T')[0];
+
+      return { dateFrom, dateTo };
+    };
+
+    const { dateFrom, dateTo } = getCurrentMonthDates();
+    const filterDateFrom = ref(dateFrom); // Filtro fecha desde (inicio del mes actual)
+    const filterDateTo = ref(dateTo); // Filtro fecha hasta (fin del mes actual)
+
+    const sortBy = ref('createdAt'); // createdAt, totalCommission, professionalName
+    const sortOrder = ref('desc'); // 'asc' o 'desc'
+    const expandedRows = ref(new Set()); // IDs de filas expandidas
 
     // Filtros para crear nuevo pago
     const selectedProfessionalId = ref(null);
@@ -60,6 +92,114 @@ export default {
       allPayments.value.filter(p => p.status === 'CANCELLED')
     );
 
+    // Función para obtener pagos filtrados y ordenados según el tab activo
+    const getFilteredPayments = computed(() => {
+      let payments = [];
+      if (activeTab.value === 'created') {
+        payments = createdPayments.value;
+      } else if (activeTab.value === 'paid') {
+        payments = paidPayments.value;
+      } else if (activeTab.value === 'cancelled') {
+        payments = cancelledPayments.value;
+      }
+
+      // Filtrar por profesional seleccionado
+      if (searchProfessionalId.value) {
+        payments = payments.filter(payment => payment.professionalId === searchProfessionalId.value);
+      }
+
+      // Filtrar por fecha desde
+      if (filterDateFrom.value) {
+        const fromDate = new Date(filterDateFrom.value);
+        fromDate.setHours(0, 0, 0, 0);
+        payments = payments.filter(payment => {
+          const paymentDate = new Date(payment.createdAt);
+          paymentDate.setHours(0, 0, 0, 0);
+          return paymentDate >= fromDate;
+        });
+      }
+
+      // Filtrar por fecha hasta
+      if (filterDateTo.value) {
+        const toDate = new Date(filterDateTo.value);
+        toDate.setHours(23, 59, 59, 999);
+        payments = payments.filter(payment => {
+          const paymentDate = new Date(payment.createdAt);
+          paymentDate.setHours(0, 0, 0, 0);
+          return paymentDate <= toDate;
+        });
+      }
+
+      // Ordenar
+      payments = [...payments].sort((a, b) => {
+        let aVal, bVal;
+        if (sortBy.value === 'professionalName') {
+          const profA = professionals.value.find(p => p.id === a.professionalId);
+          const profB = professionals.value.find(p => p.id === b.professionalId);
+          aVal = (profA?.personalInfo?.name || profA?.name || '').toLowerCase();
+          bVal = (profB?.personalInfo?.name || profB?.name || '').toLowerCase();
+        } else if (sortBy.value === 'totalCommission') {
+          aVal = a.totalCommission || 0;
+          bVal = b.totalCommission || 0;
+        } else {
+          aVal = new Date(a.createdAt || 0).getTime();
+          bVal = new Date(b.createdAt || 0).getTime();
+        }
+
+        if (sortOrder.value === 'asc') {
+          return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+        } else {
+          return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+        }
+      });
+
+      return payments;
+    });
+
+    // Paginación
+    const paginatedPayments = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage.value;
+      const end = start + itemsPerPage.value;
+      return getFilteredPayments.value.slice(start, end);
+    });
+
+    const totalPages = computed(() => {
+      return Math.ceil(getFilteredPayments.value.length / itemsPerPage.value);
+    });
+
+    const toggleRowExpansion = (paymentId) => {
+      if (expandedRows.value.has(paymentId)) {
+        expandedRows.value.delete(paymentId);
+      } else {
+        expandedRows.value.add(paymentId);
+      }
+    };
+
+    const isRowExpanded = (paymentId) => {
+      return expandedRows.value.has(paymentId);
+    };
+
+    const changeSort = (field) => {
+      if (sortBy.value === field) {
+        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortBy.value = field;
+        sortOrder.value = 'desc';
+      }
+      currentPage.value = 1; // Reset a primera página al cambiar orden
+    };
+
+    // Reset paginación y filtros al cambiar de tab
+    watch(activeTab, () => {
+      currentPage.value = 1;
+      searchProfessionalId.value = null;
+      // Resetear a fechas del mes actual
+      const { dateFrom, dateTo } = getCurrentMonthDates();
+      filterDateFrom.value = dateFrom;
+      filterDateTo.value = dateTo;
+      expandedRows.value.clear();
+    });
+
     const selectedProfessional = computed(() =>
       professionals.value.find(p => p.id === selectedProfessionalId.value)
     );
@@ -82,13 +222,32 @@ export default {
       }
     };
 
+    const paymentCardRefs = ref({});
+
     const loadPayments = async () => {
       try {
         loading.value = true;
-        allPayments.value = await getCommissionPaymentsByCommerce(props.commerce.id);
+
+        // Reset all payment card details before reloading
+        if (paymentCardRefs.value && typeof paymentCardRefs.value === 'object') {
+          Object.values(paymentCardRefs.value).forEach(ref => {
+            if (ref && typeof ref.resetDetails === 'function') {
+              ref.resetDetails();
+            }
+          });
+        }
+
+        // Add timestamp to prevent caching
+        const timestamp = Date.now();
+        const payments = await getCommissionPaymentsByCommerce(props.commerce.id, timestamp);
+        allPayments.value = Array.isArray(payments) ? payments : [];
+        console.log('[loadPayments] Loaded payments:', {
+          count: allPayments.value.length,
+          payments: allPayments.value,
+        });
         loading.value = false;
       } catch (error) {
-        console.error('Error loading payments:', error);
+        console.error('[loadPayments] Error loading payments:', error);
         alertError.value = error.response?.status || 500;
         loading.value = false;
       }
@@ -102,21 +261,84 @@ export default {
 
       try {
         loading.value = true;
-        const from = periodFrom.value ? new Date(periodFrom.value).toISOString() : null;
-        const to = periodTo.value ? new Date(periodTo.value).toISOString() : null;
+        alertError.value = null; // Clear previous errors
 
-        unpaidIncomes.value = await getUnpaidIncomesByProfessional(
+        // Asegurar que las fechas incluyan todo el día (inicio y fin del día)
+        // Crear fechas en UTC para evitar problemas de zona horaria
+        let from = null;
+        let to = null;
+
+        if (periodFrom.value) {
+          // Crear fecha UTC para el inicio del día (00:00:00 UTC)
+          const [year, month, day] = periodFrom.value.split('-').map(Number);
+          const fromDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+          from = fromDate.toISOString();
+        }
+
+        if (periodTo.value) {
+          // Crear fecha UTC para el fin del día (23:59:59.999 UTC)
+          const [year, month, day] = periodTo.value.split('-').map(Number);
+          const toDate = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+          to = toDate.toISOString();
+        }
+
+        console.log('[searchUnpaidIncomes] Searching with params:', {
+          professionalId: selectedProfessionalId.value,
+          commerceId: props.commerce.id,
+          from,
+          to,
+        });
+
+        const result = await getUnpaidIncomesByProfessional(
           selectedProfessionalId.value,
           props.commerce.id,
           from,
           to
         );
 
+        console.log('[searchUnpaidIncomes] Result:', {
+          isArray: Array.isArray(result),
+          length: Array.isArray(result) ? result.length : 'not array',
+          result,
+        });
+
+        // Asegurar que siempre sea un array
+        unpaidIncomes.value = Array.isArray(result) ? result : [];
         selectedIncomeIds.value = [];
         loading.value = false;
+
+        // Si no hay resultados, no es un error, solo información
+        if (unpaidIncomes.value.length === 0) {
+          console.log('[searchUnpaidIncomes] No unpaid incomes found for the selected criteria');
+        }
       } catch (error) {
-        console.error('Error searching unpaid incomes:', error);
-        alertError.value = error.response?.status || 500;
+        console.error('[searchUnpaidIncomes] Error:', error);
+        console.error('[searchUnpaidIncomes] Error details:', {
+          message: error.message,
+          response: error.response,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+
+        // Solo mostrar error si realmente hay un error HTTP (no 200)
+        // Si la respuesta es 200 con array vacío, no es un error
+        if (error.response) {
+          if (error.response.status === 200 && Array.isArray(error.response.data)) {
+            // Respuesta exitosa con array vacío - no es un error
+            unpaidIncomes.value = error.response.data || [];
+            alertError.value = null;
+          } else if (error.response.status !== 200) {
+            // Error HTTP real
+            alertError.value = error.response.status;
+          } else {
+            // Respuesta 200 pero formato inesperado
+            unpaidIncomes.value = [];
+            alertError.value = null;
+          }
+        } else {
+          // Error de red u otro error sin response
+          alertError.value = 500;
+        }
         loading.value = false;
       }
     };
@@ -137,27 +359,68 @@ export default {
 
       try {
         loading.value = true;
+        alertError.value = null;
 
-        await createCommissionPayment(
+        // Convert dates to ISO strings if they are date strings
+        let periodFromISO = periodFrom.value;
+        let periodToISO = periodTo.value;
+
+        if (periodFrom.value && !periodFrom.value.includes('T')) {
+          const [year, month, day] = periodFrom.value.split('-').map(Number);
+          periodFromISO = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0)).toISOString();
+        }
+
+        if (periodTo.value && !periodTo.value.includes('T')) {
+          const [year, month, day] = periodTo.value.split('-').map(Number);
+          periodToISO = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999)).toISOString();
+        }
+
+        console.log('[createPayment] Creating payment with:', {
+          commerceId: props.commerce.id,
+          businessId: props.business.id,
+          professionalId: selectedProfessionalId.value,
+          incomeIds: selectedIncomeIds.value,
+          periodFrom: periodFromISO,
+          periodTo: periodToISO,
+          notes: notes.value,
+        });
+
+        const createdPayment = await createCommissionPayment(
           props.commerce.id,
           props.business.id,
           selectedProfessionalId.value,
           selectedIncomeIds.value,
-          periodFrom.value || new Date().toISOString(),
-          periodTo.value || new Date().toISOString(),
+          periodFromISO || new Date().toISOString(),
+          periodToISO || new Date().toISOString(),
           notes.value
         );
+
+        console.log('[createPayment] Payment created:', createdPayment);
 
         // Reset form
         selectedIncomeIds.value = [];
         unpaidIncomes.value = [];
         notes.value = '';
 
+        // Small delay to ensure backend has processed the payment
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Force reload payments with fresh data (no cache)
         await loadPayments();
+
+        // Switch to created tab to show the new payment
         activeTab.value = 'created';
         loading.value = false;
+
+        console.log('[createPayment] Payment created successfully, switched to created tab');
       } catch (error) {
-        console.error('Error creating payment:', error);
+        console.error('[createPayment] Error creating payment:', error);
+        console.error('[createPayment] Error details:', {
+          message: error.message,
+          response: error.response,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
         alertError.value = error.response?.status || 500;
         loading.value = false;
       }
@@ -186,12 +449,65 @@ export default {
       await loadPayments();
     };
 
+    const handleViewOutcome = outcomeId => {
+      // Emit event to parent to switch to outcomes tab and highlight the outcome
+      // The parent component (BusinessFinancial) should handle navigation
+      emit('view-outcome', outcomeId);
+    };
+
+    const downloadingPdf = ref(false);
+    const handleDownloadPdf = async (payment) => {
+      if (downloadingPdf.value) return;
+
+      try {
+        downloadingPdf.value = true;
+        const blob = await downloadCommissionPaymentPdf(payment.id, props.commerce.id);
+
+        // Crear URL del blob y descargar
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `commission-payment-${payment.id}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error downloading PDF:', error);
+        alertError.value = error.response?.status || 500;
+      } finally {
+        downloadingPdf.value = false;
+      }
+    };
+
     const formatDate = date => getDate(date);
 
     const formatCurrency = amount =>
       Number(parseFloat(amount || 0).toFixed(2)).toLocaleString('de-DE');
 
+    // Función para obtener el primer día del mes actual
+    const getFirstDayOfMonth = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const firstDay = new Date(year, month, 1);
+      return firstDay.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    };
+
+    // Función para obtener el último día del mes actual
+    const getLastDayOfMonth = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const lastDay = new Date(year, month + 1, 0); // Día 0 del siguiente mes = último día del mes actual
+      return lastDay.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    };
+
     onMounted(async () => {
+      // Establecer fechas por defecto: inicio y fin del mes actual
+      periodFrom.value = getFirstDayOfMonth();
+      periodTo.value = getLastDayOfMonth();
+
       await loadProfessionals();
       await loadPayments();
     });
@@ -226,15 +542,35 @@ export default {
       handleModalClose,
       formatDate,
       formatCurrency,
+      loadPayments,
+      paymentCardRefs,
+      handleViewOutcome,
+      handleDownloadPdf,
+      downloadingPdf,
+      viewMode,
+      currentPage,
+      itemsPerPage,
+      searchProfessionalId,
+      filterDateFrom,
+      filterDateTo,
+      sortBy,
+      sortOrder,
+      expandedRows,
+      getFilteredPayments,
+      paginatedPayments,
+      totalPages,
+      toggleRowExpansion,
+      isRowExpanded,
+      changeSort,
     };
   },
 };
 </script>
 
+<!-- eslint-disable vue/no-v-for-template-key -->
 <template>
   <div>
     <Spinner :show="loading" />
-    <Alert :show="alertError !== null && alertError !== ''" :message="alertError" />
 
     <!-- Tabs con estilo moderno -->
     <div class="row mb-3">
@@ -319,7 +655,7 @@ export default {
                 class="btn btn-md btn-dark fw-bold rounded-pill w-100"
                 :disabled="!selectedProfessionalId"
               >
-                <i class="bi bi-search"></i> {{ $t('commissionPayments.search') }}
+                <i class="bi bi-search"></i>
               </button>
             </div>
           </div>
@@ -364,6 +700,7 @@ export default {
                     <td class="fw-bold">${{ formatCurrency(income.amount) }}</td>
                     <td class="text-success fw-bold">
                       ${{ formatCurrency(income.professionalCommission) }}
+                      <i v-if="income?.commissionPaid === true || income?.commissionPaid === 'true' || income?.commissionPaid === 1" class="bi bi-check-circle-fill text-success ms-2" :title="$t('commissionPayments.commissionPaid')"></i>
                     </td>
                   </tr>
                 </tbody>
@@ -373,21 +710,25 @@ export default {
             <!-- Resumen -->
             <div class="row mt-3">
               <div class="col-12">
-                <div class="alert alert-info">
-                  <div class="row">
-                    <div class="col-md-4">
-                      <strong>{{ $t('commissionPayments.selectedCount') }}:</strong>
-                      <span class="ms-2 fs-5">{{ selectedIncomeIds.length }}</span>
+                <div class="commission-summary-card">
+                  <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                      <div class="summary-item">
+                        <div class="summary-label">{{ $t('commissionPayments.selectedCount') }}</div>
+                        <div class="summary-value">{{ selectedIncomeIds.length }}</div>
+                      </div>
                     </div>
-                    <div class="col-md-4">
-                      <strong>{{ $t('commissionPayments.totalAmount') }}:</strong>
-                      <span class="ms-2 fs-5">${{ formatCurrency(totalAmount) }}</span>
+                    <div class="col-12 col-md-4">
+                      <div class="summary-item">
+                        <div class="summary-label">{{ $t('commissionPayments.totalAmount') }}</div>
+                        <div class="summary-value">${{ formatCurrency(totalAmount) }}</div>
+                      </div>
                     </div>
-                    <div class="col-md-4">
-                      <strong>{{ $t('commissionPayments.totalCommission') }}:</strong>
-                      <span class="ms-2 fs-5 text-success"
-                        >${{ formatCurrency(totalCommission) }}</span
-                      >
+                    <div class="col-12 col-md-4">
+                      <div class="summary-item">
+                        <div class="summary-label">{{ $t('commissionPayments.totalCommission') }}</div>
+                        <div class="summary-value text-success">${{ formatCurrency(totalCommission) }}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -414,7 +755,7 @@ export default {
               <div class="col-12 text-end">
                 <button
                   @click="createPayment"
-                  class="btn btn-lg btn-success"
+                  class="btn btn-sm btn-size fw-bold btn-success rounded-pill px-4"
                   :disabled="selectedIncomeIds.length === 0"
                 >
                   <i class="bi bi-check-circle"></i> {{ $t('commissionPayments.createPayment') }}
@@ -439,19 +780,315 @@ export default {
 
     <!-- Tab: Pagos Creados -->
     <div v-if="activeTab === 'created'">
-      <div v-if="createdPayments.length > 0" class="row">
-        <div v-for="payment in createdPayments" :key="payment.id" class="col-12 mb-3">
+      <!-- Barra de herramientas: Filtros, Vista y Refresh -->
+      <div class="row mb-3">
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+          <label class="form-label metric-card-subtitle fw-bold mb-2">{{ $t('commissionPayments.professional') || 'Profesional' }}</label>
+          <div class="select-wrapper">
+            <select
+              class="form-control metric-controls"
+              v-model="searchProfessionalId"
+              @change="currentPage = 1"
+            >
+              <option :value="null">{{ $t('commissionPayments.allProfessionals') || 'Todos los Profesionales' }}</option>
+              <option
+                v-for="prof in professionals"
+                :key="prof.id"
+                :value="prof.id"
+              >
+                {{ prof.personalInfo?.name || prof.name || prof.id }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+          <label class="form-label metric-card-subtitle fw-bold mb-2">
+            {{ $t('commissionPayments.dateFrom') || 'Data Desde' }}
+          </label>
+          <input
+            type="date"
+            v-model="filterDateFrom"
+            class="form-control metric-controls"
+            @change="currentPage = 1"
+          />
+        </div>
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+          <label class="form-label metric-card-subtitle fw-bold mb-2">
+            {{ $t('commissionPayments.dateTo') || 'Data Até' }}
+          </label>
+          <input
+            type="date"
+            v-model="filterDateTo"
+            class="form-control metric-controls"
+            @change="currentPage = 1"
+          />
+        </div>
+        <div class="col-12 col-md-3 d-flex justify-content-end gap-2 align-items-end">
+          <div class="btn-group" role="group">
+            <button
+              type="button"
+              class="btn btn-sm"
+              :class="viewMode === 'table' ? 'btn-dark' : 'btn-outline-dark'"
+              @click="viewMode = 'table'"
+              title="Vista de tabla"
+            >
+              <i class="bi bi-table"></i>
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm"
+              :class="viewMode === 'cards' ? 'btn-dark' : 'btn-outline-dark'"
+              @click="viewMode = 'cards'"
+              title="Vista de cards"
+            >
+              <i class="bi bi-grid-3x3-gap"></i>
+            </button>
+          </div>
+          <button
+            @click="loadPayments"
+            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+            :disabled="loading"
+          >
+            <i class="bi bi-arrow-clockwise"></i> {{ $t('commissionPayments.refresh') || 'Atualizar' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Vista de Tabla Compacta -->
+      <div v-if="viewMode === 'table' && getFilteredPayments.length > 0" class="row">
+        <div class="col-12">
+          <div class="table-responsive">
+            <table class="table table-hover table-sm commission-payments-table">
+              <thead class="table-light">
+                <tr>
+                  <th @click="changeSort('professionalName')" class="sortable-header">
+                    {{ $t('commissionPayments.professional') || 'Profesional' }}
+                    <i
+                      class="bi"
+                      :class="
+                        sortBy === 'professionalName'
+                          ? sortOrder === 'asc'
+                            ? 'bi-arrow-up'
+                            : 'bi-arrow-down'
+                          : 'bi-arrow-down-up'
+                      "
+                    ></i>
+                  </th>
+                  <th @click="changeSort('createdAt')" class="sortable-header">
+                    {{ $t('commissionPayments.createdAt') || 'Fecha Creación' }}
+                    <i
+                      class="bi"
+                      :class="
+                        sortBy === 'createdAt'
+                          ? sortOrder === 'asc'
+                            ? 'bi-arrow-up'
+                            : 'bi-arrow-down'
+                          : 'bi-arrow-down-up'
+                      "
+                    ></i>
+                  </th>
+                  <th>{{ $t('commissionPayments.period') || 'Período' }}</th>
+                  <th class="text-end">{{ $t('commissionPayments.receitas') || 'Receitas' }}</th>
+                  <th @click="changeSort('totalCommission')" class="text-end sortable-header">
+                    {{ $t('commissionPayments.totalCommission') || 'Comisión Total' }}
+                    <i
+                      class="bi"
+                      :class="
+                        sortBy === 'totalCommission'
+                          ? sortOrder === 'asc'
+                          ? 'bi-arrow-up'
+                          : 'bi-arrow-down'
+                        : 'bi-arrow-down-up'
+                      "
+                    ></i>
+                  </th>
+                  <th class="text-center" style="width: 120px;">{{ $t('commissionPayments.actions') || 'Acciones' }}</th>
+                  <th style="width: 40px;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- eslint-disable vue/no-v-for-template-key -->
+                <template v-for="payment in paginatedPayments" :key="`payment-${payment.id}`">
+                  <tr
+                    class="commission-payment-row"
+                    :class="{ 'table-active': isRowExpanded(payment.id) }"
+                    @click="toggleRowExpansion(payment.id)"
+                    style="cursor: pointer;"
+                  >
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-badge text-primary"></i>
+                        <strong>
+                          {{
+                            professionals.find(p => p.id === payment.professionalId)?.personalInfo?.name ||
+                            professionals.find(p => p.id === payment.professionalId)?.name ||
+                            payment.professionalId
+                          }}
+                        </strong>
+                      </div>
+                    </td>
+                    <td>
+                      <small>{{ formatDate(payment.createdAt) }}</small>
+                    </td>
+                    <td>
+                      <small>
+                        {{ formatDate(payment.periodFrom) }}<br />
+                        {{ formatDate(payment.periodTo) }}
+                      </small>
+                    </td>
+                    <td class="text-end">
+                      <span class="badge bg-info">{{ payment.totalIncomes || 0 }}</span>
+                    </td>
+                    <td class="text-end">
+                      <strong class="text-success">${{ formatCurrency(payment.totalCommission) }}</strong>
+                    </td>
+                    <td class="text-center" @click.stop>
+                      <div class="btn-group btn-group-sm" role="group">
+                        <button
+                          v-if="payment.status === 'CREATED'"
+                          class="btn btn-outline-primary btn-sm"
+                          @click="openEditModal(payment)"
+                          :title="$t('commissionPayments.edit') || 'Editar'"
+                        >
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <button
+                          v-if="payment.status === 'CREATED'"
+                          class="btn btn-outline-success btn-sm"
+                          @click="openConfirmModal(payment)"
+                          :title="$t('commissionPayments.confirmPaymentAction') || 'Confirmar Pago'"
+                        >
+                          <i class="bi bi-check-circle"></i>
+                        </button>
+                        <button
+                          v-if="payment.status === 'CREATED'"
+                          class="btn btn-outline-danger btn-sm"
+                          @click="openCancelModal(payment)"
+                          :title="$t('commissionPayments.cancel') || 'Cancelar'"
+                        >
+                          <i class="bi bi-x-circle"></i>
+                        </button>
+                        <button
+                          v-if="payment.status === 'PAID'"
+                          class="btn btn-outline-danger btn-sm"
+                          @click="handleDownloadPdf(payment)"
+                          :title="$t('commissionPayments.downloadPdf') || 'Descargar PDF'"
+                          :disabled="downloadingPdf"
+                        >
+                          <span v-if="downloadingPdf" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                          <i v-else class="bi bi-file-earmark-pdf-fill"></i>
+                        </button>
+                      </div>
+                    </td>
+                    <td @click.stop>
+                      <button
+                        class="btn btn-sm btn-link p-0"
+                        @click="toggleRowExpansion(payment.id)"
+                        :title="isRowExpanded(payment.id) ? $t('commissionPayments.hideDetails') : $t('commissionPayments.showDetails')"
+                      >
+                        <i
+                          class="bi"
+                          :class="isRowExpanded(payment.id) ? 'bi-chevron-up' : 'bi-chevron-down'"
+                        ></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <!-- Fila expandida con detalles -->
+                  <tr v-if="isRowExpanded(payment.id)" :key="`expanded-${payment.id}`">
+                    <td colspan="7" class="p-0">
+                      <div class="commission-payment-details p-3 bg-light">
+                        <CommissionPaymentCard
+                          :ref="el => {
+                            if (!paymentCardRefs.value) paymentCardRefs.value = {};
+                            if (el) {
+                              paymentCardRefs.value[payment.id] = el;
+                            } else if (paymentCardRefs.value) {
+                              delete paymentCardRefs.value[payment.id];
+                            }
+                          }"
+                          :key="`payment-${payment.id}-${payment.updatedAt || payment.createdAt}`"
+                          :payment="payment"
+                          :professionals="professionals"
+                          :commerce="commerce"
+                          :business="business"
+                          :auto-expand="true"
+                          @edit="openEditModal"
+                          @confirm="openConfirmModal"
+                          @cancel="openCancelModal"
+                          @view-outcome="handleViewOutcome"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Paginación -->
+          <div v-if="totalPages > 1" class="row mt-3">
+            <div class="col-12 d-flex justify-content-between align-items-center">
+              <div>
+                <small class="text-muted">
+                  Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, getFilteredPayments.length) }} de {{ getFilteredPayments.length }}
+                </small>
+              </div>
+              <nav>
+                <ul class="pagination pagination-sm mb-0">
+                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                    <button class="page-link" @click="currentPage = Math.max(1, currentPage - 1)">
+                      <i class="bi bi-chevron-left"></i>
+                    </button>
+                  </li>
+                  <li
+                    v-for="page in Math.min(5, totalPages)"
+                    :key="page"
+                    class="page-item"
+                    :class="{ active: currentPage === page }"
+                  >
+                    <button class="page-link" @click="currentPage = page">{{ page }}</button>
+                  </li>
+                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                    <button
+                      class="page-link"
+                      @click="currentPage = Math.min(totalPages, currentPage + 1)"
+                    >
+                      <i class="bi bi-chevron-right"></i>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de Cards (fallback) -->
+      <div v-else-if="viewMode === 'cards' && getFilteredPayments.length > 0" class="row">
+        <div v-for="payment in paginatedPayments" :key="payment.id" class="col-12 mb-3">
           <CommissionPaymentCard
+            :ref="el => {
+              if (!paymentCardRefs.value) paymentCardRefs.value = {};
+              if (el) {
+                paymentCardRefs.value[payment.id] = el;
+              } else if (paymentCardRefs.value) {
+                delete paymentCardRefs.value[payment.id];
+              }
+            }"
+            :key="`payment-${payment.id}-${payment.updatedAt || payment.createdAt}`"
             :payment="payment"
             :professionals="professionals"
+            :commerce="commerce"
+            :business="business"
             @edit="openEditModal"
             @confirm="openConfirmModal"
             @cancel="openCancelModal"
           />
         </div>
       </div>
+
       <Message
-        v-else
+        v-else-if="getFilteredPayments.length === 0"
         :icon="'bi-clock'"
         :title="$t('commissionPayments.messages.noCreatedPayments')"
         :content="$t('commissionPayments.messages.noCreatedPaymentsContent')"
@@ -460,13 +1097,271 @@ export default {
 
     <!-- Tab: Pagos Confirmados -->
     <div v-if="activeTab === 'paid'">
-      <div v-if="paidPayments.length > 0" class="row">
-        <div v-for="payment in paidPayments" :key="payment.id" class="col-12 mb-3">
-          <CommissionPaymentCard :payment="payment" :professionals="professionals" />
+      <!-- Barra de herramientas: Filtros, Vista y Refresh -->
+      <div class="row mb-3">
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+          <label class="form-label metric-card-subtitle fw-bold mb-2">{{ $t('commissionPayments.professional') || 'Profesional' }}</label>
+          <div class="select-wrapper">
+            <select
+              class="form-control metric-controls"
+              v-model="searchProfessionalId"
+              @change="currentPage = 1"
+            >
+              <option :value="null">{{ $t('commissionPayments.allProfessionals') || 'Todos los Profesionales' }}</option>
+              <option
+                v-for="prof in professionals"
+                :key="prof.id"
+                :value="prof.id"
+              >
+                {{ prof.personalInfo?.name || prof.name || prof.id }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+          <label class="form-label metric-card-subtitle fw-bold mb-2">
+            {{ $t('commissionPayments.dateFrom') || 'Data Desde' }}
+          </label>
+          <input
+            type="date"
+            v-model="filterDateFrom"
+            class="form-control metric-controls"
+            @change="currentPage = 1"
+          />
+        </div>
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+          <label class="form-label metric-card-subtitle fw-bold mb-2">
+            {{ $t('commissionPayments.dateTo') || 'Data Até' }}
+          </label>
+          <input
+            type="date"
+            v-model="filterDateTo"
+            class="form-control metric-controls"
+            @change="currentPage = 1"
+          />
+        </div>
+        <div class="col-12 col-md-3 d-flex justify-content-end gap-2 align-items-end">
+          <div class="btn-group" role="group">
+            <button
+              type="button"
+              class="btn btn-sm"
+              :class="viewMode === 'table' ? 'btn-dark' : 'btn-outline-dark'"
+              @click="viewMode = 'table'"
+              title="Vista de tabla"
+            >
+              <i class="bi bi-table"></i>
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm"
+              :class="viewMode === 'cards' ? 'btn-dark' : 'btn-outline-dark'"
+              @click="viewMode = 'cards'"
+              title="Vista de cards"
+            >
+              <i class="bi bi-grid-3x3-gap"></i>
+            </button>
+          </div>
+          <button
+            @click="loadPayments"
+            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+            :disabled="loading"
+          >
+            <i class="bi bi-arrow-clockwise"></i> {{ $t('commissionPayments.refresh') || 'Atualizar' }}
+          </button>
         </div>
       </div>
+
+      <!-- Vista de Tabla Compacta -->
+      <div v-if="viewMode === 'table' && getFilteredPayments.length > 0" class="row">
+        <div class="col-12">
+          <div class="table-responsive">
+            <table class="table table-hover table-sm commission-payments-table">
+              <thead class="table-light">
+                <tr>
+                  <th @click="changeSort('professionalName')" class="sortable-header">
+                    {{ $t('commissionPayments.professional') || 'Profesional' }}
+                    <i
+                      class="bi"
+                      :class="
+                        sortBy === 'professionalName'
+                          ? sortOrder === 'asc'
+                            ? 'bi-arrow-up'
+                            : 'bi-arrow-down'
+                          : 'bi-arrow-down-up'
+                      "
+                    ></i>
+                  </th>
+                  <th @click="changeSort('createdAt')" class="sortable-header">
+                    {{ $t('commissionPayments.createdAt') || 'Fecha Creación' }}
+                    <i
+                      class="bi"
+                      :class="
+                        sortBy === 'createdAt'
+                          ? sortOrder === 'asc'
+                            ? 'bi-arrow-up'
+                            : 'bi-arrow-down'
+                          : 'bi-arrow-down-up'
+                      "
+                    ></i>
+                  </th>
+                  <th>{{ $t('commissionPayments.period') || 'Período' }}</th>
+                  <th class="text-end">{{ $t('commissionPayments.receitas') || 'Receitas' }}</th>
+                  <th @click="changeSort('totalCommission')" class="text-end sortable-header">
+                    {{ $t('commissionPayments.totalCommission') || 'Comisión Total' }}
+                    <i
+                      class="bi"
+                      :class="
+                        sortBy === 'totalCommission'
+                          ? sortOrder === 'asc'
+                            ? 'bi-arrow-up'
+                            : 'bi-arrow-down'
+                          : 'bi-arrow-down-up'
+                      "
+                    ></i>
+                  </th>
+                  <th>{{ $t('commissionPayments.paidAt') || 'Data de Pagamento' }}</th>
+                  <th class="text-center" style="width: 80px;">{{ $t('commissionPayments.actions') || 'Ações' }}</th>
+                  <th style="width: 40px;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- eslint-disable vue/no-v-for-template-key -->
+                <template v-for="payment in paginatedPayments" :key="`payment-${payment.id}`">
+                  <tr
+                    class="commission-payment-row"
+                    :class="{ 'table-active': isRowExpanded(payment.id) }"
+                    @click="toggleRowExpansion(payment.id)"
+                    style="cursor: pointer;"
+                  >
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-badge text-success"></i>
+                        <strong>
+                          {{
+                            professionals.find(p => p.id === payment.professionalId)?.personalInfo?.name ||
+                            professionals.find(p => p.id === payment.professionalId)?.name ||
+                            payment.professionalId
+                          }}
+                        </strong>
+                      </div>
+                    </td>
+                    <td>
+                      <small>{{ formatDate(payment.createdAt) }}</small>
+                    </td>
+                    <td>
+                      <small>
+                        {{ formatDate(payment.periodFrom) }}<br />
+                        {{ formatDate(payment.periodTo) }}
+                      </small>
+                    </td>
+                    <td class="text-end">
+                      <span class="badge bg-info">{{ payment.totalIncomes || 0 }}</span>
+                    </td>
+                    <td class="text-end">
+                      <strong class="text-success">${{ formatCurrency(payment.totalCommission) }}</strong>
+                    </td>
+                    <td>
+                      <small class="text-success">
+                        <i class="bi bi-check-circle"></i> {{ formatDate(payment.paidAt) }}
+                      </small>
+                    </td>
+                    <td class="text-center">
+                      <button
+                        v-if="payment.status === 'PAID'"
+                        class="btn btn-outline-danger btn-sm"
+                        @click.stop="handleDownloadPdf(payment)"
+                        :title="$t('commissionPayments.downloadPdf') || 'Descargar PDF'"
+                        :disabled="downloadingPdf"
+                      >
+                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                      </button>
+                    </td>
+                    <td @click.stop>
+                      <button
+                        class="btn btn-sm btn-link p-0"
+                        @click="toggleRowExpansion(payment.id)"
+                        :title="isRowExpanded(payment.id) ? $t('commissionPayments.hideDetails') : $t('commissionPayments.showDetails')"
+                      >
+                        <i
+                          class="bi"
+                          :class="isRowExpanded(payment.id) ? 'bi-chevron-up' : 'bi-chevron-down'"
+                        ></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <!-- Fila expandida con detalles -->
+                  <tr v-if="isRowExpanded(payment.id)">
+                    <td colspan="8" class="p-0">
+                      <div class="commission-payment-details p-3 bg-light">
+                        <CommissionPaymentCard
+                          :payment="payment"
+                          :professionals="professionals"
+                          :commerce="commerce"
+                          :business="business"
+                          :auto-expand="true"
+                          @view-outcome="handleViewOutcome"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Paginación -->
+          <div v-if="totalPages > 1" class="row mt-3">
+            <div class="col-12 d-flex justify-content-between align-items-center">
+              <div>
+                <small class="text-muted">
+                  Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, getFilteredPayments.length) }} de {{ getFilteredPayments.length }}
+                </small>
+              </div>
+              <nav>
+                <ul class="pagination pagination-sm mb-0">
+                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                    <button class="page-link" @click="currentPage = Math.max(1, currentPage - 1)">
+                      <i class="bi bi-chevron-left"></i>
+                    </button>
+                  </li>
+                  <li
+                    v-for="page in Math.min(5, totalPages)"
+                    :key="page"
+                    class="page-item"
+                    :class="{ active: currentPage === page }"
+                  >
+                    <button class="page-link" @click="currentPage = page">{{ page }}</button>
+                  </li>
+                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                    <button
+                      class="page-link"
+                      @click="currentPage = Math.min(totalPages, currentPage + 1)"
+                    >
+                      <i class="bi bi-chevron-right"></i>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de Cards (fallback) -->
+      <div v-else-if="viewMode === 'cards' && getFilteredPayments.length > 0" class="row">
+        <div v-for="payment in paginatedPayments" :key="payment.id" class="col-12 mb-3">
+          <CommissionPaymentCard
+            :payment="payment"
+            :professionals="professionals"
+            :commerce="commerce"
+            :business="business"
+            @view-outcome="handleViewOutcome"
+          />
+        </div>
+      </div>
+
       <Message
-        v-else
+        v-else-if="getFilteredPayments.length === 0"
         :icon="'bi-check-circle'"
         :title="$t('commissionPayments.messages.noPaidPayments')"
         :content="$t('commissionPayments.messages.noPaidPaymentsContent')"
@@ -475,13 +1370,259 @@ export default {
 
     <!-- Tab: Pagos Cancelados -->
     <div v-if="activeTab === 'cancelled'">
-      <div v-if="cancelledPayments.length > 0" class="row">
-        <div v-for="payment in cancelledPayments" :key="payment.id" class="col-12 mb-3">
-          <CommissionPaymentCard :payment="payment" :professionals="professionals" />
+      <!-- Barra de herramientas: Filtros, Vista y Refresh -->
+      <div class="row mb-3">
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+          <label class="form-label metric-card-subtitle fw-bold mb-2">{{ $t('commissionPayments.professional') || 'Profesional' }}</label>
+          <div class="select-wrapper">
+            <select
+              class="form-control metric-controls"
+              v-model="searchProfessionalId"
+              @change="currentPage = 1"
+            >
+              <option :value="null">{{ $t('commissionPayments.allProfessionals') || 'Todos los Profesionales' }}</option>
+              <option
+                v-for="prof in professionals"
+                :key="prof.id"
+                :value="prof.id"
+              >
+                {{ prof.personalInfo?.name || prof.name || prof.id }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+          <label class="form-label metric-card-subtitle fw-bold mb-2">
+            {{ $t('commissionPayments.dateFrom') || 'Data Desde' }}
+          </label>
+          <input
+            type="date"
+            v-model="filterDateFrom"
+            class="form-control metric-controls"
+            @change="currentPage = 1"
+          />
+        </div>
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+          <label class="form-label metric-card-subtitle fw-bold mb-2">
+            {{ $t('commissionPayments.dateTo') || 'Data Até' }}
+          </label>
+          <input
+            type="date"
+            v-model="filterDateTo"
+            class="form-control metric-controls"
+            @change="currentPage = 1"
+          />
+        </div>
+        <div class="col-12 col-md-3 d-flex justify-content-end gap-2 align-items-end">
+          <div class="btn-group" role="group">
+            <button
+              type="button"
+              class="btn btn-sm"
+              :class="viewMode === 'table' ? 'btn-dark' : 'btn-outline-dark'"
+              @click="viewMode = 'table'"
+              title="Vista de tabla"
+            >
+              <i class="bi bi-table"></i>
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm"
+              :class="viewMode === 'cards' ? 'btn-dark' : 'btn-outline-dark'"
+              @click="viewMode = 'cards'"
+              title="Vista de cards"
+            >
+              <i class="bi bi-grid-3x3-gap"></i>
+            </button>
+          </div>
+          <button
+            @click="loadPayments"
+            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+            :disabled="loading"
+          >
+            <i class="bi bi-arrow-clockwise"></i> {{ $t('commissionPayments.refresh') || 'Atualizar' }}
+          </button>
         </div>
       </div>
+
+      <!-- Vista de Tabla Compacta -->
+      <div v-if="viewMode === 'table' && getFilteredPayments.length > 0" class="row">
+        <div class="col-12">
+          <div class="table-responsive">
+            <table class="table table-hover table-sm commission-payments-table">
+              <thead class="table-light">
+                <tr>
+                  <th @click="changeSort('professionalName')" class="sortable-header">
+                    {{ $t('commissionPayments.professional') || 'Profesional' }}
+                    <i
+                      class="bi"
+                      :class="
+                        sortBy === 'professionalName'
+                          ? sortOrder === 'asc'
+                            ? 'bi-arrow-up'
+                            : 'bi-arrow-down'
+                          : 'bi-arrow-down-up'
+                      "
+                    ></i>
+                  </th>
+                  <th @click="changeSort('createdAt')" class="sortable-header">
+                    {{ $t('commissionPayments.createdAt') || 'Fecha Creación' }}
+                    <i
+                      class="bi"
+                      :class="
+                        sortBy === 'createdAt'
+                          ? sortOrder === 'asc'
+                            ? 'bi-arrow-up'
+                            : 'bi-arrow-down'
+                          : 'bi-arrow-down-up'
+                      "
+                    ></i>
+                  </th>
+                  <th>{{ $t('commissionPayments.period') || 'Período' }}</th>
+                  <th class="text-end">{{ $t('commissionPayments.receitas') || 'Receitas' }}</th>
+                  <th @click="changeSort('totalCommission')" class="text-end sortable-header">
+                    {{ $t('commissionPayments.totalCommission') || 'Comisión Total' }}
+                    <i
+                      class="bi"
+                      :class="
+                        sortBy === 'totalCommission'
+                          ? sortOrder === 'asc'
+                            ? 'bi-arrow-up'
+                            : 'bi-arrow-down'
+                          : 'bi-arrow-down-up'
+                      "
+                    ></i>
+                  </th>
+                  <th>{{ $t('commissionPayments.cancelledAt') || 'Fecha Cancelación' }}</th>
+                  <th style="width: 40px;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- eslint-disable vue/no-v-for-template-key -->
+                <template v-for="payment in paginatedPayments" :key="`payment-${payment.id}`">
+                  <tr
+                    class="commission-payment-row"
+                    :class="{ 'table-active': isRowExpanded(payment.id) }"
+                    @click="toggleRowExpansion(payment.id)"
+                    style="cursor: pointer;"
+                  >
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-badge text-danger"></i>
+                        <strong>
+                          {{
+                            professionals.find(p => p.id === payment.professionalId)?.personalInfo?.name ||
+                            professionals.find(p => p.id === payment.professionalId)?.name ||
+                            payment.professionalId
+                          }}
+                        </strong>
+                      </div>
+                    </td>
+                    <td>
+                      <small>{{ formatDate(payment.createdAt) }}</small>
+                    </td>
+                    <td>
+                      <small>
+                        {{ formatDate(payment.periodFrom) }}<br />
+                        {{ formatDate(payment.periodTo) }}
+                      </small>
+                    </td>
+                    <td class="text-end">
+                      <span class="badge bg-info">{{ payment.totalIncomes || 0 }}</span>
+                    </td>
+                    <td class="text-end">
+                      <strong class="text-danger">${{ formatCurrency(payment.totalCommission) }}</strong>
+                    </td>
+                    <td>
+                      <small class="text-danger">
+                        <i class="bi bi-x-circle"></i> {{ formatDate(payment.cancelledAt) }}
+                      </small>
+                    </td>
+                    <td @click.stop>
+                      <button
+                        class="btn btn-sm btn-link p-0"
+                        @click="toggleRowExpansion(payment.id)"
+                        :title="isRowExpanded(payment.id) ? $t('commissionPayments.hideDetails') : $t('commissionPayments.showDetails')"
+                      >
+                        <i
+                          class="bi"
+                          :class="isRowExpanded(payment.id) ? 'bi-chevron-up' : 'bi-chevron-down'"
+                        ></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <!-- Fila expandida con detalles -->
+                  <tr v-if="isRowExpanded(payment.id)">
+                    <td colspan="7" class="p-0">
+                      <div class="commission-payment-details p-3 bg-light">
+                        <CommissionPaymentCard
+                          :payment="payment"
+                          :professionals="professionals"
+                          :commerce="commerce"
+                          :business="business"
+                          :auto-expand="true"
+                          @view-outcome="handleViewOutcome"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Paginación -->
+          <div v-if="totalPages > 1" class="row mt-3">
+            <div class="col-12 d-flex justify-content-between align-items-center">
+              <div>
+                <small class="text-muted">
+                  Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, getFilteredPayments.length) }} de {{ getFilteredPayments.length }}
+                </small>
+              </div>
+              <nav>
+                <ul class="pagination pagination-sm mb-0">
+                  <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                    <button class="page-link" @click="currentPage = Math.max(1, currentPage - 1)">
+                      <i class="bi bi-chevron-left"></i>
+                    </button>
+                  </li>
+                  <li
+                    v-for="page in Math.min(5, totalPages)"
+                    :key="page"
+                    class="page-item"
+                    :class="{ active: currentPage === page }"
+                  >
+                    <button class="page-link" @click="currentPage = page">{{ page }}</button>
+                  </li>
+                  <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                    <button
+                      class="page-link"
+                      @click="currentPage = Math.min(totalPages, currentPage + 1)"
+                    >
+                      <i class="bi bi-chevron-right"></i>
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de Cards (fallback) -->
+      <div v-else-if="viewMode === 'cards' && getFilteredPayments.length > 0" class="row">
+        <div v-for="payment in paginatedPayments" :key="payment.id" class="col-12 mb-3">
+          <CommissionPaymentCard
+            :payment="payment"
+            :professionals="professionals"
+            :commerce="commerce"
+            :business="business"
+            @view-outcome="handleViewOutcome"
+          />
+        </div>
+      </div>
+
       <Message
-        v-else
+        v-else-if="getFilteredPayments.length === 0"
         :icon="'bi-x-circle'"
         :title="$t('commissionPayments.messages.noCancelledPayments')"
         :content="$t('commissionPayments.messages.noCancelledPaymentsContent')"
@@ -494,6 +1635,7 @@ export default {
       :show="showEditModal"
       :payment="selectedPayment"
       :commerce="commerce"
+      :business="business"
       @close="handleModalClose"
     />
 
@@ -524,6 +1666,126 @@ export default {
   border-color: var(--primary-color);
 }
 
+/* Estilos para tabla compacta de pagos de comisiones */
+.commission-payments-table {
+  font-size: 0.875rem;
+}
+
+.commission-payments-table thead th {
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #dee2e6;
+  padding: 0.5rem 0.75rem;
+  white-space: nowrap;
+  vertical-align: middle;
+  line-height: 1.5;
+}
+
+.commission-payments-table tbody td {
+  padding: 0.5rem 0.75rem;
+  vertical-align: middle;
+  line-height: 1.5;
+}
+
+.commission-payment-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.commission-payment-row:hover {
+  background-color: #f8f9fa;
+}
+
+.commission-payment-row.table-active {
+  background-color: #e7f3ff;
+}
+
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 1.5rem !important;
+}
+
+.sortable-header:hover {
+  background-color: #e9ecef;
+}
+
+.sortable-header i {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.sortable-header:hover i {
+  opacity: 1;
+}
+
+.commission-payment-details {
+  border-top: 2px solid #dee2e6;
+  animation: slideDown 0.3s ease;
+}
+
+/* Estilos para select con flecha */
+.select-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.select-wrapper::after {
+  content: '\f282';
+  font-family: 'bootstrap-icons';
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #6c757d;
+  font-size: 0.875rem;
+  z-index: 1;
+}
+
+.select-wrapper select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 2.5rem;
+  background-image: none;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .commission-payments-table {
+    font-size: 0.75rem;
+  }
+
+  .commission-payments-table thead th,
+  .commission-payments-table tbody td {
+    padding: 0.375rem 0.5rem;
+  }
+
+  .sortable-header {
+    font-size: 0.7rem;
+  }
+}
+
 .metric-card {
   background: white;
   border-radius: 8px;
@@ -535,6 +1797,50 @@ export default {
   background-color: #f8f9fa;
 }
 
+/* Commission Summary Card - matching modern-card style */
+.commission-summary-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  border-left: 4px solid #004aad;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 1.25rem 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.commission-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-color: rgba(169, 169, 169, 0.3);
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.summary-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.summary-value.text-success {
+  color: #00c2cb;
+}
+
 /* Tabs modernos */
 .modern-tabs {
   display: flex;
@@ -544,14 +1850,14 @@ export default {
   border: 1px solid #e5e5e5;
   border-radius: 8px;
   background-color: #f8f9fa;
-  padding: 4px;
+  padding: 1px;
 }
 
 .tab-button {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0.5rem 1rem;
+  padding: 0.25rem .5rem;
   background-color: transparent;
   border: none;
   border-radius: 6px;
@@ -575,7 +1881,7 @@ export default {
 }
 
 .tab-button i {
-  font-size: 16px;
+  font-size: 10px;
 }
 
 .badge {

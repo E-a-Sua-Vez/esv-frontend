@@ -251,6 +251,51 @@ export default {
   color: #004aad;
 }
 
+/* Popper Styles with proper z-index - Higher than all cards and modals */
+:deep(.vue3-popper) {
+  z-index: 99999 !important;
+  position: fixed !important;
+  pointer-events: auto !important;
+}
+
+:deep(.vue3-popper__inner) {
+  z-index: 99999 !important;
+  position: relative;
+  pointer-events: auto !important;
+}
+
+:deep(.vue3-popper__arrow) {
+  z-index: 100000 !important;
+  pointer-events: auto !important;
+}
+
+:deep(.vue3-popper__wrapper) {
+  z-index: 99999 !important;
+  position: fixed !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure parent containers don't clip poppers */
+.metric-title-section {
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
+}
+
+.modern-metric-card {
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure all parent containers allow overflow */
+:deep(.row),
+:deep(.col),
+:deep(.col-12),
+:deep(.col-md-6) {
+  overflow: visible !important;
+}
+
 /* Value Container */
 .metric-value-container {
   display: flex;

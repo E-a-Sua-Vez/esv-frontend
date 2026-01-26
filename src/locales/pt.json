@@ -249,6 +249,10 @@
       "paymentFiscalNote": "Nota Fiscal: Tipo de documento fiscal que será emitido. NOTA_FISCAL é uma nota fiscal oficial. GERENCIAL é um documento gerencial interno.",
       "paymentCommission": "Comissão de Pagamento: Valor da comissão associada a este pagamento. Pode ser uma porcentagem ou um valor fixo de acordo com a configuração do profissional.",
       "paymentComment": "Comentário de Pagamento: Notas adicionais sobre este pagamento. Pode incluir informações relevantes sobre o método de pagamento, condições especiais ou qualquer outra observação (opcional)."
+    },
+    "suggestedCommissionWarning": {
+      "message": "O valor de comissão sugerido vem do registro do profissional.",
+      "tooltip": "Este valor de comissão é calculado automaticamente com base na configuração do profissional atribuído (porcentagem ou valor fixo). Você pode modificar este valor manualmente se necessário para ajustá-lo às circunstâncias específicas do pagamento."
     }
   },
   "incomeTypes": {
@@ -258,6 +262,12 @@
     "FUND_INCREASE": "Aumento de Fundos",
     "STANDARD": "Recebemento Normal",
     "PACKAGE": "Pacote"
+  },
+  "outcomeTypes": {
+    "PROFESSIONAL_COMMISSION": "Comissão Profissional",
+    "PRODUCT": "Produto",
+    "SERVICE": "Serviço",
+    "OTHER": "Outro"
   },
   "incomeStatus": {
     "CONFIRMED": "Confirmado",
@@ -296,6 +306,7 @@
     "cancelPayment": "Cancelar Pagamento",
     "professionalCommissions": "Comissões Profissionais",
     "selectProfessional": "Selecionar Profissional",
+    "allProfessionals": "Todos os Profissionais",
     "selectPeriod": "Selecionar Período",
     "dateFrom": "Data Desde",
     "dateTo": "Data Até",
@@ -318,6 +329,7 @@
     "created": "Criados",
     "paid": "Pagos",
     "cancelled": "Cancelados",
+    "refresh": "Atualizar",
     "status": "Estado",
     "professional": "Profissional",
     "period": "Período",
@@ -360,6 +372,28 @@
       "PAID": "Pago",
       "CANCELLED": "Cancelado"
     },
+    "status": {
+      "CREATED": "Criado",
+      "PAID": "Pago",
+      "CANCELLED": "Cancelado"
+    },
+    "includedIncomes": "Receitas Incluídas",
+    "incomeIdsCount": "{count} receitas incluídas",
+    "commissionPaid": "Comissão Paga",
+    "commissionUnpaid": "Comissão Não Pagada",
+    "outcomeCreated": "Despesa Criada",
+    "viewOutcome": "Ver Despesa",
+    "downloadPdf": "Baixar PDF",
+    "downloading": "Baixando...",
+    "incomeDetailsNotAvailable": "Detalhes das receitas não disponíveis. Tentando carregar...",
+    "retry": "Tentar Novamente",
+    "loading": "Carregando receitas...",
+    "receitas": "Receitas",
+    "tableView": "Vista de Tabela",
+    "cardsView": "Vista de Cards",
+    "showing": "Mostrando",
+    "of": "de",
+    "searchProfessional": "Buscar profissional...",
     "tabs": {
       "create": "Criar Novo Pagamento",
       "created": "Pagamentos Criados",
@@ -1104,6 +1138,7 @@
     "code": "Código:",
     "installments": "Parcelas:",
     "totalAmount": "Valor Total:",
+    "paidAt": "Pago em:",
     "package": "Pacote:",
     "service": "Serviço:",
     "outcomeTitle": "Conceito:",
@@ -2132,6 +2167,20 @@
     "upcomingWeek": "Próxima Semana",
     "totalActive": "Total Ativas",
     "recentBookings": "Reservas Recentes",
+    "metrics": {
+      "today": {
+        "description": "Mostra o número total de atenções agendadas para hoje. Inclui todas as atenções confirmadas e pendentes do dia atual."
+      },
+      "pending": {
+        "description": "Mostra o número de reservas que estão pendentes de confirmação. Essas reservas requerem ação do colaborador para serem confirmadas ou processadas."
+      },
+      "upcomingWeek": {
+        "description": "Mostra o número de reservas agendadas para os próximos 7 dias. Inclui todas as reservas confirmadas e pendentes da próxima semana."
+      },
+      "totalActive": {
+        "description": "Mostra o número total de reservas ativas (pendentes + confirmadas) no mês atual. Inclui todas as reservas que requerem acompanhamento ou estão agendadas."
+      }
+    },
     "noBookings": {
       "title": "Nenhuma Reserva Encontrada",
       "content": "Não há reservas para exibir no momento."
@@ -2544,6 +2593,15 @@
         "status": "Status do pagamento"
       },
       "contactInfo": "Informação de Contato"
+    },
+    "outcomeCard": {
+      "tooltip": {
+        "type": "Tipo de despesa",
+        "copy": "Copiar dados",
+        "outcomeType": "Tipo de despesa",
+        "status": "Status do pagamento"
+      },
+      "beneficiaryInfo": "Informação do Beneficiário"
     },
     "lgpdCompliance": {
       "notificationMetrics": {
@@ -4138,7 +4196,15 @@
       "averageDailyIncome": "Média Diária de Receitas",
       "daysUntilMonthEnd": "Dias até o Fim do Mês",
       "vsPreviousMonth": "vs mês anterior",
-      "vsPreviousPeriod": "vs período anterior"
+      "vsPreviousPeriod": "vs período anterior",
+      "tooltips": {
+        "totalIncomes": "Soma de todas as receitas criadas no período selecionado. Representa o valor total bruto recebido antes de deduzir comissões e despesas. Fórmula: Soma de todos os valores de receitas (paymentAmountSum) do período.",
+        "totalOutcomes": "Soma de todas as despesas criadas no período selecionado. Representa o valor total gasto com custos operacionais, pagamentos e outras saídas financeiras. Fórmula: Soma de todos os valores de despesas (paymentAmountSum) do período.",
+        "netProfit": "Lucro líquido após deduzir todas as despesas das receitas totais. Indica o ganho real do negócio no período. Fórmula: Receitas Totais - Despesas Totais. As comissões já estão incluídas como parte das receitas.",
+        "profitMargin": "Percentual que representa quanto do lucro representa em relação às receitas totais. Quanto maior, melhor a eficiência financeira. Fórmula: (Lucro Líquido / Receitas Totais) × 100.",
+        "averageDailyIncome": "Média de receitas líquidas (após comissões) por dia no período selecionado. Útil para projeções e análise de desempenho diário. Fórmula: (Receitas Totais - Comissões) / Número de Dias no Período.",
+        "daysUntilMonthEnd": "Quantidade de dias restantes até o final do mês atual. Usado para cálculos de projeções e planejamento financeiro mensal."
+      }
     },
     "distribution": {
       "title": "Distribuição de Receitas por Tipo"
@@ -4168,6 +4234,8 @@
       "minAmount": "Valor Mínimo",
       "maxAmount": "Valor Máximo",
       "incomeType": "Tipo de Receita",
+      "outcomeType": "Tipo de Despesa",
+      "outcomeSystemType": "Tipo de Despesa",
       "paymentMethod": "Método de Pagamento",
       "professional": "Profissional",
       "all": "Todos"
@@ -4181,8 +4249,13 @@
       "title": "Alertas Financeiros",
       "expensesExceedIncome": "As despesas superam as receitas este mês",
       "pendingPayments": "Há {count} pagamentos pendentes por mais de {days} dias",
+      "pendingIncomes": "Há {count} receitas pendentes ({amount} €) por mais de {days} dias",
+      "pendingOutcomes": "Há {count} despesas pendentes ({amount} €) por mais de {days} dias",
       "lowMargin": "A margem de lucro está abaixo de {threshold}%",
       "unusualExpense": "Despesa incomum detectada",
+      "unusualExpenses": "As despesas aumentaram {percentage}% em relação ao período anterior",
+      "negativeProjectedCashFlow": "O fluxo de caixa projetado é negativo: -{amount} €",
+      "behindMonthlyGoal": "Você está {progress}% da meta mensal",
       "allGood": "Tudo em ordem",
       "health": {
         "excellent": "Excelente",

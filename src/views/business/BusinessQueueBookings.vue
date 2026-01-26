@@ -14,7 +14,6 @@ import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import BookingCalendar from '../../components/bookings/domain/BookingCalendar.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
-import BookingDetailsCard from '../../components/clients/common/BookingDetailsCard.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 
 export default {
@@ -27,7 +26,6 @@ export default {
     Alert,
     BookingCalendar,
     ComponentMenu,
-    BookingDetailsCard,
     DesktopPageHeader,
   },
   async setup() {

@@ -82,7 +82,8 @@ export default {
       consentStatusInterval: null,
       alertError: '',
       selectedProfessional: null,
-      professionalCommission: null,
+      professionalCommission: '', // Inicializar como string vacío para permitir escritura libre
+      commissionManuallyEdited: false, // Bandera para rastrear si el usuario editó la comisión
       professionals: [],
       loadingProfessionalData: false,
       _permissionsDebugLogged: false,
@@ -265,12 +266,44 @@ export default {
     },
     handleProfessionalSelected(professional) {
       this.selectedProfessional = professional;
-      if (professional && professional.financialInfo) {
+      // Solo establecer la comisión por defecto si el usuario no ha editado el campo
+      if (professional && professional.financialInfo && !this.commissionManuallyEdited) {
         const { commissionValue } = professional.financialInfo;
         if (commissionValue !== undefined && commissionValue !== null) {
           this.professionalCommission = commissionValue;
         }
       }
+    },
+    handleCommissionInput(event) {
+      // Marcar que el usuario ha editado manualmente la comisión
+      this.commissionManuallyEdited = true;
+      // Permitir escribir libremente, solo validar formato básico
+      let value = event.target.value;
+      // Remover caracteres no numéricos excepto punto decimal
+      value = value.replace(/[^0-9.]/g, '');
+      // Asegurar que solo haya un punto decimal
+      const parts = value.split('.');
+      if (parts.length > 2) {
+        value = parts[0] + '.' + parts.slice(1).join('');
+      }
+      // Actualizar el valor solo si cambió (para evitar loops)
+      if (this.professionalCommission !== value) {
+        this.professionalCommission = value;
+      }
+    },
+    handleInputClick(event) {
+      // Solo detener propagación, no prevenir el comportamiento por defecto
+      event.stopPropagation();
+      // Forzar focus en el input
+      this.$nextTick(() => {
+        if (this.$refs.commissionInputRef) {
+          this.$refs.commissionInputRef.focus();
+        }
+      });
+    },
+    handleInputMouseDown(event) {
+      // Solo detener propagación, no prevenir el comportamiento por defecto
+      event.stopPropagation();
     },
     getSuggestedCommission() {
       if (!this.selectedProfessional || !this.selectedProfessional.financialInfo) {
@@ -409,6 +442,7 @@ export default {
       };
     },
     goAssignProfessional() {
+      // NO llamar handleProfessionalSelected aquí para evitar sobrescribir la comisión editada
       this.goToAssignProfessional = !this.goToAssignProfessional;
     },
     cancelAssignProfessional() {
@@ -429,10 +463,33 @@ export default {
           this.selectedProfessional.personalInfo?.name ||
           this.selectedProfessional.name ||
           this.selectedProfessional.id;
-        await assignProfessional(this.attention.id, this.selectedProfessional.id, name);
+
+        // Usar la comisión editada por el usuario si existe, sino usar la del profesional
+        // Convertir a número si es string
+        let commissionToUse = null;
+        const commissionValue = this.professionalCommission?.trim();
+        if (commissionValue && commissionValue !== '') {
+          const parsed = parseFloat(commissionValue);
+          if (!isNaN(parsed) && isFinite(parsed)) {
+            commissionToUse = parsed;
+          }
+        }
+        if (commissionToUse === null) {
+          commissionToUse = this.selectedProfessional.financialInfo?.commissionValue || null;
+        }
+        const commissionType = this.selectedProfessional.financialInfo?.commissionType || null;
+
+        await assignProfessional(
+          this.attention.id,
+          this.selectedProfessional.id,
+          name,
+          commissionToUse,
+          commissionType,
+        );
         this.$emit('attention-updated');
         this.extendedProfessionalEntity = false;
         this.goToAssignProfessional = false;
+        this.commissionManuallyEdited = false; // Reset flag
       } catch (error) {
         console.error('Error assigning professional:', error);
         this.alertError = error.message || 'Error al asignar profesional';
@@ -1696,10 +1753,16 @@ export default {
                           }}</label>
                           <div class="d-flex align-items-center gap-2">
                             <input
+                              ref="commissionInputRef"
                               v-model="professionalCommission"
-                              type="number"
-                              class="payment-form-input"
+                              type="text"
+                              inputmode="decimal"
+                              class="payment-form-input commission-input-fix"
                               :placeholder="getSuggestedCommission()"
+                              @input="handleCommissionInput"
+                              @click="handleInputClick"
+                              @mousedown="handleInputMouseDown"
+                              tabindex="0"
                             />
                             <span class="text-muted">
                               {{
@@ -1708,6 +1771,19 @@ export default {
                                   : commerce.currency || 'BRL'
                               }}
                             </span>
+                          </div>
+                          <!-- Warning about suggested commission -->
+                          <div v-if="getSuggestedCommission()" class="alert alert-warning mt-2">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span>{{ $t('professionals.suggestedCommission') }}: {{ getSuggestedCommission() }}</span>
+                            <Popper :class="'dark'" arrow hover>
+                              <template #content>
+                                <div>
+                                  {{ $t('paymentForm.suggestedCommissionWarning.tooltip') }}
+                                </div>
+                              </template>
+                              <i class="bi bi-question-circle ms-2"></i>
+                            </Popper>
                           </div>
                         </div>
                         <div class="attention-action-buttons">
@@ -1895,11 +1971,7 @@ export default {
 
 /* Modal Header - Matching Booking Style */
 .modal-header {
-  background: linear-gradient(
-    135deg,
-    var(--azul-turno, #004aad) 0%,
-    var(--verde-tu, #00c2cb) 100%
-  ) !important;
+  background-color: var(--azul-turno, #004aad);
   color: white !important;
   border-bottom: none !important;
   padding: 1rem 1.25rem !important;
@@ -2746,6 +2818,25 @@ export default {
   box-shadow: 0 0 0 3px rgba(0, 194, 203, 0.1);
 }
 
+/* Fix para input de comisión bloqueado */
+.commission-input-fix {
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text !important;
+  z-index: 10000 !important;
+  position: relative !important;
+}
+
+.commission-input-fix:focus {
+  pointer-events: auto !important;
+  user-select: text !important;
+  outline: 2px solid #00c2cb !important;
+  outline-offset: 2px !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .attention-modal-dialog {
@@ -2768,4 +2859,5 @@ export default {
     gap: 0.5rem;
   }
 }
+
 </style>

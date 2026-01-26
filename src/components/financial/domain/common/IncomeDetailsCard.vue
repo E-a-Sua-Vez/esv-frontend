@@ -92,6 +92,15 @@ export default {
         ? professional.personalInfo?.name || professional.name || '-'
         : professionalId;
     },
+    isCommissionPaid(income) {
+      if (!income) return false;
+      // Handle different possible formats: boolean, string 'true'/'false', or null/undefined
+      const commissionPaid = income.commissionPaid;
+      if (commissionPaid === true || commissionPaid === 'true' || commissionPaid === 1) {
+        return true;
+      }
+      return false;
+    },
     // New methods for modernized component
     formatAmount(amount) {
       return Number(parseFloat(amount || 0).toFixed(2)).toLocaleString('de-DE');
@@ -382,6 +391,7 @@ export default {
             <span v-if="income?.professionalCommission" class="info-badge">
               <span class="badge-label">{{ $t('paymentData.professionalCommission') }}:</span>
               <span class="badge-value">{{ formatAmount(income.professionalCommission) }}</span>
+              <i v-if="isCommissionPaid(income)" class="bi bi-check-circle-fill green-icon ms-2" :title="$t('commissionPayments.commissionPaid')"></i>
             </span>
 
             <span v-if="income?.createdBy" class="info-badge">
@@ -488,7 +498,7 @@ export default {
   background: rgba(255, 255, 255, 0.95);
   padding: 0.5rem 0.625rem;
   margin: 0;
-  margin-bottom: 0;
+  margin-bottom: .5rem;
   border-radius: 8px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;

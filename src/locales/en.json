@@ -247,6 +247,10 @@
       "paymentFiscalNote": "Fiscal Note: Type of fiscal document to be issued. NOTA_FISCAL is an official fiscal note. GERENCIAL is an internal management document.",
       "paymentCommission": "Payment Commission: Commission amount associated with this payment. Can be a percentage or fixed amount according to the professional's configuration.",
       "paymentComment": "Payment Comment: Additional notes about this payment. Can include relevant information about the payment method, special conditions, or any other observations (optional)."
+    },
+    "suggestedCommissionWarning": {
+      "message": "The suggested commission value comes from the professional's record.",
+      "tooltip": "This commission value is automatically calculated based on the assigned professional's configuration (percentage or fixed amount). You can modify this value manually if needed to adjust it to the specific payment circumstances."
     }
   },
   "incomeTypes": {
@@ -256,6 +260,12 @@
     "FUND_INCREASE": "Fund Increase",
     "STANDARD": "Standard",
     "PACKAGE": "Package"
+  },
+  "outcomeTypes": {
+    "PROFESSIONAL_COMMISSION": "Professional Commission",
+    "PRODUCT": "Product",
+    "SERVICE": "Service",
+    "OTHER": "Other"
   },
   "incomeStatus": {
     "CONFIRMED": "Confirmed",
@@ -294,6 +304,7 @@
     "cancelPayment": "Cancel Payment",
     "professionalCommissions": "Professional Commissions",
     "selectProfessional": "Select Professional",
+    "allProfessionals": "All Professionals",
     "selectPeriod": "Select Period",
     "dateFrom": "Date From",
     "dateTo": "Date To",
@@ -316,6 +327,7 @@
     "created": "Created",
     "paid": "Paid",
     "cancelled": "Cancelled",
+    "refresh": "Refresh",
     "status": "Status",
     "professional": "Professional",
     "period": "Period",
@@ -358,6 +370,28 @@
       "PAID": "Paid",
       "CANCELLED": "Cancelled"
     },
+    "status": {
+      "CREATED": "Created",
+      "PAID": "Paid",
+      "CANCELLED": "Cancelled"
+    },
+    "includedIncomes": "Included Incomes",
+    "incomeIdsCount": "{count} incomes included",
+    "commissionPaid": "Commission Paid",
+    "commissionUnpaid": "Commission Unpaid",
+    "outcomeCreated": "Outcome Created",
+    "viewOutcome": "View Outcome",
+    "downloadPdf": "Download PDF",
+    "downloading": "Downloading...",
+    "incomeDetailsNotAvailable": "Income details not available. Trying to load...",
+    "retry": "Retry",
+    "loading": "Loading incomes...",
+    "receitas": "Incomes",
+    "tableView": "Table View",
+    "cardsView": "Cards View",
+    "showing": "Showing",
+    "of": "of",
+    "searchProfessional": "Search professional...",
     "tabs": {
       "create": "Create New Payment",
       "created": "Created Payments",
@@ -1206,6 +1240,7 @@
     "code": "Code:",
     "installments": "Installemnts:",
     "totalAmount": "Total Amount:",
+    "paidAt": "Paid at:",
     "package": "Package:",
     "service": "Service:",
     "outcomeTitle": "Reason:",
@@ -1906,6 +1941,20 @@
     "upcomingWeek": "Upcoming Week",
     "totalActive": "Total Active",
     "recentBookings": "Recent Bookings",
+    "metrics": {
+      "today": {
+        "description": "Shows the total number of attentions scheduled for today. Includes all confirmed and pending attentions for the current day."
+      },
+      "pending": {
+        "description": "Shows the number of bookings that are pending confirmation. These bookings require action from the collaborator to be confirmed or processed."
+      },
+      "upcomingWeek": {
+        "description": "Shows the number of bookings scheduled for the next 7 days. Includes all confirmed and pending bookings for the upcoming week."
+      },
+      "totalActive": {
+        "description": "Shows the total number of active bookings (pending + confirmed) in the current month. Includes all bookings that require follow-up or are scheduled."
+      }
+    },
     "noBookings": {
       "title": "No Bookings Found",
       "content": "There are no bookings to display at this time."
@@ -2611,6 +2660,15 @@
         "status": "Payment status"
       },
       "contactInfo": "Contact Information"
+    },
+    "outcomeCard": {
+      "tooltip": {
+        "type": "Outcome type",
+        "copy": "Copy data",
+        "outcomeType": "Outcome type",
+        "status": "Payment status"
+      },
+      "beneficiaryInfo": "Beneficiary Information"
     },
     "intelligentEstimationTooltip": "This time was calculated using intelligent learning (median) based on historical data from completed services. The median is more robust than the average, not being affected by extreme values.",
     "queueDetails": {
@@ -4129,7 +4187,15 @@
       "averageDailyIncome": "Average Daily Income",
       "daysUntilMonthEnd": "Days Until Month End",
       "vsPreviousMonth": "vs previous month",
-      "vsPreviousPeriod": "vs previous period"
+      "vsPreviousPeriod": "vs previous period",
+      "tooltips": {
+        "totalIncomes": "Sum of all incomes created in the selected period. Represents the total gross value received before deducting commissions and expenses. Formula: Sum of all income values (paymentAmountSum) in the period.",
+        "totalOutcomes": "Sum of all expenses created in the selected period. Represents the total amount spent on operational costs, payments, and other financial outflows. Formula: Sum of all expense values (paymentAmountSum) in the period.",
+        "netProfit": "Net profit after deducting all expenses from total incomes. Indicates the actual business gain in the period. Formula: Total Incomes - Total Outcomes. Commissions are already included as part of incomes.",
+        "profitMargin": "Percentage representing how much profit represents in relation to total incomes. The higher, the better the financial efficiency. Formula: (Net Profit / Total Incomes) × 100.",
+        "averageDailyIncome": "Average of net incomes (after commissions) per day in the selected period. Useful for projections and daily performance analysis. Formula: (Total Incomes - Commissions) / Number of Days in Period.",
+        "daysUntilMonthEnd": "Number of days remaining until the end of the current month. Used for projection calculations and monthly financial planning."
+      }
     },
     "distribution": {
       "title": "Income Distribution by Type"
@@ -4159,11 +4225,17 @@
       "minAmount": "Min Amount",
       "maxAmount": "Max Amount",
       "incomeType": "Income Type",
+      "outcomeType": "Outcome Type",
+      "outcomeSystemType": "System Type",
       "paymentMethod": "Payment Method",
       "professional": "Professional",
       "all": "All"
     },
     "commission": "Commission",
+    "professionalIncomes": {
+      "title": "Incomes by Professional",
+      "grossIncome": "Gross Income"
+    },
     "projectedCashFlow": "Projected Cash Flow",
     "projectedCashFlowDescription": "Projection based on daily average of current period",
     "projectedCashFlowDays": "Days remaining in the month: {days}",
@@ -4172,8 +4244,13 @@
       "title": "Financial Alerts",
       "expensesExceedIncome": "Expenses exceed income this month",
       "pendingPayments": "There are {count} pending payments for more than {days} days",
+      "pendingIncomes": "There are {count} pending incomes ({amount} €) for more than {days} days",
+      "pendingOutcomes": "There are {count} pending outcomes ({amount} €) for more than {days} days",
       "lowMargin": "Profit margin is below {threshold}%",
       "unusualExpense": "Unusual expense detected",
+      "unusualExpenses": "Expenses increased {percentage}% compared to the previous period",
+      "negativeProjectedCashFlow": "Projected cash flow is negative: -{amount} €",
+      "behindMonthlyGoal": "You are at {progress}% of the monthly goal",
       "allGood": "All good",
       "health": {
         "excellent": "Excellent",

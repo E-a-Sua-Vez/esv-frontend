@@ -250,6 +250,10 @@
       "paymentFiscalNote": "Nota Fiscal: Tipo de documento fiscal que se emitirá. NOTA_FISCAL es una nota fiscal oficial. GERENCIAL es un documento gerencial interno.",
       "paymentCommission": "Comisión de Pago: Monto de comisión asociado a este pago. Puede ser un porcentaje o un monto fijo según la configuración del profesional.",
       "paymentComment": "Comentario de Pago: Notas adicionales sobre este pago. Puede incluir información relevante sobre el método de pago, condiciones especiales, o cualquier otra observación (opcional)."
+    },
+    "suggestedCommissionWarning": {
+      "message": "El valor de comisión sugerido proviene del registro del profesional.",
+      "tooltip": "Este valor de comisión se calcula automáticamente basado en la configuración del profesional asignado (porcentaje o monto fijo). Puedes modificar este valor manualmente si es necesario para ajustarlo a las circunstancias específicas del pago."
     }
   },
   "incomeTypes": {
@@ -259,6 +263,12 @@
     "STANDARD": "Entrada Normal",
     "FUND_INCREASE": "Incremento de Fondos",
     "PACKAGE": "Paquete"
+  },
+  "outcomeTypes": {
+    "PROFESSIONAL_COMMISSION": "Comisión Profesional",
+    "PRODUCT": "Producto",
+    "SERVICE": "Servicio",
+    "OTHER": "Otro"
   },
   "incomeStatus": {
     "CONFIRMED": "Confirmado",
@@ -297,6 +307,7 @@
     "cancelPayment": "Cancelar Pago",
     "professionalCommissions": "Comisiones Profesionales",
     "selectProfessional": "Seleccionar Profesional",
+    "allProfessionals": "Todos los Profesionales",
     "selectPeriod": "Seleccionar Período",
     "dateFrom": "Fecha Desde",
     "dateTo": "Fecha Hasta",
@@ -319,6 +330,7 @@
     "created": "Creados",
     "paid": "Pagados",
     "cancelled": "Cancelados",
+    "refresh": "Actualizar",
     "status": "Estado",
     "professional": "Profesional",
     "period": "Período",
@@ -361,6 +373,28 @@
       "PAID": "Pagado",
       "CANCELLED": "Cancelado"
     },
+    "status": {
+      "CREATED": "Creado",
+      "PAID": "Pagado",
+      "CANCELLED": "Cancelado"
+    },
+    "includedIncomes": "Ingresos Incluidos",
+    "incomeIdsCount": "{count} ingresos incluidos",
+    "commissionPaid": "Comisión Pagada",
+    "commissionUnpaid": "Comisión No Pagada",
+    "outcomeCreated": "Egreso Creado",
+    "viewOutcome": "Ver Egreso",
+    "downloadPdf": "Descargar PDF",
+    "downloading": "Descargando...",
+    "incomeDetailsNotAvailable": "Detalles de los ingresos no disponibles. Intentando cargar...",
+    "retry": "Intentar Nuevamente",
+    "loading": "Cargando ingresos...",
+    "receitas": "Ingresos",
+    "tableView": "Vista de Tabla",
+    "cardsView": "Vista de Tarjetas",
+    "showing": "Mostrando",
+    "of": "de",
+    "searchProfessional": "Buscar profesional...",
     "tabs": {
       "create": "Crear Nuevo Pago",
       "created": "Pagos Creados",
@@ -1209,6 +1243,7 @@
     "code": "Código:",
     "installments": "Cuotas:",
     "totalAmount": "Total Procedimiento:",
+    "paidAt": "Pago en:",
     "package": "Paquete:",
     "service": "Servicio:",
     "outcomeTitle": "Concepto:",
@@ -1921,6 +1956,20 @@
     "upcomingWeek": "Próxima Semana",
     "totalActive": "Total Activas",
     "recentBookings": "Reservas Recientes",
+    "metrics": {
+      "today": {
+        "description": "Muestra el número total de atenciones programadas para hoy. Incluye todas las atenciones confirmadas y pendientes del día actual."
+      },
+      "pending": {
+        "description": "Muestra el número de reservas que están pendientes de confirmación. Estas reservas requieren acción del colaborador para ser confirmadas o procesadas."
+      },
+      "upcomingWeek": {
+        "description": "Muestra el número de reservas programadas para los próximos 7 días. Incluye todas las reservas confirmadas y pendientes de la próxima semana."
+      },
+      "totalActive": {
+        "description": "Muestra el número total de reservas activas (pendientes + confirmadas) en el mes actual. Incluye todas las reservas que requieren seguimiento o están programadas."
+      }
+    },
     "noBookings": {
       "title": "No se Encontraron Reservas",
       "content": "No hay reservas para mostrar en este momento."
@@ -2656,6 +2705,15 @@
         "status": "Estado del pago"
       },
       "contactInfo": "Información de Contacto"
+    },
+    "outcomeCard": {
+      "tooltip": {
+        "type": "Tipo de gasto",
+        "copy": "Copiar datos",
+        "outcomeType": "Tipo de gasto",
+        "status": "Estado del pago"
+      },
+      "beneficiaryInfo": "Información del Beneficiario"
     },
     "lgpdCompliance": {
       "title": "Compliance LGPD",
@@ -4383,6 +4441,10 @@
     "outcomePaymentAmount": "Monto:",
     "outcomeBeneficiary": "Beneficiario:",
     "commission": "Comisión",
+    "professionalIncomes": {
+      "title": "Ingresos por Profesional",
+      "grossIncome": "Ingreso Bruto"
+    },
     "expireDate": "Vencimiento:",
     "incomeStatus": "Estado",
     "fiscalNote": "Nota Fiscal",
@@ -4395,7 +4457,15 @@
       "averageDailyIncome": "Promedio Diario de Ingresos",
       "daysUntilMonthEnd": "Días hasta Fin de Mes",
       "vsPreviousMonth": "vs mes anterior",
-      "vsPreviousPeriod": "vs período anterior"
+      "vsPreviousPeriod": "vs período anterior",
+      "tooltips": {
+        "totalIncomes": "Suma de todos los ingresos creados en el período seleccionado. Representa el valor total bruto recibido antes de deducir comisiones y gastos. Fórmula: Suma de todos los valores de ingresos (paymentAmountSum) del período.",
+        "totalOutcomes": "Suma de todos los gastos creados en el período seleccionado. Representa el valor total gastado en costos operativos, pagos y otras salidas financieras. Fórmula: Suma de todos los valores de gastos (paymentAmountSum) del período.",
+        "netProfit": "Ganancia neta después de deducir todos los gastos de los ingresos totales. Indica la ganancia real del negocio en el período. Fórmula: Ingresos Totales - Gastos Totales. Las comisiones ya están incluidas como parte de los ingresos.",
+        "profitMargin": "Porcentaje que representa cuánto de la ganancia representa en relación a los ingresos totales. Cuanto mayor, mejor la eficiencia financiera. Fórmula: (Ganancia Neta / Ingresos Totales) × 100.",
+        "averageDailyIncome": "Promedio de ingresos netos (después de comisiones) por día en el período seleccionado. Útil para proyecciones y análisis de desempeño diario. Fórmula: (Ingresos Totales - Comisiones) / Número de Días en el Período.",
+        "daysUntilMonthEnd": "Cantidad de días restantes hasta el final del mes actual. Usado para cálculos de proyecciones y planificación financiera mensual."
+      }
     },
     "distribution": {
       "title": "Distribución de Ingresos por Tipo"
@@ -4426,6 +4496,7 @@
       "maxAmount": "Monto Máximo",
       "incomeType": "Tipo de Ingreso",
       "outcomeType": "Tipo de Egreso",
+      "outcomeSystemType": "Tipo de Gasto",
       "paymentMethod": "Método de Pago",
       "professional": "Profesional",
       "all": "Todos"
@@ -4438,8 +4509,13 @@
       "title": "Alertas Financieras",
       "expensesExceedIncome": "Los gastos superan los ingresos este mes",
       "pendingPayments": "Hay {count} pagos pendientes por más de {days} días",
+      "pendingIncomes": "Hay {count} ingresos pendientes ({amount} €) por más de {days} días",
+      "pendingOutcomes": "Hay {count} gastos pendientes ({amount} €) por más de {days} días",
       "lowMargin": "El margen de ganancia está por debajo del {threshold}%",
       "unusualExpense": "Gasto inusual detectado",
+      "unusualExpenses": "Los gastos aumentaron {percentage}% en relación al período anterior",
+      "negativeProjectedCashFlow": "El flujo de caja proyectado es negativo: -{amount} €",
+      "behindMonthlyGoal": "Estás al {progress}% de la meta mensal",
       "allGood": "Todo en orden",
       "health": {
         "excellent": "Excelente",

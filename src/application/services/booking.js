@@ -74,11 +74,16 @@ export const getPendingBookingsByClient = async (commerceId, clientId, idNumber)
 export const editBooking = async (id, body) =>
   (await requestBackend.patch(`/${entity}/edit/${id}`, body, await getHeaders())).data;
 
-export const assignProfessional = async (id, professionalId, professionalName) =>
+export const assignProfessional = async (id, professionalId, professionalName, professionalCommission = null, professionalCommissionType = null) =>
   (
     await requestBackend.patch(
       `/${entity}/${id}/assign-professional`,
-      { professionalId, professionalName },
+      {
+        professionalId,
+        professionalName,
+        ...(professionalCommission !== null && professionalCommission !== undefined ? { professionalCommission } : {}),
+        ...(professionalCommissionType ? { professionalCommissionType } : {}),
+      },
       await getHeaders(),
     )
   ).data;

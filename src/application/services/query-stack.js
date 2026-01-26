@@ -803,6 +803,7 @@ export const getIncomesDetails = async (
   incomeStatus = undefined,
   fiscalNote = undefined,
   automatic = undefined,
+  commissionPaid = undefined,
   minAmount = undefined,
   maxAmount = undefined,
   incomeTypeFilter = undefined,
@@ -823,6 +824,7 @@ export const getIncomesDetails = async (
     incomeStatus,
     fiscalNote: fiscalNote !== undefined ? fiscalNote.toString() : undefined,
     automatic: automatic !== undefined ? automatic.toString() : undefined,
+    commissionPaid: commissionPaid !== undefined ? commissionPaid.toString() : undefined,
     minAmount,
     maxAmount,
     incomeTypeFilter,
@@ -830,7 +832,7 @@ export const getIncomesDetails = async (
     // Add timestamp to prevent caching
     _t: Date.now(),
   };
-  
+
   // Only include professionalFilter if it has a value
   if (professionalFilter !== undefined && professionalFilter !== null && professionalFilter !== '') {
     options.params.professionalFilter = professionalFilter;
@@ -838,7 +840,7 @@ export const getIncomesDetails = async (
   } else {
     console.log('[getIncomesDetails] professionalFilter is empty/undefined, not including in params');
   }
-  
+
   console.log('[getIncomesDetails] Final params:', options.params);
   options.paramsSerializer = params => qs.stringify(params);
   const { headers } = await getHeaders();
@@ -862,7 +864,9 @@ export const getOutcomesDetails = async (
   minAmount = undefined,
   maxAmount = undefined,
   outcomeTypeFilter = undefined,
-  paymentMethodFilter = undefined
+  outcomeSystemTypeFilter = undefined,
+  paymentMethodFilter = undefined,
+  professionalFilter = undefined
 ) => {
   const options = {};
   options.params = {
@@ -881,7 +885,9 @@ export const getOutcomesDetails = async (
     minAmount,
     maxAmount,
     outcomeTypeFilter,
+    outcomeSystemTypeFilter,
     paymentMethodFilter,
+    professionalFilter,
     // Add timestamp to prevent caching
     _t: Date.now(),
   };

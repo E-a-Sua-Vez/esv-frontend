@@ -6,8 +6,15 @@ const queryEntity = 'professional-commission-payments';
 export const getCommissionPaymentById = async id =>
   (await requestQuery.get(`/${queryEntity}/${id}`, await getHeaders())).data;
 
-export const getCommissionPaymentsByCommerce = async commerceId =>
-  (await requestQuery.get(`/${queryEntity}/commerce/${commerceId}`, await getHeaders())).data;
+export const getCommissionPaymentsByCommerce = async (commerceId, timestamp = null) => {
+  // Use requestBackend instead of requestQuery to read from Firestore directly
+  // This ensures we get the latest data immediately after creation
+  const params = timestamp ? { _t: timestamp } : { _t: Date.now() };
+  const queryString = new URLSearchParams(params).toString();
+  return (
+    await requestBackend.get(`/${entity}/commerce/${commerceId}?${queryString}`, await getHeaders())
+  ).data;
+};
 
 export const getCommissionPaymentsByProfessional = async professionalId =>
   (await requestQuery.get(`/${queryEntity}/professional/${professionalId}`, await getHeaders()))
@@ -105,3 +112,12 @@ export const cancelCommissionPayment = async (id, reason) =>
       await getHeaders(),
     )
   ).data;
+
+export const downloadCommissionPaymentPdf = async (id, commerceId) => {
+  const response = await requestBackend.get(`/${entity}/${id}/pdf`, {
+    params: { commerceId },
+    ...(await getHeaders()),
+    responseType: 'blob',
+  });
+  return response.data;
+};
