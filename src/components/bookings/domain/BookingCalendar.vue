@@ -115,6 +115,7 @@ export default {
       showBookings360: true,
       showClients360: false,
       specificCalendar: false,
+      calendarVisible: true, // Nueva variable para controlar visibilidad del calendar
       specificCalendarDays: {},
       specificCalendarDates: [],
       specificCalendarDate: undefined,
@@ -1675,6 +1676,10 @@ export default {
 
     const openBookingDrawer = booking => {
       state.selectedBooking = booking;
+      
+      // NO hacer nada con el modal principal aquí
+      // El BookingDetailsModal maneja su propia ocultación
+      
       // Find the queue for this booking
       if (booking && booking.queueId && queues.value) {
         const queue = queues.value.find(q => q.id === booking.queueId);
@@ -1727,6 +1732,9 @@ export default {
     const closeBookingDrawer = () => {
       state.drawerOpen = false;
       state.selectedBooking = null;
+      
+      // El modal principal se restaura automáticamente
+      // cuando BookingDetailsModal cambia su prop 'show' a false
     };
 
     const handleBookingUpdated = async updatedBooking => {
@@ -1758,7 +1766,7 @@ export default {
       // Comprehensive refresh of all calendar data
       try {
         // 1. Refresh bookings for the current view
-        await refreshBookings();
+        getBookings();
 
         // 2. If date changed, also refresh bookings for the new date
         if (updatedBooking && updatedBooking.date && updatedBooking.date !== state.selectedDate) {
@@ -2976,6 +2984,21 @@ export default {
   user-select: none;
 }
 
+/* Fix para inputs dentro de modales en BookingCalendar */
+.booking-details-modal-overlay input,
+.booking-details-modal-content input,
+.modal-body input,
+input.form-control,
+input[ref="commissionInputRef"] {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
+  -webkit-user-select: text !important;
+  background: white !important;
+  z-index: 99999 !important;
+  position: relative !important;
+}
+
 .resizer-bar:hover {
   background: rgba(0, 194, 203, 0.4);
   width: 2px;
@@ -3971,4 +3994,25 @@ export default {
   font-size: 0.875rem;
 }
 
+</style>
+
+<style>
+/* CSS ESPECIFICO SOLO PARA INPUTS EN MODALES - SIN SCOPED */
+.modal input,
+.booking-details-modal-overlay input,
+.booking-details-modal-content input,
+input.form-control {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
+  -webkit-user-select: text !important;
+  background: white !important;
+}
+
+.modal input:focus,
+.booking-details-modal-overlay input:focus,
+input.form-control:focus {
+  outline: 2px solid #00c2cb !important;
+  border-color: #00c2cb !important;
+}
 </style>

@@ -75,7 +75,6 @@ export default {
 
         <div class="modal-body confirm-payment-modal-body">
           <Spinner :show="loading" />
-          <Alert :show="alertError !== ''" :message="alertError" />
 
           <!-- Resumen del Pago -->
           <div class="confirm-payment-summary-card">
@@ -173,11 +172,7 @@ export default {
 
 /* Modern Header - matching product style with success gradient */
 .confirm-payment-modal-header {
-  background: linear-gradient(
-    135deg,
-    #00c2cb 0%,
-    #00a8b0 100%
-  ) !important;
+  background-color: var(--azul-turno, #004aad);
   color: white !important;
   border-bottom: none !important;
   padding: 1rem 1.25rem !important;

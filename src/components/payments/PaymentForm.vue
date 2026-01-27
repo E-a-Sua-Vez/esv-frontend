@@ -33,7 +33,9 @@ export default {
     receiveData: { type: Function, default: () => {} },
     // NEW: Professional commission props
     professionalName: { type: String, default: undefined },
+    professionalId: { type: String, default: undefined },
     professionalCommission: { type: [Number, String], default: undefined },
+    professionalCommissionType: { type: String, default: undefined },
     suggestedCommissionAmount: { type: Number, default: undefined },
     // DEPRECATED: single service price hint (keep for backward compatibility)
     servicePrice: { type: Number, default: undefined },
@@ -43,6 +45,8 @@ export default {
     existingPackageProceduresTotalNumber: { type: Number, default: undefined },
     // NEW: Type of entity (to know if we should fetch attention or booking)
     entityType: { type: String, default: 'attention' }, // 'attention' or 'booking'
+    // NEW: Existing confirmation data (to show payment already confirmed)
+    existingConfirmationData: { type: Object, default: undefined },
   },
   async setup(props) {
     const loading = ref(false);
@@ -57,13 +61,16 @@ export default {
       errorsAdd,
       confirmPayment,
       professionalName,
+      professionalId,
       professionalCommission,
+      professionalCommissionType,
       suggestedCommissionAmount,
       servicePrice,
       existingPackageId,
       existingPackageProcedureNumber,
       existingPackageProceduresTotalNumber,
       entityType,
+      existingConfirmationData,
     } = toRefs(props);
 
     const { receiveData } = props;
@@ -173,6 +180,29 @@ export default {
       if (Number.isFinite(single) && single > 0) return single;
 
       return 0;
+    });
+
+    // Computed to check if payment is already confirmed
+    const isPaymentConfirmed = computed(() => {
+      return existingConfirmationData.value?.paid === true;
+    });
+
+    const confirmationMessage = computed(() => {
+      if (isPaymentConfirmed.value) {
+        const paymentDate = existingConfirmationData.value?.paymentDate;
+        const formattedDate = paymentDate ? new Date(paymentDate).toLocaleDateString('pt-BR') : '';
+        const amount = existingConfirmationData.value?.paymentAmount;
+        const method = existingConfirmationData.value?.paymentMethod;
+        
+        return {
+          title: 'Pagamento Confirmado',
+          details: `Confirmado em ${formattedDate}${amount ? ` - ${amount} ${commerce.value?.currency || 'BRL'}` : ''}${method ? ` via ${method}` : ''}`,
+          date: formattedDate,
+          amount: amount,
+          method: method
+        };
+      }
+      return null;
     });
 
     // Computed para determinar qué mostrar en "Total Procedimiento"
@@ -559,6 +589,31 @@ export default {
     );
 
     const sendData = () => {
+      // Asegurar que los datos del profesional se incluyan en confirmationData
+      if (professionalId.value) {
+        state.newConfirmationData.professionalId = professionalId.value;
+        state.newConfirmationData.professionalCommissionType = professionalCommissionType.value || 'PERCENTAGE';
+        state.newConfirmationData.professionalCommissionValue = professionalCommission.value;
+        
+        // Calcular professionalCommissionAmount basado en paymentAmount
+        if (state.newConfirmationData.paymentAmount && professionalCommission.value) {
+          const commissionValue = Number(professionalCommission.value);
+          if (professionalCommissionType.value === 'FIXED') {
+            state.newConfirmationData.professionalCommissionAmount = commissionValue;
+          } else {
+            // PERCENTAGE por defecto
+            state.newConfirmationData.professionalCommissionAmount = Math.round(
+              (state.newConfirmationData.paymentAmount * commissionValue) / 100
+            );
+          }
+        }
+        
+        // Agregar notas de comisión
+        if (!state.newConfirmationData.professionalCommissionNotes && professionalName.value) {
+          state.newConfirmationData.professionalCommissionNotes = `Comisión del profesional ${professionalName.value}`;
+        }
+      }
+      
       receiveData(state.newConfirmationData);
     };
 
@@ -778,13 +833,26 @@ export default {
       userEditedPaymentAmount,
       calculatePaymentAmount,
       packagePaymentStatus,
+      isPaymentConfirmed,
+      confirmationMessage,
     };
   },
 };
 </script>
 <template>
   <div class="payment-form-modern">
-    <div id="payment-data">
+    <!-- Payment Confirmation Message -->
+    <div v-if="isPaymentConfirmed && confirmationMessage" class="payment-confirmed-message">
+      <div class="payment-confirmed-header">
+        <i class="bi bi-check-circle-fill"></i>
+        <h4>{{ confirmationMessage.title }}</h4>
+      </div>
+      <div class="payment-confirmed-details">
+        <p>{{ confirmationMessage.details }}</p>
+      </div>
+    </div>
+    
+    <div id="payment-data" v-if="!isPaymentConfirmed">
       <div class="payment-form-content">
         <div v-if="state.packages && state.packages.length > 0" class="payment-form-field">
           <label class="payment-form-label">
@@ -1197,10 +1265,9 @@ export default {
                 </div>
               </div>
 
-              <!-- Row 4: Comissão (full width or can share with something) -->
-              <div class="payment-form-row payment-form-row-single">
-                <!-- PROFESSIONAL COMMISSION SECTION -->
-                <div v-if="professionalName" class="payment-form-field payment-commission-section">
+              <!-- Row 4: Professional Commission Info (full width) -->
+              <div v-if="professionalName" class="payment-form-row payment-form-row-single">
+                <div class="payment-form-field payment-commission-section">
                   <div class="professional-commission-header">
                     <label class="payment-form-label">
                       <i class="bi bi-person-badge"></i>
@@ -1209,7 +1276,7 @@ export default {
                     <div class="professional-commission-info">
                       <span class="professional-name">{{ professionalName }}</span>
                       <span v-if="professionalCommission" class="suggested-commission">
-                        {{ $t('professionals.suggestedCommission') || 'Comisión Sugerida' }}:
+                        Comisión Asignada:
                         <strong>{{ professionalCommission }}</strong>
                       </span>
                       <span
@@ -1224,26 +1291,10 @@ export default {
                     </div>
                   </div>
                 </div>
-                <!-- Warning about suggested commission -->
-                <div
-                  v-if="professionalCommission || suggestedCommissionAmount"
-                  class="payment-form-field"
-                >
-                  <Warning>
-                    <div class="commission-warning-content">
-                      <i class="bi bi-info-circle-fill me-2"></i>
-                      <span>{{ $t('paymentForm.suggestedCommissionWarning.message') }}</span>
-                      <Popper :class="'dark'" arrow hover>
-                        <template #content>
-                          <div>
-                            {{ $t('paymentForm.suggestedCommissionWarning.tooltip') }}
-                          </div>
-                        </template>
-                        <i class="bi bi-question-circle-fill ms-2 commission-warning-icon"></i>
-                      </Popper>
-                    </div>
-                  </Warning>
-                </div>
+              </div>
+
+              <!-- Row 5: Comisión de Pago (full width) -->
+              <div class="payment-form-row payment-form-row-single">
                 <div class="payment-form-field">
                   <label class="payment-form-label">
                     {{ $t('collaboratorBookingsView.paymentCommission') }}
@@ -1271,7 +1322,7 @@ export default {
                 </div>
               </div>
 
-              <!-- Row 5: Confirmar Parcela (switch, full width) -->
+              <!-- Row 6: Confirmar Parcela (switch, full width) -->
               <div class="payment-form-row payment-form-row-single">
                 <div class="payment-form-field payment-form-switch">
                   <label class="payment-form-label">
@@ -1425,10 +1476,62 @@ export default {
   justify-content: space-between;
 }
 
-.payment-switch-input {
-  width: 3rem;
-  height: 1.5rem;
+.form-check-input {
+  width: 1.25em;
+  height: 1.25em;
+  margin-top: 0.125em;
+  vertical-align: top;
+  background-color: #fff;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 0.25rem;
+}
+
+.form-check-input[type="checkbox"]:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.form-switch .form-check-input {
+  width: 2em;
+  margin-left: -2.5em;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280,0,0,.25%29'/%3e%3c/svg%3e");
+  background-position: left center;
+  border-radius: 2em;
+  transition: background-position .15s ease-in-out;
+  background-color: #fff !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+}
+
+.form-switch .form-check-input:checked {
+  background-position: right center;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+}
+
+/* Estilos específicos para el switch de payment */
+.payment-form-field.payment-form-switch .form-switch .form-check-input.payment-switch-input {
+  width: 3rem !important;
+  height: 1.5rem !important;
+  margin-left: -3.25rem !important;
   cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280,0,0,.25%29'/%3e%3c/svg%3e") !important;
+  background-position: left center !important;
+  background-repeat: no-repeat !important;
+  background-size: contain !important;
+}
+
+.payment-form-field.payment-form-switch .form-switch .form-check-input.payment-switch-input:checked {
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
+  background-position: right center !important;
 }
 
 .payment-form-textarea {
@@ -1475,6 +1578,46 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
+}
+
+/* Payment Confirmation Message Styles */
+.payment-confirmed-message {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.payment-confirmed-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.payment-confirmed-header i {
+  color: #155724;
+  font-size: 1.5rem;
+}
+
+.payment-confirmed-header h4 {
+  color: #155724;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.payment-confirmed-details {
+  color: #155724;
+}
+
+.payment-confirmed-details p {
+  margin: 0;
+  font-size: 0.95rem;
+  opacity: 0.9;
 }
 
 .payment-form-row {

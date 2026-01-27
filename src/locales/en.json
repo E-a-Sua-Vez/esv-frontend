@@ -318,6 +318,7 @@
     "type": "Type",
     "amount": "Amount",
     "commission": "Commission",
+    "statuss": "Status",
     "totalAmount": "Total Amount",
     "totalCommission": "Total Commissions",
     "incomes": "Incomes",
@@ -328,7 +329,6 @@
     "paid": "Paid",
     "cancelled": "Cancelled",
     "refresh": "Refresh",
-    "status": "Status",
     "professional": "Professional",
     "period": "Period",
     "createdAt": "Creation Date",
@@ -397,6 +397,27 @@
       "created": "Created Payments",
       "paid": "Confirmed Payments",
       "cancelled": "Cancelled Payments"
+    },
+    "serviceFilters": "Service Filters",
+    "includeExecuted": "Include executed services",
+    "includePending": "Include pending services",
+    "serviceStatus": {
+      "executed": "Executed",
+      "pending": "Pending",
+      "direct": "Direct"
+    },
+    "filterHelp": {
+      "executed": "Services that have already been performed (with attention)",
+      "pending": "Services with booking only (no attention)",
+      "direct": "Direct income without booking"
+    },
+    "noFilteredResults": {
+      "title": "No services match the selected filters",
+      "subtitle": "Adjust the filters to see more results"
+    },
+    "noFilteredResults": {
+      "title": "No services match the selected filters",
+      "subtitle": "Adjust the filters to see more results"
     },
     "messages": {
       "selectProfessional": "Select a professional to begin",

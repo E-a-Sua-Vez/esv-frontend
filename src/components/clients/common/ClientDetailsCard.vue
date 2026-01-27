@@ -3201,7 +3201,6 @@ export default {
 }
 
 .services-badge {
-  flex-direction: column;
   align-items: flex-start;
   gap: 0.5rem;
 }

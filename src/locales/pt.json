@@ -320,6 +320,7 @@
     "type": "Tipo",
     "amount": "Valor",
     "commission": "Comissão",
+    "statuss": "Estado",
     "totalAmount": "Valor Total",
     "totalCommission": "Total Comissões",
     "incomes": "Receitas",
@@ -330,7 +331,6 @@
     "paid": "Pagos",
     "cancelled": "Cancelados",
     "refresh": "Atualizar",
-    "status": "Estado",
     "professional": "Profissional",
     "period": "Período",
     "createdAt": "Data de Criação",
@@ -399,6 +399,27 @@
       "created": "Pagamentos Criados",
       "paid": "Pagamentos Confirmados",
       "cancelled": "Pagamentos Cancelados"
+    },
+    "serviceFilters": "Filtros de Serviço",
+    "includeExecuted": "Incluir serviços executados",
+    "includePending": "Incluir serviços pendentes",
+    "serviceStatus": {
+      "executed": "Executado",
+      "pending": "Pendente",
+      "direct": "Direto"
+    },
+    "filterHelp": {
+      "executed": "Serviços que já foram realizados (com atendimento)",
+      "pending": "Serviços que têm apenas reserva (sem atendimento)",
+      "direct": "Receitas diretas sem reserva"
+    },
+    "noFilteredResults": {
+      "title": "Não há serviços que coincidam com os filtros selecionados",
+      "subtitle": "Ajuste os filtros para ver mais resultados"
+    },
+    "noFilteredResults": {
+      "title": "Não há serviços que coincidam com os filtros selecionados",
+      "subtitle": "Ajuste os filtros para ver mais resultados"
     },
     "messages": {
       "selectProfessional": "Selecione um profissional para começar",

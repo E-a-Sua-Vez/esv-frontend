@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
+import { ref, reactive, onBeforeMount, computed, watch, Teleport } from 'vue';
 import { useRouter } from 'vue-router';
 import { getQueuesByCommerceId } from '../../application/services/queue';
 import { getQueueByCommerce } from '../../application/services/queue';
@@ -15,6 +15,9 @@ import Alert from '../../components/common/Alert.vue';
 import BookingCalendar from '../../components/bookings/domain/BookingCalendar.vue';
 import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
+import BookingDetailsCard from '../../components/clients/common/BookingDetailsCard.vue';
+import AttentionDetailsCard from '../../components/clients/common/AttentionDetailsCard.vue';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'BusinessQueueBookings',
@@ -27,6 +30,10 @@ export default {
     BookingCalendar,
     ComponentMenu,
     DesktopPageHeader,
+    AttentionDetailsCard,
+    BookingDetailsCard,
+    Teleport,
+    Popper,
   },
   async setup() {
     const router = useRouter();
@@ -66,6 +73,10 @@ export default {
         totalActiveCount: 0,
       },
       loadingStats: false,
+      // Recent data
+      recentBookings: [],
+      recentAttentions: [],
+      showAttentions: false,
     });
 
     // Use global commerce from store
@@ -197,14 +208,30 @@ export default {
         state.stats.totalActiveCount =
           (pendingBookings?.length || 0) + (confirmedBookings?.length || 0);
 
+        // Load recent bookings (last 5)
+        state.recentBookings = upcomingBookings?.slice(0, 5) || [];
+
         state.loadingStats = false;
       } catch (error) {
         state.loadingStats = false;
+        state.recentBookings = [];
+        state.recentAttentions = [];
       }
     };
 
     const openCalendar = () => {
       // Modal will be opened via data-bs-toggle
+    };
+
+    const showTodayAttentions = () => {
+      state.showAttentions = true;
+      // Load recent attentions logic can be added here if needed
+      state.recentAttentions = []; // Placeholder
+    };
+
+    const showRecentBookings = () => {
+      state.showAttentions = false;
+      // recentBookings are already loaded in loadDashboardStats
     };
 
     // Load stats after component mounts
@@ -252,6 +279,8 @@ export default {
       goBack,
       loadDashboardStats,
       openCalendar,
+      showTodayAttentions,
+      showRecentBookings,
     };
   },
 };
@@ -286,7 +315,17 @@ export default {
                   </div>
                   <div class="stat-content">
                     <div class="stat-value">{{ state.stats.todayCount }}</div>
-                    <div class="stat-label">{{ $t('collaboratorBookingsView.today') }}</div>
+                    <div class="stat-label">
+                      {{ $t('collaboratorBookingsView.today') }}
+                      <Popper :class="'dark'" arrow hover>
+                        <template #content>
+                          <div>
+                            {{ $t('collaboratorBookingsView.metrics.today.description') }}
+                          </div>
+                        </template>
+                        <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                      </Popper>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -297,7 +336,17 @@ export default {
                   </div>
                   <div class="stat-content">
                     <div class="stat-value">{{ state.stats.pendingCount }}</div>
-                    <div class="stat-label">{{ $t('collaboratorBookingsView.pending') }}</div>
+                    <div class="stat-label">
+                      {{ $t('collaboratorBookingsView.pending') }}
+                      <Popper :class="'dark'" arrow hover>
+                        <template #content>
+                          <div>
+                            {{ $t('collaboratorBookingsView.metrics.pending.description') }}
+                          </div>
+                        </template>
+                        <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                      </Popper>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -308,7 +357,17 @@ export default {
                   </div>
                   <div class="stat-content">
                     <div class="stat-value">{{ state.stats.upcomingWeekCount }}</div>
-                    <div class="stat-label">{{ $t('collaboratorBookingsView.upcomingWeek') }}</div>
+                    <div class="stat-label">
+                      {{ $t('collaboratorBookingsView.upcomingWeek') }}
+                      <Popper :class="'dark'" arrow hover>
+                        <template #content>
+                          <div>
+                            {{ $t('collaboratorBookingsView.metrics.upcomingWeek.description') }}
+                          </div>
+                        </template>
+                        <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                      </Popper>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -319,7 +378,17 @@ export default {
                   </div>
                   <div class="stat-content">
                     <div class="stat-value">{{ state.stats.totalActiveCount }}</div>
-                    <div class="stat-label">{{ $t('collaboratorBookingsView.totalActive') }}</div>
+                    <div class="stat-label">
+                      {{ $t('collaboratorBookingsView.totalActive') }}
+                      <Popper :class="'dark'" arrow hover>
+                        <template #content>
+                          <div>
+                            {{ $t('collaboratorBookingsView.metrics.totalActive.description') }}
+                          </div>
+                        </template>
+                        <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                      </Popper>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -331,7 +400,7 @@ export default {
             <div class="row g-2 justify-content-center">
               <div class="col-auto">
                 <button
-                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3"
+                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3 pulse-btn"
                   data-bs-toggle="modal"
                   data-bs-target="#modalAgenda"
                   :disabled="
@@ -344,7 +413,50 @@ export default {
               </div>
             </div>
           </div>
-        </div>
+
+          <!-- Recent Attentions (when clicking Hoje) -->
+          <div
+            class="recent-bookings-container mt-4"
+            v-if="state.showAttentions && state.recentAttentions.length > 0"
+          >
+            <div class="section-header">
+              <h5 class="section-title">
+                <i class="bi bi-clock-history"></i>
+                {{ $t('collaboratorBookingsView.todayAttentions') }}
+              </h5>
+            </div>
+            <div class="">
+              <div
+                class=""
+                v-for="(attention, index) in state.recentAttentions"
+                :key="`attention-${index}`"
+              >
+                <AttentionDetailsCard :show="true" :attention="attention" :commerce="commerce" />
+              </div>
+            </div>
+          </div>
+          <!-- Recent Bookings -->
+          <div
+            class="recent-bookings-container mt-4"
+            v-else-if="!state.showAttentions && state.recentBookings.length > 0"
+          >
+            <div class="section-header">
+              <h5 class="section-title">
+                <i class="bi bi-clock-history"></i>
+                {{ $t('collaboratorBookingsView.recentBookings') }}
+              </h5>
+            </div>
+            <div class="">
+              <div
+                class=""
+                v-for="(booking, index) in state.recentBookings"
+                :key="`booking-${index}`"
+              >
+                <BookingDetailsCard :show="true" :booking="booking" :commerce="commerce" />
+              </div>
+            </div>
+          </div>
+      </div>
       </div>
     </div>
 
@@ -374,7 +486,17 @@ export default {
                 </div>
                 <div class="stat-content">
                   <div class="stat-value">{{ state.stats.todayCount }}</div>
-                  <div class="stat-label">{{ $t('collaboratorBookingsView.today') }}</div>
+                  <div class="stat-label">
+                    {{ $t('collaboratorBookingsView.today') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{ $t('collaboratorBookingsView.metrics.today.description') }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                    </Popper>
+                  </div>
                 </div>
               </div>
             </div>
@@ -385,7 +507,17 @@ export default {
                 </div>
                 <div class="stat-content">
                   <div class="stat-value">{{ state.stats.pendingCount }}</div>
-                  <div class="stat-label">{{ $t('collaboratorBookingsView.pending') }}</div>
+                  <div class="stat-label">
+                    {{ $t('collaboratorBookingsView.pending') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{ $t('collaboratorBookingsView.metrics.pending.description') }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                    </Popper>
+                  </div>
                 </div>
               </div>
             </div>
@@ -396,7 +528,17 @@ export default {
                 </div>
                 <div class="stat-content">
                   <div class="stat-value">{{ state.stats.upcomingWeekCount }}</div>
-                  <div class="stat-label">{{ $t('collaboratorBookingsView.upcomingWeek') }}</div>
+                  <div class="stat-label">
+                    {{ $t('collaboratorBookingsView.upcomingWeek') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{ $t('collaboratorBookingsView.metrics.upcomingWeek.description') }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                    </Popper>
+                  </div>
                 </div>
               </div>
             </div>
@@ -407,7 +549,17 @@ export default {
                 </div>
                 <div class="stat-content">
                   <div class="stat-value">{{ state.stats.totalActiveCount }}</div>
-                  <div class="stat-label">{{ $t('collaboratorBookingsView.totalActive') }}</div>
+                  <div class="stat-label">
+                    {{ $t('collaboratorBookingsView.totalActive') }}
+                    <Popper :class="'dark'" arrow hover>
+                      <template #content>
+                        <div>
+                          {{ $t('collaboratorBookingsView.metrics.totalActive.description') }}
+                        </div>
+                      </template>
+                      <i class="bi bi-info-circle-fill stat-info-icon"></i>
+                    </Popper>
+                  </div>
                 </div>
               </div>
             </div>
@@ -419,7 +571,7 @@ export default {
           <div class="row g-2 justify-content-center">
             <div class="col-auto">
               <button
-                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3"
+                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3 pulse-btn"
                 data-bs-toggle="modal"
                 data-bs-target="#modalAgenda"
                 :disabled="!state.toggles['business.bookings.manage'] || state.queues.length === 0"
@@ -427,6 +579,49 @@ export default {
                 <i class="bi bi-calendar-check-fill me-2"></i>
                 {{ $t('collaboratorBookingsView.schedules') }}
               </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Attentions (when clicking Hoje) -->
+        <div
+          class="recent-bookings-container mt-4"
+          v-if="state.showAttentions && state.recentAttentions.length > 0"
+        >
+          <div class="section-header">
+            <h5 class="section-title">
+              <i class="bi bi-clock-history"></i>
+              {{ $t('collaboratorBookingsView.todayAttentions') }}
+            </h5>
+          </div>
+          <div class="">
+            <div
+              class=""
+              v-for="(attention, index) in state.recentAttentions"
+              :key="`attention-${index}`"
+            >
+              <AttentionDetailsCard :show="true" :attention="attention" :commerce="commerce" />
+            </div>
+          </div>
+        </div>
+        <!-- Recent Bookings -->
+        <div
+          class="recent-bookings-container mt-4"
+          v-else-if="!state.showAttentions && state.recentBookings.length > 0"
+        >
+          <div class="section-header">
+            <h5 class="section-title">
+              <i class="bi bi-clock-history"></i>
+              {{ $t('collaboratorBookingsView.recentBookings') }}
+            </h5>
+          </div>
+          <div class="">
+            <div
+              class=""
+              v-for="(booking, index) in state.recentBookings"
+              :key="`booking-${index}`"
+            >
+              <BookingDetailsCard :show="true" :booking="booking" :commerce="commerce" />
             </div>
           </div>
         </div>
@@ -476,6 +671,7 @@ export default {
     </Teleport>
   </div>
 </template>
+
 <style scoped>
 /* Modern Form Controls */
 .control-box {
@@ -734,5 +930,16 @@ export default {
   .recent-bookings-container {
     margin: 1.5rem 0;
   }
+}
+
+.stat-info-icon {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.4);
+  cursor: help;
+  transition: color 0.2s ease;
+}
+
+.stat-info-icon:hover {
+  color: rgba(0, 194, 203, 0.8);
 }
 </style>

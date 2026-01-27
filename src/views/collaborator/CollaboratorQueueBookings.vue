@@ -838,7 +838,7 @@ export default {
             <div class="row g-2 justify-content-center">
               <div class="col-auto">
                 <button
-                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3"
+                  class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3 pulse-btn"
                   data-bs-toggle="modal"
                   data-bs-target="#modalAgenda"
                   :disabled="
@@ -1013,7 +1013,7 @@ export default {
           <div class="row g-2 justify-content-center">
             <div class="col-auto">
               <button
-                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3"
+                class="btn btn-lg btn-size fw-bold btn-dark rounded-pill px-5 py-3 pulse-btn"
                 data-bs-toggle="modal"
                 data-bs-target="#modalAgenda"
                 :disabled="

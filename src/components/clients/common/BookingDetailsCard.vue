@@ -202,8 +202,10 @@ export default {
           return 'bi-check-circle-fill green-icon';
         } else if (status === 'PROCESSED') {
           return 'bi-qr-code green-icon';
+        } else if (status === 'USER_CANCELED' || status === 'RESERVE_CANCELLED') {
+          return 'bi-x-circle-fill red-icon';
         } else {
-          return 'bi-calendar-fill red-icon';
+          return 'bi-calendar-fill blue-icon';
         }
       } catch (error) {
         console.error('Error classifying status:', error);
@@ -215,6 +217,7 @@ export default {
         if (!this.booking) return 'client-card-error';
         const status = this.booking?.status;
         if (status === 'CONFIRMED' || status === 'PROCESSED') return 'client-card-success';
+        if (status === 'USER_CANCELED' || status === 'RESERVE_CANCELLED') return 'client-card-error';
         if (status === 'PENDING') return 'client-card-warning';
         return 'client-card-error';
       } catch (error) {
@@ -227,6 +230,7 @@ export default {
         if (!this.booking) return 'icon-error';
         const status = this.booking?.status;
         if (status === 'CONFIRMED' || status === 'PROCESSED') return 'icon-success';
+        if (status === 'USER_CANCELED' || status === 'RESERVE_CANCELLED') return 'icon-error';
         if (status === 'PENDING') return 'icon-warning';
         return 'icon-error';
       } catch (error) {
@@ -251,7 +255,7 @@ export default {
           return this.$t('dashboard.status.confirmed') || 'Confirmado';
         } else if (status === 'PROCESSED') {
           return this.$t('dashboard.status.processed') || 'Atendido';
-        } else if (status === 'USER_CANCELED') {
+        } else if (status === 'USER_CANCELED' || status === 'RESERVE_CANCELLED') {
           return this.$t('dashboard.status.cancelled') || 'Cancelado';
         }
         return this.$t('dashboard.status.unknown') || 'Indefinido';
@@ -268,7 +272,7 @@ export default {
           return 'badge-info';
         } else if (status === 'PROCESSED') {
           return 'badge-success';
-        } else if (status === 'USER_CANCELED') {
+        } else if (status === 'USER_CANCELED' || status === 'RESERVE_CANCELLED') {
           return 'badge-danger';
         }
         return 'badge-secondary';
@@ -1313,7 +1317,6 @@ export default {
 }
 
 .services-badge {
-  flex-direction: column;
   align-items: flex-start;
   gap: 0.5rem;
 }

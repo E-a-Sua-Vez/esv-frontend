@@ -1722,6 +1722,9 @@ export default {
                           <span class="alert-text">
                             {{ $t('professionals.alreadyAssigned') || 'Profesional ya asignado' }}:
                             <strong>{{ attention.professionalName }}</strong>
+                            <span v-if="getAssignedProfessionalCommissionData().commission" class="commission-info">
+                              ({{ $t('professionals.commission') || 'Comisión' }}: <strong>{{ getAssignedProfessionalCommissionData().commission }}</strong>)
+                            </span>
                           </span>
                           <small class="alert-action">
                             {{
@@ -2768,6 +2771,16 @@ export default {
 .professional-assigned-alert strong {
   color: #0d47a1;
   font-weight: 600;
+}
+
+.professional-assigned-alert .commission-info {
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.8);
+  margin-left: 0.5rem;
+}
+
+.professional-assigned-alert .commission-info strong {
+  color: #28a745;
 }
 
 .payment-form-modern {

@@ -78,6 +78,10 @@ export default {
     const selectedIncomeIds = ref([]);
     const notes = ref('');
 
+    // Filtros para tipo de servicios
+    const includeExecutedServices = ref(true); // Incluir servicios ya ejecutados (con atención)
+    const includePendingServices = ref(true);  // Incluir servicios pendientes (solo reserva)
+
     // Modales
     const showEditModal = ref(false);
     const showConfirmModal = ref(false);
@@ -345,7 +349,7 @@ export default {
 
     const selectAll = event => {
       if (event.target.checked) {
-        selectedIncomeIds.value = unpaidIncomes.value.map(inc => inc.id);
+        selectedIncomeIds.value = getFilteredIncomes.value.map(inc => inc.id);
       } else {
         selectedIncomeIds.value = [];
       }
@@ -485,7 +489,55 @@ export default {
     const formatCurrency = amount =>
       Number(parseFloat(amount || 0).toFixed(2)).toLocaleString('de-DE');
 
-    // Función para obtener el primer día del mes actual
+    // Función para determinar el estado de la reserva/atención
+    const getIncomeStatus = (income) => {
+      if (income.attentionId) {
+        // Si tiene attentionId, es un servicio ya ejecutado
+        return {
+          type: 'executed',
+          status: 'completed',
+          icon: 'bi bi-check-circle-fill',
+          class: 'service-status-badge executed',
+          text: 'Ejecutado'
+        };
+      } else if (income.bookingId) {
+        // Si solo tiene bookingId sin attentionId, es un servicio pendiente de ejecución
+        return {
+          type: 'pending',
+          status: 'pending',
+          icon: 'bi bi-clock-fill',
+          class: 'service-status-badge pending',
+          text: 'Pendiente'
+        };
+      } else {
+        // Otros casos (paquetes, pagos directos, etc.)
+        return {
+          type: 'other',
+          status: 'other',
+          icon: 'bi bi-cash-coin',
+          class: 'service-status-badge direct',
+          text: 'Directo'
+        };
+      }
+    };
+
+    // Función para filtrar incomes según el estado de ejecución
+    const getFilteredIncomes = computed(() => {
+      return unpaidIncomes.value.filter(income => {
+        const status = getIncomeStatus(income);
+
+        // Aplicar filtros
+        if (status.type === 'executed' && !includeExecutedServices.value) {
+          return false; // Excluir servicios ejecutados si el filtro está desactivado
+        }
+
+        if (status.type === 'pending' && !includePendingServices.value) {
+          return false; // Excluir servicios pendientes si el filtro está desactivado
+        }
+
+        return true; // Incluir otros tipos y los que pasan los filtros
+      });
+    });
     const getFirstDayOfMonth = () => {
       const now = new Date();
       const year = now.getFullYear();
@@ -523,6 +575,9 @@ export default {
       unpaidIncomes,
       selectedIncomeIds,
       notes,
+      includeExecutedServices,
+      includePendingServices,
+      getFilteredIncomes,
       createdPayments,
       paidPayments,
       cancelledPayments,
@@ -542,6 +597,7 @@ export default {
       handleModalClose,
       formatDate,
       formatCurrency,
+      getIncomeStatus,
       loadPayments,
       paymentCardRefs,
       handleViewOutcome,
@@ -660,34 +716,85 @@ export default {
             </div>
           </div>
 
-          <!-- Tabla de Incomes Pendientes -->
+          <!-- Filtros de Estado de Servicios -->
+          <!-- Filtros de Servicio - Siempre visibles cuando hay unpaidIncomes -->
+          <div v-if="unpaidIncomes.length > 0" class="row mt-2 mb-3">
+            <div class="col-12">
+              <div class="filter-section-compact">
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                  <span class="fw-bold text-muted">
+                    <i class="bi bi-funnel"></i> {{ $t('commissionPayments.serviceFilters') }}:
+                  </span>
+                  <div class="d-flex gap-3 flex-wrap">
+                    <div class="form-check form-switch">
+                      <input
+                        v-model="includeExecutedServices"
+                        class="form-check-input"
+                        type="checkbox"
+                        id="includeExecuted"
+                      />
+                      <label class="form-check-label" for="includeExecuted">
+                        <span class="service-status-badge executed">
+                          <i class="bi bi-check-circle-fill"></i>
+                          {{ $t('commissionPayments.serviceStatus.executed') }}
+                        </span>
+                        <span class="ms-2">{{ $t('commissionPayments.includeExecuted') }}</span>
+                      </label>
+                    </div>
+                    <div class="form-check form-switch">
+                      <input
+                        v-model="includePendingServices"
+                        class="form-check-input"
+                        type="checkbox"
+                        id="includePending"
+                      />
+                      <label class="form-check-label" for="includePending">
+                        <span class="service-status-badge pending">
+                          <i class="bi bi-clock-fill"></i>
+                          {{ $t('commissionPayments.serviceStatus.pending') }}
+                        </span>
+                        <span class="ms-2">{{ $t('commissionPayments.includePending') }}</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contenido cuando hay unpaidIncomes -->
           <div v-if="unpaidIncomes.length > 0" class="mt-4">
+            <!-- Título con contador -->
             <h5 class="metric-card-title">
               <i class="bi bi-list-check"></i> {{ $t('commissionPayments.selectedIncomes') }}
+              <span class="badge bg-secondary ms-2">{{ getFilteredIncomes.length }}/{{ unpaidIncomes.length }}</span>
             </h5>
 
-            <div class="table-responsive">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>
-                      <input
-                        type="checkbox"
-                        @change="selectAll"
-                        :checked="
-                          selectedIncomeIds.length === unpaidIncomes.length &&
-                          unpaidIncomes.length > 0
+            <!-- Tabla cuando hay resultados filtrados -->
+            <div v-if="getFilteredIncomes.length > 0">
+              <div class="table-responsive">
+                <table class="table table-hover table-sm commission-payments-table">
+                  <thead class="table-light">
+                    <tr>
+                      <th>
+                        <input
+                          type="checkbox"
+                          @change="selectAll"
+                          :checked="
+                            selectedIncomeIds.length === getFilteredIncomes.length &&
+                          getFilteredIncomes.length > 0
                         "
                       />
                     </th>
                     <th>{{ $t('commissionPayments.date') }}</th>
                     <th>{{ $t('commissionPayments.type') }}</th>
+                    <th>{{ $t('commissionPayments.statuss') }}</th>
                     <th>{{ $t('commissionPayments.amount') }}</th>
                     <th>{{ $t('commissionPayments.commission') }}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="income in unpaidIncomes" :key="income.id">
+                  <tr v-for="income in getFilteredIncomes" :key="income.id">
                     <td>
                       <input type="checkbox" v-model="selectedIncomeIds" :value="income.id" />
                     </td>
@@ -695,6 +802,15 @@ export default {
                     <td>
                       <span class="badge bg-info">
                         {{ $t(`incomeTypes.${income.type}`) }}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        :class="`${getIncomeStatus(income).class}`"
+                        :title="getIncomeStatus(income).type === 'executed' ? $t('commissionPayments.filterHelp.executed') : getIncomeStatus(income).type === 'pending' ? $t('commissionPayments.filterHelp.pending') : $t('commissionPayments.filterHelp.direct')"
+                      >
+                        <i :class="getIncomeStatus(income).icon"></i>
+                        {{ $t(`commissionPayments.serviceStatus.${getIncomeStatus(income).type}`) }}
                       </span>
                     </td>
                     <td class="fw-bold">${{ formatCurrency(income.amount) }}</td>
@@ -734,8 +850,18 @@ export default {
                 </div>
               </div>
             </div>
+            </div>
 
-            <!-- Notas -->
+            <!-- Mensaje cuando no hay resultados filtrados -->
+            <div v-else class="text-center py-4">
+              <div class="text-muted">
+                <i class="bi bi-funnel" style="font-size: 2rem; color: #6c757d"></i>
+                <p class="mt-2 mb-0">{{ $t('commissionPayments.noFilteredResults.title') }}</p>
+                <small>{{ $t('commissionPayments.noFilteredResults.subtitle') }}</small>
+              </div>
+            </div>
+
+            <!-- Notas - Siempre visibles -->
             <div class="row mt-3">
               <div class="col-12">
                 <label class="form-label metric-card-subtitle fw-bold">
@@ -750,7 +876,7 @@ export default {
               </div>
             </div>
 
-            <!-- Botón Crear -->
+            <!-- Botón Crear - Deshabilitado cuando no hay selecciones -->
             <div class="row mt-3">
               <div class="col-12 text-end">
                 <button
@@ -1664,6 +1790,75 @@ export default {
   background-color: var(--primary-color);
   color: white;
   border-color: var(--primary-color);
+}
+
+/* Estilos para la sección de filtros */
+.filter-section-compact {
+  background: rgba(248, 249, 250, 0.8);
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.filter-section-compact .form-check {
+  margin-bottom: 0;
+}
+
+.filter-section-compact .form-check-label {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.filter-section-compact .form-check-label:hover {
+  color: #212529;
+}
+
+.service-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.filter-section-compact .service-status-badge {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
+}
+
+.service-status-badge.executed {
+  background-color: rgba(40, 167, 69, 0.15);
+  color: #155724;
+}
+
+.service-status-badge.pending {
+  background-color: rgba(255, 193, 7, 0.15);
+  color: #856404;
+}
+
+.service-status-badge.direct {
+  background-color: rgba(23, 162, 184, 0.15);
+  color: #0c5460;
+}
+
+.form-check-input:checked {
+  background-color: #00c2cb;
+  border-color: #00c2cb;
+}
+
+.form-check-input:focus {
+  border-color: rgba(0, 194, 203, 0.5);
+  box-shadow: 0 0 0 0.2rem rgba(0, 194, 203, 0.25);
 }
 
 /* Estilos para tabla compacta de pagos de comisiones */

@@ -321,6 +321,7 @@
     "type": "Tipo",
     "amount": "Monto",
     "commission": "Comisión",
+    "statuss": "Estado",
     "totalAmount": "Monto Total",
     "totalCommission": "Total Comisiones",
     "incomes": "Ingresos",
@@ -331,7 +332,6 @@
     "paid": "Pagados",
     "cancelled": "Cancelados",
     "refresh": "Actualizar",
-    "status": "Estado",
     "professional": "Profesional",
     "period": "Período",
     "createdAt": "Fecha de Creación",
@@ -400,6 +400,23 @@
       "created": "Pagos Creados",
       "paid": "Pagos Confirmados",
       "cancelled": "Pagos Cancelados"
+    },
+    "serviceFilters": "Filtros de Servicio",
+    "includeExecuted": "Incluir servicios ejecutados",
+    "includePending": "Incluir servicios pendientes",
+    "serviceStatus": {
+      "executed": "Ejecutado",
+      "pending": "Pendiente",
+      "direct": "Directo"
+    },
+    "filterHelp": {
+      "executed": "Servicios que ya fueron realizados (con atención)",
+      "pending": "Servicios que solo tienen reserva (sin atención)",
+      "direct": "Ingresos directos sin reserva"
+    },
+    "noFilteredResults": {
+      "title": "No hay servicios que coincidan con los filtros seleccionados",
+      "subtitle": "Ajusta los filtros para ver más resultados"
     },
     "messages": {
       "selectProfessional": "Seleccione un profesional para comenzar",

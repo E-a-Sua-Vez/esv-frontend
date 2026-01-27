@@ -28,7 +28,55 @@ export default {
   },
   methods: {
     closeModal() {
+      // SIMPLE como antes - solo emitir close
       this.$emit('close');
+    },
+    restoreMainModal() {
+      console.log('🔄 Restaurando modal principal...');
+      
+      const mainModal = document.querySelector('#modalAgenda');
+      if (mainModal) {
+        console.log('📍 Modal principal encontrado, restaurando...');
+        
+        // Restaurar estilos
+        mainModal.style.display = '';
+        mainModal.style.pointerEvents = '';
+        mainModal.style.opacity = '';
+        mainModal.style.visibility = '';
+        
+        // IMPORTANTE: Reactivar el modal de Bootstrap si está inactivo
+        if (!mainModal.classList.contains('show')) {
+          mainModal.classList.add('show');
+          mainModal.style.display = 'block';
+          console.log('🔄 Reactivando modal Bootstrap');
+        }
+        
+        // Asegurar que el body tenga las clases correctas para modals
+        if (!document.body.classList.contains('modal-open')) {
+          document.body.classList.add('modal-open');
+          console.log('🔄 Reactivando body modal-open');
+        }
+        
+        console.log('✅ Modal principal completamente restaurado');
+      } else {
+        console.log('⚠️ Modal principal (#modalAgenda) NO encontrado');
+      }
+      
+      // Restaurar o crear backdrop si es necesario
+      let backdrop = document.querySelector('.modal-backdrop');
+      if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop fade show';
+        document.body.appendChild(backdrop);
+        console.log('🔄 Backdrop recreado');
+      } else {
+        backdrop.style.display = '';
+        backdrop.style.visibility = '';
+        if (!backdrop.classList.contains('show')) {
+          backdrop.classList.add('show');
+        }
+        console.log('🔄 Backdrop restaurado');
+      }
     },
     handleBookingUpdated(updatedBooking) {
       this.$emit('booking-updated', updatedBooking);
@@ -36,6 +84,49 @@ export default {
     handleGetAvailableDatesByCalendarMonth(data) {
       this.$emit('getAvailableDatesByCalendarMonth', data);
     },
+  },
+  watch: {
+    show(newValue) {
+      if (newValue) {
+        console.log('📖 Ocultando modal principal');
+        const mainModal = document.querySelector('#modalAgenda');
+        if (mainModal) {
+          mainModal.style.display = 'none';
+        }
+      } else {
+        console.log('📖 Reabriendo modal principal FORZADAMENTE');  
+        // FORZAR reapertura del modal
+        setTimeout(() => {
+          const mainModal = document.querySelector('#modalAgenda');
+          if (mainModal) {
+            // Restaurar completamente
+            mainModal.style.display = 'block';
+            mainModal.classList.add('show');
+            mainModal.setAttribute('aria-modal', 'true');
+            mainModal.setAttribute('role', 'dialog');
+            mainModal.style.paddingLeft = '0px';
+            
+            // Asegurar que el body tenga las clases correctas
+            document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
+            document.body.style.paddingRight = '0px';
+            
+            // Crear o mostrar backdrop
+            let backdrop = document.querySelector('.modal-backdrop');
+            if (!backdrop) {
+              backdrop = document.createElement('div');
+              backdrop.className = 'modal-backdrop fade show';
+              document.body.appendChild(backdrop);
+            } else {
+              backdrop.style.display = 'block';
+              backdrop.classList.add('show');
+            }
+            
+            console.log('✅ Modal principal FORZADAMENTE reabierto');
+          }
+        }, 50);
+      }
+    }
   },
 };
 </script>
@@ -82,6 +173,7 @@ export default {
                 :selected-date="selectedDate"
                 @getAvailableDatesByCalendarMonth="handleGetAvailableDatesByCalendarMonth"
                 @booking-updated="handleBookingUpdated"
+                style="pointer-events: auto !important; user-select: auto !important;"
               >
               </BookingDetailsCard>
             </div>
@@ -100,8 +192,8 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 9999;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 2147483647;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -170,6 +262,29 @@ export default {
   flex: 1 1 auto !important;
   min-height: 0 !important;
   max-height: calc(90vh - 80px) !important;
+  pointer-events: auto !important;
+  user-select: auto !important;
+}
+
+.modal-body *,
+.modal-body input,
+.modal-body textarea,
+.modal-body select,
+.modal-body button {
+  pointer-events: auto !important;
+  user-select: auto !important;
+}
+
+.modal-body input[type="text"],
+.modal-body input[type="number"] {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  -webkit-touch-callout: default !important;
+  touch-action: manipulation !important;
 }
 
 /* Modal fade transition */
@@ -215,5 +330,49 @@ export default {
   .booking-details-modal-overlay {
     padding: 0;
   }
+}
+</style>
+
+<style>
+/* CSS GLOBAL ULTRA AGRESIVO PARA MODAL - SIN SCOPED */
+.booking-details-modal-overlay,
+.booking-details-modal-overlay *,
+.booking-details-modal-content,
+.booking-details-modal-content * {
+  pointer-events: auto !important;
+}
+
+.booking-details-modal-overlay input,
+.booking-details-modal-content input,
+.modal-body input {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
+  -webkit-user-select: text !important;
+  background: white !important;
+  z-index: 999999 !important;
+  border: 1px solid #ccc !important;
+  padding: 8px !important;
+}
+
+.booking-details-modal-overlay input:focus,
+.booking-details-modal-content input:focus {
+  outline: 2px solid #00c2cb !important;
+  border-color: #00c2cb !important;
+}
+
+/* Asegurar que el modal esté por encima de TODO */
+.booking-details-modal-overlay {
+  z-index: 999999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+.booking-details-modal-dialog {
+  z-index: 999999 !important;
+  position: relative !important;
 }
 </style>

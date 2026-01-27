@@ -61,7 +61,6 @@ export default {
 
         <div class="modal-body cancel-payment-modal-body">
           <Spinner :show="loading" />
-          <Alert :show="alertError !== ''" :message="alertError" />
 
           <!-- Advertencia -->
           <div class="cancel-payment-warning-card">
@@ -116,11 +115,7 @@ export default {
 
 /* Modern Header - matching product style with danger gradient */
 .cancel-payment-modal-header {
-  background: linear-gradient(
-    135deg,
-    #a52a2a 0%,
-    #dc3545 100%
-  ) !important;
+  background-color: var(--azul-turno, #004aad);
   color: white !important;
   border-bottom: none !important;
   padding: 1rem 1.25rem !important;

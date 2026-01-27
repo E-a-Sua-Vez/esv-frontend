@@ -13,6 +13,7 @@ import {
   getPendingCommerceBookingsByDate,
   transferBooking,
   editBooking,
+  getBookingDetails,
 } from '../../../application/services/booking';
 import {
   getActiveProfessionalsByCommerce,
@@ -100,11 +101,29 @@ export default {
   mounted() {
     // Asegurar que los inputs sean interactivos después de montar
     this.$nextTick(() => {
-      if (this.$refs.commissionInputRef) {
-        this.$refs.commissionInputRef.style.pointerEvents = 'auto';
-        this.$refs.commissionInputRef.style.userSelect = 'text';
-      }
+      this.ensureInputsAreInteractive();
     });
+
+    // Inicializar comisión desde datos guardados si existe profesional asignado
+    // Primero intentar desde campos directos del booking
+    if (this.booking?.professionalName && this.booking?.professionalCommissionValue) {
+      this.professionalCommission = this.booking.professionalCommissionValue;
+      this.commissionManuallyEdited = true; // Marcar como editada para mantener la prioridad
+    }
+    // Fallback: desde confirmationData
+    else if (this.booking?.professionalName && this.booking?.confirmationData?.professionalCommissionValue) {
+      this.professionalCommission = this.booking.confirmationData.professionalCommissionValue;
+      this.commissionManuallyEdited = true; // Marcar como editada para mantener la prioridad
+    }
+
+    // Fix específico para el input de comisión con delay
+    setTimeout(() => {
+      if (this.$refs.commissionInputRef) {
+        this.$refs.commissionInputRef.style.setProperty('pointer-events', 'auto', 'important');
+        this.$refs.commissionInputRef.style.setProperty('user-select', 'text', 'important');
+        this.$refs.commissionInputRef.style.setProperty('cursor', 'text', 'important');
+      }
+    }, 300);
   },
   beforeMount() {
     this.paymentTypes = getPaymentTypes();
@@ -150,8 +169,15 @@ export default {
         processPaymentNow: false,
       };
     },
-    showProfessionalDetails() {
+    async showProfessionalDetails() {
       this.extendedProfessionalEntity = !this.extendedProfessionalEntity;
+      
+      // Consultar datos frescos del booking cuando se abre el collapsible
+      if (this.extendedProfessionalEntity) {
+        console.log('[BookingDetailsCard] Opening professional section - refreshing booking data');
+        await this.refreshBookingDataWithoutOverriding();
+      }
+      
       // Forzar focus en el input cuando se muestra la sección
       if (this.extendedProfessionalEntity) {
         this.$nextTick(() => {
@@ -181,22 +207,70 @@ export default {
         }
       }
     },
+    handleProfessionalIdChanged(professionalId) {
+      // Cuando cambia el ID del profesional seleccionado en el dropdown
+      if (professionalId) {
+        // Buscar el profesional completo en la lista
+        const professional = this.professionals.find(p => p.id === professionalId);
+        if (professional) {
+          console.log('[BookingDetailsCard] Professional changed via dropdown:', professional);
+          this.handleProfessionalSelected(professional);
+        }
+      } else {
+        // Si se deselecciona el profesional
+        console.log('[BookingDetailsCard] Professional deselected via dropdown');
+        this.selectedProfessional = null;
+        if (!this.commissionManuallyEdited) {
+          this.professionalCommission = null;
+        }
+      }
+    },
     handleCommissionInput(event) {
       // Marcar que el usuario ha editado manualmente la comisión
       this.commissionManuallyEdited = true;
+
       // Permitir escribir libremente, solo validar formato básico
       let value = event.target.value;
+
       // Remover caracteres no numéricos excepto punto decimal
       value = value.replace(/[^0-9.]/g, '');
+
       // Asegurar que solo haya un punto decimal
       const parts = value.split('.');
       if (parts.length > 2) {
         value = parts[0] + '.' + parts.slice(1).join('');
       }
-      // Actualizar el valor solo si cambió (para evitar loops)
-      if (this.professionalCommission !== value) {
-        this.professionalCommission = value;
-      }
+
+      // Actualizar el valor directamente
+      this.professionalCommission = value;
+    },
+    handleCommissionFocus(event) {
+      console.log('🔥 Commission input focus event:', event);
+      // Aplicar los mismos fixes que funcionaron en los inputs de prueba
+      const input = event.target;
+
+      // Forzar habilitación completa
+      input.disabled = false;
+      input.readOnly = false;
+      input.removeAttribute('disabled');
+      input.removeAttribute('readonly');
+      input.removeAttribute('aria-disabled');
+
+      // Aplicar estilos ultra-agresivos que funcionaron
+      input.style.setProperty('pointer-events', 'auto', 'important');
+      input.style.setProperty('user-select', 'text', 'important');
+      input.style.setProperty('-webkit-user-select', 'text', 'important');
+      input.style.setProperty('cursor', 'text', 'important');
+      input.style.setProperty('background', 'white', 'important');
+      input.style.setProperty('z-index', '999999999', 'important');
+      input.style.setProperty('position', 'relative', 'important');
+      input.style.setProperty('opacity', '1', 'important');
+      input.style.setProperty('visibility', 'visible', 'important');
+
+      console.log('✅ Fixes aplicados al input de comisión');
+    },
+    ensureInputsAreInteractive() {
+      // Método completamente vacío para evitar errores
     },
     handleInputClick(event) {
       // Solo detener propagación, no prevenir el comportamiento por defecto
@@ -227,10 +301,85 @@ export default {
     // PROFESSIONAL PAYMENT COMMISSION DATA
     getAssignedProfessionalCommissionData() {
       if (!this.booking?.professionalName) {
-        return { name: null, commission: null, suggestedAmount: 0 };
+        return { id: null, name: null, commission: null, commissionType: null, suggestedAmount: 0 };
       }
 
-      // 1. Primero intentar usar datos de confirmationData (guardados al asignar profesional)
+      console.log('[getAssignedProfessionalCommissionData] Debug info:', {
+        commissionManuallyEdited: this.commissionManuallyEdited,
+        professionalCommission: this.professionalCommission,
+        'booking.professionalCommissionType': this.booking?.professionalCommissionType,
+        'booking.professionalCommissionValue': this.booking?.professionalCommissionValue,
+        'booking.confirmationData': this.booking?.confirmationData,
+        'booking.confirmationData.professionalCommissionValue': this.booking?.confirmationData?.professionalCommissionValue,
+        'selectedProfessional': this.selectedProfessional?.financialInfo
+      });
+
+      // Si el usuario ha editado manualmente la comisión, usar ese valor
+      if (this.commissionManuallyEdited && this.professionalCommission !== null && this.professionalCommission !== undefined && this.professionalCommission !== '') {
+        const manualCommissionValue = typeof this.professionalCommission === 'string' 
+          ? parseFloat(this.professionalCommission) 
+          : Number(this.professionalCommission);
+        
+        if (manualCommissionValue > 0) {
+          let suggestedAmount = 0;
+          const commissionDisplay = `${manualCommissionValue}%`;
+
+          // Calculate percentage of payment amount if available
+          if (this.newConfirmationData.paymentAmount) {
+            suggestedAmount = Math.round(
+              (this.newConfirmationData.paymentAmount * manualCommissionValue) / 100,
+            );
+          }
+
+          console.log('[getAssignedProfessionalCommissionData] Using manual commission:', commissionDisplay);
+
+          return {
+            id: this.selectedProfessional?.id || this.booking.professionalId,
+            name: this.booking.professionalName,
+            commission: commissionDisplay,
+            commissionType: 'PERCENTAGE',
+            suggestedAmount,
+          };
+        }
+      }
+
+      // 1. Primero intentar usar datos guardados directamente en el booking
+      if (this.booking?.professionalCommissionType && this.booking?.professionalCommissionValue) {
+        const { professionalCommissionType, professionalCommissionValue } = this.booking;
+        let suggestedAmount = 0;
+        let commissionDisplay = '';
+
+        if (professionalCommissionValue && professionalCommissionValue > 0) {
+          if (professionalCommissionType === 'PERCENTAGE') {
+            commissionDisplay = `${professionalCommissionValue}%`;
+            // Calculate percentage of payment amount if available
+            if (this.newConfirmationData.paymentAmount) {
+              suggestedAmount = Math.round(
+                (this.newConfirmationData.paymentAmount * professionalCommissionValue) / 100,
+              );
+            } else if (this.booking.professionalCommissionAmount) {
+              suggestedAmount = this.booking.professionalCommissionAmount;
+            }
+          } else {
+            commissionDisplay = `${professionalCommissionValue} ${
+              this.commerce?.currency || 'BRL'
+            }`;
+            suggestedAmount = Number(professionalCommissionValue);
+          }
+        }
+
+        console.log('[getAssignedProfessionalCommissionData] Using direct booking commission:', commissionDisplay);
+
+        return {
+          id: this.selectedProfessional?.id || this.booking.professionalId,
+          name: this.booking.professionalName,
+          commission: commissionDisplay,
+          commissionType: this.booking.professionalCommissionType || 'PERCENTAGE',
+          suggestedAmount,
+        };
+      }
+
+      // 2. Fallback: intentar usar datos de confirmationData (guardados al asignar profesional)
       if (
         this.booking?.confirmationData?.professionalCommissionType &&
         this.booking?.confirmationData?.professionalCommissionValue
@@ -244,9 +393,9 @@ export default {
           if (professionalCommissionType === 'PERCENTAGE') {
             commissionDisplay = `${professionalCommissionValue}%`;
             // Calculate percentage of payment amount if available
-            if (this.newPaymentConfirmationData.paymentAmount) {
+            if (this.newConfirmationData.paymentAmount) {
               suggestedAmount = Math.round(
-                (this.newPaymentConfirmationData.paymentAmount * professionalCommissionValue) / 100,
+                (this.newConfirmationData.paymentAmount * professionalCommissionValue) / 100,
               );
             } else if (this.booking.confirmationData?.professionalCommissionAmount) {
               suggestedAmount = this.booking.confirmationData.professionalCommissionAmount;
@@ -259,14 +408,18 @@ export default {
           }
         }
 
+        console.log('[getAssignedProfessionalCommissionData] Using saved commission from confirmationData:', commissionDisplay);
+
         return {
+          id: this.selectedProfessional?.id || this.booking.professionalId,
           name: this.booking.professionalName,
           commission: commissionDisplay,
+          commissionType: professionalCommissionType,
           suggestedAmount,
         };
       }
 
-      // 2. Segundo, intentar usar selectedProfessional (si está disponible)
+      // 3. Fallback: usar selectedProfessional (si está disponible)
       if (this.selectedProfessional?.financialInfo) {
         const { commissionType, commissionValue } = this.selectedProfessional.financialInfo;
         let suggestedAmount = 0;
@@ -276,9 +429,9 @@ export default {
           if (commissionType === 'PERCENTAGE') {
             commissionDisplay = `${commissionValue}%`;
             // Calculate percentage of payment amount if available
-            if (this.newPaymentConfirmationData.paymentAmount) {
+            if (this.newConfirmationData.paymentAmount) {
               suggestedAmount = Math.round(
-                (this.newPaymentConfirmationData.paymentAmount * commissionValue) / 100,
+                (this.newConfirmationData.paymentAmount * commissionValue) / 100,
               );
             }
           } else {
@@ -287,9 +440,13 @@ export default {
           }
         }
 
+        console.log('[getAssignedProfessionalCommissionData] Using selectedProfessional default commission:', commissionDisplay);
+
         return {
+          id: this.selectedProfessional.id,
           name: this.booking.professionalName,
           commission: commissionDisplay,
+          commissionType: commissionType,
           suggestedAmount,
         };
       }
@@ -305,9 +462,12 @@ export default {
       }
 
       // Fallback: solo el nombre (sin comisión)
+      console.log('[getAssignedProfessionalCommissionData] No commission data found, using fallback');
       return {
+        id: this.selectedProfessional?.id || this.booking.professionalId,
         name: this.booking.professionalName,
         commission: null,
+        commissionType: null,
         suggestedAmount: 0,
       };
     },
@@ -340,6 +500,20 @@ export default {
 
       this.loadingProfessionalData = true;
       try {
+        // Cargar comisión guardada si hay profesional asignado
+        // Primero intentar desde campos directos del booking
+        if (this.booking?.professionalName && this.booking?.professionalCommissionValue) {
+          this.professionalCommission = this.booking.professionalCommissionValue;
+          this.commissionManuallyEdited = true; // Marcar como editada para mantener prioridad
+          console.log('[BookingDetailsCard] Loaded saved commission from direct fields:', this.professionalCommission);
+        }
+        // Fallback: desde confirmationData
+        else if (this.booking?.professionalName && this.booking?.confirmationData?.professionalCommissionValue) {
+          this.professionalCommission = this.booking.confirmationData.professionalCommissionValue;
+          this.commissionManuallyEdited = true; // Marcar como editada para mantener prioridad
+          console.log('[BookingDetailsCard] Loaded saved commission from confirmationData:', this.professionalCommission);
+        }
+
         // Solo cargar si existe professionalId pero no selectedProfessional
         if (
           this.booking?.professionalId &&
@@ -379,7 +553,116 @@ export default {
         this.loadingProfessionalData = false;
       }
     },
-    goAssignProfessional() {
+    async refreshBookingData() {
+      if (!this.booking?.id) {
+        console.log('[BookingDetailsCard] Cannot refresh - no booking ID');
+        return;
+      }
+      
+      try {
+        console.log('[BookingDetailsCard] Refreshing booking data for ID:', this.booking.id);
+        this.loading = true; // Show loading indicator
+        const freshBooking = await getBookingDetails(this.booking.id);
+        
+        console.log('[BookingDetailsCard] Fresh booking data received:', freshBooking);
+        
+        if (freshBooking) {
+          // Update booking data with fresh information
+          this.booking.professionalId = freshBooking.professionalId;
+          this.booking.professionalName = freshBooking.professionalName;
+          this.booking.professionalCommissionType = freshBooking.professionalCommissionType;
+          this.booking.professionalCommissionValue = freshBooking.professionalCommissionValue;
+          this.booking.professionalCommissionAmount = freshBooking.professionalCommissionAmount;
+          this.booking.professionalCommissionNotes = freshBooking.professionalCommissionNotes;
+          
+          // Also update confirmationData if it exists
+          if (freshBooking.confirmationData) {
+            this.booking.confirmationData = freshBooking.confirmationData;
+          }
+          
+          console.log('[BookingDetailsCard] Booking data refreshed:', {
+            professionalId: this.booking.professionalId,
+            professionalName: this.booking.professionalName,
+            professionalCommissionType: this.booking.professionalCommissionType,
+            professionalCommissionValue: this.booking.professionalCommissionValue
+          });
+          
+          // Load fresh commission data
+          if (this.booking.professionalCommissionValue) {
+            this.professionalCommission = this.booking.professionalCommissionValue;
+            this.commissionManuallyEdited = true;
+            console.log('[BookingDetailsCard] Updated commission from fresh data:', this.professionalCommission);
+          }
+          
+          // Emit event to notify parent component of data changes
+          this.$emit('booking-updated', this.booking);
+          
+        } else {
+          console.warn('[BookingDetailsCard] No fresh booking data received');
+        }
+      } catch (error) {
+        console.error('[BookingDetailsCard] Error refreshing booking data:', error);
+        console.error('[BookingDetailsCard] Error details:', error.message, error.stack);
+      } finally {
+        this.loading = false; // Hide loading indicator
+      }
+    },
+    async refreshBookingDataWithoutOverriding() {
+      if (!this.booking?.id) {
+        console.log('[BookingDetailsCard] Cannot refresh - no booking ID');
+        return;
+      }
+      
+      try {
+        console.log('[BookingDetailsCard] Refreshing booking data (without overriding user values) for ID:', this.booking.id);
+        this.loading = true;
+        const freshBooking = await getBookingDetails(this.booking.id);
+        
+        console.log('[BookingDetailsCard] Fresh booking data received:', freshBooking);
+        
+        if (freshBooking) {
+          // Update booking data with fresh information
+          this.booking.professionalId = freshBooking.professionalId;
+          this.booking.professionalName = freshBooking.professionalName;
+          this.booking.professionalCommissionType = freshBooking.professionalCommissionType;
+          this.booking.professionalCommissionValue = freshBooking.professionalCommissionValue;
+          this.booking.professionalCommissionAmount = freshBooking.professionalCommissionAmount;
+          this.booking.professionalCommissionNotes = freshBooking.professionalCommissionNotes;
+          
+          // Also update confirmationData if it exists
+          if (freshBooking.confirmationData) {
+            this.booking.confirmationData = freshBooking.confirmationData;
+          }
+          
+          console.log('[BookingDetailsCard] Booking data refreshed:', {
+            professionalId: this.booking.professionalId,
+            professionalName: this.booking.professionalName,
+            professionalCommissionType: this.booking.professionalCommissionType,
+            professionalCommissionValue: this.booking.professionalCommissionValue
+          });
+          
+          // NO cargar comisión si el usuario ya editó manualmente
+          if (!this.commissionManuallyEdited && this.booking.professionalCommissionValue) {
+            this.professionalCommission = this.booking.professionalCommissionValue;
+            console.log('[BookingDetailsCard] Updated commission from fresh data (not manually edited):', this.professionalCommission);
+          } else if (this.commissionManuallyEdited) {
+            console.log('[BookingDetailsCard] NOT updating commission - user has manually edited it');
+          }
+          
+          // Emit event to notify parent component of data changes
+          this.$emit('booking-updated', this.booking);
+          
+        } else {
+          console.warn('[BookingDetailsCard] No fresh booking data received');
+        }
+      } catch (error) {
+        console.error('[BookingDetailsCard] Error refreshing booking data:', error);
+        console.error('[BookingDetailsCard] Error details:', error.message, error.stack);
+      } finally {
+        this.loading = false;
+      }
+    },
+    async goAssignProfessional() {
       if (!this.selectedProfessional) {
         this.alertError =
           this.$t('professionals.selectProfessionalFirst') || 'Por favor seleccione un profesional';
@@ -535,6 +818,7 @@ export default {
       }
       try {
         this.loading = true;
+        this.alertError = '';
         if (this.booking && this.booking.id) {
           if (this.validateConfirm(this.newConfirmationData)) {
             const body = {
@@ -544,15 +828,29 @@ export default {
                 ...this.newConfirmationData,
               },
             };
-            await confirmBooking(this.booking.id, body);
+            console.log('[BookingDetailsCard] Confirming booking payment:', this.booking.id, body);
+            const updatedBooking = await confirmBooking(this.booking.id, body);
+            
+            // Emit event to refresh the booking list - let parent component handle the update
+            if (updatedBooking) {
+              console.log('[BookingDetailsCard] Booking updated after confirmation:', updatedBooking);
+              // Emit event with the updated booking data to parent component
+              this.$emit('booking-updated', updatedBooking);
+            }
+            
+            // Close the payment modal after successful confirmation
+            this.extendedPaymentEntity = false;
+            this.goToConfirm1 = false;
+            this.goToConfirm2 = false;
+            
+            console.log('[BookingDetailsCard] Booking payment confirmed successfully');
           }
         }
         this.loading = false;
-        this.goToConfirm1 = false;
-        this.goToConfirm2 = false;
       } catch (error) {
         this.loading = false;
         this.alertError = error.message;
+        console.error('[BookingDetailsCard] Error confirming booking payment:', error);
       }
     },
     async toTransfer() {
@@ -798,13 +1096,19 @@ export default {
     cancelCancel() {
       this.goToCancel = false;
     },
-    goConfirm1() {
+    async goConfirm1() {
+      // Refresh booking data to get latest commission information
+      await this.refreshBookingData();
+      
       this.goToConfirm1 = !this.goToConfirm1;
     },
     confirmCancel1() {
       this.goToConfirm1 = false;
     },
-    goConfirm2() {
+    async goConfirm2() {
+      // Refresh booking data to get latest commission information
+      await this.refreshBookingData();
+      
       this.goToConfirm2 = !this.goToConfirm2;
     },
     confirmCancel2() {
@@ -899,31 +1203,45 @@ export default {
     getStatusIcon() {
       if (this.booking.status === 'PENDING') return 'bi bi-clock-fill';
       if (this.booking.status === 'CONFIRMED') return 'bi bi-check-circle-fill';
-      if (this.booking.status === 'CANCELLED') return 'bi bi-x-circle-fill';
+      if (this.booking.status === 'CANCELLED' || this.booking.status === 'RESERVE_CANCELLED') return 'bi bi-x-circle-fill';
       return 'bi bi-calendar-check-fill';
     },
     getStatusIconClass() {
       if (this.booking.status === 'CONFIRMED') return 'icon-success';
       if (this.booking.status === 'PENDING') return 'icon-warning';
-      if (this.booking.status === 'CANCELLED') return 'icon-error';
+      if (this.booking.status === 'CANCELLED' || this.booking.status === 'RESERVE_CANCELLED') return 'icon-error';
       return 'icon-info';
     },
     getStatusTooltip() {
       if (this.booking.status === 'PENDING') return 'Reserva pendente';
       if (this.booking.status === 'CONFIRMED') return 'Reserva confirmada';
-      if (this.booking.status === 'CANCELLED') return 'Reserva cancelada';
+      if (this.booking.status === 'CANCELLED' || this.booking.status === 'RESERVE_CANCELLED') return 'Reserva cancelada';
       return 'Estado da reserva';
     },
     getCardTypeClass() {
       if (this.booking.status === 'CONFIRMED') return 'booking-card-success';
       if (this.booking.status === 'PENDING') return 'booking-card-warning';
-      if (this.booking.status === 'CANCELLED') return 'booking-card-error';
+      if (this.booking.status === 'CANCELLED' || this.booking.status === 'RESERVE_CANCELLED') return 'booking-card-error';
       return 'booking-card-info';
     },
   },
   watch: {
     booking: {
       handler(newVal) {
+        // Cargar comisión guardada si hay profesional asignado
+        // Primero intentar desde campos directos del booking
+        if (newVal && newVal.professionalName && newVal.professionalCommissionValue) {
+          this.professionalCommission = newVal.professionalCommissionValue;
+          this.commissionManuallyEdited = true; // Marcar como editada para mantener prioridad
+          console.log('[BookingDetailsCard] Loaded commission from direct booking fields:', this.professionalCommission);
+        } 
+        // Fallback: cargar desde confirmationData
+        else if (newVal && newVal.professionalName && newVal.confirmationData?.professionalCommissionValue) {
+          this.professionalCommission = newVal.confirmationData.professionalCommissionValue;
+          this.commissionManuallyEdited = true; // Marcar como editada para mantener prioridad
+          console.log('[BookingDetailsCard] Loaded commission from booking confirmationData:', this.professionalCommission);
+        }
+        
         // Auto-cargar datos del profesional si es necesario
         if (newVal && newVal.professionalId && !this.selectedProfessional) {
           this.$nextTick(() => {
@@ -952,7 +1270,7 @@ export default {
 </script>
 
 <template>
-  <div v-if="show && booking">
+  <div v-if="show && booking" data-booking-component="BookingDetailsCard">
     <!-- Card view - hidden when details are already opened (modal mode) -->
     <div
       v-if="!detailsOpened"
@@ -1081,7 +1399,7 @@ export default {
                     booking.status === 'USER_CANCELED' ||
                     booking.cancelled ||
                     isBookingProcessed ||
-                    (togglesLoaded && !toggles['collaborator.bookings.cancel'])
+                    (togglesLoaded && !toggles['collaborator.bookings.cancel'] && !toggles['business.bookings.manage'])
                   "
                   title="Cancelar reserva"
                 >
@@ -1314,19 +1632,9 @@ export default {
           class="attention-confirmation-badges"
           v-if="booking.confirmed === true && booking.confirmationData"
         >
-          <div class="booking-confirmation-header">
+          <div class="attention-confirmation-header">
             <i class="bi bi-check-circle-fill"></i>
-            <span>{{ $t('collaboratorBookingsView.confirmData') }}</span>
-            <span
-              v-if="booking.confirmationData.paid === true"
-              class="booking-badge-modern booking-badge-secondary ms-2"
-            >
-              <i class="bi bi-cash-coin"></i>
-              {{
-                $t('collaboratorBookingsView.message.7.title') ||
-                $t('collaboratorBookingsView.paymentConfirm')
-              }}
-            </span>
+            <span>{{ $t('collaboratorBookingsView.paymentData') || 'Dados de Confirmação' }}</span>
           </div>
           <!-- Payment Details with Inline Labels Style -->
           <div class="attention-context-info-compact" v-if="booking.confirmationData">
@@ -1461,7 +1769,7 @@ export default {
             v-if="
               getActiveFeature(commerce, 'booking-confirm', 'PRODUCT') &&
               toggles &&
-              toggles['collaborator.bookings.confirm'] &&
+              (toggles['collaborator.bookings.confirm'] || toggles['business.bookings.manage']) &&
               booking.status !== 'USER_CANCELED' &&
               !booking.cancelled &&
               !isBookingProcessed
@@ -1469,7 +1777,7 @@ export default {
             class="attention-action-tab"
             :class="{ 'booking-action-tab-active': extendedPaymentEntity }"
             @click.prevent="showPaymentDetails()"
-            :disabled="isBookingCancelledOrProcessed || booking.confirmed"
+            :disabled="isBookingCancelledOrProcessed"
           >
             <i class="bi bi-cash-coin"></i>
             <span>{{ $t('collaboratorBookingsView.paymentConfirm') }}</span>
@@ -1533,7 +1841,7 @@ export default {
               extendedPaymentEntity &&
               getActiveFeature(commerce, 'booking-confirm', 'PRODUCT') &&
               toggles &&
-              toggles['collaborator.bookings.confirm']
+              (toggles['collaborator.bookings.confirm'] || toggles['business.bookings.manage'])
             "
             class="attention-action-section"
           >
@@ -1545,6 +1853,7 @@ export default {
                 </div>
                 <PaymentForm
                   :id="booking.id"
+                  entity-type="booking"
                   :commerce="commerce"
                   :client-id="booking.clientId"
                   :service-id="
@@ -1559,11 +1868,14 @@ export default {
                   "
                   :errors-add="errorsAdd"
                   :receive-data="receiveData"
+                  :professional-id="getAssignedProfessionalCommissionData().id"
                   :professional-name="getAssignedProfessionalCommissionData().name"
                   :professional-commission="getAssignedProfessionalCommissionData().commission"
+                  :professional-commission-type="getAssignedProfessionalCommissionData().commissionType"
                   :suggested-commission-amount="
                     getAssignedProfessionalCommissionData().suggestedAmount
                   "
+                  :existing-confirmation-data="booking.confirmationData"
                 >
                 </PaymentForm>
                 <div class="booking-action-buttons">
@@ -1574,7 +1886,7 @@ export default {
                       isBookingCancelledOrProcessed ||
                       booking.status === 'CONFIRMED' ||
                       booking.confirmed ||
-                      (togglesLoaded && !toggles['collaborator.bookings.confirm'])
+                      (togglesLoaded && !toggles['collaborator.bookings.confirm'] && !toggles['business.bookings.manage'])
                     "
                   >
                     <i class="bi bi-person-check-fill"></i>
@@ -1585,11 +1897,11 @@ export default {
                   :show="goToConfirm2"
                   :yes-disabled="
                     isBookingCancelledOrProcessed ||
-                    (togglesLoaded && !toggles['collaborator.bookings.confirm'])
+                    (togglesLoaded && !toggles['collaborator.bookings.confirm'] && !toggles['business.bookings.manage'])
                   "
                   :no-disabled="
                     isBookingCancelledOrProcessed ||
-                    (togglesLoaded && !toggles['collaborator.bookings.confirm'])
+                    (togglesLoaded && !toggles['collaborator.bookings.confirm'] && !toggles['business.bookings.manage'])
                   "
                   @actionYes="confirm()"
                   @actionNo="confirmCancel2()"
@@ -1627,6 +1939,9 @@ export default {
                     <span class="alert-text">
                       {{ $t('professionals.alreadyAssigned') || 'Profesional ya asignado' }}:
                       <strong>{{ booking.professionalName }}</strong>
+                      <span v-if="getAssignedProfessionalCommissionData().commission" class="commission-info">
+                        ({{ $t('professionals.commission') || 'Comisión' }}: <strong>{{ getAssignedProfessionalCommissionData().commission }}</strong>)
+                      </span>
                     </span>
                     <small class="alert-action">
                       {{
@@ -1639,10 +1954,12 @@ export default {
                       $t('professionals.selectProfessional')
                     }}</label>
                     <ProfessionalSelector
+                      :model-value="booking?.professionalId"
                       :professionals="professionals"
                       :filter-by-service="booking.servicesId"
                       :show-commission="false"
                       @professional-selected="handleProfessionalSelected"
+                      @update:model-value="handleProfessionalIdChanged"
                     />
                   </div>
                   <div
@@ -1654,30 +1971,33 @@ export default {
                     style="position: relative; z-index: 2; pointer-events: auto;"
                   >
                     <label class="payment-form-label">{{ $t('professionals.commission') }}</label>
-                    <div class="d-flex align-items-center gap-2">
-                      <input
-                        ref="commissionInputRef"
-                        v-model="professionalCommission"
-                        min="1"
-                        max="50"
-                        type="text"
-                        class="payment-form-input commission-input-fix"
-                        :placeholder="getSuggestedCommission()"
-                        @input="handleCommissionInput"
-                        :value="professionalCommission"
-                      />
-                      <span class="text-muted">
-                        {{
-                          selectedProfessional.financialInfo?.commissionType === 'PERCENTAGE'
-                            ? '%'
-                            : commerce.currency || 'BRL'
-                        }}
-                      </span>
-                    </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <!-- Input de comisión restaurado -->
+                        <input
+                          id="professional-commission-input"
+                          ref="commissionInputRef"
+                          type="text"
+                          v-model="professionalCommission"
+                          :placeholder="getSuggestedCommission()"
+                          autocomplete="off"
+                          class="commission-input payment-form-select"
+                          @input="commissionManuallyEdited = true"
+                          @click.stop
+                          @mousedown.stop
+                          @focus="handleCommissionFocus"
+                        />
+                        <span class="text-muted commission-unit">
+                          {{
+                            selectedProfessional.financialInfo?.commissionType === 'PERCENTAGE'
+                              ? '%'
+                              : commerce.currency || 'BRL'
+                          }}
+                        </span>
+                      </div>
                     <!-- Warning about suggested commission -->
-                    <div v-if="getSuggestedCommission()" class="alert alert-warning mt-2">
+                    <div v-if="getSuggestedCommission()" class="alert alert-warning mt-2 commission-warning">
                       <i class="bi bi-info-circle me-2"></i>
-                      <span>{{ $t('professionals.suggestedCommission') }}: {{ getSuggestedCommission() }}</span>
+                      <span>{{ $t('professionals.suggestedCommission') }}: <strong>{{ getSuggestedCommission() }}</strong></span>
                       <Popper :class="'dark'" arrow hover>
                         <template #content>
                           <div>
@@ -1705,10 +2025,11 @@ export default {
                     class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
                     @click="goAssignProfessional()"
                     :disabled="
-                      !selectedProfessional || isBookingCancelledOrProcessed
+                      !selectedProfessional || isBookingCancelledOrProcessed || loading
                     "
                   >
-                    <i class="bi bi-person-check-fill"></i>
+                    <i v-if="loading" class="bi bi-arrow-clockwise spinner-icon"></i>
+                    <i v-else class="bi bi-person-check-fill"></i>
                     {{ $t('professionals.assignProfessional') }}
                   </button>
                 </div>
@@ -1788,7 +2109,7 @@ export default {
                         !queueToTransfer ||
                         loading ||
                         isBookingCancelledOrProcessed ||
-                        (togglesLoaded && !toggles['collaborator.bookings.transfer'])
+                        (togglesLoaded && !toggles['collaborator.bookings.transfer'] && !toggles['business.bookings.manage'])
                       "
                     >
                       <i class="bi bi-person-check-fill"></i>
@@ -1799,11 +2120,11 @@ export default {
                     :show="goToTransfer"
                     :yes-disabled="
                       isBookingCancelledOrProcessed ||
-                      (togglesLoaded && !toggles['collaborator.bookings.transfer'])
+                      (togglesLoaded && !toggles['collaborator.bookings.transfer'] && !toggles['business.bookings.manage'])
                     "
                     :no-disabled="
                       isBookingCancelledOrProcessed ||
-                      (togglesLoaded && !toggles['collaborator.bookings.transfer'])
+                      (togglesLoaded && !toggles['collaborator.bookings.transfer'] && !toggles['business.bookings.manage'])
                     "
                     @actionYes="transfer()"
                     @actionNo="cancelTransfer()"
@@ -2362,7 +2683,7 @@ export default {
   letter-spacing: -0.01em;
 }
 
-.booking-confirmation-header i {
+.attention-confirmation-header i {
   color: #00c2cb;
   font-size: 1rem;
 }
@@ -2842,13 +3163,14 @@ export default {
 .info-badge {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.625rem;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
   background: rgba(0, 194, 203, 0.08);
   border: 1px solid rgba(0, 194, 203, 0.15);
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   transition: all 0.2s ease;
+  line-height: 1.2;
 }
 
 .info-badge:hover {
@@ -2857,7 +3179,7 @@ export default {
 }
 
 .info-badge i {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--azul-turno);
 }
 
@@ -2869,6 +3191,35 @@ export default {
 .badge-value {
   font-weight: 700;
   color: #000000;
+}
+
+.service-tag {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  background: rgba(0, 194, 203, 0.15);
+  border: 1px solid rgba(0, 194, 203, 0.25);
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--azul-turno);
+  margin-left: 0.25rem;
+  line-height: 1;
+}
+
+.service-tag:first-child {
+  margin-left: 0;
+}
+
+.services-badge {
+  align-items: center;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.services-badge .badge-label {
+  margin-right: 0.5rem;
+  flex-shrink: 0;
 }
 
 /* Metadata Section */
@@ -3269,6 +3620,16 @@ export default {
   font-weight: 600;
 }
 
+.professional-assigned-alert .commission-info {
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.8);
+  margin-left: 0.5rem;
+}
+
+.professional-assigned-alert .commission-info strong {
+  color: #28a745;
+}
+
 /* Payment Form Styles - Para formulario de profesionales */
 .payment-form-modern {
   display: flex;
@@ -3440,5 +3801,160 @@ export default {
   cursor: text !important;
   -webkit-touch-callout: default !important;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+}
+
+/* Fix específico para inputs dentro del modal */
+.booking-details-modal-overlay input,
+.booking-details-modal-overlay textarea,
+.booking-details-modal-overlay select {
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  cursor: text !important;
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+/* Fix para inputs de tipo number que se bloquean */
+input[type="number"] {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
+  -moz-appearance: textfield !important;
+}
+
+/* Remover flechas por defecto de inputs number */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+/* Asegurar que el formulario de pago no bloquee inputs */
+.payment-form-modern,
+.payment-form-modern *,
+.payment-form-content,
+.payment-form-content *,
+.attention-action-section,
+.attention-action-section * {
+  pointer-events: auto !important;
+}
+
+.payment-form-modern input,
+.payment-form-content input,
+.attention-action-section input {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+/* Fix universal para todos los inputs dentro de modales y formularios de booking */
+.booking-details-modal-overlay input,
+.booking-details-modal-overlay textarea,
+.booking-details-modal-overlay select,
+.booking-details-modal-content input,
+.booking-details-modal-content textarea,
+.booking-details-modal-content select,
+.booking-row-card input,
+.booking-row-card textarea,
+.booking-row-card select {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  background: white !important;
+  z-index: 999999 !important;
+  position: relative !important;
+}
+
+/* Asegurar que los eventos de click y focus funcionen */
+.booking-details-modal-overlay input:focus,
+.booking-details-modal-content input:focus,
+.booking-row-card input:focus {
+  outline: 2px solid #00c2cb !important;
+  outline-offset: 2px !important;
+  border-color: #00c2cb !important;
+  pointer-events: auto !important;
+}
+
+/* Fix para inputs de tipo number - remover completamente las flechas */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+  display: none !important;
+}
+
+/* Convertir inputs number problemáticos en inputs text visualmente */
+input[type="number"] {
+  -moz-appearance: textfield !important;
+}
+
+/* Spinner animation for loading buttons */
+.spinner-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>
+
+<style>
+/* Estilos globales para fix de inputs en modales (sin scoped) */
+.booking-details-modal-overlay *,
+.booking-details-modal-content *,
+.modal-dialog * {
+  pointer-events: auto !important;
+}
+
+.booking-details-modal-overlay input,
+.booking-details-modal-content input,
+.modal-dialog input {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
+  -webkit-user-select: text !important;
+}
+</style>
+
+<style>
+/* SOLO CSS ESPECIFICO PARA INPUTS EN MODALES - SIN SCOPED */
+.booking-details-modal-overlay input,
+.booking-details-modal-content input,
+.modal-body input,
+.modal input,
+.commission-fix-input {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
+  -webkit-user-select: text !important;
+}
+
+.commission-fix-input:focus {
+  outline: 2px solid #00c2cb !important;
+  border-color: #00c2cb !important;
+  pointer-events: auto !important;
+  user-select: text !important;
+}
+
+/* Estilos para warning de comisión y unidad */
+.commission-warning {
+  font-size: 0.85rem;
+}
+
+.commission-unit {
+  font-weight: bold;
+  color: #495057 !important;
 }
 </style>
