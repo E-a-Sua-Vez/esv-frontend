@@ -83,16 +83,19 @@ export default {
       </div>
     </div>
     <div class="metric-value-container">
-      <span class="metric-value">{{ getFormattedValue() }}</span>
-      <span
+      <div class="metric-value-section">
+        <span class="metric-value">{{ getFormattedValue() }}</span>
+      </div>
+      <div
         v-if="change !== undefined && change !== null"
-        class="metric-change"
-        :class="getChangeClass()"
+        class="metric-change-section"
       >
-        <i :class="`bi ${getChangeIcon()}`"></i>
-        <span>{{ Math.abs(change).toFixed(2) }}%</span>
-        <span v-if="changeLabel" class="change-label">{{ changeLabel }}</span>
-      </span>
+        <span class="metric-change" :class="getChangeClass()">
+          <i :class="`bi ${getChangeIcon()}`"></i>
+          <span>{{ Math.abs(change).toFixed(2) }}%</span>
+          <span v-if="changeLabel" class="change-label">{{ changeLabel }}</span>
+        </span>
+      </div>
     </div>
     <div class="metric-card-accent"></div>
   </div>
@@ -103,7 +106,7 @@ export default {
 .modern-metric-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
   backdrop-filter: blur(10px);
-  padding: 1.25rem 1rem;
+  padding: 0.875rem 0.75rem;
   margin: 0.5rem;
   border-radius: 12px;
   border: 1px solid rgba(169, 169, 169, 0.2);
@@ -178,7 +181,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .metric-icon-container {
@@ -299,9 +302,18 @@ export default {
 /* Value Container */
 .metric-value-container {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
   gap: 0.5rem;
-  flex-wrap: wrap;
+}
+
+.metric-value-section {
+  display: flex;
+  align-items: baseline;
+}
+
+.metric-change-section {
+  display: flex;
+  align-items: center;
 }
 
 .metric-value {
@@ -313,18 +325,18 @@ export default {
 }
 
 .metric-change {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.4rem;
   border-radius: 9999px;
   white-space: nowrap;
 }
 
 .metric-change i {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
 }
 
 .change-positive {
@@ -343,7 +355,7 @@ export default {
 }
 
 .change-label {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 500;
   opacity: 0.8;
 }
@@ -372,7 +384,7 @@ export default {
 /* Responsive */
 @media (max-width: 768px) {
   .modern-metric-card {
-    padding: 1rem 0.75rem;
+    padding: 0.75rem 0.625rem;
   }
 
   .metric-value {
@@ -391,7 +403,7 @@ export default {
 
 @media (max-width: 576px) {
   .modern-metric-card {
-    padding: 0.75rem 0.5rem;
+    padding: 0.625rem 0.5rem;
     margin: 0.25rem;
   }
 
@@ -404,8 +416,8 @@ export default {
   }
 
   .metric-change {
-    font-size: 0.75rem;
-    padding: 0.2rem 0.4rem;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.35rem;
   }
 }
 </style>

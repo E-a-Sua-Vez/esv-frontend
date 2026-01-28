@@ -7,15 +7,13 @@ import AttentionManagementDetailsCard from './common/AttentionManagementDetailsC
 import AttentionDetailsModal from './common/AttentionDetailsModal.vue';
 import jsonToCsv from '../../shared/utils/jsonToCsv';
 import { getAttentionsDetails } from '../../application/services/query-stack';
-import { DoughnutChart, BarChart } from 'vue-chart-3';
+import { BarChart } from 'vue-chart-3';
 import SimpleDownloadButton from '../reports/SimpleDownloadButton.vue';
 import { DateModel } from '../../shared/utils/date.model';
-import { ATTENTION_STATUS } from '../../shared/constants';
 
 export default {
   name: 'DashboardAttentionsManagement',
   components: {
-    DoughnutChart,
     BarChart,
     Message,
     SimpleDownloadCard,

@@ -247,6 +247,25 @@ export default {
       };
     });
 
+    // Computed property para el cálculo correcto de la comisión profesional
+    const calculatedProfessionalCommission = computed(() => {
+      if (!professionalCommission.value || !state.newConfirmationData.paymentAmount) {
+        return 0;
+      }
+
+      const commissionValue = Number(professionalCommission.value);
+      const paymentAmount = Number(state.newConfirmationData.paymentAmount);
+      const commissionType = professionalCommissionType.value;
+
+      if (commissionType === 'FIXED') {
+        // Si es valor fijo, devolver el valor directamente
+        return commissionValue;
+      } else {
+        // Si es porcentaje, calcular basado en paymentAmount
+        return Math.round((paymentAmount * commissionValue) / 100);
+      }
+    });
+
     // Calcular automáticamente el valor pagado basado en totalAmount e installments
     // NOTA: Este cálculo es solo una ayuda/sugerencia. El usuario siempre puede editar
     // el campo "Valor Pagado" libremente, y una vez editado manualmente, este cálculo
@@ -501,6 +520,20 @@ export default {
         }
       },
       { deep: true },
+    );
+
+    // Watch for changes in calculated professional commission to update payment commission
+    watch(
+      calculatedProfessionalCommission,
+      (newCommissionAmount) => {
+        if (newCommissionAmount && newCommissionAmount > 0) {
+          // Solo actualizar si el campo está vacío o es 0 (no sobrescribir si el usuario editó)
+          if (!state.newConfirmationData.paymentCommission || state.newConfirmationData.paymentCommission === 0) {
+            state.newConfirmationData.paymentCommission = newCommissionAmount;
+          }
+        }
+      },
+      { immediate: true }
     );
 
     // AUTO-CALCULATE COMMISSION based on professional data
@@ -835,6 +868,7 @@ export default {
       packagePaymentStatus,
       isPaymentConfirmed,
       confirmationMessage,
+      calculatedProfessionalCommission,
     };
   },
 };
@@ -1277,15 +1311,15 @@ export default {
                       <span class="professional-name">{{ professionalName }}</span>
                       <span v-if="professionalCommission" class="suggested-commission">
                         Comisión Asignada:
-                        <strong>{{ professionalCommission }}</strong>
+                        <strong>{{ professionalCommission }}{{ professionalCommissionType === 'PERCENTAGE' ? '%' : ' BRL' }}</strong>
                       </span>
                       <span
-                        v-if="suggestedCommissionAmount && state.newConfirmationData.paymentAmount"
+                        v-if="calculatedProfessionalCommission && state.newConfirmationData.paymentAmount"
                         class="calculated-commission"
                       >
                         {{ $t('professionals.calculatedAmount') || 'Monto Calculado' }}:
                         <strong
-                          >{{ suggestedCommissionAmount }} {{ commerce?.currency || 'BRL' }}</strong
+                          >{{ calculatedProfessionalCommission }} {{ commerce?.currency || 'BRL' }}</strong
                         >
                       </span>
                     </div>

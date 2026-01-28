@@ -5,7 +5,6 @@ import Warning from '../../common/Warning.vue';
 import Popper from 'vue3-popper';
 import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
-import { lazyLoadHtml2Pdf } from '../../../shared/utils/lazyLoad';
 import { globalStore } from '../../../stores';
 import { getDate } from '../../../shared/utils/date';
 import {
@@ -1250,52 +1249,317 @@ export default {
       }
     },
     exportToPDF() {
+      console.log('Creating professional financial PDF report...');
       this.loading = true;
-      this.detailsOpened = true;
-      const filename = `financial-resume-${this.commerce.name}.pdf`;
-      const options = {
-        margin: 0.5,
-        filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-      };
-      let doc = document.getElementById('financial-component');
-      document.getElementById('pdf-header').style.display = 'block';
-      document.getElementById('pdf-footer').style.display = 'block';
+
       setTimeout(async () => {
         try {
-          const html2pdf = await lazyLoadHtml2Pdf();
-          html2pdf()
-            .set(options)
-            .from(doc)
-            .save()
-            .then(() => {
-              document.getElementById('pdf-header').style.display = 'none';
-              document.getElementById('pdf-footer').style.display = 'none';
-              doc = undefined;
-              this.loading = false;
-              this.downloading = false;
-              this.detailsOpened = false;
-            })
-            .catch(error => {
-              document.getElementById('pdf-header').style.display = 'none';
-              document.getElementById('pdf-footer').style.display = 'none';
-              doc = undefined;
-              this.loading = false;
-              this.downloading = false;
-              this.detailsOpened = false;
+          const { jsPDF } = await import('jspdf');
+          const pdf = new jsPDF();
+
+          // === HEADER ===
+          pdf.setFillColor(52, 58, 64);
+          pdf.rect(0, 0, 210, 35, 'F');
+
+          pdf.setTextColor(255, 255, 255);
+          pdf.setFontSize(16);
+          pdf.setFont(undefined, 'bold');
+          pdf.text('REPORTE FINANCIERO', 15, 20);
+
+          pdf.setFontSize(9);
+          pdf.setFont(undefined, 'normal');
+          pdf.text(`${this.commerce?.name || 'N/A'}`, 15, 28);
+          pdf.text(`${this.startDate} - ${this.endDate}`, 120, 20);
+          pdf.text(`Generado: ${new Date().toLocaleDateString()}`, 120, 28);
+
+          pdf.setTextColor(0, 0, 0);
+          let yPos = 50;
+
+          // === RESUMEN FINANCIERO ===
+          if (this.calculatedMetrics && Object.keys(this.calculatedMetrics).length > 0) {
+            const incomesAmount = this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 0;
+            const incomesCount = this.calculatedMetrics['incomes.created']?.paymentData?.paymentCounter || 0;
+            const outcomesAmount = this.calculatedMetrics['outcomes.created']?.paymentData?.paymentAmountSum || 0;
+            const outcomesCount = this.calculatedMetrics['outcomes.created']?.paymentData?.paymentCounter || 0;
+            const balance = incomesAmount - outcomesAmount;
+            const margin = incomesAmount > 0 ? ((balance / incomesAmount) * 100).toFixed(1) : '0';
+            const avgIncomePerOp = incomesCount > 0 ? (incomesAmount / incomesCount) : 0;
+            const avgOutcomePerOp = outcomesCount > 0 ? (outcomesAmount / outcomesCount) : 0;
+
+            // Financial summary cards
+            pdf.setFillColor(240, 248, 255);
+            pdf.rect(15, yPos, 55, 35, 'F');
+            pdf.setFillColor(248, 255, 240);
+            pdf.rect(75, yPos, 55, 35, 'F');
+            pdf.setFillColor(255, 248, 240);
+            pdf.rect(135, yPos, 55, 35, 'F');
+
+            pdf.setFontSize(8);
+            pdf.setTextColor(100, 100, 100);
+            pdf.text('INGRESOS TOTALES', 17, yPos + 8);
+            pdf.text('GASTOS TOTALES', 77, yPos + 8);
+            pdf.text('UTILIDAD NETA', 137, yPos + 8);
+
+            pdf.setFontSize(14);
+            pdf.setFont(undefined, 'bold');
+            pdf.setTextColor(0, 102, 204);
+            pdf.text(`R$${incomesAmount.toLocaleString('de-DE')}`, 17, yPos + 18);
+            pdf.setTextColor(255, 102, 0);
+            pdf.text(`R$${outcomesAmount.toLocaleString('de-DE')}`, 77, yPos + 18);
+            pdf.setTextColor(balance >= 0 ? 0 : 255, balance >= 0 ? 153 : 0, 0);
+            pdf.text(`R$${balance.toLocaleString('de-DE')}`, 137, yPos + 18);
+
+            pdf.setFontSize(7);
+            pdf.setTextColor(100, 100, 100);
+            pdf.setFont(undefined, 'normal');
+            pdf.text(`${incomesCount} operaciones`, 17, yPos + 26);
+            pdf.text(`Promedio: R$${Math.round(avgIncomePerOp).toLocaleString('de-DE')}`, 17, yPos + 32);
+            pdf.text(`${outcomesCount} operaciones`, 77, yPos + 26);
+            pdf.text(`Promedio: R$${Math.round(avgOutcomePerOp).toLocaleString('de-DE')}`, 77, yPos + 32);
+            pdf.text(`Margen: ${margin}%`, 137, yPos + 26);
+            pdf.text(`ROI: ${margin}%`, 137, yPos + 32);
+
+            yPos += 45;
+          } else {
+            pdf.setFontSize(12);
+            pdf.text('No hay datos disponibles para este período.', 20, yPos);
+            yPos += 20;
+          }
+
+          // === ANÁLISIS DE RENDIMIENTO ===
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFontSize(10);
+          pdf.setFont(undefined, 'bold');
+          pdf.text('ANÁLISIS DE RENDIMIENTO', 15, yPos);
+          yPos += 12;
+
+          // Performance metrics in two columns
+          pdf.setFontSize(8);
+          pdf.setFont(undefined, 'normal');
+
+          if (this.calculatedMetrics && Object.keys(this.calculatedMetrics).length > 0) {
+            const days = Math.ceil((new Date(this.endDate) - new Date(this.startDate)) / (1000 * 60 * 60 * 24)) || 1;
+            const incomesAmount = this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 0;
+            const outcomesAmount = this.calculatedMetrics['outcomes.created']?.paymentData?.paymentAmountSum || 0;
+            const dailyAvgIncome = incomesAmount / days;
+            const dailyAvgOutcome = outcomesAmount / days;
+            const incomesCount = this.calculatedMetrics['incomes.created']?.paymentData?.paymentCounter || 0;
+            const outcomesCount = this.calculatedMetrics['outcomes.created']?.paymentData?.paymentCounter || 0;
+            const totalOps = incomesCount + outcomesCount;
+
+            pdf.text('• Ingreso promedio diario:', 15, yPos);
+            pdf.text(`R$${Math.round(dailyAvgIncome).toLocaleString('de-DE')}`, 80, yPos);
+            pdf.text('• Gasto promedio diario:', 110, yPos);
+            pdf.text(`R$${Math.round(dailyAvgOutcome).toLocaleString('de-DE')}`, 170, yPos);
+            yPos += 8;
+
+            pdf.text('• Días analizados:', 15, yPos);
+            pdf.text(`${days}`, 80, yPos);
+            pdf.text('• Frecuencia operaciones:', 110, yPos);
+            pdf.text(`${(totalOps/days).toFixed(1)}/día`, 170, yPos);
+            yPos += 15;
+          } else {
+            pdf.text('No hay suficientes datos para análisis de rendimiento.', 15, yPos);
+            yPos += 15;
+          }
+
+          // === DISTRIBUCIÓN DE INGRESOS ===
+          if (this.calculatedMetrics?.['incomes.created']?.paymentDistribution) {
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('MÉTODOS DE PAGO', 15, yPos);
+            yPos += 10;
+
+            const paymentDist = this.calculatedMetrics['incomes.created'].paymentDistribution;
+            const totalIncome = this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 1;
+
+            pdf.setFontSize(7);
+            pdf.setFont(undefined, 'normal');
+
+            let xPos = 15;
+            let col = 0;
+            Object.entries(paymentDist).forEach(([method, data]) => {
+              if (data.paymentAmountSum > 0) {
+                const percentage = ((data.paymentAmountSum || 0) / totalIncome * 100).toFixed(1);
+
+                pdf.setFillColor(240, 240, 240);
+                pdf.rect(xPos, yPos, 45, 12, 'F');
+
+                pdf.text(`${method}`, xPos + 2, yPos + 4);
+                pdf.text(`$${(data.paymentAmountSum || 0).toLocaleString()}`, xPos + 2, yPos + 8);
+                pdf.text(`${percentage}%`, xPos + 30, yPos + 8);
+
+                col++;
+                if (col % 4 === 0) {
+                  xPos = 15;
+                  yPos += 16;
+                } else {
+                  xPos += 47;
+                }
+              }
             });
+
+            if (col % 4 !== 0) yPos += 16;
+            yPos += 8;
+          }
+
+          // === INGRESOS POR PROFESIONAL ===
+          if (this.financialResume?.professionalIncomes?.list && this.financialResume.professionalIncomes.list.length > 0) {
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('TOP PROFESIONALES', 15, yPos);
+            yPos += 10;
+
+            // Sort by gross income and take top 5
+            const topProfessionals = [...this.financialResume.professionalIncomes.list]
+              .sort((a, b) => (b.grossIncome || 0) - (a.grossIncome || 0))
+              .slice(0, 5);
+
+            pdf.setFontSize(8);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('PROFESIONAL', 15, yPos);
+            pdf.text('BRUTO', 90, yPos);
+            pdf.text('NETO', 120, yPos);
+            pdf.text('EFECTIVIDAD', 150, yPos);
+            yPos += 6;
+
+            pdf.setFont(undefined, 'normal');
+            let rank = 1;
+            topProfessionals.forEach((prof) => {
+              const gross = prof.grossIncome || 0;
+              const net = prof.netIncome || 0;
+              const effectiveness = gross > 0 ? ((net / gross) * 100).toFixed(1) : '0';
+
+              pdf.setFontSize(7);
+              pdf.text(`${rank}. ${prof.name.substring(0, 25)}`, 15, yPos);
+              pdf.text(`R$${gross.toLocaleString('de-DE')}`, 90, yPos);
+              pdf.text(`R$${net.toLocaleString('de-DE')}`, 120, yPos);
+              pdf.text(`${effectiveness}%`, 150, yPos);
+
+              rank++;
+              yPos += 8;
+            });
+            yPos += 8;
+          }
+
+          // === TENDENCIAS Y PROYECCIONES ===
+          if (this.trends && this.trends.length > 0) {
+            if (yPos > 220) {
+              pdf.addPage();
+              yPos = 40;
+            }
+
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('EVOLUCIÓN MENSUAL', 15, yPos);
+            yPos += 10;
+
+            // Create a simple chart-like visualization
+            const recentTrends = this.trends.slice(-6);
+            const maxIncome = Math.max(...recentTrends.map(t => t.incomes || 0));
+
+            pdf.setFontSize(7);
+            pdf.setFont(undefined, 'normal');
+
+            recentTrends.forEach((trend, index) => {
+              const date = new Date(trend.month || trend.date).toLocaleDateString('es', {month: 'short'});
+              const incomes = trend.incomes || 0;
+              const outcomes = trend.outcomes || 0;
+              const profit = incomes - outcomes;
+              const barWidth = maxIncome > 0 ? (incomes / maxIncome) * 120 : 0;
+
+              pdf.text(`${date}`, 15, yPos);
+
+              // Income bar
+              pdf.setFillColor(0, 153, 0);
+              pdf.rect(35, yPos - 3, barWidth, 4, 'F');
+
+              pdf.text(`$${incomes.toLocaleString()}`, 160, yPos);
+
+              yPos += 8;
+            });
+            yPos += 10;
+          }
+
+          // === RECOMENDACIONES AUTOMÁTICAS ===
+          pdf.setFontSize(10);
+          pdf.setFont(undefined, 'bold');
+          pdf.text('INSIGHTS Y RECOMENDACIONES', 15, yPos);
+          yPos += 10;
+
+          pdf.setFontSize(8);
+          pdf.setFont(undefined, 'normal');
+
+          const insights = [];
+
+          if (this.calculatedMetrics) {
+            const balance = (this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 0) -
+                           (this.calculatedMetrics['outcomes.created']?.paymentData?.paymentAmountSum || 0);
+            const margin = balance > 0 ? ((balance / (this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 1)) * 100).toFixed(1) : 0;
+
+            if (margin > 80) {
+              insights.push('✓ Excelente rentabilidad. Considera expandir operaciones.');
+            } else if (margin > 50) {
+              insights.push('✓ Buena rentabilidad. Mantén el control de gastos.');
+            } else if (margin > 20) {
+              insights.push('⚠ Rentabilidad moderada. Revisa eficiencia operativa.');
+            } else {
+              insights.push('⚠ Baja rentabilidad. Requiere análisis de costos urgente.');
+            }
+
+            const avgTicket = (this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 0) /
+                             (this.calculatedMetrics['incomes.created']?.paymentData?.paymentCounter || 1);
+
+            if (avgTicket > 500) {
+              insights.push('✓ Ticket promedio alto. Cliente objetivo premium.');
+            } else if (avgTicket < 200) {
+              insights.push('• Ticket promedio bajo. Considera servicios add-on.');
+            }
+          }
+
+          if (this.professionalIncomes && this.professionalIncomes.length > 1) {
+            const topPerformer = this.professionalIncomes.reduce((max, prof) =>
+              (prof.grossIncome || 0) > (max.grossIncome || 0) ? prof : max);
+            insights.push(`• Top performer: ${topPerformer.name}`);
+          }
+
+          insights.forEach(insight => {
+            if (yPos > 270) {
+              pdf.addPage();
+              yPos = 30;
+            }
+            pdf.text(insight, 15, yPos, { maxWidth: 180 });
+            yPos += 10;
+          });
+
+          // === FOOTER ===
+          const pageCount = pdf.internal.getNumberOfPages();
+          for (let i = 1; i <= pageCount; i++) {
+            pdf.setPage(i);
+            pdf.setFillColor(240, 240, 240);
+            pdf.rect(0, 285, 210, 12, 'F');
+
+            pdf.setFontSize(7);
+            pdf.setTextColor(100, 100, 100);
+            pdf.text(`${this.commerce?.name || 'Comercio'}`, 15, 292);
+            pdf.text(`Página ${i}/${pageCount}`, 95, 292);
+            pdf.text(`${new Date().toLocaleDateString()}`, 170, 292);
+          }
+
+          const fileName = `reporte-${this.commerce?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'comercio'}-${this.startDate}.pdf`;
+          pdf.save(fileName);
+
+          console.log('Professional PDF report generated');
+
         } catch (error) {
-          document.getElementById('pdf-header').style.display = 'none';
-          document.getElementById('pdf-footer').style.display = 'none';
-          doc = undefined;
+          console.error('Error generating PDF:', error);
+          alert('Error al generar el PDF: ' + error.message);
+        } finally {
           this.loading = false;
-          this.downloading = false;
           this.detailsOpened = false;
+          this.downloading = false;
         }
-      }, 1100);
+      }, 300);
     },
     async getUserType() {
       this.userType = await this.store.getCurrentUserType;
@@ -1558,6 +1822,7 @@ export default {
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  line-height: 1;
 }
 
 .report-card::before {
@@ -1828,7 +2093,11 @@ export default {
                               <button
                                 class="btn btn-sm btn-primary w-100"
                                 style="font-size: 0.75rem; padding: 0.25rem 0.5rem"
-                                @click="exportToPDF"
+                                @click="() => {
+                                  console.log('[Button Click] exportToPDF button clicked');
+                                  console.log('[Button Click] toggle status:', toggles['financial.reports.resume']);
+                                  exportToPDF();
+                                }"
                                 :disabled="!toggles['financial.reports.resume']"
                               >
                                 <i class="bi bi-download me-1"></i>
@@ -1988,6 +2257,13 @@ export default {
                         @click="clear()"
                       >
                         <span><i class="bi bi-eraser-fill"></i></span>
+                      </button>
+                      <button
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-1 mx-1"
+                        @click="clear()"
+                        :disabled="loading"
+                      >
+                        <span><i class="bi bi-arrow-clockwise"></i></span>
                       </button>
                     </div>
                     <div>

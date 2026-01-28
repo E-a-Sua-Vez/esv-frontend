@@ -245,7 +245,7 @@ export default {
       this.professionalCommission = value;
     },
     handleCommissionFocus(event) {
-      console.log('🔥 Commission input focus event:', event);
+      // Handle commission input focus event
       // Aplicar los mismos fixes que funcionaron en los inputs de prueba
       const input = event.target;
 

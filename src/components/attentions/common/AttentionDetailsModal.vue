@@ -86,6 +86,7 @@ export default {
       commissionManuallyEdited: false, // Bandera para rastrear si el usuario editó la comisión
       professionals: [],
       loadingProfessionalData: false,
+      loadedProfessionalName: '', // Para almacenar el nombre del profesional cargado
       _permissionsDebugLogged: false,
     };
   },
@@ -99,16 +100,52 @@ export default {
   },
   watch: {
     attention: {
-      handler(newVal) {
+      handler(newVal, oldVal) {
         if (newVal && newVal.clientId && newVal.commerceId) {
           this.loadConsentStatus();
           this.startConsentStatusPolling();
+          
+          // Solo inicializar si es una atención nueva o ha cambiado el professionalId
+          if (newVal.professionalId && (!oldVal || newVal.professionalId !== oldVal.professionalId)) {
+            this.$nextTick(() => {
+              this.initializeProfessionalData();
+            });
+          }
         } else {
           this.stopConsentStatusPolling();
         }
       },
       immediate: true,
-      deep: true,
+      deep: false, // Cambiar a false para evitar watchers excesivos
+    },
+    selectedProfessional: {
+      handler(newVal) {
+        if (newVal) {
+          // Llamar handleProfessionalSelected cuando cambie selectedProfessional
+          this.handleProfessionalSelected(newVal);
+        }
+      },
+      immediate: false,
+      deep: false,
+    },
+    // Watcher para actualizar la comisión cuando la atención cambie
+    'attention.professionalCommissionValue': {
+      handler(newVal) {
+        if (newVal !== undefined && newVal !== null && !this.commissionManuallyEdited) {
+          // Solo actualizar si el usuario no ha editado manualmente la comisión
+          this.professionalCommission = String(newVal);
+        }
+      },
+      immediate: true,
+    },
+    // También watch para cuando toda la atención cambie (para inicialización)
+    attention: {
+      handler(newAttention) {
+        if (newAttention?.professionalCommissionValue !== undefined && newAttention?.professionalCommissionValue !== null && !this.commissionManuallyEdited) {
+          this.professionalCommission = String(newAttention.professionalCommissionValue);
+        }
+      },
+      immediate: true,
     },
   },
   computed: {
@@ -150,6 +187,129 @@ export default {
         ATTENTION_STATUS.TERMINATED_RESERVE_CANCELLED,
       ];
       return terminatedOrCancelledStatuses.includes(this.attention.status);
+    },
+    // Get professional name - check various sources
+    professionalDisplayName() {
+      if (!this.attention) return '';
+      
+      // First check if professionalName is already available
+      if (this.attention.professionalName) {
+        return this.attention.professionalName;
+      }
+      
+      // Check if we have loaded professional data
+      if (this.loadedProfessionalName) {
+        return this.loadedProfessionalName;
+      }
+      
+      // If we have professionalId, show loading or the ID as fallback
+      const professionalId = this.attention.professionalId || this.attention.paymentConfirmationData?.professionalId;
+      if (professionalId) {
+        return this.loadingProfessionalData ? 'Carregando...' : professionalId;
+      }
+      
+      return '';
+    },
+    // Check if professional is assigned
+    isProfessionalAssigned() {
+      if (!this.attention) return false;
+      return !!(this.attention.professionalName || 
+                this.attention.professionalId || 
+                this.attention.paymentConfirmationData?.professionalId ||
+                this.loadedProfessionalName);
+    },
+    // Selected professional ID for the selector
+    selectedProfessionalId: {
+      get() {
+        return this.selectedProfessional?.id || this.attention?.professionalId || null;
+      },
+      set(newId) {
+        if (!newId) {
+          this.selectedProfessional = null;
+          return;
+        }
+        
+        // Find the professional in the list
+        const professional = this.professionals?.find(p => p.id === newId);
+        if (professional) {
+          console.log('[AttentionDetailsModal] Setting selectedProfessional from selector:', professional.personalInfo?.name || professional.name);
+          this.selectedProfessional = professional;
+          // No llamar handleProfessionalSelected aquí para evitar loops
+          // this.handleProfessionalSelected(professional);
+        } else {
+          console.warn('[AttentionDetailsModal] Professional not found in list:', newId);
+        }
+      }
+    },
+    // Professional commission type para PaymentForm
+    professionalCommissionType() {
+      // 1. Primero verificar si la atención ya tiene comisión asignada
+      if (this.attention?.professionalCommissionType) {
+        return this.attention.professionalCommissionType;
+      }
+      
+      // 2. Verificar si hay confirmationData (atención ya pagada)
+      if (this.attention?.paymentConfirmationData?.professionalCommissionType) {
+        return this.attention.paymentConfirmationData.professionalCommissionType;
+      }
+      
+      // 3. Verificar selectedProfessional
+      if (this.selectedProfessional?.financialInfo?.commissionType) {
+        return this.selectedProfessional.financialInfo.commissionType;
+      }
+      
+      // 4. Si hay profesional asignado, buscar en la lista
+      if (this.attention?.professionalId && this.professionals?.length > 0) {
+        const assignedProfessional = this.professionals.find(p => p.id === this.attention.professionalId);
+        if (assignedProfessional?.financialInfo?.commissionType) {
+          return assignedProfessional.financialInfo.commissionType;
+        }
+      }
+      
+      // Default: FIXED (si no es explícitamente PERCENTAGE, es FIXED)
+      return 'FIXED';
+    },
+    // Professional display name para PaymentForm
+    professionalDisplayName() {
+      const selectedName = this.selectedProfessional?.personalInfo?.name || 
+                           this.selectedProfessional?.name ||
+                           this.loadedProfessionalName;
+                           
+      const attentionName = this.attention?.professionalName;
+      
+      return selectedName || attentionName || 'N/I';
+    },
+    // Professional commission value para PaymentForm (computed property que lee primero de la atención)
+    computedProfessionalCommission() {
+      // 1. Primero verificar si la atención ya tiene comisión asignada
+      if (this.attention?.professionalCommissionValue !== undefined && this.attention?.professionalCommissionValue !== null) {
+        return this.attention.professionalCommissionValue;
+      }
+      
+      // 2. Verificar si hay confirmationData (atención ya pagada)
+      if (this.attention?.paymentConfirmationData?.professionalCommissionValue) {
+        return this.attention.paymentConfirmationData.professionalCommissionValue;
+      }
+      
+      // 3. Si no hay comisión de la atención, usar la variable reactiva actual (para edición manual)
+      if (this.professionalCommission && this.professionalCommission !== '') {
+        return Number(this.professionalCommission);
+      }
+      
+      // 4. Fallback: selectedProfessional
+      if (this.selectedProfessional?.financialInfo?.commissionValue) {
+        return this.selectedProfessional.financialInfo.commissionValue;
+      }
+      
+      // 5. Fallback: profesional asignado en la lista
+      if (this.attention?.professionalId && this.professionals?.length > 0) {
+        const assignedProfessional = this.professionals.find(p => p.id === this.attention.professionalId);
+        if (assignedProfessional?.financialInfo?.commissionValue) {
+          return assignedProfessional.financialInfo.commissionValue;
+        }
+      }
+      
+      return null;
     },
   },
   methods: {
@@ -226,8 +386,15 @@ export default {
         return 'bi-qr-code red-icon';
       }
     },
-    showPaymentDetails() {
+    async showPaymentDetails() {
       this.extendedPaymentEntity = !this.extendedPaymentEntity;
+      
+      // Consultar datos frescos de la atención cuando se abre el collapsible
+      if (this.extendedPaymentEntity) {
+        console.log('[AttentionDetailsModal] Opening payment section - refreshing attention data');
+        await this.refreshAttentionDataWithoutOverriding();
+      }
+      
       this.extendedTransferEntity = false;
       this.extendedProfessionalEntity = false;
       this.newPaymentConfirmationData = {
@@ -244,8 +411,15 @@ export default {
         await this.toTransfer();
       }
     },
-    showProfessionalDetails() {
+    async showProfessionalDetails() {
       this.extendedProfessionalEntity = !this.extendedProfessionalEntity;
+      
+      // Consultar datos frescos de la atención cuando se abre el collapsible
+      if (this.extendedProfessionalEntity) {
+        console.log('[AttentionDetailsModal] Opening professional section - refreshing attention data');
+        await this.refreshAttentionDataWithoutOverriding();
+      }
+      
       this.extendedPaymentEntity = false;
       this.extendedTransferEntity = false;
       // Cargar profesionales solo cuando se abre la sección
@@ -264,10 +438,163 @@ export default {
         this.professionals = [];
       }
     },
+    async refreshAttentionDataWithoutOverriding() {
+      if (!this.attention?.id) {
+        console.log('[AttentionDetailsModal] Cannot refresh - no attention ID');
+        return;
+      }
+      
+      try {
+        console.log('[AttentionDetailsModal] Refreshing attention data (without overriding user values) for ID:', this.attention.id);
+        // NO usar this.loading = true para evitar que se cierre el modal
+        const freshAttention = await getAttentionDetails(this.attention.id);
+        
+        console.log('[AttentionDetailsModal] Fresh attention data received:', freshAttention);
+        
+        if (freshAttention) {
+          // Update attention data with fresh information
+          this.attention.professionalId = freshAttention.professionalId;
+          this.attention.professionalName = freshAttention.professionalName;
+          this.attention.paymentConfirmationData = freshAttention.paymentConfirmationData;
+          this.attention.paid = freshAttention.paid;
+          this.attention.paidAt = freshAttention.paidAt;
+          
+          // Update any other relevant fields
+          this.attention.status = freshAttention.status;
+          this.attention.comment = freshAttention.comment;
+          
+          console.log('[AttentionDetailsModal] Attention data refreshed:', {
+            professionalId: this.attention.professionalId,
+            professionalName: this.attention.professionalName,
+            paid: this.attention.paid,
+            status: this.attention.status
+          });
+          
+          // Load professional name if it has changed and we don't have it
+          if (this.attention.professionalId && !this.professionalDisplayName) {
+            await this.loadProfessionalName();
+          }
+          
+          // NO cargar comisión si el usuario ya editó manualmente
+          if (!this.commissionManuallyEdited && this.selectedProfessional?.financialInfo?.commissionValue) {
+            this.professionalCommission = this.selectedProfessional.financialInfo.commissionValue;
+            console.log('[AttentionDetailsModal] Updated commission from fresh data (not manually edited):', this.professionalCommission);
+          } else if (this.commissionManuallyEdited) {
+            console.log('[AttentionDetailsModal] NOT updating commission - user has manually edited it');
+          }
+          
+          // NO emitir evento que puede causar que se cierre el modal
+          // this.$emit('attention-updated', this.attention);
+          
+        } else {
+          console.warn('[AttentionDetailsModal] No fresh attention data received');
+        }
+      } catch (error) {
+        console.error('[AttentionDetailsModal] Error refreshing attention data:', error);
+        console.error('[AttentionDetailsModal] Error details:', error.message, error.stack);
+      }
+      // NO usar finally con this.loading = false
+    },
+    async initializeProfessionalData() {
+      if (!this.attention?.professionalId) return;
+      
+      // Si ya tenemos el profesional seleccionado, no hacer nada
+      if (this.selectedProfessional?.id === this.attention.professionalId) return;
+      
+      console.log('[AttentionDetailsModal] Initializing professional data for:', this.attention.professionalId);
+      
+      try {
+        // Cargar lista de profesionales si no está disponible
+        if (!this.professionals || this.professionals.length === 0) {
+          await this.loadProfessionals();
+        }
+        
+        // Buscar el profesional en la lista
+        let professional = this.professionals.find(p => p.id === this.attention.professionalId);
+        
+        // Si no se encuentra o no tiene información financiera completa, cargar por ID
+        if (!professional || !professional.financialInfo || professional.financialInfo.commissionValue === undefined) {
+          professional = await getProfessionalById(this.attention.professionalId);
+        }
+        
+        if (professional) {
+          console.log('[AttentionDetailsModal] Professional found and selected:', professional.personalInfo?.name || professional.name);
+          this.selectedProfessional = professional;
+          this.loadedProfessionalName = professional.personalInfo?.name || professional.name || this.attention.professionalId;
+          
+          // Cargar comisión si no ha sido editada manualmente
+          if (!this.commissionManuallyEdited && professional?.financialInfo?.commissionValue !== undefined) {
+            this.professionalCommission = professional.financialInfo.commissionValue;
+            console.log('[AttentionDetailsModal] Commission loaded:', this.professionalCommission);
+          }
+        } else {
+          console.warn('[AttentionDetailsModal] Professional not found:', this.attention.professionalId);
+        }
+      } catch (error) {
+        console.error('[AttentionDetailsModal] Error initializing professional data:', error);
+      }
+    },
+    async loadProfessionalName() {
+      if (!this.attention) return;
+      
+      // If we already have the name, no need to load
+      if (this.attention.professionalName) {
+        this.loadedProfessionalName = this.attention.professionalName;
+        return;
+      }
+      
+      // Get professionalId from various sources
+      const professionalId = this.attention.professionalId || this.attention.paymentConfirmationData?.professionalId;
+      
+      if (!professionalId) return;
+      
+      try {
+        this.loadingProfessionalData = true;
+        console.log('[AttentionDetailsModal] Loading professional:', professionalId);
+        
+        // Load commission data if available
+        if (this.attention.paymentConfirmationData?.professionalCommissionValue) {
+          this.professionalCommission = this.attention.paymentConfirmationData.professionalCommissionValue;
+          this.commissionManuallyEdited = true; // Mark as manually edited to maintain priority
+          console.log('[AttentionDetailsModal] Loaded saved commission from paymentConfirmationData:', this.professionalCommission);
+        }
+        
+        // Load professionals if not loaded
+        if (this.professionals.length === 0) {
+          await this.loadProfessionals();
+        }
+        
+        // Find the assigned professional
+        let professional = this.professionals.find(p => p.id === professionalId) || null;
+        
+        // If not found or incomplete, fetch by id to ensure commission info is available
+        if (
+          !professional ||
+          !professional.financialInfo ||
+          professional.financialInfo.commissionValue === undefined
+        ) {
+          professional = await getProfessionalById(professionalId);
+        }
+        
+        if (professional) {
+          this.selectedProfessional = professional;
+          this.loadedProfessionalName = professional.personalInfo?.name || professional.name || professionalId;
+          console.log('[AttentionDetailsModal] Professional loaded and selected:', professional);
+        } else {
+          this.loadedProfessionalName = professionalId;
+        }
+      } catch (error) {
+        console.error('[AttentionDetailsModal] Error loading professional:', error);
+        // Fallback to ID if can't load name
+        this.loadedProfessionalName = professionalId;
+      } finally {
+        this.loadingProfessionalData = false;
+      }
+    },
     handleProfessionalSelected(professional) {
       this.selectedProfessional = professional;
       // Solo establecer la comisión por defecto si el usuario no ha editado el campo
-      if (professional && professional.financialInfo && !this.commissionManuallyEdited) {
+      if (professional?.financialInfo && !this.commissionManuallyEdited) {
         const { commissionValue } = professional.financialInfo;
         if (commissionValue !== undefined && commissionValue !== null) {
           this.professionalCommission = commissionValue;
@@ -306,14 +633,41 @@ export default {
       event.stopPropagation();
     },
     getSuggestedCommission() {
-      if (!this.selectedProfessional || !this.selectedProfessional.financialInfo) {
-        return '';
+      // 1. Primero verificar si la atención ya tiene comisión asignada
+      if (this.attention?.professionalCommissionValue && this.attention?.professionalCommissionType) {
+        const { professionalCommissionType, professionalCommissionValue } = this.attention;
+        if (professionalCommissionType === 'PERCENTAGE') {
+          return `${professionalCommissionValue}%`;
+        }
+        return `${professionalCommissionValue} ${this.commerce?.currency || 'BRL'}`;
       }
-      const { commissionType, commissionValue } = this.selectedProfessional.financialInfo;
-      if (!commissionType || commissionValue === undefined || commissionValue === null) {
-        return '';
+      
+      // 2. Verificar selectedProfessional
+      if (this.selectedProfessional?.financialInfo) {
+        const { commissionType, commissionValue } = this.selectedProfessional.financialInfo;
+        if (commissionValue) {
+          if (commissionType === 'PERCENTAGE') {
+            return `${commissionValue}%`;
+          }
+          return `${commissionValue} ${this.commerce?.currency || 'BRL'}`;
+        }
       }
-      return commissionType === 'PERCENTAGE' ? `${commissionValue}%` : `${commissionValue}`;
+      
+      // 3. Si no hay selectedProfessional pero sí hay profesional asignado, buscar en la lista
+      if (this.attention?.professionalId && this.professionals?.length > 0) {
+        const assignedProfessional = this.professionals.find(p => p.id === this.attention.professionalId);
+        if (assignedProfessional?.financialInfo) {
+          const { commissionType, commissionValue } = assignedProfessional.financialInfo;
+          if (commissionValue) {
+            if (commissionType === 'PERCENTAGE') {
+              return `${commissionValue}%`;
+            }
+            return `${commissionValue} ${this.commerce?.currency || 'BRL'}`;
+          }
+        }
+      }
+      
+      return '';
     },
     async loadProfessionalDataIfNeeded() {
       if (this.loadingProfessionalData) return;
@@ -358,12 +712,47 @@ export default {
     },
     // PROFESSIONAL PAYMENT COMMISSION DATA (used by PaymentForm)
     getAssignedProfessionalCommissionData() {
-      if (!this.attention?.professionalName) {
+      if (!this.isProfessionalAssigned) {
         return { name: null, commission: null, suggestedAmount: 0 };
+      }
+
+      // 0) FIRST: Check for commission data directly on attention (from assign-professional)
+      if (this.attention?.professionalCommissionType && this.attention?.professionalCommissionValue !== undefined && this.attention?.professionalCommissionValue !== null) {
+        const { professionalCommissionType, professionalCommissionValue } = this.attention;
+        let suggestedAmount = 0;
+        let commissionDisplay = '';
+
+        if (professionalCommissionValue && professionalCommissionValue > 0) {
+          if (professionalCommissionType === 'PERCENTAGE') {
+            commissionDisplay = `${professionalCommissionValue}%`;
+            // For percentage, we would need payment amount to calculate the final amount
+            suggestedAmount = professionalCommissionValue; // Keep as percentage for now
+          } else {
+            commissionDisplay = `${professionalCommissionValue} ${this.commerce?.currency || 'BRL'}`;
+            suggestedAmount = Number(professionalCommissionValue);
+          }
+        }
+
+        return {
+          name: this.professionalDisplayName,
+          commission: commissionDisplay,
+          suggestedAmount,
+        };
       }
 
       // 1) Prefer persisted confirmation data (if backend already stored it)
       const confirmationData = this.attention?.paymentConfirmationData;
+      
+      // First check for direct commission amount (from booking data)
+      if (confirmationData?.professionalCommissionAmount) {
+        return {
+          name: this.professionalDisplayName,
+          commission: `${confirmationData.professionalCommissionAmount} ${this.commerce?.currency || 'BRL'}`,
+          suggestedAmount: Number(confirmationData.professionalCommissionAmount),
+        };
+      }
+      
+      // Then check for commission type and value
       if (
         confirmationData?.professionalCommissionType &&
         confirmationData?.professionalCommissionValue
@@ -391,7 +780,7 @@ export default {
         }
 
         return {
-          name: this.attention.professionalName,
+          name: this.professionalDisplayName,
           commission: commissionDisplay,
           suggestedAmount,
         };
@@ -418,15 +807,16 @@ export default {
         }
 
         return {
-          name: this.attention.professionalName,
+          name: this.professionalDisplayName,
           commission: commissionDisplay,
           suggestedAmount,
         };
       }
 
       // 3) If we have professionalId but not the professional data yet, reload it
+      const professionalId = this.attention?.professionalId || this.attention?.paymentConfirmationData?.professionalId;
       if (
-        this.attention?.professionalId &&
+        professionalId &&
         !this.selectedProfessional &&
         !this.loadingProfessionalData
       ) {
@@ -436,7 +826,7 @@ export default {
 
       // Fallback: name only
       return {
-        name: this.attention.professionalName,
+        name: this.professionalDisplayName,
         commission: null,
         suggestedAmount: 0,
       };
@@ -467,7 +857,9 @@ export default {
         // Usar la comisión editada por el usuario si existe, sino usar la del profesional
         // Convertir a número si es string
         let commissionToUse = null;
-        const commissionValue = this.professionalCommission?.trim();
+        const commissionValue = typeof this.professionalCommission === 'string' 
+          ? this.professionalCommission.trim() 
+          : String(this.professionalCommission || '').trim();
         if (commissionValue && commissionValue !== '') {
           const parsed = parseFloat(commissionValue);
           if (!isNaN(parsed) && isFinite(parsed)) {
@@ -1237,6 +1629,7 @@ export default {
         document.body.style.overflow = 'hidden';
         console.log('[AttentionDetailsModal] Modal opened, calling loadTimelineData');
         this.loadTimelineData();
+        this.loadProfessionalName();
       } else {
         document.body.style.overflow = '';
       }
@@ -1252,6 +1645,7 @@ export default {
             '[AttentionDetailsModal] Attention changed and modal is open, calling loadTimelineData',
           );
           this.loadTimelineData();
+          this.loadProfessionalName();
         }
       },
       immediate: true,
@@ -1261,6 +1655,100 @@ export default {
     document.body.style.overflow = '';
     // Clean up polling interval
     this.stopConsentStatusPolling();
+  },
+  watch: {
+    show(newValue) {
+      if (newValue) {
+        console.log('📜 Ocultando modal principal');
+        const mainModal = document.querySelector('#modalAgenda');
+        if (mainModal) {
+          mainModal.style.display = 'none';
+        }
+      } else {
+        console.log('📜 Reabriendo modal principal FORZADAMENTE');  
+        // FORZAR reapertura del modal
+        setTimeout(() => {
+          const mainModal = document.querySelector('#modalAgenda');
+          if (mainModal) {
+            // Restaurar completamente
+            mainModal.style.display = 'block';
+            mainModal.classList.add('show');
+            mainModal.setAttribute('aria-modal', 'true');
+            mainModal.setAttribute('role', 'dialog');
+            mainModal.style.paddingLeft = '0px';
+            
+            // Asegurar que el body tenga las clases correctas
+            document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
+            document.body.style.paddingRight = '0px';
+            
+            console.log('✅ Modal principal completamente restaurado');
+          } else {
+            console.log('⚠️ Modal principal (#modalAgenda) NO encontrado');
+          }
+          
+          // Restaurar o crear backdrop si es necesario
+          let backdrop = document.querySelector('.modal-backdrop');
+          if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            document.body.appendChild(backdrop);
+          } else {
+            backdrop.style.display = 'block';
+            backdrop.classList.add('show');
+          }
+          
+          console.log('✅ Modal principal FORZADAMENTE reabierto');
+        }, 50);
+      }
+    }
+  },
+  watch: {
+    show(newValue) {
+      if (newValue) {
+        console.log('📜 Ocultando modal principal');
+        const mainModal = document.querySelector('#modalAgenda');
+        if (mainModal) {
+          mainModal.style.display = 'none';
+        }
+      } else {
+        console.log('📜 Reabriendo modal principal FORZADAMENTE');  
+        // FORZAR reapertura del modal
+        setTimeout(() => {
+          const mainModal = document.querySelector('#modalAgenda');
+          if (mainModal) {
+            // Restaurar completamente
+            mainModal.style.display = 'block';
+            mainModal.classList.add('show');
+            mainModal.setAttribute('aria-modal', 'true');
+            mainModal.setAttribute('role', 'dialog');
+            mainModal.style.paddingLeft = '0px';
+            
+            // Asegurar que el body tenga las clases correctas
+            document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
+            document.body.style.paddingRight = '0px';
+            
+            console.log('✅ Modal principal completamente restaurado');
+          } else {
+            console.log('⚠️ Modal principal (#modalAgenda) NO encontrado');
+          }
+          
+          // Restaurar o crear backdrop si es necesario
+          let backdrop = document.querySelector('.modal-backdrop');
+          if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            document.body.appendChild(backdrop);
+          } else {
+            backdrop.style.display = 'block';
+            backdrop.classList.add('show');
+          }
+          
+          console.log('✅ Modal principal FORZADAMENTE reabierto');
+        }, 50);
+      }
+    }
   },
 };
 </script>
@@ -1373,8 +1861,7 @@ export default {
                   attention.queueName ||
                   (queues && queues.length > 0 && queues[0]?.name) ||
                   attention.collaboratorName ||
-                  attention.professionalName ||
-                  attention.professionalId ||
+                  professionalDisplayName ||
                   (attention.servicesDetails && attention.servicesDetails.length > 0) ||
                   attention.createdDate
                 "
@@ -1398,16 +1885,14 @@ export default {
                   }}</span>
                 </div>
                 <div
-                  v-if="attention.professionalName || attention.professionalId"
+                  v-if="professionalDisplayName"
                   class="attention-context-item-inline"
                 >
                   <i class="bi bi-person-badge"></i>
                   <span class="attention-context-label-inline">{{
                     $t('professionals.professional') || 'Profesional'
                   }}</span>
-                  <span class="attention-context-value-inline">{{
-                    attention.professionalName || attention.professionalId || 'N/I'
-                  }}</span>
+                  <span class="attention-context-value-inline">{{ professionalDisplayName }}</span>
                 </div>
                 <div v-if="attention.createdDate" class="attention-context-item-inline">
                   <i class="bi bi-calendar-event"></i>
@@ -1641,31 +2126,39 @@ export default {
                         <i class="bi bi-cash-coin"></i>
                         <span>{{ $t('collaboratorBookingsView.paymentConfirm') }}</span>
                       </div>
+                      <!-- Debug info -->
+                      <div v-if="!attention.servicesId || attention.servicesId.length === 0" class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <span>Atención sin servicios asignados. ServicesId: {{ attention.servicesId }}</span>
+                      </div>
                       <PaymentForm
+                        v-if="attention.servicesId && attention.servicesId.length > 0"
                         :id="attention.id"
                         :commerce="commerce"
                         :client-id="attention.clientId"
-                        :service-id="
-                          attention.servicesId && attention.servicesId.length > 0
-                            ? attention.servicesId[0]
-                            : undefined
-                        "
-                        :service-ids="attention.servicesId || []"
-                        :services="attention.servicesDetails || []"
-                        :confirm-payment="
-                          getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')
-                        "
+                        :service-id="attention.servicesId[0]"
+                        :service-ids="attention.servicesId"
+                        :services="attention.servicesDetails"
+                        :confirm-payment="true"
                         :errors-add="errorsAdd"
                         :receive-data="receiveData"
-                        :professional-name="getAssignedProfessionalCommissionData().name"
-                        :professional-commission="
-                          getAssignedProfessionalCommissionData().commission
-                        "
-                        :suggested-commission-amount="
-                          getAssignedProfessionalCommissionData().suggestedAmount
-                        "
+                        :professional-id="attention.professionalId"
+                        :professional-name="attention.professionalName || professionalDisplayName"
+                        :professional-commission="computedProfessionalCommission || null"
+                        :professional-commission-type="professionalCommissionType"
+                        :suggested-commission-amount="0"
                       >
                       </PaymentForm>
+                      <!-- Fallback si PaymentForm no se renderiza -->
+                      <div v-else class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <span>
+                          PaymentForm no disponible. Debug: 
+                          servicesId={{ attention.servicesId?.length || 0 }}, 
+                          commerce={{ !!commerce }},
+                          clientId={{ !!attention.clientId }}
+                        </span>
+                      </div>
                       <div class="attention-action-buttons">
                         <button
                           class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
@@ -1714,30 +2207,26 @@ export default {
                     <div class="attention-action-form payment-form-modern">
                       <div class="attention-action-header">
                         <i class="bi bi-person-badge"></i>
-                        <span>{{ $t('professionals.assignProfessional') }}</span>
+                        <span>Atribuir Profissional</span>
                       </div>
                       <div class="payment-form-content">
-                        <div v-if="attention.professionalName" class="professional-assigned-alert">
+                        <div v-if="isProfessionalAssigned" class="professional-assigned-alert">
                           <i class="bi bi-person-badge-fill"></i>
                           <span class="alert-text">
-                            {{ $t('professionals.alreadyAssigned') || 'Profesional ya asignado' }}:
-                            <strong>{{ attention.professionalName }}</strong>
+                            Profissional já atribuído:
+                            <strong>{{ professionalDisplayName }}</strong>
                             <span v-if="getAssignedProfessionalCommissionData().commission" class="commission-info">
-                              ({{ $t('professionals.commission') || 'Comisión' }}: <strong>{{ getAssignedProfessionalCommissionData().commission }}</strong>)
+                              (Comissão: <strong>{{ getAssignedProfessionalCommissionData().commission }}</strong>)
                             </span>
                           </span>
                           <small class="alert-action">
-                            {{
-                              $t('professionals.canReplace') ||
-                              'Puede reemplazarlo seleccionando otro.'
-                            }}
+                            Você pode substituí-lo selecionando outro
                           </small>
                         </div>
                         <div class="payment-form-field">
-                          <label class="payment-form-label">{{
-                            $t('professionals.selectProfessional')
-                          }}</label>
+                          <label class="payment-form-label">Selecionar profissional</label>
                           <ProfessionalSelector
+                            v-model="selectedProfessionalId"
                             :professionals="professionals"
                             :filter-by-service="attention.servicesId"
                             :show-commission="false"
@@ -1746,14 +2235,12 @@ export default {
                         </div>
                         <div
                           v-if="
-                            selectedProfessional &&
+                            (selectedProfessional || isProfessionalAssigned) &&
                             getActiveFeature(commerce, 'professional-commission-enabled', 'PRODUCT')
                           "
                           class="payment-form-field"
                         >
-                          <label class="payment-form-label">{{
-                            $t('professionals.commission')
-                          }}</label>
+                          <label class="payment-form-label">Comissão</label>
                           <div class="d-flex align-items-center gap-2">
                             <input
                               ref="commissionInputRef"
@@ -1762,6 +2249,7 @@ export default {
                               inputmode="decimal"
                               class="payment-form-input commission-input-fix"
                               :placeholder="getSuggestedCommission()"
+                              :value="computedProfessionalCommission || professionalCommission"
                               @input="handleCommissionInput"
                               @click="handleInputClick"
                               @mousedown="handleInputMouseDown"
@@ -1769,20 +2257,20 @@ export default {
                             />
                             <span class="text-muted">
                               {{
-                                selectedProfessional.financialInfo?.commissionType === 'PERCENTAGE'
+                                selectedProfessional?.financialInfo?.commissionType === 'PERCENTAGE'
                                   ? '%'
                                   : commerce.currency || 'BRL'
                               }}
                             </span>
                           </div>
                           <!-- Warning about suggested commission -->
-                          <div v-if="getSuggestedCommission()" class="alert alert-warning mt-2">
+                          <div v-if="getSuggestedCommission()" class="alert alert-warning mt-2 commission-warning">
                             <i class="bi bi-info-circle me-2"></i>
-                            <span>{{ $t('professionals.suggestedCommission') }}: {{ getSuggestedCommission() }}</span>
+                            <span>Comissão sugerida: <strong>{{ getSuggestedCommission() }}</strong></span>
                             <Popper :class="'dark'" arrow hover>
                               <template #content>
                                 <div>
-                                  {{ $t('paymentForm.suggestedCommissionWarning.tooltip') }}
+                                  Esta é a comissão configurada para este profissional
                                 </div>
                               </template>
                               <i class="bi bi-question-circle ms-2"></i>
@@ -1793,10 +2281,10 @@ export default {
                           <button
                             class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
                             @click="goAssignProfessional()"
-                            :disabled="!selectedProfessional || loading || isAttentionTerminatedOrCancelled"
+                            :disabled="(!selectedProfessional && !isProfessionalAssigned) || loading || isAttentionTerminatedOrCancelled"
                           >
                             <i class="bi bi-person-check-fill"></i>
-                            {{ $t('professionals.assignProfessional') }}
+                            Atribuir Profissional
                           </button>
                         </div>
                         <AreYouSure
@@ -2871,6 +3359,111 @@ export default {
     align-items: flex-start;
     gap: 0.5rem;
   }
+}
+
+/* Estilos para warning de comisión */
+.commission-warning {
+  font-size: 0.85rem;
+}
+
+</style>
+
+<style>
+/* CSS GLOBAL ULTRA AGRESIVO PARA MODAL DE ATENCION - SIN SCOPED */
+.attention-modal-overlay,
+.attention-modal-overlay *,
+.attention-modal-content,
+.attention-modal-content * {
+  pointer-events: auto !important;
+}
+
+.attention-modal-overlay input,
+.attention-modal-content input,
+.modal-body input {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
+  -webkit-user-select: text !important;
+  background: white !important;
+  z-index: 999999 !important;
+  border: 1px solid #ccc !important;
+  padding: 8px !important;
+}
+
+.attention-modal-overlay input:focus,
+.attention-modal-content input:focus {
+  outline: 2px solid #00c2cb !important;
+  border-color: #00c2cb !important;
+}
+
+/* Asegurar que el modal esté por encima de TODO */
+.attention-modal-overlay {
+  z-index: 999999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+.attention-modal-dialog {
+  z-index: 999999 !important;
+  position: relative !important;
+}
+
+/* Fix universal para todos los inputs dentro de modales de atención */
+.attention-modal-overlay input,
+.attention-modal-overlay textarea,
+.attention-modal-overlay select,
+.attention-modal-content input,
+.attention-modal-content textarea,
+.attention-modal-content select,
+.modal-body input,
+.modal-body textarea,
+.modal-body select,
+.payment-form-modern input,
+.payment-form-modern textarea,
+.payment-form-modern select {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  background: white !important;
+  z-index: 999999 !important;
+  position: relative !important;
+}
+
+/* Fix para inputs de comisión */
+.commission-input-fix,
+input[ref="commissionInputRef"] {
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text !important;
+  z-index: 999999 !important;
+  position: relative !important;
+  background: white !important;
+  -webkit-touch-callout: default !important;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+  touch-action: manipulation !important;
+}
+
+/* Fix para inputs de tipo number */
+input[type="number"] {
+  pointer-events: auto !important;
+  user-select: text !important;
+  cursor: text !important;
+  -moz-appearance: textfield !important;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
 }
 
 </style>

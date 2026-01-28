@@ -243,6 +243,21 @@ export default {
                 <span v-else-if="income?.type === 'UNIQUE'" class="badge bg-success">U</span>
               </span>
             </Popper>
+
+            <!-- Commission Status Indicator -->
+            <Popper v-if="income?.professionalCommission" :class="'dark'" arrow disable-click-away hover>
+              <template #content>
+                <div>{{ isCommissionPaid(income) ? $t('commissionPayments.commissionPaid') : $t('commissionPayments.commissionUnpaid') }}</div>
+              </template>
+              <span class="badge-mini commission-status" @click.stop>
+                <span v-if="isCommissionPaid(income)" class="badge bg-success">
+                  $
+                </span>
+                <span v-else class="badge bg-warning">
+                  $
+                </span>
+              </span>
+            </Popper>
           </div>
         </div>
 
@@ -663,6 +678,36 @@ export default {
 
 .badge-mini i {
   font-size: 0.625rem;
+}
+
+.badge-mini.commission-status .badge {
+  font-size: 0.5rem;
+  padding: 0.125rem 0.25rem;
+  min-width: 1rem;
+  height: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.badge-mini.commission-status .badge.bg-success {
+  background-color: #28a745 !important;
+  color: white !important;
+}
+
+.badge-mini.commission-status .badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+/* Increase z-index for popper to avoid being covered by cards */
+.popper {
+  z-index: 9999 !important;
+}
+
+.popper[data-popper-placement] {
+  z-index: 9999 !important;
 }
 
 .collapse-icon-wrapper {

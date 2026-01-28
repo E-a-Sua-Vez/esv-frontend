@@ -6,7 +6,7 @@ import { getMetrics } from '../../application/services/query-stack';
 import { getCollaboratorById } from '../../application/services/collaborator';
 import { getQueueByCommerce, getGroupedQueueByCommerceId } from '../../application/services/queue';
 import { Chart, registerables } from 'chart.js';
-import { LineChart, DoughnutChart, BarChart, useBarChart } from 'vue-chart-3';
+import { LineChart, BarChart, useBarChart } from 'vue-chart-3';
 import { getPermissions } from '../../application/services/permissions';
 import { getActiveFeature } from '../../shared/features';
 import Message from '../../components/common/Message.vue';
@@ -24,7 +24,6 @@ import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader
 import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
 import DateRangeFilters from '../../components/common/desktop/DateRangeFilters.vue';
 import SimpleDownloadCard from '../../components/reports/SimpleDownloadCard.vue';
-import { lazyLoadHtml2Pdf } from '../../shared/utils/lazyLoad';
 import { DateModel } from '../../shared/utils/date.model';
 
 Chart.register(...registerables);
@@ -36,7 +35,6 @@ export default {
     Spinner,
     Alert,
     LineChart,
-    DoughnutChart,
     BarChart,
     DashboardIndicators,
     DashboardGraphs,
@@ -302,12 +300,11 @@ export default {
           state.graphs['attention-number-evolution'] = true;
         }
       }
-      if (
-        state.calculatedMetrics['attention.created'].durationFlow.datasets.length > 0 &&
-        !state.calculatedMetrics['attention.created'].durationFlow.datasets.every(
-          item => item === 0
-        )
-      ) {
+      if (state.calculatedMetrics['attention.created'].durationFlow.datasets.length > 0 &&
+          state.calculatedMetrics['attention.created'].durationFlow.datasets.some(val => {
+            const numVal = typeof val === 'string' ? parseInt(val, 10) : val;
+            return numVal > 0;
+          })) {
         if (state.toggles['dashboard.attention-duration-evolution.view']) {
           state.graphs['attention-duration-evolution'] = true;
         }
@@ -340,7 +337,13 @@ export default {
           state.graphs['survey-flow'] = true;
         }
       }
-      if (state.calculatedMetrics['attention.created'].hourDistribution.datasets.length > 0) {
+      if (
+        state.calculatedMetrics['attention.created'].hourDistribution.datasets.length > 0 &&
+        state.calculatedMetrics['attention.created'].hourDistribution.datasets.some(val => {
+          const numVal = typeof val === 'string' ? parseInt(val, 10) : val;
+          return numVal > 0;
+        })
+      ) {
         if (state.toggles['dashboard.attention-hour-distribution.view']) {
           state.graphs['attention-hour-distribution'] = true;
         }
@@ -635,7 +638,7 @@ export default {
               boxWidth: 10,
               borderColor: '#004aad',
               backgroundColor: 'rgba(127, 134, 255, 0.7)',
-              data: data.datasets || [],
+              data: (data.datasets || []).map(val => typeof val === 'string' ? parseInt(val, 10) : val),
               fill: false,
               tension: 0.2,
               type: 'bar',

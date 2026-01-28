@@ -83,45 +83,59 @@ export default {
     },
     getMaxAvgTime() {
       const arr = this.calculatedMetrics['attention.created'].durationFlow.datasets;
+      if (!arr || arr.length === 0) return 0;
       return arr.reduce((a, b) => Math.max(a, b), -Infinity);
     },
     getMinAvgTime() {
       const arr = this.calculatedMetrics['attention.created'].durationFlow.datasets;
+      if (!arr || arr.length === 0) return 0;
       return arr.reduce((a, b) => Math.min(a, b), 100000000);
     },
     getMaxAvgHour() {
       const arr = this.calculatedMetrics['attention.created'].hourDistribution.datasets;
-      const max = JSON.parse(JSON.stringify(arr)).reduce((a, b) => Math.max(a, b), -Infinity);
-      const ind = arr.indexOf(max.toString());
+      if (!arr || arr.length === 0) {
+        return { label: '00', data: 0 };
+      }
+      const max = arr.reduce((a, b) => Math.max(a, b), -Infinity);
+      const ind = arr.indexOf(max);
       return {
-        label: this.calculatedMetrics['attention.created'].hourDistribution.labels[ind],
+        label: this.calculatedMetrics['attention.created'].hourDistribution.labels[ind] || '00',
         data: max,
       };
     },
     getMaxAvgDay() {
       const arr = this.calculatedMetrics['attention.created'].dayDistribution.datasets;
-      const max = JSON.parse(JSON.stringify(arr)).reduce((a, b) => Math.max(a, b), -Infinity);
-      const ind = arr.indexOf(max.toString());
+      if (!arr || arr.length === 0) {
+        return { label: 'N/A', data: 0 };
+      }
+      const max = arr.reduce((a, b) => Math.max(a, b), -Infinity);
+      const ind = arr.indexOf(max);
       return {
-        label: this.calculatedMetrics['attention.created'].dayDistribution.labels[ind],
+        label: this.calculatedMetrics['attention.created'].dayDistribution.labels[ind] || 'N/A',
         data: max,
       };
     },
     getMaxBookingAvgHour() {
       const arr = this.calculatedMetrics['booking.created'].hourDistribution.datasets;
-      const max = JSON.parse(JSON.stringify(arr)).reduce((a, b) => Math.max(a, b), -Infinity);
-      const ind = arr.indexOf(max.toString());
+      if (!arr || arr.length === 0) {
+        return { label: '00', data: 0 };
+      }
+      const max = arr.reduce((a, b) => Math.max(a, b), -Infinity);
+      const ind = arr.indexOf(max);
       return {
-        label: this.calculatedMetrics['booking.created'].hourDistribution.labels[ind],
+        label: this.calculatedMetrics['booking.created'].hourDistribution.labels[ind] || '00',
         data: max,
       };
     },
     getMaxBookingAvgDay() {
       const arr = this.calculatedMetrics['booking.created'].dayDistribution.datasets;
-      const max = JSON.parse(JSON.stringify(arr)).reduce((a, b) => Math.max(a, b), -Infinity);
-      const ind = arr.indexOf(max.toString());
+      if (!arr || arr.length === 0) {
+        return { label: 'N/A', data: 0 };
+      }
+      const max = arr.reduce((a, b) => Math.max(a, b), -Infinity);
+      const ind = arr.indexOf(max);
       return {
-        label: this.calculatedMetrics['booking.created'].dayDistribution.labels[ind],
+        label: this.calculatedMetrics['booking.created'].dayDistribution.labels[ind] || 'N/A',
         data: max,
       };
     },
@@ -275,7 +289,7 @@ export default {
                             ><strong> {{ $t('dashboard.items.attentions.graph.1') }} </strong></span
                           >
                         </div>
-                        <div class="row">
+                        <div class="row" style="width: 60%">
                           <LineChart
                             class="centered"
                             v-bind="calculatedMetrics.attentionNumberEvolutionProps"
@@ -439,7 +453,7 @@ export default {
                             ><strong> {{ $t('dashboard.items.attentions.graph.2') }} </strong></span
                           >
                         </div>
-                        <div class="row">
+                        <div class="row" style="width: 50%">
                           <DoughnutChart
                             class="centered"
                             v-bind="calculatedMetrics.attentionQueuesProps"
@@ -1324,6 +1338,26 @@ export default {
   margin: 0.5rem;
   border-radius: 0.5rem;
   border: 1px solid var(--gris-default);
+}
+
+.doughnut-container {
+  max-width: 350px;
+  max-height: 350px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .doughnut-container {
+    max-width: 280px;
+    max-height: 280px;
+  }
+}
+
+@media (max-width: 576px) {
+  .doughnut-container {
+    max-width: 250px;
+    max-height: 250px;
+  }
 }
 .metric-card-graph {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);

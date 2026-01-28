@@ -743,6 +743,13 @@ export default {
                       @download="exportToCSV"
                       :can-download="toggles['financial.reports.incomes'] === true"
                     ></SimpleDownloadButton>
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 ms-2"
+                      @click="clear()"
+                      :disabled="loading"
+                    >
+                      <i class="bi bi-arrow-clockwise"></i>
+                    </button>
                   </div>
                 </div>
                 <!-- Filters Section - Can be shown in component or exposed via slot -->
