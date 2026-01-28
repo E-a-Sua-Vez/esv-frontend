@@ -653,7 +653,7 @@ export default {
                         :on-select-service="(prof, service) => selectServiceIndex(index, service)"
                         :on-delete-service="(prof, serviceId) => deleteService(prof, serviceId)"
                         :show-service="showService"
-                        @update:professional="professional = $event"
+                        @update:professional="state.filtered[index] = $event"
                       />
                       <div class="col centered d-flex justify-content-center gap-3">
                         <button
@@ -829,12 +829,12 @@ export default {
                         :on-select-service="(prof, service) => selectServiceIndex(index, service)"
                         :on-delete-service="(prof, serviceId) => deleteService(prof, serviceId)"
                         :show-service="showService"
-                        @update:professional="professional = $event"
+                        @update:professional="state.filtered[index] = $event"
                       />
                       <div class="col centered d-flex justify-content-center gap-3">
                         <button
                           class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(professional)"
+                          @click="update(state.filtered[index])"
                           :disabled="!state.toggles['professionals.admin.update']"
                         >
                           {{ $t('businessProfessionalsAdmin.update') }} <i class="bi bi-save"></i>

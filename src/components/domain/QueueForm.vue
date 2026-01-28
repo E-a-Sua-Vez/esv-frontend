@@ -16,7 +16,8 @@ export default {
     groupedQueues: { type: Object, default: {} },
     queueId: { type: String, default: undefined },
     accept: { type: Boolean, default: false },
-    collaborators: { type: Array, default: [] },
+    collaborators: { type: Array, default: [] }, // Keep for backward compatibility
+    professionals: { type: Array, default: [] }, // New professionals prop
     receiveQueue: { type: Function, default: () => {} },
     receiveServices: { type: Function, default: () => {} },
     preselectedServiceId: { type: String, default: null }, // Service ID to filter collaborators
@@ -25,7 +26,7 @@ export default {
     const loading = ref(false);
     const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
 
-    const { commerce, queues, groupedQueues, collaborators, queueId, accept } = toRefs(props);
+    const { commerce, queues, groupedQueues, collaborators, professionals, queueId, accept } = toRefs(props);
 
     const { receiveQueue, receiveServices } = props;
 
@@ -56,33 +57,50 @@ export default {
               const queueAux = [];
               for (const queue of queues) {
                 if (queue.type === 'PROFESSIONAL') {
-                  const collaboratorsAux = collaborators.value.filter(collaborator => {
-                    // If preselectedServiceId is provided, filter collaborators that have this service
-                    if (props.preselectedServiceId) {
-                      const hasService =
-                        queue.servicesId &&
-                        queue.servicesId.some(
-                          serviceId => serviceId === props.preselectedServiceId
-                        );
-                      return collaborator.id === queue.professionalId && hasService;
-                    }
-                    return collaborator.id === queue.professionalId;
-                  });
-                  if (collaboratorsAux && collaboratorsAux.length > 0) {
-                    queue.collaborator = collaboratorsAux[0];
+                  // Try to find matching professional in professionals array first
+                  let professionalsAux = [];
+
+                  if (professionals.value.length > 0) {
+                    professionalsAux = professionals.value.filter(professional => {
+                      return professional.id === queue.professionalId;
+                    });
+                  }
+
+                  // Fallback to collaborators if no match found in professionals
+                  if (professionalsAux.length === 0 && collaborators.value.length > 0) {
+                    professionalsAux = collaborators.value.filter(collaborator => {
+                      const profId = collaborator.professionalId || collaborator.id;
+                      return profId === queue.professionalId;
+                    });
+                  }
+
+                  if (professionalsAux && professionalsAux.length > 0) {
+                    queue.collaborator = professionalsAux[0]; // Keep as collaborator for backward compatibility
                     // Fix tag if it's undefined - regenerate from professional info
                     if (queue.tag === 'undefined' || !queue.tag) {
                       queue.tag =
-                        collaboratorsAux[0].personalInfo?.email ||
-                        collaboratorsAux[0].personalInfo?.name ||
+                        professionalsAux[0].email ||
+                        professionalsAux[0].personalInfo?.email ||
+                        professionalsAux[0].name ||
+                        professionalsAux[0].personalInfo?.name ||
                         'Profesional';
                     }
+
+                    // Enhance telemedicine information from professional's medical data
+                    const medicalData = professionalsAux[0].medicalData;
+                    if (medicalData && medicalData.telemedicine) {
+                      // If the professional offers telemedicine, enable it for the queue
+                      // Override queue setting if professional offers telemedicine
+                      queue.telemedicineEnabled = true;
+                    }
+
                     // For PROFESSIONAL queues, get services from queue.servicesId
                     if (queue.servicesId && queue.servicesId.length > 0) {
                       try {
-                        queue.services = await getServicesById(queue.servicesId);
+                        const loadedServices = await getServicesById(queue.servicesId);
+                        queue.services = loadedServices || [];
                       } catch (error) {
-                        console.error('Error loading professional services:', error);
+                        console.error(`Error loading professional ${queue.name} services:`, error);
                         queue.services = [];
                       }
                     } else {
@@ -102,37 +120,61 @@ export default {
               const queueAux = [];
               for (const queue of queues.value) {
                 if (queue.type === 'PROFESSIONAL') {
-                  const collaboratorsAux = collaborators.value.filter(collaborator => {
-                    // If preselectedServiceId is provided, filter collaborators that have this service
+                  // Use professionals array if available, fallback to collaborators for backward compatibility
+                  const professionalsArray = professionals.value.length > 0 ? professionals.value : collaborators.value;
+                  const professionalsAux = professionalsArray.filter(professional => {
+                    // If preselectedServiceId is provided, filter professionals that have this service
                     if (props.preselectedServiceId) {
                       const hasService =
                         queue.servicesId &&
                         queue.servicesId.some(
                           serviceId => serviceId === props.preselectedServiceId
                         );
-                      return collaborator.id === queue.professionalId && hasService;
+                      return professional.id === queue.professionalId && hasService;
                     }
-                    return collaborator.id === queue.professionalId;
+                    return professional.id === queue.professionalId;
                   });
-                  if (collaboratorsAux && collaboratorsAux.length > 0) {
-                    queue.collaborator = collaboratorsAux[0];
+                  console.log(`[StandardMode] Professional ${queue.name} - professionalId: ${queue.professionalId}`);
+                  console.log(`[StandardMode] Available professionals:`, professionalsArray);
+                  console.log(`[StandardMode] Matched professionals:`, professionalsAux);
+
+                  if (professionalsAux && professionalsAux.length > 0) {
+                    queue.collaborator = professionalsAux[0]; // Keep as collaborator for backward compatibility
                     // Fix tag if it's undefined - regenerate from professional info
                     if (queue.tag === 'undefined' || !queue.tag) {
                       queue.tag =
-                        collaboratorsAux[0].personalInfo?.email ||
-                        collaboratorsAux[0].personalInfo?.name ||
+                        professionalsAux[0].personalInfo?.email ||
+                        professionalsAux[0].personalInfo?.name ||
                         'Profesional';
                     }
+
+                    // Enhance telemedicine information from professional's medical data
+                    const medicalData = professionalsAux[0].medicalData;
+                    console.log(`[StandardMode] Professional ${queue.name} medical data:`, medicalData);
+                    console.log(`[StandardMode] Queue ${queue.name} current telemedicineEnabled:`, queue.telemedicineEnabled);
+                    if (medicalData && medicalData.telemedicine) {
+                      // If the professional offers telemedicine, enable it for the queue
+                      // Override queue setting if professional offers telemedicine
+                      queue.telemedicineEnabled = true;
+                      console.log(`[StandardMode] Telemedicine enabled for professional ${queue.name} (overridden from queue setting)`);
+                    }
+
                     // For PROFESSIONAL queues, get services from queue.servicesId
+                    console.log(`[StandardMode] Professional ${queue.name} - servicesId:`, queue.servicesId);
                     if (queue.servicesId && queue.servicesId.length > 0) {
                       try {
-                        queue.services = await getServicesById(queue.servicesId);
+                        console.log(`[StandardMode] Calling getServicesById with:`, queue.servicesId);
+                        const loadedServices = await getServicesById(queue.servicesId);
+                        console.log(`[StandardMode] getServicesById returned:`, loadedServices);
+                        queue.services = loadedServices || [];
+                        console.log(`[StandardMode] Professional ${queue.name} services loaded:`, queue.services);
                       } catch (error) {
-                        console.error('Error loading professional services:', error);
+                        console.error(`[StandardMode] Error loading professional ${queue.name} services:`, error);
                         queue.services = [];
                       }
                     } else {
                       queue.services = [];
+                      console.log(`[StandardMode] Professional ${queue.name} has no services configured (servicesId: ${queue.servicesId})`);
                     }
                     queue.servicesName =
                       queue.services && queue.services.length > 0
@@ -437,7 +479,7 @@ export default {
             </div>
             <div
               class="centered mt-1"
-              v-if="state.filteredCollaboratorQueues && collaborators.length > state.limit"
+              v-if="state.filteredCollaboratorQueues && (professionals.length > 0 ? professionals.length : collaborators.length) > state.limit"
             >
               <nav>
                 <ul class="pagination pagination-ul">

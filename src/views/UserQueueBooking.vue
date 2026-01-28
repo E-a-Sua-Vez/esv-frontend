@@ -166,7 +166,13 @@ export default {
         state.queue = bookingData.queue;
         state.commerce = bookingData.commerce;
 
-        // Debug: Log booking block structure
+        // Debug: Log booking data structure
+        console.log('[UserQueueBooking] Booking data loaded:', bookingData);
+        console.log('[UserQueueBooking] Booking number:', state.booking.number);
+        console.log('[UserQueueBooking] Booking date:', state.booking.date);
+        console.log('[UserQueueBooking] Booking block:', state.booking.block);
+        console.log('[UserQueueBooking] Booking beforeYou:', state.booking.beforeYou);
+        console.log('[UserQueueBooking] Booking status:', state.booking.status);
 
         // Calculate estimated time using intelligent estimation
         await calculateEstimatedTime();

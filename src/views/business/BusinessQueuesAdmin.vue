@@ -409,14 +409,20 @@ export default {
           created = true;
           state.queues = await getQueuesByCommerceId(commerce.value.id);
           state.extendedEntity = undefined;
+          console.log('Queue created successfully, closing modal');
         }
         alertError.value = '';
       } catch (error) {
         alertError.value = error.response.status || 500;
+        console.error('Error adding queue:', error);
       } finally {
+        loading.value = false;
         if (created) {
           state.showAdd = false;
-          closeAddModal();
+          // Usar setTimeout para asegurar que el DOM se haya actualizado
+          setTimeout(() => {
+            closeAddModal();
+          }, 100);
         }
         loading.value = false;
       }
@@ -768,8 +774,26 @@ export default {
     };
 
     const closeAddModal = () => {
+      // Intentar múltiples métodos para cerrar el modal
       const modalCloseButton = document.getElementById('close-modal');
-      modalCloseButton.click();
+      if (modalCloseButton) {
+        modalCloseButton.click();
+        return;
+      }
+
+      // Si no hay botón de cierre, usar Bootstrap modal hide
+      const modalElement = document.getElementById('addModal');
+      if (modalElement) {
+        const modal = window.bootstrap.Modal.getInstance(modalElement) || new window.bootstrap.Modal(modalElement);
+        modal.hide();
+        return;
+      }
+
+      // Como último recurso, buscar cualquier botón con data-bs-dismiss
+      const dismissButton = document.querySelector('[data-bs-dismiss="modal"]');
+      if (dismissButton) {
+        dismissButton.click();
+      }
     };
 
     const resetAddForm = () => {

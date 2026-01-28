@@ -3904,7 +3904,7 @@
     "procedures": "Procedures:",
     "proceduresHelp": "Procedures number needed to complete the Service",
     "estimatedTime": "Estimated Time:",
-    "tagHelp": "Short identifier of the service.",
+    "tagHelp": "Short and unique identifier of the service for easy reference and identification.",
     "onlineHelp": "Service can be shown to be selected by the user.",
     "blockTimeHelp": "Duration of the block of attention to the user for this service in minutes.",
     "estimatedTimeHelp": "Estimated time duration of the service.",

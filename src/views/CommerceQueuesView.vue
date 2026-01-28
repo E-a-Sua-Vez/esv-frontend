@@ -25,6 +25,7 @@ import {
   getDetailsCollaboratorsByCommerceId,
   getCollaboratorDetailsById,
 } from '../application/services/collaborator';
+import { getActiveProfessionalsByCommerce } from '../application/services/professional';
 import Message from '../components/common/Message.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
 import Spinner from '../components/common/Spinner.vue';
@@ -157,6 +158,7 @@ export default {
       queues: [],
       groupedQueues: [],
       collaborators: [],
+      professionals: [], // Add professionals state
       queue: {},
       services: [],
       selectedServices: [],
@@ -286,8 +288,9 @@ export default {
               }
             }
           }
-          const [collaborators, groupedQueues] = await Promise.all([
+          const [collaborators, professionals, groupedQueues] = await Promise.all([
             getDetailsCollaboratorsByCommerceId(state.commerce.id),
+            getActiveProfessionalsByCommerce(state.commerce.id),
             getGroupedQueueByCommerceId(state.commerce.id),
           ]);
           if ((queueId && queueId !== 'undefined') || (queue && queue !== undefined)) {
@@ -328,6 +331,7 @@ export default {
               await getAttention(undefined);
             }
             state.collaborators = collaborators;
+            state.professionals = professionals || [];
             if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
               state.groupedQueues = groupedQueues;
               const queues = state.groupedQueues['PROFESSIONAL'] || [];
@@ -3498,6 +3502,7 @@ export default {
                   :queue-id="state.queueId"
                   :accept="state.accept"
                   :collaborators="state.collaborators"
+                  :professionals="state.professionals"
                   :receive-queue="receiveQueue"
                   :receive-services="receiveServices"
                 >

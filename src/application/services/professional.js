@@ -35,6 +35,8 @@ export const addProfessional = async professional =>
   (await requestBackend.post(`/${entity}`, professional, await getHeaders())).data;
 
 export const updateProfessional = async professional => {
+  console.log('🔄 [updateProfessional] Iniciando actualización:', professional);
+
   // Si hay profilePhoto con File en personalInfo, primero hacer upload separado
   if (
     professional.personalInfo?.profilePhoto &&
@@ -69,9 +71,17 @@ export const updateProfessional = async professional => {
     }
   }
 
-  return (
-    await requestBackend.patch(`/${entity}/${professional.id}`, professional, await getHeaders())
-  ).data;
+  console.log('📡 [updateProfessional] Enviando datos al backend:', {
+    id: professional.id,
+    medicalData: professional.medicalData,
+    personalInfo: professional.personalInfo,
+    professionalInfo: professional.professionalInfo
+  });
+
+  const result = await requestBackend.patch(`/${entity}/${professional.id}`, professional, await getHeaders());
+  console.log('✅ [updateProfessional] Respuesta del backend:', result.data);
+
+  return result.data;
 };
 
 export const getProfessionalsByCommerceId = async commerceId =>

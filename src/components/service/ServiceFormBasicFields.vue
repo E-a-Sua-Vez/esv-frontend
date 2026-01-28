@@ -104,14 +104,17 @@ export default {
           <i class="bi bi-info-circle-fill h7"></i>
         </Popper>
       </label>
-      <input
+      <select
         :id="`${prefix}service-type-form`"
-        type="text"
-        class="form-control-modern"
-        :disabled="true"
+        class="form-control-modern form-select-modern"
+        :class="{ 'is-invalid': errors.typeError }"
+        :disabled="isAdd ? false : !toggles['services.admin.edit']"
         v-model="service.type"
-        placeholder="Type"
-      />
+      >
+        <option v-for="typ in types" :key="typ.id" :value="typ.id">
+          {{ $t(`services.types.${typ.id}`) }}
+        </option>
+      </select>
     </div>
     <div class="form-group-modern form-group-toggle" v-if="!isAdd">
       <label class="form-label-modern">

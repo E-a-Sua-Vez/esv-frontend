@@ -135,7 +135,7 @@ export default {
                   {{
                     queue.services && queue.services.length > 0
                       ? queue.services.map(serv => serv.name).join(', ')
-                      : queue.name
+                      : queue.type === 'PROFESSIONAL' ? 'Cargando servicios...' : queue.name
                   }}
                 </span>
               </div>

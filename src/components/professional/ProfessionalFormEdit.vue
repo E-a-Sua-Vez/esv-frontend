@@ -48,17 +48,55 @@ export default {
   computed: {
     localProfessional: {
       get() {
-        // Asegurar que medicalData existe si el profesional es de tipo médico
-        const prof = { ...this.professional };
-        if (this.isMedicalProfessional && !prof.medicalData) {
-          prof.medicalData = {};
+        // Crear una copia profunda para mantener reactividad
+        const prof = JSON.parse(JSON.stringify(this.professional));
+
+        // Asegurar que medicalData siempre existe (temporalmente para debug)
+        if (!prof.medicalData || typeof prof.medicalData !== 'object') {
+          prof.medicalData = {
+            medicalLicense: '',
+            medicalLicenseState: '',
+            specialization: '',
+            subspecialization: '',
+            medicalSchool: '',
+            graduationYear: null,
+            professionalAddress: '',
+            professionalPhone: '',
+            professionalMobile: '',
+            professionalEmail: '',
+            emergencyPhone: '',
+            acceptsEmergencies: false,
+            homeVisits: false,
+            telemedicine: false,
+            canSignDocuments: false,
+            languages: [],
+            insuranceProviders: []
+          };
         }
         return prof;
       },
       set(value) {
-        // Asegurar que medicalData siempre existe cuando se actualiza
-        if (!value.medicalData) {
-          value.medicalData = {};
+        // Asegurar que medicalData siempre existe cuando se actualiza (temporalmente para debug)
+        if (!value.medicalData || typeof value.medicalData !== 'object') {
+          value.medicalData = {
+            medicalLicense: '',
+            medicalLicenseState: '',
+            specialization: '',
+            subspecialization: '',
+            medicalSchool: '',
+            graduationYear: null,
+            professionalAddress: '',
+            professionalPhone: '',
+            professionalMobile: '',
+            professionalEmail: '',
+            emergencyPhone: '',
+            acceptsEmergencies: false,
+            homeVisits: false,
+            telemedicine: false,
+            canSignDocuments: false,
+            languages: [],
+            insuranceProviders: []
+          };
         }
         this.$emit('update:professional', value);
       },
@@ -83,7 +121,17 @@ export default {
         'PHARMACIST',
         'TECHNICIAN',
       ];
-      return medicalTypes.includes(this.professional.professionalInfo?.professionalType);
+      const professionalType = this.professional.professionalInfo?.professionalType;
+      const isMedical = medicalTypes.includes(professionalType);
+
+      console.log('🔍 isMedicalProfessional check:', {
+        professionalType,
+        isMedical,
+        medicalTypes,
+        professionalInfo: this.professional.professionalInfo
+      });
+
+      return isMedical;
     },
   },
   methods: {
@@ -107,10 +155,19 @@ export default {
     },
     updateMedicalData(field, value) {
       const updated = { ...this.professional };
-      if (!updated.medicalData) updated.medicalData = {};
+
+      // Asegurar que medicalData existe
+      if (!updated.medicalData || typeof updated.medicalData !== 'object') {
+        updated.medicalData = {};
+      }
+
       // Deep clone medicalData to ensure reactivity
       updated.medicalData = { ...updated.medicalData };
       updated.medicalData[field] = value;
+
+      console.log(`Updating medical data - ${field}:`, value);
+      console.log('Full medicalData:', updated.medicalData);
+
       this.$emit('update:professional', updated);
     },
     handlePhotoUpdated(partial) {
@@ -195,18 +252,8 @@ export default {
     },
   },
   watch: {
-    'professional.medicalData': {
-      handler(newMedicalData) {
-        // When medicalData changes due to v-model updates on toggles,
-        // emit the updated professional object to ensure parent receives changes
-        if (newMedicalData) {
-          const updated = { ...this.professional };
-          updated.medicalData = newMedicalData;
-          this.$emit('update:professional', updated);
-        }
-      },
-      deep: true,
-    },
+    // Removido el watcher de professional.medicalData que causaba loops infinitos
+    // El binding correcto con localProfessional elimina la necesidad de este watcher
   },
 };
 </script>
@@ -483,7 +530,8 @@ export default {
     </div>
 
     <!-- Dados Médicos -->
-    <div v-if="isMedicalProfessional" class="form-fields-container">
+    <!-- Sección: Datos Médicos (temporalmente siempre visible para debug) -->
+    <div class="form-fields-container">
       <!-- Sección: Información Profesional Médica -->
       <div class="form-section-group">
         <h6 class="form-section-title mb-3">
@@ -506,7 +554,7 @@ export default {
           <input
             type="text"
             class="form-control-modern"
-            :value="professional.medicalData?.medicalLicense"
+            :value="localProfessional.medicalData?.medicalLicense"
             @input="updateMedicalData('medicalLicense', $event.target.value)"
             :placeholder="$t('professionals.medicalLicensePlaceholder')"
           />
@@ -527,7 +575,7 @@ export default {
           <input
             type="text"
             class="form-control-modern"
-            :value="professional.medicalData?.medicalLicenseState"
+            :value="localProfessional.medicalData?.medicalLicenseState"
             @input="updateMedicalData('medicalLicenseState', $event.target.value)"
             :placeholder="$t('professionals.medicalLicenseStatePlaceholder')"
           />
@@ -546,7 +594,7 @@ export default {
           <input
             type="text"
             class="form-control-modern"
-            :value="professional.medicalData?.specialization"
+            :value="localProfessional.medicalData?.specialization"
             @input="updateMedicalData('specialization', $event.target.value)"
             :placeholder="$t('professionals.specializationPlaceholder')"
           />
@@ -567,7 +615,7 @@ export default {
           <input
             type="text"
             class="form-control-modern"
-            :value="professional.medicalData?.subspecialization"
+            :value="localProfessional.medicalData?.subspecialization"
             @input="updateMedicalData('subspecialization', $event.target.value)"
             :placeholder="$t('professionals.subspecializationPlaceholder')"
           />
@@ -588,7 +636,7 @@ export default {
           <input
             type="text"
             class="form-control-modern"
-            :value="professional.medicalData?.medicalSchool"
+            :value="localProfessional.medicalData?.medicalSchool"
             @input="updateMedicalData('medicalSchool', $event.target.value)"
             :placeholder="$t('professionals.medicalSchoolPlaceholder')"
           />
@@ -607,7 +655,7 @@ export default {
           <input
             type="number"
             class="form-control-modern"
-            :value="professional.medicalData?.graduationYear"
+            :value="localProfessional.medicalData?.graduationYear"
             @input="
               updateMedicalData(
                 'graduationYear',
@@ -641,7 +689,7 @@ export default {
           <input
             type="text"
             class="form-control-modern"
-            :value="professional.medicalData?.professionalAddress"
+            :value="localProfessional.medicalData?.professionalAddress"
             @input="updateMedicalData('professionalAddress', $event.target.value)"
             :placeholder="$t('professionals.professionalAddressPlaceholder')"
           />
@@ -662,7 +710,7 @@ export default {
           <input
             type="tel"
             class="form-control-modern"
-            :value="professional.medicalData?.professionalPhone"
+            :value="localProfessional.medicalData?.professionalPhone"
             @input="updateMedicalData('professionalPhone', $event.target.value)"
             :placeholder="$t('professionals.professionalPhonePlaceholder')"
           />
@@ -683,7 +731,7 @@ export default {
           <input
             type="tel"
             class="form-control-modern"
-            :value="professional.medicalData?.professionalMobile"
+            :value="localProfessional.medicalData?.professionalMobile"
             @input="updateMedicalData('professionalMobile', $event.target.value)"
             :placeholder="$t('professionals.professionalMobilePlaceholder')"
           />
@@ -704,7 +752,7 @@ export default {
           <input
             type="email"
             class="form-control-modern"
-            :value="professional.medicalData?.professionalEmail"
+            :value="localProfessional.medicalData?.professionalEmail"
             @input="updateMedicalData('professionalEmail', $event.target.value)"
             :placeholder="$t('professionals.professionalEmailPlaceholder')"
           />
@@ -725,7 +773,7 @@ export default {
           <input
             type="tel"
             class="form-control-modern"
-            :value="professional.medicalData?.emergencyPhone"
+            :value="localProfessional.medicalData?.emergencyPhone"
             @input="updateMedicalData('emergencyPhone', $event.target.value)"
             :placeholder="$t('professionals.emergencyPhonePlaceholder')"
           />
@@ -750,7 +798,8 @@ export default {
             </Popper>
           </label>
           <Toggle
-            v-model="localProfessional.medicalData.acceptsEmergencies"
+            :model-value="localProfessional.medicalData?.acceptsEmergencies || false"
+            @update:model-value="updateMedicalData('acceptsEmergencies', $event)"
             on-label=" "
             off-label=" "
           />
@@ -766,7 +815,12 @@ export default {
               <i class="bi bi-info-circle-fill h7"></i>
             </Popper>
           </label>
-          <Toggle v-model="localProfessional.medicalData.homeVisits" on-label=" " off-label=" " />
+          <Toggle
+            :model-value="localProfessional.medicalData?.homeVisits || false"
+            @update:model-value="updateMedicalData('homeVisits', $event)"
+            on-label=" "
+            off-label=" "
+          />
         </div>
 
         <div class="form-group-modern form-group-toggle">
@@ -779,7 +833,12 @@ export default {
               <i class="bi bi-info-circle-fill h7"></i>
             </Popper>
           </label>
-          <Toggle v-model="localProfessional.medicalData.telemedicine" on-label=" " off-label=" " />
+          <Toggle
+            :model-value="localProfessional.medicalData?.telemedicine || false"
+            @update:model-value="updateMedicalData('telemedicine', $event)"
+            on-label=" "
+            off-label=" "
+          />
         </div>
 
         <div class="form-group-modern">
@@ -795,7 +854,7 @@ export default {
           <input
             type="text"
             class="form-control-modern"
-            :value="professional.medicalData?.languages?.join(', ')"
+            :value="localProfessional.medicalData?.languages?.join(', ')"
             @input="
               updateMedicalData(
                 'languages',
@@ -821,7 +880,7 @@ export default {
           <input
             type="text"
             class="form-control-modern"
-            :value="professional.medicalData?.insuranceProviders?.join(', ')"
+            :value="localProfessional.medicalData?.insuranceProviders?.join(', ')"
             @input="
               updateMedicalData(
                 'insuranceProviders',
@@ -851,7 +910,8 @@ export default {
             </Popper>
           </label>
           <Toggle
-            v-model="localProfessional.medicalData.canSignDocuments"
+            :model-value="localProfessional.medicalData?.canSignDocuments || false"
+            @update:model-value="updateMedicalData('canSignDocuments', $event)"
             on-label=" "
             off-label=" "
           />
