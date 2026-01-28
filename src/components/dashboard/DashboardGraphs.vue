@@ -104,14 +104,29 @@ export default {
       };
     },
     getMaxAvgDay() {
-      const arr = this.calculatedMetrics['attention.created'].dayDistribution.datasets;
+      const dayDistribution = this.calculatedMetrics['attention.created']?.dayDistribution;
+      console.log('[DEBUG Frontend] dayDistribution:', dayDistribution);
+
+      const arr = dayDistribution?.datasets;
       if (!arr || arr.length === 0) {
+        console.log('[DEBUG Frontend] No datasets found, returning N/A');
         return { label: 'N/A', data: 0 };
       }
+
       const max = arr.reduce((a, b) => Math.max(a, b), -Infinity);
       const ind = arr.indexOf(max);
+      const label = dayDistribution.labels?.[ind];
+
+      console.log('[DEBUG Frontend] Max calculation:', {
+        arr,
+        max,
+        ind,
+        labels: dayDistribution.labels,
+        selectedLabel: label,
+      });
+
       return {
-        label: this.calculatedMetrics['attention.created'].dayDistribution.labels[ind] || 'N/A',
+        label: label || 'N/A',
         data: max,
       };
     },
