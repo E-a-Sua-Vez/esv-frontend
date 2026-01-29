@@ -20,6 +20,7 @@ import {
   checkAgreementStatus,
 } from '../../../application/services/whatsapp-notification';
 import { getActiveFeature } from '../../../shared/features';
+import { Modal } from 'bootstrap';
 import Popper from 'vue3-popper';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import Spinner from '../../common/Spinner.vue';
@@ -112,6 +113,8 @@ export default {
       preselectedQueueForModal: null, // Queue preselected from package
       preselectedServiceIdForModal: null, // Service ID preselected from package
       preselectedPackageIdForModal: null, // Package ID preselected from package
+      selectedBookingFromPackage: null, // Booking selected from package to open details
+      selectedAttentionFromPackage: null, // Attention selected from package to open details
       consentStatus: null,
       loadingConsentStatus: false,
       lgpdModalVisible: false, // Track LGPD modal visibility for lazy loading
@@ -396,34 +399,98 @@ export default {
       }
     },
     handleOpenAttentionModalFromPackage(data) {
-      // Open attention creation modal with package pre-selected data
+      // Check if this is a request to show attention details (not create new)
+      if (data.mode === 'details' && data.attention) {
+        console.log('Opening attention details directly for:', data.attention);
 
-      // Find the client object
-      const clientForModal = this.client;
+        // Hide packages modal temporarily
+        this.hidePackagesModal();
 
-      // Prepare client data for modal
-      this.attentionCreationClientData = {
-        queryStackClientId: clientForModal?.id,
-        firebaseClientId: undefined,
-        sendingClientId: false,
-        hasIdNumber: !!clientForModal?.userIdNumber,
-        hasEmail: !!clientForModal?.userEmail,
-        hasPhone: !!clientForModal?.userPhone,
-        userIdNumber: clientForModal?.userIdNumber,
-        name: clientForModal?.name,
-        lastName: clientForModal?.lastName,
-        email: clientForModal?.userEmail,
-        phone: clientForModal?.userPhone,
-      };
+        // Wait a bit for the packages modal to close
+        setTimeout(() => {
+          // Call the openAttentionModal method directly on ClientAttentionsManagement
+          if (this.$refs.attentionsManagementRef && this.$refs.attentionsManagementRef.openAttentionModal) {
+            this.$refs.attentionsManagementRef.openAttentionModal(data.attention);
 
-      // Store preselected data
-      this.preselectedQueueForModal = data.queue || null;
-      this.preselectedServiceIdForModal = data.serviceId || null;
-      this.preselectedPackageIdForModal = data.packageId || null;
+            // Listen for when the attention details modal closes to restore packages modal
+            const checkModalClosed = setInterval(() => {
+              const attentionModal = this.$refs.attentionsManagementRef?.showAttentionModal;
+              if (attentionModal === false) {
+                clearInterval(checkModalClosed);
+                // Restore packages modal after attention details modal closes
+                setTimeout(() => {
+                  this.showPackagesModal();
+                }, 300);
+              }
+            }, 500);
+          } else {
+            console.error('ClientAttentionsManagement ref not found or method not available');
+            // Restore packages modal if error
+            this.showPackagesModal();
+          }
+        }, 300);
+      } else {
+        // Open attention creation modal with package pre-selected data
 
-      // Open the modal
-      this.showAttentionCreationModal = true;
+        // Find the client object
+        const clientForModal = this.client;
+
+        // Prepare client data for modal
+        this.attentionCreationClientData = {
+          queryStackClientId: clientForModal?.id,
+          firebaseClientId: undefined,
+          sendingClientId: false,
+          hasIdNumber: !!clientForModal?.userIdNumber,
+          hasEmail: !!clientForModal?.userEmail,
+          hasPhone: !!clientForModal?.userPhone,
+          userIdNumber: clientForModal?.userIdNumber,
+          name: clientForModal?.name,
+          lastName: clientForModal?.lastName,
+          email: clientForModal?.userEmail,
+          phone: clientForModal?.userPhone,
+        };
+
+        // Store preselected data
+        this.preselectedQueueForModal = data.queue || null;
+        this.preselectedServiceIdForModal = data.serviceId || null;
+        this.preselectedPackageIdForModal = data.packageId || null;
+
+        // Open the modal
+        this.showAttentionCreationModal = true;
+      }
     },
+
+    handleOpenBookingModalFromPackage(booking) {
+      console.log('Opening booking details directly for:', booking);
+
+      // Hide packages modal temporarily
+      this.hidePackagesModal();
+
+      // Wait a bit for the packages modal to close
+      setTimeout(() => {
+        // Call the openBookingDetailsModal method directly on ClientBookingsManagement
+        if (this.$refs.bookingsManagementRef && this.$refs.bookingsManagementRef.openBookingDetailsModal) {
+          this.$refs.bookingsManagementRef.openBookingDetailsModal(booking);
+
+          // Listen for when the booking details modal closes to restore packages modal
+          const checkModalClosed = setInterval(() => {
+            const bookingDetailsModal = document.getElementById('bookingDetailsModal');
+            if (bookingDetailsModal && !bookingDetailsModal.classList.contains('show')) {
+              clearInterval(checkModalClosed);
+              // Restore packages modal after booking details modal closes
+              setTimeout(() => {
+                this.showPackagesModal();
+              }, 300);
+            }
+          }, 500);
+        } else {
+          console.error('ClientBookingsManagement ref not found or method not available');
+          // Restore packages modal if error
+          this.showPackagesModal();
+        }
+      }, 300);
+    },
+
     handleOpenPaymentFormFromPackage(paymentData) {
       // Open attention creation modal with package pre-selected for payment
       // The user will need to create an attention/booking first, then PaymentForm will open automatically
@@ -493,6 +560,88 @@ export default {
       // Note: The actual PaymentForm will open when the attention/booking is created
       // This is a limitation - PaymentForm requires an attention/booking ID
       // For now, we open the attention creation modal and the user can proceed from there
+    },
+    hidePackagesModal() {
+      console.log('hidePackagesModal called');
+      try {
+        const packagesModal = document.getElementById(`packagesModal-${this.client.id}`);
+        if (packagesModal) {
+          // Use Bootstrap's modal API instead of manual DOM manipulation
+          const bsModal = Modal.getOrCreateInstance(packagesModal);
+          if (bsModal) {
+            bsModal.hide();
+            console.log('Packages modal hidden successfully');
+          } else {
+            console.error('Bootstrap Modal instance not found');
+          }
+        } else {
+          console.warn('Packages modal element not found');
+        }
+      } catch (error) {
+        console.error('Error hiding packages modal:', error);
+      }
+    },
+    showPackagesModal() {
+      console.log('showPackagesModal called');
+      try {
+        const packagesModal = document.getElementById(`packagesModal-${this.client.id}`);
+        if (packagesModal) {
+          // Use Bootstrap's modal API instead of manual DOM manipulation
+          const bsModal = Modal.getOrCreateInstance(packagesModal);
+          if (bsModal) {
+            bsModal.show();
+            console.log('Packages modal shown successfully');
+          } else {
+            console.error('Bootstrap Modal instance not found');
+          }
+        } else {
+          console.warn('Packages modal element not found');
+        }
+      } catch (error) {
+        console.error('Error showing packages modal:', error);
+      }
+    },
+    ensureModalBackdrop(modalElement) {
+      try {
+        // Check if backdrop already exists
+        if (!document.querySelector('.modal-backdrop')) {
+          const backdrop = document.createElement('div');
+          backdrop.className = 'modal-backdrop fade show';
+          document.body.appendChild(backdrop);
+        }
+      } catch (error) {
+        console.error('Error ensuring modal backdrop:', error);
+      }
+    },
+    setupModalRestoreListener(modalId) {
+      try {
+        const modalElement = document.getElementById(modalId);
+        if (modalElement) {
+          // Remove any existing listener to avoid duplicates
+          modalElement.removeEventListener('hidden.bs.modal', this.restorePackagesModalHandler);
+
+          // Add new listener
+          this.restorePackagesModalHandler = () => {
+            this.showPackagesModal();
+            // Remove the listener after use
+            modalElement.removeEventListener('hidden.bs.modal', this.restorePackagesModalHandler);
+          };
+
+          modalElement.addEventListener('hidden.bs.modal', this.restorePackagesModalHandler);
+        }
+      } catch (error) {
+        console.error('Error setting up modal restore listener:', error);
+      }
+    },
+    cleanupModalListeners() {
+      // Clean up any existing listeners
+      if (this.restorePackagesModalHandler) {
+        const modalElements = document.querySelectorAll('[id*="Modal"]');
+        modalElements.forEach(modal => {
+          modal.removeEventListener('hidden.bs.modal', this.restorePackagesModalHandler);
+        });
+        this.restorePackagesModalHandler = null;
+      }
     },
     handleAttentionCreationError(errors) {
       // Handle errors as needed
@@ -844,19 +993,29 @@ export default {
     },
     // Métodos para abrir modales (solo abren, no cargan datos)
     async openAttentionsModal() {
-      // El modal se abre automáticamente con data-bs-toggle
-      // Los datos se cargarán cuando el modal se muestre (event listener)
       // Update preprontuario status when opening modal
       if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
         await this.checkPreprontuarioCompletion();
       }
+
+      // Open the modal using Bootstrap's Modal API
+      const attentionsModalElement = document.getElementById(`attentionsModal-${this.client.id}`);
+      if (attentionsModalElement) {
+        const attentionsModal = Modal.getOrCreateInstance(attentionsModalElement);
+        attentionsModal.show();
+      }
     },
     async openBookingsModal() {
-      // El modal se abre automáticamente con data-bs-toggle
-      // Los datos se cargarán cuando el modal se muestre (event listener)
       // Update preprontuario status when opening modal
       if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
         await this.checkPreprontuarioCompletion();
+      }
+
+      // Open the modal using Bootstrap's Modal API
+      const bookingsModalElement = document.getElementById(`bookingsModal-${this.client.id}`);
+      if (bookingsModalElement) {
+        const bookingsModal = Modal.getOrCreateInstance(bookingsModalElement);
+        bookingsModal.show();
       }
     },
     async openPackagesModal() {
@@ -1347,6 +1506,10 @@ export default {
     });
     // Don't load client data or check preprontuario on mount - wait until card is expanded or modal is opened
     // This reduces unnecessary API calls when the card is closed
+  },
+  beforeUnmount() {
+    // Clean up modal listeners to prevent memory leaks
+    this.cleanupModalListeners();
   },
 };
 </script>
@@ -2223,6 +2386,7 @@ export default {
                 :commerces="commerces"
                 :queues="queuesArray"
                 @open-attention-modal="handleOpenAttentionModalFromPackage"
+                @open-booking-modal="handleOpenBookingModalFromPackage"
                 @open-payment-form="handleOpenPaymentFormFromPackage"
               >
               </ClientPackagesManagement>

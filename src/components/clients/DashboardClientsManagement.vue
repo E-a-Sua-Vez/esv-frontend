@@ -65,19 +65,28 @@ export default {
       endDate: undefined,
       togglesClient: {},
       _skipWatch: false, // Flag to skip watch during manual sync
+      _refreshTimeout: null, // Timeout para debounce del refresh
     };
   },
   methods: {
     async refresh(page) {
-      try {
-        this.loading = true;
-        // Clear previous clients IMMEDIATELY to avoid showing stale data
-        this.clients = [];
-        this.counter = 0;
-        this.totalPages = 0;
-        let commerceIds = [this.commerce.id];
-        if (this.commerces && this.commerces.length > 0) {
-          commerceIds = this.commerces.map(commerce => commerce.id);
+      // Clear any existing timeout
+      if (this._refreshTimeout) {
+        clearTimeout(this._refreshTimeout);
+      }
+
+      // Debounce the refresh by 500ms
+      return new Promise((resolve) => {
+        this._refreshTimeout = setTimeout(async () => {
+          try {
+            this.loading = true;
+            // Clear previous clients IMMEDIATELY to avoid showing stale data
+            this.clients = [];
+            this.counter = 0;
+            this.totalPages = 0;
+            let commerceIds = [this.commerce.id];
+            if (this.commerces && this.commerces.length > 0) {
+              commerceIds = this.commerces.map(commerce => commerce.id);
         }
         this.page = page ? page : this.page;
 
@@ -137,9 +146,13 @@ export default {
           this.totalPages = 0;
         }
         this.loading = false;
+        resolve();
       } catch (error) {
         this.loading = false;
+        resolve();
       }
+        }, 500);
+      });
     },
     async setPage(pageIn) {
       this.page = pageIn;

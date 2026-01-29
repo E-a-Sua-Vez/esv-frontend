@@ -7257,6 +7257,7 @@
   },
   "package": {
     "package": "Paquete",
+    "status": "Estado",
     "status": {
       "ACTIVE": "Activo",
       "CONFIRMED": "Confirmado",
@@ -7304,6 +7305,7 @@
     "payRemainingMessage": "Se abrirá el formulario de pago para pagar el monto restante.",
     "copy": "Copiar",
     "details": "Detalles",
+    "noPaymentInfo": "No hay información de pago establecida para este paquete",
     "services": "Servicios",
     "type": "Tipo",
     "actions": "Acciones",

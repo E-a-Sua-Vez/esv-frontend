@@ -171,13 +171,13 @@ export default {
     },
     async showProfessionalDetails() {
       this.extendedProfessionalEntity = !this.extendedProfessionalEntity;
-      
+
       // Consultar datos frescos del booking cuando se abre el collapsible
       if (this.extendedProfessionalEntity) {
         console.log('[BookingDetailsCard] Opening professional section - refreshing booking data');
         await this.refreshBookingDataWithoutOverriding();
       }
-      
+
       // Forzar focus en el input cuando se muestra la sección
       if (this.extendedProfessionalEntity) {
         this.$nextTick(() => {
@@ -300,10 +300,22 @@ export default {
     },
     // PROFESSIONAL PAYMENT COMMISSION DATA
     getAssignedProfessionalCommissionData() {
+      console.log('[getAssignedProfessionalCommissionData] RAW BOOKING OBJECT:', this.booking);
+      console.log('[getAssignedProfessionalCommissionData] COMMISSION TYPE CHECK:', {
+        'this.booking?.professionalCommissionType': this.booking?.professionalCommissionType,
+        'typeof': typeof this.booking?.professionalCommissionType,
+        'this.booking?.professionalCommissionValue': this.booking?.professionalCommissionValue,
+        'typeof value': typeof this.booking?.professionalCommissionValue,
+        'condition result': !!(this.booking?.professionalCommissionType && this.booking?.professionalCommissionValue)
+      });
+
       if (!this.booking?.professionalName) {
+        console.log('[getAssignedProfessionalCommissionData] No professional name found');
         return { id: null, name: null, commission: null, commissionType: null, suggestedAmount: 0 };
       }
 
+      // DEBUG: Comentar toda la lógica intermedia para ir directo al final
+      /*
       console.log('[getAssignedProfessionalCommissionData] Debug info:', {
         commissionManuallyEdited: this.commissionManuallyEdited,
         professionalCommission: this.professionalCommission,
@@ -316,13 +328,12 @@ export default {
 
       // Si el usuario ha editado manualmente la comisión, usar ese valor
       if (this.commissionManuallyEdited && this.professionalCommission !== null && this.professionalCommission !== undefined && this.professionalCommission !== '') {
-        const manualCommissionValue = typeof this.professionalCommission === 'string' 
-          ? parseFloat(this.professionalCommission) 
+        const manualCommissionValue = typeof this.professionalCommission === 'string'
+          ? parseFloat(this.professionalCommission)
           : Number(this.professionalCommission);
-        
+
         if (manualCommissionValue > 0) {
           let suggestedAmount = 0;
-          const commissionDisplay = `${manualCommissionValue}%`;
 
           // Calculate percentage of payment amount if available
           if (this.newConfirmationData.paymentAmount) {
@@ -331,12 +342,12 @@ export default {
             );
           }
 
-          console.log('[getAssignedProfessionalCommissionData] Using manual commission:', commissionDisplay);
+          console.log('[getAssignedProfessionalCommissionData] Using manual commission:', manualCommissionValue);
 
           return {
             id: this.selectedProfessional?.id || this.booking.professionalId,
             name: this.booking.professionalName,
-            commission: commissionDisplay,
+            commission: manualCommissionValue,
             commissionType: 'PERCENTAGE',
             suggestedAmount,
           };
@@ -347,11 +358,9 @@ export default {
       if (this.booking?.professionalCommissionType && this.booking?.professionalCommissionValue) {
         const { professionalCommissionType, professionalCommissionValue } = this.booking;
         let suggestedAmount = 0;
-        let commissionDisplay = '';
 
         if (professionalCommissionValue && professionalCommissionValue > 0) {
           if (professionalCommissionType === 'PERCENTAGE') {
-            commissionDisplay = `${professionalCommissionValue}%`;
             // Calculate percentage of payment amount if available
             if (this.newConfirmationData.paymentAmount) {
               suggestedAmount = Math.round(
@@ -361,20 +370,21 @@ export default {
               suggestedAmount = this.booking.professionalCommissionAmount;
             }
           } else {
-            commissionDisplay = `${professionalCommissionValue} ${
-              this.commerce?.currency || 'BRL'
-            }`;
             suggestedAmount = Number(professionalCommissionValue);
           }
         }
 
-        console.log('[getAssignedProfessionalCommissionData] Using direct booking commission:', commissionDisplay);
+        console.log('[getAssignedProfessionalCommissionData] Using direct booking commission:', {
+          professionalCommissionValue,
+          professionalCommissionType,
+          rawType: this.booking.professionalCommissionType
+        });
 
         return {
           id: this.selectedProfessional?.id || this.booking.professionalId,
           name: this.booking.professionalName,
-          commission: commissionDisplay,
-          commissionType: this.booking.professionalCommissionType || 'PERCENTAGE',
+          commission: professionalCommissionValue,
+          commissionType: professionalCommissionType,
           suggestedAmount,
         };
       }
@@ -387,11 +397,9 @@ export default {
         const { professionalCommissionType, professionalCommissionValue } =
           this.booking.confirmationData;
         let suggestedAmount = 0;
-        let commissionDisplay = '';
 
         if (professionalCommissionValue && professionalCommissionValue > 0) {
           if (professionalCommissionType === 'PERCENTAGE') {
-            commissionDisplay = `${professionalCommissionValue}%`;
             // Calculate percentage of payment amount if available
             if (this.newConfirmationData.paymentAmount) {
               suggestedAmount = Math.round(
@@ -401,19 +409,16 @@ export default {
               suggestedAmount = this.booking.confirmationData.professionalCommissionAmount;
             }
           } else {
-            commissionDisplay = `${professionalCommissionValue} ${
-              this.commerce?.currency || 'BRL'
-            }`;
             suggestedAmount = Number(professionalCommissionValue);
           }
         }
 
-        console.log('[getAssignedProfessionalCommissionData] Using saved commission from confirmationData:', commissionDisplay);
+        console.log('[getAssignedProfessionalCommissionData] Using saved commission from confirmationData:', professionalCommissionValue);
 
         return {
           id: this.selectedProfessional?.id || this.booking.professionalId,
           name: this.booking.professionalName,
-          commission: commissionDisplay,
+          commission: professionalCommissionValue,
           commissionType: professionalCommissionType,
           suggestedAmount,
         };
@@ -423,11 +428,9 @@ export default {
       if (this.selectedProfessional?.financialInfo) {
         const { commissionType, commissionValue } = this.selectedProfessional.financialInfo;
         let suggestedAmount = 0;
-        let commissionDisplay = '';
 
         if (commissionValue) {
           if (commissionType === 'PERCENTAGE') {
-            commissionDisplay = `${commissionValue}%`;
             // Calculate percentage of payment amount if available
             if (this.newConfirmationData.paymentAmount) {
               suggestedAmount = Math.round(
@@ -435,17 +438,16 @@ export default {
               );
             }
           } else {
-            commissionDisplay = `${commissionValue} ${this.commerce?.currency || 'BRL'}`;
             suggestedAmount = Number(commissionValue);
           }
         }
 
-        console.log('[getAssignedProfessionalCommissionData] Using selectedProfessional default commission:', commissionDisplay);
+        console.log('[getAssignedProfessionalCommissionData] Using selectedProfessional default commission:', commissionValue);
 
         return {
           id: this.selectedProfessional.id,
           name: this.booking.professionalName,
-          commission: commissionDisplay,
+          commission: commissionValue,
           commissionType: commissionType,
           suggestedAmount,
         };
@@ -460,16 +462,29 @@ export default {
         // Evitar loops infinitos con flag
         this.loadProfessionalDataIfNeeded();
       }
+      */
 
-      // Fallback: solo el nombre (sin comisión)
-      console.log('[getAssignedProfessionalCommissionData] No commission data found, using fallback');
+      // TEMPORARY DEBUG VERSION - FORCE USE BOOKING DATA DIRECTLY
+      console.log('[getAssignedProfessionalCommissionData] FORCING BOOKING DATA USAGE');
       return {
-        id: this.selectedProfessional?.id || this.booking.professionalId,
+        id: this.booking.professionalId,
         name: this.booking.professionalName,
-        commission: null,
-        commissionType: null,
+        commission: this.booking.professionalCommissionValue || null,
+        commissionType: this.booking.professionalCommissionType || 'UNKNOWN',
         suggestedAmount: 0,
       };
+    },
+    getFormattedCommissionForDisplay() {
+      const data = this.getAssignedProfessionalCommissionData();
+      if (!data.commission || !data.commissionType) {
+        return null;
+      }
+
+      if (data.commissionType === 'PERCENTAGE') {
+        return `${data.commission}%`;
+      } else {
+        return `${data.commission} ${this.commerce?.currency || 'BRL'}`;
+      }
     },
     async loadProfessionals() {
       if (!this.booking || !this.booking.commerceId) {
@@ -558,14 +573,14 @@ export default {
         console.log('[BookingDetailsCard] Cannot refresh - no booking ID');
         return;
       }
-      
+
       try {
         console.log('[BookingDetailsCard] Refreshing booking data for ID:', this.booking.id);
         this.loading = true; // Show loading indicator
         const freshBooking = await getBookingDetails(this.booking.id);
-        
+
         console.log('[BookingDetailsCard] Fresh booking data received:', freshBooking);
-        
+
         if (freshBooking) {
           // Update booking data with fresh information
           this.booking.professionalId = freshBooking.professionalId;
@@ -574,29 +589,29 @@ export default {
           this.booking.professionalCommissionValue = freshBooking.professionalCommissionValue;
           this.booking.professionalCommissionAmount = freshBooking.professionalCommissionAmount;
           this.booking.professionalCommissionNotes = freshBooking.professionalCommissionNotes;
-          
+
           // Also update confirmationData if it exists
           if (freshBooking.confirmationData) {
             this.booking.confirmationData = freshBooking.confirmationData;
           }
-          
+
           console.log('[BookingDetailsCard] Booking data refreshed:', {
             professionalId: this.booking.professionalId,
             professionalName: this.booking.professionalName,
             professionalCommissionType: this.booking.professionalCommissionType,
             professionalCommissionValue: this.booking.professionalCommissionValue
           });
-          
+
           // Load fresh commission data
           if (this.booking.professionalCommissionValue) {
             this.professionalCommission = this.booking.professionalCommissionValue;
             this.commissionManuallyEdited = true;
             console.log('[BookingDetailsCard] Updated commission from fresh data:', this.professionalCommission);
           }
-          
+
           // Emit event to notify parent component of data changes
           this.$emit('booking-updated', this.booking);
-          
+
         } else {
           console.warn('[BookingDetailsCard] No fresh booking data received');
         }
@@ -612,14 +627,14 @@ export default {
         console.log('[BookingDetailsCard] Cannot refresh - no booking ID');
         return;
       }
-      
+
       try {
         console.log('[BookingDetailsCard] Refreshing booking data (without overriding user values) for ID:', this.booking.id);
         this.loading = true;
         const freshBooking = await getBookingDetails(this.booking.id);
-        
+
         console.log('[BookingDetailsCard] Fresh booking data received:', freshBooking);
-        
+
         if (freshBooking) {
           // Update booking data with fresh information
           this.booking.professionalId = freshBooking.professionalId;
@@ -628,19 +643,19 @@ export default {
           this.booking.professionalCommissionValue = freshBooking.professionalCommissionValue;
           this.booking.professionalCommissionAmount = freshBooking.professionalCommissionAmount;
           this.booking.professionalCommissionNotes = freshBooking.professionalCommissionNotes;
-          
+
           // Also update confirmationData if it exists
           if (freshBooking.confirmationData) {
             this.booking.confirmationData = freshBooking.confirmationData;
           }
-          
+
           console.log('[BookingDetailsCard] Booking data refreshed:', {
             professionalId: this.booking.professionalId,
             professionalName: this.booking.professionalName,
             professionalCommissionType: this.booking.professionalCommissionType,
             professionalCommissionValue: this.booking.professionalCommissionValue
           });
-          
+
           // NO cargar comisión si el usuario ya editó manualmente
           if (!this.commissionManuallyEdited && this.booking.professionalCommissionValue) {
             this.professionalCommission = this.booking.professionalCommissionValue;
@@ -648,10 +663,10 @@ export default {
           } else if (this.commissionManuallyEdited) {
             console.log('[BookingDetailsCard] NOT updating commission - user has manually edited it');
           }
-          
+
           // Emit event to notify parent component of data changes
           this.$emit('booking-updated', this.booking);
-          
+
         } else {
           console.warn('[BookingDetailsCard] No fresh booking data received');
         }
@@ -830,19 +845,19 @@ export default {
             };
             console.log('[BookingDetailsCard] Confirming booking payment:', this.booking.id, body);
             const updatedBooking = await confirmBooking(this.booking.id, body);
-            
+
             // Emit event to refresh the booking list - let parent component handle the update
             if (updatedBooking) {
               console.log('[BookingDetailsCard] Booking updated after confirmation:', updatedBooking);
               // Emit event with the updated booking data to parent component
               this.$emit('booking-updated', updatedBooking);
             }
-            
+
             // Close the payment modal after successful confirmation
             this.extendedPaymentEntity = false;
             this.goToConfirm1 = false;
             this.goToConfirm2 = false;
-            
+
             console.log('[BookingDetailsCard] Booking payment confirmed successfully');
           }
         }
@@ -1099,7 +1114,7 @@ export default {
     async goConfirm1() {
       // Refresh booking data to get latest commission information
       await this.refreshBookingData();
-      
+
       this.goToConfirm1 = !this.goToConfirm1;
     },
     confirmCancel1() {
@@ -1108,7 +1123,7 @@ export default {
     async goConfirm2() {
       // Refresh booking data to get latest commission information
       await this.refreshBookingData();
-      
+
       this.goToConfirm2 = !this.goToConfirm2;
     },
     confirmCancel2() {
@@ -1234,14 +1249,14 @@ export default {
           this.professionalCommission = newVal.professionalCommissionValue;
           this.commissionManuallyEdited = true; // Marcar como editada para mantener prioridad
           console.log('[BookingDetailsCard] Loaded commission from direct booking fields:', this.professionalCommission);
-        } 
+        }
         // Fallback: cargar desde confirmationData
         else if (newVal && newVal.professionalName && newVal.confirmationData?.professionalCommissionValue) {
           this.professionalCommission = newVal.confirmationData.professionalCommissionValue;
           this.commissionManuallyEdited = true; // Marcar como editada para mantener prioridad
           console.log('[BookingDetailsCard] Loaded commission from booking confirmationData:', this.professionalCommission);
         }
-        
+
         // Auto-cargar datos del profesional si es necesario
         if (newVal && newVal.professionalId && !this.selectedProfessional) {
           this.$nextTick(() => {
@@ -1940,7 +1955,7 @@ export default {
                       {{ $t('professionals.alreadyAssigned') || 'Profesional ya asignado' }}:
                       <strong>{{ booking.professionalName }}</strong>
                       <span v-if="getAssignedProfessionalCommissionData().commission" class="commission-info">
-                        ({{ $t('professionals.commission') || 'Comisión' }}: <strong>{{ getAssignedProfessionalCommissionData().commission }}</strong>)
+                        ({{ $t('professionals.commission') || 'Comisión' }}: <strong>{{ getFormattedCommissionForDisplay() }}</strong>)
                       </span>
                     </span>
                     <small class="alert-action">

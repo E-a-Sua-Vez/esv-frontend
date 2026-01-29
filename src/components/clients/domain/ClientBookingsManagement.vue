@@ -32,6 +32,16 @@ export default {
     services: { type: Array, default: undefined },
     bookingsIn: { type: Array, default: undefined },
   },
+  emits: ['booking-modal-closed'],
+  watch: {
+    showBookingDetailsModal(newValue, oldValue) {
+      // Emit event when modal closes (goes from true to false)
+      if (oldValue === true && newValue === false) {
+        console.log('BookingDetailsModal closed via watcher');
+        this.$emit('booking-modal-closed');
+      }
+    }
+  },
   data() {
     return {
       loading: false,
@@ -155,6 +165,7 @@ export default {
       }
     },
     closeBookingDetailsModal() {
+      console.log('closeBookingDetailsModal called');
       const modalElement = document.getElementById('bookingDetailsModal');
       if (modalElement) {
         const modal = Modal.getInstance(modalElement);
@@ -169,6 +180,10 @@ export default {
         this.showBookingDetailsModal = false;
         this.selectedBookingForModal = null;
       }
+
+      // Emit event when modal is closed
+      console.log('Emitting booking-modal-closed event');
+      this.$emit('booking-modal-closed');
     },
     handleBookingUpdated(updatedBooking) {
       // Refresh bookings list when a booking is updated
@@ -905,11 +920,7 @@ export default {
 
 /* Modal Header - Matching Attention Style */
 .modal-header {
-  background: linear-gradient(
-    135deg,
-    var(--azul-turno, #004aad) 0%,
-    var(--verde-tu, #00c2cb) 100%
-  ) !important;
+  background-color: var(--azul-turno, #004aad);
   color: white !important;
   border-bottom: none !important;
   padding: 1rem 1.25rem !important;

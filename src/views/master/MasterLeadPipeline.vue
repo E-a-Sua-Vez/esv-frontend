@@ -6221,7 +6221,7 @@ export default {
 }
 
 .analytics-modal .modal-header {
-  background: linear-gradient(135deg, #004aad 0%, #00c2cb 100%);
+  background-color: var(--azul-turno, #004aad);
   color: white;
   border-radius: 16px 16px 0 0;
   padding: 1rem 1.25rem;

@@ -28,7 +28,7 @@ export default {
     commerces: Array,
     queues: { type: Array, default: () => [] },
   },
-  emits: ['open-attention-modal', 'open-payment-form'],
+  emits: ['open-attention-modal', 'open-booking-modal', 'open-payment-form'],
   data() {
     return {
       loading: false,
@@ -235,6 +235,10 @@ export default {
     handleOpenAttentionModal(data) {
       // Emit event to parent (ClientDetailsCard) to open attention modal
       this.$emit('open-attention-modal', data);
+    },
+    handleOpenBookingModal(booking) {
+      // Emit event to parent (ClientDetailsCard) to open booking modal
+      this.$emit('open-booking-modal', booking);
     },
     handleAttentionCreated(attention) {
       // When attention/booking is created, refresh packages to update sessions
@@ -494,6 +498,7 @@ export default {
                       @package-updated="handlePackageUpdated"
                       @refresh="refresh"
                       @open-attention-modal="handleOpenAttentionModal"
+                      @open-booking-modal="handleOpenBookingModal"
                       @open-payment-form="handleOpenPaymentForm"
                     ></PackageDetailsCard>
                   </div>
@@ -529,6 +534,7 @@ export default {
                       @package-updated="handlePackageUpdated"
                       @refresh="refresh"
                       @open-attention-modal="handleOpenAttentionModal"
+                      @open-booking-modal="handleOpenBookingModal"
                       @open-payment-form="handleOpenPaymentForm"
                     ></PackageDetailsCard>
                   </div>
@@ -564,6 +570,7 @@ export default {
                       @package-updated="handlePackageUpdated"
                       @refresh="refresh"
                       @open-attention-modal="handleOpenAttentionModal"
+                      @open-booking-modal="handleOpenBookingModal"
                       @open-payment-form="handleOpenPaymentForm"
                     ></PackageDetailsCard>
                   </div>
@@ -599,6 +606,7 @@ export default {
                       @package-updated="handlePackageUpdated"
                       @refresh="refresh"
                       @open-attention-modal="handleOpenAttentionModal"
+                      @open-booking-modal="handleOpenBookingModal"
                       @open-payment-form="handleOpenPaymentForm"
                     ></PackageDetailsCard>
                   </div>

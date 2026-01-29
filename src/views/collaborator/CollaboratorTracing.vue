@@ -44,6 +44,7 @@ export default {
 
     const loading = ref(false);
     const alertError = ref('');
+    let refreshInProgress = false; // Flag para evitar múltiples refreshes simultáneos
 
     // Refs to access child component instances
     const clientsFilterRef = ref(null);
@@ -115,7 +116,16 @@ export default {
     });
 
     // Use global commerce from store
-    const commerce = computed(() => store.getCurrentCommerce);
+    const commerce = computed(() => {
+      const currentCommerce = store.getCurrentCommerce;
+      console.log('🔄 COMMERCE COMPUTED:', {
+        currentCommerce,
+        id: currentCommerce?.id,
+        name: currentCommerce?.name,
+        businessId: currentCommerce?.businessId
+      });
+      return currentCommerce;
+    });
     const business = computed(() => store.getCurrentBusiness);
 
     // Compute selectedCommerces - use all commerces for Tracing components
@@ -196,6 +206,9 @@ export default {
     onBeforeMount(async () => {
       try {
         loading.value = true;
+
+        console.log('🚀 === INICIO DEBUG COLLABORATOR TRACING ===');
+
         // Parallelize independent calls
         const [currentUser, business, toggles] = await Promise.all([
           store.getCurrentUser,
@@ -203,30 +216,102 @@ export default {
           getPermissions('dashboard'),
         ]);
 
+        console.log('🔍 DEBUG USER:', {
+          currentUser,
+          email: currentUser?.email,
+          businessId: currentUser?.businessId,
+          userType: currentUser?.userType
+        });
+
+        console.log('🔍 DEBUG BUSINESS:', {
+          business,
+          id: business?.id,
+          active: business?.active,
+          name: business?.name,
+          commerces: business?.commerces?.length || 'NO COMMERCES'
+        });
+
+        console.log('🔍 DEBUG TOGGLES:', {
+          toggles,
+          hasTracingPermission: toggles?.['dashboard.tracing'] || 'NO TRACING PERMISSION'
+        });
+
         state.currentUser = currentUser;
         state.business = business;
         state.toggles = toggles;
 
+        // Add missing collaborator booking permissions
+        try {
+          const collaboratorToggles = await getPermissions('collaborator');
+          if (collaboratorToggles) {
+            state.toggles = { ...state.toggles, ...collaboratorToggles };
+          }
+        } catch (error) {
+          console.warn('Could not load collaborator permissions:', error);
+        }
+
         // Load commerces after business is loaded
-        state.allCommerces = await store.getAvailableCommerces(state.business.commerces);
+        console.log('🔍 ABOUT TO LOAD COMMERCES FROM BUSINESS:', state.business?.commerces);
+
+        // Validate business before loading commerces
+        if (!state.business) {
+          console.error('🚨 NO BUSINESS AVAILABLE - Cannot load commerces');
+          loading.value = false;
+          return;
+        }
+
+        state.allCommerces = await store.getAvailableCommerces(state.business?.commerces || []);
+
+        console.log('🔍 DEBUG ALL COMMERCES LOADED:', {
+          allCommerces: state.allCommerces,
+          length: state.allCommerces?.length || 'NO LENGTH',
+          isArray: Array.isArray(state.allCommerces)
+        });
 
         // Initialize commerce in store if not set
         const currentCommerce = store.getCurrentCommerce;
+        console.log('🔍 DEBUG CURRENT COMMERCE FROM STORE:', {
+          currentCommerce,
+          id: currentCommerce?.id,
+          name: currentCommerce?.name
+        });
+
         if (!currentCommerce || !currentCommerce.id) {
+          console.log('🚨 NO CURRENT COMMERCE - TRYING TO SET FROM allCommerces');
           if (state.allCommerces && state.allCommerces.length > 0) {
+            console.log('🔄 SETTING COMMERCE TO:', state.allCommerces[0]);
             await store.setCurrentCommerce(state.allCommerces[0]);
+
+            const newCommerce = store.getCurrentCommerce;
+            console.log('✅ COMMERCE SET TO:', newCommerce);
+          } else {
+            console.log('🚨 NO allCommerces AVAILABLE TO SET');
           }
+        } else {
+          console.log('✅ COMMERCE ALREADY SET');
         }
 
         // Load queues from current commerce (no API call needed)
         const commerceToUse = store.getCurrentCommerce;
+        console.log('🔍 DEBUG FINAL COMMERCE TO USE:', {
+          commerceToUse,
+          id: commerceToUse?.id,
+          name: commerceToUse?.name
+        });
+
         if (commerceToUse) {
+          console.log('✅ LOADING QUEUES FOR COMMERCE:', commerceToUse.name);
           loadCommerceQueues(commerceToUse);
           // Services will be loaded lazily when needed (when attentions/clients tab is shown)
+        } else {
+          console.log('🚨 NO COMMERCE TO LOAD QUEUES');
         }
+
+        console.log('🏁 === FIN DEBUG COLLABORATOR TRACING ===');
 
         loading.value = false;
       } catch (error) {
+        console.error('💥 ERROR EN COLLABORATOR TRACING:', error);
         loading.value = false;
       }
     });
@@ -419,20 +504,28 @@ export default {
     // CRITICAL: This function must sync ALL filter values exactly as they are in filterInstance
     // to ensure mobile and desktop produce identical results
     const refreshClientsContent = (filterPropsOverride = null) => {
+      // Evitar múltiples refreshes simultáneos
+      if (refreshInProgress) {
+        return;
+      }
+      refreshInProgress = true;
+
       // Use nextTick to ensure filter instance values are updated
       nextTick(() => {
         nextTick(() => {
-          if (clientsFilterRef.value && clientsContentRef.value) {
-            const filterInstance = clientsFilterRef.value;
-            const contentInstance = clientsContentRef.value;
+          try {
+            if (clientsFilterRef.value && clientsContentRef.value) {
+              const filterInstance = clientsFilterRef.value;
+              const contentInstance = clientsContentRef.value;
 
-            if (!filterInstance || !contentInstance) {
-              return;
-            }
+              if (!filterInstance || !contentInstance) {
+                refreshInProgress = false;
+                return;
+              }
 
-            // Clear previous data immediately
-            contentInstance.clients = [];
-            contentInstance.counter = 0;
+              // Clear previous data immediately
+              contentInstance.clients = [];
+              contentInstance.counter = 0;
             contentInstance.totalPages = 0;
 
             // Set flag to skip watch during manual sync
@@ -502,14 +595,22 @@ export default {
             // Force Vue to update the reactive properties
             nextTick(() => {
               nextTick(() => {
-                if (contentInstance && contentInstance.refresh) {
-                  contentInstance.refresh(1);
+                try {
+                  if (contentInstance && contentInstance.refresh) {
+                    contentInstance.refresh(1);
+                  }
+                } finally {
+                  refreshInProgress = false;
                 }
               });
             });
           }
-        });
+        } catch (error) {
+          console.error('Error in refreshClientsContent:', error);
+          refreshInProgress = false;
+        }
       });
+    });
     };
 
     const refreshAttentionsContent = (filterPropsOverride = null) => {
@@ -1285,6 +1386,19 @@ export default {
             v-if="!commerce || (state.allCommerces && state.allCommerces.length === 0)"
             class="control-box"
           >
+            <!-- DEBUG: Showing why this error is displayed -->
+            <div class="alert alert-danger">
+              <h5>🚨 DEBUG ERROR CONDITION:</h5>
+              <p><strong>!commerce:</strong> {{ !commerce }}</p>
+              <p><strong>commerce value:</strong> {{ JSON.stringify(commerce, null, 2) }}</p>
+              <p><strong>state.allCommerces exists:</strong> {{ !!state.allCommerces }}</p>
+              <p><strong>state.allCommerces.length:</strong> {{ state.allCommerces?.length || 'NO LENGTH' }}</p>
+              <p><strong>allCommerces === 0:</strong> {{ state.allCommerces && state.allCommerces.length === 0 }}</p>
+              <p><strong>Full condition result:</strong> {{ !commerce || (state.allCommerces && state.allCommerces.length === 0) }}</p>
+              <br>
+              <p><strong>state.allCommerces content:</strong></p>
+              <pre>{{ JSON.stringify(state.allCommerces, null, 2) }}</pre>
+            </div>
             <Message
               :title="$t('dashboard.message.3.title')"
               :content="$t('dashboard.message.3.content')"

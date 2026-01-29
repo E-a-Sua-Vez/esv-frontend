@@ -421,7 +421,7 @@ export default {
   align-items: center;
   padding: 1.25rem;
   border-bottom: 1px solid var(--border-color);
-  background: linear-gradient(135deg, rgba(68, 111, 252, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
+  background-color: var(--azul-turno, #004aad);
 }
 
 .modal-title {

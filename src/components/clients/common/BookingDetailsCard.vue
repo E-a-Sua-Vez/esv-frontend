@@ -1503,11 +1503,7 @@ export default {
 
 /* Modal Header - Matching Attention Style */
 .modal-header {
-  background: linear-gradient(
-    135deg,
-    var(--azul-turno, #004aad) 0%,
-    var(--verde-tu, #00c2cb) 100%
-  ) !important;
+  background-color: var(--azul-turno, #004aad);
   color: white !important;
   border-bottom: none !important;
   padding: 1rem 1.25rem !important;

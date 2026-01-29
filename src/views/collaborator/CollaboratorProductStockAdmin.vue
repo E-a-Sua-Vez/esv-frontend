@@ -84,6 +84,10 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
+        
+        // Load business first (required for isActiveBusiness check)
+        await store.getActualBusiness();
+        
         // Set initial commerce if not set - check both commerceId and commercesId
         if (!commerce.value || !commerce.value.id) {
           // First try commerceId (single commerce)
@@ -160,7 +164,7 @@ export default {
       { deep: true }
     );
 
-    const isActiveBusiness = () => state.business && state.business.active === true;
+    const isActiveBusiness = () => business.value && business.value.active === true;
 
     const goBack = () => {
       router.back();
@@ -355,7 +359,7 @@ export default {
                     :commerce="commerce"
                     :queues="state.queues"
                     :commerces="selectedCommerces"
-                    :business="state.business"
+                    :business="business"
                     filters-location="component"
                   >
                   </ProductsStockManagement>
@@ -392,7 +396,7 @@ export default {
         </div>
         <DesktopPageHeader
           :commerce-id="commerce?.id"
-          :business-id="state.business?.id"
+          :business-id="business?.id"
           :loading="loading"
           :title="$t('businessProductStockAdmin.title')"
           :toggles="state.toggles"
@@ -454,7 +458,7 @@ export default {
                       :commerce="commerce"
                       :queues="Array.isArray(state.queues) ? state.queues : []"
                       :commerces="selectedCommerces"
-                      :business="state.business"
+                      :business="business"
                       filters-location="slot"
                     >
                       <template #filters-exposed="filterProps">
@@ -992,7 +996,7 @@ export default {
                   :commerce="commerce"
                   :queues="state.queues"
                   :commerces="selectedCommerces"
-                  :business="state.business"
+                  :business="business"
                   filters-location="slot"
                 >
                 </ProductsStockManagement>

@@ -7127,6 +7127,7 @@
   },
   "package": {
     "package": "Package",
+    "statuss": "Status",
     "status": {
       "ACTIVE": "Active",
       "CONFIRMED": "Confirmed",
@@ -7174,6 +7175,7 @@
     "payRemainingMessage": "Payment form will open to pay the remaining amount.",
     "copy": "Copy",
     "details": "Details",
+    "noPaymentInfo": "No payment information set for this package",
     "services": "Services",
     "type": "Type",
     "actions": "Actions",

@@ -1278,7 +1278,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem;
-  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  background-color: var(--azul-turno, #004aad);
   border-radius: 0.625rem 0.625rem 0 0;
 }
 

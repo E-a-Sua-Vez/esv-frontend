@@ -66,7 +66,7 @@ const commissionInfo = computed(() => {
   return {
     type: commissionType,
     value: commissionValue,
-    label: commissionType === 'PERCENTAGE' ? `${commissionValue}%` : `$${commissionValue}`,
+    label: commissionType === 'PERCENTAGE' ? `${commissionValue}%` : `${commissionValue} BRL`,
   };
 });
 

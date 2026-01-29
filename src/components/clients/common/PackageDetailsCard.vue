@@ -8,6 +8,7 @@ import { pausePackage, resumePackage, cancelPackage } from '../../../application
 import { getAttentionsDetails } from '../../../application/services/query-stack';
 import { getBookingsDetails } from '../../../application/services/query-stack';
 import { getAllIncomesByPackage } from '../../../application/services/income';
+import { getServicesById } from '../../../application/services/service';
 
 export default {
   name: 'PackageDetailsCard',
@@ -20,7 +21,7 @@ export default {
     disableClick: { type: Boolean, default: false },
     queues: { type: Array, default: () => [] },
   },
-  emits: ['package-updated', 'refresh', 'open-attention-modal', 'open-payment-form'],
+  emits: ['package-updated', 'refresh', 'open-attention-modal', 'open-booking-modal', 'open-payment-form'],
   data() {
     return {
       loading: false,
@@ -34,6 +35,8 @@ export default {
       loadingIncomes: false,
       paidAmount: 0,
       remainingAmount: 0,
+      packageServices: [], // Services loaded by ID
+      loadingServices: false,
     };
   },
   computed: {
@@ -93,6 +96,15 @@ export default {
       const now = new Date();
       return Math.ceil((expireDate - now) / (1000 * 60 * 60 * 24));
     },
+    // Get service names from loaded services
+    serviceNames() {
+      if (!this.packageServices || this.packageServices.length === 0) {
+        // Fallback to serviceIds if services not loaded yet
+        return this.pkg?.servicesId || [];
+      }
+
+      return this.packageServices.map(service => service.name || service.id);
+    },
     canBookNextSession() {
       return (
         (this.pkg?.status === 'ACTIVE' ||
@@ -110,29 +122,71 @@ export default {
       );
     },
     pendingBookings() {
-      return this.packageBookings.filter(booking => booking.status === 'PENDING');
+      // Show both PENDING and CONFIRMED bookings (until they become attentions)
+      return this.packageBookings.filter(booking =>
+        booking.status === 'PENDING' || booking.status === 'CONFIRMED'
+      );
     },
     canCreateNewReservation() {
       return this.canBookNextSession && this.sessionsRemaining > 0;
     },
     paymentInfo() {
       if (!this.pkg) return null;
+
       const totalAmount = this.pkg.totalAmount || 0;
       const paid = this.paidAmount || 0;
       const remaining = Math.max(0, totalAmount - paid);
-      const paymentPercentage = totalAmount > 0 ? Math.round((paid / totalAmount) * 100) : 0;
+
+      // If no total amount is set, calculate based on sessions instead
+      const totalSessions = this.pkg.proceduresAmount || 0;
+      const sessionsPaid = this.calculatedProceduresUsed || 0; // Sessions consumed/reserved
+      const sessionsPaymentPercentage = totalSessions > 0
+        ? Math.round((sessionsPaid / totalSessions) * 100)
+        : 0;
+
+      // Use amount-based calculation if totalAmount is set, otherwise use session-based
+      const useSessionBased = totalAmount === 0 && totalSessions > 0;
+      const paymentPercentage = useSessionBased
+        ? sessionsPaymentPercentage
+        : (totalAmount > 0 ? Math.round((paid / totalAmount) * 100) : 0);
+
+      // Only consider fully paid if all sessions are paid (when no totalAmount)
+      // or if amount is fully paid (when totalAmount is set)
+      const isFullyPaid = useSessionBased
+        ? sessionsPaid >= totalSessions
+        : (this.pkg.paid === true || remaining <= 0);
 
       return {
         totalAmount,
         paidAmount: paid,
         remainingAmount: remaining,
         paymentPercentage,
-        isFullyPaid: this.pkg.paid === true || remaining <= 0,
-        hasPayment: totalAmount > 0,
+        isFullyPaid,
+        hasPayment: true, // Always show payment section
+        // Session-based info for display
+        useSessionBased,
+        totalSessions,
+        sessionsPaid,
+        sessionsRemaining: Math.max(0, totalSessions - sessionsPaid),
       };
     },
   },
   methods: {
+    async loadPackageServices() {
+      if (!this.pkg?.servicesId || this.pkg.servicesId.length === 0) return;
+      if (this.loadingServices) return;
+
+      try {
+        this.loadingServices = true;
+        const services = await getServicesById(this.pkg.servicesId);
+        this.packageServices = services || [];
+      } catch (error) {
+        console.error('Error loading package services:', error);
+        this.packageServices = [];
+      } finally {
+        this.loadingServices = false;
+      }
+    },
     async showDetails() {
       this.extendedEntity = !this.extendedEntity;
       if (this.extendedEntity && this.pkg?.id && this.commerce?.id) {
@@ -140,6 +194,7 @@ export default {
         await this.loadPackageAttentions();
         await this.loadPackageBookings();
         await this.loadPackageIncomes();
+        await this.loadPackageServices(); // Load services too
       }
     },
     async loadPackageIncomes() {
@@ -463,6 +518,32 @@ export default {
         queue: preselectedQueue,
       });
     },
+    openAttentionDetailsModal(attention) {
+      // Emit event to open attention details modal
+      this.$emit('open-attention-modal', {
+        attention: attention,
+        mode: 'details'
+      });
+    },
+    openBookingDetailsModal(booking) {
+      // Emit event to open booking details modal
+      this.$emit('open-booking-modal', booking);
+    },
+    handleAttentionClick(attention, event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      this.openAttentionDetailsModal(attention);
+    },
+    handleBookingClick(booking, event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      this.openBookingDetailsModal(booking);
+    },
+
   },
   watch: {
     detailsOpened: {
@@ -498,6 +579,10 @@ export default {
           await this.loadPackageAttentions();
           await this.loadPackageBookings();
           await this.loadPackageIncomes();
+        }
+        // Load services whenever package data changes
+        if (newPkg?.servicesId) {
+          await this.loadPackageServices();
         }
       },
     },
@@ -670,11 +755,11 @@ export default {
               <div class="package-stat-card">
                 <div class="stat-card-header">
                   <i class="bi" :class="clasifyStatus(pkg.status)"></i>
-                  <span class="stat-card-label">{{ $t('package.status') || 'Estado' }}</span>
+                  <span class="stat-card-label">Status</span>
                 </div>
                 <div class="stat-card-value">
                   <span class="stat-badge" :class="`status-${pkg.status?.toLowerCase()}`">
-                    {{ pkg.status }}
+                    {{ $t(`package.status.${pkg.status}`) || pkg.status }}
                   </span>
                 </div>
                 <div class="stat-card-footer">
@@ -738,8 +823,10 @@ export default {
               <div
                 v-for="(attention, idx) in pendingAttentions"
                 :key="`att-${idx}`"
-                class="package-item-card"
+                class="package-item-card clickable-item"
                 :class="getAttentionStatusClass(attention.status)"
+                @click="handleAttentionClick(attention, $event)"
+                style="cursor: pointer;"
               >
                 <div class="package-item-info">
                   <div class="package-item-main">
@@ -750,6 +837,23 @@ export default {
                       {{ attention.status }}
                     </span>
                     <span class="package-item-number">#{{ attention.number }}</span>
+                    <!-- Payment Status Indicator -->
+                    <span
+                      v-if="!attention.paid && attention.status === 'TERMINATED'"
+                      class="package-item-payment-indicator unpaid"
+                      title="Pago pendiente"
+                    >
+                      <i class="bi bi-exclamation-circle-fill"></i>
+                      Sin confirmar pago
+                    </span>
+                    <span
+                      v-else-if="attention.paid"
+                      class="package-item-payment-indicator paid"
+                      title="Pago confirmado"
+                    >
+                      <i class="bi bi-check-circle-fill"></i>
+                      Pago confirmado
+                    </span>
                     <span v-if="attention.queueName" class="package-item-queue">{{
                       attention.queueName
                     }}</span>
@@ -779,14 +883,16 @@ export default {
             <div v-else-if="pendingBookings.length > 0" class="package-items-list">
               <div class="package-items-header">
                 <i class="bi bi-calendar-check"></i>
-                <span>{{ $t('package.pendingBookings') || 'Reservas Pendientes' }}</span>
+                <span>{{ $t('package.bookings') || 'Reservas' }}</span>
                 <span class="items-count">({{ pendingBookings.length }})</span>
               </div>
               <div
                 v-for="(booking, idx) in pendingBookings"
                 :key="`book-${idx}`"
-                class="package-item-card"
+                class="package-item-card clickable-item"
                 :class="getBookingStatusClass(booking.status)"
+                @click="handleBookingClick(booking, $event)"
+                style="cursor: pointer;"
               >
                 <div class="package-item-info">
                   <div class="package-item-main">
@@ -795,6 +901,23 @@ export default {
                       :class="getBookingStatusClass(booking.status)"
                     >
                       {{ booking.status }}
+                    </span>
+                    <!-- Payment Status Indicator -->
+                    <span
+                      v-if="!booking.paid && booking.status === 'CONFIRMED'"
+                      class="package-item-payment-indicator unpaid"
+                      title="Pago pendiente"
+                    >
+                      <i class="bi bi-exclamation-circle-fill"></i>
+                      Sin confirmar pago
+                    </span>
+                    <span
+                      v-else-if="booking.paid"
+                      class="package-item-payment-indicator paid"
+                      title="Pago confirmado"
+                    >
+                      <i class="bi bi-check-circle-fill"></i>
+                      Pago confirmado
                     </span>
                     <span v-if="booking.queueName" class="package-item-queue">{{
                       booking.queueName
@@ -862,16 +985,26 @@ export default {
           </div>
 
           <!-- Package Payment Information Section -->
-          <div v-if="paymentInfo && paymentInfo.hasPayment" class="info-section">
+          <div v-if="paymentInfo" class="info-section">
             <div class="info-section-header">
               <i class="bi bi-credit-card-fill"></i>
               <span class="info-section-title">{{
                 $t('package.paymentInfo') || 'Información de Pago'
               }}</span>
             </div>
-            <div class="package-payment-grid">
-              <!-- Total Amount Card -->
-              <div class="package-payment-card">
+
+            <!-- No Payment Info Message - Only show if no total amount AND no payment history -->
+            <div v-if="paymentInfo.totalAmount === 0 && packageIncomes.length === 0" class="package-no-payment-message">
+              <div class="no-payment-card">
+                <i class="bi bi-exclamation-circle-fill yellow-icon"></i>
+                <span class="no-payment-text">{{ $t('package.noPaymentInfo') || 'No hay información de pago establecida para este paquete' }}</span>
+              </div>
+            </div>
+
+            <!-- Payment Grid - Only show if there's payment info -->
+            <div v-else class="package-payment-grid">
+              <!-- Total Amount Card - Show sessions or amount based on context -->
+              <div v-if="!paymentInfo.useSessionBased" class="package-payment-card">
                 <div class="payment-card-header">
                   <i class="bi bi-coin"></i>
                   <span class="payment-card-label">{{
@@ -883,14 +1016,37 @@ export default {
                 </div>
               </div>
 
-              <!-- Paid Amount Card -->
+              <!-- Total Sessions Card - When using session-based payment -->
+              <div v-else class="package-payment-card">
+                <div class="payment-card-header">
+                  <i class="bi bi-layers"></i>
+                  <span class="payment-card-label">{{
+                    $t('package.totalSessions') || 'Sesiones Totales'
+                  }}</span>
+                </div>
+                <div class="payment-card-value">
+                  {{ paymentInfo.totalSessions }}
+                </div>
+              </div>
+
+              <!-- Paid Amount/Sessions Card -->
               <div class="package-payment-card">
                 <div class="payment-card-header">
                   <i class="bi bi-check-circle-fill green-icon"></i>
-                  <span class="payment-card-label">{{ $t('package.paidAmount') || 'Pagado' }}</span>
+                  <span class="payment-card-label">
+                    {{ paymentInfo.useSessionBased
+                      ? ($t('package.sessionsPaid') || 'Sesiones Pagas')
+                      : ($t('package.paidAmount') || 'Pagado')
+                    }}
+                  </span>
                 </div>
                 <div class="payment-card-value">
-                  {{ paymentInfo.paidAmount }} {{ commerce?.currency || 'BRL' }}
+                  <span v-if="paymentInfo.useSessionBased">
+                    {{ paymentInfo.sessionsPaid }} / {{ paymentInfo.totalSessions }}
+                  </span>
+                  <span v-else>
+                    {{ paymentInfo.paidAmount }} {{ commerce?.currency || 'BRL' }}
+                  </span>
                 </div>
                 <div class="payment-card-progress">
                   <div class="progress-bar-full">
@@ -908,7 +1064,7 @@ export default {
                 </div>
               </div>
 
-              <!-- Remaining Amount Card -->
+              <!-- Remaining Amount/Sessions Card -->
               <div class="package-payment-card" :class="{ 'fully-paid': paymentInfo.isFullyPaid }">
                 <div class="payment-card-header">
                   <i
@@ -919,27 +1075,48 @@ export default {
                         : 'bi-clock-history'
                     "
                   ></i>
-                  <span class="payment-card-label">{{
-                    $t('package.remainingAmount') || 'Pendiente'
-                  }}</span>
+                  <span class="payment-card-label">
+                    {{ paymentInfo.useSessionBased
+                      ? ($t('package.sessionsRemaining') || 'Sesiones Restantes')
+                      : ($t('package.remainingAmount') || 'Pendiente')
+                    }}
+                  </span>
                 </div>
                 <div
                   class="payment-card-value"
                   :class="{ 'fully-paid-value': paymentInfo.isFullyPaid }"
                 >
-                  {{ paymentInfo.remainingAmount }} {{ commerce?.currency || 'BRL' }}
+                  <span v-if="paymentInfo.useSessionBased">
+                    {{ paymentInfo.sessionsRemaining }}
+                  </span>
+                  <span v-else>
+                    {{ paymentInfo.remainingAmount }} {{ commerce?.currency || 'BRL' }}
+                  </span>
                 </div>
                 <div v-if="paymentInfo.isFullyPaid" class="payment-card-footer">
                   <span class="payment-footer-text fully-paid-text">
                     <i class="bi bi-check-circle-fill"></i>
-                    {{ $t('package.fullyPaid') || 'Completamente Pagado' }}
+                    {{ paymentInfo.useSessionBased
+                      ? ($t('package.allSessionsPaid') || 'Todas las Sesiones Pagas')
+                      : ($t('package.fullyPaid') || 'Completamente Pagado')
+                    }}
                   </span>
                 </div>
               </div>
             </div>
 
+            <!-- Info message when using session-based payment with actual payments made -->
+            <div v-if="paymentInfo.useSessionBased && paymentInfo.paidAmount > 0" class="package-payment-info-message">
+              <i class="bi bi-info-circle-fill"></i>
+              <span>
+                {{ $t('package.sessionBasedPaymentInfo') || 'Monto pagado' }}:
+                <strong>{{ paymentInfo.paidAmount }} {{ commerce?.currency || 'BRL' }}</strong>
+              </span>
+            </div>
+
             <!-- Payment Actions -->
-            <div v-if="!paymentInfo.isFullyPaid" class="package-payment-actions">
+            <!-- Payment Actions - Only show when using amount-based payment -->
+            <div v-if="!paymentInfo.isFullyPaid && !paymentInfo.useSessionBased" class="package-payment-actions">
               <button
                 class="btn btn-sm btn-dark rounded-pill px-3"
                 @click.stop="openPaymentForm(false)"
@@ -1027,8 +1204,8 @@ export default {
                 class="info-badge services-badge"
               >
                 <span class="badge-label">{{ $t('package.services') || 'Servicios' }}</span>
-                <span v-for="(serviceId, idx) in pkg.servicesId" :key="idx" class="service-tag">
-                  {{ serviceId }}
+                <span v-for="(serviceName, idx) in serviceNames" :key="idx" class="service-tag">
+                  {{ serviceName }}
                 </span>
               </span>
               <span v-if="pkg.type" class="info-badge">
@@ -1910,6 +2087,20 @@ export default {
   transform: translateX(2px);
 }
 
+.package-item-card.clickable,
+.package-item-card.clickable-item {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.package-item-card.clickable:hover,
+.package-item-card.clickable-item:hover {
+  background: rgba(240, 248, 255, 1);
+  border-color: #007bff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+}
+
 .package-item-card.status-pending {
   border-left: 3px solid #f9c322;
 }
@@ -2012,6 +2203,29 @@ export default {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.75rem;
   margin-top: 0.5rem;
+}
+
+.package-payment-info-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+  background: rgba(0, 74, 173, 0.05);
+  border: 1px solid rgba(0, 74, 173, 0.2);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #004aad;
+}
+
+.package-payment-info-message i {
+  font-size: 1rem;
+  color: #004aad;
+}
+
+.package-payment-info-message strong {
+  color: #000000;
+  font-weight: 700;
 }
 
 .package-payment-card {
@@ -2289,5 +2503,60 @@ export default {
     align-items: flex-start;
     gap: 0.5rem;
   }
+}
+
+/* Package Payment Indicators */
+.package-no-payment-message {
+  padding: 1rem;
+  text-align: center;
+}
+
+.no-payment-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 8px;
+}
+
+.no-payment-text {
+  color: #856404;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.yellow-icon {
+  color: #ffc107;
+}
+
+/* Package Item Payment Indicators */
+.package-item-payment-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.package-item-payment-indicator.unpaid {
+  background: rgba(220, 53, 69, 0.1);
+  color: #721c24;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.package-item-payment-indicator.paid {
+  background: rgba(25, 135, 84, 0.1);
+  color: #0a3622;
+  border: 1px solid rgba(25, 135, 84, 0.3);
+}
+
+.package-item-payment-indicator i {
+  font-size: 0.75rem;
 }
 </style>

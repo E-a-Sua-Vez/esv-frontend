@@ -1108,20 +1108,36 @@ export default {
       return mapped;
     };
 
+    // Debounced function to load clinical alerts
+    let loadClinicalAlertsTimeout = null;
     const loadClinicalAlerts = async clientId => {
       if (!clientId || !props.commerce?.id) {
         state.clinicalAlerts = [];
         return;
       }
-      try {
-        state.loadingAlerts = true;
-        const alerts = await getAlertsByClient(props.commerce.id, clientId, true);
-        state.clinicalAlerts = alerts || [];
-      } catch (error) {
-        state.clinicalAlerts = [];
-      } finally {
-        state.loadingAlerts = false;
+
+      // Clear any existing timeout
+      if (loadClinicalAlertsTimeout) {
+        clearTimeout(loadClinicalAlertsTimeout);
       }
+
+      // Debounce the API call by 300ms
+      return new Promise((resolve) => {
+        loadClinicalAlertsTimeout = setTimeout(async () => {
+          try {
+            state.loadingAlerts = true;
+            const alerts = await getAlertsByClient(props.commerce.id, clientId, true);
+            state.clinicalAlerts = alerts || [];
+            resolve(alerts);
+          } catch (error) {
+            state.clinicalAlerts = [];
+            console.error('Error loading clinical alerts:', error);
+            resolve([]);
+          } finally {
+            state.loadingAlerts = false;
+          }
+        }, 300);
+      });
     };
 
     // Function to reset state to initial values
