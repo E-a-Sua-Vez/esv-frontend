@@ -1,10 +1,11 @@
 <script>
-import { ref, reactive, toRefs, onBeforeMount, watch, computed } from 'vue';
+import { ref, reactive, toRefs, onBeforeMount, watch, computed, nextTick } from 'vue';
 import { VueRecaptcha } from 'vue-recaptcha';
 import Warning from '../common/Warning.vue';
 import Message from '../common/Message.vue';
 import QueueButton from '../common/QueueButton.vue';
-import { isTelemedicineEnabled } from '../../shared/features';
+import { isTelemedicineEnabled, getActiveFeature } from '../../shared/features';
+import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'ServiceForm',
@@ -18,6 +19,7 @@ export default {
   },
   async setup(props) {
     const loading = ref(false);
+    const { t } = useI18n();
 
     const { commerce, queue, selectedServices } = toRefs(props);
 
@@ -34,13 +36,15 @@ export default {
       page: 1,
       totalPages: 0,
       limit: 5,
+      validationError: '',
     });
 
     onBeforeMount(async () => {
       try {
         loading.value = true;
         if (selectedServices.value && selectedServices.value.length > 0) {
-          state.selectedServices.push(selectedServices.value);
+          // Spread the array instead of pushing the whole array
+          state.selectedServices = [...selectedServices.value];
         }
         if (queue.value && queue.value.id) {
           if (queue.value.services && queue.value.services.length > 0) {
@@ -68,6 +72,7 @@ export default {
           }
         }
         loading.value = false;
+        syncCheckboxes();
       } catch (error) {
         loading.value = false;
       }
@@ -79,20 +84,105 @@ export default {
       ['PROFESSIONAL', 'SELECT_SERVICE', 'MULTI_SERVICE'].includes(queue.value.type) &&
       queue.value.services;
 
+    // Check if service has multiple sessions/procedures
+    const hasMultipleSessions = service => {
+      if (!service || !service.serviceInfo) {
+        return false;
+      }
+
+      const hasProcedures = service.serviceInfo.procedures && service.serviceInfo.procedures > 1;
+      const hasProceduresList = service.serviceInfo.proceduresList &&
+                                 service.serviceInfo.proceduresList.trim().length > 0;
+
+      return hasProcedures || hasProceduresList;
+    };
+
+    // Sync checkbox states with selected services
+    const syncCheckboxes = () => {
+      nextTick(() => {
+        const selectedIds = state.selectedServices.map(s => s.id);
+        const allServices = state.filteredServices && state.filteredServices.length > 0
+          ? state.filteredServices
+          : state.services;
+
+        allServices.forEach(svc => {
+          const checkbox = document.getElementById(`queue-${svc.id}`);
+          if (checkbox) {
+            const shouldBeChecked = selectedIds.includes(svc.id);
+            if (checkbox.checked !== shouldBeChecked) {
+              checkbox.checked = shouldBeChecked;
+            }
+          }
+        });
+      });
+    };
+
+    // Check if multiple service selection is allowed
+    const isMultipleSelectionAllowed = () => {
+      return getActiveFeature(commerce.value, 'attention-multiple-service-selection', 'PRODUCT');
+    };
+
     const checkService = (event, service) => {
-      if (event.target.checked) {
-        if (!state.selectedServices.includes(service)) {
-          state.selectedServices.push(service);
+      state.validationError = '';
+      const isChecking = event.target.checked;
+
+      if (isChecking) {
+        // RULE 1: Services with multiple sessions cannot be combined with others (ALWAYS applies)
+        if (hasMultipleSessions(service)) {
+          // If service has multiple sessions, deselect all others and select only this one
+          const hadOtherServices = state.selectedServices.length > 0 &&
+                                    !state.selectedServices.some(s => s.id === service.id);
+          state.selectedServices = [service];
+          if (hadOtherServices) {
+            state.validationError = t('commerceQueuesView.multipleSessionsWarning');
+          }
+        }
+        // RULE 2: If there's already a service with multiple sessions selected, deselect it and select the new one
+        else if (state.selectedServices.some(s => hasMultipleSessions(s))) {
+          // Deselect the service with multiple sessions and apply normal selection rules
+          state.selectedServices = state.selectedServices.filter(s => !hasMultipleSessions(s));
+
+          if (!isMultipleSelectionAllowed()) {
+            // Replace with new service
+            state.selectedServices = [service];
+          } else {
+            // Add to selection
+            if (!state.selectedServices.some(s => s.id === service.id)) {
+              state.selectedServices.push(service);
+            }
+          }
+        }
+        // RULE 3: Apply multiple selection feature toggle (only for services without multiple sessions)
+        else if (!isMultipleSelectionAllowed()) {
+          // If multiple selection is not allowed, replace with new service
+          state.selectedServices = [service];
+        } else {
+          // Multiple selection is allowed and no service has multiple sessions
+          // Add service if not already selected
+          if (!state.selectedServices.some(s => s.id === service.id)) {
+            state.selectedServices.push(service);
+          }
         }
       } else {
-        state.selectedServices = state.selectedServices.filter(el => el !== service);
+        // Deselect service
+        state.selectedServices = state.selectedServices.filter(el => el.id !== service.id);
       }
-      receiveSelectedServices(state.selectedServices);
+
+      // Update parent component first
+      receiveSelectedServices([...state.selectedServices]);
+
+      // Update duration
       state.duration = state.selectedServices.reduce(
         (acc, service) =>
           acc + (service.serviceInfo.blockTime || service.serviceInfo.estimatedTime),
         0
       );
+
+      // Force counter update
+      state.counter++;
+
+      // Sync all checkboxes
+      syncCheckboxes();
     };
 
     const serviceChecked = service => {
@@ -129,6 +219,7 @@ export default {
         state.totalPages = totalB <= 0 ? 1 : counter % state.limit === 0 ? totalB : totalB + 1;
         const filtered = services.slice((state.page - 1) * state.limit, state.page * state.limit);
         state.filteredServices = filtered;
+        syncCheckboxes();
       } else {
         state.counter = 0;
         state.totalPages = 0;
@@ -239,6 +330,8 @@ export default {
       getProcedureAmounts,
       convertDuration,
       isTelemedicineEnabled,
+      hasMultipleSessions,
+      isMultipleSelectionAllowed,
     };
   },
 };
@@ -249,11 +342,20 @@ export default {
     <div id="queues" v-if="isActiveCommerce() && isActiveQueues() && !loading" class="mb-2">
       <div class="row g-1" v-if="state.services && state.services.length > 0">
         <div class="col col-md-10 offset-md-1 data-card">
-          <div class="choose-attention py-2">
-            <span v-if="queue && queue.id" class="fw-bold">{{
+          <div id="service-selection-title" class="choose-attention py-2 mb-2">
+            <i class="bi bi-list-check h5 m-1"></i>
+            <span v-if="queue && queue.id" class="fw-bold h6">{{
               $t('commerceQueuesView.selectService')
             }}</span>
           </div>
+
+          <!-- Validation Error Alert -->
+          <div v-if="state.validationError" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ state.validationError }}
+            <button type="button" class="btn-close" @click="state.validationError = ''" aria-label="Close"></button>
+          </div>
+
           <div v-if="state.filteredServices">
             <div class="row col-md mb-2">
               <input
@@ -319,7 +421,7 @@ export default {
           </div>
           <div
             v-for="service in state.filteredServices"
-            :key="service.id"
+            :key="`${service.id}-${state.counter}`"
             class="d-grid btn-group btn-group-justified mt-3"
           >
             <div class="btn-size btn-lg btn-block fw-bold queue-btn px-1">
@@ -330,8 +432,7 @@ export default {
                       class="form-check-input py-2 px-3 col-12"
                       type="checkbox"
                       :id="`queue-${service.id}`"
-                      :checked="serviceChecked(service)"
-                      @click="checkService($event, service)"
+                      @change="checkService($event, service)"
                     />
                   </div>
                   <div class="col">
@@ -433,7 +534,7 @@ export default {
 }
 .data-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  padding: 2rem 0.5rem;
+  padding: 1rem 0.5rem;
   margin-bottom: 1.5rem;
   border-radius: 1rem;
   border: 1px solid rgba(0, 0, 0, 0.05);

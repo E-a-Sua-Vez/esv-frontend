@@ -499,12 +499,6 @@ export default {
     const receiveSelectedServices = async services => {
       state.selectedServices = services;
 
-      // Clear selectedProcedureAmount when services change (user might select different service)
-      state.selectedProcedureAmount = null;
-
-      // Check for active packages when service is selected
-      await checkActivePackagesForService();
-
       state.totalDurationRequested = state.selectedServices.reduce(
         (acc, service) =>
           acc + (service.serviceInfo.blockTime || service.serviceInfo.estimatedTime),
@@ -2428,12 +2422,6 @@ export default {
         return false;
       }
 
-      // If client has active packages for this service, don't show selector
-      // (the attention/booking will be associated to the existing package)
-      if (state.activePackagesForService && state.activePackagesForService.length > 0) {
-        return false;
-      }
-
       // Check if any selected service has proceduresList
       const serviceWithProceduresList = state.selectedServices.find(service => {
         const proceduresList = service.serviceInfo?.proceduresList;
@@ -2644,13 +2632,25 @@ export default {
         state.showPickQueue,
       ],
       () => {
-        if (isMounted.value && state.showPickQueue) {
+        if (isMounted.value && state.showPickQueue && state.newUser?.clientId) {
           loadPackageReminderInfo();
           checkActivePackagesForService();
         }
       },
       { deep: true }
     );
+
+    // Watch for procedure amount selection to become visible and scroll to it
+    watch(needsProcedureAmountSelection, (newValue) => {
+      if (newValue === true) {
+        setTimeout(() => {
+          const procedureSection = document.getElementById('procedure-amount-selection');
+          if (procedureSection) {
+            procedureSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 300);
+      }
+    });
 
     const changeAttentionBlock = computed(() => {
       const { attentionBlock } = state;
@@ -3529,7 +3529,7 @@ export default {
                   class="row g-1 mt-3"
                 >
                   <div class="col col-md-10 offset-md-1 data-card">
-                    <div class="choose-attention py-2 mb-2">
+                    <div id="procedure-amount-selection" class="choose-attention py-2 mb-2">
                       <i class="bi bi-list-check h5 m-1"></i>
                       <span class="fw-bold h6">{{
                         $t('attentionCreation.selectProcedureAmount') ||
@@ -5215,7 +5215,7 @@ export default {
                     v-else-if="state.showPickQueue"
                     class="btn btn-lg flex-grow-1 btn-size fw-bold btn-next-sticky rounded-pill px-5 py-3"
                     @click="showPickHours()"
-                    :disabled="!state.queue.id || !state.canBook"
+                    :disabled="!state.queue.id || !state.canBook || !isProcedureAmountSelectionValid"
                   >
                     {{ $t('continue') }}
                     <i class="bi bi-arrow-right-circle-fill ms-2"></i>
@@ -5517,7 +5517,7 @@ export default {
 
 .modern-progress {
   display: flex;
-  height: 24px;
+  height: 16px;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);

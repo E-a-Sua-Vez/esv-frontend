@@ -731,6 +731,14 @@ export default {
       state.showNewClient = false;
       state.showOldClient = true;
       clearClient();
+
+      // Scroll to the button after a short delay
+      setTimeout(() => {
+        const button = document.querySelector('.btn-selected.btn-dark');
+        if (button) {
+          button.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
     };
 
     const validateCaptchaOk = response => {
@@ -840,17 +848,21 @@ export default {
           </div>
         </div>
         <div class="row g-1 mt-2" v-if="state.showOldClient">
-          <div class="col-10 col-md-10">
+          <div class="col-10 col-md-10 form-floating">
             <input
+              id="search-client-input"
               maxlength="20"
               type="text"
-              class="form-control"
+              class="form-control form-control-solid"
               v-model.trim="state.idNumber"
               :placeholder="$t('dashboard.search3')"
               @keyup="replaceOnlyNumber"
               @keypress="onlyNumber"
               @keyup.enter="searchClient"
             />
+            <label for="search-client-input" class="label-form">
+              {{ $t('dashboard.search3') }} <i class="bi bi-search"></i>
+            </label>
           </div>
           <div class="col-2 col-md-2 centered">
             <button
@@ -900,9 +912,13 @@ export default {
               </template>
             </Warning>
           </div>
-          <div class="welcome-user centered" v-if="state.clientSearched && state.clientSearched.id">
-            {{ $t('collaboratorAttentionValidate.hello-user') }},
-            {{ state.clientSearched.name || state.clientSearched.idNumber }}!
+          <div class="d-flex justify-content-center m-1" v-if="state.clientSearched && state.clientSearched.id">
+            <div class="d-inline-flex align-items-center py-2 px-3 mb-0" role="alert" style="font-size: 1.5rem;">
+              <i class="bi bi-check-circle-fill me-2 fs-7"></i>
+              <div>
+                <strong>{{ $t('collaboratorAttentionValidate.hello-user') }}, {{ state.clientSearched.name || state.clientSearched.idNumber }}!</strong>
+              </div>
+            </div>
           </div>
           <div
             id="conditions"

@@ -961,6 +961,10 @@
       "title": "Form pide Código 3",
       "description": "Solicita código 3 del usuario para obtener número de atención"
     },
+    "attention-multiple-service-selection": {
+      "title": "Selección Múltiple de Servicios",
+      "description": "Permite seleccionar múltiples servicios al obtener número de atención"
+    },
     "close-commerce-by-service-hours": {
       "title": "Cerrar comercio horario",
       "description": "Minisitio no permite generar nuevas atenciones para el comercio fuera de horario de atención"
@@ -1406,6 +1410,8 @@
     "procedures": "Sesiones:",
     "packagesAvailable": "Paquetes disponibles",
     "healthAgreementText": "Convenio de Salud",
+    "multipleSessionsWarning": "Este servicio tiene múltiples sesiones y no puede combinarse con otros servicios",
+    "deselectOtherServices": "Debes deseleccionar los demás servicios primero",
     "waitlist": {
       "title": "¡Únete a la lista de espera!",
       "content": "No hay horarios disponibles para esta fecha... ¿Quieres que te avisemos si alguien cancela y queda algún horario disponible?",

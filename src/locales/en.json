@@ -808,6 +808,10 @@
       "title": "Attention Request Code 3",
       "description": "Request the code 3 of the user to obtain service number"
     },
+    "attention-multiple-service-selection": {
+      "title": "Multiple Service Selection",
+      "description": "Allows selecting multiple services when obtaining service number"
+    },
     "close-commerce-by-service-hours": {
       "title": "Close commerce out of time",
       "description": "Minisite does not allow generating new attentions for commerce outside of business hours"
@@ -1402,6 +1406,8 @@
     "selectTheService": "Select the Service",
     "procedures": "Procedures:",
     "healthAgreementText": "Health Agreement",
+    "multipleSessionsWarning": "This service has multiple sessions and cannot be combined with other services",
+    "deselectOtherServices": "You must deselect the other services first",
     "waitlist": {
       "title": "Join the Waitlist!",
       "content": "There's not hours available... Do you want to get adviced if someone cancel and one hour is available?",

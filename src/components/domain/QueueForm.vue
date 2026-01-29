@@ -25,6 +25,8 @@ export default {
   async setup(props) {
     const loading = ref(false);
     const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
+    const professionalTitleRef = ref(null);
+    const serviceSectionRef = ref(null);
 
     const { commerce, queues, groupedQueues, collaborators, professionals, queueId, accept } = toRefs(props);
 
@@ -261,6 +263,17 @@ export default {
         receiveServices(queueIn.services || []);
       }
       receiveQueue(state.queue);
+
+      // Scroll to service selection title for queues with services
+      const queueTypesWithServices = ['PROFESSIONAL', 'SELECT_SERVICE', 'MULTI_SERVICE', 'SERVICE'];
+      if (queueTypesWithServices.includes(queueIn.type) && queueIn.services && queueIn.services.length > 0) {
+        setTimeout(() => {
+          const serviceTitle = document.getElementById('service-selection-title');
+          if (serviceTitle) {
+            serviceTitle.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 200);
+      }
     };
 
     const showByProfessional = () => {
@@ -269,6 +282,13 @@ export default {
       state.showSelectServices = false;
       receiveQueue({});
       receiveServices([]);
+
+      // Scroll to professional title after DOM update
+      setTimeout(() => {
+        if (professionalTitleRef.value) {
+          professionalTitleRef.value.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
     };
 
     const showByService = () => {
@@ -277,6 +297,13 @@ export default {
       state.showSelectServices = false;
       receiveQueue({});
       receiveServices([]);
+
+      // Scroll to service section after DOM update
+      setTimeout(() => {
+        if (serviceSectionRef.value) {
+          serviceSectionRef.value.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
     };
 
     const showServices = () => {
@@ -389,6 +416,8 @@ export default {
       showByService,
       showServices,
       isTelemedicineEnabled,
+      professionalTitleRef,
+      serviceSectionRef,
     };
   },
 };
@@ -455,8 +484,9 @@ export default {
 
         <!-- Professional Selection Content Card -->
         <div class="col col-md-10 offset-md-1 data-card" v-if="state.showProfessional">
-          <div class="choose-attention py-2">
-            <span class="fw-bold">{{ $t('commerceQueuesView.byCollaboratorTitle') }}</span>
+          <div ref="professionalTitleRef" class="choose-attention py-2 mb-2">
+            <i class="bi bi-list-check h5 m-1"></i>
+            <span class="fw-bold h6">{{ $t('commerceQueuesView.byCollaboratorTitle') }}</span>
           </div>
           <div id="attention-collaborator-queue">
             <div v-if="state.filteredCollaboratorQueues">
@@ -548,7 +578,7 @@ export default {
         </div>
 
         <!-- Service Selection Content Card -->
-        <div class="col col-md-10 offset-md-1 data-card" v-if="state.showService">
+        <div ref="serviceSectionRef" class="col col-md-10 offset-md-1 data-card" v-if="state.showService">
           <div id="attention-service-queue">
             <div
               v-if="groupedQueues['SELECT_SERVICE'] && groupedQueues['SELECT_SERVICE'].length > 0"
@@ -678,7 +708,7 @@ export default {
 }
 .data-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
-  padding: 2rem 0.5rem;
+  padding: 1rem 0.5rem;
   margin-bottom: 1.5rem;
   border-radius: 1rem;
   border: 1px solid rgba(0, 0, 0, 0.05);
