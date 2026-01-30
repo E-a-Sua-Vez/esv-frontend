@@ -476,9 +476,13 @@ export default {
         return;
       }
 
+      console.log('[CollaboratorAttentionValidate] updateAttentionDetails called for queue:', state.queue.id);
+
       // Get pending attentions from Firebase listener (already filtered by date and status)
       const pendingArray = pendingAttentionsRef?.value || [];
       const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
+
+      console.log('[CollaboratorAttentionValidate] pendingArray length:', pendingArray.length);
 
       // Firebase already filters by today and PENDING status, just sort by number
       const filteredPending = [...pendingList].filter(att => att && ['PENDING', 'CONFIRMED'].includes(att.status));
@@ -488,12 +492,16 @@ export default {
         return numA - numB;
       });
 
+      console.log('[CollaboratorAttentionValidate] sortedPending length:', sortedPending.length);
+
       // CRITICAL: Replace the entire array reference to force Vue reactivity
       state.queuePendingDetails.splice(0, state.queuePendingDetails.length, ...sortedPending);
 
       // Get processing attentions from Firebase listener (already filtered by date)
       const processingArray = processingAttentionsRef?.value || [];
       const processingList = Array.isArray(processingArray) ? processingArray : [];
+
+      console.log('[CollaboratorAttentionValidate] processingArray length:', processingArray.length);
       state.queueProcessingDetails.splice(
         0,
         state.queueProcessingDetails.length,
@@ -503,6 +511,8 @@ export default {
       // Get terminated attentions from Firebase listener (already filtered by date)
       const terminatedArray = terminatedAttentionsRef?.value || [];
       const terminatedList = Array.isArray(terminatedArray) ? terminatedArray : [];
+
+      console.log('[CollaboratorAttentionValidate] terminatedArray length:', terminatedArray.length);
       const sortedTerminated = [...terminatedList].sort((a, b) => {
         const numA = a.number || 0;
         const numB = b.number || 0;
@@ -513,6 +523,8 @@ export default {
         state.queueTerminatedDetails.length,
         ...sortedTerminated,
       );
+
+      console.log('[CollaboratorAttentionValidate] Updated state: pending:', state.queuePendingDetails.length, 'processing:', state.queueProcessingDetails.length, 'terminated:', state.queueTerminatedDetails.length);
 
       // Force component re-render by updating key
       state.listUpdateKey++;
@@ -1707,6 +1719,53 @@ export default {
       };
     });
 
+    // Computed for professional name
+    const professionalName = computed(() => {
+      console.log('DEBUG professionalName:', state.attention.professionalName, state.attention.collaboratorName);
+      return state.attention.professionalName || state.attention.collaboratorName || '';
+    });
+
+    // Computed for booking scheduled time
+    const bookingScheduledTime = computed(() => {
+      console.log('DEBUG bookingScheduledTime:', state.attention.bookingScheduledTime, state.attention.scheduledAt);
+      if (state.attention.block && state.attention.block.hourFrom) {
+        return state.attention.block.hourFrom;
+      }
+      if (state.attention.bookingScheduledTime) {
+        const date = new Date(state.attention.bookingScheduledTime);
+        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      }
+      if (state.attention.telemedicineConfig && state.attention.telemedicineConfig.scheduledAt) {
+        const date = new Date(state.attention.telemedicineConfig.scheduledAt);
+        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      }
+      return '';
+    });
+
+    // Computed for booking scheduled date
+    const bookingScheduledDate = computed(() => {
+      // For attentions, date is always today
+      const today = new Date();
+      return today.toLocaleDateString('pt-BR');
+    });
+
+    // Computed for payment status
+    const paymentStatusText = computed(() => {
+      if (state.attention.status === 'CONFIRMED' || state.attention.confirmed || state.attention.paid) {
+        return 'Pago';
+      } else {
+        return 'Pendente';
+      }
+    });
+
+    const paymentStatusBadgeClass = computed(() => {
+      return (state.attention.status === 'CONFIRMED' || state.attention.confirmed || state.attention.paid) ? 'attention-paid-badge' : 'attention-pending-badge';
+    });
+
+    const paymentStatusIcon = computed(() => {
+      return (state.attention.status === 'CONFIRMED' || state.attention.confirmed || state.attention.paid) ? 'bi bi-check-circle-fill' : 'bi bi-clock-history';
+    });
+
     return {
       id,
       state,
@@ -1726,6 +1785,12 @@ export default {
       loadStockData,
       attentionStats,
       statsUpdateTrigger,
+      professionalName,
+      bookingScheduledTime,
+      bookingScheduledDate,
+      paymentStatusText,
+      paymentStatusBadgeClass,
+      paymentStatusIcon,
       loadTelemedicineSessionDetails,
       handleStartTelemedicineSession,
       closeTelemedicineVideo,
@@ -1867,15 +1932,32 @@ export default {
               </div>
             </div>
 
-            <!-- Creation Time Card -->
-            <div class="stat-card stat-card-creation">
+            <!-- Booking Scheduled Time Card (if attention comes from a booking or block) -->
+            <div v-if="state.attention.bookingId || state.attention.booking || state.attention.block" class="stat-card stat-card-booking">
               <div class="stat-card-icon">
-                <i class="bi bi-clock-history"></i>
+                <i class="bi bi-calendar-check"></i>
               </div>
               <div class="stat-card-content">
-                <div class="stat-card-label">Criado em</div>
-                <div class="stat-card-value">{{ attentionStats.creationTime }}</div>
-                <div class="stat-card-subvalue">{{ attentionStats.creationDate }}</div>
+                <div class="stat-card-label">Agendado para</div>
+                <div class="stat-card-value">{{ bookingScheduledTime }}</div>
+                <div class="stat-card-subvalue">{{ bookingScheduledDate }}</div>
+              </div>
+            </div>
+
+            <!-- Professional and Payment Card -->
+            <div class="stat-card stat-card-professional">
+              <div class="stat-card-icon">
+                <i class="bi bi-person-badge"></i>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Profissional</div>
+                <div class="stat-card-value">{{ professionalName || 'Não atribuído' }}</div>
+                <div v-if="state.attention.bookingId || state.attention.booking || state.attention.block" class="stat-card-subvalue">
+                  <div :class="paymentStatusBadgeClass">
+                    <i :class="paymentStatusIcon"></i>
+                    <span class="paid-text">{{ paymentStatusText }}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -2345,15 +2427,32 @@ export default {
               </div>
             </div>
 
-            <!-- Creation Time Card -->
-            <div class="stat-card stat-card-creation">
+            <!-- Booking Scheduled Time Card (if attention comes from a booking or block) -->
+            <div v-if="state.attention.bookingId || state.attention.booking || state.attention.block" class="stat-card stat-card-booking">
               <div class="stat-card-icon">
-                <i class="bi bi-clock-history"></i>
+                <i class="bi bi-calendar-check"></i>
               </div>
               <div class="stat-card-content">
-                <div class="stat-card-label">Criado em</div>
-                <div class="stat-card-value">{{ attentionStats.creationTime }}</div>
-                <div class="stat-card-subvalue">{{ attentionStats.creationDate }}</div>
+                <div class="stat-card-label">Agendado para</div>
+                <div class="stat-card-value">{{ bookingScheduledTime }}</div>
+                <div class="stat-card-subvalue">{{ bookingScheduledDate }}</div>
+              </div>
+            </div>
+
+            <!-- Professional and Payment Card -->
+            <div class="stat-card stat-card-professional">
+              <div class="stat-card-icon">
+                <i class="bi bi-person-badge"></i>
+              </div>
+              <div class="stat-card-content">
+                <div class="stat-card-label">Profissional</div>
+                <div class="stat-card-value">{{ professionalName || 'Não atribuído' }}</div>
+                <div v-if="state.attention.bookingId || state.attention.booking || state.attention.block" class="stat-card-subvalue">
+                  <div :class="paymentStatusBadgeClass">
+                    <i :class="paymentStatusIcon"></i>
+                    <span class="paid-text">{{ paymentStatusText }}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -2929,7 +3028,7 @@ export default {
       :commerce="state.commerce"
       :queues="state.commerce?.queues || state.queue ? [state.queue] : []"
       :toggles="state.toggles"
-      @close="closeAttentionModal"
+      @close="state.showAttentionModal = false"
       @attention-updated="handleAttentionUpdatedFromModal"
     />
     <!-- Modal Products -->
@@ -3170,6 +3269,16 @@ export default {
 .stat-card-creation .stat-card-icon {
   background: rgba(0, 74, 173, 0.1);
   color: #004aad;
+}
+
+.stat-card-booking .stat-card-icon {
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+}
+
+.stat-card-professional .stat-card-icon {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
 }
 
 .stat-card-processing .stat-card-icon {
@@ -3856,5 +3965,46 @@ export default {
   background: white;
   border-color: #6c757d;
   color: #6c757d;
+}
+
+/* Payment Status Badge */
+.attention-paid-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+  border-radius: 12px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.attention-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  color: #f57c00;
+  border: 1px solid #ffcc02;
+  border-radius: 12px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.attention-paid-badge i,
+.attention-pending-badge i {
+  font-size: 0.75rem;
+}
+
+.attention-paid-badge .paid-text,
+.attention-pending-badge .paid-text {
+  line-height: 1;
 }
 </style>

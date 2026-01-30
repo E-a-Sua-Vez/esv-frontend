@@ -2407,7 +2407,8 @@
           "transfer": "Transfer Atendimento",
           "cancel": "Cancelar Atendimento",
           "patient-history": "Prontuario",
-          "products": "Produtos"
+          "products": "Produtos",
+          "advance-stage": "Avançar Estágio"
         },
         "module": {
           "update": "Atualizar o modulo de atendimento"

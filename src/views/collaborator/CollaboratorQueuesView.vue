@@ -179,6 +179,7 @@ export default {
           state.modules = [];
           state.queue = {};
           state.queueStatus = {};
+          state.queueProcessingStatus = {};
           state.queueTerminatedStatus = {}; // Reset terminated status when commerce changes
           state.queueAverageDurationsLoaded = {}; // Reset loaded flags when commerce changes
           state.queueAverageDurationsLoading = {}; // Reset loading flags when commerce changes
@@ -271,6 +272,7 @@ export default {
         attentionsRef && attentionsRef.value && Array.isArray(attentionsRef.value)
           ? attentionsRef.value
           : [];
+
       const processingAttentionsArray =
         processingAttentionsRef &&
         processingAttentionsRef.value &&
@@ -285,6 +287,9 @@ export default {
           : [];
 
       try {
+        // Create combined array of all attentions
+        const allAttentionsArray = [...attentionsArray, ...processingAttentionsArray, ...terminatedAttentionsArray];
+
         // Group pending attentions by queue
         const filteredPendingByQueue = attentionsArray.reduce((acc, attention) => {
           if (attention && attention.queueId) {
@@ -302,8 +307,6 @@ export default {
           commerce.value && getActiveFeature(commerce.value, 'attention-stages-enabled', 'PRODUCT');
 
         // Group terminated attentions by queue FIRST
-        // Also create a Set of terminated attention IDs to avoid double counting
-        const terminatedAttentionIds = new Set();
         const filteredTerminatedByQueue = terminatedAttentionsArray.reduce((acc, attention) => {
           if (attention && attention.queueId) {
             const queueId = attention.queueId;
@@ -311,45 +314,30 @@ export default {
               acc[queueId] = [];
             }
             acc[queueId].push(attention);
-            // Track terminated attention IDs
-            if (attention.id) {
-              terminatedAttentionIds.add(attention.id);
-            }
           }
           return acc;
         }, {});
 
         // Group processing attentions by queue, separating CHECKOUT stage attentions
         const filteredProcessingByQueue = {};
-        const checkoutAttentionsByQueue = {}; // Atentions in CHECKOUT stage (but not yet terminated)
+        const checkoutAttentionsByQueue = allAttentionsArray.reduce((acc, attention) => {
+          if (attention && attention.queueId && attention.currentStage === 'CHECKOUT') {
+            const queueId = attention.queueId;
+            if (!acc[queueId]) {
+              acc[queueId] = [];
+            }
+            acc[queueId].push(attention);
+          }
+          return acc;
+        }, {});
 
         processingAttentionsArray.forEach(attention => {
-          if (attention && attention.queueId) {
+          if (attention && attention.queueId && attention.currentStage !== 'CHECKOUT') {
             const queueId = attention.queueId;
-            const attentionId = attention.id || attention.attentionId;
-
-            // Check if attention is already fully terminated (should not be in processing array, but check to be safe)
-            const isTerminated =
-              attention.status === 'TERMINATED' ||
-              attention.status === 'RATED' ||
-              attention.status === 'SKIPED' ||
-              (isStagesEnabled && attention.currentStage === 'TERMINATED') ||
-              (attentionId && terminatedAttentionIds.has(attentionId));
-
-            // If stages enabled and attention is in CHECKOUT stage (but NOT terminated), count it as checkout
-            if (isStagesEnabled && attention.currentStage === 'CHECKOUT' && !isTerminated) {
-              if (!checkoutAttentionsByQueue[queueId]) {
-                checkoutAttentionsByQueue[queueId] = [];
-              }
-              checkoutAttentionsByQueue[queueId].push(attention);
-            } else if (!isTerminated) {
-              // Regular processing attention (not in CHECKOUT stage and not terminated)
-              if (!filteredProcessingByQueue[queueId]) {
-                filteredProcessingByQueue[queueId] = [];
-              }
-              filteredProcessingByQueue[queueId].push(attention);
+            if (!filteredProcessingByQueue[queueId]) {
+              filteredProcessingByQueue[queueId] = [];
             }
-            // If isTerminated, skip it (should be in terminatedAttentionsArray instead)
+            filteredProcessingByQueue[queueId].push(attention);
           }
         });
 
@@ -374,17 +362,13 @@ export default {
             }
 
             // Update terminated count from Firebase
-            // Include: terminated attentions + CHECKOUT stage attentions (when stages enabled)
-            let terminatedCount = 0;
-            if (filteredTerminatedByQueue[queue.id]) {
-              terminatedCount += filteredTerminatedByQueue[queue.id].length;
-            }
-            if (checkoutAttentionsByQueue[queue.id]) {
-              terminatedCount += checkoutAttentionsByQueue[queue.id].length;
-            }
+            // Include: checkout attentions
+            let terminatedCount = checkoutAttentionsByQueue[queue.id] ? checkoutAttentionsByQueue[queue.id].length : 0;
             state.queueTerminatedStatus[queue.id] = terminatedCount;
           }
         });
+
+
       } catch (error) {
         console.error('Error checking queue status:', error);
         initializeQueueStatus();
@@ -897,6 +881,7 @@ export default {
   },
 };
 </script>
+
 <template>
   <div>
     <!-- Mobile/Tablet Layout -->
@@ -1349,6 +1334,7 @@ export default {
     </div>
   </div>
 </template>
+
 <style scoped>
 .choose-attention {
   padding-top: 1rem;

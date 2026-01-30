@@ -71,7 +71,10 @@
         <div class="stat-card-label">{{ $t('attentionStats.professional') || 'Profissional' }}</div>
         <div class="stat-card-value">{{ professionalName || 'Não atribuído' }}</div>
         <div v-if="attention.bookingId || attention.booking || attention.block" class="stat-card-subvalue">
-          <span :class="paymentStatusClass">{{ paymentStatusText }}</span>
+          <div :class="paymentStatusBadgeClass">
+            <i :class="paymentStatusIcon"></i>
+            <span class="paid-text">{{ paymentStatusText }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -186,6 +189,7 @@
 
 <script>
 import Popper from 'vue3-popper';
+import { ATTENTION_STATUS } from '../../../shared/constants';
 
 export default {
   name: 'AttentionStatsCards',
@@ -195,16 +199,37 @@ export default {
     attention: { type: Object, required: true },
     queue: { type: Object, default: null },
     estimatedTime: { type: String, default: null },
+    queuePendingDetails: { type: Array, default: () => [] },
+    queueProcessingDetails: { type: Array, default: () => [] },
   },
   computed: {
     queuePosition() {
       if (!this.queue || !this.attention) return null;
-      if (this.queue.currentAttentionNumber === 0 || !this.queue.currentAttentionNumber) {
-        return 0;
-      }
       if (!this.attention.number) return null;
-      const position = this.attention.number - this.queue.currentAttentionNumber + 1;
-      return position > 0 ? position : 0;
+
+      // Cálculo inteligente: contar atenciones realmente pendientes/confirmadas con número menor
+      const pendingAttentions = this.queuePendingDetails.filter(att =>
+        att.number &&
+        att.number < this.attention.number &&
+        (att.status === ATTENTION_STATUS.PENDING || att.status === ATTENTION_STATUS.CONFIRMED)
+      );
+
+      // Si no hay atenciones pendientes con número menor, verificar si estamos en procesamiento
+      if (pendingAttentions.length === 0) {
+        // Si la atención actual está siendo procesada, mostrar 0
+        if (this.attention.status === ATTENTION_STATUS.PROCESSING) {
+          return 0;
+        }
+        // Si no hay pendientes pero sí hay en procesamiento, contar las que están antes
+        const processingAttentions = this.queueProcessingDetails.filter(att =>
+          att.number &&
+          att.number < this.attention.number &&
+          att.status === ATTENTION_STATUS.PROCESSING
+        );
+        return processingAttentions.length;
+      }
+
+      return pendingAttentions.length;
     },
     bookingScheduledTime() {
       if (this.attention.block && this.attention.block.hourFrom) {
@@ -226,14 +251,17 @@ export default {
     },
     paymentStatusText() {
       // Assuming attention has payment info
-      if (this.attention.paymentConfirmed) {
+      if (this.attention.status === 'CONFIRMED' || this.attention.confirmed || this.attention.paid) {
         return 'Pago';
       } else {
         return 'Pendente';
       }
     },
-    paymentStatusClass() {
-      return this.attention.paymentConfirmed ? 'text-success' : 'text-warning';
+    paymentStatusBadgeClass() {
+      return (this.attention.status === 'CONFIRMED' || this.attention.confirmed || this.attention.paid) ? 'attention-paid-badge' : 'attention-pending-badge';
+    },
+    paymentStatusIcon() {
+      return (this.attention.status === 'CONFIRMED' || this.attention.confirmed || this.attention.paid) ? 'bi bi-check-circle-fill' : 'bi bi-clock-history';
     },
   },
 };
@@ -599,5 +627,46 @@ export default {
   .stat-card-value {
     font-size: 1.1rem;
   }
+}
+
+/* Payment Status Badge */
+.attention-paid-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+  border-radius: 12px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.attention-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  color: #f57c00;
+  border: 1px solid #ffcc02;
+  border-radius: 12px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.attention-paid-badge i,
+.attention-pending-badge i {
+  font-size: 0.75rem;
+}
+
+.attention-paid-badge .paid-text,
+.attention-pending-badge .paid-text {
+  line-height: 1;
 }
 </style>

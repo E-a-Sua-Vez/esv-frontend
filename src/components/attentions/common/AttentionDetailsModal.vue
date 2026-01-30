@@ -1023,6 +1023,8 @@ export default {
             console.log('[AttentionDetailsModal] Confirming payment with body:', body);
             await attentionPaymentConfirm(this.attention.id, body);
             console.log('[AttentionDetailsModal] Payment confirmed successfully');
+            // Refrescar datos de la atención después de confirmar para actualizar el estado
+            await this.refreshAttentionDataWithoutOverriding();
             this.$emit('attention-updated');
             this.extendedPaymentEntity = false;
             this.goToConfirm = false;
@@ -1693,14 +1695,17 @@ export default {
   },
   watch: {
     show(newVal) {
-      console.log('[AttentionDetailsModal] show changed:', newVal);
       if (newVal) {
+        document.body.classList.add('modal-open');
         document.body.style.overflow = 'hidden';
-        console.log('[AttentionDetailsModal] Modal opened, calling loadTimelineData');
-        this.loadTimelineData();
-        this.loadProfessionalName();
       } else {
+        document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
+        // Remove backdrop when modal closes
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+          backdrop.remove();
+        }
       }
     },
     attention: {
@@ -1708,8 +1713,7 @@ export default {
         console.log('[AttentionDetailsModal] attention changed');
         console.log('[AttentionDetailsModal] newVal:', newVal);
         console.log('[AttentionDetailsModal] oldVal:', oldVal);
-        console.log('[AttentionDetailsModal] this.show:', this.show);
-        if (newVal && this.show) {
+        if (newVal) {
           console.log(
             '[AttentionDetailsModal] Attention changed and modal is open, calling loadTimelineData',
           );
@@ -1720,112 +1724,29 @@ export default {
       immediate: true,
     },
   },
+  mounted() {
+    if (!this.attention) return;
+    console.log('[AttentionDetailsModal] Modal opened, calling loadTimelineData');
+    this.loadTimelineData();
+    this.loadProfessionalName();
+  },
   beforeUnmount() {
+    document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
+    // Remove backdrop
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+      backdrop.remove();
+    }
     // Clean up polling interval
     this.stopConsentStatusPolling();
-  },
-  watch: {
-    show(newValue) {
-      if (newValue) {
-        console.log('📜 Ocultando modal principal');
-        const mainModal = document.querySelector('#modalAgenda');
-        if (mainModal) {
-          mainModal.style.display = 'none';
-        }
-      } else {
-        console.log('📜 Reabriendo modal principal FORZADAMENTE');
-        // FORZAR reapertura del modal
-        setTimeout(() => {
-          const mainModal = document.querySelector('#modalAgenda');
-          if (mainModal) {
-            // Restaurar completamente
-            mainModal.style.display = 'block';
-            mainModal.classList.add('show');
-            mainModal.setAttribute('aria-modal', 'true');
-            mainModal.setAttribute('role', 'dialog');
-            mainModal.style.paddingLeft = '0px';
-
-            // Asegurar que el body tenga las clases correctas
-            document.body.classList.add('modal-open');
-            document.body.style.overflow = 'hidden';
-            document.body.style.paddingRight = '0px';
-
-            console.log('✅ Modal principal completamente restaurado');
-          } else {
-            console.log('⚠️ Modal principal (#modalAgenda) NO encontrado');
-          }
-
-          // Restaurar o crear backdrop si es necesario
-          let backdrop = document.querySelector('.modal-backdrop');
-          if (!backdrop) {
-            backdrop = document.createElement('div');
-            backdrop.className = 'modal-backdrop fade show';
-            document.body.appendChild(backdrop);
-          } else {
-            backdrop.style.display = 'block';
-            backdrop.classList.add('show');
-          }
-
-          console.log('✅ Modal principal FORZADAMENTE reabierto');
-        }, 50);
-      }
-    }
-  },
-  watch: {
-    show(newValue) {
-      if (newValue) {
-        console.log('📜 Ocultando modal principal');
-        const mainModal = document.querySelector('#modalAgenda');
-        if (mainModal) {
-          mainModal.style.display = 'none';
-        }
-      } else {
-        console.log('📜 Reabriendo modal principal FORZADAMENTE');
-        // FORZAR reapertura del modal
-        setTimeout(() => {
-          const mainModal = document.querySelector('#modalAgenda');
-          if (mainModal) {
-            // Restaurar completamente
-            mainModal.style.display = 'block';
-            mainModal.classList.add('show');
-            mainModal.setAttribute('aria-modal', 'true');
-            mainModal.setAttribute('role', 'dialog');
-            mainModal.style.paddingLeft = '0px';
-
-            // Asegurar que el body tenga las clases correctas
-            document.body.classList.add('modal-open');
-            document.body.style.overflow = 'hidden';
-            document.body.style.paddingRight = '0px';
-
-            console.log('✅ Modal principal completamente restaurado');
-          } else {
-            console.log('⚠️ Modal principal (#modalAgenda) NO encontrado');
-          }
-
-          // Restaurar o crear backdrop si es necesario
-          let backdrop = document.querySelector('.modal-backdrop');
-          if (!backdrop) {
-            backdrop = document.createElement('div');
-            backdrop.className = 'modal-backdrop fade show';
-            document.body.appendChild(backdrop);
-          } else {
-            backdrop.style.display = 'block';
-            backdrop.classList.add('show');
-          }
-
-          console.log('✅ Modal principal FORZADAMENTE reabierto');
-        }, 50);
-      }
-    }
   },
 };
 </script>
 
 <template>
   <Teleport to="body">
-    <Transition name="modal-fade">
-      <div v-if="show" class="attention-modal-overlay" @click.self="closeModal">
+    <div v-if="show" class="attention-modal-overlay" @click.self="closeModal">
         <div
           class="modal-dialog modal-dialog-scrollable modal-lg attention-modal-dialog"
           @click.stop
@@ -2491,8 +2412,7 @@ export default {
           </div>
         </div>
       </div>
-    </Transition>
-  </Teleport>
+    </Teleport>
 </template>
 
 <style scoped>

@@ -57,6 +57,8 @@
         :toggles="state.toggles"
         :attention-stats="attentionStats"
         :estimated-time="estimatedTime"
+        :queue-pending-details="state.queuePendingDetails"
+        :queue-processing-details="state.queueProcessingDetails"
       >
         <template #content>
           <!-- Client Requirements Cards & Check-In Call -->

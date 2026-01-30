@@ -52,6 +52,8 @@
         :toggles="state.toggles"
         :attention-stats="attentionStats"
         :estimated-time="estimatedTime"
+        :queue-pending-details="state.queuePendingDetails"
+        :queue-processing-details="state.queueProcessingDetails"
       >
         <template #content>
           <!-- Checkout Specific Content -->
@@ -210,7 +212,7 @@
       :commerce="state.commerce || commerce"
       :queues="state.commerce?.queues || state.queue ? [state.queue] : []"
       :toggles="state.toggles"
-      @close="closeAttentionModal"
+      @close="state.showAttentionModal = false"
       @attention-updated="handleAttentionUpdatedFromModal"
     />
   </div>

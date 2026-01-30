@@ -1,4 +1,5 @@
 <script>
+import { watch } from 'vue';
 import QueueAttentionDetails from '../domain/QueueAttentionDetails.vue';
 import {
   updatedAvailableAttentions,
@@ -33,37 +34,27 @@ export default {
       pendingAttentionsRef: null,
       processingAttentionsRef: null,
       terminatedAttentionsRef: null,
+      isLoading: false,
     };
   },
   computed: {
-    // Use external props if provided, otherwise use internal Firebase data
+    // Prioritize external props if available, otherwise use internal Firebase data for independence
     finalPendingDetails() {
-      // If parent passed an array (including empty), trust it
-      return this.queuePendingDetails !== null
-        ? this.queuePendingDetails
-        : this.internalPendingDetails;
+      return this.queuePendingDetails && this.queuePendingDetails.length > 0 ? this.queuePendingDetails : this.internalPendingDetails;
     },
     finalProcessingDetails() {
-      return this.queueProcessingDetails !== null
-        ? this.queueProcessingDetails
-        : this.internalProcessingDetails;
+      return this.queueProcessingDetails && this.queueProcessingDetails.length > 0 ? this.queueProcessingDetails : this.internalProcessingDetails;
     },
     finalTerminatedDetails() {
-      return this.queueTerminatedDetails !== null
-        ? this.queueTerminatedDetails
-        : this.internalTerminatedDetails;
+      return this.queueTerminatedDetails && this.queueTerminatedDetails.length > 0 ? this.queueTerminatedDetails : this.internalTerminatedDetails;
     },
   },
   mounted() {
-    // Initialize Firebase listeners only when QueueName manages its own data
-    // (i.e. parent did NOT pass queue*Details props, they stay null)
-    if (
-      this.details &&
-      this.queue?.id &&
-      this.queuePendingDetails === null &&
-      this.queueProcessingDetails === null &&
-      this.queueTerminatedDetails === null
-    ) {
+    // Load cached data from sessionStorage if available
+    this.loadCachedData();
+
+    // Initialize Firebase listeners if details is enabled
+    if (this.details && this.queue?.id) {
       this.initializeFirebaseListeners();
     }
 
@@ -80,15 +71,8 @@ export default {
           // Remove aria-hidden immediately and synchronously
           modalElement.removeAttribute('aria-hidden');
 
-          // Reinitialize Firebase listeners every time the modal is shown
-          // ONLY when QueueName is responsible for fetching data itself
-          if (
-            this.details &&
-            this.queue?.id &&
-            this.queuePendingDetails === null &&
-            this.queueProcessingDetails === null &&
-            this.queueTerminatedDetails === null
-          ) {
+          // Ensure Firebase listeners are active when modal opens
+          if (this.details && this.queue?.id && !this.pendingAttentionsRef) {
             this.initializeFirebaseListeners();
           }
         },
@@ -123,12 +107,10 @@ export default {
       });
     }
   },
-  beforeUnmount() {
-    this.cleanupFirebaseListeners();
-  },
   watch: {
     queue(newQueue, oldQueue) {
       if (this.details && newQueue?.id && newQueue.id !== oldQueue?.id) {
+        this.loadCachedData();
         this.initializeFirebaseListeners();
       }
     },
@@ -149,14 +131,16 @@ export default {
       // Clean up previous listeners
       this.cleanupFirebaseListeners();
 
+      this.isLoading = true;
+
       // Initialize Firebase listeners
       this.pendingAttentionsRef = updatedAvailableAttentions(this.queue.id);
       this.processingAttentionsRef = updatedProcessingAttentions(this.queue.id);
       this.terminatedAttentionsRef = updatedTerminatedAttentions(this.queue.id);
 
       // Watch for changes and update internal data
-      this.$watch(
-        () => this.pendingAttentionsRef?.value,
+      watch(
+        this.pendingAttentionsRef,
         newVal => {
           console.debug('[QueueName] pending updated', {
             queueId: this.queue?.id,
@@ -164,13 +148,15 @@ export default {
           });
           if (Array.isArray(newVal)) {
             this.internalPendingDetails.splice(0, this.internalPendingDetails.length, ...newVal);
+            this.isLoading = false;
+            this.saveCachedData();
           }
         },
         { immediate: true, deep: true }
       );
 
-      this.$watch(
-        () => this.processingAttentionsRef?.value,
+      watch(
+        this.processingAttentionsRef,
         newVal => {
           if (Array.isArray(newVal)) {
             this.internalProcessingDetails.splice(
@@ -178,13 +164,15 @@ export default {
               this.internalProcessingDetails.length,
               ...newVal,
             );
+            this.isLoading = false;
+            this.saveCachedData();
           }
         },
         { immediate: true, deep: true }
       );
 
-      this.$watch(
-        () => this.terminatedAttentionsRef?.value,
+      watch(
+        this.terminatedAttentionsRef,
         newVal => {
           if (Array.isArray(newVal)) {
             this.internalTerminatedDetails.splice(
@@ -192,6 +180,8 @@ export default {
               this.internalTerminatedDetails.length,
               ...newVal,
             );
+            this.isLoading = false;
+            this.saveCachedData();
           }
         },
         { immediate: true, deep: true }
@@ -207,6 +197,31 @@ export default {
       }
       if (this.terminatedAttentionsRef && this.terminatedAttentionsRef._unsubscribe) {
         this.terminatedAttentionsRef._unsubscribe();
+      }
+    },
+
+    loadCachedData() {
+      if (!this.queue?.id) return;
+      try {
+        const pending = sessionStorage.getItem(`queue-${this.queue.id}-pending`);
+        const processing = sessionStorage.getItem(`queue-${this.queue.id}-processing`);
+        const terminated = sessionStorage.getItem(`queue-${this.queue.id}-terminated`);
+        if (pending) this.internalPendingDetails = JSON.parse(pending);
+        if (processing) this.internalProcessingDetails = JSON.parse(processing);
+        if (terminated) this.internalTerminatedDetails = JSON.parse(terminated);
+      } catch (e) {
+        console.warn('Error loading cached queue data', e);
+      }
+    },
+
+    saveCachedData() {
+      if (!this.queue?.id) return;
+      try {
+        sessionStorage.setItem(`queue-${this.queue.id}-pending`, JSON.stringify(this.internalPendingDetails));
+        sessionStorage.setItem(`queue-${this.queue.id}-processing`, JSON.stringify(this.internalProcessingDetails));
+        sessionStorage.setItem(`queue-${this.queue.id}-terminated`, JSON.stringify(this.internalTerminatedDetails));
+      } catch (e) {
+        console.warn('Error saving cached queue data', e);
       }
     },
   },
@@ -261,7 +276,7 @@ export default {
       <div
         class="modal fade"
         id="queueModal"
-        data-bs-backdrop="static"
+        data-bs-backdrop="false"
         data-bs-keyboard="false"
         tabindex="-1"
         aria-labelledby="queueModalLabel"
@@ -288,7 +303,12 @@ export default {
               ></button>
             </div>
             <div class="modal-body text-center pb-3">
+              <div v-if="isLoading" class="text-center">
+                <i class="bi bi-arrow-repeat fs-1 text-primary" style="animation: spin 1s linear infinite;"></i>
+                <p class="mt-2">Carregando dados...</p>
+              </div>
               <QueueAttentionDetails
+                v-else
                 :key="`queue-modal-${queue?.id}-${listUpdateKey || 0}`"
                 :queue="queue"
                 :queue-pending-details="finalPendingDetails"
@@ -369,11 +389,8 @@ export default {
   max-width: 280px !important;
 }
 
-@media (max-width: 768px) {
-  #queueModal .modal-body .attention-pipeline-column {
-    flex: 0 0 calc(100% - 1rem) !important;
-    min-width: 250px !important;
-    max-width: 100% !important;
-  }
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>

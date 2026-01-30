@@ -106,6 +106,7 @@ export default {
 
     const userEditedTotalAmount = ref(false);
     const userEditedPaymentAmount = ref(false);
+    const userEditedPaymentCommission = ref(false);
     const loadedServices = ref([]); // Services fetched from backend when details are missing
     const loadingServices = ref(false);
 
@@ -193,7 +194,7 @@ export default {
         const formattedDate = paymentDate ? new Date(paymentDate).toLocaleDateString('pt-BR') : '';
         const amount = existingConfirmationData.value?.paymentAmount;
         const method = existingConfirmationData.value?.paymentMethod;
-        
+
         return {
           title: 'Pagamento Confirmado',
           details: `Confirmado em ${formattedDate}${amount ? ` - ${amount} ${commerce.value?.currency || 'BRL'}` : ''}${method ? ` via ${method}` : ''}`,
@@ -526,11 +527,10 @@ export default {
     watch(
       calculatedProfessionalCommission,
       (newCommissionAmount) => {
-        if (newCommissionAmount && newCommissionAmount > 0) {
-          // Solo actualizar si el campo está vacío o es 0 (no sobrescribir si el usuario editó)
-          if (!state.newConfirmationData.paymentCommission || state.newConfirmationData.paymentCommission === 0) {
-            state.newConfirmationData.paymentCommission = newCommissionAmount;
-          }
+        if (newCommissionAmount && newCommissionAmount > 0 && !userEditedPaymentCommission.value) {
+          state.newConfirmationData.paymentCommission = newCommissionAmount;
+          // Sincronizar con el componente padre
+          props.receiveData(state.newConfirmationData);
         }
       },
       { immediate: true }
@@ -627,7 +627,7 @@ export default {
         state.newConfirmationData.professionalId = professionalId.value;
         state.newConfirmationData.professionalCommissionType = professionalCommissionType.value || 'PERCENTAGE';
         state.newConfirmationData.professionalCommissionValue = professionalCommission.value;
-        
+
         // Calcular professionalCommissionAmount basado en paymentAmount
         if (state.newConfirmationData.paymentAmount && professionalCommission.value) {
           const commissionValue = Number(professionalCommission.value);
@@ -640,13 +640,13 @@ export default {
             );
           }
         }
-        
+
         // Agregar notas de comisión
         if (!state.newConfirmationData.professionalCommissionNotes && professionalName.value) {
           state.newConfirmationData.professionalCommissionNotes = `Comisión del profesional ${professionalName.value}`;
         }
       }
-      
+
       receiveData(state.newConfirmationData);
     };
 
@@ -864,6 +864,7 @@ export default {
       formattedServicePrice,
       userEditedTotalAmount,
       userEditedPaymentAmount,
+      userEditedPaymentCommission,
       calculatePaymentAmount,
       packagePaymentStatus,
       isPaymentConfirmed,
@@ -885,7 +886,7 @@ export default {
         <p>{{ confirmationMessage.details }}</p>
       </div>
     </div>
-    
+
     <div id="payment-data" v-if="!isPaymentConfirmed">
       <div class="payment-form-content">
         <div v-if="state.packages && state.packages.length > 0" class="payment-form-field">
@@ -1096,7 +1097,7 @@ export default {
                 </div>
               </div>
             </div>
-            
+
             <!-- Desktop: Organized in rows | Mobile: Vertical stack -->
             <div class="payment-form-rows">
               <!-- Row 1: Tipo de Pagamento | Método de Pagamento -->
@@ -1350,7 +1351,10 @@ export default {
                     class="payment-form-input"
                     v-model.number="state.newConfirmationData.paymentCommission"
                     placeholder="100"
-                    @input="sendData"
+                    @input="
+                      userEditedPaymentCommission = true;
+                      sendData();
+                    "
                     @change="sendData"
                   />
                 </div>

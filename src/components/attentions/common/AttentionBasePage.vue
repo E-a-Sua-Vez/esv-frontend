@@ -23,6 +23,8 @@
       :attention="attention"
       :queue="queue"
       :estimated-time="estimatedTime"
+      :queue-pending-details="queuePendingDetails"
+      :queue-processing-details="queueProcessingDetails"
     />
 
     <!-- Gestión del Cliente -->
@@ -73,6 +75,8 @@ export default {
     toggles: { type: Object, default: () => ({}) },
     attentionStats: { type: Object, default: null },
     estimatedTime: { type: String, default: null },
+    queuePendingDetails: { type: Array, default: () => [] },
+    queueProcessingDetails: { type: Array, default: () => [] },
   },
 };
 </script>

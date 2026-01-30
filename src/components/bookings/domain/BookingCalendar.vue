@@ -1676,10 +1676,10 @@ export default {
 
     const openBookingDrawer = booking => {
       state.selectedBooking = booking;
-      
+
       // NO hacer nada con el modal principal aquí
       // El BookingDetailsModal maneja su propia ocultación
-      
+
       // Find the queue for this booking
       if (booking && booking.queueId && queues.value) {
         const queue = queues.value.find(q => q.id === booking.queueId);
@@ -1732,7 +1732,7 @@ export default {
     const closeBookingDrawer = () => {
       state.drawerOpen = false;
       state.selectedBooking = null;
-      
+
       // El modal principal se restaura automáticamente
       // cuando BookingDetailsModal cambia su prop 'show' a false
     };

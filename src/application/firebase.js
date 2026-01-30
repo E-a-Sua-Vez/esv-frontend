@@ -169,10 +169,11 @@ export function updatedAvailableAttentions(queueId) {
 
 export function updatedProcessingAttentions(queueId) {
   const attentions = ref([]);
-  // Filter to only get attentions from today (starting from midnight today)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dateToRequest = Timestamp.fromDate(today);
+  // Filter to only get attentions from the last 7 days (starting from 7 days ago)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+  const dateToRequest = Timestamp.fromDate(sevenDaysAgo);
 
   // Query with single orderBy to avoid composite index requirements
   // We'll sort by number in JavaScript after fetching
@@ -223,10 +224,11 @@ export function updatedProcessingAttentions(queueId) {
 
 export function updatedTerminatedAttentions(queueId) {
   const attentions = ref([]);
-  // Filter to only get attentions from today (starting from midnight today)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dateToRequest = Timestamp.fromDate(today);
+  // Filter to only get attentions from the last 7 days (starting from 7 days ago)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+  const dateToRequest = Timestamp.fromDate(sevenDaysAgo);
 
   const attentionQuery = query(
     attentionCollection,
@@ -368,10 +370,11 @@ export function updatedAvailableAttentionsByCommerce(commerceId) {
 
 export function updatedProcessingAttentionsByCommerce(commerceId) {
   const attentions = ref([]);
-  // Filter to only get attentions from today (starting from midnight today)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dateToRequest = Timestamp.fromDate(today);
+  // Filter to only get attentions from the last 7 days (starting from 7 days ago)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+  const dateToRequest = Timestamp.fromDate(sevenDaysAgo);
 
   const attentionQuery = query(
     attentionCollection,
@@ -404,10 +407,11 @@ export function updatedProcessingAttentionsByCommerce(commerceId) {
 
 export function updatedTerminatedAttentionsByCommerce(commerceId) {
   const attentions = ref([]);
-  // Filter to only get attentions from today (starting from midnight today)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dateToRequest = Timestamp.fromDate(today);
+  // Filter to only get attentions from the last 7 days (starting from 7 days ago)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+  const dateToRequest = Timestamp.fromDate(sevenDaysAgo);
 
   const attentionQuery = query(
     attentionCollection,

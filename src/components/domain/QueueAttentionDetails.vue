@@ -42,6 +42,11 @@ export default {
       pendingAttentionsRef: null,
       processingAttentionsRef: null,
       terminatedAttentionsRef: null,
+
+      // Cache for external data to prevent flickering when modal opens
+      cachedPendingDetails: null,
+      cachedProcessingDetails: null,
+      cachedTerminatedDetails: null,
     };
   },
 
@@ -62,29 +67,32 @@ export default {
 
     pendingList() {
       if (this.hasExternalData) {
-        // Use props if provided
-        return Array.isArray(this.queuePendingDetails) ? this.queuePendingDetails : [];
+        // Cache the external data to prevent flickering
+        this.cachedPendingDetails = this.queuePendingDetails;
+        return this.queuePendingDetails;
       }
-      // Use internal state (from Firebase listeners or fetchQueue)
-      return Array.isArray(this.internalPending) ? this.internalPending : [];
+      // Use cached data if available, otherwise use internal state
+      return this.cachedPendingDetails || this.internalPending || [];
     },
 
     processingList() {
       if (this.hasExternalData) {
-        // Use props if provided
-        return Array.isArray(this.queueProcessingDetails) ? this.queueProcessingDetails : [];
+        // Cache the external data to prevent flickering
+        this.cachedProcessingDetails = this.queueProcessingDetails;
+        return this.queueProcessingDetails;
       }
-      // Use internal state (from Firebase listeners or fetchQueue)
-      return Array.isArray(this.internalProcessing) ? this.internalProcessing : [];
+      // Use cached data if available, otherwise use internal state
+      return this.cachedProcessingDetails || this.internalProcessing || [];
     },
 
     terminatedList() {
       if (this.hasExternalData) {
-        // Use props if provided
-        return Array.isArray(this.queueTerminatedDetails) ? this.queueTerminatedDetails : [];
+        // Cache the external data to prevent flickering
+        this.cachedTerminatedDetails = this.queueTerminatedDetails;
+        return this.queueTerminatedDetails;
       }
-      // Use internal state (from Firebase listeners or fetchQueue)
-      return Array.isArray(this.internalTerminated) ? this.internalTerminated : [];
+      // Use cached data if available, otherwise use internal state
+      return this.cachedTerminatedDetails || this.internalTerminated || [];
     },
 
     isStagesEnabled() {
@@ -125,26 +133,20 @@ export default {
         return [];
       }
       // When stages enabled: show CHECKOUT stage only (not fully terminated)
-      return filterAttentionsByToday(
-        this.allAttentions.filter(a => a?.currentStage === 'CHECKOUT')
-      );
+      return this.allAttentions.filter(a => a?.currentStage === 'CHECKOUT');
     },
 
     terminatedAttentions() {
       // Show fully terminated attentions (TERMINATED/RATED/SKIPED that have passed checkout)
       if (!this.isStagesEnabled) {
         // When stages disabled: show TERMINATED/RATED/SKIPED status
-        return filterAttentionsByToday(
-          this.terminatedList.filter(a => ['TERMINATED', 'RATED', 'SKIPED'].includes(a?.status)),
-        );
+        return this.terminatedList.filter(a => ['TERMINATED', 'RATED', 'SKIPED'].includes(a?.status));
       }
       // When stages enabled: show TERMINATED stage OR TERMINATED/RATED/SKIPED status without currentStage (backward compatibility)
-      return filterAttentionsByToday(
-        this.allAttentions.filter(
-          a =>
-            a?.currentStage === 'TERMINATED' ||
-            (['TERMINATED', 'RATED', 'SKIPED'].includes(a?.status) && !a?.currentStage)
-        ),
+      return this.allAttentions.filter(
+        a =>
+          a?.currentStage === 'TERMINATED' ||
+          (['TERMINATED', 'RATED', 'SKIPED'].includes(a?.status) && !a?.currentStage)
       );
     },
   },
@@ -383,6 +385,10 @@ export default {
   watch: {
     async queue(newQ, oldQ) {
       if (!this.hasExternalData && newQ?.id && newQ.id !== oldQ?.id) {
+        // Clear cache when queue changes
+        this.cachedPendingDetails = null;
+        this.cachedProcessingDetails = null;
+        this.cachedTerminatedDetails = null;
         // Always re-initialize Firebase listeners when queue changes
         this.initializeFirebaseListeners();
       }
@@ -399,6 +405,24 @@ export default {
       deep: true,
       immediate: true,
     },
+  },
+
+  beforeUnmount() {
+    // Clear cache when component is destroyed
+    this.cachedPendingDetails = null;
+    this.cachedProcessingDetails = null;
+    this.cachedTerminatedDetails = null;
+
+    // Clean up Firebase listeners
+    if (this.pendingAttentionsRef && this.pendingAttentionsRef._unsubscribe) {
+      this.pendingAttentionsRef._unsubscribe();
+    }
+    if (this.processingAttentionsRef && this.processingAttentionsRef._unsubscribe) {
+      this.processingAttentionsRef._unsubscribe();
+    }
+    if (this.terminatedAttentionsRef && this.terminatedAttentionsRef._unsubscribe) {
+      this.terminatedAttentionsRef._unsubscribe();
+    }
   },
 };
 </script>
