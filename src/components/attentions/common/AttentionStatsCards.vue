@@ -50,15 +50,29 @@
       </div>
     </div>
 
-    <!-- Creation Time Card -->
-    <div class="stat-card stat-card-creation">
+    <!-- Booking Scheduled Time Card (if attention comes from a booking or block) -->
+    <div v-if="attention.bookingId || attention.booking || attention.block" class="stat-card stat-card-booking">
       <div class="stat-card-icon">
-        <i class="bi bi-clock-history"></i>
+        <i class="bi bi-calendar-check"></i>
       </div>
       <div class="stat-card-content">
-        <div class="stat-card-label">{{ $t('attentionStats.createdAt') }}</div>
-        <div class="stat-card-value">{{ stats.creationTime }}</div>
-        <div class="stat-card-subvalue">{{ stats.creationDate }}</div>
+        <div class="stat-card-label">{{ $t('attentionStats.scheduledAt') || 'Agendado para' }}</div>
+        <div class="stat-card-value">{{ bookingScheduledTime }}</div>
+        <div class="stat-card-subvalue">{{ bookingScheduledDate }}</div>
+      </div>
+    </div>
+
+    <!-- Professional and Payment Card -->
+    <div class="stat-card stat-card-professional">
+      <div class="stat-card-icon">
+        <i class="bi bi-person-badge"></i>
+      </div>
+      <div class="stat-card-content">
+        <div class="stat-card-label">{{ $t('attentionStats.professional') || 'Profissional' }}</div>
+        <div class="stat-card-value">{{ professionalName || 'Não atribuído' }}</div>
+        <div v-if="attention.bookingId || attention.booking || attention.block" class="stat-card-subvalue">
+          <span :class="paymentStatusClass">{{ paymentStatusText }}</span>
+        </div>
       </div>
     </div>
 
@@ -191,6 +205,35 @@ export default {
       if (!this.attention.number) return null;
       const position = this.attention.number - this.queue.currentAttentionNumber + 1;
       return position > 0 ? position : 0;
+    },
+    bookingScheduledTime() {
+      if (this.attention.block && this.attention.block.hourFrom) {
+        return this.attention.block.hourFrom;
+      }
+      if (this.attention.booking && this.attention.booking.date) {
+        const date = new Date(this.attention.booking.date);
+        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      }
+      return '';
+    },
+    bookingScheduledDate() {
+      // For attentions, date is always today
+      const today = new Date();
+      return today.toLocaleDateString('pt-BR');
+    },
+    professionalName() {
+      return this.attention.professionalName || this.attention.collaboratorName || '';
+    },
+    paymentStatusText() {
+      // Assuming attention has payment info
+      if (this.attention.paymentConfirmed) {
+        return 'Pago';
+      } else {
+        return 'Pendente';
+      }
+    },
+    paymentStatusClass() {
+      return this.attention.paymentConfirmed ? 'text-success' : 'text-warning';
     },
   },
 };
