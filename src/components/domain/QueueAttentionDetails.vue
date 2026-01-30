@@ -232,7 +232,7 @@ export default {
           // Get pending attentions from Firebase
           const pendingArray = this.pendingAttentionsRef?.value || [];
           const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
-          const filteredPending = [...pendingList].filter(att => att && att.status === 'PENDING');
+          const filteredPending = [...pendingList].filter(att => att && ['PENDING', 'CONFIRMED'].includes(att.status));
           const sortedPending = [...filteredPending].sort((a, b) => {
             const numA = a.number || 0;
             const numB = b.number || 0;

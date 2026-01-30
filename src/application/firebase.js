@@ -100,21 +100,39 @@ export function updatedQueues(queueId) {
 
 export function updatedAvailableAttentions(queueId) {
   const attentions = ref([]);
-  // Filter to only get attentions from today (starting from midnight today)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dateToRequest = Timestamp.fromDate(today);
+  // Filter to only get attentions from the last 7 days (starting from 7 days ago)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+  const dateToRequest = Timestamp.fromDate(sevenDaysAgo);
 
-  const attentionQuery = query(
+  // Query for PENDING attentions from last 7 days
+  const pendingQuery = query(
     attentionCollection,
     where('queueId', '==', queueId),
-    where('status', 'in', [ATTENTION_STATUS.PENDING]),
+    where('status', '==', 'PENDING'),
     where('createdAt', '>=', dateToRequest),
     orderBy('createdAt', 'asc'),
     orderBy('number', 'asc')
   );
-  const unsubscribe = onSnapshot(attentionQuery, snapshot => {
-    attentions.value = snapshot.docs.map(doc => {
+
+  // Query for CONFIRMED attentions from last 7 days
+  const confirmedQuery = query(
+    attentionCollection,
+    where('queueId', '==', queueId),
+    where('status', '==', 'CONFIRMED'),
+    where('createdAt', '>=', dateToRequest),
+    orderBy('createdAt', 'asc'),
+    orderBy('number', 'asc')
+  );
+
+  let pendingDocs = [];
+  let confirmedDocs = [];
+
+  const updateAttentions = () => {
+    // Combine results from both queries
+    const allDocs = [...pendingDocs, ...confirmedDocs];
+    attentions.value = allDocs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -126,7 +144,23 @@ export function updatedAvailableAttentions(queueId) {
         createdAt: data.createdAt ? data.createdAt.toDate().toString() : undefined,
       };
     });
+  };
+
+  const unsubscribePending = onSnapshot(pendingQuery, snapshot => {
+    pendingDocs = snapshot.docs;
+    updateAttentions();
   });
+
+  const unsubscribeConfirmed = onSnapshot(confirmedQuery, snapshot => {
+    confirmedDocs = snapshot.docs;
+    updateAttentions();
+  });
+
+  const unsubscribe = () => {
+    unsubscribePending();
+    unsubscribeConfirmed();
+  };
+
   safeOnUnmounted(unsubscribe);
   // Add unsubscribe for manual cleanup
   attentions.value._unsubscribe = unsubscribe;
@@ -264,21 +298,39 @@ export function updatedAttentionsByDateAndCommerceAndQueue(queueId) {
 
 export function updatedAvailableAttentionsByCommerce(commerceId) {
   const attentions = ref([]);
-  // Filter to only get attentions from today (starting from midnight today)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dateToRequest = Timestamp.fromDate(today);
+  // Filter to only get attentions from the last 7 days (starting from 7 days ago)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+  const dateToRequest = Timestamp.fromDate(sevenDaysAgo);
 
-  const attentionQuery = query(
+  // Query for PENDING attentions from last 7 days
+  const pendingQuery = query(
     attentionCollection,
     where('commerceId', '==', commerceId),
-    where('status', 'in', ['PENDING']),
+    where('status', '==', 'PENDING'),
     where('createdAt', '>=', dateToRequest),
     orderBy('createdAt', 'asc'),
     orderBy('number', 'asc')
   );
-  const unsubscribe = onSnapshot(attentionQuery, snapshot => {
-    attentions.value = snapshot.docs.map(doc => {
+
+  // Query for CONFIRMED attentions from last 7 days
+  const confirmedQuery = query(
+    attentionCollection,
+    where('commerceId', '==', commerceId),
+    where('status', '==', 'CONFIRMED'),
+    where('createdAt', '>=', dateToRequest),
+    orderBy('createdAt', 'asc'),
+    orderBy('number', 'asc')
+  );
+
+  let pendingDocs = [];
+  let confirmedDocs = [];
+
+  const updateAttentions = () => {
+    // Combine results from both queries
+    const allDocs = [...pendingDocs, ...confirmedDocs];
+    attentions.value = allDocs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -290,7 +342,23 @@ export function updatedAvailableAttentionsByCommerce(commerceId) {
         createdAt: data.createdAt ? data.createdAt.toDate().toString() : undefined,
       };
     });
+  };
+
+  const unsubscribePending = onSnapshot(pendingQuery, snapshot => {
+    pendingDocs = snapshot.docs;
+    updateAttentions();
   });
+
+  const unsubscribeConfirmed = onSnapshot(confirmedQuery, snapshot => {
+    confirmedDocs = snapshot.docs;
+    updateAttentions();
+  });
+
+  const unsubscribe = () => {
+    unsubscribePending();
+    unsubscribeConfirmed();
+  };
+
   // Register cleanup on unmount, but also return unsubscribe for manual cleanup
   safeOnUnmounted(unsubscribe);
   // Return both the ref and the unsubscribe function

@@ -19,6 +19,7 @@ export const USER_TYPES = {
 // Attention statuses
 export const ATTENTION_STATUS = {
   PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
   TERMINATED: 'TERMINATED',
   RATED: 'RATED',
   PROCESSING: 'PROCESSING',
