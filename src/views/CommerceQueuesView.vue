@@ -36,8 +36,8 @@ import { Timestamp, query, where, orderBy, onSnapshot } from 'firebase/firestore
 import ClientForm from '../components/domain/ClientForm.vue';
 import QueueForm from '../components/domain/QueueForm.vue';
 import ServiceForm from '../components/domain/ServiceForm.vue';
+import PackageReminderCard from '../components/domain/PackageReminderCard.vue';
 import NextAvailableSlot from '../components/bookings/common/NextAvailableSlot.vue';
-import PackageReminderBanner from '../components/common/PackageReminderBanner.vue';
 import { v4 as uuidv4 } from 'uuid';
 import { validateIdNumber } from '../shared/utils/idNumber';
 import { DateModel } from '../shared/utils/date.model';
@@ -54,8 +54,8 @@ export default {
     ClientForm,
     QueueForm,
     ServiceForm,
+    PackageReminderCard,
     NextAvailableSlot,
-    PackageReminderBanner,
   },
   async setup() {
     const { t } = useI18n();
@@ -82,6 +82,9 @@ export default {
     } = route.params;
 
     const { client, queue } = route.query;
+
+    // Store client data separately to avoid interfering with form input
+    const clientFormData = ref({});
 
     const siteKey = import.meta.env.VITE_RECAPTCHA_INVISIBLE;
     const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
@@ -210,7 +213,7 @@ export default {
       showFillForm: true,
       showPickQueue: false,
       showPickHours: false,
-      summaryExpanded: true,
+      summaryExpanded: false,
       isTelemedicine: false,
       telemedicineConfig: {
         type: 'VIDEO',
@@ -284,6 +287,7 @@ export default {
               if (clientById.name) {
                 const personalInfo = clientById.personalInfo;
                 const user = { ...clientById, ...personalInfo };
+                clientFormData.value = user;
                 receiveData(user);
               }
             }
@@ -497,30 +501,34 @@ export default {
     };
 
     const receiveSelectedServices = async services => {
-      state.selectedServices = services;
+      try {
+        state.selectedServices = services;
 
-      state.totalDurationRequested = state.selectedServices.reduce(
-        (acc, service) =>
-          acc + (service.serviceInfo.blockTime || service.serviceInfo.estimatedTime),
-        0
-      );
-      state.amountofBlocksNeeded = Math.ceil(state.totalDurationRequested / state.queue.blockTime);
-      if (state.specificCalendar === true) {
-        state.specificCalendarDate = undefined;
-        if (state.specificCalendarDate && state.specificCalendarDate !== 'TODAY') {
-          getAvailableBookingSuperBlocks();
+        state.totalDurationRequested = state.selectedServices.reduce(
+          (acc, service) =>
+            acc + (service.serviceInfo.blockTime || service.serviceInfo.estimatedTime),
+          0
+        );
+        state.amountofBlocksNeeded = Math.ceil(state.totalDurationRequested / state.queue.blockTime);
+        if (state.specificCalendar === true) {
+          state.specificCalendarDate = undefined;
+          if (state.specificCalendarDate && state.specificCalendarDate !== 'TODAY') {
+            getAvailableBookingSuperBlocks();
+          } else {
+            getAvailableAttentionSuperBlocks();
+          }
         } else {
-          getAvailableAttentionSuperBlocks();
+          state.date = undefined;
+          if (state.date && state.date !== 'TODAY') {
+            getAvailableBookingSuperBlocks();
+          } else {
+            getAvailableAttentionSuperBlocks();
+          }
         }
-      } else {
-        state.date = undefined;
-        if (state.date && state.date !== 'TODAY') {
-          getAvailableBookingSuperBlocks();
-        } else {
-          getAvailableAttentionSuperBlocks();
-        }
+        setCanBook();
+      } catch (error) {
+        console.error('Error in receiveSelectedServices:', error);
       }
-      setCanBook();
     };
 
     const setCanBook = () => {
@@ -2415,7 +2423,7 @@ export default {
       }
     };
 
-    // Check if procedure amount selection is needed
+     // Check if procedure amount selection is needed
     const needsProcedureAmountSelection = computed(() => {
       // Only check if we have selected services
       if (!state.selectedServices || state.selectedServices.length === 0) {
@@ -2425,10 +2433,29 @@ export default {
       // Check if any selected service has proceduresList
       const serviceWithProceduresList = state.selectedServices.find(service => {
         const proceduresList = service.serviceInfo?.proceduresList;
-        return proceduresList && proceduresList.trim() && proceduresList.trim().length > 0;
+        const hasProceduresList =
+          proceduresList && proceduresList.trim() && proceduresList.trim().length > 0;
+        return hasProceduresList;
       });
 
-      return !!serviceWithProceduresList;
+      if (!serviceWithProceduresList) {
+        return false;
+      }
+
+      // Check if client has active package (if activePackagesForService exists, they have an active package)
+      // Only skip procedure selection if we have a client ID and an active package
+      const hasClientId =
+        clientFormData.value?.clientId ||
+        clientFormData.value?.id ||
+        state.newUser?.clientId ||
+        state.newUser?.id;
+
+      if (hasClientId && state.activePackagesForService.length > 0) {
+        return false; // Client has active package, no need to select amount
+      }
+
+      // If service has proceduresList and no active package, show selection
+      return true;
     });
 
     // Get available procedure amounts from proceduresList
@@ -2526,7 +2553,7 @@ export default {
 
             try {
               const allAttentions = await getAttentionsDetails(
-                state.commerce.id,
+                [state.commerce.id],
                 undefined,
                 undefined,
                 undefined,
@@ -2557,48 +2584,93 @@ export default {
               });
 
               const allBookings = await getBookingsDetails(
-                state.commerce.id,
+                [state.commerce.id],
                 null,
                 null,
-                null,
+                undefined,
                 1,
                 100,
                 null,
                 null,
                 false,
-                null,
-                null,
-                null,
-                clientId
+                activePackage.serviceId,
+                undefined,
+                clientId,
+                activePackage.id,
+                undefined
               );
 
               pendingBookings = (allBookings || []).filter(booking => {
-                const bookingPackageId = String(booking.packageId || '').trim();
-                const pkgId = String(activePackage.id || '').trim();
-                return (
-                  bookingPackageId === pkgId &&
-                  bookingPackageId !== '' &&
-                  booking.status === 'PENDING'
-                );
+                return booking.status === 'PENDING'
               });
             } catch (error) {
               console.error('Error loading package attentions/bookings:', error);
             }
+
+            // Get attentions for this package by filtering all client attentions
+            const attentionsDetails = await getAttentionsDetails(
+              [state.commerce.id],
+              undefined,
+              undefined,
+              undefined,
+              1,
+              10,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              true,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              clientId,
+              undefined
+            );
+            const allPackageAttentions = attentionsDetails?.attentions?.filter(a => a.packageId === activePackage.id) || [];
+
+            // Find last terminated or rated attention
+            const terminatedAttentions = allPackageAttentions.filter(a => ['TERMINATED', 'RATED'].includes(a.status)).sort((a,b) => b.createdAt - a.createdAt);
+            const lastAttention = terminatedAttentions[0];
+            const lastAttentionDate = lastAttention?.createdAt?.toDate?.() || null;
 
             const proceduresUsed = activePackage.proceduresUsed || 0;
             const currentSessionNumber =
               proceduresUsed + pendingAttentions.length + pendingBookings.length + 1;
             const totalSessions = activePackage.proceduresAmount || 0;
             const serviceName = state.selectedServices[0]?.name || '';
+            const service = state.selectedServices.find(s => s.id === activePackage.serviceId);
+
+            // Find next expected date from pending attentions or bookings
+            let nextExpectedDate = null;
+            const pendingPackageAttentions = allPackageAttentions.filter(a => a.status === 'PENDING').sort((a,b) => a.createdAt - b.createdAt);
+            const nextPendingAttention = pendingPackageAttentions[0];
+            if (nextPendingAttention) {
+              nextExpectedDate = nextPendingAttention.createdAt.toDate();
+            } else {
+              const nextPendingBooking = pendingBookings.sort((a,b) => new Date(a.date) - new Date(b.date))[0];
+              if (nextPendingBooking) {
+                nextExpectedDate = new Date(nextPendingBooking.date);
+              } else if (lastAttentionDate && service?.daysBetweenSessions) {
+                nextExpectedDate = new Date(lastAttentionDate);
+                nextExpectedDate.setDate(nextExpectedDate.getDate() + service.daysBetweenSessions);
+              }
+            }
 
             if (isMounted.value) {
               packageReminderInfo.value = {
                 id: activePackage.id,
-                name: activePackage.name,
+                name: activePackage.name || `${serviceName} Package`,
                 serviceName,
                 currentSession: currentSessionNumber,
                 totalSessions,
                 sessionsRemaining: activePackage.proceduresLeft || 0,
+                lastAttentionDate,
+                nextExpectedDate,
               };
             }
           } else {
@@ -2633,8 +2705,12 @@ export default {
       ],
       () => {
         if (isMounted.value && state.showPickQueue && state.newUser?.clientId) {
-          loadPackageReminderInfo();
-          checkActivePackagesForService();
+          try {
+            checkActivePackagesForService();
+            loadPackageReminderInfo();
+          } catch (error) {
+            console.error('Error in watch callback for selectedServices:', error);
+          }
         }
       },
       { deep: true }
@@ -3050,7 +3126,51 @@ export default {
       }
     });
 
-    // Helper function to convert duration from minutes to readable format
+    // Watch for changes that affect the confirm button visibility/enabled state
+    watch([
+      () => state.showPickHours,
+      () => state.block,
+      () => state.attentionBlock,
+      () => state.date,
+      () => state.specificCalendarDate,
+      () => state.accept,
+      () => state.queue?.id,
+      () => isProcedureAmountSelectionValid?.value,
+      () => loadingService?.value,
+      () => state.isTelemedicine,
+      () => state.telemedicineConfig?.scheduledAt
+    ], () => {
+      // Check if the confirm button should be visible (same condition as v-else-if)
+      const shouldShowButton =
+        state.showPickHours &&
+        ((state.block &&
+          state.block.hourFrom &&
+          (state.date || state.specificCalendarDate)) ||
+          (state.attentionBlock &&
+            (state.attentionBlock.number || state.attentionBlock.hourFrom) &&
+            (state.date === 'TODAY' || state.specificCalendarDate === 'TODAY')));
+
+      // Check if the button should be enabled (opposite of :disabled condition)
+      const shouldEnableButton =
+        state.accept &&
+        state.queue?.id &&
+        isProcedureAmountSelectionValid?.value !== false &&
+        !loadingService?.value &&
+        !((state.date === 'TODAY' || state.specificCalendarDate === 'TODAY') &&
+          !state.attentionBlock) &&
+        !(state.isTelemedicine &&
+          (!state.telemedicineConfig || !state.telemedicineConfig.scheduledAt));
+
+      // Expand summary if button is visible AND enabled, collapse otherwise
+      const shouldExpand = shouldShowButton && shouldEnableButton;
+
+      if (shouldExpand && !state.summaryExpanded) {
+        state.summaryExpanded = true;
+      } else if (!shouldExpand && state.summaryExpanded) {
+        state.summaryExpanded = false;
+      }
+    });
+
     const convertDuration = duration => {
       if (duration) {
         if (duration > 0 && duration < 60) {
@@ -3345,6 +3465,18 @@ export default {
       }
     });
 
+    // Computed property to check if the continue/confirm button is enabled
+    // Temporarily removed to debug the error
+    // const canProceedFromCurrentStep = computed(() => {
+    //   try {
+    //     // Simplified version to avoid errors
+    //     return false;
+    //   } catch (error) {
+    //     console.error('Error in canProceedFromCurrentStep:', error);
+    //     return false;
+    //   }
+    // });
+
     return {
       state,
       siteKey,
@@ -3421,6 +3553,7 @@ export default {
       groupedTodayAttentionBlocks,
       groupedBookingSuperBlocks,
       groupedBookingBlocks,
+      // canProceedFromCurrentStep,
     };
   },
 };
@@ -3517,7 +3650,27 @@ export default {
                 >
                 </ServiceForm>
 
-                <!-- Procedure Amount Selection (if service has proceduresList) -->
+                <!-- Package Reminder Card (if client has active package for selected service) -->
+                <div
+                  v-if="
+                    state.queue &&
+                    state.queue.id &&
+                    state.selectedServices &&
+                    state.selectedServices.length > 0 &&
+                    state.activePackagesForService.length > 0 &&
+                    (packageReminderInfo || loadingPackageReminder)
+                  "
+                  class="row g-1 mt-3"
+                >
+                  <div class="col col-md-10 offset-md-1 data-card">
+                    <PackageReminderCard
+                      :package-info="packageReminderInfo"
+                      :loading="loadingPackageReminder"
+                    />
+                  </div>
+                </div>
+
+                <!-- Procedure Amount Selection (if service has proceduresList and no active package) -->
                 <div
                   v-if="
                     state.queue &&
@@ -5021,17 +5174,19 @@ export default {
                 <div
                   v-if="state.queue.id && (state.showPickQueue || state.showPickHours)"
                   class="booking-summary-card mb-3"
+                  :class="{ 'summary-collapsed': !state.summaryExpanded }"
                 >
                   <!-- Toggle Button Header -->
-                  <div class="summary-header">
+                  <div class="summary-header" @click="state.summaryExpanded = !state.summaryExpanded">
+                    <div v-if="!state.summaryExpanded" class="summary-collapsed-content">
+                      <i class="bi bi-chevron-down summary-icon pulse-btn"></i>
+                    </div>
                     <button
+                      v-else
                       class="summary-toggle-btn"
-                      @click="state.summaryExpanded = !state.summaryExpanded"
                       type="button"
                     >
-                      <i
-                        :class="state.summaryExpanded ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"
-                      ></i>
+                      <i class="bi bi-chevron-up"></i>
                     </button>
                   </div>
 
@@ -5729,15 +5884,51 @@ export default {
   border: 1px solid rgba(0, 74, 173, 0.1);
   animation: slideInUp 0.4s ease-out;
   overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.booking-summary-card.summary-collapsed {
+  box-shadow: 0 2px 12px rgba(0, 74, 173, 0.2);
+}
+
+.summary-collapsed-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0.15rem;
+  min-width: 1.2rem;
+  min-height: 1.2rem;
+}
+
+.summary-collapsed-content .summary-icon {
+  color: #004aad;
+  font-size: 0.75rem;
+  border-radius: 50%;
+  padding: 0.1rem;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.summary-collapsed-content .summary-icon:hover {
+  color: #003d8a;
+  transform: scale(1.1);
 }
 
 .summary-header {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0.15rem;
+  padding: 0.05rem;
   background: rgba(0, 74, 173, 0.03);
   border-bottom: 1px solid rgba(0, 74, 173, 0.08);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.summary-header:hover {
+  background: rgba(0, 74, 173, 0.06);
 }
 
 .summary-toggle-btn {
@@ -6487,5 +6678,22 @@ export default {
     font-size: 0.85rem;
     padding: 0 0.5rem;
   }
+}
+
+/* Pulse animation for summary icon */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 74, 173, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 5px rgba(0, 74, 173, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 74, 173, 0);
+  }
+}
+
+.pulse-btn {
+  animation: pulse 2s infinite;
 }
 </style>

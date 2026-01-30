@@ -1357,7 +1357,8 @@
       "healthAgreementId": "Deve selecionar seu convenio de saúde",
       "queueRequired": "Por favor selecione uma fila válida antes de criar a reserva",
       "queueRequiredAttention": "Por favor selecione uma fila válida antes de criar a atenção"
-    }
+    },
+    "summaryTitle": "Resumo do atendimento"
   },
   "nextAvailableSlot": {
     "title": "Próximo horário disponível",
@@ -7181,7 +7182,14 @@
     "telemedicineScheduleNote": "A data e hora serão definidas pelo bloco selecionado abaixo",
     "selectProcedureAmount": "Selecione a quantidade de sessões",
     "sessions": "sessões",
-    "selectedAmount": "Quantidade selecionada"
+    "selectedAmount": "Quantidade selecionada",
+    "packageReminder": "Lembrete de Pacote",
+    "youHaveActivePackage": "Você tem um pacote ativo para este serviço:",
+    "packageName": "Nome do Pacote",
+    "sessionsUsed": "Sessões Usadas",
+    "lastSession": "Última Sessão",
+    "nextExpected": "Próxima Esperada",
+    "packageBookingNote": "Esta reserva será realizada dentro do seu pacote ativo. Se você concordar, pressione Continuar."
   },
   "package": {
     "package": "Pacote",

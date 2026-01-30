@@ -551,7 +551,6 @@ export default {
     const needsProcedureAmountSelection = computed(() => {
       // Only check if we have selected services
       if (!state.selectedServices || state.selectedServices.length === 0) {
-        console.log('🔍 needsProcedureAmountSelection: No selected services');
         return false;
       }
 
@@ -560,19 +559,10 @@ export default {
         const proceduresList = service.serviceInfo?.proceduresList;
         const hasProceduresList =
           proceduresList && proceduresList.trim() && proceduresList.trim().length > 0;
-        console.log(
-          '🔍 Checking service:',
-          service.name,
-          'proceduresList:',
-          proceduresList,
-          'hasProceduresList:',
-          hasProceduresList,
-        );
         return hasProceduresList;
       });
 
       if (!serviceWithProceduresList) {
-        console.log('🔍 needsProcedureAmountSelection: No service with proceduresList found');
         return false;
       }
 
@@ -723,7 +713,6 @@ export default {
 
       try {
         loadingPackageInfo.value = true;
-        console.log('📦 Loading package info for summary:', packageIdToLoad);
 
         // Load package details
         const pkg = await getPackageById(packageIdToLoad);

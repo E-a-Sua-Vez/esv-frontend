@@ -520,8 +520,8 @@ export const getBookingsDetails = async (
     ...(commerceIds ? { commerceIds } : {}), // Only include if defined
     page,
     limit,
-    searchText,
-    queueId,
+    ...(searchText ? { searchText } : {}),
+    ...(queueId ? { queueId } : {}),
     asc: convertBool(asc),
     serviceId,
     status,

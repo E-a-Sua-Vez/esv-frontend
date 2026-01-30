@@ -1448,7 +1448,8 @@
       "healthAgreementId": "Should select your health agreement",
       "queueRequired": "Please select a valid queue before creating the booking",
       "queueRequiredAttention": "Please select a valid queue before creating the attention"
-    }
+    },
+    "summaryTitle": "Attention Summary"
   },
   "nextAvailableSlot": {
     "title": "Next available appointment",
@@ -7129,7 +7130,17 @@
     "selectedDate": "Selected Date",
     "loadingAvailableHours": "Loading available hours...",
     "telemedicineNote": "Telemedicine Consultation",
-    "telemedicineScheduleNote": "Date and time will be set by the selected block below"
+    "telemedicineScheduleNote": "Date and time will be set by the selected block below",
+    "selectProcedureAmount": "Select the number of sessions",
+    "sessions": "sessions",
+    "selectedAmount": "Selected amount",
+    "packageReminder": "Package Reminder",
+    "youHaveActivePackage": "You have an active package for this service:",
+    "packageName": "Package Name",
+    "sessionsUsed": "Sessions Used",
+    "lastSession": "Last Session",
+    "nextExpected": "Next Expected",
+    "packageBookingNote": "This booking will be made within your active package. If you agree, press Continue."
   },
   "package": {
     "package": "Package",
