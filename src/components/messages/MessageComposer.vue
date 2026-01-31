@@ -725,7 +725,7 @@ const chatCanPickRecipients = computed(() => {
   // Para master: requiere commerce y tipo seleccionados
   if (props.userRole === 'master') {
     const result = !!chatSelectedCommerce.value && !!chatRecipientType.value;
-    console.log('[DEBUG MessageComposer] chatCanPickRecipients (master):', {
+    console.log({
       chatSelectedCommerce: chatSelectedCommerce.value,
       chatRecipientType: chatRecipientType.value,
       result,
@@ -734,7 +734,7 @@ const chatCanPickRecipients = computed(() => {
   }
   // Para no-master: solo requiere tipo seleccionado
   const result = !!chatRecipientType.value;
-  console.log('[DEBUG MessageComposer] chatCanPickRecipients (no-master):', {
+  console.log({
     chatRecipientType: chatRecipientType.value,
     userRole: props.userRole,
     result,
@@ -770,11 +770,6 @@ function clearChatCommerce() {
 }
 
 function selectChatRecipientType(type) {
-  console.log('[DEBUG MessageComposer] selectChatRecipientType called:', {
-    type,
-    userRole: props.userRole,
-    currentChatRecipientType: chatRecipientType.value,
-  });
 
   chatRecipientType.value = type;
   chatSelectedRecipient.value = '';
@@ -787,10 +782,8 @@ function selectChatRecipientType(type) {
     }
   } else {
     // Para no-master, cargar recipients del tipo seleccionado
-    console.log('[DEBUG MessageComposer] Loading recipients for no-master user, type:', type);
     form.value.recipientType = type;
     loadRecipients().then(() => {
-      console.log('[DEBUG MessageComposer] Recipients loaded, count:', recipients.value.length);
       showRecipientsPicker.value = true;
     });
   }
@@ -980,11 +973,6 @@ watch(
         } else {
           // Para usuarios no-master en chat mode, configurar tipo por defecto y cargar recipients
           chatRecipientType.value = 'collaborator';
-          form.value.recipientType = 'collaborator';
-          console.log(
-            '[DEBUG MessageComposer] Configured chatRecipientType for no-master:',
-            chatRecipientType.value,
-          );
           loadRecipients();
         }
       }
@@ -1204,12 +1192,6 @@ async function loadRecipients() {
     return;
   }
 
-  console.log('[MessageComposer] Loading recipients for:', {
-    recipientType: form.value.recipientType,
-    userRole: props.userRole,
-    userData: props.userData,
-  });
-
   loadingRecipients.value = true;
   try {
     let endpoint = '';
@@ -1222,11 +1204,7 @@ async function loadRecipients() {
           // MASTER puede ver TODOS los collaborators
           endpoint = '/collaborator';
           response = await requestBackend.get(endpoint);
-          console.log(
-            '[MessageComposer] All collaborators (master):',
-            response.data.length,
-            'items',
-          );
+
           data = response.data;
         } else if (
           (props.userRole === 'business' || props.userRole === 'administrator') &&
@@ -1234,25 +1212,15 @@ async function loadRecipients() {
         ) {
           // ADMINISTRATOR/BUSINESS puede enviar a collaborators de los commerces de su negocio
           // 1. Primero obtener los commerces del businessId
-          console.log(
-            '[MessageComposer] Fetching commerces for businessId:',
-            props.userData.businessId,
-          );
           const commercesResponse = await requestBackend.get(
             `/commerce/businessId/${props.userData.businessId}`,
           );
           const commerces = commercesResponse.data;
           const commercesIds = commerces.map(c => c.id);
-          console.log('[MessageComposer] Found commerces:', commercesIds);
 
           // 2. Luego obtener todos los collaborators y filtrar por commerceId
           endpoint = '/collaborator';
           response = await requestBackend.get(endpoint);
-          console.log(
-            '[MessageComposer] All collaborators before filter:',
-            response.data.length,
-            'items',
-          );
 
           // Filtrar collaborators cuyo commerceId esté en la lista de commerces del business
           data = response.data.filter(collab => {
@@ -1266,16 +1234,10 @@ async function loadRecipients() {
             }
             return false;
           });
-          console.log('[MessageComposer] After commerceId filter:', data.length, 'items');
         } else if (props.userRole === 'collaborator' && props.userData.commerceId) {
           // COLLABORATOR solo puede enviar a otros de su mismo commerceId
           endpoint = `/collaborator/commerceId/${props.userData.commerceId}`;
           response = await requestBackend.get(endpoint);
-          console.log(
-            '[MessageComposer] Collaborators (commerceId filter):',
-            response.data.length,
-            'items',
-          );
           data = response.data;
         } else {
           // Fallback: traer todos
@@ -1322,7 +1284,6 @@ async function loadRecipients() {
             });
 
             data = Array.from(uniqueAdministrators.values());
-            console.log('[MessageComposer] All administrators (master):', data.length, 'items');
           } catch (error) {
             console.error('[MessageComposer] Error loading all administrators for master:', error);
             data = [];
@@ -1334,11 +1295,6 @@ async function loadRecipients() {
           // ADMINISTRATOR/BUSINESS puede enviar a otros administrators de su businessId
           endpoint = `/administrator/businessId/${props.userData.businessId}`;
           response = await requestBackend.get(endpoint);
-          console.log(
-            '[MessageComposer] Administrators by businessId:',
-            response.data.length,
-            'items',
-          );
           data = response.data;
         } else if (props.userRole === 'collaborator') {
           // COLLABORATOR puede enviar a administrators de su businessId
@@ -1351,7 +1307,6 @@ async function loadRecipients() {
                 `/commerce/${props.userData.commerceId}`,
               );
               businessId = commerceResponse.data?.businessId;
-              console.log('[MessageComposer] Got businessId from commerce:', businessId);
             } catch (error) {
               console.error('[MessageComposer] Error fetching commerce:', error);
             }
@@ -1360,11 +1315,6 @@ async function loadRecipients() {
           if (businessId) {
             endpoint = `/administrator/businessId/${businessId}`;
             response = await requestBackend.get(endpoint);
-            console.log(
-              '[MessageComposer] Administrators by businessId (collaborator):',
-              response.data.length,
-              'items',
-            );
             data = response.data;
           } else {
             console.warn(
@@ -1428,11 +1378,6 @@ async function send() {
   try {
     if (props.massMode) {
       // Modo masivo: enviar a todos los destinatarios seleccionados
-      console.log(
-        '[MessageComposer] Sending mass message to',
-        massFilters.value.selectedRecipients.length,
-        'recipients',
-      );
 
       const selectedRecipients = allRecipients.value.filter(r =>
         massFilters.value.selectedRecipients.includes(r.id)
@@ -1488,31 +1433,14 @@ async function send() {
       });
 
       await Promise.all(promises);
-      console.log('[MessageComposer] Mass message sent to all selected recipients');
     } else if (props.chatMode) {
       // Chat mode: crear conversación y enviar mensaje
-      console.log('[MessageComposer] ========================================');
-      console.log('[MessageComposer] Sending chat message');
-      console.log('[MessageComposer] Current user (props.userData):', {
-        id: props.userData?.id,
-        email: props.userData?.email,
-        userType: props.userData?.userType,
-        commerceId: props.userData?.commerceId || props.userData?.commerce?.id,
-      });
 
       // Determinar el recipiente según el rol del usuario
       const recipientId =
         props.userRole === 'master' ? chatSelectedRecipient.value : chatSelectedRecipient.value;
       const selectedRecipient = allRecipients.value.find(r => r.id === recipientId);
       const recipientType = selectedRecipient?.type || 'collaborator';
-
-      console.log('[MessageComposer] Recipient:', {
-        id: recipientId,
-        type: recipientType,
-        selectedRecipient,
-      });
-      console.log('[MessageComposer] ========================================');
-
       if (!recipientId) {
         throw new Error('No recipient selected for chat');
       }
@@ -1540,7 +1468,6 @@ async function send() {
         commerceId
       );
 
-      console.log('[MessageComposer] Chat message sent, conversationId:', conversation.id);
 
       // Emitir conversationId para que se seleccione automáticamente
       emit('sent', { conversationId: conversation.id });

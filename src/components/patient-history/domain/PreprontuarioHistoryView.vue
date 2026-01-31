@@ -106,10 +106,8 @@ export default {
 
     // Load form to personal data
     const loadToPersonalData = async form => {
-      console.log('🚀 Starting loadToPersonalData with form:', form);
 
       if (!canLoadFormToProntuario(form)) {
-        console.log('❌ Form cannot be loaded to prontuario');
         alertError.value =
           t('dashboard.preprontuarioHistory.cannotLoad') ||
           'Este formulário não pode ser carregado';
@@ -122,10 +120,8 @@ export default {
         state.loadingForm = form.id;
 
         const personalData = extractPersonalDataFromForm(form);
-        console.log('📥 Extracted personal data:', personalData);
 
         if (!personalData || Object.keys(personalData).length === 0) {
-          console.log('❌ No personal data found in form');
           alertError.value =
             t('dashboard.preprontuarioHistory.noPersonalData') ||
             'Este formulário não contém dados pessoais';
@@ -134,7 +130,6 @@ export default {
 
         // Call parent callback if provided
         if (props.onLoadToPersonalData) {
-          console.log('📤 Calling parent callback with personal data');
           await props.onLoadToPersonalData(personalData);
         }
 
@@ -162,10 +157,8 @@ export default {
 
     // Load form to anamnese
     const loadToAnamnese = async form => {
-      console.log('🚀 Starting loadToAnamnese with form:', form);
 
       if (!canLoadFormToProntuario(form)) {
-        console.log('❌ Form cannot be loaded to prontuario');
         alertError.value =
           t('dashboard.preprontuarioHistory.cannotLoad') ||
           'Este formulário não pode ser carregado';
@@ -178,10 +171,8 @@ export default {
         state.loadingForm = form.id;
 
         const anamneseData = extractAnamneseDataFromForm(form);
-        console.log('📥 Extracted anamnese data:', anamneseData);
 
         if (!anamneseData || Object.keys(anamneseData).length === 0) {
-          console.log('❌ No anamnese data found in form');
           alertError.value =
             t('dashboard.preprontuarioHistory.noAnamneseData') ||
             'Este formulário não contém dados de anamnese';
@@ -190,7 +181,6 @@ export default {
 
         // Call parent callback if provided
         if (props.onLoadToAnamnese) {
-          console.log('📤 Calling parent callback with anamnese data');
           await props.onLoadToAnamnese(anamneseData);
         }
 

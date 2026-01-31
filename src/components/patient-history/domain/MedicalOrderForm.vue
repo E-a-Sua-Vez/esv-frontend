@@ -453,7 +453,6 @@ export default {
           text: state.newMedicalOrder?.medicalOrder || '',
         };
 
-        console.log('📤 Sending medical order data:', data);
 
         if (typeof receiveData === 'function') {
           receiveData(data);
@@ -476,7 +475,6 @@ export default {
         }
 
         // First send data to parent to update newMedicalOrder
-        console.log('💾 Saving text order:', state.newMedicalOrder.medicalOrder);
         sendData();
 
         // Then trigger save if onSave is available
@@ -492,7 +490,6 @@ export default {
 
     const receivePrescriptionData = data => {
       try {
-        console.log('💊 Receiving prescription data:', data);
         state.prescriptionData = data || null;
         sendData();
       } catch (error) {
@@ -502,7 +499,6 @@ export default {
 
     const receiveExamOrderData = data => {
       try {
-        console.log('🔬 Receiving exam order data:', data);
         state.examOrderData = data || null;
         sendData();
       } catch (error) {
@@ -512,7 +508,6 @@ export default {
 
     const receiveReferenceData = data => {
       try {
-        console.log('📋 Receiving reference data:', data);
         state.referenceData = data || null;
         sendData();
       } catch (error) {

@@ -303,7 +303,6 @@ export default {
             try {
               const groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
               state.commerce.queues = Object.values(groupedQueues).flat();
-              console.log('✅ Queues loaded for validate commerce:', state.commerce.queues.length);
             } catch (error) {
               console.warn('❌ Failed to load queues for validate commerce:', state.commerce.id, error);
             }
@@ -484,13 +483,9 @@ export default {
         return;
       }
 
-      console.log('[CollaboratorAttentionValidate] updateAttentionDetails called for queue:', state.queue.id);
-
       // Get pending attentions from Firebase listener (already filtered by date and status)
       const pendingArray = pendingAttentionsRef?.value || [];
       const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
-
-      console.log('[CollaboratorAttentionValidate] pendingArray length:', pendingArray.length);
 
       // Firebase already filters by today and PENDING status, just sort by number
       const filteredPending = [...pendingList].filter(att => att && ['PENDING', 'CONFIRMED'].includes(att.status));
@@ -500,8 +495,6 @@ export default {
         return numA - numB;
       });
 
-      console.log('[CollaboratorAttentionValidate] sortedPending length:', sortedPending.length);
-
       // CRITICAL: Replace the entire array reference to force Vue reactivity
       state.queuePendingDetails.splice(0, state.queuePendingDetails.length, ...sortedPending);
 
@@ -509,7 +502,6 @@ export default {
       const processingArray = processingAttentionsRef?.value || [];
       const processingList = Array.isArray(processingArray) ? processingArray : [];
 
-      console.log('[CollaboratorAttentionValidate] processingArray length:', processingArray.length);
       state.queueProcessingDetails.splice(
         0,
         state.queueProcessingDetails.length,
@@ -520,7 +512,6 @@ export default {
       const terminatedArray = terminatedAttentionsRef?.value || [];
       const terminatedList = Array.isArray(terminatedArray) ? terminatedArray : [];
 
-      console.log('[CollaboratorAttentionValidate] terminatedArray length:', terminatedArray.length);
       const sortedTerminated = [...terminatedList].sort((a, b) => {
         const numA = a.number || 0;
         const numB = b.number || 0;
@@ -531,8 +522,6 @@ export default {
         state.queueTerminatedDetails.length,
         ...sortedTerminated,
       );
-
-      console.log('[CollaboratorAttentionValidate] Updated state: pending:', state.queuePendingDetails.length, 'processing:', state.queueProcessingDetails.length, 'terminated:', state.queueTerminatedDetails.length);
 
       // Force component re-render by updating key
       state.listUpdateKey++;
@@ -1729,13 +1718,11 @@ export default {
 
     // Computed for professional name
     const professionalName = computed(() => {
-      console.log('DEBUG professionalName:', state.attention.professionalName, state.attention.collaboratorName);
       return state.attention.professionalName || state.attention.collaboratorName || '';
     });
 
     // Computed for booking scheduled time
     const bookingScheduledTime = computed(() => {
-      console.log('DEBUG bookingScheduledTime:', state.attention.bookingScheduledTime, state.attention.scheduledAt);
       if (state.attention.block && state.attention.block.hourFrom) {
         return state.attention.block.hourFrom;
       }

@@ -983,6 +983,69 @@ export default {
       return '';
     };
 
+    const getMenuIcon = (opt) => {
+      const iconMap = {
+        'dashboard': 'bi-speedometer2',
+        'reports': 'bi-bar-chart',
+        'booking-manage': 'bi-calendar-check',
+        'control-admin': 'bi-gear',
+        'manage-admin': 'bi-people',
+        'medical-management': 'bi-heart-pulse',
+        'configuration': 'bi-sliders',
+        'documents': 'bi-file-earmark-text',
+        'your-plan': 'bi-credit-card',
+        'business-resume': 'bi-building',
+        'go-minisite': 'bi-globe',
+        'client-portal': 'bi-person-circle',
+        'queue-manage': 'bi-list-check',
+        'tracing': 'bi-search',
+        'product-stock': 'bi-boxes',
+        'business-master-admin': 'bi-building',
+        'plans-master-admin': 'bi-credit-card',
+        'features-master-admin': 'bi-puzzle-piece',
+        'plan-activations-admin': 'bi-check-circle',
+        'lead-pipeline': 'bi-funnel',
+        'performance-hub': 'bi-graph-up',
+        'download-dados': 'bi-download',
+        'agendas-reservas': 'bi-calendar-event',
+        'perfil-empresa': 'bi-building',
+        'gestao-medica': 'bi-heart-pulse',
+        'configuracoes': 'bi-sliders',
+        'documentos': 'bi-file-earmark-text',
+        'seu-plano': 'bi-credit-card',
+        'estado-sistema': 'bi-activity',
+      };
+      return `bi ${iconMap[opt] || 'bi-circle'}`;
+    };
+
+    const getSubmenuIcon = (opt) => {
+      const iconMap = {
+        'commerce-admin': 'bi-building',
+        'service-admin': 'bi-tools',
+        'modules-admin': 'bi-layers',
+        'queues-admin': 'bi-list-check',
+        'collaborators-admin': 'bi-people',
+        'professionals-admin': 'bi-person-badge',
+        'surveys-admin': 'bi-clipboard-check',
+        'product-admin': 'bi-box-seam',
+        'outcome-types-admin': 'bi-check-circle',
+        'company-admin': 'bi-building',
+        'forms-admin': 'bi-file-text',
+        'lgpd-consent-admin': 'bi-shield-check',
+        'permissions-admin': 'bi-key',
+        'tracing': 'bi-search',
+        'product-stock': 'bi-boxes',
+        'financial': 'bi-cash',
+        'patient-history-item-admin': 'bi-file-medical',
+        'medications-admin': 'bi-capsule',
+        'medical-exams-admin': 'bi-clipboard-data',
+        'medical-templates-admin': 'bi-file-earmark-medical',
+        'pdf-templates-admin': 'bi-file-earmark-pdf',
+        'audit-log': 'bi-journal-text',
+      };
+      return `bi ${iconMap[opt] || 'bi-chevron-right'}`;
+    };
+
     const logoutClientPortal = () => {
       try {
         // Safely clear localStorage
@@ -1044,6 +1107,8 @@ export default {
       getClientPortalLink,
       handleCommerceChanged,
       handleModuleChanged,
+      getMenuIcon,
+      getSubmenuIcon,
       desktopCommerceSelectorRef,
       mobileCommerceSelectorRef,
       desktopCollaboratorCommerceSelectorRef,
@@ -1435,60 +1500,73 @@ export default {
                 <div class="centered">
                   <a
                     v-if="option === 'go-minisite'"
-                    type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
+                    class="submenu-card portal-card"
                     :href="getBusinessLink()"
                     target="_blank"
                     @click="closeDesktopMenu"
                   >
-                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
-                    <i class="bi bi-box-arrow-up-right"></i>
+                    <div class="card-icon">
+                      <i class="bi bi-globe"></i>
+                    </div>
+                    <div class="card-text">
+                      {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                      <i class="bi bi-box-arrow-up-right external-icon"></i>
+                    </div>
                   </a>
                   <a
                     v-else-if="option === 'client-portal'"
-                    type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
+                    class="submenu-card portal-card"
                     :href="getClientPortalLink()"
                     target="_blank"
                     @click="closeDesktopMenu"
                   >
-                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
-                    <i class="bi bi-box-arrow-up-right"></i>
+                    <div class="card-icon">
+                      <i class="bi bi-person-circle"></i>
+                    </div>
+                    <div class="card-text">
+                      {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                      <i class="bi bi-box-arrow-up-right external-icon"></i>
+                    </div>
                   </a>
-                  <button
+                  <div
                     v-else
-                    type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style desktop-menu-btn"
+                    class="submenu-card"
                     @click="navigateToMenuOption(option, true)"
-                    :disabled="
-                      state.currentUserType === USER_TYPES.BUSINESS &&
-                      !state.toggles[`business.main-menu.${option}`]
-                    "
+                    :class="{
+                      disabled:
+                        state.currentUserType === USER_TYPES.BUSINESS &&
+                        !state.toggles[`business.main-menu.${option}`]
+                    }"
                   >
-                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
-                    <i
-                      v-if="option === 'manage-admin'"
-                      :class="`bi ${
-                        state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                      }`"
-                    ></i>
-                    <i
-                      v-if="option === 'control-admin'"
-                      :class="`bi ${
-                        state.manageControlSubMenuOption === true
-                          ? 'bi-chevron-up'
-                          : 'bi-chevron-down'
-                      }`"
-                    ></i>
-                    <i
-                      v-if="option === 'medical-management'"
-                      :class="`bi ${
-                        state.medicalManagementSubMenuOption === true
-                          ? 'bi-chevron-up'
-                          : 'bi-chevron-down'
-                      }`"
-                    ></i>
-                  </button>
+                    <div class="card-icon">
+                      <i :class="getMenuIcon(option)"></i>
+                    </div>
+                    <div class="card-text">
+                      {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                      <i
+                        v-if="option === 'manage-admin'"
+                        :class="`chevron bi ${
+                          state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                      <i
+                        v-if="option === 'control-admin'"
+                        :class="`chevron bi ${
+                          state.manageControlSubMenuOption === true
+                            ? 'bi-chevron-up'
+                            : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                      <i
+                        v-if="option === 'medical-management'"
+                        :class="`chevron bi ${
+                          state.medicalManagementSubMenuOption === true
+                            ? 'bi-chevron-up'
+                            : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                    </div>
+                  </div>
                   <!-- Manage Admin Submenu -->
                   <div
                     v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
@@ -1499,17 +1577,17 @@ export default {
                       :key="subOption"
                       class="desktop-submenu-item"
                     >
-                      <button
-                        type="button"
-                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
+                      <div
+                        class="submenu-card"
                         @click="
                           navigateToMenuOption(subOption);
                           closeDesktopMenu();
                         "
-                        :disabled="
-                          state.currentUserType === USER_TYPES.BUSINESS &&
-                          !state.toggles[`business.main-menu.${subOption}`]
-                        "
+                        :class="{
+                          disabled:
+                            state.currentUserType === USER_TYPES.BUSINESS &&
+                            !state.toggles[`business.main-menu.${subOption}`]
+                        }"
                         :title="
                           state.currentUserType === USER_TYPES.BUSINESS &&
                           !state.toggles[`business.main-menu.${subOption}`]
@@ -1517,9 +1595,13 @@ export default {
                             : ''
                         "
                       >
-                        {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
-                        <i class="bi bi-chevron-right"></i>
-                      </button>
+                        <div class="card-icon">
+                          <i :class="getSubmenuIcon(subOption)"></i>
+                        </div>
+                        <div class="card-text">
+                          {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <!-- Control Admin Submenu -->
@@ -1532,17 +1614,17 @@ export default {
                       :key="subOption"
                       class="desktop-submenu-item"
                     >
-                      <button
-                        type="button"
-                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
+                      <div
+                        class="submenu-card"
                         @click="
                           navigateToMenuOption(subOption);
                           closeDesktopMenu();
                         "
-                        :disabled="
-                          state.currentUserType === USER_TYPES.BUSINESS &&
-                          !state.toggles[`business.main-menu.${subOption}`]
-                        "
+                        :class="{
+                          disabled:
+                            state.currentUserType === USER_TYPES.BUSINESS &&
+                            !state.toggles[`business.main-menu.${subOption}`]
+                        }"
                         :title="
                           state.currentUserType === USER_TYPES.BUSINESS &&
                           !state.toggles[`business.main-menu.${subOption}`]
@@ -1550,9 +1632,13 @@ export default {
                             : ''
                         "
                       >
-                        {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
-                        <i class="bi bi-chevron-right"></i>
-                      </button>
+                        <div class="card-icon">
+                          <i :class="getSubmenuIcon(subOption)"></i>
+                        </div>
+                        <div class="card-text">
+                          {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <!-- Medical Management Submenu -->
@@ -1568,17 +1654,17 @@ export default {
                       :key="subOption"
                       class="desktop-submenu-item"
                     >
-                      <button
-                        type="button"
-                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
+                      <div
+                        class="submenu-card"
                         @click="
                           navigateToMenuOption(subOption);
                           closeDesktopMenu();
                         "
-                        :disabled="
-                          state.currentUserType === USER_TYPES.BUSINESS &&
-                          !state.toggles[`business.main-menu.${subOption}`]
-                        "
+                        :class="{
+                          disabled:
+                            state.currentUserType === USER_TYPES.BUSINESS &&
+                            !state.toggles[`business.main-menu.${subOption}`]
+                        }"
                         :title="
                           state.currentUserType === USER_TYPES.BUSINESS &&
                           !state.toggles[`business.main-menu.${subOption}`]
@@ -1586,9 +1672,13 @@ export default {
                             : ''
                         "
                       >
-                        {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
-                        <i class="bi bi-chevron-right"></i>
-                      </button>
+                        <div class="card-icon">
+                          <i :class="getSubmenuIcon(subOption)"></i>
+                        </div>
+                        <div class="card-text">
+                          {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1608,13 +1698,17 @@ export default {
                 class="d-grid btn-group btn-group-justified desktop-button-wrapper"
               >
                 <div class="centered">
-                  <button
-                    type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style desktop-menu-btn"
+                  <div
+                    class="submenu-card"
                     @click="navigateToMenuOption(option, true)"
                   >
-                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
-                  </button>
+                    <div class="card-icon">
+                      <i :class="`bi ${getMenuIcon(option)}`"></i>
+                    </div>
+                    <div class="card-text">
+                      {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1854,62 +1948,72 @@ export default {
               >
                 <div v-if="option === 'go-minisite'" class="centered">
                   <a
-                    type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
+                    class="mobile-submenu-card portal-card"
                     :href="getBusinessLink()"
                     target="_blank"
                     @click="closeMobileMenu"
                   >
-                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
-                    <i class="bi bi-box-arrow-up-right"></i>
+                    <div class="card-icon">
+                      <i class="bi bi-globe"></i>
+                    </div>
+                    <div class="card-text">
+                      {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                      <i class="bi bi-box-arrow-up-right external-icon"></i>
+                    </div>
                   </a>
                 </div>
                 <div v-else-if="option === 'client-portal'" class="centered">
                   <a
-                    type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
+                    class="mobile-submenu-card portal-card"
                     :href="getClientPortalLink()"
                     target="_blank"
                     @click="closeMobileMenu"
                   >
-                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
-                    <i class="bi bi-box-arrow-up-right"></i>
+                    <div class="card-icon">
+                      <i class="bi bi-person-circle"></i>
+                    </div>
+                    <div class="card-text">
+                      {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                      <i class="bi bi-box-arrow-up-right external-icon"></i>
+                    </div>
                   </a>
                 </div>
                 <div v-else>
-                  <button
-                    type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-1 btn-style mobile-menu-btn"
+                  <div
+                    class="mobile-submenu-card"
                     @click="navigateToMenuOption(option)"
-                    :disabled="
-                      state.currentUserType === USER_TYPES.BUSINESS &&
-                      !state.toggles[`business.main-menu.${option}`]
-                    "
+                    :class="{ disabled: state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${option}`] }"
+                    :title="state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${option}`] ? $t('common.disabled') : ''"
                   >
-                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
-                    <i
-                      v-if="option === 'manage-admin'"
-                      :class="`bi ${
-                        state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                      }`"
-                    ></i>
-                    <i
-                      v-if="option === 'control-admin'"
-                      :class="`bi ${
-                        state.manageControlSubMenuOption === true
-                          ? 'bi-chevron-up'
-                          : 'bi-chevron-down'
-                      }`"
-                    ></i>
-                    <i
-                      v-if="option === 'medical-management'"
-                      :class="`bi ${
-                        state.medicalManagementSubMenuOption === true
-                          ? 'bi-chevron-up'
-                          : 'bi-chevron-down'
-                      }`"
-                    ></i>
-                  </button>
+                    <div class="card-icon">
+                      <i :class="`bi ${getMenuIcon(option)}`"></i>
+                    </div>
+                    <div class="card-text">
+                      {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                      <i
+                        v-if="option === 'manage-admin'"
+                        :class="`bi ${
+                          state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                      <i
+                        v-if="option === 'control-admin'"
+                        :class="`bi ${
+                          state.manageControlSubMenuOption === true
+                            ? 'bi-chevron-up'
+                            : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                      <i
+                        v-if="option === 'medical-management'"
+                        :class="`bi ${
+                          state.medicalManagementSubMenuOption === true
+                            ? 'bi-chevron-up'
+                            : 'bi-chevron-down'
+                        }`"
+                      ></i>
+                    </div>
+                  </div>
                   <!-- Manage Admin Submenu -->
                   <div
                     v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
@@ -1920,24 +2024,20 @@ export default {
                       :key="subOption"
                       class="mobile-submenu-item"
                     >
-                      <button
-                        type="button"
-                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-0 mb-1 btn-style mobile-menu-btn mobile-submenu-btn"
+                      <div
+                        class="mobile-submenu-card"
                         @click="navigateToMenuOption(subOption)"
-                        :disabled="
-                          state.currentUserType === USER_TYPES.BUSINESS &&
-                          !state.toggles[`business.main-menu.${subOption}`]
-                        "
-                        :title="
-                          state.currentUserType === USER_TYPES.BUSINESS &&
-                          !state.toggles[`business.main-menu.${subOption}`]
-                            ? $t(`${getMenuTranslationKey()}.permissionRequired`)
-                            : ''
-                        "
+                        :class="{ disabled: state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${subOption}`] }"
+                        :title="state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${subOption}`] ? $t(`${getMenuTranslationKey()}.permissionRequired`) : ''"
                       >
-                        {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
-                        <i class="bi bi-chevron-right"></i>
-                      </button>
+                        <div class="card-icon">
+                          <i :class="`bi ${getSubmenuIcon(subOption)}`"></i>
+                        </div>
+                        <div class="card-text">
+                          {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
+                          <i class="bi bi-chevron-right chevron"></i>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <!-- Control Admin Submenu -->
@@ -1950,24 +2050,20 @@ export default {
                       :key="subOption"
                       class="mobile-submenu-item"
                     >
-                      <button
-                        type="button"
-                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-0 mb-1 btn-style mobile-menu-btn mobile-submenu-btn"
+                      <div
+                        class="mobile-submenu-card"
                         @click="navigateToMenuOption(subOption)"
-                        :disabled="
-                          state.currentUserType === USER_TYPES.BUSINESS &&
-                          !state.toggles[`business.main-menu.${subOption}`]
-                        "
-                        :title="
-                          state.currentUserType === USER_TYPES.BUSINESS &&
-                          !state.toggles[`business.main-menu.${subOption}`]
-                            ? $t(`${getMenuTranslationKey()}.permissionRequired`)
-                            : ''
-                        "
+                        :class="{ disabled: state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${subOption}`] }"
+                        :title="state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${subOption}`] ? $t(`${getMenuTranslationKey()}.permissionRequired`) : ''"
                       >
-                        {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
-                        <i class="bi bi-chevron-right"></i>
-                      </button>
+                        <div class="card-icon">
+                          <i :class="`bi ${getSubmenuIcon(subOption)}`"></i>
+                        </div>
+                        <div class="card-text">
+                          {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
+                          <i class="bi bi-chevron-right chevron"></i>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <!-- Medical Management Submenu -->
@@ -1983,24 +2079,20 @@ export default {
                       :key="subOption"
                       class="mobile-submenu-item"
                     >
-                      <button
-                        type="button"
-                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-0 mb-1 btn-style mobile-menu-btn mobile-submenu-btn"
+                      <div
+                        class="mobile-submenu-card"
                         @click="navigateToMenuOption(subOption)"
-                        :disabled="
-                          state.currentUserType === USER_TYPES.BUSINESS &&
-                          !state.toggles[`business.main-menu.${subOption}`]
-                        "
-                        :title="
-                          state.currentUserType === USER_TYPES.BUSINESS &&
-                          !state.toggles[`business.main-menu.${subOption}`]
-                            ? $t(`${getMenuTranslationKey()}.permissionRequired`)
-                            : ''
-                        "
+                        :class="{ disabled: state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${subOption}`] }"
+                        :title="state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${subOption}`] ? $t(`${getMenuTranslationKey()}.permissionRequired`) : ''"
                       >
-                        {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
-                        <i class="bi bi-chevron-right"></i>
-                      </button>
+                        <div class="card-icon">
+                          <i :class="`bi ${getSubmenuIcon(subOption)}`"></i>
+                        </div>
+                        <div class="card-text">
+                          {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
+                          <i class="bi bi-chevron-right chevron"></i>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2020,13 +2112,17 @@ export default {
                 class="d-grid btn-group btn-group-justified mobile-button-wrapper"
               >
                 <div class="centered">
-                  <button
-                    type="button"
-                    class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
+                  <div
+                    class="mobile-submenu-card"
                     @click="navigateToMenuOption(option)"
                   >
-                    {{ $t(`${getMenuTranslationKey()}.${option}`) }}
-                  </button>
+                    <div class="card-icon">
+                      <i :class="`bi ${getMenuIcon(option)}`"></i>
+                    </div>
+                    <div class="card-text">
+                      {{ $t(`${getMenuTranslationKey()}.${option}`) }}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2937,6 +3033,8 @@ export default {
 .desktop-menu-item-wrapper {
   border-bottom: 1px solid var(--gris-default, #e0e0e0);
   padding: 0.4rem 0;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
 }
 
 .desktop-menu-item {
@@ -3139,5 +3237,150 @@ export default {
     gap: 0.5rem;
     margin-right: 0.25rem;
   }
+}
+
+/* Submenu card styles */
+.submenu-card {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.2rem 0.8rem;
+  margin: 0.25rem 0.5rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-left: 3px solid #0056b3;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 40px;
+  width: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.submenu-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 74, 173, 0.1);
+  border-color: var(--azul-turno);
+}
+
+.submenu-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submenu-card.disabled:hover {
+  transform: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.card-icon {
+  font-size: 1.25rem;
+  color: var(--azul-turno);
+  margin-right: 0.5rem;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.card-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: left;
+  color: #333;
+  line-height: 1.1;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-submenu-card {
+  display: flex;
+  height: 40px;
+  padding: 0.2rem 0.8rem;
+  margin: 0.25rem 0.5rem;
+  width: 100%;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-left: 3px solid #0056b3;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.mobile-submenu-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 74, 173, 0.1);
+  border-color: var(--azul-turno);
+}
+
+.mobile-submenu-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mobile-submenu-card.disabled:hover {
+  transform: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.mobile-submenu-card .card-icon {
+  font-size: 1rem;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.mobile-submenu-card .card-text {
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-align: left;
+  padding: 0 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Portal card styles - blue background with white icons */
+.portal-card {
+  background: var(--azul-turno) !important;
+  border-color: var(--azul-turno) !important;
+  border-left: 3px solid #0056b3 !important;
+  color: white !important;
+  width: 100% !important;
+}
+
+.portal-card .card-icon {
+  color: white !important;
+}
+
+.portal-card .card-text {
+  color: white !important;
+}
+
+.portal-card .external-icon {
+  color: white !important;
+}
+
+.portal-card:hover {
+  background: var(--azul-turno-hover, #0056b3) !important;
+  border-color: var(--azul-turno-hover, #0056b3) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.25) !important;
 }
 </style>

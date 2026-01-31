@@ -3503,7 +3503,8 @@
     "validate": {
       "type": "Should select the type",
       "result": "Should select the result",
-      "comment": "Debes enter the comment"
+      "comment": "Debes enter the comment",
+      "clientNotFound": "Client not found"
     }
   },
   "resumeAttention": {

@@ -232,7 +232,6 @@ export default {
         // Find the professional in the list
         const professional = this.professionals?.find(p => p.id === newId);
         if (professional) {
-          console.log('[AttentionDetailsModal] Setting selectedProfessional from selector:', professional.personalInfo?.name || professional.name);
           this.selectedProfessional = professional;
           // No llamar handleProfessionalSelected aquí para evitar loops
           // this.handleProfessionalSelected(professional);
@@ -387,18 +386,11 @@ export default {
       }
     },
     async showPaymentDetails() {
-      console.log('[AttentionDetailsModal] showPaymentDetails called - current extendedPaymentEntity:', this.extendedPaymentEntity);
       this.extendedPaymentEntity = !this.extendedPaymentEntity;
-      console.log('[AttentionDetailsModal] showPaymentDetails - new extendedPaymentEntity:', this.extendedPaymentEntity);
 
       // Consultar datos frescos de la atención cuando se abre el collapsible
       if (this.extendedPaymentEntity) {
-        console.log('[AttentionDetailsModal] Opening payment section - refreshing attention data');
-        console.log('[AttentionDetailsModal] Attention ID:', this.attention?.id);
         await this.refreshAttentionDataWithoutOverriding();
-        console.log('[AttentionDetailsModal] Attention data refreshed');
-      } else {
-        console.log('[AttentionDetailsModal] Closing payment section - no refresh needed');
       }
 
       this.extendedTransferEntity = false;
@@ -408,7 +400,6 @@ export default {
         // PaymentForm can toggle this to true when user chooses to process payment now.
         processPaymentNow: false,
       };
-      console.log('[AttentionDetailsModal] showPaymentDetails completed');
     },
     async showTransferDetails() {
       this.extendedTransferEntity = !this.extendedTransferEntity;
@@ -423,7 +414,6 @@ export default {
 
       // Consultar datos frescos de la atención cuando se abre el collapsible
       if (this.extendedProfessionalEntity) {
-        console.log('[AttentionDetailsModal] Opening professional section - refreshing attention data');
         await this.refreshAttentionDataWithoutOverriding();
       }
 
@@ -449,18 +439,12 @@ export default {
       const attentionId = this.attention?.id || this.attention?.attentionId;
 
       if (!attentionId) {
-        console.log('[AttentionDetailsModal] Cannot refresh - no attention ID');
-        console.log('[AttentionDetailsModal] attention.id:', this.attention?.id);
-        console.log('[AttentionDetailsModal] attention.attentionId:', this.attention?.attentionId);
         return;
       }
 
       try {
-        console.log('[AttentionDetailsModal] Refreshing attention data (without overriding user values) for ID:', attentionId);
         // NO usar this.loading = true para evitar que se cierre el modal
         const freshAttention = await getAttentionDetails(attentionId);
-
-        console.log('[AttentionDetailsModal] Fresh attention data received:', freshAttention);
 
         if (freshAttention) {
           // Update attention data with fresh information
@@ -474,13 +458,6 @@ export default {
           this.attention.status = freshAttention.status;
           this.attention.comment = freshAttention.comment;
 
-          console.log('[AttentionDetailsModal] Attention data refreshed:', {
-            professionalId: this.attention.professionalId,
-            professionalName: this.attention.professionalName,
-            paid: this.attention.paid,
-            status: this.attention.status
-          });
-
           // Load professional name if it has changed and we don't have it
           if (this.attention.professionalId && !this.professionalDisplayName) {
             await this.loadProfessionalName();
@@ -489,9 +466,7 @@ export default {
           // NO cargar comisión si el usuario ya editó manualmente
           if (!this.commissionManuallyEdited && this.selectedProfessional?.financialInfo?.commissionValue) {
             this.professionalCommission = this.selectedProfessional.financialInfo.commissionValue;
-            console.log('[AttentionDetailsModal] Updated commission from fresh data (not manually edited):', this.professionalCommission);
           } else if (this.commissionManuallyEdited) {
-            console.log('[AttentionDetailsModal] NOT updating commission - user has manually edited it');
           }
 
           // NO emitir evento que puede causar que se cierre el modal
@@ -519,7 +494,6 @@ export default {
       // Si ya tenemos el profesional seleccionado, no hacer nada
       if (this.selectedProfessional?.id === this.attention.professionalId) return;
 
-      console.log('[AttentionDetailsModal] Initializing professional data for:', this.attention.professionalId);
 
       try {
         // Cargar lista de profesionales si no está disponible
@@ -536,14 +510,12 @@ export default {
         }
 
         if (professional) {
-          console.log('[AttentionDetailsModal] Professional found and selected:', professional.personalInfo?.name || professional.name);
           this.selectedProfessional = professional;
           this.loadedProfessionalName = professional.personalInfo?.name || professional.name || this.attention.professionalId;
 
           // Cargar comisión si no ha sido editada manualmente
           if (!this.commissionManuallyEdited && professional?.financialInfo?.commissionValue !== undefined) {
             this.professionalCommission = professional.financialInfo.commissionValue;
-            console.log('[AttentionDetailsModal] Commission loaded:', this.professionalCommission);
           }
         } else {
           console.warn('[AttentionDetailsModal] Professional not found:', this.attention.professionalId);
@@ -568,13 +540,11 @@ export default {
 
       try {
         this.loadingProfessionalData = true;
-        console.log('[AttentionDetailsModal] Loading professional:', professionalId);
 
         // Load commission data if available
         if (this.attention.paymentConfirmationData?.professionalCommissionValue) {
           this.professionalCommission = this.attention.paymentConfirmationData.professionalCommissionValue;
           this.commissionManuallyEdited = true; // Mark as manually edited to maintain priority
-          console.log('[AttentionDetailsModal] Loaded saved commission from paymentConfirmationData:', this.professionalCommission);
         }
 
         // Load professionals if not loaded
@@ -597,7 +567,6 @@ export default {
         if (professional) {
           this.selectedProfessional = professional;
           this.loadedProfessionalName = professional.personalInfo?.name || professional.name || professionalId;
-          console.log('[AttentionDetailsModal] Professional loaded and selected:', professional);
         } else {
           this.loadedProfessionalName = professionalId;
         }
@@ -864,10 +833,6 @@ export default {
       this.goToAssignProfessional = false;
     },
     async confirmAssignProfessional() {
-      console.log('[AttentionDetailsModal] confirmAssignProfessional called');
-      console.log('[AttentionDetailsModal] attention:', this.attention);
-      console.log('[AttentionDetailsModal] selectedProfessional:', this.selectedProfessional);
-      console.log('[AttentionDetailsModal] selectedProfessionalId:', this.selectedProfessionalId);
 
       if (!this.attention || !this.attention.id) {
         console.error('[AttentionDetailsModal] No attention or attention.id');
@@ -921,13 +886,7 @@ export default {
         }
         const commissionType = professional.financialInfo?.commissionType || null;
 
-        console.log('[AttentionDetailsModal] Assigning professional:', {
-          attentionId: this.attention.id,
-          professionalId: professional.id,
-          name,
-          commission: commissionToUse,
-          commissionType
-        });
+
 
         await assignProfessional(
           this.attention.id,
@@ -937,7 +896,6 @@ export default {
           commissionType,
         );
 
-        console.log('[AttentionDetailsModal] Professional assigned successfully');
         this.$emit('attention-updated');
         this.extendedProfessionalEntity = false;
         this.goToAssignProfessional = false;
@@ -998,7 +956,6 @@ export default {
       return false;
     },
     async confirm() {
-      console.log('[AttentionDetailsModal] confirm called');
       // Prevent action if attention is terminated or cancelled
       if (this.isAttentionTerminatedOrCancelled) {
         this.alertError = 'No se puede confirmar el pago de una atención terminada o cancelada';
@@ -1008,7 +965,6 @@ export default {
         this.loading = true;
 
         // Refrescar datos de la atención antes de confirmar
-        console.log('[AttentionDetailsModal] Refreshing attention data before payment confirmation');
         await this.refreshAttentionDataWithoutOverriding();
 
         if (this.attention && this.attention.id) {
@@ -1020,9 +976,7 @@ export default {
                 ...this.newPaymentConfirmationData,
               },
             };
-            console.log('[AttentionDetailsModal] Confirming payment with body:', body);
             await attentionPaymentConfirm(this.attention.id, body);
-            console.log('[AttentionDetailsModal] Payment confirmed successfully');
             // Refrescar datos de la atención después de confirmar para actualizar el estado
             await this.refreshAttentionDataWithoutOverriding();
             this.$emit('attention-updated');
@@ -1532,54 +1486,21 @@ export default {
       }
     },
     async loadTimelineData() {
-      console.log('[AttentionDetailsModal] loadTimelineData called');
-      console.log('[AttentionDetailsModal] this.attention:', this.attention);
-      console.log('[AttentionDetailsModal] this.attention type:', typeof this.attention);
-      console.log('[AttentionDetailsModal] this.attention is null?', this.attention === null);
-      console.log(
-        '[AttentionDetailsModal] this.attention is undefined?',
-        this.attention === undefined,
-      );
+
 
       if (this.attention) {
-        console.log('[AttentionDetailsModal] attention.id:', this.attention.id);
-        console.log('[AttentionDetailsModal] attention.attentionId:', this.attention.attentionId);
-        console.log('[AttentionDetailsModal] attention keys:', Object.keys(this.attention || {}));
-        console.log('[AttentionDetailsModal] attention has id?', 'id' in (this.attention || {}));
-        console.log(
-          '[AttentionDetailsModal] attention has attentionId?',
-          'attentionId' in (this.attention || {}),
-        );
+
       }
 
       const attentionId = this.attention?.id || this.attention?.attentionId;
-      console.log('[AttentionDetailsModal] resolved attentionId:', attentionId);
 
       if (!this.attention || !attentionId) {
-        console.log('[AttentionDetailsModal] No attention or attention.id, skipping timeline load');
-        console.log('[AttentionDetailsModal] attention:', this.attention);
-        console.log('[AttentionDetailsModal] attentionId:', attentionId);
         return;
       }
 
       try {
-        console.log('[AttentionDetailsModal] Loading timeline data for attention:', attentionId);
         // Load attention details with full stageHistory
         const attentionDetails = await getAttentionDetails(attentionId);
-        console.log('[AttentionDetailsModal] Attention details loaded:', attentionDetails);
-        console.log('[AttentionDetailsModal] Attention details has id?', attentionDetails?.id);
-        console.log(
-          '[AttentionDetailsModal] Attention details has stageHistory?',
-          !!attentionDetails?.stageHistory,
-        );
-        console.log(
-          '[AttentionDetailsModal] Attention details stageHistory length:',
-          attentionDetails?.stageHistory?.length,
-        );
-        console.log(
-          '[AttentionDetailsModal] Attention details keys:',
-          Object.keys(attentionDetails || {}),
-        );
 
         // Ensure attentionDetails has id (map attentionId to id if needed)
         if (attentionDetails && !attentionDetails.id && attentionDetails.attentionId) {
@@ -1588,7 +1509,6 @@ export default {
 
         // If attentionDetails doesn't have stageHistory, try to get it from the original attention
         if (attentionDetails && !attentionDetails.stageHistory && this.attention?.stageHistory) {
-          console.log('[AttentionDetailsModal] Using stageHistory from original attention');
           attentionDetails.stageHistory = this.attention.stageHistory;
         }
 
@@ -1710,13 +1630,7 @@ export default {
     },
     attention: {
       handler(newVal, oldVal) {
-        console.log('[AttentionDetailsModal] attention changed');
-        console.log('[AttentionDetailsModal] newVal:', newVal);
-        console.log('[AttentionDetailsModal] oldVal:', oldVal);
         if (newVal) {
-          console.log(
-            '[AttentionDetailsModal] Attention changed and modal is open, calling loadTimelineData',
-          );
           this.loadTimelineData();
           this.loadProfessionalName();
         }
@@ -1726,7 +1640,6 @@ export default {
   },
   mounted() {
     if (!this.attention) return;
-    console.log('[AttentionDetailsModal] Modal opened, calling loadTimelineData');
     this.loadTimelineData();
     this.loadProfessionalName();
   },

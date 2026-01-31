@@ -54,6 +54,20 @@ export default {
         'go-minisite',
         'client-portal',
       ],
+      menuIcons: {
+        'dashboard': 'bi-speedometer2',
+        'reports': 'bi-bar-chart',
+        'booking-manage': 'bi-calendar-check',
+        'control-admin': 'bi-gear',
+        'manage-admin': 'bi-people',
+        'medical-management': 'bi-heart-pulse',
+        'configuration': 'bi-sliders',
+        'documents': 'bi-file-earmark-text',
+        'your-plan': 'bi-credit-card',
+        'business-resume': 'bi-building',
+        'go-minisite': 'bi-globe',
+        'client-portal': 'bi-person-circle',
+      },
       manageControlSubMenuOptions: [
         'tracing',
         'product-stock',
@@ -176,6 +190,34 @@ export default {
       state.showMobileSpySide = true;
     };
 
+    const getSubmenuIcon = (opt) => {
+      const iconMap = {
+        'commerce-admin': 'bi-building',
+        'service-admin': 'bi-tools',
+        'modules-admin': 'bi-layers',
+        'queues-admin': 'bi-list-check',
+        'collaborators-admin': 'bi-people',
+        'professionals-admin': 'bi-person-badge',
+        'surveys-admin': 'bi-clipboard-check',
+        'product-admin': 'bi-box-seam',
+        'outcome-types-admin': 'bi-check-circle',
+        'company-admin': 'bi-building',
+        'forms-admin': 'bi-file-text',
+        'lgpd-consent-admin': 'bi-shield-check',
+        'permissions-admin': 'bi-key',
+        'tracing': 'bi-search',
+        'product-stock': 'bi-boxes',
+        'financial': 'bi-cash',
+        'patient-history-admin': 'bi-file-medical',
+        'medications-admin': 'bi-capsule',
+        'medical-exams-admin': 'bi-clipboard-data',
+        'medical-templates-admin': 'bi-file-earmark-medical',
+        'pdf-templates-admin': 'bi-file-earmark-pdf',
+        'audit-log': 'bi-journal-text',
+      };
+      return `bi ${iconMap[opt] || 'bi-chevron-right'}`;
+    };
+
     return {
       state,
       loading,
@@ -186,6 +228,7 @@ export default {
       getClientPortalLink,
       onShowMobileMenuSide,
       onShowMobileSpySide,
+      getSubmenuIcon,
     };
   },
 };
@@ -229,49 +272,32 @@ export default {
                 <div class="choose-attention my-3 mt-4">
                   <span>{{ $t('businessMenu.choose') }}</span>
                 </div>
-                <div class="row">
+                <!-- Main menu options (excluding portal and minisite) -->
+                <div class="row mobile-cards-grid">
                   <div
-                    v-for="option in state.menuOptions"
+                    v-for="option in state.menuOptions.filter(opt => opt !== 'go-minisite' && opt !== 'client-portal')"
                     :key="option"
-                    class="d-grid btn-group btn-group-justified mobile-button-wrapper"
+                    class="col-12 mobile-card-wrapper"
                   >
-                    <div v-if="option === 'go-minisite'" class="centered">
-                      <a
-                        type="button"
-                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
-                        :href="`${getBusinessLink()}`"
-                        target="_blank"
-                      >
-                        {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
-                      </a>
-                    </div>
-                    <div v-else-if="option === 'client-portal'" class="centered">
-                      <a
-                        type="button"
-                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
-                        :href="`${getClientPortalLink()}`"
-                        target="_blank"
-                      >
-                        {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
-                      </a>
-                    </div>
-                    <div v-else>
-                      <button
-                        type="button"
-                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style mobile-menu-btn"
-                        @click="goToOption(option)"
-                        :disabled="!state.toggles[`business.main-menu.${option}`]"
-                      >
+                    <div
+                      class="menu-card mobile-menu-card"
+                      @click="goToOption(option)"
+                      :class="{ disabled: !state.toggles[`business.main-menu.${option}`] }"
+                    >
+                      <div class="card-icon">
+                        <i :class="`bi ${state.menuIcons[option]}`"></i>
+                      </div>
+                      <div class="card-text">
                         {{ $t(`businessMenu.${option}`) }}
                         <i
                           v-if="option === 'manage-admin'"
-                          :class="`bi ${
+                          :class="`chevron bi ${
                             state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
                           }`"
                         ></i>
                         <i
                           v-if="option === 'control-admin'"
-                          :class="`bi ${
+                          :class="`chevron bi ${
                             state.manageControlSubMenuOption === true
                               ? 'bi-chevron-up'
                               : 'bi-chevron-down'
@@ -279,81 +305,120 @@ export default {
                         ></i>
                         <i
                           v-if="option === 'medical-management'"
-                          :class="`bi ${
+                          :class="`chevron bi ${
                             state.medicalManagementSubMenuOption === true
                               ? 'bi-chevron-up'
                               : 'bi-chevron-down'
                           }`"
                         ></i>
-                      </button>
-                      <div
-                        v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
-                        class="mobile-submenu-container"
-                      >
-                        <div
-                          v-for="opt in state.manageSubMenuOptions"
-                          :key="opt"
-                          class="mobile-submenu-item"
-                        >
-                          <button
-                            type="button"
-                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style mobile-menu-btn mobile-submenu-btn"
-                            @click="goToOption(opt)"
-                            :disabled="!state.toggles[`business.main-menu.${opt}`]"
-                            :title="
-                              !state.toggles[`business.main-menu.${opt}`]
-                                ? $t('businessMenu.permissionRequired')
-                                : ''
-                            "
-                          >
-                            {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                          </button>
-                        </div>
                       </div>
+                    </div>
+                    <div
+                      v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
+                      class="mobile-submenu-container"
+                    >
                       <div
-                        v-if="
-                          option === 'control-admin' && state.manageControlSubMenuOption === true
-                        "
-                        class="mobile-submenu-container"
+                        v-for="opt in state.manageSubMenuOptions"
+                        :key="opt"
+                        class="mobile-submenu-item"
                       >
                         <div
-                          v-for="opt in state.manageControlSubMenuOptions"
-                          :key="opt"
-                          class="mobile-submenu-item"
+                          class="mobile-submenu-card"
+                          @click="goToOption(opt)"
+                          :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
+                          :title="
+                            !state.toggles[`business.main-menu.${opt}`]
+                              ? $t('businessMenu.permissionRequired')
+                              : ''
+                          "
                         >
-                          <button
-                            type="button"
-                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style mobile-menu-btn mobile-submenu-btn"
-                            @click="goToOption(opt)"
-                            :disabled="!state.toggles[`business.main-menu.${opt}`]"
-                          >
-                            {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                          </button>
-                        </div>
-                      </div>
-                      <div
-                        v-if="
-                          option === 'medical-management' &&
-                          state.medicalManagementSubMenuOption === true
-                        "
-                        class="mobile-submenu-container"
-                      >
-                        <div
-                          v-for="opt in state.medicalManagementSubMenuOptions"
-                          :key="opt"
-                          class="mobile-submenu-item"
-                        >
-                          <button
-                            type="button"
-                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style mobile-menu-btn mobile-submenu-btn"
-                            @click="goToOption(opt)"
-                            :disabled="!state.toggles[`business.main-menu.${opt}`]"
-                          >
-                            {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                          </button>
+                          <div class="card-icon">
+                            <i :class="getSubmenuIcon(opt)"></i>
+                          </div>
+                          <div class="card-text">
+                            {{ $t(`businessMenu.${opt}`) }}
+                          </div>
                         </div>
                       </div>
                     </div>
+                    <div
+                      v-if="
+                        option === 'control-admin' && state.manageControlSubMenuOption === true
+                      "
+                      class="mobile-submenu-container"
+                    >
+                      <div
+                        v-for="opt in state.manageControlSubMenuOptions"
+                        :key="opt"
+                        class="mobile-submenu-item"
+                      >
+                        <div
+                          class="mobile-submenu-card"
+                          @click="goToOption(opt)"
+                          :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
+                        >
+                          <div class="card-icon">
+                            <i :class="getSubmenuIcon(opt)"></i>
+                          </div>
+                          <div class="card-text">
+                            {{ $t(`businessMenu.${opt}`) }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      v-if="
+                        option === 'medical-management' &&
+                        state.medicalManagementSubMenuOption === true
+                      "
+                      class="mobile-submenu-container"
+                    >
+                      <div
+                        v-for="opt in state.medicalManagementSubMenuOptions"
+                        :key="opt"
+                        class="mobile-submenu-item"
+                      >
+                        <div
+                          class="mobile-submenu-card"
+                          @click="goToOption(opt)"
+                          :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
+                        >
+                          <div class="card-icon">
+                            <i :class="getSubmenuIcon(opt)"></i>
+                          </div>
+                          <div class="card-text">
+                            {{ $t(`businessMenu.${opt}`) }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Portal and Minisite buttons in same row -->
+                  <div class="col-12 mobile-portal-wrapper">
+                    <a
+                      class="menu-card mobile-menu-card portal-card external-link"
+                      :href="`${getBusinessLink()}`"
+                      target="_blank"
+                    >
+                      <div class="card-icon">
+                        <i :class="`bi ${state.menuIcons['go-minisite']}`"></i>
+                      </div>
+                      <div class="card-text">{{ $t('businessMenu.go-minisite') }}</div>
+                      <i class="bi bi-box-arrow-up-right external-icon"></i>
+                    </a>
+                  </div>
+                  <div class="col-12 mobile-portal-wrapper">
+                    <a
+                      class="menu-card mobile-menu-card portal-card external-link"
+                      :href="`${getClientPortalLink()}`"
+                      target="_blank"
+                    >
+                      <div class="card-icon">
+                        <i :class="`bi ${state.menuIcons['client-portal']}`"></i>
+                      </div>
+                      <div class="card-text">{{ $t('businessMenu.client-portal') }}</div>
+                      <i class="bi bi-box-arrow-up-right external-icon"></i>
+                    </a>
                   </div>
                 </div>
                 <div v-if="!isActiveBusiness() && !loading">
@@ -402,49 +467,34 @@ export default {
             <div class="choose-attention my-3 mb-4">
               <span>{{ $t('businessMenu.choose') }}</span>
             </div>
-            <div class="row menu-buttons-grid">
+            <!-- Main menu options (excluding portal and minisite) -->
+            <div class="row menu-cards-grid">
               <div
-                v-for="option in state.menuOptions"
+                v-for="option in state.menuOptions.filter(opt => opt !== 'go-minisite' && opt !== 'client-portal')"
                 :key="option"
-                class="col-12 col-lg-6 menu-button-wrapper"
+                class="col-12 menu-card-wrapper"
               >
-                <div v-if="option === 'go-minisite'" class="centered">
-                  <a
-                    type="button"
-                    class="btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
-                    :href="`${getBusinessLink()}`"
-                    target="_blank"
-                  >
-                    {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
-                  </a>
-                </div>
-                <div v-else-if="option === 'client-portal'" class="centered">
-                  <a
-                    type="button"
-                    class="btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
-                    :href="`${getClientPortalLink()}`"
-                    target="_blank"
-                  >
-                    {{ $t(`businessMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
-                  </a>
-                </div>
-                <div v-else>
-                  <button
-                    type="button"
-                    class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style desktop-menu-btn"
-                    @click="goToOption(option)"
-                    :disabled="!state.toggles[`business.main-menu.${option}`]"
-                  >
+                <div
+                  class="menu-card"
+                  @click="goToOption(option)"
+                  :class="{
+                    disabled: !state.toggles[`business.main-menu.${option}`]
+                  }"
+                >
+                  <div class="card-icon">
+                    <i :class="`bi ${state.menuIcons[option]}`"></i>
+                  </div>
+                  <div class="card-text">
                     {{ $t(`businessMenu.${option}`) }}
                     <i
                       v-if="option === 'manage-admin'"
-                      :class="`bi ${
+                      :class="`chevron bi ${
                         state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
                       }`"
                     ></i>
                     <i
                       v-if="option === 'control-admin'"
-                      :class="`bi ${
+                      :class="`chevron bi ${
                         state.manageControlSubMenuOption === true
                           ? 'bi-chevron-up'
                           : 'bi-chevron-down'
@@ -452,81 +502,118 @@ export default {
                     ></i>
                     <i
                       v-if="option === 'medical-management'"
-                      :class="`bi ${
+                      :class="`chevron bi ${
                         state.medicalManagementSubMenuOption === true
                           ? 'bi-chevron-up'
                           : 'bi-chevron-down'
                       }`"
                     ></i>
-                  </button>
-                  <Transition name="fade">
-                    <div
-                      v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
-                      class="submenu-container"
-                    >
-                      <div
-                        v-for="opt in state.manageSubMenuOptions"
-                        :key="opt"
-                        class="submenu-item"
-                      >
-                        <button
-                          type="button"
-                          class="btn btn-lg btn-block btn-size fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
-                          @click="goToOption(opt)"
-                          :disabled="!state.toggles[`business.main-menu.${opt}`]"
-                        >
-                          {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </Transition>
-                  <Transition name="fade">
-                    <div
-                      v-if="option === 'control-admin' && state.manageControlSubMenuOption === true"
-                      class="submenu-container"
-                    >
-                      <div
-                        v-for="opt in state.manageControlSubMenuOptions"
-                        :key="opt"
-                        class="submenu-item"
-                      >
-                        <button
-                          type="button"
-                          class="btn btn-lg btn-block btn-size fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
-                          @click="goToOption(opt)"
-                          :disabled="!state.toggles[`business.main-menu.${opt}`]"
-                        >
-                          {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </Transition>
-                  <Transition name="fade">
-                    <div
-                      v-if="
-                        option === 'medical-management' &&
-                        state.medicalManagementSubMenuOption === true
-                      "
-                      class="submenu-container"
-                    >
-                      <div
-                        v-for="opt in state.medicalManagementSubMenuOptions"
-                        :key="opt"
-                        class="submenu-item"
-                      >
-                        <button
-                          type="button"
-                          class="btn btn-lg btn-block btn-size fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
-                          @click="goToOption(opt)"
-                          :disabled="!state.toggles[`business.main-menu.${opt}`]"
-                        >
-                          {{ $t(`businessMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </Transition>
+                  </div>
                 </div>
+                <Transition name="fade">
+                  <div
+                    v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
+                    class="submenu-container"
+                  >
+                    <div
+                      v-for="opt in state.manageSubMenuOptions"
+                      :key="opt"
+                      class="submenu-item"
+                    >
+                      <div
+                        class="submenu-card"
+                        @click="goToOption(opt)"
+                        :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
+                      >
+                        <div class="card-icon">
+                          <i :class="getSubmenuIcon(opt)"></i>
+                        </div>
+                        <div class="card-text">
+                          {{ $t(`businessMenu.${opt}`) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Transition>
+                <Transition name="fade">
+                  <div
+                    v-if="option === 'control-admin' && state.manageControlSubMenuOption === true"
+                    class="submenu-container"
+                  >
+                    <div
+                      v-for="opt in state.manageControlSubMenuOptions"
+                      :key="opt"
+                      class="submenu-item"
+                    >
+                      <div
+                        class="submenu-card"
+                        @click="goToOption(opt)"
+                        :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
+                      >
+                        <div class="card-icon">
+                          <i :class="getSubmenuIcon(opt)"></i>
+                        </div>
+                        <div class="card-text">
+                          {{ $t(`businessMenu.${opt}`) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Transition>
+                <Transition name="fade">
+                  <div
+                    v-if="
+                      option === 'medical-management' &&
+                      state.medicalManagementSubMenuOption === true
+                    "
+                    class="submenu-container"
+                  >
+                    <div
+                      v-for="opt in state.medicalManagementSubMenuOptions"
+                      :key="opt"
+                      class="submenu-item"
+                    >
+                      <div
+                        class="submenu-card"
+                        @click="goToOption(opt)"
+                        :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
+                      >
+                        <div class="card-icon">
+                          <i :class="getSubmenuIcon(opt)"></i>
+                        </div>
+                        <div class="card-text">
+                          {{ $t(`businessMenu.${opt}`) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Transition>
               </div>
+            </div>
+            <!-- Portal and Minisite buttons in same row, full width -->
+            <div class="portal-buttons-row">
+              <a
+                class="menu-card portal-card external-link portal-button"
+                :href="`${getBusinessLink()}`"
+                target="_blank"
+              >
+                <div class="card-icon">
+                  <i :class="`bi ${state.menuIcons['go-minisite']}`"></i>
+                </div>
+                <div class="card-text">{{ $t('businessMenu.go-minisite') }}</div>
+                <i class="bi bi-box-arrow-up-right external-icon"></i>
+              </a>
+              <a
+                class="menu-card portal-card external-link portal-button"
+                :href="`${getClientPortalLink()}`"
+                target="_blank"
+              >
+                <div class="card-icon">
+                  <i :class="`bi ${state.menuIcons['client-portal']}`"></i>
+                </div>
+                <div class="card-text">{{ $t('businessMenu.client-portal') }}</div>
+                <i class="bi bi-box-arrow-up-right external-icon"></i>
+              </a>
             </div>
             <div v-if="!isActiveBusiness() && !loading">
               <Message
@@ -666,19 +753,16 @@ export default {
 /* Submenu styles */
 .submenu-container {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
+  display: block;
   margin-top: 0.25rem;
   margin-bottom: 0.25rem;
 }
 
 .submenu-item {
   width: 100%;
-  display: flex;
-  justify-content: center;
-  max-width: 100%;
+  display: block;
+  margin-bottom: 0.25rem;
+  padding-left: 20px;
 }
 
 .submenu-item .desktop-submenu-btn {
@@ -713,14 +797,16 @@ export default {
 
   .submenu-container {
     width: 100%;
-    gap: 0.25rem;
+    display: block;
     margin-top: 0.25rem;
     margin-bottom: 0.25rem;
   }
 
   .submenu-item {
     width: 100%;
-    max-width: 100%;
+    display: block;
+    margin-bottom: 0.25rem;
+    padding-left: 20px;
   }
 
   .menu-buttons-grid {
@@ -850,8 +936,8 @@ export default {
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
+    align-items: flex-start;
+    gap: 0.1rem;
     margin-top: 0.25rem;
     margin-bottom: 0.25rem;
   }
@@ -859,14 +945,327 @@ export default {
   .mobile-submenu-item {
     width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
+    padding-left: 20px;
   }
 
   .mobile-submenu-btn {
-    width: 66.666667%;
-    margin-left: auto;
-    margin-right: auto;
+    width: auto;
+    margin-left: 0;
+    margin-right: 0;
   }
+}
+
+/* New card-based menu styles */
+.menu-cards-grid {
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.menu-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.menu-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-left: 3px solid #007bff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 50px;
+  width: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.menu-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.12);
+  border-color: var(--azul-turno);
+}
+
+.menu-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.menu-card.disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.submenu-card {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.2rem 0.8rem;
+  margin: 0.25rem 0.5rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-left: 3px solid #0056b3;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 40px;
+  width: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.submenu-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 74, 173, 0.1);
+  border-color: var(--azul-turno);
+}
+
+.submenu-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submenu-card.disabled:hover {
+  transform: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.card-icon {
+  font-size: 1.25rem;
+  color: var(--azul-turno);
+  margin-right: 0.5rem;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.card-text .chevron {
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--verde-tu);
+}
+
+.card-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: left;
+  color: #333;
+  line-height: 1.1;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.external-link .card-text {
+  margin-right: 0.1rem;
+}
+
+.external-icon {
+  font-size: 0.6rem;
+  color: var(--azul-turno);
+}
+
+.submenu-container {
+  margin-top: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  align-items: flex-start;
+}
+
+.submenu-btn {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-color: var(--azul-turno);
+  color: var(--azul-turno);
+}
+
+.submenu-btn:hover {
+  background-color: var(--azul-turno);
+  color: white;
+}
+
+/* Portal card styles - blue background with white icons */
+.portal-card {
+  background: var(--azul-turno) !important;
+  border-color: var(--azul-turno) !important;
+  border-left: 3px solid #0056b3 !important;
+  color: white !important;
+  width: 120px !important;
+}
+
+.portal-card .card-icon {
+  color: white !important;
+}
+
+.portal-card .card-text {
+  color: white !important;
+}
+
+.portal-card .external-icon {
+  color: white !important;
+}
+
+.portal-card:hover {
+  background: var(--azul-turno-hover, #0056b3) !important;
+  border-color: var(--azul-turno-hover, #0056b3) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.25) !important;
+}
+
+/* Portal row styles */
+.portal-row {
+  margin-top: 1rem;
+}
+
+.portal-card-wrapper {
+  padding: 0 0.25rem;
+}
+
+/* Mobile card styles */
+.mobile-cards-grid {
+  gap: 0.4rem;
+  justify-content: center;
+  padding: 0 0.5rem;
+}
+
+.mobile-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.15rem;
+}
+
+.mobile-menu-card {
+  height: 50px;
+  padding: 0.5rem 1rem;
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.mobile-menu-card .card-icon {
+  font-size: 1.1rem;
+  margin-right: 0.5rem;
+}
+
+.mobile-menu-card .card-text {
+  font-size: 0.7rem; /* Reduced for long text */
+  font-weight: 500;
+  text-align: left;
+  padding: 0 0.1rem;
+  word-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.1;
+}
+
+.mobile-submenu-card {
+  height: 40px;
+  padding: 0.2rem 0.8rem;
+  margin: 0.25rem 0.5rem;
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-left: 3px solid #0056b3;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.mobile-submenu-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 74, 173, 0.1);
+  border-color: var(--azul-turno);
+}
+
+.mobile-submenu-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mobile-submenu-card.disabled:hover {
+  transform: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.mobile-submenu-card .card-icon {
+  font-size: 1rem;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.mobile-submenu-card .card-text {
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-align: left;
+  padding: 0 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.mobile-submenu-btn {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.3rem;
+  width: 100%;
+  max-width: 95px;
+}
+
+/* Mobile portal row */
+.mobile-portal-row {
+  margin-top: 1rem;
+  padding: 0 0.5rem;
+}
+
+.mobile-portal-wrapper {
+  padding: 0.15rem;
+}
+
+/* Desktop portal buttons */
+.portal-buttons-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.portal-button {
+  flex: 1;
+}
+
+/* Portal cards in mobile should be narrower */
+.mobile-menu-card.portal-card {
+  width: 120px !important;
+}
+
+.mobile-submenu-btn {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  width: 100%;
+  max-width: 100px;
 }
 </style>

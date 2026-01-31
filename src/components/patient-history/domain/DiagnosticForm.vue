@@ -80,7 +80,6 @@ export default {
             ...cacheData.value,
             diagnostic: cacheData.value.diagnostic || '',
           };
-          console.log('📝 Loaded diagnostic from cache (session data)');
         }
         // PRIORIDAD 2: Si no hay cache, cargar desde patientHistoryData guardado
         else if (patientHistoryData.value && patientHistoryData.value.id) {
@@ -101,7 +100,6 @@ export default {
                 ...diagnosticToLoad,
                 diagnostic: diagnosticToLoad.diagnostic || '',
               };
-              console.log('📝 Loaded diagnostic from saved data');
             }
           }
         }
@@ -356,7 +354,6 @@ export default {
     });
 
     const handleTemplateSelected = content => {
-      console.log('🟣 DiagnosticForm: Recibido template-selected con:', content);
       state.newDiagnostic.diagnostic = content;
       console.log(
         '🟣 DiagnosticForm: state.newDiagnostic.diagnostic actualizado a:',

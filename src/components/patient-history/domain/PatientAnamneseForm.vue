@@ -93,10 +93,8 @@ export default {
         }
         // Only use cacheData if no saved data exists in patientHistoryData
         if ((!state.newPatientAnamnese || !state.newPatientAnamnese.id) && cacheData.value) {
-          console.log('💾 Loading anamnese data from preprontuario cache:', cacheData.value);
           state.newPatientAnamnese = cacheData.value;
           state.habitsAux = state.newPatientAnamnese?.habitsDetails || {};
-          console.log('💾 Anamnese data loaded. habitsAux:', state.habitsAux);
         }
 
         // Ensure habitsAux is always an object
@@ -135,14 +133,12 @@ export default {
         return;
       }
 
-      console.log('🎤 handleSpeechFinalResult called:', { finalText, field });
 
       if (field === 'general') {
         const currentText = state.newPatientAnamnese.habits || '';
         const newText =
           currentText && currentText.trim() !== '' ? `${currentText}\n\n${finalText}` : finalText;
         state.newPatientAnamnese.habits = newText;
-        console.log('✅ Updated general field:', newText);
       } else {
         const { itemId, fieldName } = field;
 
@@ -170,7 +166,6 @@ export default {
         // Update habitsDetails to trigger reactivity
         state.newPatientAnamnese.habitsDetails = { ...state.habitsAux };
 
-        console.log('✅ Updated field:', { itemId, fieldName, newText });
       }
 
       sendData();
@@ -569,7 +564,6 @@ export default {
       // Template methods
       handleTemplateSelected: template => {
         if (template && template.content) {
-          console.log('🎯 Template selected for anamnesis:', template);
           // Append template content to habits field
           const currentText = state.newPatientAnamnese.habits || '';
           const templateText = template.content;

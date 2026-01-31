@@ -480,7 +480,6 @@ export default {
         loading.value = false;
 
         // Mostrar mensaje de éxito (opcional)
-        console.log('Professional created successfully:', result.professional);
       } catch (error) {
         console.error('Error refreshing collaborators after professional creation:', error);
         loading.value = false;

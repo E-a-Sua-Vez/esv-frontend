@@ -44,17 +44,11 @@ export default {
 
     const loadIncomeDetails = async () => {
       if (!props.commerce || !props.business || !props.payment.incomeIds?.length) {
-        console.log('[CommissionPaymentCard] Cannot load income details - missing required props:', {
-          hasCommerce: !!props.commerce,
-          hasBusiness: !!props.business,
-          incomeIdsLength: props.payment.incomeIds?.length || 0,
-        });
         return;
       }
 
       try {
         loadingIncomes.value = true;
-        console.log('[CommissionPaymentCard] Loading income details for payment:', props.payment.id, 'IncomeIds:', props.payment.incomeIds);
 
         // Convert period dates to YYYY-MM-DD format
         const periodFrom = props.payment.periodFrom
@@ -86,17 +80,11 @@ export default {
           props.payment.professionalId          // professionalFilter
         );
 
-        console.log('[CommissionPaymentCard] Fetched incomes:', {
-          totalFetched: Array.isArray(allIncomes) ? allIncomes.length : 0,
-          lookingForIds: props.payment.incomeIds,
-        });
-
         // Filter to only include incomes that are in the payment's incomeIds
         if (Array.isArray(allIncomes)) {
           incomeDetails.value = allIncomes.filter(income =>
             props.payment.incomeIds.includes(income.id)
           );
-          console.log('[CommissionPaymentCard] Filtered income details:', incomeDetails.value.length);
         } else {
           console.warn('[CommissionPaymentCard] allIncomes is not an array:', allIncomes);
           incomeDetails.value = [];
@@ -140,7 +128,6 @@ export default {
     watch(
       () => props.autoExpand,
       (newVal) => {
-        console.log('[CommissionPaymentCard] autoExpand changed:', newVal, 'showDetails:', showDetails.value);
         if (newVal) {
           showDetails.value = true;
           // Small delay to ensure component is fully mounted
@@ -156,7 +143,6 @@ export default {
     watch(
       () => showDetails.value,
       (newVal) => {
-        console.log('[CommissionPaymentCard] showDetails changed:', newVal);
         if (newVal && incomeDetails.value.length === 0 && !loadingIncomes.value) {
           loadIncomeDetails();
         }
@@ -165,7 +151,6 @@ export default {
 
     // Auto-load details on mount if autoExpand is true
     onMounted(() => {
-      console.log('[CommissionPaymentCard] Component mounted, autoExpand:', props.autoExpand, 'payment:', props.payment?.id);
       if (props.autoExpand) {
         showDetails.value = true;
         // Use nextTick to ensure DOM is ready

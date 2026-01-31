@@ -177,13 +177,9 @@ export default {
         return;
       }
       try {
-        console.log('[BusinessQueuesAdmin] Loading commerce data for commerceId:', commerceId);
         state.queues = await getQueuesByCommerceId(commerceId);
-        console.log('[BusinessQueuesAdmin] Loaded queues:', state.queues);
         state.services = await getActiveServicesByCommerceId(commerceId);
-        console.log('[BusinessQueuesAdmin] Loaded services:', state.services);
         state.professionals = await getProfessionalsByCommerce(commerceId);
-        console.log('[BusinessQueuesAdmin] Loaded professionals:', state.professionals);
         state.filtered = state.queues;
       } catch (error) {
         console.error('[BusinessQueuesAdmin] Error loading commerce data:', error);
@@ -409,7 +405,6 @@ export default {
           created = true;
           state.queues = await getQueuesByCommerceId(commerce.value.id);
           state.extendedEntity = undefined;
-          console.log('Queue created successfully, closing modal');
         }
         alertError.value = '';
       } catch (error) {
@@ -588,9 +583,7 @@ export default {
 
     const selectType = (queue, type) => {
       if (queue) {
-        console.log('[BusinessQueuesAdmin] selectType called with type:', type);
         const typeId = typeof type === 'string' ? type : type.id;
-        console.log('[BusinessQueuesAdmin] typeId:', typeId);
 
         if (typeId === 'PROFESSIONAL') {
           queue.servicesId = undefined;
@@ -604,12 +597,10 @@ export default {
           queue.professionalId = undefined;
           queue.type = typeId;
         }
-        console.log('[BusinessQueuesAdmin] queue.type after selectType:', queue.type);
       }
     };
 
     const onAddQueueTypeChanged = event => {
-      console.log('[BusinessQueuesAdmin] onAddQueueTypeChanged called with event:', event);
       if (event && event.queue) {
         selectType(event.queue, event.type);
       }

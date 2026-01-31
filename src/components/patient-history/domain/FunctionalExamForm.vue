@@ -98,7 +98,6 @@ export default {
             ...cacheData.value,
             exam: cacheData.value.exam || '',
           };
-          console.log('📝 Loaded functional exam from cache (session data)');
         }
         // PRIORIDAD 2: Si no hay cache, cargar desde patientHistoryData guardado
         else if (patientHistoryData.value && patientHistoryData.value.id) {
@@ -119,7 +118,6 @@ export default {
                 ...examToLoad,
                 exam: examToLoad.exam || '',
               };
-              console.log('📝 Loaded functional exam from saved data');
             }
           }
         }

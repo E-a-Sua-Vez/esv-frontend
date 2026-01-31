@@ -641,14 +641,7 @@ export default {
     },
     async calculateProfessionalIncomes() {
       try {
-        console.log('[calculateProfessionalIncomes] Starting...', {
-          commerce: this.commerce?.id,
-          startDate: this.startDate,
-          endDate: this.endDate,
-        });
-
         if (!this.commerce || !this.commerce.id || !this.startDate || !this.endDate) {
-          console.log('[calculateProfessionalIncomes] Missing required data, setting to null');
           this.financialResume.professionalIncomes = null;
           return;
         }
@@ -671,7 +664,6 @@ export default {
         }
 
         // Get all incomes for the date range
-        console.log('[calculateProfessionalIncomes] Fetching incomes...');
         const incomesArray = await getIncomesDetails(
           this.business?.id,
           this.commerce.id,
@@ -691,15 +683,7 @@ export default {
           undefined
         );
 
-        console.log('[calculateProfessionalIncomes] Incomes data received:', {
-          hasData: !!incomesArray,
-          isArray: Array.isArray(incomesArray),
-          count: Array.isArray(incomesArray) ? incomesArray.length : 0,
-          firstItem: Array.isArray(incomesArray) && incomesArray.length > 0 ? incomesArray[0] : null,
-        });
-
         if (!incomesArray || !Array.isArray(incomesArray) || incomesArray.length === 0) {
-          console.log('[calculateProfessionalIncomes] No valid incomes data, setting to null');
           this.financialResume.professionalIncomes = null;
           return;
         }
@@ -748,13 +732,7 @@ export default {
           .filter(p => p.totalAmount > 0) // Only include professionals with income
           .sort((a, b) => b.totalAmount - a.totalAmount);
 
-        console.log('[calculateProfessionalIncomes] Professional list:', {
-          count: professionalList.length,
-          list: professionalList,
-        });
-
         if (professionalList.length === 0) {
-          console.log('[calculateProfessionalIncomes] No professionals with income, setting to null');
           this.financialResume.professionalIncomes = null;
           return;
         }
@@ -843,10 +821,6 @@ export default {
           options: donutChartOptions,
         };
 
-        console.log('[calculateProfessionalIncomes] Successfully set professionalIncomes:', {
-          listCount: professionalList.length,
-          hasChartData: !!donutChartData,
-        });
       } catch (error) {
         console.error('[calculateProfessionalIncomes] Error calculating professional incomes:', error);
         this.financialResume.professionalIncomes = null;
@@ -1249,7 +1223,6 @@ export default {
       }
     },
     exportToPDF() {
-      console.log('Creating professional financial PDF report...');
       this.loading = true;
 
       setTimeout(async () => {
@@ -1549,7 +1522,6 @@ export default {
           const fileName = `reporte-${this.commerce?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'comercio'}-${this.startDate}.pdf`;
           pdf.save(fileName);
 
-          console.log('Professional PDF report generated');
 
         } catch (error) {
           console.error('Error generating PDF:', error);
@@ -2094,8 +2066,6 @@ export default {
                                 class="btn btn-sm btn-primary w-100"
                                 style="font-size: 0.75rem; padding: 0.25rem 0.5rem"
                                 @click="() => {
-                                  console.log('[Button Click] exportToPDF button clicked');
-                                  console.log('[Button Click] toggle status:', toggles['financial.reports.resume']);
                                   exportToPDF();
                                 }"
                                 :disabled="!toggles['financial.reports.resume']"

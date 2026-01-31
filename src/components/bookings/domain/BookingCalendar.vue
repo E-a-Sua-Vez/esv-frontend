@@ -351,7 +351,6 @@ export default {
     const goToCreateBooking = () => {
       // If we have client data, use the modal instead of redirecting
       if (state.client && state.client.id) {
-        console.log('📅 Creating booking for existing client using modal:', state.client);
 
         // Use the modal with client data
         const options = {};
@@ -1116,28 +1115,10 @@ export default {
           state.errorsSearch.push('dashboard.validate.search');
           state.searchTextError = true;
         } else {
-          console.log('🔍 Searching client with getClientsDetails:', {
-            businessId: commerce.value.businessId,
-            commerceId: commerce.value.id,
-            searchText: state.searchText,
-            searchTextLength: state.searchText.length,
-          });
-
-          console.log('🔍 Complete commerce object:', {
-            commerce: commerce.value,
-            commerceKeys: Object.keys(commerce.value || {}),
-            businessId: commerce.value?.businessId,
-            id: commerce.value?.id,
-          });
 
           // Get businessId from commerce or store as fallback
           const businessId = commerce.value?.businessId || store.getCurrentBusiness?.id;
 
-          console.log('🔍 BusinessId resolution:', {
-            fromCommerce: commerce.value?.businessId,
-            fromStore: store.getCurrentBusiness?.id,
-            finalBusinessId: businessId,
-          });
 
           // Validate required parameters
           if (!businessId) {
@@ -1175,37 +1156,18 @@ export default {
             null // contactResultType
           );
 
-          console.log('🔍 getClientsDetails response:', {
-            result,
-            isArray: Array.isArray(result),
-            length: result?.length || 0,
-            firstItem: result?.[0],
-          });
 
-          console.log('🔍 Client search result:', result);
-          console.log('🔍 Result type:', typeof result);
-          console.log('🔍 Result is array:', Array.isArray(result));
-          console.log('🔍 Result length:', result?.length);
 
           if (result && result.length > 0) {
             state.client = result[0];
-            console.log('✅ Client found and assigned:', {
-              id: result[0].id,
-              name: result[0].name,
-              email: result[0].email,
-              allKeys: Object.keys(result[0]),
-            });
           } else {
             state.client = undefined;
-            console.log('❌ Client not found or empty result');
             state.errorsSearch.push('dashboard.validate.clientNotFound');
             state.searchTextError = true;
           }
           if (!state.client || !state.client.id) {
-            console.log('❌ Client validation failed - resetting to undefined');
             state.client = undefined;
           } else {
-            console.log('✅ Client validation passed - keeping client data');
             // Client found - scroll to client details after rendering
             nextTick(() => {
               setTimeout(() => {
@@ -1738,10 +1700,6 @@ export default {
     };
 
     const handleBookingUpdated = async updatedBooking => {
-      console.log(
-        '📅 BookingCalendar - Booking updated, refreshing calendar view:',
-        updatedBooking,
-      );
 
       // Update the selected booking with the new data
       if (updatedBooking && updatedBooking.id === state.selectedBooking?.id) {
@@ -1752,14 +1710,12 @@ export default {
           const newQueue = queues.value.find(q => q.id === updatedBooking.queueId);
           if (newQueue) {
             state.selectedQueue = newQueue;
-            console.log('📅 BookingCalendar - Queue changed to:', newQueue.name);
           }
         }
 
         // Update selected date if it changed (for edit operations)
         if (updatedBooking.date && updatedBooking.date !== state.selectedDate) {
           state.selectedDate = updatedBooking.date;
-          console.log('📅 BookingCalendar - Date changed to:', updatedBooking.date);
         }
       }
 
@@ -1771,7 +1727,6 @@ export default {
         // 2. If date changed, also refresh bookings for the new date
         if (updatedBooking && updatedBooking.date && updatedBooking.date !== state.selectedDate) {
           const formattedNewDate = updatedBooking.date.split('T')[0]; // Ensure YYYY-MM-DD format
-          console.log('📅 BookingCalendar - Refreshing bookings for new date:', formattedNewDate);
 
           // Get bookings for the new date
           const newDateBookings = await getPendingCommerceBookingsByDate(
@@ -1794,7 +1749,6 @@ export default {
           year: new Date().getFullYear(),
         });
 
-        console.log('📅 BookingCalendar - Calendar refresh completed');
       } catch (error) {
         console.error('📅 BookingCalendar - Error refreshing calendar:', error);
       }
@@ -1826,7 +1780,6 @@ export default {
 
     // New method to open attention drawer with client data (for "Criar uma Reserva" button)
     const openAttentionDrawerWithClient = (clientData, options = {}) => {
-      console.log('📅 Opening attention drawer with client data:', clientData);
 
       const { queue = null, date = null, block = null } = options;
 
@@ -1867,18 +1820,15 @@ export default {
     };
 
     const handleAttentionUpdated = async () => {
-      console.log('📅 BookingCalendar - Attention updated, refreshing data');
       if (state.selectedQueue && state.selectedQueue.id) {
         const today = getDate(new Date());
         const selectedDate = getDate(state.selectedDate);
 
         // If we're viewing today's date, refresh attentions
         if (selectedDate === today) {
-          console.log('📅 Refreshing attentions for today');
           await updatedAttentions(state.selectedQueue.id);
         } else {
           // If we're viewing a future date, refresh bookings
-          console.log('📅 Refreshing bookings for future date:', selectedDate);
           await getBookings();
         }
 
@@ -1889,7 +1839,6 @@ export default {
     };
 
     const handleAttentionCreated = async attention => {
-      console.log('📅 BookingCalendar - Attention/Booking created, refreshing data:', attention);
 
       // Close the drawer first
       closeAttentionDrawer();
@@ -1901,11 +1850,9 @@ export default {
 
         // If we're viewing today's date, refresh attentions
         if (selectedDate === today) {
-          console.log('📅 Refreshing attentions for today');
           await updatedAttentions(state.selectedQueue.id);
         } else {
           // If we're viewing a future date, refresh bookings
-          console.log('📅 Refreshing bookings for future date:', selectedDate);
           await getBookings();
         }
 
@@ -1926,7 +1873,6 @@ export default {
           await getAvailableDatesByCalendarMonth(pages);
         }
 
-        console.log('📅 BookingCalendar - Data refresh completed');
       }
     };
 

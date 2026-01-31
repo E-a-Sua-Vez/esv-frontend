@@ -58,7 +58,6 @@ export default {
             ...cacheData.value,
             illness: cacheData.value.illness || '',
           };
-          console.log('📝 Loaded current illness from cache (session data)');
         }
         // PRIORIDAD 2: Si no hay cache, cargar desde patientHistoryData guardado
         else if (patientHistoryData.value && patientHistoryData.value.id) {
@@ -79,7 +78,6 @@ export default {
                 ...illnessToLoad,
                 illness: illnessToLoad.illness || '',
               };
-              console.log('📝 Loaded current illness from saved data');
             }
           }
         }

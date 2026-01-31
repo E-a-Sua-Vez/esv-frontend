@@ -177,14 +177,10 @@ export default {
       // Convert empty string or "undefined" string to undefined
       const newValue = selectedValue === '' || selectedValue === 'undefined' ? undefined : selectedValue;
 
-      console.log('[handleProfessionalFilterChange] Selected value:', selectedValue);
-      console.log('[handleProfessionalFilterChange] New value:', newValue);
-      console.log('[handleProfessionalFilterChange] Type:', typeof newValue);
 
       // Update the value
       this.professionalFilter = newValue;
 
-      console.log('[handleProfessionalFilterChange] After setting, professionalFilter is:', this.professionalFilter);
 
       this.page = 1; // Reset to first page when filter changes
       this.refresh();
@@ -192,8 +188,6 @@ export default {
     setProfessionalFilter(value) {
       // Method to set professionalFilter from slot (for desktop filters)
       const newValue = value === '' || value === 'undefined' ? undefined : value;
-      console.log('[setProfessionalFilter] Setting to:', newValue);
-      console.log('[setProfessionalFilter] Current professionalFilter:', this.professionalFilter);
 
       // Only update if value actually changed
       if (this.professionalFilter !== newValue) {
@@ -204,8 +198,6 @@ export default {
         this.counter = 0;
         this.totalPages = 0;
 
-        console.log('[setProfessionalFilter] After setting, professionalFilter is:', this.professionalFilter);
-        console.log('[setProfessionalFilter] Calling refresh()...');
 
         // Call refresh to get new data
         this.refresh();
@@ -226,7 +218,6 @@ export default {
         }
 
         // Debug: Log professional filter before API call
-        console.log('Calling getIncomesDetails with professionalFilter:', this.professionalFilter);
 
         // Llamada optimizada a la API
         const incomes = await getIncomesDetails(
@@ -250,9 +241,6 @@ export default {
           this.professionalFilter,
         );
 
-        console.log('[refresh] API returned incomes:', incomes);
-        console.log('[refresh] Incomes array length:', Array.isArray(incomes) ? incomes.length : 'not an array');
-        console.log('[refresh] First income:', Array.isArray(incomes) && incomes.length > 0 ? incomes[0] : 'no incomes');
 
         // Clear first to force UI update
         this.financialIncomes = [];
@@ -265,8 +253,6 @@ export default {
         // Force reactivity by creating a new array reference
         this.financialIncomes = Array.isArray(incomes) ? [...incomes] : [];
 
-        console.log('[refresh] financialIncomes after assignment:', this.financialIncomes.length);
-        console.log('[refresh] financialIncomes content:', JSON.stringify(this.financialIncomes));
 
         // Set default minAmount to 0 and maxAmount to maximum value from records if not already set
         // Only set these values if they haven't been explicitly set by the user
@@ -433,11 +419,9 @@ export default {
         const total = this.counter / this.limit;
         const totalB = Math.trunc(total);
         this.totalPages = totalB <= 0 ? 1 : this.counter % this.limit === 0 ? totalB : totalB + 1;
-        console.log('[updatePaginationData] Counter:', this.counter, 'Total pages:', this.totalPages, 'Incomes length:', this.financialIncomes.length);
       } else {
         this.counter = 0;
         this.totalPages = 0;
-        console.log('[updatePaginationData] No incomes, reset counter and totalPages');
       }
     },
     async exportToCSV() {
@@ -557,11 +541,9 @@ export default {
   watch: {
     professionalFilter: {
       handler(newVal, oldVal) {
-        console.log('[watch professionalFilter] Changed from:', oldVal, 'to:', newVal);
         // When filtersLocation is 'slot', the value might be updated from the parent template
         // Make sure we're using the latest value
         if (this.filtersLocation === 'slot' && newVal !== oldVal) {
-          console.log('[watch professionalFilter] Value changed in slot mode, ensuring sync');
         }
       },
       immediate: true,
@@ -658,16 +640,13 @@ export default {
     // Watch for changes in professionalFilter
     professionalFilter: {
       handler(newVal, oldVal) {
-        console.log('[watch professionalFilter] Changed from:', oldVal, 'to:', newVal);
 
         // When filters are in slot mode and value changes, ensure refresh is called
         if (this.filtersLocation === 'slot' && newVal !== oldVal && oldVal !== undefined) {
-          console.log('[watch professionalFilter] Value changed in slot mode, ensuring refresh');
           // setProfessionalFilter should have already called refresh, but ensure it
           this.$nextTick(() => {
             if (this.professionalFilter === newVal) {
               // Value is stable, refresh if needed
-              console.log('[watch professionalFilter] Value is stable, checking if refresh needed');
             }
           });
         }

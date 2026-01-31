@@ -570,7 +570,8 @@ export default {
         () => state.newConfirmationData.paymentAmount,
       ],
       () => {
-        console.log('[PaymentForm] Main watcher triggered:', {
+        // Debug logging
+        console.log({
           professionalName: professionalName.value,
           professionalCommission: professionalCommission.value,
           suggestedCommissionAmount: suggestedCommissionAmount.value,
@@ -581,13 +582,11 @@ export default {
         // Auto-set commission when professional is assigned
         if (professionalName.value) {
           const suggested = calculateSuggestedCommission();
-          console.log('[PaymentForm] Calculated suggested:', suggested);
 
           if (suggested > 0) {
             // Siempre usar suggestedCommissionAmount si está disponible (viene del backend)
             if (suggestedCommissionAmount.value && suggestedCommissionAmount.value > 0) {
               const newValue = Number(suggestedCommissionAmount.value);
-              console.log('[PaymentForm] Using suggestedCommissionAmount:', newValue);
               state.newConfirmationData.paymentCommission = newValue;
               sendData();
             }
@@ -597,7 +596,6 @@ export default {
               (!state.newConfirmationData.paymentCommission ||
                 state.newConfirmationData.paymentCommission === 0)
             ) {
-              console.log('[PaymentForm] Auto-calculating commission:', suggested);
               state.newConfirmationData.paymentCommission = suggested;
               sendData();
             }
@@ -610,10 +608,8 @@ export default {
     watch(
       suggestedCommissionAmount,
       newValue => {
-        console.log('[PaymentForm] suggestedCommissionAmount changed:', newValue, typeof newValue);
         if (newValue && newValue > 0 && professionalName.value) {
           const numValue = Number(newValue);
-          console.log('[PaymentForm] Setting paymentCommission to:', numValue);
           state.newConfirmationData.paymentCommission = numValue;
           sendData();
         }

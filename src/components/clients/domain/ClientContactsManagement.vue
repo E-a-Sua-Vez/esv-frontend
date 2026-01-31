@@ -216,20 +216,9 @@ export default {
       if (this.client?.userIdNumber || this.client?.idNumber) {
         try {
           const idNumber = this.client.userIdNumber || this.client.idNumber;
-          console.log('🔍 Searching client in Firebase by idNumber:', {
-            idNumber,
-            commerceId: this.commerce.id,
-          });
           const firebaseClient = await searchClientByIdNumber(this.commerce.id, idNumber);
           if (firebaseClient && firebaseClient.id) {
             // Update client with the correct Firebase ID
-            console.log(
-              '✅ Found client in Firebase with ID:',
-              firebaseClient.id,
-              '(query-stack ID was:',
-              this.client.id,
-              ')',
-            );
             // Store the Firebase ID for use in attentionCreationClientData
             this.client._firebaseClientId = firebaseClient.id;
           } else {
@@ -247,20 +236,17 @@ export default {
 
       // If no queues available, try to load them BEFORE opening the modal
       if (!this.queuesArray || this.queuesArray.length === 0) {
-        console.log('No queues available, loading queues from service...');
         try {
           if (this.commerce?.id) {
             const groupedQueues = await getGroupedQueueByCommerceId(this.commerce.id);
             // Convert grouped queues object to flat array
             this.loadedQueues = Object.values(groupedQueues).flat();
-            console.log('Loaded queues:', this.loadedQueues.length);
 
             // Force Vue to update by waiting for next tick
             await this.$nextTick();
 
             // Verify queues are now available
             const finalQueuesArray = this.queuesArray;
-            console.log('Queues array after load:', finalQueuesArray?.length);
 
             if (!finalQueuesArray || finalQueuesArray.length === 0) {
               console.error('Failed to load queues, modal may not work correctly');
@@ -271,15 +257,6 @@ export default {
         }
       }
 
-      console.log('Opening attention creation modal', {
-        commerce: this.commerce?.id,
-        client: this.client?.id,
-        firebaseClientId: this.client?._firebaseClientId,
-        queues: this.queuesArray?.length,
-        queuesProp: this.queues,
-        loadedQueues: this.loadedQueues?.length,
-        queuesArray: this.queuesArray,
-      });
 
       this.showAttentionCreationModal = true;
     },
@@ -288,7 +265,6 @@ export default {
     },
     handleAttentionCreated(attention) {
       // Handle when attention is successfully created
-      console.log('Attention created:', attention);
       // Optionally emit event to parent to refresh data
       this.$emit('attention-created', attention);
     },
@@ -410,17 +386,6 @@ export default {
         phone: this.client.userPhone || this.client.phone,
         ...(this.client.personalInfo || {}),
       };
-
-      console.log('🔍 ClientContactsManagement - attentionCreationClientData:', {
-        queryStackClientId: this.client.id,
-        firebaseClientId,
-        sendingClientId: !!firebaseClientId,
-        hasIdNumber: !!clientData.userIdNumber,
-        hasEmail: !!clientData.email,
-        strategy: firebaseClientId
-          ? 'Using Firebase client ID'
-          : 'Backend will find/create by idNumber/email',
-      });
 
       return clientData;
     },

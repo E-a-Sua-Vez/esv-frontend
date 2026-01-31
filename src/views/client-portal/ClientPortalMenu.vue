@@ -55,20 +55,21 @@
                 <div class="choose-attention my-3 mt-4">
                   <span>{{ $t('clientPortal.menu.choose') }}</span>
                 </div>
-                <div class="row">
+                <div class="row mobile-cards-grid">
                   <div
                     v-for="option in menuOptions"
                     :key="option"
-                    class="d-grid btn-group btn-group-justified mobile-button-wrapper"
+                    class="col-8 mobile-card-wrapper"
                   >
-                    <button
-                      type="button"
-                      class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2 btn-style"
+                    <div
+                      class="menu-card mobile-menu-card"
                       @click="goToOption(option)"
                     >
-                      <i :class="`bi ${getOptionIcon(option)} me-2`"></i>
-                      {{ $t(`clientPortal.menu.${option}`) }}
-                    </button>
+                      <div class="card-icon">
+                        <i :class="`bi ${getOptionIcon(option)}`"></i>
+                      </div>
+                      <div class="card-text">{{ $t(`clientPortal.menu.${option}`) }}</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -137,21 +138,20 @@
             <div class="choose-attention my-3 mb-4">
               <span>{{ $t('clientPortal.menu.choose') }}</span>
             </div>
-            <div class="row menu-buttons-grid">
+            <div class="row menu-cards-grid">
               <div
                 v-for="option in menuOptions"
                 :key="option"
-                class="col-12 col-lg-6 menu-button-wrapper"
+                class="col-12 col-md-6 col-lg-4 menu-card-wrapper"
               >
-                <div>
-                  <button
-                    type="button"
-                    class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style"
-                    @click="goToOption(option)"
-                  >
-                    <i :class="`bi ${getOptionIcon(option)} me-2`"></i>
-                    {{ $t(`clientPortal.menu.${option}`) }}
-                  </button>
+                <div
+                  class="menu-card"
+                  @click="goToOption(option)"
+                >
+                  <div class="card-icon">
+                    <i :class="`bi ${getOptionIcon(option)}`"></i>
+                  </div>
+                  <div class="card-text">{{ $t(`clientPortal.menu.${option}`) }}</div>
                 </div>
               </div>
             </div>
@@ -704,5 +704,92 @@ export default {
   .mobile-button-wrapper .btn {
     font-size: 0.9rem;
   }
+}
+
+/* New card-based menu styles */
+.menu-cards-grid {
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.menu-card-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.menu-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.5rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-left: 3px solid #007bff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 100px;
+  width: 120px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.menu-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.12);
+  border-color: var(--azul-turno);
+}
+
+.card-icon {
+  font-size: 1.25rem;
+  color: var(--azul-turno);
+  margin-bottom: 0.15rem;
+  position: relative;
+}
+
+.card-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  color: #333;
+  line-height: 1.1;
+  max-width: 100%;
+  word-wrap: break-word;
+  hyphens: auto;
+  padding: 0 0.1rem;
+}
+
+/* Mobile card styles */
+.mobile-cards-grid {
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.mobile-card-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem;
+}
+
+.mobile-menu-card {
+  height: 100px;
+  padding: 0.75rem 0.5rem;
+  width: 140px; /* Consistent width for regular buttons */
+}
+
+.mobile-menu-card .card-icon {
+  font-size: 1.25rem;
+  margin-bottom: 0.2rem;
+}
+
+.mobile-menu-card .card-text {
+  font-size: 0.7rem; /* Reduced for long text */
+  font-weight: 500;
+  word-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.1;
+  padding: 0 0.1rem;
 }
 </style>

@@ -173,7 +173,6 @@ export default {
 
         // Apply cache data from preprontuario if available
         if (cacheData.value && Object.keys(cacheData.value).length > 0) {
-          console.log('💾 Loading personal data from preprontuario cache:', cacheData.value);
           state.newPersonalData = { ...state.newPersonalData, ...cacheData.value };
           // Recalculate age if birthday exists after merging cache data
           if (state.newPersonalData.birthday) {

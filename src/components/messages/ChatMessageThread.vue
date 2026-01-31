@@ -104,17 +104,9 @@ const messagesContainer = ref(null);
 const looksLikeId = s => typeof s === 'string' && /^[A-Za-z0-9_-]{16,}$/.test(s);
 
 const participantName = computed(() => {
-  console.log('[ChatMessageThread] participantName debug:', {
-    conversation: props.conversation,
-    lastMessageSenderId: props.conversation?.lastMessageSenderId,
-    participants: props.conversation?.participants,
-    currentUserId: props.currentUserId,
-  });
-
   // Intentar usar lastMessageSenderId si tiene información del usuario
   if (props.conversation?.lastMessageSenderId) {
     const sender = props.conversation.lastMessageSenderId;
-    console.log('[ChatMessageThread] Processing sender:', sender);
     if (typeof sender === 'object' && sender !== null) {
       const senderId = normalizeId(sender);
       const name = sender.email || sender.name || sender.displayName || sender.userName;
@@ -133,7 +125,6 @@ const participantName = computed(() => {
       const pid = normalizeId(p);
       return !meIds.includes(pid);
     });
-    console.log('[ChatMessageThread] Found other participant:', other);
 
     // Extraer nombre usando múltiples estrategias
     let candidate = null;
@@ -182,15 +173,6 @@ const participantType = computed(() => {
 });
 
 const groupedMessages = computed(() => {
-  console.log('[DEBUG ChatMessageThread] Grouping messages:', {
-    totalMessages: props.messages.length,
-    messages: props.messages.map(m => ({
-      id: m.id,
-      content: m.content?.substring(0, 30),
-      senderId: m.senderId,
-    })),
-  });
-
   const groups = {};
 
   props.messages.forEach(message => {
@@ -239,10 +221,6 @@ const buildMyIds = () => {
 const isSentByMe = message => {
   const meIds = buildMyIds();
   if (!meIds.length) {
-    console.log('[ChatMessageThread] ERROR: No myUserIds/currentUserId available:', {
-      currentUserId: props.currentUserId,
-      myUserIds: props.myUserIds,
-    });
     return false;
   }
   // Extraer senderId del mensaje
@@ -250,26 +228,10 @@ const isSentByMe = message => {
 
   // Verificación de seguridad para senderId
   if (!senderId) {
-    console.log('[ChatMessageThread] ERROR: No senderId in message:', message);
     return false;
   }
 
   const result = meIds.includes(senderId);
-
-  // Log para debug (remover después)
-  console.log('[ChatMessageThread] isSentByMe DETAILED:', {
-    senderId,
-    currentUserId: props.currentUserId,
-    myUserIds: props.myUserIds,
-    meIds,
-    messageId: message.id,
-    content: message.content?.substring(0, 20),
-    result,
-    originalSender: message.senderId,
-    senderType: typeof message.senderId,
-    senderKeys: typeof message.senderId === 'object' ? Object.keys(message.senderId) : 'not object',
-    originalCurrentUser: props.currentUserId,
-  });
 
   return result;
 };

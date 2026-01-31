@@ -820,16 +820,8 @@ export default {
             // Sync asc filter - prioritize override, then filterInstance, then default to true
             if (filterPropsOverride !== null && filterPropsOverride !== undefined) {
               if (Object.prototype.hasOwnProperty.call(filterPropsOverride, 'asc')) {
-                console.log(
-                  '[refreshBookingsContent] Setting contentInstance.asc from override:',
-                  filterPropsOverride.asc,
-                );
                 contentInstance.asc = filterPropsOverride.asc;
               } else if (filterInstance && filterInstance.asc !== undefined) {
-                console.log(
-                  '[refreshBookingsContent] Setting contentInstance.asc from filterInstance:',
-                  filterInstance.asc,
-                );
                 contentInstance.asc = filterInstance.asc;
               } else {
                 contentInstance.asc = true;
@@ -3301,18 +3293,10 @@ export default {
                                         );
                                         if (filterInstance) {
                                           filterInstance.asc = newValue;
-                                          console.log(
-                                            '[ASC TOGGLE] Updated filterInstance.asc to:',
-                                            newValue
-                                          );
                                         }
                                       }
                                     }
                                     if (filterProps.filterType === 'bookings') {
-                                      console.log(
-                                        '[ASC TOGGLE] Calling refreshBookingsContentDelayed with:',
-                                        { asc: newValue }
-                                      );
                                       refreshBookingsContentDelayed({ asc: newValue });
                                     }
                                   }

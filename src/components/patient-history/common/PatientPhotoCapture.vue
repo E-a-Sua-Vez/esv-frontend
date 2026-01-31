@@ -31,7 +31,6 @@ export default {
     const startCamera = async () => {
       try {
         cameraError.value = '';
-        console.log('📸 Iniciando cámara...');
 
         // Check if getUserMedia is supported
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -47,9 +46,7 @@ export default {
           },
         };
 
-        console.log('📸 Solicitando permisos de cámara...');
         stream.value = await navigator.mediaDevices.getUserMedia(constraints);
-        console.log('📸 Permisos concedidos, configurando video...');
 
         // Set camera state first to render the video element
         isCameraActive.value = true;
@@ -63,16 +60,13 @@ export default {
         if (videoRef.value) {
           videoRef.value.srcObject = stream.value;
           await videoRef.value.play();
-          console.log('📸 Cámara activa y funcionando');
         } else {
           console.error('📸 Error: videoRef no está disponible después de esperar');
           // Try to find video element manually
           const videoElement = document.querySelector('.camera-video');
           if (videoElement) {
-            console.log('📸 Encontré video element manualmente');
             videoElement.srcObject = stream.value;
             await videoElement.play();
-            console.log('📸 Cámara activa usando elemento manual');
           } else {
             throw new Error('Video element not available');
           }
@@ -97,7 +91,6 @@ export default {
     const tryBackCamera = async () => {
       try {
         cameraError.value = '';
-        console.log('📸 Probando cámara trasera...');
 
         const constraints = {
           video: {
@@ -121,7 +114,6 @@ export default {
         if (videoRef.value) {
           videoRef.value.srcObject = stream.value;
           await videoRef.value.play();
-          console.log('📸 Cámara trasera activa');
         }
       } catch (error) {
         console.error('📸 Error with back camera:', error);
@@ -151,10 +143,6 @@ export default {
       canvas.toBlob(
         blob => {
           if (blob) {
-            console.log('📸 Photo captured successfully:', {
-              size: blob.size,
-              type: blob.type,
-            });
 
             const photoUrl = URL.createObjectURL(blob);
             capturedPhoto.value = {

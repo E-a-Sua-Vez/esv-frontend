@@ -3392,6 +3392,9 @@
         }
       }
     },
+    "validate": {
+      "clientNotFound": "Cliente no encontrado"
+    },
     "status": {
       "pending": "Pendiente",
       "confirmed": "Confirmado",

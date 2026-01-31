@@ -52,6 +52,15 @@ export default {
         'go-minisite',
         'client-portal',
       ],
+      menuIcons: {
+        'queue-manage': 'bi-list-check',
+        'booking-manage': 'bi-calendar-check',
+        'tracing': 'bi-search',
+        'product-stock': 'bi-box-seam',
+        'dashboard': 'bi-speedometer2',
+        'go-minisite': 'bi-globe',
+        'client-portal': 'bi-person-circle',
+      },
       currentPlanActivation: {},
       toggles: {},
       showMobileMenuSide: true,
@@ -224,69 +233,50 @@ export default {
                 <div class="choose-attention my-3 mt-4">
                   <span>{{ $t('collaboratorMenu.choose') }}</span>
                 </div>
-                <div class="row">
+                <!-- Main menu options (including portal and minisite) -->
+                <div class="row mobile-cards-grid">
                   <div
-                    v-for="option in state.collaboratorOptions"
+                    v-for="option in state.collaboratorOptions.filter(opt => opt !== 'go-minisite' && opt !== 'client-portal')"
                     :key="option"
-                    class="d-grid btn-group btn-group-justified mobile-button-wrapper"
+                    class="col-8 mobile-card-wrapper"
                   >
-                    <div v-if="option === 'go-minisite'" class="centered">
-                      <a
-                        type="button"
-                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
-                        :href="`${getCommerceLink()}`"
-                        target="_blank"
-                      >
-                        {{ $t(`collaboratorMenu.${option}`) }}
-                        <i class="bi bi-box-arrow-up-right"></i>
-                      </a>
-                    </div>
-                    <div v-else-if="option === 'client-portal'" class="centered">
-                      <a
-                        type="button"
-                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style mobile-menu-btn"
-                        :href="`${getClientPortalLink()}`"
-                        target="_blank"
-                      >
-                        {{ $t(`collaboratorMenu.${option}`) }}
-                        <i class="bi bi-box-arrow-up-right"></i>
-                      </a>
-                    </div>
-                    <div v-else>
-                      <button
-                        type="button"
-                        class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style mobile-menu-btn"
-                        @click="goToOption(option)"
-                        :disabled="!state.toggles[`collaborator.main-menu.${option}`]"
-                      >
-                        {{ $t(`collaboratorMenu.${option}`) }}
-                        <i
-                          v-if="option === 'manage-admin'"
-                          :class="`bi ${
-                            state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                          }`"
-                        ></i>
-                      </button>
-                      <div
-                        v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
-                        class="mobile-submenu-container"
-                      >
-                        <div
-                          v-for="opt in state.manageSubMenuOptions"
-                          :key="opt"
-                          class="mobile-submenu-item"
-                        >
-                          <button
-                            type="button"
-                            class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1 btn-style mobile-menu-btn mobile-submenu-btn"
-                            @click="goToOption(opt)"
-                            :disabled="!state.toggles[`collaborator.main-menu.${opt}`]"
-                          >
-                            {{ $t(`collaboratorMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                          </button>
-                        </div>
+                    <div
+                      class="menu-card mobile-menu-card"
+                      @click="goToOption(option)"
+                      :class="{ disabled: !state.toggles[`collaborator.main-menu.${option}`] }"
+                    >
+                      <div class="card-icon">
+                        <i :class="`bi ${state.menuIcons[option]}`"></i>
                       </div>
+                      <div class="card-text">{{ $t(`collaboratorMenu.${option}`) }}</div>
                     </div>
+                  </div>
+                  <!-- Portal and Minisite buttons in same row -->
+                  <div class="col-8 mobile-portal-wrapper">
+                    <a
+                      class="menu-card mobile-menu-card portal-card external-link"
+                      :href="`${getCommerceLink()}`"
+                      target="_blank"
+                    >
+                      <div class="card-icon">
+                        <i :class="`bi ${state.menuIcons['go-minisite']}`"></i>
+                      </div>
+                      <div class="card-text">{{ $t('collaboratorMenu.go-minisite') }}</div>
+                      <i class="bi bi-box-arrow-up-right external-icon"></i>
+                    </a>
+                  </div>
+                  <div class="col-8 mobile-portal-wrapper">
+                    <a
+                      class="menu-card mobile-menu-card portal-card external-link"
+                      :href="`${getClientPortalLink()}`"
+                      target="_blank"
+                    >
+                      <div class="card-icon">
+                        <i :class="`bi ${state.menuIcons['client-portal']}`"></i>
+                      </div>
+                      <div class="card-text">{{ $t('collaboratorMenu.client-portal') }}</div>
+                      <i class="bi bi-box-arrow-up-right external-icon"></i>
+                    </a>
                   </div>
                 </div>
                 <div v-if="!isActiveBusiness() && !loading">
@@ -351,68 +341,52 @@ export default {
             <div class="choose-attention my-3 mb-4">
               <span>{{ $t('collaboratorMenu.choose') }}</span>
             </div>
-            <div class="row menu-buttons-grid">
+            <!-- Main menu options (excluding portal and minisite) -->
+            <div class="row menu-cards-grid">
               <div
-                v-for="option in state.collaboratorOptions"
+                v-for="option in state.collaboratorOptions.filter(opt => opt !== 'go-minisite' && opt !== 'client-portal')"
                 :key="option"
-                class="col-12 col-lg-6 menu-button-wrapper"
+                class="col-12 col-md-6 col-lg-4 menu-card-wrapper"
               >
-                <div v-if="option === 'go-minisite'" class="centered">
-                  <a
-                    type="button"
-                    class="btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
-                    :href="`${getCommerceLink()}`"
-                    target="_blank"
-                  >
-                    {{ $t(`collaboratorMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
-                  </a>
+                <div
+                  class="menu-card"
+                  @click="goToOption(option)"
+                  :class="{ disabled: !state.toggles[`collaborator.main-menu.${option}`] }"
+                >
+                  <div class="card-icon">
+                    <i :class="`bi ${state.menuIcons[option]}`"></i>
+                  </div>
+                  <div class="card-text">{{ $t(`collaboratorMenu.${option}`) }}</div>
                 </div>
-                <div v-else-if="option === 'client-portal'" class="centered">
-                  <a
-                    type="button"
-                    class="btn btn-lg btn-block btn-size fw-bold btn-secondary rounded-pill mt-2 mb-2 btn-style desktop-menu-btn"
-                    :href="`${getClientPortalLink()}`"
-                    target="_blank"
-                  >
-                    {{ $t(`collaboratorMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
-                  </a>
-                </div>
-                <div v-else>
-                  <button
-                    type="button"
-                    class="btn btn-lg btn-block btn-size fw-bold btn-dark rounded-pill mt-1 mb-2 btn-style desktop-menu-btn"
-                    @click="goToOption(option)"
-                    :disabled="!state.toggles[`collaborator.main-menu.${option}`]"
-                  >
-                    {{ $t(`collaboratorMenu.${option}`) }}
-                    <i
-                      v-if="option === 'manage-admin'"
-                      :class="`bi ${
-                        state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                      }`"
-                    ></i>
-                  </button>
-                  <Transition name="fade">
-                    <div
-                      v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
-                      class="submenu-container"
-                    >
-                      <div
-                        v-for="opt in state.manageSubMenuOptions"
-                        :key="opt"
-                        class="submenu-item"
-                      >
-                        <button
-                          type="button"
-                          class="btn btn-lg btn-block btn-size fw-bold btn-light rounded-pill mt-1 btn-style desktop-menu-btn desktop-submenu-btn"
-                          @click="goToOption(opt)"
-                        >
-                          {{ $t(`collaboratorMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </Transition>
-                </div>
+              </div>
+            </div>
+            <!-- Portal and Minisite buttons in separate row -->
+            <div class="row portal-row justify-content-center mt-3">
+              <div class="col-auto portal-card-wrapper">
+                <a
+                  class="menu-card portal-card external-link"
+                  :href="`${getCommerceLink()}`"
+                  target="_blank"
+                >
+                  <div class="card-icon">
+                    <i :class="`bi ${state.menuIcons['go-minisite']}`"></i>
+                  </div>
+                  <div class="card-text">{{ $t('collaboratorMenu.go-minisite') }}</div>
+                  <i class="bi bi-box-arrow-up-right external-icon"></i>
+                </a>
+              </div>
+              <div class="col-auto portal-card-wrapper">
+                <a
+                  class="menu-card portal-card external-link"
+                  :href="`${getClientPortalLink()}`"
+                  target="_blank"
+                >
+                  <div class="card-icon">
+                    <i :class="`bi ${state.menuIcons['client-portal']}`"></i>
+                  </div>
+                  <div class="card-text">{{ $t('collaboratorMenu.client-portal') }}</div>
+                  <i class="bi bi-box-arrow-up-right external-icon"></i>
+                </a>
               </div>
             </div>
             <div v-if="!isActiveBusiness() && !loading">
@@ -723,5 +697,191 @@ export default {
     width: auto;
     text-align: left;
   }
+}
+
+/* New card-based menu styles */
+.menu-cards-grid {
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.menu-card-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.menu-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.5rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-left: 3px solid #007bff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 100px;
+  width: 140px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.menu-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.12);
+  border-color: var(--azul-turno);
+}
+
+.menu-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.menu-card.disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.card-icon {
+  font-size: 1.25rem;
+  color: var(--azul-turno);
+  margin-bottom: 0.15rem;
+  position: relative;
+}
+
+.card-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  color: #333;
+  line-height: 1.1;
+  word-wrap: break-word;
+  hyphens: auto;
+  padding: 0 0.1rem;
+}
+
+.external-link .card-text {
+  margin-right: 0.1rem;
+}
+
+.external-icon {
+  font-size: 0.6rem;
+  color: var(--azul-turno);
+}
+
+/* Portal card styles - blue background with white icons */
+.portal-card {
+  background: var(--azul-turno) !important;
+  border-color: var(--azul-turno) !important;
+  border-left: 3px solid #0056b3 !important;
+  color: white !important;
+  width: 120px !important;
+}
+
+.portal-card .card-icon {
+  color: white !important;
+}
+
+.portal-card .card-text {
+  color: white !important;
+}
+
+.portal-card .external-icon {
+  color: white !important;
+}
+
+.portal-card:hover {
+  background: var(--azul-turno-hover, #0056b3) !important;
+  border-color: var(--azul-turno-hover, #0056b3) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.25) !important;
+}
+
+/* Portal row styles */
+.portal-row {
+  margin-top: 1rem;
+}
+
+.portal-card-wrapper {
+  padding: 0 0.25rem;
+}
+
+/* Mobile card styles */
+.mobile-cards-grid {
+  gap: 0.4rem;
+  justify-content: center;
+  padding: 0 0.5rem;
+}
+
+.mobile-card-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 0.15rem;
+}
+
+.mobile-menu-card {
+  height: 100px;
+  padding: 0.5rem 0.4rem;
+  width: 140px; /* Regular buttons wider */
+}
+
+.mobile-menu-card .card-icon {
+  font-size: 1.1rem;
+  margin-bottom: 0.1rem;
+}
+
+.mobile-menu-card .card-text {
+  font-size: 0.7rem; /* Reduced for long text */
+  font-weight: 500;
+  padding: 0 0.1rem;
+  word-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.1;
+}
+
+/* Mobile portal row */
+.mobile-portal-row {
+  margin-top: 1rem;
+  padding: 0 0.5rem;
+}
+
+.mobile-portal-wrapper {
+  padding: 0.15rem;
+}
+
+/* Portal cards in mobile should be narrower */
+.mobile-menu-card.portal-card {
+  width: 120px !important;
+}
+
+/* Mobile card styles */
+.mobile-cards-grid {
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.mobile-card-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem;
+}
+
+.mobile-menu-card {
+  height: 100px;
+  padding: 0.75rem 0.5rem;
+  width: 140px; /* Regular buttons wider */
+}
+
+.mobile-menu-card .card-icon {
+  font-size: 1.25rem;
+  margin-bottom: 0.2rem;
+}
+
+.mobile-menu-card .card-text {
+  font-size: 0.8rem; /* Better readability */
+  font-weight: 500;
 }
 </style>

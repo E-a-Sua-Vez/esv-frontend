@@ -32,6 +32,22 @@ export default {
         'plan-activations-admin',
         'lead-pipeline',
       ],
+      menuIcons: {
+        'business-master-admin': 'bi-building',
+        'plans-master-admin': 'bi-credit-card',
+        'features-master-admin': 'bi-gear',
+        'plan-activations-admin': 'bi-check-circle',
+        'lead-pipeline': 'bi-funnel',
+        'dashboard': 'bi-speedometer2',
+        'reports': 'bi-bar-chart',
+        'bookings-master-admin': 'bi-calendar-check',
+        'manage-master-admin': 'bi-people',
+        'configuration': 'bi-sliders',
+        'documents': 'bi-file-earmark-text',
+        'your-plan': 'bi-credit-card',
+        'business-master-resume': 'bi-building',
+        'go-minisite': 'bi-globe',
+      },
       businessMenuOptions: [
         'dashboard',
         'reports',
@@ -149,20 +165,20 @@ export default {
           <span>{{ $t('masterMenu.choose') }}</span>
         </div>
         <div id="master-menu">
-          <div class="row">
+          <div class="row menu-cards-grid">
             <div
               v-for="option in state.masterMenuOptions"
               :key="option"
-              class="d-grid btn-group btn-group-justified"
+              class="col-12 col-md-6 col-lg-4 menu-card-wrapper"
             >
-              <div>
-                <button
-                  type="button"
-                  class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2"
-                  @click="goToOption(option)"
-                >
-                  {{ $t(`masterMenu.${option}`) }}
-                </button>
+              <div
+                class="menu-card"
+                @click="goToOption(option)"
+              >
+                <div class="card-icon">
+                  <i :class="`bi ${state.menuIcons[option]}`"></i>
+                </div>
+                <div class="card-text">{{ $t(`masterMenu.${option}`) }}</div>
               </div>
             </div>
           </div>
@@ -293,5 +309,73 @@ export default {
 }
 .btn-light {
   --bs-btn-bg: #dcddde !important;
+}
+
+/* New card-based menu styles */
+.menu-cards-grid {
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.menu-card-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.menu-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.5rem;
+  margin: 0.25rem 0.5rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-left: 3px solid #007bff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 80px;
+  width: 150px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.menu-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.12);
+  border-color: var(--azul-turno);
+}
+
+.card-icon {
+  font-size: 1.25rem;
+  color: var(--azul-turno);
+  margin-bottom: 0.15rem;
+  position: relative;
+}
+
+.card-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  color: #333;
+  line-height: 1.1;
+  max-width: 100%;
+  word-wrap: break-word;
+  hyphens: auto;
+  padding: 0 0.1rem;
+}
+
+/* Mobile adjustments for square buttons */
+@media (max-width: 768px) {
+  .menu-card {
+    height: 120px;
+    width: 120px;
+  }
+
+  .card-text {
+    font-size: 0.65rem;
+  }
 }
 </style>

@@ -255,7 +255,6 @@ export default {
 
     const initializeWebRTC = async () => {
       try {
-        console.log('[TelemedicineVideoCall] Requesting camera and microphone access...');
 
         // Verificar que getUserMedia esté disponible
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -277,10 +276,6 @@ export default {
           },
         });
 
-        console.log('[TelemedicineVideoCall] Camera and microphone access granted', {
-          videoTracks: stream.getVideoTracks().length,
-          audioTracks: stream.getAudioTracks().length,
-        });
 
         localStream.value = stream;
 
@@ -289,12 +284,10 @@ export default {
 
         if (localVideo.value) {
           localVideo.value.srcObject = stream;
-          console.log('[TelemedicineVideoCall] Local video element updated');
 
           // Forzar play para asegurar que el video se muestre
           try {
             await localVideo.value.play();
-            console.log('[TelemedicineVideoCall] Local video playing');
           } catch (playErr) {
             console.warn('[TelemedicineVideoCall] Could not autoplay video:', playErr);
           }
@@ -306,7 +299,6 @@ export default {
               localVideo.value.srcObject = localStream.value;
               try {
                 await localVideo.value.play();
-                console.log('[TelemedicineVideoCall] Local video element updated (retry)');
               } catch (playErr) {
                 console.warn('[TelemedicineVideoCall] Could not autoplay video (retry):', playErr);
               }
@@ -324,36 +316,15 @@ export default {
 
         // Manejar stream remoto
         peerConnection.ontrack = async event => {
-          console.log('[TelemedicineVideoCall] ontrack event received:', {
-            streams: event.streams.length,
-            track: event.track.kind,
-            trackId: event.track.id,
-            trackEnabled: event.track.enabled,
-            trackReadyState: event.track.readyState,
-            streamsInfo: event.streams.map(s => ({
-              id: s.id,
-              active: s.active,
-              videoTracks: s.getVideoTracks().length,
-              audioTracks: s.getAudioTracks().length,
-            })),
-          });
 
           if (event.streams && event.streams.length > 0) {
             remoteStream.value = event.streams[0];
-            console.log('[TelemedicineVideoCall] Remote stream set:', {
-              streamId: remoteStream.value?.id,
-              active: remoteStream.value?.active,
-              videoTracks: remoteStream.value?.getVideoTracks().length,
-              audioTracks: remoteStream.value?.getAudioTracks().length,
-            });
 
             await nextTick();
             if (remoteVideo.value) {
               remoteVideo.value.srcObject = remoteStream.value;
-              console.log('[TelemedicineVideoCall] Remote video srcObject set');
               try {
                 await remoteVideo.value.play();
-                console.log('[TelemedicineVideoCall] Remote video playing');
               } catch (playErr) {
                 console.warn('[TelemedicineVideoCall] Could not autoplay remote video:', playErr);
               }
@@ -368,40 +339,18 @@ export default {
         // Manejar ICE candidates
         peerConnection.onicecandidate = event => {
           if (event.candidate) {
-            console.log('[TelemedicineVideoCall] ICE candidate generated:', {
-              candidate: event.candidate.candidate.substring(0, 50) + '...',
-              sdpMLineIndex: event.candidate.sdpMLineIndex,
-              sdpMid: event.candidate.sdpMid,
-            });
             sendIceCandidate(event.candidate);
           } else {
-            console.log('[TelemedicineVideoCall] ICE candidate gathering complete');
           }
         };
 
-        // Monitorear cambios en el estado de la conexión
-        peerConnection.oniceconnectionstatechange = () => {
-          console.log('[TelemedicineVideoCall] ICE connection state changed:', {
-            iceConnectionState: peerConnection.iceConnectionState,
-            connectionState: peerConnection.connectionState,
-            signalingState: peerConnection.signalingState,
-          });
-        };
-
-        peerConnection.onconnectionstatechange = () => {
-          console.log('[TelemedicineVideoCall] Connection state changed:', {
-            connectionState: peerConnection.connectionState,
-            iceConnectionState: peerConnection.iceConnectionState,
-            signalingState: peerConnection.signalingState,
-          });
-        };
 
         // Variable para rastrear si ya se recibió una oferta
         const offerReceived = ref(false);
 
         // Escuchar ofertas/respuestas de video
         onVideoOffer(async data => {
-          console.log('[TelemedicineVideoCall] Received video offer:', {
+          console.log({
             from: data.from,
             socketId: data.socketId,
             hasOffer: !!data.offer,
@@ -414,11 +363,6 @@ export default {
 
           // Aceptar ofertas de otros usuarios (comparar por userId, no socketId)
           if (data.from !== props.currentUserId && data.offer) {
-            console.log('[TelemedicineVideoCall] Processing offer from different user:', {
-              fromUserId: data.from,
-              currentUserId: props.currentUserId,
-              willProcess: true,
-            });
             // Marcar que se recibió una oferta
             offerReceived.value = true;
 
@@ -431,14 +375,8 @@ export default {
             }
 
             try {
-              console.log('[TelemedicineVideoCall] Processing offer from another user...');
-              console.log('[TelemedicineVideoCall] PeerConnection state before processing:', {
-                signalingState: peerConnection.signalingState,
-                connectionState: peerConnection.connectionState,
-              });
 
               await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-              console.log('[TelemedicineVideoCall] Remote description set, creating answer...');
 
               // Verificar nuevamente antes de crear la respuesta
               if (peerConnection.signalingState === 'closed') {
@@ -450,9 +388,7 @@ export default {
 
               const answer = await peerConnection.createAnswer();
               await peerConnection.setLocalDescription(answer);
-              console.log('[TelemedicineVideoCall] Answer created, sending...');
               sendVideoAnswer(answer);
-              console.log('[TelemedicineVideoCall] Answer sent via WebSocket');
             } catch (err) {
               console.error('[TelemedicineVideoCall] Error handling video offer:', err);
               if (err.name === 'InvalidStateError') {
@@ -462,12 +398,11 @@ export default {
               }
             }
           } else {
-            console.log('[TelemedicineVideoCall] Ignoring offer (from self or no offer data)');
           }
         });
 
         onVideoAnswer(async data => {
-          console.log('[TelemedicineVideoCall] Received video answer:', {
+          console.log({
             from: data.from,
             socketId: data.socketId,
             hasAnswer: !!data.answer,
@@ -479,11 +414,6 @@ export default {
           });
 
           if (data.from !== props.currentUserId && data.answer) {
-            console.log('[TelemedicineVideoCall] Processing answer from different user:', {
-              fromUserId: data.from,
-              currentUserId: props.currentUserId,
-              willProcess: true,
-            });
             // Verificar que la conexión esté activa
             if (!peerConnection || peerConnection.signalingState === 'closed') {
               console.warn(
@@ -493,9 +423,7 @@ export default {
             }
 
             try {
-              console.log('[TelemedicineVideoCall] Processing answer from another user...');
               await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-              console.log('[TelemedicineVideoCall] Remote description set from answer');
             } catch (err) {
               console.error('[TelemedicineVideoCall] Error handling video answer:', err);
               if (err.name === 'InvalidStateError') {
@@ -505,31 +433,17 @@ export default {
               }
             }
           } else {
-            console.log('[TelemedicineVideoCall] Ignoring answer (from self or no answer data)');
           }
         });
 
         onIceCandidate(async data => {
-          console.log('[TelemedicineVideoCall] Received ICE candidate:', {
-            from: data.from,
-            socketId: data.socketId,
-            hasCandidate: !!data.candidate,
-            currentUserId: props.currentUserId,
-            isFromSelf: data.from === props.currentUserId,
-          });
 
           if (data.from !== props.currentUserId && data.candidate) {
             try {
-              console.log('[TelemedicineVideoCall] Adding ICE candidate from different user');
               await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-              console.log('[TelemedicineVideoCall] ICE candidate added successfully');
             } catch (err) {
               console.error('[TelemedicineVideoCall] Error adding ICE candidate:', err);
             }
-          } else {
-            console.log(
-              '[TelemedicineVideoCall] Ignoring ICE candidate (from self or no candidate)'
-            );
           }
         });
 
@@ -576,12 +490,6 @@ export default {
 
             try {
               isCreatingOffer = true;
-              console.log('[TelemedicineVideoCall] Doctor creating offer...');
-              console.log('[TelemedicineVideoCall] PeerConnection state:', {
-                signalingState: peerConnection.signalingState,
-                connectionState: peerConnection.connectionState,
-                iceConnectionState: peerConnection.iceConnectionState,
-              });
 
               // Verificar nuevamente el estado antes de crear la oferta
               if (peerConnection.signalingState === 'closed') {
@@ -603,11 +511,7 @@ export default {
               }
 
               await peerConnection.setLocalDescription(offer);
-              console.log(
-                '[TelemedicineVideoCall] Offer created and local description set, sending...'
-              );
               sendVideoOffer(offer);
-              console.log('[TelemedicineVideoCall] Offer sent via WebSocket');
               isCreatingOffer = false;
             } catch (err) {
               isCreatingOffer = false;
@@ -625,7 +529,6 @@ export default {
           // Paciente espera a recibir una oferta, si no recibe una en 3 segundos, crea una
           offerTimeout = setTimeout(async () => {
             if (offerReceived.value) {
-              console.log('[TelemedicineVideoCall] Patient received offer, not creating one');
               return;
             }
 
@@ -644,22 +547,11 @@ export default {
 
             // Verificar si ya hay una descripción local (significa que ya se procesó una oferta)
             if (peerConnection.localDescription) {
-              console.log(
-                '[TelemedicineVideoCall] Patient already has local description, not creating offer'
-              );
               return;
             }
 
             try {
               isCreatingOffer = true;
-              console.log(
-                '[TelemedicineVideoCall] Patient creating offer (no offer received from doctor)...'
-              );
-              console.log('[TelemedicineVideoCall] PeerConnection state:', {
-                signalingState: peerConnection.signalingState,
-                connectionState: peerConnection.connectionState,
-                iceConnectionState: peerConnection.iceConnectionState,
-              });
 
               // Verificar nuevamente el estado antes de crear la oferta
               if (peerConnection.signalingState === 'closed') {
@@ -681,11 +573,7 @@ export default {
               }
 
               await peerConnection.setLocalDescription(offer);
-              console.log(
-                '[TelemedicineVideoCall] Offer created and local description set, sending...'
-              );
               sendVideoOffer(offer);
-              console.log('[TelemedicineVideoCall] Offer sent via WebSocket');
               isCreatingOffer = false;
             } catch (err) {
               isCreatingOffer = false;
@@ -898,7 +786,6 @@ export default {
 
         if (response.data && response.data.recordingUrl) {
           // Recording URL saved successfully
-          console.log('Recording saved:', response.data.recordingUrl);
         }
       } catch (err) {
         console.error('Error saving recording:', err);
@@ -973,11 +860,6 @@ export default {
 
     onMounted(async () => {
       try {
-        console.log('[TelemedicineVideoCall] Component mounted', {
-          sessionId: props.sessionId,
-          currentUserId: props.currentUserId,
-          userType: props.userType,
-        });
 
         if (!props.sessionId) {
           throw new Error('Session ID is required');
@@ -996,7 +878,6 @@ export default {
         // Si hay un error 429, continuamos de todas formas ya que connect() también intentará obtenerla
         try {
           sessionData = await getTelemedicineSession(props.sessionId);
-          console.log('[TelemedicineVideoCall] Current session status:', sessionData.status);
           sessionStatus = sessionData?.status?.toUpperCase();
         } catch (err) {
           // Si es un error 429, no bloqueamos - connect() intentará obtenerla después
@@ -1011,10 +892,8 @@ export default {
 
         // Solo iniciar la sesión si está en estado SCHEDULED
         if (sessionStatus === 'SCHEDULED' || sessionStatus === 'scheduled') {
-          console.log('[TelemedicineVideoCall] Starting telemedicine session...');
           try {
             await startTelemedicineSession(props.sessionId);
-            console.log('[TelemedicineVideoCall] Session started successfully');
           } catch (err) {
             // Si el error es 400, puede ser que la sesión ya cambió de estado
             if (err.response?.status === 400) {
@@ -1026,7 +905,6 @@ export default {
                 sessionData = await getTelemedicineSession(props.sessionId);
                 const newStatus = sessionData.status?.toUpperCase();
                 if (newStatus === 'ACTIVE' || newStatus === 'active') {
-                  console.log('[TelemedicineVideoCall] Session is already active, continuing...');
                 } else {
                   throw err; // Re-throw si realmente hay un problema
                 }
@@ -1038,13 +916,7 @@ export default {
             }
           }
         } else if (sessionStatus === 'ACTIVE' || sessionStatus === 'active') {
-          console.log('[TelemedicineVideoCall] Session is already active, skipping start');
         } else {
-          console.warn(
-            '[TelemedicineVideoCall] Session status is',
-            sessionStatus,
-            '- attempting to start anyway'
-          );
           try {
             await startTelemedicineSession(props.sessionId);
           } catch (err) {
@@ -1058,24 +930,16 @@ export default {
         }
 
         // Conectar WebSocket
-        console.log('[TelemedicineVideoCall] Connecting to WebSocket...');
         await connect();
 
-        // Inicializar WebRTC (esto solicitará permisos de cámara/micrófono)
-        console.log(
-          '[TelemedicineVideoCall] Initializing WebRTC (requesting camera/microphone permissions)...'
-        );
         await initializeWebRTC();
-        console.log('[TelemedicineVideoCall] WebRTC initialized successfully');
 
         // Marcar como conectado según el tipo de usuario
         try {
           if (props.userType === 'patient') {
             await markPatientConnected(props.sessionId);
-            console.log('[TelemedicineVideoCall] Patient marked as connected');
           } else if (props.userType === 'doctor') {
             await markDoctorConnected(props.sessionId);
-            console.log('[TelemedicineVideoCall] Doctor marked as connected');
           }
         } catch (err) {
           console.warn('[TelemedicineVideoCall] Failed to mark as connected:', err);
@@ -1084,7 +948,6 @@ export default {
 
         // Listen for session completion notification from WebSocket
         onSessionCompleted(data => {
-          console.log('[TelemedicineVideoCall] Session completed notification received:', data);
           if (statusPollInterval.value) {
             clearInterval(statusPollInterval.value);
             statusPollInterval.value = null;
@@ -1288,9 +1151,6 @@ export default {
       if (newStream && localVideo.value) {
         await nextTick();
         if (!localVideo.value.srcObject) {
-          console.log(
-            '[TelemedicineVideoCall] Setting local stream to video element (stream watch)'
-          );
           localVideo.value.srcObject = newStream;
           try {
             await localVideo.value.play();
@@ -1309,9 +1169,6 @@ export default {
       if (newStream && remoteVideo.value) {
         await nextTick();
         if (!remoteVideo.value.srcObject) {
-          console.log(
-            '[TelemedicineVideoCall] Setting remote stream to video element (stream watch)'
-          );
           remoteVideo.value.srcObject = newStream;
           try {
             await remoteVideo.value.play();

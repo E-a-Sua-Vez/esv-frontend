@@ -316,7 +316,6 @@ export default {
           }
         }
       } catch (error) {
-        console.log('No template found or error loading template:', error);
         // No es crítico, continuar sin template
       } finally {
         loadingTemplate.value = false;

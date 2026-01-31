@@ -67,10 +67,6 @@ export default {
     };
 
     onMounted(() => {
-      console.log('📋 PatientResumeForm mounted with props:');
-      console.log('📋 patientHistoryData:', patientHistoryData.value);
-      console.log('📋 commerce:', commerce.value);
-      console.log('📋 toggles:', toggles.value);
       loadAdditionalData();
     });
 

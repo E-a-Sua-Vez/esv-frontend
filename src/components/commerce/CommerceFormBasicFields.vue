@@ -127,13 +127,12 @@ export default {
           if (parts.length === 4) {
             const commerceId = parts[2];
             const logoId = parts[3];
-            console.log('🏪 Loading commerce logo:', { commerceId, logoId });
 
             const url = await getCommerceLogoUrl(commerceId, logoId);
             if (url) {
               this.logoPreviewUrl = url;
               this.logoLoadFailed = false;
-              console.log('🏪 Commerce logo loaded:', url);
+
               return;
             }
           }
@@ -151,8 +150,6 @@ export default {
       const businessId = this.businessId || this.commerce?.businessId;
       const logo = this.businessLogo;
 
-      console.log('🔍 loadBusinessLogoPreview called with:', { businessId, logo });
-
       if (!logo && !businessId) {
         this.businessLogoPreviewUrl = null;
         this.businessLogoLoading = false;
@@ -164,7 +161,6 @@ export default {
       try {
         // If we have a direct logo URL (http/https), use it directly
         if (logo && (logo.startsWith('http://') || logo.startsWith('https://'))) {
-          console.log('🔍 Using direct URL:', logo);
           this.businessLogoPreviewUrl = logo;
           return;
         }
@@ -173,14 +169,12 @@ export default {
         // Path format: /business-logos/{businessId}/{logoId}
         if (logo && logo.startsWith('/business-logos/')) {
           const parts = logo.split('/');
-          console.log('🔍 Path parts:', parts);
           if (parts.length === 4) {
             const pathBusinessId = parts[2];
             const logoId = parts[3];
-            console.log('🔍 Extracted from path:', { pathBusinessId, logoId });
 
             const url = await getBusinessLogoUrl(pathBusinessId, logoId);
-            console.log('🔍 Got signed URL:', url);
+
             if (url) {
               this.businessLogoPreviewUrl = url;
               return;
@@ -190,12 +184,11 @@ export default {
 
         // Fallback: Try to get logo metadata from backend using businessId
         if (businessId) {
-          console.log('🔍 Fallback: getting logo metadata for business:', businessId);
           const logoData = await getBusinessLogo(businessId);
-          console.log('🔍 Logo metadata:', logoData);
+
           if (logoData && logoData.id) {
             const url = await getBusinessLogoUrl(businessId, logoData.id);
-            console.log('🔍 Got signed URL from fallback:', url);
+
             if (url) {
               this.businessLogoPreviewUrl = url;
             }
@@ -205,7 +198,6 @@ export default {
         console.error('Error loading business logo preview:', error);
       } finally {
         this.businessLogoLoading = false;
-        console.log('🔍 Final businessLogoPreviewUrl:', this.businessLogoPreviewUrl);
       }
     },
     handleLogoError() {

@@ -123,7 +123,6 @@ export default {
 
     // Initialize reference data
     onMounted(async () => {
-      console.log('📋 Initializing reference - attention prop:', attention.value);
 
       // Extract attention ID first (could be string, object with id, or object with full details)
       let attentionId = null;
@@ -136,7 +135,6 @@ export default {
       // Set attention ID immediately if we have it
       if (attentionId) {
         state.reference.attentionId = attentionId;
-        console.log('✅ Attention ID set from prop:', state.reference.attentionId);
       }
 
       if (commerce.value?.id) state.reference.commerceId = commerce.value.id;
@@ -145,10 +143,8 @@ export default {
       // Load full attention details if we need collaborator info
       let attentionDetails = attention.value;
       if (attentionId && !attention.value?.collaboratorId) {
-        console.log('🔄 Loading attention details for ID:', attentionId);
         try {
           attentionDetails = await getAttentionDetails(attentionId);
-          console.log('✅ Attention details loaded:', attentionDetails);
           // Ensure attentionId is set (in case getAttentionDetails succeeds but ID was missing)
           if (attentionDetails?.id) {
             state.reference.attentionId = attentionDetails.id;
@@ -165,7 +161,6 @@ export default {
       if (attentionDetails?.professionalId) {
         state.reference.professionalId = attentionDetails.professionalId;
         state.reference.referringDoctorId = attentionDetails.professionalId;
-        console.log('👨‍⚕️ Doctor ID set from professional:', state.reference.referringDoctorId);
       }
       if (attentionDetails?.collaboratorId) {
         state.reference.collaboratorId = attentionDetails.collaboratorId;
@@ -189,7 +184,6 @@ export default {
           if (currentUser && currentUser.id) {
             state.reference.referringDoctorId = currentUser.id;
             state.reference.collaboratorId = currentUser.id; // Asumir que es collaborator
-            console.log('👨‍⚕️ Doctor ID set from current user:', state.reference.referringDoctorId);
           } else {
             console.error('❌ No current user found in store');
           }
@@ -415,7 +409,6 @@ export default {
 
     const handleSignatureVerified = result => {
       // Verification result is already shown in the component
-      console.log('Signature verification:', result);
     };
 
     const handleSignatureCancel = () => {
@@ -433,7 +426,6 @@ export default {
             .substr(2, 9)}`;
         }
 
-        console.log('📋 Sending reference data:', state.reference);
 
         if (typeof receiveData.value === 'function') {
           receiveData.value(state.reference);

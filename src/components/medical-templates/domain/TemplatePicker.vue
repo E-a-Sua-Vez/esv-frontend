@@ -180,8 +180,6 @@ export default {
 
     const applyTemplate = async template => {
       try {
-        console.log('🔵 TemplatePicker: Aplicando template:', template);
-
         // Procesar template con variables del sistema
         const variables = {
           date: new Date().toLocaleDateString('pt-BR'),
@@ -189,10 +187,7 @@ export default {
           datetime: new Date().toLocaleString('pt-BR'),
         };
 
-        console.log('🔵 TemplatePicker: Procesando con variables:', variables);
         const result = await processTemplate(template.id, variables);
-        console.log('🔵 TemplatePicker: Resultado procesado:', result);
-        console.log('🔵 TemplatePicker: Emitiendo template-selected con:', result.processedContent);
 
         emit('template-selected', result.processedContent);
         showPicker.value = false;

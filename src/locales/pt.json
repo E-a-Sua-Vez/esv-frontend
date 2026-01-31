@@ -3510,7 +3510,8 @@
       "type": "Você deve selecionar o tipo",
       "result": "Você deve selecionar o resultado",
       "comment": "Você deve digitar o comentário",
-      "search": "Você deve digitar o valor da pesquisa"
+      "search": "Você deve digitar o valor da pesquisa",
+      "clientNotFound": "Cliente não encontrado"
     }
   },
   "resumeAttention": {

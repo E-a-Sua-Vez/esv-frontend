@@ -124,7 +124,6 @@ export default {
       const professionalType = this.professional.professionalInfo?.professionalType;
       const isMedical = medicalTypes.includes(professionalType);
 
-      console.log('🔍 isMedicalProfessional check:', {
         professionalType,
         isMedical,
         medicalTypes,
@@ -165,8 +164,6 @@ export default {
       updated.medicalData = { ...updated.medicalData };
       updated.medicalData[field] = value;
 
-      console.log(`Updating medical data - ${field}:`, value);
-      console.log('Full medicalData:', updated.medicalData);
 
       this.$emit('update:professional', updated);
     },

@@ -136,9 +136,6 @@ export default {
                     }
                     return professional.id === queue.professionalId;
                   });
-                  console.log(`[StandardMode] Professional ${queue.name} - professionalId: ${queue.professionalId}`);
-                  console.log(`[StandardMode] Available professionals:`, professionalsArray);
-                  console.log(`[StandardMode] Matched professionals:`, professionalsAux);
 
                   if (professionalsAux && professionalsAux.length > 0) {
                     queue.collaborator = professionalsAux[0]; // Keep as collaborator for backward compatibility
@@ -152,31 +149,23 @@ export default {
 
                     // Enhance telemedicine information from professional's medical data
                     const medicalData = professionalsAux[0].medicalData;
-                    console.log(`[StandardMode] Professional ${queue.name} medical data:`, medicalData);
-                    console.log(`[StandardMode] Queue ${queue.name} current telemedicineEnabled:`, queue.telemedicineEnabled);
                     if (medicalData && medicalData.telemedicine) {
                       // If the professional offers telemedicine, enable it for the queue
                       // Override queue setting if professional offers telemedicine
                       queue.telemedicineEnabled = true;
-                      console.log(`[StandardMode] Telemedicine enabled for professional ${queue.name} (overridden from queue setting)`);
                     }
 
                     // For PROFESSIONAL queues, get services from queue.servicesId
-                    console.log(`[StandardMode] Professional ${queue.name} - servicesId:`, queue.servicesId);
                     if (queue.servicesId && queue.servicesId.length > 0) {
                       try {
-                        console.log(`[StandardMode] Calling getServicesById with:`, queue.servicesId);
                         const loadedServices = await getServicesById(queue.servicesId);
-                        console.log(`[StandardMode] getServicesById returned:`, loadedServices);
                         queue.services = loadedServices || [];
-                        console.log(`[StandardMode] Professional ${queue.name} services loaded:`, queue.services);
                       } catch (error) {
                         console.error(`[StandardMode] Error loading professional ${queue.name} services:`, error);
                         queue.services = [];
                       }
                     } else {
                       queue.services = [];
-                      console.log(`[StandardMode] Professional ${queue.name} has no services configured (servicesId: ${queue.servicesId})`);
                     }
                     queue.servicesName =
                       queue.services && queue.services.length > 0

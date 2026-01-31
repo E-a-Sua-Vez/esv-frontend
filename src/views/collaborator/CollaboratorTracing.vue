@@ -118,12 +118,6 @@ export default {
     // Use global commerce from store
     const commerce = computed(() => {
       const currentCommerce = store.getCurrentCommerce;
-      console.log('🔄 COMMERCE COMPUTED:', {
-        currentCommerce,
-        id: currentCommerce?.id,
-        name: currentCommerce?.name,
-        businessId: currentCommerce?.businessId
-      });
       return currentCommerce;
     });
     const business = computed(() => store.getCurrentBusiness);
@@ -207,34 +201,12 @@ export default {
       try {
         loading.value = true;
 
-        console.log('🚀 === INICIO DEBUG COLLABORATOR TRACING ===');
-
         // Parallelize independent calls
         const [currentUser, business, toggles] = await Promise.all([
           store.getCurrentUser,
           store.getActualBusiness(),
           getPermissions('dashboard'),
         ]);
-
-        console.log('🔍 DEBUG USER:', {
-          currentUser,
-          email: currentUser?.email,
-          businessId: currentUser?.businessId,
-          userType: currentUser?.userType
-        });
-
-        console.log('🔍 DEBUG BUSINESS:', {
-          business,
-          id: business?.id,
-          active: business?.active,
-          name: business?.name,
-          commerces: business?.commerces?.length || 'NO COMMERCES'
-        });
-
-        console.log('🔍 DEBUG TOGGLES:', {
-          toggles,
-          hasTracingPermission: toggles?.['dashboard.tracing'] || 'NO TRACING PERMISSION'
-        });
 
         state.currentUser = currentUser;
         state.business = business;
@@ -251,7 +223,6 @@ export default {
         }
 
         // Load commerces after business is loaded
-        console.log('🔍 ABOUT TO LOAD COMMERCES FROM BUSINESS:', state.business?.commerces);
 
         // Validate business before loading commerces
         if (!state.business) {
@@ -262,52 +233,24 @@ export default {
 
         state.allCommerces = await store.getAvailableCommerces(state.business?.commerces || []);
 
-        console.log('🔍 DEBUG ALL COMMERCES LOADED:', {
-          allCommerces: state.allCommerces,
-          length: state.allCommerces?.length || 'NO LENGTH',
-          isArray: Array.isArray(state.allCommerces)
-        });
-
         // Initialize commerce in store if not set
         const currentCommerce = store.getCurrentCommerce;
-        console.log('🔍 DEBUG CURRENT COMMERCE FROM STORE:', {
-          currentCommerce,
-          id: currentCommerce?.id,
-          name: currentCommerce?.name
-        });
 
         if (!currentCommerce || !currentCommerce.id) {
-          console.log('🚨 NO CURRENT COMMERCE - TRYING TO SET FROM allCommerces');
           if (state.allCommerces && state.allCommerces.length > 0) {
-            console.log('🔄 SETTING COMMERCE TO:', state.allCommerces[0]);
             await store.setCurrentCommerce(state.allCommerces[0]);
 
             const newCommerce = store.getCurrentCommerce;
-            console.log('✅ COMMERCE SET TO:', newCommerce);
-          } else {
-            console.log('🚨 NO allCommerces AVAILABLE TO SET');
           }
-        } else {
-          console.log('✅ COMMERCE ALREADY SET');
         }
 
         // Load queues from current commerce (no API call needed)
         const commerceToUse = store.getCurrentCommerce;
-        console.log('🔍 DEBUG FINAL COMMERCE TO USE:', {
-          commerceToUse,
-          id: commerceToUse?.id,
-          name: commerceToUse?.name
-        });
 
         if (commerceToUse) {
-          console.log('✅ LOADING QUEUES FOR COMMERCE:', commerceToUse.name);
           loadCommerceQueues(commerceToUse);
           // Services will be loaded lazily when needed (when attentions/clients tab is shown)
-        } else {
-          console.log('🚨 NO COMMERCE TO LOAD QUEUES');
         }
-
-        console.log('🏁 === FIN DEBUG COLLABORATOR TRACING ===');
 
         loading.value = false;
       } catch (error) {
@@ -923,16 +866,8 @@ export default {
             // Sync asc filter - prioritize override, then filterInstance, then default to true
             if (filterPropsOverride !== null && filterPropsOverride !== undefined) {
               if (Object.prototype.hasOwnProperty.call(filterPropsOverride, 'asc')) {
-                console.log(
-                  '[refreshBookingsContent] Setting contentInstance.asc from override:',
-                  filterPropsOverride.asc,
-                );
                 contentInstance.asc = filterPropsOverride.asc;
               } else if (filterInstance && filterInstance.asc !== undefined) {
-                console.log(
-                  '[refreshBookingsContent] Setting contentInstance.asc from filterInstance:',
-                  filterInstance.asc,
-                );
                 contentInstance.asc = filterInstance.asc;
               } else {
                 contentInstance.asc = true;
@@ -3403,18 +3338,10 @@ export default {
                                         );
                                         if (filterInstance) {
                                           filterInstance.asc = newValue;
-                                          console.log(
-                                            '[ASC TOGGLE] Updated filterInstance.asc to:',
-                                            newValue
-                                          );
                                         }
                                       }
                                     }
                                     if (filterProps.filterType === 'bookings') {
-                                      console.log(
-                                        '[ASC TOGGLE] Calling refreshBookingsContentDelayed with:',
-                                        { asc: newValue }
-                                      );
                                       refreshBookingsContentDelayed({ asc: newValue });
                                     }
                                   }

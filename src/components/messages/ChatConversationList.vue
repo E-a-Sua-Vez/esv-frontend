@@ -75,12 +75,6 @@ const { t } = useI18n();
 const looksLikeId = s => typeof s === 'string' && /^[A-Za-z0-9_-]{16,}$/.test(s);
 
 const getParticipantName = conversation => {
-  console.log('[DEBUG ChatConversationList] getParticipantName called with:', {
-    conversation,
-    participants: conversation.participants,
-    currentUserId: props.currentUserId,
-  });
-
   if (!conversation.participants || conversation.participants.length < 2) {
     return t('chat.unknownUser');
   }

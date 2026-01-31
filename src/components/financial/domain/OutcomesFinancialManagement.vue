@@ -130,19 +130,6 @@ export default {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
 
-        // Debug logging
-        console.log('OutcomesFinancialManagement.refresh - Filters:', {
-          startDate: this.startDate,
-          endDate: this.endDate,
-          searchText: this.searchText,
-          asc: this.asc,
-          minAmount: this.minAmount,
-          maxAmount: this.maxAmount,
-          outcomeTypeFilter: this.outcomeTypeFilter,
-          paymentMethodFilter: this.paymentMethodFilter,
-          professionalFilter: this.professionalFilter,
-        });
-
         this.financialOutcomes = await getOutcomesDetails(
           this.business.id,
           this.commerce.id,
@@ -161,12 +148,6 @@ export default {
           this.outcomeTypeFilter,
           this.paymentMethodFilter
         );
-
-        console.log('OutcomesFinancialManagement.refresh - API Response:', {
-          count: this.financialOutcomes?.length || 0,
-          firstOutcome: this.financialOutcomes?.[0],
-          hasClientSideFilters: !!(this.minAmount || this.maxAmount || this.outcomeTypeFilter || this.paymentMethodFilter || this.professionalFilter),
-        });
 
         // Load professionals if there are outcomes with professional data
         if (this.commerce?.id) {

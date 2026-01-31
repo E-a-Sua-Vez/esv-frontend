@@ -75,11 +75,6 @@ export default {
         const queueIdParam = normalizeString(this.queueId);
         const serviceIdParam = normalizeString(this.serviceId);
 
-        console.log('[DashboardBookingsManagement.refresh] Calling getBookingsDetails with:', {
-          asc: this.asc,
-          survey: this.survey,
-          status: this.status,
-        });
         this.newBookings = await getBookingsDetails(
           this.commerce.id,
           startDateParam,

@@ -80,11 +80,6 @@ export default {
         state.formsPersonalized = await getFormPersonalizedByCommerceId(state.commerce.id);
         await getFormCompleted();
         state.toggles = await getPermissions('user');
-        console.log('[UserQueueBooking] Loaded booking/commerce/toggles', {
-          commerceId: state.commerce?.id,
-          features: state.commerce?.features,
-          toggles: state.toggles,
-        });
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -99,12 +94,6 @@ export default {
         'booking-whatsapp-confirm',
         'WHATSAPP',
       );
-
-      console.log('[UserQueueBooking] hasWhatsappReminderFeature', {
-        commerceId: state.commerce?.id,
-        whatsappFeatureActive,
-        toggles: state.toggles,
-      });
 
       return !!whatsappFeatureActive;
     });
@@ -165,14 +154,6 @@ export default {
         state.booking = bookingData;
         state.queue = bookingData.queue;
         state.commerce = bookingData.commerce;
-
-        // Debug: Log booking data structure
-        console.log('[UserQueueBooking] Booking data loaded:', bookingData);
-        console.log('[UserQueueBooking] Booking number:', state.booking.number);
-        console.log('[UserQueueBooking] Booking date:', state.booking.date);
-        console.log('[UserQueueBooking] Booking block:', state.booking.block);
-        console.log('[UserQueueBooking] Booking beforeYou:', state.booking.beforeYou);
-        console.log('[UserQueueBooking] Booking status:', state.booking.status);
 
         // Calculate estimated time using intelligent estimation
         await calculateEstimatedTime();

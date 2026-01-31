@@ -383,7 +383,6 @@ export default {
         // Debug: Verificar estructura de datos para desarrollo
         if (process.env.NODE_ENV === 'development') {
           console.group('🔍 Patient Evolution Data Analysis');
-          console.log('Total records:', evolutionData.value.length);
 
           // Analizar tipos de datos disponibles
           const typeCount = {};
@@ -405,8 +404,6 @@ export default {
             }
           });
 
-          console.log('Types available:', typeCount);
-          console.log('Physical exam samples:', physicalExamSample);
           console.groupEnd();
         }
       } catch (error) {

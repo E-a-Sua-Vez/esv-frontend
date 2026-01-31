@@ -32,11 +32,9 @@ export default {
       this.$emit('close');
     },
     restoreMainModal() {
-      console.log('🔄 Restaurando modal principal...');
       
       const mainModal = document.querySelector('#modalAgenda');
       if (mainModal) {
-        console.log('📍 Modal principal encontrado, restaurando...');
         
         // Restaurar estilos
         mainModal.style.display = '';
@@ -48,18 +46,14 @@ export default {
         if (!mainModal.classList.contains('show')) {
           mainModal.classList.add('show');
           mainModal.style.display = 'block';
-          console.log('🔄 Reactivando modal Bootstrap');
         }
         
         // Asegurar que el body tenga las clases correctas para modals
         if (!document.body.classList.contains('modal-open')) {
           document.body.classList.add('modal-open');
-          console.log('🔄 Reactivando body modal-open');
         }
         
-        console.log('✅ Modal principal completamente restaurado');
       } else {
-        console.log('⚠️ Modal principal (#modalAgenda) NO encontrado');
       }
       
       // Restaurar o crear backdrop si es necesario
@@ -68,14 +62,12 @@ export default {
         backdrop = document.createElement('div');
         backdrop.className = 'modal-backdrop fade show';
         document.body.appendChild(backdrop);
-        console.log('🔄 Backdrop recreado');
       } else {
         backdrop.style.display = '';
         backdrop.style.visibility = '';
         if (!backdrop.classList.contains('show')) {
           backdrop.classList.add('show');
         }
-        console.log('🔄 Backdrop restaurado');
       }
     },
     handleBookingUpdated(updatedBooking) {
@@ -88,13 +80,11 @@ export default {
   watch: {
     show(newValue) {
       if (newValue) {
-        console.log('📖 Ocultando modal principal');
         const mainModal = document.querySelector('#modalAgenda');
         if (mainModal) {
           mainModal.style.display = 'none';
         }
       } else {
-        console.log('📖 Reabriendo modal principal FORZADAMENTE');  
         // FORZAR reapertura del modal
         setTimeout(() => {
           const mainModal = document.querySelector('#modalAgenda');
@@ -122,7 +112,6 @@ export default {
               backdrop.classList.add('show');
             }
             
-            console.log('✅ Modal principal FORZADAMENTE reabierto');
           }
         }, 50);
       }

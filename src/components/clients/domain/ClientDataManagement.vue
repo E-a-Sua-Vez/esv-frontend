@@ -59,7 +59,7 @@ export default {
         state.newUser.healthAgreementId = data.healthAgreementId || '';
 
         // ✅ Debug: Log received data
-        console.log('🔍 ClientDataManagement - receiveData:', {
+        console.log({
           birthday: data.birthday,
           origin: data.origin,
           stateBirthday: state.newUser.birthday,
@@ -136,18 +136,6 @@ export default {
         personalInfo.healthAgreementId ||
         clientData.userHealthAgreementId ||
         '';
-
-      // ✅ Debug: Log client data to verify values
-      console.log('🔍 ClientDataManagement - populateFormFromClient:', {
-        userBirthday: clientData.userBirthday,
-        userOrigin: clientData.userOrigin,
-        personalInfoBirthday: personalInfo.birthday,
-        personalInfoOrigin: personalInfo.origin,
-        extractedBirthday: birthday,
-        extractedOrigin: origin,
-        fullClient: clientData,
-        personalInfo,
-      });
 
       receiveData({
         name: clientData.userName || clientData.name || '',

@@ -393,7 +393,6 @@ export default {
     handleOpenAttentionModalFromPackage(data) {
       // Check if this is a request to show attention details (not create new)
       if (data.mode === 'details' && data.attention) {
-        console.log('Opening attention details directly for:', data.attention);
 
         // Hide packages modal temporarily
         this.hidePackagesModal();
@@ -453,7 +452,6 @@ export default {
     },
 
     handleOpenBookingModalFromPackage(booking) {
-      console.log('Opening booking details directly for:', booking);
 
       // Hide packages modal temporarily
       this.hidePackagesModal();
@@ -554,7 +552,6 @@ export default {
       // For now, we open the attention creation modal and the user can proceed from there
     },
     hidePackagesModal() {
-      console.log('hidePackagesModal called');
       try {
         const packagesModal = document.getElementById(`packagesModal-${this.client.id}`);
         if (packagesModal) {
@@ -562,7 +559,6 @@ export default {
           const bsModal = Modal.getOrCreateInstance(packagesModal);
           if (bsModal) {
             bsModal.hide();
-            console.log('Packages modal hidden successfully');
           } else {
             console.error('Bootstrap Modal instance not found');
           }
@@ -574,7 +570,6 @@ export default {
       }
     },
     showPackagesModal() {
-      console.log('showPackagesModal called');
       try {
         const packagesModal = document.getElementById(`packagesModal-${this.client.id}`);
         if (packagesModal) {
@@ -582,7 +577,6 @@ export default {
           const bsModal = Modal.getOrCreateInstance(packagesModal);
           if (bsModal) {
             bsModal.show();
-            console.log('Packages modal shown successfully');
           } else {
             console.error('Bootstrap Modal instance not found');
           }
@@ -758,7 +752,6 @@ export default {
       this.showClientData = false;
     },
     handleClientUpdated(updatedData) {
-      console.log('[ClientDetailsCard] Client updated event received', updatedData);
       // Update client object with new data
       if (this.client && updatedData) {
         Object.assign(this.client, updatedData);
@@ -769,12 +762,7 @@ export default {
     async checkPreprontuarioCompletion() {
       try {
         this.loadingPreprontuario = true;
-        console.log('🔍 Checking preprontuario status for:', {
-          clientId: this.client.id,
-          commerceId: this.commerce.id,
-        });
         this.preprontuarioStatus = await checkPreprontuarioStatus(this.client.id, this.commerce.id);
-        console.log('🔍 Preprontuario status result:', this.preprontuarioStatus);
         this.loadingPreprontuario = false;
       } catch (error) {
         this.loadingPreprontuario = false;
@@ -874,23 +862,11 @@ export default {
           // Load forms if not already loaded
           if (!this.formsPersonalized || this.formsPersonalized.length === 0) {
             this.formsPersonalized = await getFormPersonalizedByCommerceId(this.commerce.id);
-            console.log('🔍 Preprontuario: Loaded forms:', this.formsPersonalized.length);
           }
 
           // Log all PRE_ATTENTION and FIRST_ATTENTION forms to debug
           const relevantForms = this.formsPersonalized.filter(
             f => f.type === 'PRE_ATTENTION' || f.type === 'FIRST_ATTENTION'
-          );
-          console.log(
-            '🔍 Preprontuario: All relevant forms:',
-            relevantForms.map(f => ({
-              id: f.id,
-              type: f.type,
-              queueId: f.queueId,
-              active: f.active,
-              available: f.available,
-              commerceId: f.commerceId,
-            })),
           );
 
           // Check if there's a PRE_ATTENTION or FIRST_ATTENTION form for the queue
@@ -909,18 +885,6 @@ export default {
               (f.queueId === this.queue.id || !f.queueId || f.queueId === null)
           );
 
-          console.log('🔍 Preprontuario: Queue check:', {
-            queueId: this.queue.id,
-            hasForm: queueHasPreprontuario,
-            formsForQueue: formsForQueue.map(f => ({
-              id: f.id,
-              type: f.type,
-              queueId: f.queueId,
-              active: f.active,
-              available: f.available,
-            })),
-          });
-
           // Check if attention's queue has preprontuario (PRE_ATTENTION or FIRST_ATTENTION)
           // If attention.queueId is different from queue.id, check both
           // Also check if form has no queueId (commerce-level form)
@@ -935,10 +899,6 @@ export default {
                 form.active === true &&
                 form.available === true
             );
-            console.log('🔍 Preprontuario: Attention queue check:', {
-              attentionQueueId: this.attention.queueId,
-              hasForm: attentionQueueHasPreprontuario,
-            });
           } else {
             // Same queue, use the same check
             attentionQueueHasPreprontuario = queueHasPreprontuario;
@@ -958,13 +918,6 @@ export default {
             (commerceActive || commerceHasForms) &&
             queueHasPreprontuario &&
             attentionQueueHasPreprontuario;
-          console.log('🔍 Preprontuario: Final context check:', {
-            commerceActive,
-            commerceHasForms,
-            queueHasPreprontuario,
-            attentionQueueHasPreprontuario,
-            final: this.preprontuarioActiveForContext,
-          });
           return this.preprontuarioActiveForContext;
         } catch (error) {
           console.error('Error checking preprontuario for context:', error);
@@ -1040,15 +993,12 @@ export default {
     },
     handleConsentUpdated() {
       // Handle consent update event
-      console.log('[ClientDetailsCard] Consent updated');
       // No llamar loadConsentStatus aquí - el componente hijo ya gestiona su propio estado
     },
     handleLgpdModalShow() {
-      console.log('[ClientDetailsCard] LGPD Modal opened - enabling data loading');
       this.lgpdModalVisible = true;
     },
     handleLgpdModalHide() {
-      console.log('[ClientDetailsCard] LGPD Modal closed - disabling data loading');
       this.lgpdModalVisible = false;
     },
     hasBlockingConsents() {
@@ -1127,10 +1077,6 @@ export default {
 
       // Modal de Packages
       const packagesModal = document.getElementById(`packagesModal-${clientId}`);
-      console.log('[ClientDetailsCard] Setting up packages modal listener', {
-        clientId,
-        packagesModal: !!packagesModal,
-      });
       if (packagesModal) {
         // Remover listener anterior si existe para evitar duplicados
         const existingHandler = packagesModal._clientDetailsPackagesHandler;
@@ -1139,28 +1085,21 @@ export default {
         }
 
         const handler = async () => {
-          console.log('[ClientDetailsCard] Packages modal shown event triggered', {
-            packagesLoaded: this.packagesLoaded,
-            packagesLength: this.packages?.length || 0,
-          });
           // Update preprontuario status when modal is shown
           if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
             await this.checkPreprontuarioCompletion();
           }
 
           // Always reload packages when modal opens
-          console.log('[ClientDetailsCard] Reloading packages for packages modal');
           await this.getPackages(true); // Force reload
 
           // Also refresh the ClientPackagesManagement component
           if (this.$refs.packagesManagementRef && this.$refs.packagesManagementRef.refresh) {
-            console.log('[ClientDetailsCard] Refreshing ClientPackagesManagement component');
             await this.$refs.packagesManagementRef.refresh();
           }
 
           // Load attentions to fulfill the card
           if (this.$refs.attentionsManagementRef && this.$refs.attentionsManagementRef.refresh) {
-            console.log('[ClientDetailsCard] Loading attentions for packages modal');
             await this.$refs.attentionsManagementRef.refresh(true);
 
             // Update daysSinceAttention based on the most recent attention
@@ -1175,10 +1114,6 @@ export default {
                 // Use the daysSinceAttention from the most recent attention
                 if (this.client) {
                   this.client.daysSinceAttention = mostRecentAttention.daysSinceAttention;
-                  console.log(
-                    '[ClientDetailsCard] Updated daysSinceAttention from attention',
-                    mostRecentAttention.daysSinceAttention,
-                  );
                 }
               } else if (mostRecentAttention && mostRecentAttention.attentionCreatedDate) {
                 // Fallback: calculate from date if daysSinceAttention is not available
@@ -1187,10 +1122,6 @@ export default {
                 const daysSince = Math.floor((now - attentionDate) / (1000 * 60 * 60 * 24));
                 if (this.client) {
                   this.client.daysSinceAttention = daysSince;
-                  console.log(
-                    '[ClientDetailsCard] Calculated daysSinceAttention from date',
-                    daysSince,
-                  );
                 }
               }
             }
@@ -1310,17 +1241,6 @@ export default {
         ...(this.client.personalInfo || {}),
       };
 
-      console.log('🔍 ClientDetailsCard - attentionCreationClientData:', {
-        queryStackClientId: this.client.id,
-        firebaseClientId,
-        sendingClientId: !!firebaseClientId,
-        hasIdNumber: !!clientData.userIdNumber,
-        hasEmail: !!clientData.email,
-        strategy: firebaseClientId
-          ? 'Using Firebase client ID'
-          : 'Backend will find/create by idNumber/email',
-      });
-
       return clientData;
     },
     // Computed property to get queues array from queues object
@@ -1422,12 +1342,6 @@ export default {
       immediate: true,
       deep: true, // Watch for deep changes in client object
       async handler(newClient, oldClient) {
-        console.log('[ClientDetailsCard] Client watcher triggered', {
-          newClientId: newClient?.id,
-          oldClientId: oldClient?.id,
-          newClientName: newClient?.userName || newClient?.name,
-          oldClientName: oldClient?.userName || oldClient?.name,
-        });
         // Reset flags when client changes to allow reloading data for new client
         if (oldClient && newClient && oldClient.id !== newClient.id) {
           this.attentionsLoaded = false;
@@ -1461,10 +1375,6 @@ export default {
       async handler() {
         // When attention context changes, check preprontuario status
         if (this.attention && this.queue && this.commerce && this.client) {
-          console.log('🔍 Attention watcher triggered:', {
-            attentionId: this.attention?.id,
-            queueId: this.queue?.id,
-          });
           await this.checkPreprontuarioActiveForContext();
           // Always check status if we're in prontuario view and context is active
           if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
@@ -1478,10 +1388,6 @@ export default {
       async handler() {
         // When queue context changes, check preprontuario status
         if (this.attention && this.queue && this.commerce && this.client) {
-          console.log('🔍 Queue watcher triggered:', {
-            attentionId: this.attention?.id,
-            queueId: this.queue?.id,
-          });
           await this.checkPreprontuarioActiveForContext();
           // Always check status if we're in prontuario view and context is active
           if (this.preprontuarioActiveForContext || this.isPreprontuarioActive()) {
@@ -1494,11 +1400,9 @@ export default {
       immediate: true,
       async handler(newCommerceId) {
         if (newCommerceId && (!this.loadedQueues || this.loadedQueues.length === 0)) {
-          console.log('🔄 Commerce ID changed, loading queues for ClientDetailsCard:', newCommerceId);
           try {
             const groupedQueues = await getGroupedQueueByCommerceId(newCommerceId);
             this.loadedQueues = Object.values(groupedQueues).flat();
-            console.log('✅ Queues loaded successfully:', this.loadedQueues.length);
           } catch (error) {
             console.warn('❌ Failed to load queues for commerce:', newCommerceId, error);
           }
@@ -1510,11 +1414,9 @@ export default {
       deep: true,
       async handler(newCommerce) {
         if (newCommerce?.id && (!this.loadedQueues || this.loadedQueues.length === 0)) {
-          console.log('🔄 Commerce changed, loading queues for ClientDetailsCard:', newCommerce.id);
           try {
             const groupedQueues = await getGroupedQueueByCommerceId(newCommerce.id);
             this.loadedQueues = Object.values(groupedQueues).flat();
-            console.log('✅ Queues loaded on commerce change:', this.loadedQueues.length);
           } catch (error) {
             console.warn('❌ Failed to load queues on commerce change:', newCommerce.id, error);
           }
@@ -1530,11 +1432,9 @@ export default {
 
     // Load queues if commerce is available and no queues loaded yet
     if (this.commerce?.id && (!this.loadedQueues || this.loadedQueues.length === 0)) {
-      console.log('🔄 Loading queues on mount for ClientDetailsCard:', this.commerce.id);
       try {
         const groupedQueues = await getGroupedQueueByCommerceId(this.commerce.id);
         this.loadedQueues = Object.values(groupedQueues).flat();
-        console.log('✅ Queues loaded on mount:', this.loadedQueues.length);
       } catch (error) {
         console.warn('❌ Failed to load queues on mount for commerce:', this.commerce.id, error);
       }

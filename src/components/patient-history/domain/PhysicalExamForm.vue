@@ -110,7 +110,6 @@ export default {
             exam: cacheData.value.exam || '',
           };
           state.habitsAux = state.newPhysicalExam.examDetails || {};
-          console.log('📝 Loaded physical exam from cache (session data)');
         }
         // PRIORIDAD 2: Si no hay cache, cargar desde patientHistoryData guardado
         else if (patientHistoryData.value && patientHistoryData.value.id) {
@@ -133,7 +132,6 @@ export default {
                 ...examToLoad,
                 exam: examToLoad.exam || '',
               };
-              console.log('📝 Loaded physical exam from saved data');
             }
           }
         }

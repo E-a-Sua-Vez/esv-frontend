@@ -105,11 +105,9 @@ export default {
     },
     getMaxAvgDay() {
       const dayDistribution = this.calculatedMetrics['attention.created']?.dayDistribution;
-      console.log('[DEBUG Frontend] dayDistribution:', dayDistribution);
 
       const arr = dayDistribution?.datasets;
       if (!arr || arr.length === 0) {
-        console.log('[DEBUG Frontend] No datasets found, returning N/A');
         return { label: 'N/A', data: 0 };
       }
 
@@ -117,7 +115,8 @@ export default {
       const ind = arr.indexOf(max);
       const label = dayDistribution.labels?.[ind];
 
-      console.log('[DEBUG Frontend] Max calculation:', {
+      // Debug logging
+      console.log({
         arr,
         max,
         ind,

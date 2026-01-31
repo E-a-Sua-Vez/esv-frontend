@@ -603,15 +603,6 @@ export default {
       } catch (err) {
         // Si el error es 401, 403 o 404, no hay sesión válida del portal
         // Continuar con flujo normal de código
-        if (
-          err.response?.status === 401 ||
-          err.response?.status === 403 ||
-          err.response?.status === 404
-        ) {
-          console.log('[TelemedicineSessionAccess] Portal session not valid, using normal flow');
-        } else {
-          console.log('[TelemedicineSessionAccess] Portal session validation error:', err);
-        }
         return false; // Error al validar, continuar con flujo normal
       }
     };
@@ -864,7 +855,6 @@ export default {
 
     const handleSessionEnded = () => {
       // Session was ended by doctor - close video/chat and show completion
-      console.log('[TelemedicineSessionAccess] Session ended by doctor');
       showVideo.value = false;
       showChat.value = false;
 
@@ -907,14 +897,12 @@ export default {
 
     const handleMessageSent = message => {
       // Message sent successfully, no action needed
-      console.log('Message sent:', message);
     };
 
     const closeSessionWindow = () => {
       // Only close the window, don't end the session
       showVideo.value = false;
       showChat.value = false;
-      console.log('[TelemedicineSessionAccess] Window closed by patient, session still active');
     };
 
     const reopenSession = () => {
@@ -940,7 +928,6 @@ export default {
         showChat.value = true;
       }
 
-      console.log('[TelemedicineSessionAccess] Session reopened by patient');
     };
 
     // Try to load commerce info from public session endpoint
@@ -1001,7 +988,6 @@ export default {
           console.warn('Could not load commerce before validation:', err.message);
         } else {
           // Network errors are expected and will be handled after validation
-          console.log('Could not load commerce before validation (network error), will load after');
         }
       }
     };

@@ -37,7 +37,6 @@ export default {
     showBookingDetailsModal(newValue, oldValue) {
       // Emit event when modal closes (goes from true to false)
       if (oldValue === true && newValue === false) {
-        console.log('BookingDetailsModal closed via watcher');
         this.$emit('booking-modal-closed');
       }
     }
@@ -165,7 +164,6 @@ export default {
       }
     },
     closeBookingDetailsModal() {
-      console.log('closeBookingDetailsModal called');
       const modalElement = document.getElementById('bookingDetailsModal');
       if (modalElement) {
         const modal = Modal.getInstance(modalElement);
@@ -182,7 +180,6 @@ export default {
       }
 
       // Emit event when modal is closed
-      console.log('Emitting booking-modal-closed event');
       this.$emit('booking-modal-closed');
     },
     handleBookingUpdated(updatedBooking) {

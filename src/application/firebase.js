@@ -224,11 +224,10 @@ export function updatedProcessingAttentions(queueId) {
 
 export function updatedTerminatedAttentions(queueId) {
   const attentions = ref([]);
-  // Filter to only get attentions from the last 7 days (starting from 7 days ago)
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  sevenDaysAgo.setHours(0, 0, 0, 0);
-  const dateToRequest = Timestamp.fromDate(sevenDaysAgo);
+  // Filter to only get attentions from today (starting from today at 00:00)
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const dateToRequest = Timestamp.fromDate(todayStart);
 
   const attentionQuery = query(
     attentionCollection,

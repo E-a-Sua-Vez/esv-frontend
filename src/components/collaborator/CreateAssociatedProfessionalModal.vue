@@ -330,9 +330,7 @@ export default {
           payload.canSignDocuments = form.value.medicalData.canSignDocuments;
         }
 
-        console.log('Creating associated professional with payload:', payload);
         const result = await createAssociatedProfessional(props.collaborator.id, payload);
-        console.log('Professional created successfully:', result);
 
         emit('created', result);
         emit('close');

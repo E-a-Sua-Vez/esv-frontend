@@ -308,12 +308,6 @@ export default {
             const professionalValue = getValue('professionalFilter');
             contentInstance.professionalFilter = professionalValue !== undefined && professionalValue !== null && professionalValue !== '' ? professionalValue : undefined;
 
-            console.log('[refreshIncomesContent] Syncing filters:', {
-              professionalFilter: contentInstance.professionalFilter,
-              startDate: contentInstance.startDate,
-              endDate: contentInstance.endDate,
-            });
-
             // Clear skip flag and refresh
             contentInstance._skipWatch = false;
 
@@ -527,10 +521,6 @@ export default {
 
     // Shared filter functions - updated to sync with filter instance and refresh content
     const setSharedIncomeStatus = value => {
-      console.log('BusinessFinancial.setSharedIncomeStatus:', {
-        oldValue: state.sharedIncomeFilters.incomeStatus,
-        newValue: value,
-      });
       state.sharedIncomeFilters.incomeStatus = value;
 
       // Update filter instance if available
@@ -1480,8 +1470,6 @@ export default {
                                   const selectedValue = e.target.value;
                                   // Convert empty string to undefined for API consistency
                                   const newValue = selectedValue === '' ? undefined : selectedValue;
-                                  console.log('[BusinessFinancial Desktop] Selected value:', selectedValue);
-                                  console.log('[BusinessFinancial Desktop] Setting to:', newValue);
 
                                   // Update filter instance directly
                                   if (filterProps.setProfessionalFilter) {

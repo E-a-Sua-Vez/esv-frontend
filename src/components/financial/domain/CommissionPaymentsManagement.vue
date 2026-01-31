@@ -245,7 +245,7 @@ export default {
         const timestamp = Date.now();
         const payments = await getCommissionPaymentsByCommerce(props.commerce.id, timestamp);
         allPayments.value = Array.isArray(payments) ? payments : [];
-        console.log('[loadPayments] Loaded payments:', {
+        console.log({
           count: allPayments.value.length,
           payments: allPayments.value,
         });
@@ -286,25 +286,12 @@ export default {
           to = toDate.toISOString();
         }
 
-        console.log('[searchUnpaidIncomes] Searching with params:', {
-          professionalId: selectedProfessionalId.value,
-          commerceId: props.commerce.id,
-          from,
-          to,
-        });
-
         const result = await getUnpaidIncomesByProfessional(
           selectedProfessionalId.value,
           props.commerce.id,
           from,
           to
         );
-
-        console.log('[searchUnpaidIncomes] Result:', {
-          isArray: Array.isArray(result),
-          length: Array.isArray(result) ? result.length : 'not array',
-          result,
-        });
 
         // Asegurar que siempre sea un array
         unpaidIncomes.value = Array.isArray(result) ? result : [];
@@ -313,7 +300,6 @@ export default {
 
         // Si no hay resultados, no es un error, solo información
         if (unpaidIncomes.value.length === 0) {
-          console.log('[searchUnpaidIncomes] No unpaid incomes found for the selected criteria');
         }
       } catch (error) {
         console.error('[searchUnpaidIncomes] Error:', error);
@@ -379,16 +365,6 @@ export default {
           periodToISO = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999)).toISOString();
         }
 
-        console.log('[createPayment] Creating payment with:', {
-          commerceId: props.commerce.id,
-          businessId: props.business.id,
-          professionalId: selectedProfessionalId.value,
-          incomeIds: selectedIncomeIds.value,
-          periodFrom: periodFromISO,
-          periodTo: periodToISO,
-          notes: notes.value,
-        });
-
         const createdPayment = await createCommissionPayment(
           props.commerce.id,
           props.business.id,
@@ -398,8 +374,6 @@ export default {
           periodToISO || new Date().toISOString(),
           notes.value
         );
-
-        console.log('[createPayment] Payment created:', createdPayment);
 
         // Reset form
         selectedIncomeIds.value = [];
@@ -416,7 +390,6 @@ export default {
         activeTab.value = 'created';
         loading.value = false;
 
-        console.log('[createPayment] Payment created successfully, switched to created tab');
       } catch (error) {
         console.error('[createPayment] Error creating payment:', error);
         console.error('[createPayment] Error details:', {

@@ -58,7 +58,6 @@ export default {
             ...cacheData.value,
             reason: cacheData.value.reason || '',
           };
-          console.log('📝 Loaded consultation reason from cache (session data)');
         }
         // PRIORIDAD 2: Si no hay cache, cargar desde patientHistoryData guardado
         else if (patientHistoryData.value && patientHistoryData.value.id) {
@@ -79,7 +78,6 @@ export default {
                 ...reasonToLoad,
                 reason: reasonToLoad.reason || '',
               };
-              console.log('📝 Loaded consultation reason from saved data');
             }
           }
         }
@@ -196,7 +194,6 @@ export default {
     });
 
     const handleTemplateSelected = content => {
-      console.log('🟢 ConsultationReasonForm: Recibido template-selected con:', content);
       state.newConsultationReason.reason = content;
       console.log(
         '🟢 ConsultationReasonForm: state.newConsultationReason.reason actualizado a:',

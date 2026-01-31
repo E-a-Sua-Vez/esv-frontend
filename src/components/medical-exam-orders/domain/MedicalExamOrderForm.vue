@@ -119,8 +119,6 @@ export default {
 
     // Initialize exam order data
     onMounted(async () => {
-      console.log('📋 Initializing exam order - attention prop:', attention.value);
-
       // Extract attention ID first (could be string, object with id, or object with full details)
       let attentionId = null;
       if (typeof attention.value === 'string') {
@@ -132,7 +130,6 @@ export default {
       // Set attention ID immediately if we have it
       if (attentionId) {
         state.examOrder.attentionId = attentionId;
-        console.log('✅ Attention ID set from prop:', state.examOrder.attentionId);
       }
 
       if (commerce.value?.id) state.examOrder.commerceId = commerce.value.id;
@@ -141,10 +138,8 @@ export default {
       // Load full attention details if we need collaborator info
       let attentionDetails = attention.value;
       if (attentionId && !attention.value?.collaboratorId) {
-        console.log('🔄 Loading attention details for ID:', attentionId);
         try {
           attentionDetails = await getAttentionDetails(attentionId);
-          console.log('✅ Attention details loaded:', attentionDetails);
           // Ensure attentionId is set (in case getAttentionDetails succeeds but ID was missing)
           if (attentionDetails?.id) {
             state.examOrder.attentionId = attentionDetails.id;
@@ -161,14 +156,12 @@ export default {
       if (attentionDetails?.professionalId) {
         state.examOrder.professionalId = attentionDetails.professionalId;
         state.examOrder.doctorId = attentionDetails.professionalId;
-        console.log('👨‍⚕️ Doctor ID set from professional:', state.examOrder.doctorId);
       }
       if (attentionDetails?.collaboratorId) {
         state.examOrder.collaboratorId = attentionDetails.collaboratorId;
         // Solo usar collaboratorId como doctorId si no hay professionalId
         if (!attentionDetails.professionalId) {
           state.examOrder.doctorId = attentionDetails.collaboratorId;
-          console.log('👨‍⚕️ Doctor ID set from collaborator (fallback):', state.examOrder.doctorId);
         }
       }
 
@@ -182,7 +175,6 @@ export default {
           if (currentUser && currentUser.id) {
             state.examOrder.doctorId = currentUser.id;
             state.examOrder.collaboratorId = currentUser.id; // Asumir que es collaborator
-            console.log('👨‍⚕️ Doctor ID set from current user:', state.examOrder.doctorId);
           } else {
             console.error('❌ No current user found in store');
           }
@@ -426,8 +418,6 @@ export default {
             .substr(2, 9)}`;
         }
 
-        console.log('🔬 Sending exam order data:', state.examOrder);
-
         if (typeof receiveData.value === 'function') {
           receiveData.value(state.examOrder);
         } else {
@@ -519,7 +509,6 @@ export default {
 
     const handleSignatureVerified = result => {
       // Verification result is already shown in the component
-      console.log('Signature verification:', result);
     };
 
     const handleSignatureCancel = () => {

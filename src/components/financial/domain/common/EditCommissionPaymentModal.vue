@@ -38,15 +38,12 @@ export default {
 
     const loadCurrentIncomeDetails = async () => {
       if (!props.commerce || !props.payment.incomeIds?.length) {
-        console.log('[EditCommissionPaymentModal] Missing required data for loading income details');
         return;
       }
 
       try {
         loadingCurrentIncomes.value = true;
 
-        console.log('[EditCommissionPaymentModal] Loading income details for payment:', props.payment.id);
-        console.log('[EditCommissionPaymentModal] IncomeIds to load:', props.payment.incomeIds);
 
         // Convert period dates to YYYY-MM-DD format
         const periodFrom = props.payment.periodFrom
@@ -56,7 +53,6 @@ export default {
           ? new Date(props.payment.periodTo).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0];
 
-        console.log('[EditCommissionPaymentModal] Period:', periodFrom, 'to', periodTo);
 
         // Use businessId if available, otherwise use commerceId
         const businessId = props.business?.id || props.commerce.id;
@@ -82,18 +78,15 @@ export default {
           props.payment.professionalId          // professionalFilter
         );
 
-        console.log('[EditCommissionPaymentModal] All incomes returned:', allIncomes?.length || 0);
 
         // Filter to only include incomes that are in the payment's incomeIds
         if (Array.isArray(allIncomes)) {
           currentIncomeDetails.value = allIncomes.filter(income => {
             const isIncluded = props.payment.incomeIds.includes(income.id);
             if (isIncluded) {
-              console.log('[EditCommissionPaymentModal] Including income:', income.id, 'with commission:', income.professionalCommission);
             }
             return isIncluded;
           });
-          console.log('[EditCommissionPaymentModal] Filtered income details:', currentIncomeDetails.value.length);
         } else {
           console.warn('[EditCommissionPaymentModal] No incomes returned or invalid format');
           currentIncomeDetails.value = [];
@@ -101,7 +94,6 @@ export default {
 
         // If we couldn't get details, try alternative approach
         if (currentIncomeDetails.value.length === 0 && props.payment.incomeIds.length > 0) {
-          console.log('[EditCommissionPaymentModal] Trying alternative approach to load income details');
 
           // Try without professional filter
           const allIncomesAlt = await getIncomesDetails(
@@ -128,7 +120,6 @@ export default {
             currentIncomeDetails.value = allIncomesAlt.filter(income =>
               props.payment.incomeIds.includes(income.id)
             );
-            console.log('[EditCommissionPaymentModal] Alternative approach found:', currentIncomeDetails.value.length, 'incomes');
           }
         }
       } catch (error) {
@@ -181,14 +172,10 @@ export default {
       Number(parseFloat(amount || 0).toFixed(2)).toLocaleString('de-DE');
 
     onMounted(async () => {
-      console.log('[EditCommissionPaymentModal] onMounted - payment data:', props.payment);
-      console.log('[EditCommissionPaymentModal] onMounted - commerce data:', props.commerce?.id);
-      console.log('[EditCommissionPaymentModal] onMounted - business data:', props.business?.id);
 
       currentIncomeIds.value = [...props.payment.incomeIds];
       notes.value = props.payment.notes || '';
 
-      console.log('[EditCommissionPaymentModal] onMounted - currentIncomeIds set to:', currentIncomeIds.value);
 
       await Promise.all([
         loadCurrentIncomeDetails(),

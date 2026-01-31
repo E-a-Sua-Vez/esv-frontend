@@ -226,7 +226,6 @@ export default {
 
       // Escuchar notificación de sesión completada
       onSessionCompleted(data => {
-        console.log('[TelemedicineChat] Session completed notification received:', data);
         // Emit event to parent to handle session end
         emit('session-ended');
         emit('close');

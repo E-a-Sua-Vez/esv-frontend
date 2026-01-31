@@ -137,7 +137,6 @@ export default {
         // Only set the queue if it's valid for preselection
         if (isPreselectedQueueValid()) {
           state.queue = props.preselectedQueue;
-          console.log('🏢 ✅ Valid preselected queue set:', props.preselectedQueue);
 
           // For SERVICE and STANDARD queues with one service, auto-select that service
           if (
@@ -146,10 +145,6 @@ export default {
           ) {
             if (props.preselectedQueue.services && props.preselectedQueue.services.length === 1) {
               state.selectedServices = [...props.preselectedQueue.services];
-              console.log(
-                '🔧 ✅ Auto-selected single service for SERVICE/STANDARD queue:',
-                state.selectedServices,
-              );
             } else if (
               props.preselectedQueue.servicesId &&
               props.preselectedQueue.servicesId.length === 1
@@ -164,29 +159,17 @@ export default {
                 },
               };
               state.selectedServices = [serviceFromId];
-              console.log(
-                '🔧 ✅ Auto-selected service from servicesId for preselected SERVICE/STANDARD queue:',
-                state.selectedServices,
-              );
             }
           }
 
-          // For MULTI_SERVICE queues, auto-select all services
           if (props.preselectedQueue.type === 'MULTI_SERVICE') {
             if (props.preselectedQueue.services && props.preselectedQueue.services.length > 0) {
               state.selectedServices = [...props.preselectedQueue.services];
-              console.log(
-                '🔧 ✅ Auto-selected all services for MULTI_SERVICE queue:',
-                state.selectedServices,
-              );
             } else if (
               props.preselectedQueue.servicesId &&
               props.preselectedQueue.servicesId.length > 0
             ) {
               // If services array is empty but servicesId exists, we'll let the ServiceForm handle the selection
-              console.log(
-                '🔧 ℹ️ MULTI_SERVICE queue has servicesId but no services array - will be handled by ServiceForm',
-              );
             }
           }
 
@@ -201,20 +184,11 @@ export default {
                 state.services = filteredServices;
                 // Auto-select the preselected service
                 state.selectedServices = [...filteredServices];
-                console.log(
-                  '🔧 ✅ Filtered services to preselected service only:',
-                  filteredServices,
-                );
               } else {
                 state.services = props.preselectedQueue.services;
-                console.log('🔧 ⚠️ Preselected service not found in queue services, showing all');
               }
             } else {
               state.services = props.preselectedQueue.services;
-              console.log(
-                '🔧 Preselected queue services available:',
-                props.preselectedQueue.services,
-              );
             }
           } else if (props.preselectedServiceId && props.preselectedQueue.servicesId) {
             // If queue has servicesId array, filter by preselectedServiceId
@@ -234,7 +208,6 @@ export default {
               };
               state.services = [serviceFromId];
               state.selectedServices = [serviceFromId];
-              console.log('🔧 ✅ Created service object from preselectedServiceId:', serviceFromId);
             }
           }
 
@@ -247,15 +220,9 @@ export default {
           // Update canBook status AFTER setting services
           setCanBook();
         } else {
-          console.log(
-            '🏢 ⚠️ Preselected queue is invalid or requires manual selection:',
-            props.preselectedQueue,
-          );
           // Don't set the queue, force user to select a valid one
           state.queue = null;
         }
-      } else if (props.preselectedQueue) {
-        console.log('🏢 ⚠️ Preselected queue provided but missing ID:', props.preselectedQueue);
       }
       if (props.preselectedClient) {
         // ✅ Map client data fields using helper function
@@ -267,8 +234,6 @@ export default {
 
       // Handle new clientData prop (enhanced client data)
       if (props.clientData) {
-        console.log('👤 Pre-populating with clientData:', props.clientData);
-
         // ✅ Map client data fields using helper function
         const mappedClientData = mapClientDataFields(props.clientData);
 
@@ -286,16 +251,8 @@ export default {
         state.date = props.preselectedDate;
         // Always load blocks for preselected date to show ALL available options
         if (props.preselectedQueue && props.preselectedQueue.id) {
-          console.log('🔄 Loading ALL blocks for preselected date:', props.preselectedDate);
-          console.log('🔄 Preselected queue:', props.preselectedQueue.id);
 
           await loadBlocksForDate(props.preselectedDate);
-
-          console.log('🔄 After loading - state.blocks length:', state.blocks?.length || 0);
-          console.log(
-            '🔄 After loading - state.blocksByDay keys:',
-            Object.keys(state.blocksByDay || {}),
-          );
 
           // Force a recalculation of available blocks
           calculateAvailableBlocks();
@@ -395,7 +352,6 @@ export default {
         const hasOneService =
           (queue.servicesId && queue.servicesId.length === 1) ||
           (queue.services && queue.services.length === 1);
-        console.log('🔍 SERVICE/STANDARD queue - hasOneService:', hasOneService);
         return hasOneService;
       }
 
@@ -404,24 +360,20 @@ export default {
         const hasServices =
           (queue.services && queue.services.length > 0) ||
           (queue.servicesId && queue.servicesId.length > 0);
-        console.log('🔍 MULTI_SERVICE queue - hasServices:', hasServices);
         return hasServices;
       }
 
       // For PROFESSIONAL queues, they need to be loaded dynamically, so we can't preselect them
       // They need service selection after loading collaborator details
       if (queue.type === 'PROFESSIONAL') {
-        console.log('🔍 PROFESSIONAL queue - cannot preselect (needs dynamic loading)');
         return false;
       }
 
       // For SELECT_SERVICE queues, user must select services, so cannot be preselected
       if (queue.type === 'SELECT_SERVICE') {
-        console.log('🔍 SELECT_SERVICE queue - cannot preselect (user must select)');
         return false;
       }
 
-      console.log('🔍 Unknown queue type or invalid queue');
       return false;
     };
 
@@ -470,23 +422,9 @@ export default {
           // If queue requires service selection, ensure services are selected
           if (hasQueue && needsServiceSelection()) {
             const hasSelectedServices = state.selectedServices && state.selectedServices.length > 0;
-            console.log(
-              '🔧 canProceedFromStep (step 2): hasQueue =',
-              hasQueue,
-              'needsServices =',
-              true,
-              'hasSelectedServices =',
-              hasSelectedServices,
-            );
             return hasSelectedServices;
           }
 
-          console.log(
-            '🔧 canProceedFromStep (step 2): hasQueue =',
-            hasQueue,
-            'queueId =',
-            state.queue?.id,
-          );
           return hasQueue;
         }
         case 3: {
@@ -579,24 +517,11 @@ export default {
         props.clientData?.clientId ||
         props.clientData?.id
 
-      console.log(
-        '🔍 needsProcedureAmountSelection: hasClientId:',
-        hasClientId,
-        'step2PackageInfo:',
-        !!step2PackageInfo.value,
-      );
-
       if (hasClientId && step2PackageInfo.value) {
-        console.log(
-          '🔍 needsProcedureAmountSelection: Client has active package, skipping selection',
-        );
         return false; // Client has active package, no need to select amount
       }
 
       // If service has proceduresList and no active package, show selection
-      console.log(
-        '🔍 needsProcedureAmountSelection: TRUE - Service has proceduresList and no active package',
-      );
       return true;
     });
 
@@ -823,7 +748,6 @@ export default {
             sessionsRemaining: pkg.proceduresLeft || 0,
           };
 
-          console.log('📦 Package info loaded:', packageInfo.value);
         }
       } catch (error) {
         console.error('Error loading package info:', error);
@@ -871,7 +795,6 @@ export default {
 
       try {
         loadingStep2PackageInfo.value = true;
-        console.log('📦 Loading step 2 package info:', { serviceId, clientId });
 
         // Get available packages for this service
         const { getAvailablePackagesForService } = await import(
@@ -981,7 +904,6 @@ export default {
                 sessionsRemaining: activePackage.proceduresLeft || 0,
               };
 
-              console.log('📦 Step 2 package info loaded:', step2PackageInfo.value);
             }
           } else {
             if (isMounted.value) {
@@ -1312,7 +1234,6 @@ export default {
 
       // Always reload blocks if we have a preselected date and queue - AWAIT this to ensure blocks are loaded
       if (props.preselectedDate && props.preselectedQueue && props.preselectedQueue.id) {
-        console.log('🔄 Reset: Loading blocks for preselected date:', props.preselectedDate);
         await loadBlocksForDate(props.preselectedDate);
       }
     };
@@ -1327,22 +1248,6 @@ export default {
 
         // Store the mapped data
         clientFormData.value = mappedData;
-
-        console.log('📋 Client data received in AttentionCreationFlow (MAPPED):', {
-          originalData: data, // Show original data
-          mappedData: clientFormData.value, // Show mapped data
-          hasName: !!clientFormData.value.name,
-          hasLastName: !!clientFormData.value.lastName,
-          hasPhone: !!clientFormData.value.phone,
-          hasEmail: !!clientFormData.value.email,
-          hasIdNumber: !!clientFormData.value.idNumber,
-          hasClientId: !!clientFormData.value.clientId,
-          hasPhoneCode: !!clientFormData.value.phoneCode,
-          allKeys: Object.keys(clientFormData.value),
-          // Show field mapping verification
-          nameSource: data.name ? 'name' : data.userName ? 'userName (mapped)' : 'missing',
-          phoneSource: data.phone ? 'phone' : data.userPhone ? 'userPhone (mapped)' : 'missing',
-        });
 
         // Extract phoneCode and phone from the data to update state for validation
         if (data.phoneCode) {
@@ -1389,10 +1294,6 @@ export default {
       }
 
       state.queue = queue;
-      console.log('🏢 Queue selected:', queue);
-      console.log('🏢 Queue type:', queue.type);
-      console.log('🏢 Queue services:', queue.services);
-      console.log('🏢 Queue collaborator:', queue.collaborator);
 
       // For PROFESSIONAL queues, load services and collaborator details
       if (queue.type === 'PROFESSIONAL') {
@@ -1400,12 +1301,10 @@ export default {
         const servicesIds = Array.isArray(queue.servicesId) ? queue.servicesId : [queue.servicesId].filter(Boolean);
         if (servicesIds.length > 0) {
           try {
-            console.log('🔧 Loading services for professional:', servicesIds);
             const loadedServices = await getServicesById(servicesIds);
             if (loadedServices && loadedServices.length > 0) {
               state.queue.services = loadedServices;
               state.queue.servicesName = loadedServices.map(serv => serv.name);
-              console.log('🔧 ✅ Services loaded for professional:', state.queue.services);
             } else {
               // Fallback: create dummy services from servicesId
               state.queue.services = servicesIds.map(id => ({
@@ -1417,7 +1316,6 @@ export default {
                 },
               }));
               state.queue.servicesName = state.queue.services.map(serv => serv.name);
-              console.log('🔧 ✅ Created dummy services for professional:', state.queue.services);
             }
           } catch (error) {
             console.error('🔧 ❌ Error loading services:', error);
@@ -1431,20 +1329,16 @@ export default {
               },
             }));
             state.queue.servicesName = state.queue.services.map(serv => serv.name);
-            console.log('🔧 ✅ Created dummy services for professional (fallback):', state.queue.services);
           }
         }
 
         // Load professional details if available
         if (queue.collaboratorId || queue.professionalId) {
           try {
-            console.log('🔧 Loading professional details for ID:', queue.collaboratorId || queue.professionalId);
             const professional = await getProfessionalById(queue.collaboratorId || queue.professionalId);
             if (professional && professional.id) {
               state.queue.collaborator = professional;
-              console.log('🔧 ✅ Professional loaded:', professional);
             } else {
-              console.log('🔧 ℹ️ Professional not found or invalid');
             }
           } catch (error) {
             console.error('🔧 ❌ Error loading professional details:', error);
@@ -1456,10 +1350,6 @@ export default {
       if (queue.type === 'SERVICE' || queue.type === 'STANDARD') {
         if (queue.services && queue.services.length === 1) {
           state.selectedServices = [...queue.services];
-          console.log(
-            '🔧 ✅ Auto-selected single service for SERVICE/STANDARD queue:',
-            state.selectedServices,
-          );
         } else if (queue.servicesId && queue.servicesId.length === 1) {
           // Create a service object from servicesId for SERVICE queues
           const serviceFromId = {
@@ -1471,27 +1361,17 @@ export default {
             },
           };
           state.selectedServices = [serviceFromId];
-          console.log(
-            '🔧 ✅ Auto-selected service from servicesId for SERVICE/STANDARD queue:',
-            state.selectedServices,
-          );
         }
       } else if (queue.type === 'MULTI_SERVICE') {
         if (queue.services && queue.services.length > 0) {
           state.selectedServices = [...queue.services];
-          console.log(
-            '🔧 ✅ Auto-selected all services for MULTI_SERVICE queue:',
-            state.selectedServices,
-          );
         } else {
           // For MULTI_SERVICE, we need the full services array, can't create from IDs alone
           state.selectedServices = [];
-          console.log('🔧 ⚠️ MULTI_SERVICE queue needs full services array - cleared selection');
         }
       } else {
         // Clear selected services for queues that require manual selection
         state.selectedServices = [];
-        console.log('🔧 ℹ️ Cleared selected services - manual selection required');
       }
 
       // Calculate blocks needed after auto-selecting services
@@ -1505,25 +1385,16 @@ export default {
           state.totalDurationRequested / (queue.blockTime || 30),
         );
 
-        console.log('🔧 Calculated blocks needed:', {
-          totalDuration: state.totalDurationRequested,
-          queueBlockTime: queue.blockTime || 30,
-          blocksNeeded: state.amountofBlocksNeeded,
-        });
       }
 
       // Set available services for UI display
-      console.log('🔧 queue.services before setting state.services:', queue.services);
       if (queue.services && queue.services.length > 0) {
         state.services = queue.services;
-        console.log('🔧 state.services set to:', state.services);
       } else {
-        console.log('🔧 No services to set, queue.services:', queue.services);
       }
 
       // Recalculate available blocks if date is already selected
       if (state.date) {
-        console.log('🔧 Recalculating blocks after queue selection');
         calculateAvailableBlocks();
       }
 
@@ -1534,13 +1405,10 @@ export default {
       alertError.value = '';
       state.errorsAdd = [];
       state.services = services;
-      console.log('🔧 receiveServices called with:', services);
-      console.log('🔧 Current queue:', state.queue);
       setCanBook();
     };
 
     const receiveSelectedServices = services => {
-      console.log('🔧 receiveSelectedServices called with services:', services?.length || 0);
       state.selectedServices = services;
 
       // Clear selectedProcedureAmount when services change (user might select different service)
@@ -1555,25 +1423,11 @@ export default {
         state.totalDurationRequested / (state.queue.blockTime || 30),
       );
 
-      console.log('🔧 Service selection updated:', {
-        servicesCount: services?.length || 0,
-        totalDuration: state.totalDurationRequested,
-        queueBlockTime: state.queue.blockTime || 30,
-        blocksNeeded: state.amountofBlocksNeeded,
-        services: services?.map(s => ({
-          name: s.name,
-          id: s.id,
-          proceduresList: s.serviceInfo?.proceduresList,
-          procedures: s.serviceInfo?.procedures,
-        })),
-      });
-
       // Log if any service has proceduresList
       const hasProceduresList = services?.some(s => {
         const pl = s.serviceInfo?.proceduresList;
         return pl && pl.trim() && pl.trim().length > 0;
       });
-      console.log('🔧 Service has proceduresList:', hasProceduresList);
 
       // Clear date and block when services change
       state.date = null;
@@ -1612,15 +1466,8 @@ export default {
       // Always set to true if we have a queue with ID - simplify the logic
       if (state.queue && state.queue.id) {
         state.canBook = true;
-        console.log(
-          '🔧 ✅ setCanBook: TRUE - Queue exists with ID:',
-          state.queue.id,
-          'Type:',
-          state.queue.type,
-        );
       } else {
         state.canBook = false;
-        console.log('🔧 ❌ setCanBook: FALSE - No queue or no queue ID');
       }
     };
 
@@ -1631,33 +1478,28 @@ export default {
 
     // Check for active packages for the selected service
     const checkActivePackagesForService = async () => {
-      console.log('🔧 checkActivePackagesForService called');
       // Reset state
       state.activePackagesForService = [];
       // state.loadingActivePackages = true; // No need since we don't have this state
 
       // Only check if we have selected services and a client
       if (!state.selectedServices || state.selectedServices.length === 0) {
-        console.log('🔧 No selected services, returning');
         // state.loadingActivePackages = false;
         return;
       }
 
       const clientId = state.newUser?.clientId || state.newUser?.id;
       if (!clientId || !props.commerce?.id) {
-        console.log('🔧 No clientId or commerce.id, returning');
         // state.loadingActivePackages = false;
         return;
       }
 
       const serviceId = state.selectedServices[0]?.id;
       if (!serviceId) {
-        console.log('🔧 No serviceId, returning');
         // state.loadingActivePackages = false;
         return;
       }
 
-      console.log('🔧 Checking active packages for service:', serviceId, 'client:', clientId, 'commerce:', props.commerce.id);
 
       try {
         const availablePackages = await getAvailablePackagesForService(
@@ -1666,7 +1508,6 @@ export default {
           clientId
         );
 
-        console.log('🔧 Available packages:', availablePackages?.length || 0);
 
         if (availablePackages && availablePackages.length > 0) {
           // Filter for active packages with pending sessions
@@ -1677,10 +1518,8 @@ export default {
           });
 
           state.activePackagesForService = activePackages || [];
-          console.log('🔧 Active packages found:', activePackages.length);
         } else {
           state.activePackagesForService = [];
-          console.log('🔧 No available packages');
         }
       } catch (error) {
         console.error('[AttentionCreationFlow] Error checking active packages:', error);
@@ -1692,9 +1531,7 @@ export default {
 
     // Load package reminder info when services and client are selected
     const loadPackageReminderInfo = async () => {
-      console.log('🔧 loadPackageReminderInfo called');
       if (state.loadingPackageReminder || !isMounted.value) {
-        console.log('🔧 Already loading or not mounted, returning');
         return;
       }
 
@@ -1706,25 +1543,21 @@ export default {
         props.clientData?.clientId ||
         props.clientData?.id;
       if (!clientId || !props.commerce?.id) {
-        console.log('🔧 No clientId or commerce.id, setting packageReminderInfo to null');
         state.packageReminderInfo = null;
         return;
       }
 
       if (!state.selectedServices || state.selectedServices.length === 0) {
-        console.log('🔧 No selected services, setting packageReminderInfo to null');
         state.packageReminderInfo = null;
         return;
       }
 
       const serviceId = state.selectedServices[0]?.id;
       if (!serviceId) {
-        console.log('🔧 No serviceId, setting packageReminderInfo to null');
         state.packageReminderInfo = null;
         return;
       }
 
-      console.log('🔧 Loading package reminder for service:', serviceId, 'client:', clientId);
 
       try {
         state.loadingPackageReminder = true;
@@ -1734,7 +1567,6 @@ export default {
           clientId
         );
 
-        console.log('🔧 Available packages for reminder:', availablePackages?.length || 0);
 
         if (availablePackages && availablePackages.length > 0) {
           const activePackage = availablePackages.find(pkg => {
@@ -1743,7 +1575,6 @@ export default {
             return isActive && hasPendingSessions;
           });
 
-          console.log('🔧 Active package found:', !!activePackage);
 
           if (activePackage) {
             let pendingAttentions = [];
@@ -1870,18 +1701,15 @@ export default {
                 lastAttentionDate,
                 nextExpectedDate,
               };
-              console.log('🔧 Package reminder info set:', state.packageReminderInfo);
             }
           } else {
             if (isMounted.value) {
               state.packageReminderInfo = null;
-              console.log('🔧 No active package, setting packageReminderInfo to null');
             }
           }
         } else {
           if (isMounted.value) {
             state.packageReminderInfo = null;
-            console.log('🔧 No available packages, setting packageReminderInfo to null');
           }
         }
       } catch (error) {
@@ -1892,7 +1720,6 @@ export default {
       } finally {
         if (isMounted.value) {
           state.loadingPackageReminder = false;
-          console.log('🔧 Finished loading package reminder, loadingPackageReminder set to false');
         }
       }
     };
@@ -1938,12 +1765,6 @@ export default {
     };
 
     const handleDateSelection = async date => {
-      console.log('📅 AttentionCreationFlow - Date selection changed:', {
-        oldDate: state.date,
-        newDate: date,
-        preselectedDate: props.preselectedDate,
-        preselectedBlock: props.preselectedBlock,
-      });
 
       state.date = date;
 
@@ -1952,7 +1773,6 @@ export default {
       if (date !== props.preselectedDate) {
         state.block = null;
         state.attentionBlock = null; // Also clear attentionBlock
-        console.log('📅 Cleared selected blocks (different date)');
       } else if (props.preselectedBlock) {
         // Determine which block to restore based on date
         const isToday = date === 'TODAY' || date === new Date().toISOString().slice(0, 10);
@@ -1963,18 +1783,14 @@ export default {
           state.block = props.preselectedBlock;
           state.attentionBlock = null;
         }
-        console.log('📅 Restored preselected block (same date)');
       }
 
       if (date) {
-        console.log('📅 Loading blocks for date:', date);
         await loadBlocksForDate(date);
-        console.log('📅 Blocks loaded, state.blocks length:', state.blocks?.length || 0);
       }
     };
 
     const handleBlockSelection = block => {
-      console.log('🟨 AttentionCreationFlow - Block selection:', block);
 
       // Determine if we're selecting for TODAY (attention) or future (booking)
       const currentDate = state.date || props.preselectedDate;
@@ -1990,7 +1806,6 @@ export default {
           ...(block.blocks && { blocks: block.blocks }),
           ...(block.blockNumbers && { blockNumbers: block.blockNumbers }),
         };
-        console.log('🟨 Set attentionBlock for TODAY:', state.attentionBlock);
       } else {
         // For future dates - use block (same as CommerceQueuesView)
         state.block = {
@@ -2000,7 +1815,6 @@ export default {
           ...(block.blocks && { blocks: block.blocks }),
           ...(block.blockNumbers && { blockNumbers: block.blockNumbers }),
         };
-        console.log('🟨 Set block for future date:', state.block);
       }
 
       // Update telemedicine config if enabled (same logic as CommerceQueuesView)
@@ -2019,22 +1833,16 @@ export default {
 
         const scheduledDateTime = new Date(dateStr + 'T' + block.hourFrom + ':00');
         state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
-        console.log('🟨 Updated telemedicine scheduledAt:', state.telemedicineConfig.scheduledAt);
       }
     };
 
     // Get blocks for a specific day (same logic as NextAvailableSlot)
     const getBlocksByDay = (date = null) => {
       const targetDate = date || state.date || props.preselectedDate;
-      console.log('🔷 getBlocksByDay() called for date:', targetDate);
-      console.log('🔷 state.blocksByDay:', state.blocksByDay);
-      console.log('🔷 queue.specificCalendar:', state.queue?.serviceInfo?.specificCalendar);
 
       if (!targetDate || targetDate === 'TODAY') {
         const day = new Date().getDay();
-        console.log('🔷 Today is day:', day);
         const blocks = state.blocksByDay[day];
-        console.log('🔷 Blocks for today:', blocks?.length || 0, blocks);
         return blocks || [];
       } else {
         // Check if using specific calendar or regular calendar
@@ -2042,9 +1850,7 @@ export default {
           // For specific calendar, use date string as key
           const dateStr =
             typeof targetDate === 'string' ? targetDate : new DateModel(targetDate).toString();
-          console.log('🔷 Getting blocks for specific date:', dateStr);
           const blocks = state.blocksByDay[dateStr];
-          console.log('🔷 Blocks for specific date:', blocks?.length || 0, blocks);
           return blocks || [];
         } else {
           // For regular calendar, convert date to day of week (same as NextAvailableSlot)
@@ -2054,9 +1860,7 @@ export default {
           let dayOfWeek = searchDateObj.getDay();
           if (dayOfWeek === 0) dayOfWeek = 7; // Sunday becomes 7
 
-          console.log('🔷 Converting date to day of week:', dateStr, '→', dayOfWeek);
           const blocks = state.blocksByDay[dayOfWeek];
-          console.log('🔷 Blocks for day of week', dayOfWeek + ':', blocks?.length || 0, blocks);
           return blocks || [];
         }
       }
@@ -2071,49 +1875,28 @@ export default {
 
         if (date === 'TODAY' || dateStr === new DateModel().toString()) {
           // Load today's blocks (same as CommerceQueuesView)
-          console.log('🔵 Loading blocks for TODAY');
           state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
-          console.log(
-            '🔵 blocksByDay loaded:',
-            Object.keys(state.blocksByDay || {}).length,
-            'days',
-          );
 
           // Use getBlocksByDay to get the actual blocks for today
           state.blocks = getBlocksByDay(date);
-          console.log('🔵 Blocks loaded for TODAY:', state.blocks?.length || 0);
 
           // Load attentions for today
           loadAttentionsForToday();
         } else {
           // Load blocks for specific date (same logic as NextAvailableSlot)
-          console.log('🟣 Loading blocks for specific date:', dateStr);
 
           // Check if queue uses specific calendar or regular calendar
           if (state.queue.serviceInfo && state.queue.serviceInfo.specificCalendar === true) {
-            console.log('🟣 Using specific calendar API');
             state.blocksByDay = await getQueueBlockDetailsBySpecificDayByCommerceId(
               props.commerce.id,
               state.queue.id
             );
-            console.log(
-              '🟣 blocksByDay loaded (specific):',
-              Object.keys(state.blocksByDay || {}).length,
-              'dates',
-            );
           } else {
-            console.log('🟣 Using regular calendar API (by day of week)');
             state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
-            console.log(
-              '🟣 blocksByDay loaded (regular):',
-              Object.keys(state.blocksByDay || {}).length,
-              'days',
-            );
           }
 
           // Use getBlocksByDay to get the actual blocks for the date
           state.blocks = getBlocksByDay(date);
-          console.log('🟣 Blocks loaded for date:', state.blocks?.length || 0);
 
           // Load bookings for date
           loadBookingsForDate(dateStr);
@@ -2145,7 +1928,6 @@ export default {
 
     const loadAttentionsForToday = async () => {
       try {
-        console.log('🎯 Loading attentions for today');
         // For today, we need to get attentions to calculate availability
         // This is a simplified version - in a real implementation you'd subscribe to Firebase
         // For now, we'll set empty attentions and let the parent component handle it
@@ -2160,7 +1942,6 @@ export default {
 
     const loadBookingsForDate = async dateStr => {
       try {
-        console.log('📅 Loading bookings for date:', dateStr);
 
         // Alinear con CommerceQueuesView / BookingCalendar:
         // getPendingBookingsBetweenDates(queueId, dateFrom, dateTo)
@@ -2169,7 +1950,6 @@ export default {
 
         const bookings = await getPendingBookingsBetweenDates(state.queue.id, dateFrom, dateTo);
         state.bookings = bookings || [];
-        console.log('📅 Loaded bookings:', state.bookings.length);
         calculateAvailableBlocks();
       } catch (error) {
         console.error('📅 Error loading bookings:', error);
@@ -2179,22 +1959,11 @@ export default {
     };
 
     const calculateAvailableBlocks = () => {
-      console.log('📊 AttentionCreationFlow - calculateAvailableBlocks() called');
-      console.log('📊 state.blocks:', state.blocks?.length || 0);
-      console.log('📊 state.bookings:', state.bookings?.length || 0);
-      console.log('📊 state.attentions:', state.attentions?.length || 0);
-      console.log('📊 creationType:', props.creationType);
 
       // Determine availability calculation based on date (same logic as CommerceQueuesView)
       const currentDate = state.date || props.preselectedDate;
       const isToday =
         currentDate === 'TODAY' || currentDate === new Date().toISOString().slice(0, 10);
-
-      console.log('📊 calculateAvailableBlocks - Date logic:', {
-        currentDate,
-        isToday,
-        willCreateBooking: !isToday,
-      });
 
       if (isToday) {
         // TODAY = attention blocks
@@ -2216,7 +1985,6 @@ export default {
 
     // Same logic as CommerceQueuesView for booking blocks (incluyendo blockLimit y filtro de hoy)
     const getAvailableBookingBlocks = () => {
-      console.log('📊 AttentionCreationFlow - getAvailableBookingBlocks() called');
       state.availableBookingBlocks = [];
       let availableBlocks = [];
       let queueBlocks = [];
@@ -2225,7 +1993,6 @@ export default {
       if (state.queue?.type !== 'SELECT_SERVICE') {
         if (state.blocks) {
           queueBlocks = state.blocks;
-          console.log('📊 Queue blocks:', queueBlocks?.length || 0);
 
           if (queueBlocks && queueBlocks.length > 0) {
             let bookingsReserved = [];
@@ -2303,7 +2070,6 @@ export default {
         // Para SELECT_SERVICE mantenemos el comportamiento simplificado original
         if (state.blocks) {
           queueBlocks = state.blocks;
-          console.log('📊 Queue blocks (SELECT_SERVICE):', queueBlocks?.length || 0);
 
           if (queueBlocks && queueBlocks.length > 0) {
             let bookingsReserved = [];
@@ -2325,7 +2091,6 @@ export default {
                 .flat();
             }
 
-            console.log('📊 Reserved blocks from bookings (SELECT_SERVICE):', bookingsReserved);
             availableBlocks = queueBlocks.filter(block => !bookingsReserved.includes(block.number));
           } else {
             availableBlocks = queueBlocks;
@@ -2334,19 +2099,16 @@ export default {
       }
 
       state.availableBookingBlocks = availableBlocks;
-      console.log('📊 Final availableBookingBlocks:', state.availableBookingBlocks?.length || 0);
     };
 
     // Same logic as CommerceQueuesView for attention blocks
     const getAvailableAttentionBlocks = () => {
-      console.log('🟣 AttentionCreationFlow - getAvailableAttentionBlocks() called');
       state.availableAttentionBlocks = [];
       let availableBlocks = [];
       let queueBlocks = [];
 
       if (state.blocks) {
         queueBlocks = state.blocks;
-        console.log('🟣 Queue blocks:', queueBlocks?.length || 0);
 
         if (queueBlocks && queueBlocks.length > 0) {
           let attentionsReserved = [];
@@ -2378,7 +2140,6 @@ export default {
               .flat();
           }
 
-          console.log('🟣 Reserved blocks from attentions:', attentionsReserved);
           availableBlocks = queueBlocks.filter(block => !attentionsReserved.includes(block.number));
         } else {
           availableBlocks = queueBlocks;
@@ -2386,10 +2147,6 @@ export default {
       }
 
       state.availableAttentionBlocks = availableBlocks;
-      console.log(
-        '🟣 Final availableAttentionBlocks:',
-        state.availableAttentionBlocks?.length || 0,
-      );
     };
 
     // Create super blocks for services that need multiple consecutive blocks
@@ -2397,11 +2154,6 @@ export default {
       if (!availableBlocks || availableBlocks.length === 0 || blocksNeeded <= 1) {
         return availableBlocks;
       }
-
-      console.log('🔧 Creating super blocks:', {
-        availableCount: availableBlocks.length,
-        blocksNeeded,
-      });
 
       const superBlocks = [];
       const availableNumbers = availableBlocks.map(block => block.number);
@@ -2440,7 +2192,6 @@ export default {
         }
       }
 
-      console.log('🔧 Created super blocks:', superBlocks.length);
       return superBlocks;
     };
 
@@ -2451,17 +2202,10 @@ export default {
         // Determine next step based on current step and conditions
         if (state.currentStep === 2) {
           // From step 2, check if we need procedure amount selection
-          console.log(
-            '🔍 nextStep from step 2: needsProcedureAmountSelection =',
-            needsProcedureAmountSelection.value,
-          );
-          console.log('🔍 Selected services:', state.selectedServices);
           if (needsProcedureAmountSelection.value) {
             targetStep = 3; // Go to procedure amount selection
-            console.log('🔍 Navigating to step 3 (procedure amount selection)');
           } else {
             targetStep = 4; // Skip to date/block selection
-            console.log('🔍 Skipping to step 4 (date/block selection)');
           }
         } else if (state.currentStep === 3) {
           // From step 3 (procedure selection), always go to step 4
@@ -2476,7 +2220,6 @@ export default {
         if (targetStep === 4) {
           const currentDate = state.date || props.preselectedDate;
           if (currentDate && state.queue) {
-            console.log('📅 Navigating to step 4, ensuring blocks are loaded for:', currentDate);
             await loadBlocksForDate(currentDate);
           }
         }
@@ -2507,7 +2250,6 @@ export default {
     // Handle procedure amount selection
     const handleProcedureAmountSelection = amount => {
       state.selectedProcedureAmount = amount;
-      console.log('🔧 Procedure amount selected:', amount);
     };
 
     const submitAttention = async event => {
@@ -2563,26 +2305,6 @@ export default {
           // ✅ Map client data fields using helper function
           rawUserData = mapClientDataFields(props.preselectedClient);
         }
-
-        console.log('📋 rawUserData before buildUserBody:', {
-          source:
-            clientFormData.value && Object.keys(clientFormData.value).length > 0
-              ? 'clientFormData'
-              : state.newUser && Object.keys(state.newUser).length > 0
-              ? 'state.newUser'
-              : props.clientData && Object.keys(props.clientData).length > 0
-              ? 'props.clientData'
-              : 'props.preselectedClient',
-          hasName: !!rawUserData.name,
-          hasLastName: !!rawUserData.lastName,
-          hasPhone: !!rawUserData.phone,
-          hasEmail: !!rawUserData.email,
-          hasIdNumber: !!rawUserData.idNumber,
-          hasClientId: !!rawUserData.clientId,
-          hasId: !!rawUserData.id,
-          rawUserDataObject: rawUserData, // ✅ Log full object to see what we have
-          allKeys: Object.keys(rawUserData),
-        });
 
         // ✅ If rawUserData is empty or missing critical fields, log warning
         if (!rawUserData || Object.keys(rawUserData).length === 0) {
@@ -2657,27 +2379,6 @@ export default {
           bodyUser.clientId = rawUserData.id;
         }
 
-        console.log('📋 bodyUser after buildUserBody:', {
-          hasName: !!bodyUser.name,
-          hasLastName: !!bodyUser.lastName,
-          hasPhone: !!bodyUser.phone,
-          hasEmail: !!bodyUser.email,
-          hasIdNumber: !!bodyUser.idNumber,
-          hasClientId: !!bodyUser.clientId,
-          clientIdValue: bodyUser.clientId,
-          hasId: !!bodyUser.id,
-          idValue: bodyUser.id,
-          hasPersonalInfo: !!bodyUser.personalInfo,
-          rawUserDataClientId: rawUserData.clientId,
-          rawUserDataId: rawUserData.id,
-          clientIdSource: rawUserData.clientId
-            ? 'rawUserData.clientId'
-            : rawUserData.id
-            ? 'rawUserData.id (mapped)'
-            : 'none',
-          allKeys: Object.keys(bodyUser),
-        });
-
         // Create newUser exactly like CommerceQueuesView
         // ✅ Only create userData if isDataActive (user data collection is required)
         // ✅ Spread bodyUser FIRST to preserve all client data, then add commerce-specific fields
@@ -2701,38 +2402,11 @@ export default {
             acceptTermsAndConditions: state.accept,
           };
 
-          console.log('📋 userData constructed:', {
-            hasClientId: !!userData.clientId,
-            clientId: userData.clientId,
-            bodyUserClientId: bodyUser.clientId,
-            bodyUserId: bodyUser.id,
-            clientIdToPreserve,
-            preservedExplicitly: !!clientIdToPreserve,
-            allKeys: Object.keys(userData),
-            userDataClientIdValue: userData.clientId,
-          });
         } else {
           // If data is not active, userData should be undefined (not an empty object)
           userData = undefined;
         }
 
-        console.log('📋 userData being sent (exact CommerceQueuesView format):', {
-          hasClientFormData: !!(
-            clientFormData.value && Object.keys(clientFormData.value).length > 0
-          ),
-          acceptTermsAndConditions: userData.acceptTermsAndConditions,
-          notificationOn: userData.notificationOn,
-          notificationEmailOn: userData.notificationEmailOn,
-          commerceId: userData.commerceId,
-          // ✅ VERIFICATION: Check if name/lastName are present
-          name: userData.name,
-          lastName: userData.lastName,
-          phone: userData.phone,
-          email: userData.email,
-          idNumber: userData.idNumber,
-          clientId: userData.clientId || userData.id,
-          userDataKeys: Object.keys(userData),
-        });
 
         // Prepare telemedicine config if enabled
         let telemedicineConfig = null;
@@ -2756,24 +2430,11 @@ export default {
 
         const shouldCreateBooking = !isTodaySubmission;
 
-        console.log('📋 AttentionCreationFlow - Creation logic:', {
-          dateToUse,
-          isTodaySubmission,
-          shouldCreateBooking,
-          creationType: props.creationType,
-        });
 
         let result;
 
         if (shouldCreateBooking) {
           // Create booking (same logic as CommerceQueuesView.getBooking)
-          console.log('📋 Creating BOOKING for future date');
-          console.log(
-            '📋 Booking data - Queue ID:',
-            state.queue.id,
-            'Selected Services:',
-            state.selectedServices?.length || 0,
-          );
 
           // Format date for booking (same as CommerceQueuesView.formattedDate)
           const formattedDate =
@@ -2810,50 +2471,11 @@ export default {
             // Client data came from state.newUser (query-stack), not from props.clientData
             // Query-stack IDs (e.g., 'C3EZW0TwfptTPG7g4VOH') don't match Firebase IDs (e.g., '3AbBN5PkZqKEvGP6v7bP')
             // Don't send clientId - backend will search by idNumber/email and find/create with correct Firebase ID
-            console.log(
-              '⚠️ Not sending clientId - client from query-stack, ID may not match Firebase. Backend will find/create by idNumber/email',
-            );
             clientIdValue = undefined;
           }
 
-          console.log('📋 bookingData.user before sending:', {
-            isUndefined: userData === undefined,
-            isNull: userData === null,
-            hasName: !!userData?.name,
-            hasLastName: !!userData?.lastName,
-            hasPhone: !!userData?.phone,
-            hasEmail: !!userData?.email,
-            hasIdNumber: !!userData?.idNumber,
-            hasClientId: !!userData?.clientId,
-            hasId: !!userData?.id,
-            rawUserDataClientId: rawUserData?.clientId,
-            rawUserDataId: rawUserData?.id,
-            clientIdValue,
-            hasClientData: !!props.clientData,
-            clientDataClientId: props.clientData?.clientId,
-            clientDataQueryStackClientId: props.clientData?.queryStackClientId,
-            sendingClientId: !!clientIdValue,
-            userDataKeys: userData ? Object.keys(userData) : [],
-            rawUserDataKeys: rawUserData ? Object.keys(rawUserData) : [],
-          });
 
           // ✅ Final validation: Log exactly what we're sending
-          console.log('📋 FINAL bookingData.clientId being sent to backend:', {
-            clientIdValue,
-            sendingClientId: !!clientIdValue,
-            clientIdType: typeof clientIdValue,
-            clientIdLength: clientIdValue?.length,
-            userDataClientId: userData?.clientId,
-            userDataId: userData?.id,
-            rawUserDataClientId: rawUserData?.clientId,
-            rawUserDataId: rawUserData?.id,
-            hasClientData: !!props.clientData,
-            clientDataClientId: props.clientData?.clientId,
-            clientDataQueryStackClientId: props.clientData?.queryStackClientId,
-            reason: clientIdValue
-              ? 'Sending clientId from props.clientData'
-              : 'Not sending clientId - letting backend find/create by idNumber/email',
-          });
 
           const bookingData = {
             queueId: state.queue.id,
@@ -2869,21 +2491,6 @@ export default {
             bookingData.professionalId = state.queue.professionalId;
           }
 
-          console.log('📋 COMPLETE bookingData object being sent:', {
-            queueId: bookingData.queueId,
-            clientId: bookingData.clientId,
-            hasClientId: !!bookingData.clientId,
-            date: bookingData.date,
-            hasUser: !!bookingData.user,
-            userKeys: bookingData.user ? Object.keys(bookingData.user) : [],
-            userClientId: bookingData.user?.clientId,
-            userId: bookingData.user?.id,
-            userEmail: bookingData.user?.email,
-            userIdNumber: bookingData.user?.idNumber,
-            strategy: bookingData.clientId
-              ? 'Using clientId to find existing client'
-              : 'Backend will find/create client by idNumber/email',
-          });
 
           // Add services if selected (same format as CommerceQueuesView)
           if (state.selectedServices && state.selectedServices.length > 0) {
@@ -2895,12 +2502,6 @@ export default {
                 // Ensure it's a number
                 proceduresValue =
                   parseInt(state.selectedProcedureAmount, 10) || state.selectedProcedureAmount;
-                console.log(
-                  '📋 Using selectedProcedureAmount for booking (flow):',
-                  proceduresValue,
-                  'from state:',
-                  state.selectedProcedureAmount,
-                );
               } else if (
                 serv.serviceInfo?.proceduresList &&
                 serv.serviceInfo.proceduresList.trim()
@@ -2915,11 +2516,6 @@ export default {
                   proceduresValue = proceduresList[0];
                 }
               }
-              console.log('📋 servicesDetails item (flow booking):', {
-                id: serv.id,
-                name: serv.name,
-                procedures: proceduresValue,
-              });
               return {
                 id: serv.id,
                 name: serv.name,
@@ -2927,7 +2523,6 @@ export default {
                 procedures: proceduresValue,
               };
             });
-            console.log('📋 Final servicesDetails for booking (flow):', servicesDetails);
             bookingData.servicesId = servicesId;
             bookingData.servicesDetails = servicesDetails;
 
@@ -2941,7 +2536,6 @@ export default {
           // Backend will handle validation and assignment of existing packages
           if (props.preselectedPackageId) {
             bookingData.packageId = props.preselectedPackageId;
-            console.log('📦 Using preselected packageId for booking:', props.preselectedPackageId);
           }
 
           // Add telemedicine config if enabled (same logic as CommerceQueuesView)
@@ -2962,14 +2556,6 @@ export default {
           }
         } else {
           // Create attention for TODAY (same logic as CommerceQueuesView.getAttention)
-          console.log('📋 Creating ATTENTION for TODAY');
-          console.log(
-            '📋 Attention data - Queue ID:',
-            state.queue.id,
-            'Selected Services:',
-            state.selectedServices?.length || 0,
-          );
-          console.log('📋 blockToUse:', blockToUse);
 
           // Convert block to plain object (same as CommerceQueuesView.convertBlockToPlainObject)
           const convertedBlock = blockToUse
@@ -2982,7 +2568,6 @@ export default {
               }
             : undefined;
 
-          console.log('📋 convertedBlock:', convertedBlock);
 
           // Get current channel exactly like CommerceQueuesView
           const store = globalStore();
@@ -2992,22 +2577,6 @@ export default {
           const clientIdValue =
             userData?.clientId || userData?.id || rawUserData?.clientId || rawUserData?.id;
 
-          console.log('📋 userData details before creating attentionData:', {
-            isUndefined: userData === undefined,
-            isNull: userData === null,
-            hasClientId: !!userData?.clientId,
-            hasId: !!userData?.id,
-            hasName: !!userData?.name,
-            hasLastName: !!userData?.lastName,
-            hasPhone: !!userData?.phone,
-            hasEmail: !!userData?.email,
-            clientId: userData?.clientId,
-            id: userData?.id,
-            userKeys: userData ? Object.keys(userData) : [],
-            fullUserData: userData, // ✅ Log full object
-            rawUserDataKeys: Object.keys(rawUserData),
-            clientIdValue,
-          });
 
           let attentionData;
           try {
@@ -3028,29 +2597,9 @@ export default {
               attentionData.professionalId = state.queue.professionalId;
             }
 
-            console.log('📋 attentionData.user before sending:', {
-              isUndefined: userData === undefined,
-              isNull: userData === null,
-              hasName: !!userData?.name,
-              hasLastName: !!userData?.lastName,
-              hasPhone: !!userData?.phone,
-              hasEmail: !!userData?.email,
-              hasIdNumber: !!userData?.idNumber,
-              hasClientId: !!userData?.clientId,
-              userDataKeys: userData ? Object.keys(userData) : [],
-              fullUserData: userData, // ✅ Log full object
-            });
 
-            console.log('📋 Basic attentionData created:', attentionData);
           } catch (error) {
             console.error('📋 ❌ Error creating basic attentionData:', error);
-            console.log('📋 Debug values:', {
-              queueId: state.queue?.id,
-              currentChannel,
-              userData: userData ? 'exists' : 'null',
-              clientId: userData?.clientId,
-              convertedBlock,
-            });
             throw error;
           }
 
@@ -3064,12 +2613,6 @@ export default {
                 // Ensure it's a number
                 proceduresValue =
                   parseInt(state.selectedProcedureAmount, 10) || state.selectedProcedureAmount;
-                console.log(
-                  '📋 Using selectedProcedureAmount for attention (flow):',
-                  proceduresValue,
-                  'from state:',
-                  state.selectedProcedureAmount,
-                );
               } else if (
                 serv.serviceInfo?.proceduresList &&
                 serv.serviceInfo.proceduresList.trim()
@@ -3084,11 +2627,6 @@ export default {
                   proceduresValue = proceduresList[0];
                 }
               }
-              console.log('📋 servicesDetails item (flow attention):', {
-                id: serv.id,
-                name: serv.name,
-                procedures: proceduresValue,
-              });
               return {
                 id: serv.id,
                 name: serv.name,
@@ -3096,7 +2634,6 @@ export default {
                 procedures: proceduresValue,
               };
             });
-            console.log('📋 Final servicesDetails for attention (flow):', servicesDetails);
             attentionData.servicesId = servicesId;
             attentionData.servicesDetails = servicesDetails;
 
@@ -3105,58 +2642,36 @@ export default {
               attentionData.selectedProcedureAmount = state.selectedProcedureAmount;
             }
 
-            console.log('📋 Services added to attention:', {
-              servicesId,
-              servicesDetails,
-              selectedProcedureAmount: state.selectedProcedureAmount,
-            });
-          } else {
-            console.log('📋 ⚠️ No services selected for attention');
           }
 
           // Only send packageId if it was preselected (from package button)
           // Backend will handle validation and assignment of existing packages
           if (props.preselectedPackageId) {
             attentionData.packageId = props.preselectedPackageId;
-            console.log(
-              '📦 Using preselected packageId for attention:',
-              props.preselectedPackageId,
-            );
           }
 
           // Add telemedicine config if enabled (same logic as CommerceQueuesView)
           if (state.isTelemedicine && telemedicineConfig) {
             attentionData.type = 'TELEMEDICINE';
             attentionData.telemedicineConfig = telemedicineConfig;
-            console.log('📋 Added telemedicine config to attention');
           }
 
           // Use the createAttention service directly (same as CommerceQueuesView)
-          console.log('📋 About to call createAttention with data:', attentionData);
           try {
             const attention = await createAttention(attentionData);
-            console.log('📋 ✅ createAttention returned:', attention);
             result = { success: true, attention };
           } catch (error) {
-            console.error('📋 ❌ createAttention failed:', error);
             result = { success: false, error: error.message || 'Error creating attention' };
           }
         }
 
-        console.log('📋 Final result:', result);
 
         if (result.success || result.id || result.attention) {
           // Emit the created attention or booking
           const createdItem = result.attention || result;
-          console.log(
-            '✅ AttentionCreationFlow - Successfully created:',
-            shouldCreateBooking ? 'booking' : 'attention',
-            createdItem,
-          );
           emit('attention-created', createdItem);
         } else {
           // Extract error message from various possible formats
-          console.log('📋 ❌ Creation failed, result:', result);
           let errorMessage =
             t('attentionCreation.errorCreatingAttention') || 'Error al crear la atención';
           const errorKeys = [];
@@ -3254,18 +2769,10 @@ export default {
         if (newStep === 4) {
           const currentDate = state.date || props.preselectedDate;
           if (currentDate && state.queue) {
-            console.log('📅 Reached step 4, ensuring ALL blocks are loaded for:', currentDate);
-            console.log('📅 Current state.blocks length:', state.blocks?.length || 0);
-            console.log('📅 Current state.blocksByDay:', Object.keys(state.blocksByDay || {}));
 
             // ALWAYS reload blocks when reaching step 4 to ensure we have ALL blocks
             await loadBlocksForDate(currentDate);
 
-            console.log('📅 After reload - state.blocks length:', state.blocks?.length || 0);
-            console.log(
-              '📅 After reload - state.blocksByDay:',
-              Object.keys(state.blocksByDay || {}),
-            );
           }
         }
       }
@@ -3305,13 +2812,6 @@ export default {
     watch(
       () => state.canBook,
       (newValue, oldValue) => {
-        console.log('🔧 WATCH: canBook changed from', oldValue, 'to', newValue, {
-          queueId: state.queue?.id,
-          queueType: state.queue?.type,
-          servicesCount: state.selectedServices?.length || 0,
-          availableServicesCount: state.queue?.services?.length || 0,
-          currentStep: state.currentStep,
-        });
       }
     );
 
@@ -3369,13 +2869,6 @@ export default {
 
     // Handle quick slot selection from NextAvailableSlot component
     const handleQuickSlotSelection = async slotData => {
-      console.log('🚀 AttentionCreationFlow - Quick slot selection:', {
-        date: slotData.date,
-        block: slotData.block,
-        blockNumber: slotData.block?.number,
-        hourFrom: slotData.block?.hourFrom,
-        hourTo: slotData.block?.hourTo,
-      });
 
       // Set the selected date
       state.date = slotData.date;
@@ -3394,7 +2887,6 @@ export default {
           ...(slotData.block.blockNumbers && { blockNumbers: slotData.block.blockNumbers }),
         };
         state.block = null; // Clear future block
-        console.log('🚀 Set attentionBlock for TODAY quick slot:', state.attentionBlock);
       } else {
         // For future dates - use block (same as manual selection)
         state.block = {
@@ -3405,7 +2897,6 @@ export default {
           ...(slotData.block.blockNumbers && { blockNumbers: slotData.block.blockNumbers }),
         };
         state.attentionBlock = null; // Clear attention block
-        console.log('🚀 Set block for future date quick slot:', state.block);
       }
 
       // Load blocks for the selected date to ensure proper state
@@ -3427,23 +2918,16 @@ export default {
         state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
       }
 
-      console.log('✅ AttentionCreationFlow - Quick slot applied successfully');
     };
 
     // Handle show manual selection
     const handleShowManualSelection = () => {
       // Just focus on the manual selection area - no specific scrolling needed
       // The user can see the manual date/time selection interface
-      console.log('📅 AttentionCreationFlow - Showing manual selection');
     };
 
     // Get all available blocks - show ALL blocks but mark availability status
     const getAllAvailableBlocks = computed(() => {
-      console.log('🔍 getAllAvailableBlocks computed called');
-      console.log('🔍 Current date:', state.date || props.preselectedDate);
-      console.log('🔍 state.blocks:', state.blocks?.length || 0, state.blocks);
-      console.log('🔍 availableBookingBlocks:', state.availableBookingBlocks?.length || 0);
-      console.log('🔍 availableAttentionBlocks:', state.availableAttentionBlocks?.length || 0);
 
       const blockMap = new Map();
       const currentDate = state.date || props.preselectedDate;
@@ -3455,23 +2939,18 @@ export default {
 
       // First try to use state.blocks (already loaded)
       if (state.blocks && state.blocks.length > 0) {
-        console.log('🔍 Using state.blocks as base:', state.blocks.length);
         allBlocks = [...state.blocks];
       }
       // If no state.blocks, try to get blocks using getBlocksByDay
       else if (state.blocksByDay && currentDate) {
-        console.log('🔍 No state.blocks, getting blocks using getBlocksByDay');
         allBlocks = getBlocksByDay(currentDate) || [];
-        console.log('🔍 Got blocks from getBlocksByDay:', allBlocks.length);
       }
       // Last resort - use available blocks (this might be incomplete)
       else {
-        console.log('🔍 No blocks available, using available blocks as fallback');
         const availableBlocks = isToday
           ? state.availableAttentionBlocks
           : state.availableBookingBlocks;
         allBlocks = availableBlocks || [];
-        console.log('🔍 Using available blocks as fallback:', allBlocks.length);
       }
 
       // Add all blocks to the map
@@ -3526,7 +3005,6 @@ export default {
 
       // Apply super block logic if multiple blocks are needed
       if (state.amountofBlocksNeeded > 1) {
-        console.log('🔍 Applying super block logic - blocks needed:', state.amountofBlocksNeeded);
         const availableBlocks = sortedBlocks.filter(b => b.isAvailable);
         const superBlocks = getAvailableSuperBlocks(availableBlocks, state.amountofBlocksNeeded);
 
@@ -3557,8 +3035,6 @@ export default {
         sortedBlocks = finalBlocks.sort((a, b) => a.number - b.number);
       }
 
-      console.log('🔍 Final sorted blocks:', sortedBlocks.length);
-      console.log('🔍 Available blocks:', sortedBlocks.filter(b => b.isAvailable).length);
 
       return sortedBlocks;
     });
@@ -3567,7 +3043,6 @@ export default {
     const refreshBlocks = async () => {
       const currentDate = state.date || props.preselectedDate;
       if (currentDate && state.queue) {
-        console.log('🔄 Force refreshing blocks for:', currentDate);
         await loadBlocksForDate(currentDate);
       }
     };

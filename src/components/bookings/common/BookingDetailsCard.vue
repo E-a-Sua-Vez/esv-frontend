@@ -174,7 +174,6 @@ export default {
 
       // Consultar datos frescos del booking cuando se abre el collapsible
       if (this.extendedProfessionalEntity) {
-        console.log('[BookingDetailsCard] Opening professional section - refreshing booking data');
         await this.refreshBookingDataWithoutOverriding();
       }
 
@@ -213,12 +212,10 @@ export default {
         // Buscar el profesional completo en la lista
         const professional = this.professionals.find(p => p.id === professionalId);
         if (professional) {
-          console.log('[BookingDetailsCard] Professional changed via dropdown:', professional);
           this.handleProfessionalSelected(professional);
         }
       } else {
         // Si se deselecciona el profesional
-        console.log('[BookingDetailsCard] Professional deselected via dropdown');
         this.selectedProfessional = null;
         if (!this.commissionManuallyEdited) {
           this.professionalCommission = null;
@@ -267,7 +264,6 @@ export default {
       input.style.setProperty('opacity', '1', 'important');
       input.style.setProperty('visibility', 'visible', 'important');
 
-      console.log('✅ Fixes aplicados al input de comisión');
     },
     ensureInputsAreInteractive() {
       // Método completamente vacío para evitar errores
@@ -300,24 +296,21 @@ export default {
     },
     // PROFESSIONAL PAYMENT COMMISSION DATA
     getAssignedProfessionalCommissionData() {
-      console.log('[getAssignedProfessionalCommissionData] RAW BOOKING OBJECT:', this.booking);
-      console.log('[getAssignedProfessionalCommissionData] COMMISSION TYPE CHECK:', {
+      // DEBUG object for development
+      const debugData = {
         'this.booking?.professionalCommissionType': this.booking?.professionalCommissionType,
         'typeof': typeof this.booking?.professionalCommissionType,
         'this.booking?.professionalCommissionValue': this.booking?.professionalCommissionValue,
         'typeof value': typeof this.booking?.professionalCommissionValue,
         'condition result': !!(this.booking?.professionalCommissionType && this.booking?.professionalCommissionValue)
-      });
+      };
 
       if (!this.booking?.professionalName) {
-        console.log('[getAssignedProfessionalCommissionData] No professional name found');
         return { id: null, name: null, commission: null, commissionType: null, suggestedAmount: 0 };
       }
 
       // DEBUG: Comentar toda la lógica intermedia para ir directo al final
       /*
-      console.log('[getAssignedProfessionalCommissionData] Debug info:', {
-        commissionManuallyEdited: this.commissionManuallyEdited,
         professionalCommission: this.professionalCommission,
         'booking.professionalCommissionType': this.booking?.professionalCommissionType,
         'booking.professionalCommissionValue': this.booking?.professionalCommissionValue,
@@ -342,7 +335,6 @@ export default {
             );
           }
 
-          console.log('[getAssignedProfessionalCommissionData] Using manual commission:', manualCommissionValue);
 
           return {
             id: this.selectedProfessional?.id || this.booking.professionalId,
@@ -374,7 +366,6 @@ export default {
           }
         }
 
-        console.log('[getAssignedProfessionalCommissionData] Using direct booking commission:', {
           professionalCommissionValue,
           professionalCommissionType,
           rawType: this.booking.professionalCommissionType
@@ -413,7 +404,6 @@ export default {
           }
         }
 
-        console.log('[getAssignedProfessionalCommissionData] Using saved commission from confirmationData:', professionalCommissionValue);
 
         return {
           id: this.selectedProfessional?.id || this.booking.professionalId,
@@ -442,7 +432,6 @@ export default {
           }
         }
 
-        console.log('[getAssignedProfessionalCommissionData] Using selectedProfessional default commission:', commissionValue);
 
         return {
           id: this.selectedProfessional.id,
@@ -465,7 +454,6 @@ export default {
       */
 
       // TEMPORARY DEBUG VERSION - FORCE USE BOOKING DATA DIRECTLY
-      console.log('[getAssignedProfessionalCommissionData] FORCING BOOKING DATA USAGE');
       return {
         id: this.booking.professionalId,
         name: this.booking.professionalName,
@@ -488,7 +476,6 @@ export default {
     },
     async loadProfessionals() {
       if (!this.booking || !this.booking.commerceId) {
-        console.log('[BookingDetailsCard] loadProfessionals - No booking or commerceId');
         return;
       }
       console.log(
@@ -520,13 +507,11 @@ export default {
         if (this.booking?.professionalName && this.booking?.professionalCommissionValue) {
           this.professionalCommission = this.booking.professionalCommissionValue;
           this.commissionManuallyEdited = true; // Marcar como editada para mantener prioridad
-          console.log('[BookingDetailsCard] Loaded saved commission from direct fields:', this.professionalCommission);
         }
         // Fallback: desde confirmationData
         else if (this.booking?.professionalName && this.booking?.confirmationData?.professionalCommissionValue) {
           this.professionalCommission = this.booking.confirmationData.professionalCommissionValue;
           this.commissionManuallyEdited = true; // Marcar como editada para mantener prioridad
-          console.log('[BookingDetailsCard] Loaded saved commission from confirmationData:', this.professionalCommission);
         }
 
         // Solo cargar si existe professionalId pero no selectedProfessional
@@ -536,7 +521,7 @@ export default {
         ) {
           console.log(
             '[BookingDetailsCard] Auto-loading professional data for:',
-            this.booking.professionalId,
+            this.booking.professionalId
           );
 
           // Cargar profesionales si no están cargados
@@ -559,7 +544,6 @@ export default {
 
           if (professional) {
             this.selectedProfessional = professional;
-            console.log('[BookingDetailsCard] Professional data loaded:', professional);
           }
         }
       } catch (error) {
@@ -570,16 +554,13 @@ export default {
     },
     async refreshBookingData() {
       if (!this.booking?.id) {
-        console.log('[BookingDetailsCard] Cannot refresh - no booking ID');
         return;
       }
 
       try {
-        console.log('[BookingDetailsCard] Refreshing booking data for ID:', this.booking.id);
         this.loading = true; // Show loading indicator
         const freshBooking = await getBookingDetails(this.booking.id);
 
-        console.log('[BookingDetailsCard] Fresh booking data received:', freshBooking);
 
         if (freshBooking) {
           // Update booking data with fresh information
@@ -595,7 +576,7 @@ export default {
             this.booking.confirmationData = freshBooking.confirmationData;
           }
 
-          console.log('[BookingDetailsCard] Booking data refreshed:', {
+          console.log({
             professionalId: this.booking.professionalId,
             professionalName: this.booking.professionalName,
             professionalCommissionType: this.booking.professionalCommissionType,
@@ -606,7 +587,6 @@ export default {
           if (this.booking.professionalCommissionValue) {
             this.professionalCommission = this.booking.professionalCommissionValue;
             this.commissionManuallyEdited = true;
-            console.log('[BookingDetailsCard] Updated commission from fresh data:', this.professionalCommission);
           }
 
           // Emit event to notify parent component of data changes
@@ -624,16 +604,13 @@ export default {
     },
     async refreshBookingDataWithoutOverriding() {
       if (!this.booking?.id) {
-        console.log('[BookingDetailsCard] Cannot refresh - no booking ID');
         return;
       }
 
       try {
-        console.log('[BookingDetailsCard] Refreshing booking data (without overriding user values) for ID:', this.booking.id);
         this.loading = true;
         const freshBooking = await getBookingDetails(this.booking.id);
 
-        console.log('[BookingDetailsCard] Fresh booking data received:', freshBooking);
 
         if (freshBooking) {
           // Update booking data with fresh information
@@ -649,7 +626,7 @@ export default {
             this.booking.confirmationData = freshBooking.confirmationData;
           }
 
-          console.log('[BookingDetailsCard] Booking data refreshed:', {
+          console.log({
             professionalId: this.booking.professionalId,
             professionalName: this.booking.professionalName,
             professionalCommissionType: this.booking.professionalCommissionType,
@@ -659,9 +636,7 @@ export default {
           // NO cargar comisión si el usuario ya editó manualmente
           if (!this.commissionManuallyEdited && this.booking.professionalCommissionValue) {
             this.professionalCommission = this.booking.professionalCommissionValue;
-            console.log('[BookingDetailsCard] Updated commission from fresh data (not manually edited):', this.professionalCommission);
           } else if (this.commissionManuallyEdited) {
-            console.log('[BookingDetailsCard] NOT updating commission - user has manually edited it');
           }
 
           // Emit event to notify parent component of data changes
@@ -843,12 +818,10 @@ export default {
                 ...this.newConfirmationData,
               },
             };
-            console.log('[BookingDetailsCard] Confirming booking payment:', this.booking.id, body);
             const updatedBooking = await confirmBooking(this.booking.id, body);
 
             // Emit event to refresh the booking list - let parent component handle the update
             if (updatedBooking) {
-              console.log('[BookingDetailsCard] Booking updated after confirmation:', updatedBooking);
               // Emit event with the updated booking data to parent component
               this.$emit('booking-updated', updatedBooking);
             }
@@ -858,7 +831,6 @@ export default {
             this.goToConfirm1 = false;
             this.goToConfirm2 = false;
 
-            console.log('[BookingDetailsCard] Booking payment confirmed successfully');
           }
         }
         this.loading = false;
@@ -1248,13 +1220,11 @@ export default {
         if (newVal && newVal.professionalName && newVal.professionalCommissionValue) {
           this.professionalCommission = newVal.professionalCommissionValue;
           this.commissionManuallyEdited = true; // Marcar como editada para mantener prioridad
-          console.log('[BookingDetailsCard] Loaded commission from direct booking fields:', this.professionalCommission);
         }
         // Fallback: cargar desde confirmationData
         else if (newVal && newVal.professionalName && newVal.confirmationData?.professionalCommissionValue) {
           this.professionalCommission = newVal.confirmationData.professionalCommissionValue;
           this.commissionManuallyEdited = true; // Marcar como editada para mantener prioridad
-          console.log('[BookingDetailsCard] Loaded commission from booking confirmationData:', this.professionalCommission);
         }
 
         // Auto-cargar datos del profesional si es necesario

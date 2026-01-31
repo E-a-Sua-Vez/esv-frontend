@@ -242,10 +242,6 @@ export default {
     },
     handleAttentionCreated(attention) {
       // When attention/booking is created, refresh packages to update sessions
-      console.log(
-        '[ClientPackagesManagement] Attention/booking created, refreshing packages:',
-        attention,
-      );
       setTimeout(this.refresh, 500);
     },
 

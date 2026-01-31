@@ -1037,12 +1037,6 @@ export default {
                 // Ensure it's a number
                 proceduresValue =
                   parseInt(state.selectedProcedureAmount, 10) || state.selectedProcedureAmount;
-                console.log(
-                  '📋 Using selectedProcedureAmount for booking:',
-                  proceduresValue,
-                  'from state:',
-                  state.selectedProcedureAmount,
-                );
               } else if (
                 serv.serviceInfo?.proceduresList &&
                 serv.serviceInfo.proceduresList.trim()
@@ -1057,11 +1051,6 @@ export default {
                   proceduresValue = proceduresList[0];
                 }
               }
-              console.log('📋 servicesDetails item:', {
-                id: serv.id,
-                name: serv.name,
-                procedures: proceduresValue,
-              });
               return {
                 id: serv.id,
                 name: serv.name,
@@ -1069,7 +1058,6 @@ export default {
                 procedures: proceduresValue,
               };
             });
-            console.log('📋 Final servicesDetails for booking:', servicesDetails);
             body = { ...body, servicesId, servicesDetails };
 
             // Add selectedProcedureAmount as a separate field for backend processing
@@ -1122,7 +1110,6 @@ export default {
             }
             try {
               const booking = await createBooking(body);
-              console.log('✅ Booking created successfully:', booking);
 
               // Check again after async operation
               if (!isMounted.value) {
@@ -1142,9 +1129,6 @@ export default {
 
               const user = store.getCurrentUserType;
               const currentRoute = route.name;
-              console.log('📍 Current route:', currentRoute);
-              console.log('👤 User type:', user);
-              console.log('🎫 Booking ID:', booking.id);
 
               // Determine which route to use based on current route and user type
               let targetRoute;
@@ -1156,14 +1140,11 @@ export default {
                 targetRoute = 'commerce-queue-booking';
               }
 
-              console.log('🚀 Attempting to navigate to:', targetRoute, routeParams);
-
               try {
                 const result = await router.push({
                   name: targetRoute,
                   params: routeParams,
                 });
-                console.log('✅ Navigation successful:', result);
                 loadingService.value = false;
               } catch (routerError) {
                 console.error('❌ Error redirecting to booking page:', routerError);
@@ -1191,7 +1172,6 @@ export default {
                 // This might work better for public routes
                 setTimeout(() => {
                   if (isMounted.value) {
-                    console.log('🔄 Attempting page reload with booking info');
                     window.location.href = `${window.location.pathname}?bookingCreated=${booking.id}`;
                   }
                 }, 2000);
@@ -3005,11 +2985,9 @@ export default {
 
         // Only reset blocks if we don't have a valid block already selected
         if (!state.block || !state.block.number) {
-          console.log('🟠 No valid block selected, getting blocks for day');
           state.blocks = getBlocksByDay();
           state.block = {};
         } else {
-          console.log('🟠 Valid block already selected, keeping current blocks');
           // Still update blocks but don't reset the selected block
           const newBlocks = getBlocksByDay();
           if (newBlocks && newBlocks.length > 0) {
@@ -3033,12 +3011,10 @@ export default {
         state.date === 'TODAY' &&
         (!state.blocks || state.blocks.length === 0)
       ) {
-        console.log('🟠 showToday is active but blocks are missing, reloading...');
         if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
           state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
         }
         state.blocks = getBlocksByDay();
-        console.log('🟠 Blocks reloaded for showToday:', state.blocks?.length || 0);
       }
       getAvailableAttentionSuperBlocks();
       bookingsAvailables();
@@ -3082,8 +3058,6 @@ export default {
         if (!state.isQuickSlotSelection) {
           state.blocks = getBlocksBySpecificDay();
           state.block = {};
-        } else {
-          console.log('🛡️ Protected state.blocks/block from reset in specificCalendarDate watcher');
         }
 
         if (unsubscribeBookings) {

@@ -153,32 +153,7 @@ export default {
     this.toggles = await getPermissions('patient', 'history');
     this.userType = await this.store.getCurrentUserType;
 
-    console.log('🔍 Preprontuario: Patient forms loaded:', this.patientForms);
-    console.log('🔍 Preprontuario: Forms count:', this.patientForms ? this.patientForms.length : 0);
 
-    if (this.patientForms && this.patientForms.length > 0) {
-      console.log(
-        '🔍 Preprontuario: All forms types:',
-        this.patientForms.map(f => f.type),
-      );
-
-      const firstAttentionForms = this.patientForms.filter(form => form.type === 'FIRST_ATTENTION');
-      console.log('🔍 Preprontuario: FIRST_ATTENTION forms:', firstAttentionForms);
-
-      firstAttentionForms.forEach((form, index) => {
-        console.log(`🔍 Preprontuario: Form ${index + 1}:`, {
-          id: form.id,
-          type: form.type,
-          hasAnswers: form.answers && form.answers.length > 0,
-          answersCount: form.answers ? form.answers.length : 0,
-          createdAt: form.createdAt,
-        });
-      });
-    } else {
-      console.log('❌ Preprontuario: No forms found for this patient');
-      console.log('🔍 Preprontuario: Client ID:', this.client?.id);
-      console.log('🔍 Preprontuario: Commerce ID:', this.commerce?.id);
-    }
 
     document.addEventListener('click', this.handleDocumentClick);
   },
@@ -463,7 +438,6 @@ export default {
       this.resetButtons();
       this.showResume = true;
       if (!this.patientHistory || !this.patientHistory.id) {
-        console.log('📋 No patient history data, loading...');
         this.loadPatientHistoryData();
       }
     },
@@ -1044,14 +1018,12 @@ export default {
 
       // If attention is already an object, return it directly
       if (this.attention && typeof this.attention === 'object' && this.attention.id) {
-        console.log('✅ attentionObject returning object directly:', this.attention);
         return this.attention;
       }
 
       // If attention is a string (ID), convert to object
       if (this.attention && typeof this.attention === 'string' && this.attention.trim() !== '') {
         const result = { id: this.attention };
-        console.log('✅ attentionObject returning:', result);
         return result;
       }
 
@@ -1100,13 +1072,11 @@ export default {
       immediate: true,
       deep: true,
       handler(newForms) {
-        console.log('🔍 Preprontuario: patientForms changed:', newForms);
         if (newForms && newForms.length > 0) {
           const firstAttentionForms = newForms.filter(form => form.type === 'FIRST_ATTENTION');
-          console.log('🔍 Preprontuario: FIRST_ATTENTION forms found:', firstAttentionForms.length);
 
           firstAttentionForms.forEach((form, index) => {
-            console.log(`🔍 Preprontuario: Form ${index + 1} details:`, {
+            console.log({
               id: form.id,
               type: form.type,
               status: form.status,
