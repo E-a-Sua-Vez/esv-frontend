@@ -759,12 +759,12 @@ export default {
                 </div>
                 <div class="stat-card-value">
                   <span class="stat-badge" :class="`status-${pkg.status?.toLowerCase()}`">
-                    {{ $t(`package.status.${pkg.status}`) || pkg.status }}
+                    {{ $t(`package.statuses.${pkg.status}`) || pkg.status }}
                   </span>
                 </div>
                 <div class="stat-card-footer">
                   <span class="stat-footer-text">
-                    {{ $t(`package.status.${pkg.status}`) || pkg.status }}
+                    {{ $t(`package.statuses.${pkg.status}`) || pkg.status }}
                   </span>
                 </div>
               </div>

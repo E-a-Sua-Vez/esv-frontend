@@ -238,7 +238,7 @@ import {
 } from '../../application/services/attention';
 import { getClientById } from '../../application/services/client';
 import { getCommerceById } from '../../application/services/commerce';
-import { getAverageAttentionDuration } from '../../application/services/queue';
+import { getAverageAttentionDuration, getGroupedQueueByCommerceId } from '../../application/services/queue';
 import { getProductsConsumptionsDetails } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
 import { getActiveFeature } from '../../shared/features';
@@ -706,6 +706,17 @@ export default {
           if (validateAndRedirectForCheckout(attentionDetails, commerceForValidation)) {
             loading.value = false;
             return; // Stop here if redirecting
+          }
+
+          // Load queues for the commerce to ensure ClientDetailsCard has them
+          if (state.commerce?.id) {
+            try {
+              const groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+              state.commerce.queues = Object.values(groupedQueues).flat();
+              console.log('✅ Queues loaded for checkout commerce:', state.commerce.queues.length);
+            } catch (error) {
+              console.warn('❌ Failed to load queues for checkout commerce:', state.commerce.id, error);
+            }
           }
 
           // Load non-critical data in parallel

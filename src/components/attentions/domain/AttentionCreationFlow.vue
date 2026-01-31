@@ -10,6 +10,7 @@ import Alert from '../../common/Alert.vue';
 import Message from '../../common/Message.vue';
 import ClinicalAlertsBanner from '../../clinical-alerts/domain/ClinicalAlertsBanner.vue';
 import PackageReminderBanner from '../../common/PackageReminderBanner.vue';
+import PackageReminderCard from '../../domain/PackageReminderCard.vue';
 import { getActiveFeature, isTelemedicineEnabled } from '../../../shared/features';
 import { getAlertsByClient } from '../../../application/services/clinical-alerts';
 import { globalStore } from '../../../stores';
@@ -18,13 +19,14 @@ import {
   getQueueBlockDetailsByDay,
   getQueueBlockDetailsBySpecificDayByCommerceId,
 } from '../../../application/services/block';
-import { getCollaboratorDetailsById } from '../../../application/services/collaborator';
+import { getProfessionalById } from '../../../application/services/professional';
+import { getServicesById } from '../../../application/services/service';
 import {
   getPendingBookingsBetweenDates,
   createBooking,
 } from '../../../application/services/booking';
 import { createAttention } from '../../../application/services/attention';
-import { getPackageById } from '../../../application/services/package';
+import { getPackageById, getAvailablePackagesForService } from '../../../application/services/package';
 import { getAttentionsDetails } from '../../../application/services/query-stack';
 import { getBookingsDetails } from '../../../application/services/query-stack';
 import NextAvailableSlot from '../../bookings/common/NextAvailableSlot.vue';
@@ -40,6 +42,7 @@ export default {
     Message,
     ClinicalAlertsBanner,
     PackageReminderBanner,
+    PackageReminderCard,
     NextAvailableSlot,
   },
   props: {
@@ -59,6 +62,8 @@ export default {
     creationType: { type: String, default: 'attention' }, // 'attention' | 'booking'
     preselectedPackageId: { type: String, default: null }, // Package ID to associate with attention/booking
     preselectedServiceId: { type: String, default: null }, // Service ID to filter services/collaborators
+    packageInfo: { type: Object, default: null }, // Package reminder info
+    loadingPackageReminder: { type: Boolean, default: false }, // Loading state for package reminder
   },
   emits: ['attention-created', 'cancel', 'step-change', 'error'],
   setup(props, { emit }) {
@@ -104,16 +109,16 @@ export default {
       bookings: [],
       attentions: [],
       services: [],
-      selectedServices: [],
       totalDurationRequested: 0,
       totalServicesRequested: 0,
       amountofBlocksNeeded: 0,
       canBook: false,
-      canBook: false,
-      amountofBlocksNeeded: 0,
       errorsAdd: [],
       clinicalAlerts: [],
       loadingAlerts: false,
+      packageReminderInfo: null,
+      loadingPackageReminder: false,
+      activePackagesForService: [],
       isTelemedicine: false,
       telemedicineConfig: {
         type: 'VIDEO',
@@ -128,10 +133,6 @@ export default {
     // Initialize preselected data
     onBeforeMount(async () => {
       if (props.preselectedQueue && props.preselectedQueue.id) {
-        console.log('🏢 Preselected queue provided:', props.preselectedQueue);
-        console.log('🏢 Queue ID:', props.preselectedQueue?.id);
-        console.log('🏢 Queue name:', props.preselectedQueue?.name);
-        console.log('🏢 Queue type:', props.preselectedQueue?.type);
 
         // Only set the queue if it's valid for preselection
         if (isPreselectedQueueValid()) {
@@ -312,6 +313,9 @@ export default {
       // For modal mode, always accept terms by default to streamline the flow
       state.accept = true;
 
+      // Load services for PROFESSIONAL queues to display service names in buttons
+      await loadServicesForQueues();
+
       // If all critical data is preselected, start at appropriate step
       // IMPORTANT: Always show client form (step 1) if needed, even if other data is preselected
       if (needsClientForm.value) {
@@ -385,9 +389,6 @@ export default {
       if (!props.preselectedQueue || !props.preselectedQueue.id) return false;
 
       const queue = props.preselectedQueue;
-      console.log('🔍 Validating preselected queue:', queue.name, 'Type:', queue.type);
-      console.log('🔍 ServicesId:', queue.servicesId?.length || 0);
-      console.log('🔍 Services:', queue.services?.length || 0);
 
       // For queues that have exactly one service attached, they can be preselected
       if (queue.type === 'SERVICE' || queue.type === 'STANDARD') {
@@ -569,14 +570,14 @@ export default {
       // Check if client has active package (if step2PackageInfo exists, they have an active package)
       // Only skip procedure selection if we have a client ID and an active package
       const hasClientId =
+        props.preselectedClient?.id ||
         clientFormData.value?.clientId ||
         clientFormData.value?.id ||
         state.newUser?.clientId ||
         state.newUser?.id ||
+        props.clientData?.queryStackClientId ||
         props.clientData?.clientId ||
-        props.clientData?.id ||
-        props.preselectedClient?.clientId ||
-        props.preselectedClient?.id;
+        props.clientData?.id
 
       console.log(
         '🔍 needsProcedureAmountSelection: hasClientId:',
@@ -686,6 +687,10 @@ export default {
     // Store client data separately to avoid interfering with form input
     const clientFormData = ref({});
 
+    // Local copy of queues with services loaded
+    const localQueues = ref(props.queues || []);
+    const localGroupedQueues = ref(props.groupedQueues || {});
+
     // Summary card state
     const summaryExpanded = ref(true);
 
@@ -723,14 +728,14 @@ export default {
 
         // Get clientId from various sources (same logic as loadStep2PackageInfo)
         const clientId =
+          props.preselectedClient?.id ||
           clientFormData.value?.clientId ||
           clientFormData.value?.id ||
           state.newUser?.clientId ||
           state.newUser?.id ||
+          props.clientData?.queryStackClientId ||
           props.clientData?.clientId ||
-          props.clientData?.id ||
-          props.preselectedClient?.clientId ||
-          props.preselectedClient?.id;
+          props.clientData?.id;
 
         if (!clientId || !props.commerce?.id) {
           packageInfo.value = null;
@@ -838,14 +843,14 @@ export default {
 
       // Get clientId from various sources
       const clientId =
+        props.preselectedClient?.id ||
         clientFormData.value?.clientId ||
         clientFormData.value?.id ||
         state.newUser?.clientId ||
         state.newUser?.id ||
+        props.clientData?.queryStackClientId ||
         props.clientData?.clientId ||
-        props.clientData?.id ||
-        props.preselectedClient?.clientId ||
-        props.preselectedClient?.id;
+        props.clientData?.id;
 
       if (!clientId || !props.commerce?.id) {
         step2PackageInfo.value = null;
@@ -1005,14 +1010,14 @@ export default {
       () => {
         // Get clientId from various sources (same logic as loadStep2PackageInfo)
         const clientId =
+          props.preselectedClient?.id ||
           clientFormData.value?.clientId ||
           clientFormData.value?.id ||
           state.newUser?.clientId ||
           state.newUser?.id ||
+          props.clientData?.queryStackClientId ||
           props.clientData?.clientId ||
-          props.clientData?.id ||
-          props.preselectedClient?.clientId ||
-          props.preselectedClient?.id;
+          props.clientData?.id;
 
         return [
           props.preselectedPackageId,
@@ -1127,6 +1132,93 @@ export default {
           }
         }, 300);
       });
+    };
+
+    // Function to load services for PROFESSIONAL queues to display service names
+    const loadServicesForQueues = async () => {
+      if (!props.queues || props.queues.length === 0) return;
+
+      // Create a copy of queues
+      localQueues.value = JSON.parse(JSON.stringify(props.queues));
+
+      // Load services for PROFESSIONAL queues
+      for (const queue of localQueues.value) {
+        if (queue.type === 'PROFESSIONAL' && (queue.collaboratorId || queue.professionalId)) {
+          const servicesIds = Array.isArray(queue.servicesId) ? queue.servicesId : [queue.servicesId].filter(Boolean);
+          if (servicesIds.length > 0) {
+            try {
+              const loadedServices = await getServicesById(servicesIds);
+              queue.services = loadedServices || [];
+              queue.servicesName = loadedServices && loadedServices.length > 0
+                ? loadedServices.map(serv => serv.name)
+                : [];
+            } catch (error) {
+              console.error(`Error loading services for queue ${queue.name}:`, error);
+              queue.services = [];
+              queue.servicesName = [];
+            }
+          } else {
+            // Try to load professional and use their services
+            try {
+              const professional = await getProfessionalById(queue.collaboratorId || queue.professionalId);
+              if (professional && professional.services && professional.services.length > 0) {
+                queue.services = professional.services;
+                queue.servicesName = professional.services.map(serv => serv.name);
+                queue.collaborator = professional;
+              } else {
+                queue.services = [];
+                queue.servicesName = [];
+              }
+            } catch (error) {
+              console.error(`Error loading professional for queue ${queue.name}:`, error);
+              queue.services = [];
+              queue.servicesName = [];
+            }
+          }
+        }
+      }
+
+      // Also handle groupedQueues if provided
+      if (props.groupedQueues && Object.keys(props.groupedQueues).length > 0) {
+        localGroupedQueues.value = JSON.parse(JSON.stringify(props.groupedQueues));
+        if (localGroupedQueues.value['PROFESSIONAL']) {
+          for (const queue of localGroupedQueues.value['PROFESSIONAL']) {
+            if (queue.type === 'PROFESSIONAL' && (queue.collaboratorId || queue.professionalId)) {
+              const servicesIds = Array.isArray(queue.servicesId) ? queue.servicesId : [queue.servicesId].filter(Boolean);
+              if (servicesIds.length > 0) {
+                try {
+                  const loadedServices = await getServicesById(servicesIds);
+                  queue.services = loadedServices || [];
+                  queue.servicesName = loadedServices && loadedServices.length > 0
+                    ? loadedServices.map(serv => serv.name)
+                    : [];
+                } catch (error) {
+                  console.error(`Error loading services for grouped queue ${queue.name}:`, error);
+                  queue.services = [];
+                  queue.servicesName = [];
+                }
+              } else {
+                // Try to load professional and use their services
+                try {
+                  const professional = await getProfessionalById(queue.collaboratorId || queue.professionalId);
+                  if (professional && professional.services && professional.services.length > 0) {
+                    queue.services = professional.services;
+                    queue.servicesName = professional.services.map(serv => serv.name);
+                    queue.collaborator = professional;
+                  } else {
+                    queue.services = [];
+                    queue.servicesName = [];
+                  }
+                } catch (error) {
+                  console.error(`Error loading professional for grouped queue ${queue.name}:`, error);
+                  queue.services = [];
+                  queue.servicesName = [];
+                }
+              }
+            }
+          }
+        }
+      }
     };
 
     // Function to reset state to initial values
@@ -1302,22 +1394,61 @@ export default {
       console.log('🏢 Queue services:', queue.services);
       console.log('🏢 Queue collaborator:', queue.collaborator);
 
-      // For PROFESSIONAL queues, load collaborator details to get services (same as CommerceQueuesView)
-      if (queue.type === 'PROFESSIONAL' && queue.collaboratorId) {
-        try {
-          console.log('🔧 Loading collaborator details for ID:', queue.collaboratorId);
-          const collaborator = await getCollaboratorDetailsById(queue.collaboratorId);
-          if (collaborator && collaborator.id) {
-            state.queue.collaborator = collaborator;
-            state.queue.services = collaborator.services || [];
-            state.queue.servicesName =
-              collaborator.services && collaborator.services.length > 0
-                ? collaborator.services.map(serv => serv.name)
-                : [];
-            console.log('🔧 ✅ Collaborator services loaded:', state.queue.services);
+      // For PROFESSIONAL queues, load services and collaborator details
+      if (queue.type === 'PROFESSIONAL') {
+        // Load services using queue.servicesId first
+        const servicesIds = Array.isArray(queue.servicesId) ? queue.servicesId : [queue.servicesId].filter(Boolean);
+        if (servicesIds.length > 0) {
+          try {
+            console.log('🔧 Loading services for professional:', servicesIds);
+            const loadedServices = await getServicesById(servicesIds);
+            if (loadedServices && loadedServices.length > 0) {
+              state.queue.services = loadedServices;
+              state.queue.servicesName = loadedServices.map(serv => serv.name);
+              console.log('🔧 ✅ Services loaded for professional:', state.queue.services);
+            } else {
+              // Fallback: create dummy services from servicesId
+              state.queue.services = servicesIds.map(id => ({
+                id,
+                name: queue.name || 'Professional Service',
+                serviceInfo: {
+                  estimatedTime: queue.estimatedTime || 30,
+                  blockTime: queue.blockTime || 30,
+                },
+              }));
+              state.queue.servicesName = state.queue.services.map(serv => serv.name);
+              console.log('🔧 ✅ Created dummy services for professional:', state.queue.services);
+            }
+          } catch (error) {
+            console.error('🔧 ❌ Error loading services:', error);
+            // Fallback: create dummy services from servicesId
+            state.queue.services = servicesIds.map(id => ({
+              id,
+              name: queue.name || 'Professional Service',
+              serviceInfo: {
+                estimatedTime: queue.estimatedTime || 30,
+                blockTime: queue.blockTime || 30,
+              },
+            }));
+            state.queue.servicesName = state.queue.services.map(serv => serv.name);
+            console.log('🔧 ✅ Created dummy services for professional (fallback):', state.queue.services);
           }
-        } catch (error) {
-          console.error('🔧 ❌ Error loading collaborator details:', error);
+        }
+
+        // Load professional details if available
+        if (queue.collaboratorId || queue.professionalId) {
+          try {
+            console.log('🔧 Loading professional details for ID:', queue.collaboratorId || queue.professionalId);
+            const professional = await getProfessionalById(queue.collaboratorId || queue.professionalId);
+            if (professional && professional.id) {
+              state.queue.collaborator = professional;
+              console.log('🔧 ✅ Professional loaded:', professional);
+            } else {
+              console.log('🔧 ℹ️ Professional not found or invalid');
+            }
+          } catch (error) {
+            console.error('🔧 ❌ Error loading professional details:', error);
+          }
         }
       }
 
@@ -1382,9 +1513,12 @@ export default {
       }
 
       // Set available services for UI display
+      console.log('🔧 queue.services before setting state.services:', queue.services);
       if (queue.services && queue.services.length > 0) {
         state.services = queue.services;
-        console.log('🔧 Available services set:', queue.services);
+        console.log('🔧 state.services set to:', state.services);
+      } else {
+        console.log('🔧 No services to set, queue.services:', queue.services);
       }
 
       // Recalculate available blocks if date is already selected
@@ -1405,7 +1539,8 @@ export default {
       setCanBook();
     };
 
-    const receiveSelectedServices = async services => {
+    const receiveSelectedServices = services => {
+      console.log('🔧 receiveSelectedServices called with services:', services?.length || 0);
       state.selectedServices = services;
 
       // Clear selectedProcedureAmount when services change (user might select different service)
@@ -1452,7 +1587,22 @@ export default {
 
       // Trigger step2PackageInfo reload when services change
       if (state.currentStep === 2) {
-        await loadStep2PackageInfo();
+        loadStep2PackageInfo();
+      }
+
+      // Load package reminder info if client is available
+      const hasClient =
+        props.preselectedClient?.id ||
+        clientFormData.value?.clientId ||
+        clientFormData.value?.id ||
+        state.newUser?.clientId ||
+        state.newUser?.id ||
+        props.clientData?.queryStackClientId ||
+        props.clientData?.clientId ||
+        props.clientData?.id;
+      if (hasClient) {
+        checkActivePackagesForService();
+        loadPackageReminderInfo();
       }
 
       setCanBook();
@@ -1477,6 +1627,274 @@ export default {
     // Legacy method for backward compatibility
     const handleQueueSelection = queue => {
       receiveQueue(queue);
+    };
+
+    // Check for active packages for the selected service
+    const checkActivePackagesForService = async () => {
+      console.log('🔧 checkActivePackagesForService called');
+      // Reset state
+      state.activePackagesForService = [];
+      // state.loadingActivePackages = true; // No need since we don't have this state
+
+      // Only check if we have selected services and a client
+      if (!state.selectedServices || state.selectedServices.length === 0) {
+        console.log('🔧 No selected services, returning');
+        // state.loadingActivePackages = false;
+        return;
+      }
+
+      const clientId = state.newUser?.clientId || state.newUser?.id;
+      if (!clientId || !props.commerce?.id) {
+        console.log('🔧 No clientId or commerce.id, returning');
+        // state.loadingActivePackages = false;
+        return;
+      }
+
+      const serviceId = state.selectedServices[0]?.id;
+      if (!serviceId) {
+        console.log('🔧 No serviceId, returning');
+        // state.loadingActivePackages = false;
+        return;
+      }
+
+      console.log('🔧 Checking active packages for service:', serviceId, 'client:', clientId, 'commerce:', props.commerce.id);
+
+      try {
+        const availablePackages = await getAvailablePackagesForService(
+          props.commerce.id,
+          serviceId,
+          clientId
+        );
+
+        console.log('🔧 Available packages:', availablePackages?.length || 0);
+
+        if (availablePackages && availablePackages.length > 0) {
+          // Filter for active packages with pending sessions
+          const activePackages = availablePackages.filter(pkg => {
+            const isActive = ['ACTIVE', 'CONFIRMED', 'REQUESTED'].includes(pkg.status);
+            const hasPendingSessions = (pkg.proceduresLeft || 0) > 0;
+            return isActive && hasPendingSessions;
+          });
+
+          state.activePackagesForService = activePackages || [];
+          console.log('🔧 Active packages found:', activePackages.length);
+        } else {
+          state.activePackagesForService = [];
+          console.log('🔧 No available packages');
+        }
+      } catch (error) {
+        console.error('[AttentionCreationFlow] Error checking active packages:', error);
+        state.activePackagesForService = [];
+      } finally {
+        // state.loadingActivePackages = false;
+      }
+    };
+
+    // Load package reminder info when services and client are selected
+    const loadPackageReminderInfo = async () => {
+      console.log('🔧 loadPackageReminderInfo called');
+      if (state.loadingPackageReminder || !isMounted.value) {
+        console.log('🔧 Already loading or not mounted, returning');
+        return;
+      }
+
+      const clientId =
+        props.preselectedClient?.id ||
+        props.clientData?.queryStackClientId ||
+        state.newUser?.clientId ||
+        state.newUser?.id ||
+        props.clientData?.clientId ||
+        props.clientData?.id;
+      if (!clientId || !props.commerce?.id) {
+        console.log('🔧 No clientId or commerce.id, setting packageReminderInfo to null');
+        state.packageReminderInfo = null;
+        return;
+      }
+
+      if (!state.selectedServices || state.selectedServices.length === 0) {
+        console.log('🔧 No selected services, setting packageReminderInfo to null');
+        state.packageReminderInfo = null;
+        return;
+      }
+
+      const serviceId = state.selectedServices[0]?.id;
+      if (!serviceId) {
+        console.log('🔧 No serviceId, setting packageReminderInfo to null');
+        state.packageReminderInfo = null;
+        return;
+      }
+
+      console.log('🔧 Loading package reminder for service:', serviceId, 'client:', clientId);
+
+      try {
+        state.loadingPackageReminder = true;
+        const availablePackages = await getAvailablePackagesForService(
+          props.commerce.id,
+          serviceId,
+          clientId
+        );
+
+        console.log('🔧 Available packages for reminder:', availablePackages?.length || 0);
+
+        if (availablePackages && availablePackages.length > 0) {
+          const activePackage = availablePackages.find(pkg => {
+            const isActive = ['ACTIVE', 'CONFIRMED', 'REQUESTED'].includes(pkg.status);
+            const hasPendingSessions = (pkg.proceduresLeft || 0) > 0;
+            return isActive && hasPendingSessions;
+          });
+
+          console.log('🔧 Active package found:', !!activePackage);
+
+          if (activePackage) {
+            let pendingAttentions = [];
+            let pendingBookings = [];
+
+            try {
+              const allAttentions = await getAttentionsDetails(
+                [props.commerce.id],
+                undefined,
+                undefined,
+                undefined,
+                1,
+                100,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                clientId
+              );
+
+              pendingAttentions = (allAttentions || []).filter(att => {
+                const attPackageId = String(att.packageId || '').trim();
+                const pkgId = String(activePackage.id || '').trim();
+                return (
+                  attPackageId === pkgId &&
+                  attPackageId !== '' &&
+                  (att.status === 'PENDING' || att.status === 'TERMINATED')
+                );
+              });
+
+              const allBookings = await getBookingsDetails(
+                [props.commerce.id],
+                null,
+                null,
+                undefined,
+                1,
+                100,
+                null,
+                null,
+                false,
+                activePackage.serviceId,
+                undefined,
+                clientId,
+                activePackage.id,
+                undefined
+              );
+
+              pendingBookings = (allBookings || []).filter(booking => {
+                return booking.status === 'PENDING'
+              });
+            } catch (error) {
+              console.error('Error loading package attentions/bookings:', error);
+            }
+
+            // Get attentions for this package by filtering all client attentions
+            const attentionsDetails = await getAttentionsDetails(
+              [props.commerce.id],
+              undefined,
+              undefined,
+              undefined,
+              1,
+              10,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              true,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              clientId,
+              undefined
+            );
+            const allPackageAttentions = attentionsDetails?.attentions?.filter(a => a.packageId === activePackage.id) || [];
+
+            // Find last terminated or rated attention
+            const terminatedAttentions = allPackageAttentions.filter(a => ['TERMINATED', 'RATED'].includes(a.status)).sort((a,b) => b.createdAt - a.createdAt);
+            const lastAttention = terminatedAttentions[0];
+            const lastAttentionDate = lastAttention?.createdAt?.toDate?.() || null;
+
+            const proceduresUsed = activePackage.proceduresUsed || 0;
+            const currentSessionNumber =
+              proceduresUsed + pendingAttentions.length + pendingBookings.length + 1;
+            const totalSessions = activePackage.proceduresAmount || 0;
+            const serviceName = state.selectedServices[0]?.name || '';
+            const service = state.selectedServices.find(s => s.id === activePackage.serviceId);
+
+            // Find next expected date from pending attentions or bookings
+            let nextExpectedDate = null;
+            const pendingPackageAttentions = allPackageAttentions.filter(a => a.status === 'PENDING').sort((a,b) => a.createdAt - b.createdAt);
+            const nextPendingAttention = pendingPackageAttentions[0];
+            if (nextPendingAttention) {
+              nextExpectedDate = nextPendingAttention.createdAt.toDate();
+            } else {
+              const nextPendingBooking = pendingBookings.sort((a,b) => new Date(a.date) - new Date(b.date))[0];
+              if (nextPendingBooking) {
+                nextExpectedDate = new Date(nextPendingBooking.date);
+              } else if (lastAttentionDate && service?.daysBetweenSessions) {
+                nextExpectedDate = new Date(lastAttentionDate);
+                nextExpectedDate.setDate(nextExpectedDate.getDate() + service.daysBetweenSessions);
+              }
+            }
+
+            if (isMounted.value) {
+              state.packageReminderInfo = {
+                id: activePackage.id,
+                name: activePackage.name || `${serviceName} Package`,
+                serviceName,
+                currentSession: currentSessionNumber,
+                totalSessions,
+                sessionsRemaining: activePackage.proceduresLeft || 0,
+                lastAttentionDate,
+                nextExpectedDate,
+              };
+              console.log('🔧 Package reminder info set:', state.packageReminderInfo);
+            }
+          } else {
+            if (isMounted.value) {
+              state.packageReminderInfo = null;
+              console.log('🔧 No active package, setting packageReminderInfo to null');
+            }
+          }
+        } else {
+          if (isMounted.value) {
+            state.packageReminderInfo = null;
+            console.log('🔧 No available packages, setting packageReminderInfo to null');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading package reminder info:', error);
+        if (isMounted.value) {
+          state.packageReminderInfo = null;
+        }
+      } finally {
+        if (isMounted.value) {
+          state.loadingPackageReminder = false;
+          console.log('🔧 Finished loading package reminder, loadingPackageReminder set to false');
+        }
+      }
     };
 
     const handleServiceSelection = services => {
@@ -2388,7 +2806,7 @@ export default {
           // If clientId comes from query-stack (not from props.clientData), we need to find the correct Firebase ID
           // Solution: Don't send clientId, let backend find/create client by idNumber/email
           // The backend will search for existing client by idNumber/email and use the correct Firebase ID
-          if (clientIdValue && !props.clientData?.clientId && !props.clientData?.id) {
+          if (clientIdValue && !props.clientData?.queryStackClientId && !props.clientData?.clientId && !props.clientData?.id) {
             // Client data came from state.newUser (query-stack), not from props.clientData
             // Query-stack IDs (e.g., 'C3EZW0TwfptTPG7g4VOH') don't match Firebase IDs (e.g., '3AbBN5PkZqKEvGP6v7bP')
             // Don't send clientId - backend will search by idNumber/email and find/create with correct Firebase ID
@@ -2413,6 +2831,7 @@ export default {
             clientIdValue,
             hasClientData: !!props.clientData,
             clientDataClientId: props.clientData?.clientId,
+            clientDataQueryStackClientId: props.clientData?.queryStackClientId,
             sendingClientId: !!clientIdValue,
             userDataKeys: userData ? Object.keys(userData) : [],
             rawUserDataKeys: rawUserData ? Object.keys(rawUserData) : [],
@@ -2430,6 +2849,7 @@ export default {
             rawUserDataId: rawUserData?.id,
             hasClientData: !!props.clientData,
             clientDataClientId: props.clientData?.clientId,
+            clientDataQueryStackClientId: props.clientData?.queryStackClientId,
             reason: clientIdValue
               ? 'Sending clientId from props.clientData'
               : 'Not sending clientId - letting backend find/create by idNumber/email',
@@ -3581,6 +4001,11 @@ export default {
       loadingPackageInfo,
       step2PackageInfo,
       loadingStep2PackageInfo,
+      localQueues,
+      localGroupedQueues,
+      preselectedServiceIdRef,
+      needsProcedureAmountSelection,
+      availableProcedureAmounts,
       t,
       handleAcknowledgeAlert: async alertId => {
         try {
@@ -3650,14 +4075,14 @@ export default {
         <!-- QUEUES SELECTOR (always show to allow changes) -->
         <QueueForm
           :commerce="commerce"
-          :queues="queues"
-          :grouped-queues="groupedQueues"
+          :queues="localQueues"
+          :grouped-queues="localGroupedQueues"
           :queue-id="undefined"
           :accept="state.accept"
           :collaborators="collaborators"
           :receive-queue="receiveQueue"
           :receive-services="receiveServices"
-          :preselected-service-id="preselectedServiceId"
+          :preselected-service-id="preselectedServiceIdRef"
         />
 
         <!-- SERVICES SELECTOR (show when queue is selected) -->
@@ -3668,8 +4093,63 @@ export default {
             :queue="state.queue"
             :selected-services="state.selectedServices"
             :receive-selected-services="receiveSelectedServices"
-            :preselected-service-id="preselectedServiceId"
+            :preselected-service-id="preselectedServiceIdRef"
           />
+        </div>
+
+        <!-- Package Reminder Card (if package info is provided) -->
+        <div
+          v-if="
+            state.queue?.id &&
+            state.selectedServices &&
+            state.selectedServices.length > 0 &&
+            (state.packageReminderInfo || state.loadingPackageReminder)
+          "
+          class="centered"
+        >
+          <div class="col-md-10 data-card">
+            <PackageReminderCard
+              :package-info="state.packageReminderInfo"
+              :loading="state.loadingPackageReminder"
+            />
+          </div>
+        </div>
+
+        <!-- Procedure Amount Selection (if service has proceduresList and no active package) -->
+        <div
+          v-if="
+            state.queue &&
+            state.queue.id &&
+            state.selectedServices &&
+            state.selectedServices.length > 0 &&
+            needsProcedureAmountSelection
+          "
+          class="centered"
+        >
+          <div class="col col-md-10 offset-md-1 data-card">
+            <div id="procedure-amount-selection" class="choose-attention py-2 mb-2">
+              <i class="bi bi-list-check h5 m-1"></i>
+              <span class="fw-bold h6">{{
+                $t('attentionCreation.selectProcedureAmount') ||
+                'Selecciona la cantidad de sesiones'
+              }}</span>
+            </div>
+            <div class="time-slot-grid">
+              <button
+                v-for="amount in availableProcedureAmounts"
+                :key="amount"
+                type="button"
+                class="time-slot-button"
+                :class="{ 'time-slot-selected': state.selectedProcedureAmount === amount }"
+                @click="state.selectedProcedureAmount = amount"
+              >
+                <div class="time-start">{{ amount }}</div>
+                <div class="time-end">
+                  {{ $t('attentionCreation.sessions') || 'sesiones' }}
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -5128,9 +5608,8 @@ export default {
 }
 
 .choose-attention {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: ruby;
+  align-items: flex-start;
   gap: 0.5rem;
   font-size: 0.9rem;
   font-weight: 500;
@@ -5138,7 +5617,7 @@ export default {
 }
 
 .choose-attention i {
-  color: #00c2cb;
+  color: #000000;
 }
 
 .choose-attention .h6 {
@@ -5263,5 +5742,68 @@ export default {
   .procedure-amount-value {
     font-size: 1.75rem;
   }
+}
+.form-check-input {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1baba;
+  background-color: #007bff !important;;
+  border-radius: 3px;
+  position: relative;
+  appearance: none;
+  cursor: pointer;
+}
+.form-check-input:checked {
+  background-color: #007bff !important;
+  border-color: #007bff !important;
+}
+.form-check-input:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+:deep(.form-switch .form-check-input) {
+  width: 40px !important;
+  height: 20px !important;
+  border-radius: 10px !important;
+  background-color: #ccc !important;
+  position: relative !important;
+  appearance: none !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s !important;
+  border: none !important;
+}
+:deep(.form-switch .form-check-input:checked) {
+  background-color: #007bff !important;
+}
+:deep(.form-switch .form-check-input::before) {
+  content: '' !important;
+  position: absolute !important;
+  top: 2px !important;
+  left: 2px !important;
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 50% !important;
+  background-color: white !important;
+  transition: transform 0.3s !important;
+}
+:deep(.form-switch .form-check-input:checked::before) {
+  transform: translateX(20px) !important;
+}
+
+.data-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
+  padding: 1rem 0.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  align-items: left;
 }
 </style>

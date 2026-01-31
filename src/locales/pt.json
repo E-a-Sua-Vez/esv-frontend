@@ -670,10 +670,6 @@
       "title": "Dados Médicos"
     }
   },
-  "common": {
-    "create": "Criar",
-    "cancel": "Cancelar"
-  },
   "collaborator": {
     "name": "Nome",
     "lastName": "Sobrenome",
@@ -1757,6 +1753,7 @@
           "cancel": "Cancelar Atendimento",
           "patient-history": "Prontuário",
           "products": "Estoque",
+          "advance-stage": "Avançar Etapa",
           "lgpd": {
             "blocking": "Bloqueante",
             "missing": "Faltantes",
@@ -7189,12 +7186,18 @@
     "sessionsUsed": "Sessões Usadas",
     "lastSession": "Última Sessão",
     "nextExpected": "Próxima Esperada",
-    "packageBookingNote": "Esta reserva será realizada dentro do seu pacote ativo. Se você concordar, pressione Continuar."
+    "packageBookingNote": "Esta reserva será realizada dentro do seu pacote ativo. Se você concordar, pressione Continuar.",
+    "sessionsRemaining": "Sessões Restantes",
+    "status": "Status",
+    "active": "Ativo",
+    "confirmed": "Confirmado",
+    "details": "Detalhes",
+    "service": "Serviço"
   },
   "package": {
     "package": "Pacote",
     "status": "Status",
-    "status": {
+    "statuses": {
       "ACTIVE": "Ativo",
       "CONFIRMED": "Confirmado",
       "REQUESTED": "Solicitado",

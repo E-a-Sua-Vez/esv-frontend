@@ -21,11 +21,7 @@ import {
   bookingBlockNumberUsedCollection,
 } from '../application/firebase';
 import { ATTENTION_STATUS, BOOKING_STATUS } from '../shared/constants';
-import {
-  getDetailsCollaboratorsByCommerceId,
-  getCollaboratorDetailsById,
-} from '../application/services/collaborator';
-import { getActiveProfessionalsByCommerce } from '../application/services/professional';
+import { getActiveProfessionalsByCommerce, getProfessionalByCollaboratorId, getProfessionalById } from '../application/services/professional';
 import Message from '../components/common/Message.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
 import Spinner from '../components/common/Spinner.vue';
@@ -160,7 +156,6 @@ export default {
       commerce: {},
       queues: [],
       groupedQueues: [],
-      collaborators: [],
       professionals: [], // Add professionals state
       queue: {},
       services: [],
@@ -292,8 +287,7 @@ export default {
               }
             }
           }
-          const [collaborators, professionals, groupedQueues] = await Promise.all([
-            getDetailsCollaboratorsByCommerceId(state.commerce.id),
+          const [professionals, groupedQueues] = await Promise.all([
             getActiveProfessionalsByCommerce(state.commerce.id),
             getGroupedQueueByCommerceId(state.commerce.id),
           ]);
@@ -302,13 +296,13 @@ export default {
             const queueType = state.queue.type;
             state.groupedQueues = {};
             if (queueType === 'PROFESSIONAL') {
-              const collaborator = await getCollaboratorDetailsById(state.queue.collaboratorId);
-              if (collaborator && collaborator.id) {
-                state.queue.collaborator = collaborator;
-                state.queue.services = collaborator.services || [];
+              const professional = await getProfessionalById(state.queue.collaboratorId);
+              if (professional && professional.id) {
+                state.queue.collaborator = professional;
+                state.queue.services = professional.services || [];
                 state.queue.servicesName =
-                  collaborator.services && collaborator.services.length > 0
-                    ? collaborator.services.map(serv => serv.name)
+                  professional.services && professional.services.length > 0
+                    ? professional.services.map(serv => serv.name)
                     : [];
                 state.queues = [state.queue];
                 state.groupedQueues[queueType] = [state.queue];
@@ -334,7 +328,6 @@ export default {
               state.queue = queues[0];
               await getAttention(undefined);
             }
-            state.collaborators = collaborators;
             state.professionals = professionals || [];
             if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
               state.groupedQueues = groupedQueues;
@@ -342,14 +335,14 @@ export default {
               const queueAux = [];
               queues.forEach(queue => {
                 if (queue.type === 'PROFESSIONAL') {
-                  const collaboratorsAux = state.collaborators.filter(
-                    collaborator => collaborator.id === queue.collaboratorId
+                  const professionalsAux = state.professionals.filter(
+                    professional => professional.id === queue.collaboratorId
                   );
-                  if (collaboratorsAux && collaboratorsAux.length > 0) {
-                    queue.services = collaboratorsAux[0].services || [];
+                  if (professionalsAux && professionalsAux.length > 0) {
+                    queue.services = professionalsAux[0].services || [];
                     queue.servicesName =
-                      collaboratorsAux[0].services && collaboratorsAux[0].services.length > 0
-                        ? collaboratorsAux[0].services.map(serv => serv.name)
+                      professionalsAux[0].services && professionalsAux[0].services.length > 0
+                        ? professionalsAux[0].services.map(serv => serv.name)
                         : [];
                   }
                   queueAux.push(queue);
@@ -2701,10 +2694,9 @@ export default {
         state.selectedServices,
         state.newUser?.clientId,
         state.newUser?.id,
-        state.showPickQueue,
       ],
       () => {
-        if (isMounted.value && state.showPickQueue && state.newUser?.clientId) {
+        if (isMounted.value && state.newUser?.clientId) {
           try {
             checkActivePackagesForService();
             loadPackageReminderInfo();
@@ -3634,7 +3626,6 @@ export default {
                   :grouped-queues="state.groupedQueues"
                   :queue-id="state.queueId"
                   :accept="state.accept"
-                  :collaborators="state.collaborators"
                   :professionals="state.professionals"
                   :receive-queue="receiveQueue"
                   :receive-services="receiveServices"

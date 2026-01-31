@@ -7140,12 +7140,18 @@
     "sessionsUsed": "Sessions Used",
     "lastSession": "Last Session",
     "nextExpected": "Next Expected",
-    "packageBookingNote": "This booking will be made within your active package. If you agree, press Continue."
+    "packageBookingNote": "This booking will be made within your active package. If you agree, press Continue.",
+    "sessionsRemaining": "Sessions Remaining",
+    "status": "Status",
+    "active": "Active",
+    "confirmed": "Confirmed",
+    "details": "Details",
+    "service": "Service"
   },
   "package": {
     "package": "Package",
-    "statuss": "Status",
-    "status": {
+    "status": "Status",
+    "statuses": {
       "ACTIVE": "Active",
       "CONFIRMED": "Confirmed",
       "REQUESTED": "Requested",

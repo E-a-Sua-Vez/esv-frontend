@@ -429,7 +429,7 @@ export default {
                 <div class="row">
                   <div class="col-1">
                     <input
-                      class="form-check-input py-2 px-3 col-12"
+                      class="form-check-input"
                       type="checkbox"
                       :id="`queue-${service.id}`"
                       @change="checkService($event, service)"
@@ -437,7 +437,7 @@ export default {
                   </div>
                   <div class="col">
                     <div class="row queue-time-title col-12">
-                      <label class="form-check-label queue-title fw-bold" :for="service.name">{{
+                      <label class="form-check-label queue-title fw-bold" :for="`queue-${service.id}`">{{
                         service.name
                       }}</label>
                     </div>
@@ -568,5 +568,33 @@ export default {
 }
 .service-channel-icons {
   font-size: 0.9rem;
+}
+.form-switch .form-check-input {
+  width: 40px !important;
+  height: 20px !important;
+  border-radius: 10px !important;
+  background-color: #ccc !important;
+  position: relative !important;
+  appearance: none !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s !important;
+  border: none !important;
+}
+.form-switch .form-check-input:checked {
+  background-color: #007bff !important;
+}
+.form-switch .form-check-input::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 2px !important;
+  left: 2px !important;
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 50% !important;
+  background-color: white !important;
+  transition: transform 0.3s !important;
+}
+.form-switch .form-check-input:checked::before {
+  transform: translateX(20px) !important;
 }
 </style>

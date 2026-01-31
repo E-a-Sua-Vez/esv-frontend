@@ -352,26 +352,18 @@ export default {
         await this.checkPreprontuarioCompletion();
       }
 
-      // If no queues available, try to load them BEFORE opening the modal
-      if (!this.queuesArray || this.queuesArray.length === 0) {
+      // Always try to load queues BEFORE opening the modal to ensure they are available
+      if (this.commerce?.id) {
         try {
-          if (this.commerce?.id) {
-            const groupedQueues = await getGroupedQueueByCommerceId(this.commerce.id);
-            // Convert grouped queues object to flat array
-            this.loadedQueues = Object.values(groupedQueues).flat();
+          const groupedQueues = await getGroupedQueueByCommerceId(this.commerce.id);
+          // Convert grouped queues object to flat array
+          this.loadedQueues = Object.values(groupedQueues).flat();
 
-            // Force Vue to update by waiting for next tick
-            await this.$nextTick();
-
-            // Verify queues are now available
-            const finalQueuesArray = this.queuesArray;
-
-            if (!finalQueuesArray || finalQueuesArray.length === 0) {
-              // Failed to load queues
-            }
-          }
+          // Force Vue to update by waiting for next tick
+          await this.$nextTick();
         } catch (error) {
-          // Error loading queues
+          // Error loading queues, but continue opening modal
+          console.warn('Failed to load queues for attention creation modal:', error);
         }
       }
 
@@ -437,7 +429,7 @@ export default {
 
         // Prepare client data for modal
         this.attentionCreationClientData = {
-          queryStackClientId: clientForModal?.id,
+          queryStackClientId: clientForModal?.queryStackId || clientForModal?.id,
           firebaseClientId: undefined,
           sendingClientId: false,
           hasIdNumber: !!clientForModal?.userIdNumber,
@@ -500,7 +492,7 @@ export default {
 
       // Prepare client data for modal
       this.attentionCreationClientData = {
-        queryStackClientId: clientForModal?.id,
+        queryStackClientId: clientForModal?.queryStackId || clientForModal?.id,
         firebaseClientId: undefined,
         sendingClientId: false,
         hasIdNumber: !!clientForModal?.userIdNumber,
@@ -1498,12 +1490,56 @@ export default {
         }
       },
     },
+    'commerce.id': {
+      immediate: true,
+      async handler(newCommerceId) {
+        if (newCommerceId && (!this.loadedQueues || this.loadedQueues.length === 0)) {
+          console.log('🔄 Commerce ID changed, loading queues for ClientDetailsCard:', newCommerceId);
+          try {
+            const groupedQueues = await getGroupedQueueByCommerceId(newCommerceId);
+            this.loadedQueues = Object.values(groupedQueues).flat();
+            console.log('✅ Queues loaded successfully:', this.loadedQueues.length);
+          } catch (error) {
+            console.warn('❌ Failed to load queues for commerce:', newCommerceId, error);
+          }
+        }
+      },
+    },
+    commerce: {
+      immediate: true,
+      deep: true,
+      async handler(newCommerce) {
+        if (newCommerce?.id && (!this.loadedQueues || this.loadedQueues.length === 0)) {
+          console.log('🔄 Commerce changed, loading queues for ClientDetailsCard:', newCommerce.id);
+          try {
+            const groupedQueues = await getGroupedQueueByCommerceId(newCommerce.id);
+            this.loadedQueues = Object.values(groupedQueues).flat();
+            console.log('✅ Queues loaded on commerce change:', this.loadedQueues.length);
+          } catch (error) {
+            console.warn('❌ Failed to load queues on commerce change:', newCommerce.id, error);
+          }
+        }
+      },
+    },
   },
   async mounted() {
     // Configurar event listeners cuando el componente se monta (esto es necesario siempre)
     this.$nextTick(() => {
       this.setupModalEventListeners();
     });
+
+    // Load queues if commerce is available and no queues loaded yet
+    if (this.commerce?.id && (!this.loadedQueues || this.loadedQueues.length === 0)) {
+      console.log('🔄 Loading queues on mount for ClientDetailsCard:', this.commerce.id);
+      try {
+        const groupedQueues = await getGroupedQueueByCommerceId(this.commerce.id);
+        this.loadedQueues = Object.values(groupedQueues).flat();
+        console.log('✅ Queues loaded on mount:', this.loadedQueues.length);
+      } catch (error) {
+        console.warn('❌ Failed to load queues on mount for commerce:', this.commerce.id, error);
+      }
+    }
+
     // Don't load client data or check preprontuario on mount - wait until card is expanded or modal is opened
     // This reduces unnecessary API calls when the card is closed
   },

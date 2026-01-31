@@ -712,10 +712,6 @@
       }
     }
   },
-  "common": {
-    "create": "Crear",
-    "cancel": "Cancelar"
-  },
   "collaborator": {
     "name": "Nombre",
     "lastName": "Apellido",
@@ -1850,7 +1846,8 @@
           "transfer": "Transferir Atención",
           "cancel": "Cancelar Atención",
           "patient-history": "Historial Médico",
-          "products": "Stock"
+          "products": "Stock",
+          "advance-stage": "Avanzar Etapa"
         },
         "module": {
           "update": "Actualizar módulo de atención"
@@ -7268,12 +7265,18 @@
     "sessionsUsed": "Sesiones Usadas",
     "lastSession": "Última Sesión",
     "nextExpected": "Próxima Esperada",
-    "packageBookingNote": "Esta reserva se realizará dentro de tu paquete activo. Si estás de acuerdo, presiona Continuar."
+    "packageBookingNote": "Esta reserva se realizará dentro de tu paquete activo. Si estás de acuerdo, presiona Continuar.",
+    "sessionsRemaining": "Sesiones Restantes",
+    "status": "Estado",
+    "active": "Activo",
+    "confirmed": "Confirmado",
+    "details": "Detalles",
+    "service": "Servicio"
   },
   "package": {
     "package": "Paquete",
     "status": "Estado",
-    "status": {
+    "statuses": {
       "ACTIVE": "Activo",
       "CONFIRMED": "Confirmado",
       "REQUESTED": "Solicitado",

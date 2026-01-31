@@ -353,6 +353,7 @@ import { getClientById } from '../../application/services/client';
 import {
   getAverageAttentionDuration,
   getEstimatedWaitTime,
+  getGroupedQueueByCommerceId,
 } from '../../application/services/queue';
 import { getPermissions } from '../../application/services/permissions';
 import { getActiveFeature } from '../../shared/features';
@@ -891,6 +892,17 @@ export default {
             if (validateAndRedirect(attentionDetails, commerceForValidation)) {
               loading.value = false;
               return; // Stop here if redirecting
+            }
+
+            // Load queues for the commerce to ensure ClientDetailsCard has them
+            if (state.commerce?.id) {
+              try {
+                const groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+                state.commerce.queues = Object.values(groupedQueues).flat();
+                console.log('✅ Queues loaded for check-in commerce:', state.commerce.queues.length);
+              } catch (error) {
+                console.warn('❌ Failed to load queues for check-in commerce:', state.commerce.id, error);
+              }
             }
           } else {
             // No commerce in attentionDetails, validate with what we have

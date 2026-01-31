@@ -8,7 +8,6 @@ import {
   ref,
   computed,
   watch,
-  triggerRef,
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
@@ -17,8 +16,6 @@ import {
   getAttentionDetails,
   attend,
   trackAttentionAccess,
-  getAvailableAttentiosnByQueue,
-  getProcessingAttentionDetailsByQueue,
 } from '../../application/services/attention';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
@@ -32,7 +29,7 @@ import { getPatientHistoryItemByCommerce } from '../../application/services/pati
 import { getFormsByClient } from '../../application/services/form';
 import { getClientById } from '../../application/services/client';
 import { getCommerceById } from '../../application/services/commerce';
-import { getAverageAttentionDuration } from '../../application/services/queue';
+import { getAverageAttentionDuration, getGroupedQueueByCommerceId } from '../../application/services/queue';
 import { getSurveyPersonalizedByCommerceId } from '../../application/services/survey-personalized';
 import {
   updatedAvailableAttentions,
@@ -299,6 +296,17 @@ export default {
           if (validateAndRedirectForAtender(state.attention, state.commerce)) {
             loading.value = false;
             return; // Stop here if redirecting
+          }
+
+          // Load queues for the commerce to ensure ClientDetailsCard has them
+          if (state.commerce?.id) {
+            try {
+              const groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+              state.commerce.queues = Object.values(groupedQueues).flat();
+              console.log('✅ Queues loaded for validate commerce:', state.commerce.queues.length);
+            } catch (error) {
+              console.warn('❌ Failed to load queues for validate commerce:', state.commerce.id, error);
+            }
           }
 
           // Optional: Track that this collaborator is accessing the attention
