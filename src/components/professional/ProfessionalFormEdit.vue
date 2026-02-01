@@ -124,12 +124,6 @@ export default {
       const professionalType = this.professional.professionalInfo?.professionalType;
       const isMedical = medicalTypes.includes(professionalType);
 
-        professionalType,
-        isMedical,
-        medicalTypes,
-        professionalInfo: this.professional.professionalInfo
-      });
-
       return isMedical;
     },
   },
