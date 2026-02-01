@@ -2729,10 +2729,9 @@ export default {
 
 .mobile-menu-body {
   flex: 1;
-  padding: 0.5rem 0;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .mobile-menu-item-wrapper {
@@ -2875,18 +2874,17 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    margin-bottom: 0.5rem;
+    margin-left: .2rem;
+    margin-right: 1rem;
   }
 
   .mobile-button-wrapper > div {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
   }
 
-  .mobile-menu-btn.col-8 {
+  .mobile-menu-btn.col-12 {
     flex: 0 0 auto;
     width: 66.666667%;
     margin-left: auto;
@@ -2895,13 +2893,10 @@ export default {
 
   /* Mobile submenu styles */
   .mobile-submenu-container {
-    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.4rem;
-    margin-top: 0.4rem;
-    margin-bottom: 0.4rem;
+    width: 90%;
   }
 
   .mobile-submenu-item {
@@ -2912,7 +2907,6 @@ export default {
   }
 
   .mobile-submenu-btn {
-    width: 66.666667%;
     margin-left: auto;
     margin-right: auto;
   }
@@ -3028,6 +3022,7 @@ export default {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .desktop-menu-item-wrapper {
@@ -3304,7 +3299,7 @@ export default {
   display: flex;
   height: 40px;
   padding: 0.2rem 0.8rem;
-  margin: 0.25rem 0.5rem;
+  margin: .1rem;
   width: 100%;
   flex-direction: row;
   flex-wrap: nowrap;
@@ -3319,6 +3314,7 @@ export default {
   transition: all 0.2s ease;
   text-decoration: none;
   color: inherit;
+  display: flex;
 }
 
 .mobile-submenu-card:hover {
@@ -3341,6 +3337,9 @@ export default {
   font-size: 1rem;
   margin-right: 0.5rem;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mobile-submenu-card .card-text {
@@ -3351,7 +3350,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.1;
+  line-height: 40px;
   flex: 1;
   min-width: 0;
 }

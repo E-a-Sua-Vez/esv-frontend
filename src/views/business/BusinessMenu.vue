@@ -394,31 +394,33 @@ export default {
                     </div>
                   </div>
                   <!-- Portal and Minisite buttons in same row -->
-                  <div class="col-12 mobile-portal-wrapper">
-                    <a
-                      class="menu-card mobile-menu-card portal-card external-link"
-                      :href="`${getBusinessLink()}`"
-                      target="_blank"
-                    >
-                      <div class="card-icon">
-                        <i :class="`bi ${state.menuIcons['go-minisite']}`"></i>
-                      </div>
-                      <div class="card-text">{{ $t('businessMenu.go-minisite') }}</div>
-                      <i class="bi bi-box-arrow-up-right external-icon"></i>
-                    </a>
-                  </div>
-                  <div class="col-12 mobile-portal-wrapper">
-                    <a
-                      class="menu-card mobile-menu-card portal-card external-link"
-                      :href="`${getClientPortalLink()}`"
-                      target="_blank"
-                    >
-                      <div class="card-icon">
-                        <i :class="`bi ${state.menuIcons['client-portal']}`"></i>
-                      </div>
-                      <div class="card-text">{{ $t('businessMenu.client-portal') }}</div>
-                      <i class="bi bi-box-arrow-up-right external-icon"></i>
-                    </a>
+                  <div class="row">
+                    <div class="col-6 centered mobile-portal-wrapper">
+                      <a
+                        class="menu-card mobile-menu-card portal-card external-link"
+                        :href="`${getBusinessLink()}`"
+                        target="_blank"
+                      >
+                        <div class="card-icon">
+                          <i :class="`bi ${state.menuIcons['go-minisite']}`"></i>
+                        </div>
+                        <div class="card-text">{{ $t('businessMenu.go-minisite') }}</div>
+                        <i class="bi bi-box-arrow-up-right external-icon"></i>
+                      </a>
+                    </div>
+                    <div class="col-6 centered mobile-portal-wrapper">
+                      <a
+                        class="menu-card mobile-menu-card portal-card external-link"
+                        :href="`${getClientPortalLink()}`"
+                        target="_blank"
+                      >
+                        <div class="card-icon">
+                          <i :class="`bi ${state.menuIcons['client-portal']}`"></i>
+                        </div>
+                        <div class="card-text">{{ $t('businessMenu.client-portal') }}</div>
+                        <i class="bi bi-box-arrow-up-right external-icon"></i>
+                      </a>
+                    </div>
                   </div>
                 </div>
                 <div v-if="!isActiveBusiness() && !loading">
@@ -754,15 +756,11 @@ export default {
 .submenu-container {
   width: 100%;
   display: block;
-  margin-top: 0.25rem;
-  margin-bottom: 0.25rem;
 }
 
 .submenu-item {
   width: 100%;
   display: block;
-  margin-bottom: 0.25rem;
-  padding-left: 20px;
 }
 
 .submenu-item .desktop-submenu-btn {
@@ -798,15 +796,11 @@ export default {
   .submenu-container {
     width: 100%;
     display: block;
-    margin-top: 0.25rem;
-    margin-bottom: 0.25rem;
   }
 
   .submenu-item {
     width: 100%;
     display: block;
-    margin-bottom: 0.25rem;
-    padding-left: 20px;
   }
 
   .menu-buttons-grid {
@@ -1010,8 +1004,8 @@ export default {
   flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-start;
-  padding: 0.2rem 0.8rem;
-  margin: 0.25rem 0.5rem;
+  padding: 0rem 0.8rem;
+  margin: 0.25rem 1rem;
   background: white;
   border: 1px solid #e0e0e0;
   border-left: 3px solid #0056b3;
@@ -1020,7 +1014,7 @@ export default {
   cursor: pointer;
   transition: all 0.2s ease;
   height: 40px;
-  width: 100%;
+  width: 80%;
   text-decoration: none;
   color: inherit;
 }
@@ -1080,10 +1074,8 @@ export default {
 }
 
 .submenu-container {
-  margin-top: 0.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
   align-items: flex-start;
 }
 
@@ -1191,6 +1183,7 @@ export default {
   transition: all 0.2s ease;
   text-decoration: none;
   color: inherit;
+  display: flex;
 }
 
 .mobile-submenu-card:hover {
@@ -1244,6 +1237,7 @@ export default {
 
 .mobile-portal-wrapper {
   padding: 0.15rem;
+  display: flex;
 }
 
 /* Desktop portal buttons */

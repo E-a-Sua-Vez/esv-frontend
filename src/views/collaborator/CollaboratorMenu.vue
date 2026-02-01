@@ -238,7 +238,7 @@ export default {
                   <div
                     v-for="option in state.collaboratorOptions.filter(opt => opt !== 'go-minisite' && opt !== 'client-portal')"
                     :key="option"
-                    class="col-8 mobile-card-wrapper"
+                    class="col-12 mobile-card-wrapper"
                   >
                     <div
                       class="menu-card mobile-menu-card"
@@ -252,31 +252,33 @@ export default {
                     </div>
                   </div>
                   <!-- Portal and Minisite buttons in same row -->
-                  <div class="col-8 mobile-portal-wrapper">
-                    <a
-                      class="menu-card mobile-menu-card portal-card external-link"
-                      :href="`${getCommerceLink()}`"
-                      target="_blank"
-                    >
-                      <div class="card-icon">
-                        <i :class="`bi ${state.menuIcons['go-minisite']}`"></i>
-                      </div>
-                      <div class="card-text">{{ $t('collaboratorMenu.go-minisite') }}</div>
-                      <i class="bi bi-box-arrow-up-right external-icon"></i>
-                    </a>
-                  </div>
-                  <div class="col-8 mobile-portal-wrapper">
-                    <a
-                      class="menu-card mobile-menu-card portal-card external-link"
-                      :href="`${getClientPortalLink()}`"
-                      target="_blank"
-                    >
-                      <div class="card-icon">
-                        <i :class="`bi ${state.menuIcons['client-portal']}`"></i>
-                      </div>
-                      <div class="card-text">{{ $t('collaboratorMenu.client-portal') }}</div>
-                      <i class="bi bi-box-arrow-up-right external-icon"></i>
-                    </a>
+                  <div class="row">
+                    <div class="col-6 centered mobile-portal-wrapper">
+                      <a
+                        class="menu-card mobile-menu-card portal-card external-link"
+                        :href="`${getCommerceLink()}`"
+                        target="_blank"
+                      >
+                        <div class="card-icon">
+                          <i :class="`bi ${state.menuIcons['go-minisite']}`"></i>
+                        </div>
+                        <div class="card-text">{{ $t('collaboratorMenu.go-minisite') }}</div>
+                        <i class="bi bi-box-arrow-up-right external-icon"></i>
+                      </a>
+                    </div>
+                    <div class="col-6 centered mobile-portal-wrapper">
+                      <a
+                        class="menu-card mobile-menu-card portal-card external-link"
+                        :href="`${getClientPortalLink()}`"
+                        target="_blank"
+                      >
+                        <div class="card-icon">
+                          <i :class="`bi ${state.menuIcons['client-portal']}`"></i>
+                        </div>
+                        <div class="card-text">{{ $t('collaboratorMenu.client-portal') }}</div>
+                        <i class="bi bi-box-arrow-up-right external-icon"></i>
+                      </a>
+                    </div>
                   </div>
                 </div>
                 <div v-if="!isActiveBusiness() && !loading">
@@ -516,9 +518,6 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.25rem;
-    margin-top: 0.25rem;
-    margin-bottom: 0.25rem;
   }
 
   .mobile-submenu-item {
@@ -723,7 +722,7 @@ export default {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: all 0.2s ease;
-  height: 100px;
+  height: 90px;
   width: 140px;
   text-decoration: none;
   color: inherit;
