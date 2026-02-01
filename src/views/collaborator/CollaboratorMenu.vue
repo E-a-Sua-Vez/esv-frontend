@@ -234,14 +234,14 @@ export default {
                   <span>{{ $t('collaboratorMenu.choose') }}</span>
                 </div>
                 <!-- Main menu options (including portal and minisite) -->
-                <div class="row mobile-cards-grid">
+                <div class="row col-12">
                   <div
                     v-for="option in state.collaboratorOptions.filter(opt => opt !== 'go-minisite' && opt !== 'client-portal')"
                     :key="option"
-                    class="col-12 mobile-card-wrapper"
+                    class="col-6 centered mobile-card-wrapper"
                   >
                     <div
-                      class="menu-card mobile-menu-card"
+                      class="col-6 menu-card mobile-menu-card"
                       @click="goToOption(option)"
                       :class="{ disabled: !state.toggles[`collaborator.main-menu.${option}`] }"
                     >
@@ -752,7 +752,7 @@ export default {
 }
 
 .card-text {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 500;
   text-align: center;
   color: #333;
@@ -833,7 +833,7 @@ export default {
 }
 
 .mobile-menu-card .card-text {
-  font-size: 0.7rem; /* Reduced for long text */
+  font-size: 0.85rem; /* Reduced for long text */
   font-weight: 500;
   padding: 0 0.1rem;
   word-wrap: break-word;
@@ -853,7 +853,7 @@ export default {
 
 /* Portal cards in mobile should be narrower */
 .mobile-menu-card.portal-card {
-  width: 120px !important;
+  width: 100% !important;
 }
 
 /* Mobile card styles */
@@ -880,7 +880,7 @@ export default {
 }
 
 .mobile-menu-card .card-text {
-  font-size: 0.8rem; /* Better readability */
+  font-size: 0.85rem; /* Better readability */
   font-weight: 500;
 }
 </style>

@@ -336,7 +336,7 @@ export default {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: all 0.2s ease;
-  height: 80px;
+  height: 90px;
   width: 150px;
   text-decoration: none;
   color: inherit;
@@ -356,7 +356,7 @@ export default {
 }
 
 .card-text {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 500;
   text-align: center;
   color: #333;
@@ -375,7 +375,7 @@ export default {
   }
 
   .card-text {
-    font-size: 0.65rem;
+    font-size: 0.85rem;
   }
 }
 </style>

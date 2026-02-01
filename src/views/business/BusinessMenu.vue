@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount } from 'vue';
+import { ref, reactive, onBeforeMount, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
@@ -218,6 +218,28 @@ export default {
       return `bi ${iconMap[opt] || 'bi-chevron-right'}`;
     };
 
+    // Función para cerrar todos los submenús
+    const closeAllSubmenus = () => {
+      state.manageSubMenuOption = false;
+      state.manageControlSubMenuOption = false;
+      state.medicalManagementSubMenuOption = false;
+    };
+
+    // Función para manejar click outside
+    const handleClickOutside = (event) => {
+      closeAllSubmenus();
+    };
+
+    // Agregar event listener para click outside
+    onMounted(() => {
+      document.addEventListener('click', handleClickOutside);
+    });
+
+    // Remover event listener al desmontar
+    onUnmounted(() => {
+      document.removeEventListener('click', handleClickOutside);
+    });
+
     return {
       state,
       loading,
@@ -235,7 +257,7 @@ export default {
 </script>
 
 <template>
-  <div>
+  <div class="business-menu-container">
     <div class="content">
       <!-- Mobile/Tablet Layout -->
       <div class="d-block d-lg-none mobile-menu-layout">
@@ -976,7 +998,7 @@ export default {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: all 0.2s ease;
-  height: 50px;
+  height: 40px;
   width: 100%;
   text-decoration: none;
   color: inherit;
@@ -1046,11 +1068,10 @@ export default {
 .card-text .chevron {
   margin-left: 0.5rem;
   font-size: 0.8rem;
-  color: var(--verde-tu);
 }
 
 .card-text {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 500;
   text-align: left;
   color: #333;
@@ -1143,7 +1164,7 @@ export default {
 }
 
 .mobile-menu-card {
-  height: 50px;
+  height: 40px;
   padding: 0.5rem 1rem;
   width: 100%;
   flex-direction: row;
@@ -1157,7 +1178,7 @@ export default {
 }
 
 .mobile-menu-card .card-text {
-  font-size: 0.7rem; /* Reduced for long text */
+  font-size: 0.85rem; /* Reduced for long text */
   font-weight: 500;
   text-align: left;
   padding: 0 0.1rem;
@@ -1209,7 +1230,7 @@ export default {
 }
 
 .mobile-submenu-card .card-text {
-  font-size: 0.65rem;
+  font-size: 0.85rem;
   font-weight: 500;
   text-align: left;
   padding: 0 0.1rem;
@@ -1253,7 +1274,7 @@ export default {
 
 /* Portal cards in mobile should be narrower */
 .mobile-menu-card.portal-card {
-  width: 120px !important;
+  width: 100% !important;
 }
 
 .mobile-submenu-btn {

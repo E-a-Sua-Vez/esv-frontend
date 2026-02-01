@@ -104,13 +104,14 @@ export default {
 }
 .commerce-info {
   padding-top: 0.25rem;
-  line-height: 1.2rem;
+  line-height: 1rem;
   text-align: center;
 }
 .commerce-info-text {
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--gris-dark, #666);
+  line-height: 1rem;
 }
 .commerce-name-bold {
   font-weight: 700;

@@ -2035,7 +2035,6 @@ export default {
                         </div>
                         <div class="card-text">
                           {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
-                          <i class="bi bi-chevron-right chevron"></i>
                         </div>
                       </div>
                     </div>
@@ -2061,7 +2060,6 @@ export default {
                         </div>
                         <div class="card-text">
                           {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
-                          <i class="bi bi-chevron-right chevron"></i>
                         </div>
                       </div>
                     </div>
@@ -2090,7 +2088,6 @@ export default {
                         </div>
                         <div class="card-text">
                           {{ $t(`${getMenuTranslationKey()}.${subOption}`) }}
-                          <i class="bi bi-chevron-right chevron"></i>
                         </div>
                       </div>
                     </div>
@@ -2699,6 +2696,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  line-height: 1rem;
 }
 
 .mobile-menu-title {
@@ -2708,6 +2706,7 @@ export default {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  line-height: 1.2rem;
 }
 
 .mobile-menu-close {
@@ -2736,7 +2735,7 @@ export default {
 
 .mobile-menu-item-wrapper {
   border-bottom: 1px solid var(--gris-default, #e0e0e0);
-  padding: 0.4rem 0;
+  padding: .6rem;
 }
 
 .mobile-menu-item {
@@ -3281,7 +3280,7 @@ export default {
 }
 
 .card-text {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 500;
   text-align: left;
   color: #333;
@@ -3343,7 +3342,7 @@ export default {
 }
 
 .mobile-submenu-card .card-text {
-  font-size: 0.65rem;
+  font-size: 0.9rem;
   font-weight: 500;
   text-align: left;
   padding: 0 0.1rem;
