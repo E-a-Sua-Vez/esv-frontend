@@ -303,7 +303,7 @@ export default {
                   >
                     <div
                       class="menu-card mobile-menu-card"
-                      @click="goToOption(option)"
+                      @click.stop="goToOption(option)"
                       :class="{ disabled: !state.toggles[`business.main-menu.${option}`] }"
                     >
                       <div class="card-icon">
@@ -500,7 +500,7 @@ export default {
               >
                 <div
                   class="menu-card"
-                  @click="goToOption(option)"
+                  @click.stop="goToOption(option)"
                   :class="{
                     disabled: !state.toggles[`business.main-menu.${option}`]
                   }"
