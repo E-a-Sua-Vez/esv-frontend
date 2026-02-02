@@ -355,10 +355,6 @@ export default {
 
     const handleTemplateSelected = content => {
       state.newDiagnostic.diagnostic = content;
-      console.log(
-        '🟣 DiagnosticForm: state.newDiagnostic.diagnostic actualizado a:',
-        state.newDiagnostic.diagnostic,
-      );
       sendData();
     };
 

@@ -1009,12 +1009,6 @@ export default {
     attentionObject() {
       // Return attention object with at least the ID
       // PrescriptionForm will load full details if needed
-      console.log(
-        '🔍 attentionObject - this.attention prop:',
-        this.attention,
-        'type:',
-        typeof this.attention,
-      );
 
       // If attention is already an object, return it directly
       if (this.attention && typeof this.attention === 'object' && this.attention.id) {
@@ -1076,13 +1070,6 @@ export default {
           const firstAttentionForms = newForms.filter(form => form.type === 'FIRST_ATTENTION');
 
           firstAttentionForms.forEach((form, index) => {
-            console.log({
-              id: form.id,
-              type: form.type,
-              status: form.status,
-              hasAnswers: form.answers && form.answers.length > 0,
-              answersCount: form.answers ? form.answers.length : 0,
-            });
           });
         }
       },

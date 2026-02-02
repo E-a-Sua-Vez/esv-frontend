@@ -725,20 +725,10 @@ const chatCanPickRecipients = computed(() => {
   // Para master: requiere commerce y tipo seleccionados
   if (props.userRole === 'master') {
     const result = !!chatSelectedCommerce.value && !!chatRecipientType.value;
-    console.log({
-      chatSelectedCommerce: chatSelectedCommerce.value,
-      chatRecipientType: chatRecipientType.value,
-      result,
-    });
     return result;
   }
   // Para no-master: solo requiere tipo seleccionado
   const result = !!chatRecipientType.value;
-  console.log({
-    chatRecipientType: chatRecipientType.value,
-    userRole: props.userRole,
-    result,
-  });
   return result;
 });
 

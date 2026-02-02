@@ -478,17 +478,8 @@ export default {
       if (!this.booking || !this.booking.commerceId) {
         return;
       }
-      console.log(
-        '[BookingDetailsCard] Loading professionals for commerce:',
-        this.booking.commerceId,
-      );
       try {
         this.professionals = await getActiveProfessionalsByCommerce(this.booking.commerceId);
-        console.log(
-          '[BookingDetailsCard] Professionals loaded:',
-          this.professionals.length,
-          this.professionals,
-        );
       } catch (error) {
         console.error('[BookingDetailsCard] Error loading professionals:', error);
         this.professionals = [];
@@ -519,11 +510,6 @@ export default {
           this.booking?.professionalId &&
           (!this.selectedProfessional || !this.selectedProfessional.financialInfo)
         ) {
-          console.log(
-            '[BookingDetailsCard] Auto-loading professional data for:',
-            this.booking.professionalId
-          );
-
           // Cargar profesionales si no están cargados
           if (this.professionals.length === 0) {
             await this.loadProfessionals();
@@ -575,14 +561,6 @@ export default {
           if (freshBooking.confirmationData) {
             this.booking.confirmationData = freshBooking.confirmationData;
           }
-
-          console.log({
-            professionalId: this.booking.professionalId,
-            professionalName: this.booking.professionalName,
-            professionalCommissionType: this.booking.professionalCommissionType,
-            professionalCommissionValue: this.booking.professionalCommissionValue
-          });
-
           // Load fresh commission data
           if (this.booking.professionalCommissionValue) {
             this.professionalCommission = this.booking.professionalCommissionValue;
@@ -625,13 +603,6 @@ export default {
           if (freshBooking.confirmationData) {
             this.booking.confirmationData = freshBooking.confirmationData;
           }
-
-          console.log({
-            professionalId: this.booking.professionalId,
-            professionalName: this.booking.professionalName,
-            professionalCommissionType: this.booking.professionalCommissionType,
-            professionalCommissionValue: this.booking.professionalCommissionValue
-          });
 
           // NO cargar comisión si el usuario ya editó manualmente
           if (!this.commissionManuallyEdited && this.booking.professionalCommissionValue) {

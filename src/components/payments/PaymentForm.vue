@@ -571,14 +571,6 @@ export default {
       ],
       () => {
         // Debug logging
-        console.log({
-          professionalName: professionalName.value,
-          professionalCommission: professionalCommission.value,
-          suggestedCommissionAmount: suggestedCommissionAmount.value,
-          paymentAmount: state.newConfirmationData.paymentAmount,
-          currentCommission: state.newConfirmationData.paymentCommission,
-        });
-
         // Auto-set commission when professional is assigned
         if (professionalName.value) {
           const suggested = calculateSuggestedCommission();

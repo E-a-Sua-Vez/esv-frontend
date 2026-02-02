@@ -58,13 +58,6 @@ export default {
         state.newUser.code3 = data.code3 || '';
         state.newUser.healthAgreementId = data.healthAgreementId || '';
 
-        // ✅ Debug: Log received data
-        console.log({
-          birthday: data.birthday,
-          origin: data.origin,
-          stateBirthday: state.newUser.birthday,
-          stateOrigin: state.newUser.origin,
-        });
         if (data.phoneCode && data.phone) {
           const cleanedPhone = data.phone.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '');
           const cleanedPhoneCode = data.phoneCode.replace(

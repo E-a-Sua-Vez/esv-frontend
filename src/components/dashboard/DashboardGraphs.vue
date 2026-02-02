@@ -115,15 +115,6 @@ export default {
       const ind = arr.indexOf(max);
       const label = dayDistribution.labels?.[ind];
 
-      // Debug logging
-      console.log({
-        arr,
-        max,
-        ind,
-        labels: dayDistribution.labels,
-        selectedLabel: label,
-      });
-
       return {
         label: label || 'N/A',
         data: max,

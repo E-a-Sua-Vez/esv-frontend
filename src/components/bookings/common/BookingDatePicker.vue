@@ -913,23 +913,9 @@ export default {
         if (state.blocks && Array.isArray(state.blocks) && state.blocks.length > 0) {
           // Use current bookings if available, otherwise empty array
           const currentBookings = state.bookings && state.bookings.length > 0 ? state.bookings : [];
-          console.log(
-            '🔵 [BookingDatePicker] Calculating available blocks. Blocks:',
-            state.blocks.length,
-            'Bookings:',
-            currentBookings.length,
-          );
           getAvailableBookingBlocks(currentBookings);
           getAvailableBookingSuperBlocks();
           bookingsAvailables();
-          console.log(
-            '🔵 [BookingDatePicker] Available blocks:',
-            state.availableBookingBlocks?.length,
-          );
-          console.log(
-            '🔵 [BookingDatePicker] Available super blocks:',
-            state.availableBookingSuperBlocks?.length,
-          );
         } else {
           console.warn('🔵 [BookingDatePicker] No blocks found for selected date');
         }

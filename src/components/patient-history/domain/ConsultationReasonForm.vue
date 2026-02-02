@@ -195,10 +195,6 @@ export default {
 
     const handleTemplateSelected = content => {
       state.newConsultationReason.reason = content;
-      console.log(
-        '🟢 ConsultationReasonForm: state.newConsultationReason.reason actualizado a:',
-        state.newConsultationReason.reason,
-      );
       sendData();
     };
 

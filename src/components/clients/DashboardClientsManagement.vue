@@ -461,7 +461,7 @@ export default {
           }
           // Auto-expand filters when component becomes visible for the first time
           if (!oldVal || (oldVal && !oldVal.showClientManagement && newVal.showClientManagement)) {
-            this.showFilterOptions = true;
+            this.showFilterOptions = false;
           }
           this.page = 1;
           this.refresh();

@@ -1250,15 +1250,16 @@ export default {
       }
       state.showQueueSelector = false;
 
-      // Show the correct queue type view based on the selected queue
+      // Switch to the appropriate view to make the selected queue visible
       if (queue.type === 'PROFESSIONAL') {
         state.showCollaboratorQueues = true;
         state.showQueues = false;
         state.showAllQueues = false;
       } else {
-        state.showQueues = true;
+        // For non-professional queues, switch to "All Queues" view to ensure visibility
+        state.showAllQueues = true;
+        state.showQueues = false;
         state.showCollaboratorQueues = false;
-        state.showAllQueues = false;
       }
 
       // Ensure the calendar for this queue is open
@@ -1560,13 +1561,7 @@ export default {
     const availableQueues = computed(() => {
       if (!queues.value || queues.value.length === 0) return [];
       const validQueues = queues.value.filter(queue => queue && queue.type);
-      if (state.showQueues) {
-        return validQueues.filter(queue => queue.type !== 'PROFESSIONAL');
-      } else if (state.showCollaboratorQueues) {
-        return validQueues.filter(queue => queue.type === 'PROFESSIONAL');
-      } else if (state.showAllQueues) {
-        return validQueues;
-      }
+      // Always return all valid queues for the queue selector, regardless of current filter
       return validQueues;
     });
 
@@ -3960,5 +3955,30 @@ input.form-control {
 input.form-control:focus {
   outline: 2px solid #00c2cb !important;
   border-color: #00c2cb !important;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 991.98px) {
+  .modal-body-full-height .row.resizable-container {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+
+  .calendar-section {
+    display: none !important;
+  }
+
+  .resizer-bar {
+    display: none !important;
+  }
+
+  .management-area-column {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    order: 1;
+    height: auto !important;
+    min-height: 400px;
+  }
 }
 </style>

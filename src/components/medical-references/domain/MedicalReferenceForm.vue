@@ -167,10 +167,6 @@ export default {
         // Solo usar collaboratorId como referringDoctorId si no hay professionalId
         if (!attentionDetails.professionalId) {
           state.reference.referringDoctorId = attentionDetails.collaboratorId;
-          console.log(
-            '👨‍⚕️ Doctor ID set from collaborator (fallback):',
-            state.reference.referringDoctorId,
-          );
         }
       }
 

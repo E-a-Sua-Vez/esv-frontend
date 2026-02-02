@@ -149,7 +149,6 @@ export function useSpeechRecognition() {
       if (onFinalResult && hasFinalResults && currentFinalText.trim()) {
         // FIX Voice Special Chars: Escape special characters
         const escaped = escapeVoiceTranscription(currentFinalText.trim());
-        console.log('🎤 Speech recognition final result (immediate):', escaped);
         onFinalResult(escaped);
       }
     };

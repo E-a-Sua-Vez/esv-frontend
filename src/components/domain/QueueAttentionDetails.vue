@@ -952,7 +952,6 @@ export default {
   .attention-pipeline-column {
     flex: 0 0 calc(100% - 1rem);
     min-width: 280px;
-    max-width: 100%;
   }
 
   .attention-pipeline-nav-arrow {

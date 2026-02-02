@@ -245,10 +245,6 @@ export default {
         const timestamp = Date.now();
         const payments = await getCommissionPaymentsByCommerce(props.commerce.id, timestamp);
         allPayments.value = Array.isArray(payments) ? payments : [];
-        console.log({
-          count: allPayments.value.length,
-          payments: allPayments.value,
-        });
         loading.value = false;
       } catch (error) {
         console.error('[loadPayments] Error loading payments:', error);

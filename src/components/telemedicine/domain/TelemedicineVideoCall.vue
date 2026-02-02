@@ -350,16 +350,6 @@ export default {
 
         // Escuchar ofertas/respuestas de video
         onVideoOffer(async data => {
-          console.log({
-            from: data.from,
-            socketId: data.socketId,
-            hasOffer: !!data.offer,
-            currentUserId: props.currentUserId,
-            userType: props.userType,
-            isFromSelf: data.from === props.currentUserId,
-            offerType: data.offer?.type,
-            offerSdp: data.offer?.sdp?.substring(0, 50) + '...',
-          });
 
           // Aceptar ofertas de otros usuarios (comparar por userId, no socketId)
           if (data.from !== props.currentUserId && data.offer) {
@@ -402,16 +392,6 @@ export default {
         });
 
         onVideoAnswer(async data => {
-          console.log({
-            from: data.from,
-            socketId: data.socketId,
-            hasAnswer: !!data.answer,
-            currentUserId: props.currentUserId,
-            userType: props.userType,
-            isFromSelf: data.from === props.currentUserId,
-            answerType: data.answer?.type,
-            answerSdp: data.answer?.sdp?.substring(0, 50) + '...',
-          });
 
           if (data.from !== props.currentUserId && data.answer) {
             // Verificar que la conexión esté activa

@@ -3036,7 +3036,8 @@
       "filters": {
         "attention": "Atendimentos",
         "contact": "Contato",
-        "contactResult": "Retorno de Contato"
+        "contactResult": "Retorno de Contato",
+        "productLevel": "Nível de Produto"
       }
     },
     "clientCard": {

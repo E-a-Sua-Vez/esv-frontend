@@ -84,10 +84,10 @@ export default {
       try {
         loading.value = true;
         state.currentUser = await store.getCurrentUser;
-        
+
         // Load business first (required for isActiveBusiness check)
         await store.getActualBusiness();
-        
+
         // Set initial commerce if not set - check both commerceId and commercesId
         if (!commerce.value || !commerce.value.id) {
           // First try commerceId (single commerce)
@@ -496,7 +496,7 @@ export default {
                           <!-- Product Status filter -->
                           <div class="mb-3">
                             <label class="form-label fw-bold mb-2">{{
-                              $t('dashboard.tracing.filters.contactResult') || 'Estado del Producto'
+                              $t('dashboard.tracing.filters.productLevel') || 'Estado del Producto'
                             }}</label>
                             <div class="d-flex gap-2 align-items-center">
                               <input
@@ -543,7 +543,7 @@ export default {
                               </label>
                               <i
                                 class="bi bi-info-circle-fill h7 m-2"
-                                :title="$t(`dashboard.tracing.filters.contactResult`)"
+                                :title="$t(`dashboard.tracing.filters.productLevel`)"
                               ></i>
                             </div>
                           </div>
