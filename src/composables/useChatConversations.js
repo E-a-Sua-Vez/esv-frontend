@@ -56,11 +56,6 @@ const totalUnreadChats = computed(() => {
           unreadCountByUser: c.unreadCountByUser,
           unreadCount: c.unreadCount,
         }));
-        console.log('[Chat] totalUnreadChats recomputed', {
-          ids,
-          total,
-          conversations: sample,
-        });
       } catch (_) {}
     }
 
@@ -394,10 +389,8 @@ export function useChatConversations() {
     }
 
     async function resolveParticipantInfo(id) {
-      console.log('[DEBUG] resolveParticipantInfo called with id:', id);
       if (!id) return null;
       if (participantCache.has(id)) {
-        console.log('[DEBUG] Found in cache:', participantCache.get(id));
         return participantCache.get(id);
       }
       try {
@@ -464,7 +457,6 @@ export function useChatConversations() {
                       ? 'collaborator'
                       : 'business'),
                 };
-                console.log('[DEBUG] Found user in', colName, 'collection:', info);
                 participantCache.set(id, info);
                 return info;
               }
@@ -472,37 +464,21 @@ export function useChatConversations() {
           }
         }
       } catch (_) {}
-      console.log('[DEBUG] No participant info found for id:', id);
       participantCache.set(id, null);
       return null;
     }
 
     async function enrichConversationParticipants(list) {
-      console.log(
-        '[DEBUG] enrichConversationParticipants called with',
-        list.length,
-        'conversations'
-      );
       const updates = [];
       for (const conv of list) {
-        console.log(
-          '[DEBUG] Processing conversation:',
-          conv.id,
-          'with participants:',
-          conv.participants
-        );
         if (!conv.participants) continue;
         for (const p of conv.participants) {
-          console.log('[DEBUG] Processing participant:', p);
           // Si parece un ID crudo, intentar resolver nombre/email
           const looksLikeId = !p.name || /^[A-Za-z0-9_-]{16,}$/.test(p.name);
-          console.log('[DEBUG] Participant looksLikeId:', looksLikeId, 'name:', p.name);
           if (looksLikeId) {
             updates.push(
               (async () => {
-                console.log('[DEBUG] Resolving participant info for ID:', p.userId || p.id);
                 const info = await resolveParticipantInfo(p.userId || p.id);
-                console.log('[DEBUG] Resolved info:', info);
                 if (info) {
                   const target = conversations.value.find(c => c.id === conv.id);
                   if (target && target.participants) {
@@ -510,7 +486,6 @@ export function useChatConversations() {
                       x => (x.userId || x.id) === (p.userId || p.id)
                     );
                     if (tp) {
-                      console.log('[DEBUG] Updating participant:', tp, 'with info:', info);
                       tp.userName = info.name || tp.userName;
                       tp.name = info.name || tp.name;
                       tp.email = info.email || tp.email;
@@ -525,10 +500,8 @@ export function useChatConversations() {
         }
       }
       if (updates.length) {
-        console.log('[DEBUG] Waiting for', updates.length, 'participant updates');
         try {
           await Promise.allSettled(updates);
-          console.log('[DEBUG] Participant updates completed');
         } catch (_) {}
       }
     }
@@ -757,7 +730,6 @@ export function useChatConversations() {
                 // También poner la conversación como leída localmente
                 markConversationAsRead(conversationId).catch(() => {});
                 if (import.meta.env && import.meta.env.DEV) {
-                  console.log('[Chat] UI-first mark read IDs:', toMark);
                 }
               } catch (_e) {
                 /* no-op */
@@ -807,7 +779,6 @@ export function useChatConversations() {
                     ? toMark.filter(id => !updatedIds.includes(id))
                     : toMark;
                   if (import.meta.env && import.meta.env.DEV) {
-                    console.log('[Chat] Bulk result:', { updatedIds, remaining });
                   }
                   if (remaining.length) {
                     if (import.meta.env && import.meta.env.DEV) {

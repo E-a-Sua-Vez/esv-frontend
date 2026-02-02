@@ -68,13 +68,11 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
 
       // Si ya hay una conexión activa, no crear una nueva
       if (socket.value && socket.value.connected && connected.value) {
-        console.log('[useTelemedicine] Socket already connected');
         return;
       }
 
       // Si hay un socket pero no está conectado, desconectarlo primero
       if (socket.value && !socket.value.connected) {
-        console.log('[useTelemedicine] Disconnecting existing socket');
         socket.value.disconnect();
         socket.value = null;
       }
@@ -87,7 +85,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
       // Parse the URL to ensure proper format
       const url = new URL(backendUrl);
       const socketUrl = `${url.protocol}//${url.host}/telemedicine`;
-      console.log('[useTelemedicine] Connecting to WebSocket:', socketUrl);
 
       // Prepare auth object for socket connection
       const auth = {};
@@ -96,7 +93,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
       if (userType === 'patient' && accessKey) {
         auth.accessKey = accessKey;
         auth.sessionId = sessionId;
-        console.log('[useTelemedicine] Connecting as patient with access key authentication');
       } else if (userType === 'doctor') {
         // For doctors, try to get Firebase token
         try {
@@ -104,9 +100,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
           const token = await getCurrentUser();
           if (token && typeof token === 'string') {
             auth.token = token;
-            console.log(
-              '[useTelemedicine] Connecting as doctor with Firebase token authentication'
-            );
           } else {
             // Try alternative method - get auth directly
             const { getAuth } = await import('firebase/auth');
@@ -116,9 +109,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
               const firebaseToken = await currentUser.getIdToken();
               if (firebaseToken) {
                 auth.token = firebaseToken;
-                console.log(
-                  '[useTelemedicine] Connecting as doctor with Firebase token from currentUser'
-                );
               }
             }
           }
@@ -157,7 +147,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
       });
 
       socket.value.on('user-joined', data => {
-        console.log('User joined:', data);
         // Emit event for connection status updates
         if (socket.value && socket.value.connected) {
           socket.value.emit('connection-status', {
@@ -170,7 +159,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
       });
 
       socket.value.on('user-left', data => {
-        console.log('User left:', data);
         // Emit event for connection status updates
         if (socket.value && socket.value.connected) {
           socket.value.emit('connection-status', {
@@ -184,13 +172,11 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
 
       // Listen for connection status updates from other users
       socket.value.on('connection-status-update', data => {
-        console.log('Connection status update:', data);
         connectionStatusCallbacks.forEach(callback => callback(data));
       });
 
       // Listen for room join confirmation (if the server emits one)
       socket.value.on('joined-room', data => {
-        console.log('[useTelemedicine] Successfully joined room:', data);
         if (socket.value && socket.value.connected) {
           connected.value = true;
         }
@@ -198,7 +184,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
 
       // Listen for session completion notification
       socket.value.on('session-completed', data => {
-        console.log('[useTelemedicine] Session completed notification received:', data);
         // Call all registered session completion callbacks
         sessionCompletedCallbacks.forEach(callback => callback(data));
       });
@@ -219,13 +204,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
 
         socket.value.once('connect', () => {
           clearTimeout(timeout);
-          console.log('[useTelemedicine] Socket connected, joining room...', {
-            socketId: socket.value.id,
-            connected: socket.value.connected,
-            sessionId,
-            userId,
-            userType,
-          });
 
           // Set connected immediately when socket connects
           connected.value = true;
@@ -283,12 +261,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
   const onVideoOffer = callback => {
     if (socket.value) {
       socket.value.on('video-offer', data => {
-        console.log('[useTelemedicine] video-offer received:', {
-          from: data.from,
-          socketId: data.socketId,
-          hasOffer: !!data.offer,
-          offerType: data.offer?.type,
-        });
         callback(data);
       });
     }
@@ -297,12 +269,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
   const onVideoAnswer = callback => {
     if (socket.value) {
       socket.value.on('video-answer', data => {
-        console.log('[useTelemedicine] video-answer received:', {
-          from: data.from,
-          socketId: data.socketId,
-          hasAnswer: !!data.answer,
-          answerType: data.answer?.type,
-        });
         callback(data);
       });
     }
@@ -311,11 +277,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
   const onIceCandidate = callback => {
     if (socket.value) {
       socket.value.on('ice-candidate', data => {
-        console.log('[useTelemedicine] ice-candidate received:', {
-          from: data.from,
-          socketId: data.socketId,
-          hasCandidate: !!data.candidate,
-        });
         callback(data);
       });
     }
@@ -325,11 +286,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
     // Check both the ref and actual socket connection state
     const isConnected = socket.value && (socket.value.connected || connected.value);
     if (isConnected) {
-      console.log('[useTelemedicine] Sending video-offer:', {
-        roomId: roomId.value,
-        offerType: offer.type,
-        offerSdp: offer.sdp?.substring(0, 50) + '...',
-      });
       socket.value.emit('video-offer', {
         roomId: roomId.value,
         offer,
@@ -347,11 +303,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
     // Check both the ref and actual socket connection state
     const isConnected = socket.value && (socket.value.connected || connected.value);
     if (isConnected) {
-      console.log('[useTelemedicine] Sending video-answer:', {
-        roomId: roomId.value,
-        answerType: answer.type,
-        answerSdp: answer.sdp?.substring(0, 50) + '...',
-      });
       socket.value.emit('video-answer', {
         roomId: roomId.value,
         answer,
@@ -369,10 +320,6 @@ export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
     // Check both the ref and actual socket connection state
     const isConnected = socket.value && (socket.value.connected || connected.value);
     if (isConnected) {
-      console.log('[useTelemedicine] Sending ice-candidate:', {
-        roomId: roomId.value,
-        candidate: candidate.candidate?.substring(0, 50) + '...',
-      });
       socket.value.emit('ice-candidate', {
         roomId: roomId.value,
         candidate,

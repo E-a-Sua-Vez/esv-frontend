@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, watch } from 'vue';
+import { ref, reactive, onBeforeMount, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import Message from '../../components/common/Message.vue';
@@ -42,7 +42,22 @@ export default {
         'your-plan',
         'business-master-resume',
         'go-minisite',
+        'client-portal',
       ],
+      menuIcons: {
+        'dashboard': 'bi-speedometer2',
+        'reports': 'bi-bar-chart',
+        'bookings-master-admin': 'bi-calendar-check',
+        'control-master-admin': 'bi-gear',
+        'manage-master-admin': 'bi-people',
+        'medical-management': 'bi-heart-pulse',
+        'configuration': 'bi-sliders',
+        'documents': 'bi-file-earmark-text',
+        'your-plan': 'bi-credit-card',
+        'business-master-resume': 'bi-building',
+        'go-minisite': 'bi-globe',
+        'client-portal': 'bi-person-circle',
+      },
       manageControlSubMenuOptions: [
         'tracing',
         'product-stock',
@@ -185,6 +200,12 @@ export default {
             state.manageSubMenuOption = false;
             state.manageControlSubMenuOption = false;
             loading.value = false;
+          } else if (option === 'go-minisite') {
+            window.open(getBusinessLink(), '_blank');
+            loading.value = false;
+          } else if (option === 'client-portal') {
+            window.open(getClientPortalLink(), '_blank');
+            loading.value = false;
           } else {
             router.push({ path: `/interno/master/${option}` });
             loading.value = false;
@@ -231,6 +252,64 @@ export default {
       return state.business?.logo;
     };
 
+    const getClientPortalLink = () => {
+      // Use commerce keyName for client portal, fallback to business if no commerce selected
+      const keyName =
+        state.commerces.length > 0 && store.getCurrentCommerce?.keyName
+          ? store.getCurrentCommerce.keyName
+          : state.business.keyName;
+      return `/public/portal/${keyName}/login`;
+    };
+
+    const getSubmenuIcon = (opt) => {
+      const iconMap = {
+        'commerce-master-admin': 'bi-building',
+        'service-master-admin': 'bi-tools',
+        'modules-master-admin': 'bi-layers',
+        'queues-master-admin': 'bi-list-check',
+        'administrators-master-admin': 'bi-person-badge',
+        'collaborators-master-admin': 'bi-people',
+        'surveys-master-admin': 'bi-clipboard-check',
+        'forms-master-admin': 'bi-file-text',
+        'outcome-types-master-admin': 'bi-check-circle',
+        'company-master-admin': 'bi-building',
+        'product-master-admin': 'bi-box-seam',
+        'permissions-master-admin': 'bi-key',
+        'tracing': 'bi-search',
+        'product-stock': 'bi-boxes',
+        'financial': 'bi-cash',
+        'patient-history-item-master-admin': 'bi-file-medical',
+        'medications-admin': 'bi-capsule',
+        'medical-exams-admin': 'bi-clipboard-data',
+        'medical-templates-admin': 'bi-file-earmark-medical',
+        'pdf-templates-admin': 'bi-file-earmark-pdf',
+        'audit-log': 'bi-journal-text',
+      };
+      return `bi ${iconMap[opt] || 'bi-chevron-right'}`;
+    };
+
+    // Función para cerrar todos los submenús
+    const closeAllSubmenus = () => {
+      state.manageSubMenuOption = false;
+      state.manageControlSubMenuOption = false;
+      state.medicalManagementSubMenuOption = false;
+    };
+
+    // Función para manejar click outside
+    const handleClickOutside = (event) => {
+      closeAllSubmenus();
+    };
+
+    // Agregar event listener para click outside
+    onMounted(() => {
+      document.addEventListener('click', handleClickOutside);
+    });
+
+    // Remover event listener al desmontar
+    onUnmounted(() => {
+      document.removeEventListener('click', handleClickOutside);
+    });
+
     return {
       state,
       loading,
@@ -242,6 +321,8 @@ export default {
       selectCommerce,
       getBusinessLink,
       getBusinessLogo,
+      getClientPortalLink,
+      getSubmenuIcon,
       router,
     };
   },
@@ -309,110 +390,154 @@ export default {
               </div>
             </div>
             <div id="business-menu" class="business-menu-content">
-              <div class="row">
-                <div
-                  v-for="option in state.businessMenuOptions"
-                  :key="option"
-                  class="d-grid btn-group btn-group-justified"
-                >
-                  <div v-if="option === 'go-minisite'" class="centered">
-                    <a
-                      type="button"
-                      class="btn btn-lg btn-block btn-size col-8 fw-bold btn-secondary rounded-pill mt-2 mb-2"
-                      :href="`${getBusinessLink()}`"
-                      target="_blank"
+              <div class="row justify-content-center">
+                <div class="col-12 col-md-10 col-lg-8">
+                  <div class="row">
+                    <div
+                      v-for="option in state.businessMenuOptions.filter(opt => opt !== 'go-minisite' && opt !== 'client-portal')"
+                      :key="option"
+                      class="col-12"
                     >
-                      {{ $t(`masterMenu.${option}`) }} <i class="bi bi-box-arrow-up-right"></i>
-                    </a>
-                  </div>
-                  <div v-else>
-                    <button
-                      type="button"
-                      class="btn btn-lg btn-block btn-size col-8 fw-bold btn-dark rounded-pill mt-2 mb-2"
-                      @click="goToOption(option)"
-                    >
-                      {{ $t(`masterMenu.${option}`) }}
-                      <i
-                        v-if="option === 'manage-master-admin'"
-                        :class="`bi ${
-                          state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                        }`"
-                      ></i>
-                      <i
-                        v-if="option === 'control-master-admin'"
-                        :class="`bi ${
+                      <div
+                        class="menu-card mb-2"
+                        @click.stop="goToOption(option)"
+                      >
+                        <div class="card-icon">
+                          <i :class="`bi ${state.menuIcons[option]}`"></i>
+                        </div>
+                        <div class="card-text">
+                          {{ $t(`masterMenu.${option}`) }}
+                          <i
+                            v-if="option === 'manage-master-admin'"
+                            :class="`chevron bi ${
+                              state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                          <i
+                            v-if="option === 'control-master-admin'"
+                            :class="`chevron bi ${
+                              state.manageControlSubMenuOption === true
+                                ? 'bi-chevron-up'
+                                : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                          <i
+                            v-if="option === 'medical-management'"
+                            :class="`chevron bi ${
+                              state.medicalManagementSubMenuOption === true
+                                ? 'bi-chevron-up'
+                                : 'bi-chevron-down'
+                            }`"
+                          ></i>
+                        </div>
+                      </div>
+                      <div
+                        v-if="option === 'manage-master-admin' && state.manageSubMenuOption === true"
+                        class="submenu-container"
+                      >
+                        <div
+                          v-for="opt in state.manageSubMenuOptions"
+                          :key="opt"
+                          class="submenu-item"
+                        >
+                          <div
+                            class="submenu-card"
+                            @click="goToOption(opt)"
+                          >
+                            <div class="card-icon">
+                              <i :class="getSubmenuIcon(opt)"></i>
+                            </div>
+                            <div class="card-text">
+                              {{ $t(`masterMenu.${opt}`) }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        v-if="
+                          option === 'control-master-admin' &&
                           state.manageControlSubMenuOption === true
-                            ? 'bi-chevron-up'
-                            : 'bi-chevron-down'
-                        }`"
-                      ></i>
-                      <i
-                        v-if="option === 'medical-management'"
-                        :class="`bi ${
+                        "
+                        class="submenu-container"
+                      >
+                        <div
+                          v-for="opt in state.manageControlSubMenuOptions"
+                          :key="opt"
+                          class="submenu-item"
+                        >
+                          <div
+                            class="submenu-card"
+                            @click="goToOption(opt)"
+                          >
+                            <div class="card-icon">
+                              <i :class="getSubmenuIcon(opt)"></i>
+                            </div>
+                            <div class="card-text">
+                              {{ $t(`masterMenu.${opt}`) }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        v-if="
+                          option === 'medical-management' &&
                           state.medicalManagementSubMenuOption === true
-                            ? 'bi-chevron-up'
-                            : 'bi-chevron-down'
-                        }`"
-                      ></i>
-                    </button>
-                    <div
-                      v-if="option === 'manage-master-admin' && state.manageSubMenuOption === true"
-                      class="mb-1"
-                    >
-                      <div
-                        v-for="opt in state.manageSubMenuOptions"
-                        :key="opt"
-                        class="centered mx-3"
+                        "
+                        class="submenu-container"
                       >
-                        <button
-                          type="button"
-                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
-                          @click="goToOption(opt)"
+                        <div
+                          v-for="opt in state.medicalManagementSubMenuOptions"
+                          :key="opt"
+                          class="submenu-item"
                         >
-                          {{ $t(`masterMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                        </button>
+                          <div
+                            class="submenu-card"
+                            @click="goToOption(opt)"
+                          >
+                            <div class="card-icon">
+                              <i :class="getSubmenuIcon(opt)"></i>
+                            </div>
+                            <div class="card-text">
+                              {{ $t(`masterMenu.${opt}`) }}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div
-                      v-if="
-                        option === 'control-master-admin' &&
-                        state.manageControlSubMenuOption === true
-                      "
-                      class="mb-1"
-                    >
-                      <div
-                        v-for="opt in state.manageControlSubMenuOptions"
-                        :key="opt"
-                        class="centered mx-3"
-                      >
-                        <button
-                          type="button"
-                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
-                          @click="goToOption(opt)"
-                        >
-                          {{ $t(`masterMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                        </button>
-                      </div>
-                    </div>
-                    <div
-                      v-if="
-                        option === 'medical-management' &&
-                        state.medicalManagementSubMenuOption === true
-                      "
-                      class="mb-1"
-                    >
-                      <div
-                        v-for="opt in state.medicalManagementSubMenuOptions"
-                        :key="opt"
-                        class="centered mx-3"
-                      >
-                        <button
-                          type="button"
-                          class="btn btn-lg btn-block btn-size col-8 fw-bold btn-light rounded-pill mt-1"
-                          @click="goToOption(opt)"
-                        >
-                          {{ $t(`masterMenu.${opt}`) }} <i class="bi bi-chevron-right"></i>
-                        </button>
+                    <div class="col-12">
+                      <div class="row portal-row">
+                        <div class="col-6 portal-card-wrapper">
+                          <div class="menu-card portal-card">
+                            <a
+                              class="menu-link"
+                              :href="`${getBusinessLink()}`"
+                              target="_blank"
+                            >
+                              <div class="card-icon">
+                                <i class="bi bi-globe"></i>
+                              </div>
+                              <div class="card-text">
+                                {{ $t(`masterMenu.go-minisite`) }} <i class="bi bi-box-arrow-up-right ms-2"></i>
+                              </div>
+                            </a>
+                          </div>
+                        </div>
+                        <div class="col-6 portal-card-wrapper">
+                          <div class="menu-card portal-card">
+                            <a
+                              class="menu-link"
+                              :href="`${getClientPortalLink()}`"
+                              target="_blank"
+                            >
+                              <div class="card-icon">
+                                <i class="bi bi-person-circle"></i>
+                              </div>
+                              <div class="card-text">
+                                {{ $t(`masterMenu.client-portal`) }} <i class="bi bi-box-arrow-up-right ms-2"></i>
+                              </div>
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -582,6 +707,176 @@ export default {
   max-width: 120px;
   max-height: 120px;
   object-fit: contain;
+}
+
+/* New card-based menu styles */
+.menu-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-left: 3px solid #007bff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 40px;
+  width: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.menu-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.12);
+  border-color: var(--azul-turno);
+}
+
+.menu-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.menu-card.disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.submenu-card {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0rem 0.8rem;
+  margin: 0.25rem 1rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-left: 3px solid #0056b3;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 40px;
+  width: 80%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.submenu-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 74, 173, 0.1);
+  border-color: var(--azul-turno);
+}
+
+.submenu-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submenu-card.disabled:hover {
+  transform: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.card-icon {
+  font-size: 1.25rem;
+  color: var(--azul-turno);
+  margin-right: 0.5rem;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.card-text .chevron {
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.card-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+  color: #333;
+  line-height: 1.1;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.submenu-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.submenu-item {
+  width: 100%;
+  display: block;
+}
+
+.menu-link {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 40px;
+  width: 90%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.menu-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.12);
+  border-color: var(--azul-turno);
+}
+
+/* Portal card styles - blue background with white icons */
+.portal-card {
+  background: var(--azul-turno) !important;
+  border-color: var(--azul-turno) !important;
+  border-left: 3px solid #0056b3 !important;
+  color: white !important;
+  width: 100% !important;
+}
+
+.portal-card .card-icon {
+  color: white !important;
+}
+
+.portal-card .card-text {
+  color: white !important;
+}
+
+.portal-card .external-icon {
+  color: white !important;
+}
+
+.portal-card:hover {
+  background: var(--azul-turno-hover, #0056b3) !important;
+  border-color: var(--azul-turno-hover, #0056b3) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 74, 173, 0.25) !important;
+}
+
+/* Portal row styles */
+.portal-row {
+  margin-top: 1rem;
+}
+
+.portal-card-wrapper {
+  padding: 0 0.25rem;
 }
 
 /* Commerce Modal Styles */

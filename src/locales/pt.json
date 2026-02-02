@@ -641,7 +641,7 @@
       "medicalData": "Dados Médicos",
       "acceptsEmergencies": "Aceita Emergências",
       "homeVisits": "Realiza Visitas Domiciliares",
-      "telemedicine": "Atendimento Telemedicina",
+      "telemedicine": "Atendimento Teleconsulta",
       "canSignDocuments": "Pode Assinar Documentos",
       "noProfessional": "Nenhum perfil profissional disponível",
       "notFound": "Perfil profissional não encontrado. Entre em contato com o suporte se você achar que isso é um erro.",
@@ -1033,7 +1033,7 @@
       "description": "Editar reserva pra outra data e ou hora"
     },
     "telemedicine-active": {
-      "title": "Telemedicina Ativa",
+      "title": "Teleconsulta Ativa",
       "description": "Ativa a funcionalidade de telemedicina para reservas e atendimentos"
     },
     "attention-stock-register": {
@@ -1295,8 +1295,8 @@
     "date": "Data",
     "time": "Horário",
     "queue": "Fila",
-    "telemedicineValue": "Telemedicina",
-    "telemedicineAvailable": "Telemedicina disponível",
+    "telemedicineValue": "Teleconsulta",
+    "telemedicineAvailable": "Teleconsulta disponível",
     "presentialAvailable": "Atendimento presencial disponível",
     "creating": "Criando...",
     "selectService": "Selecione o serviço:",
@@ -1572,7 +1572,7 @@
       }
     },
     "telemedicine": {
-      "title": "Consulta por Telemedicina",
+      "title": "Consulta por Teleconsulta",
       "subtitle": "Esta é uma consulta por telemedicina. Você não precisa comparecer presencialmente.",
       "typeVideo": "Vídeo",
       "typeChat": "Chat",
@@ -1864,7 +1864,7 @@
       }
     },
     "telemedicine": {
-      "title": "Minhas Sessões de Telemedicina",
+      "title": "Minhas Sessões de Teleconsulta",
       "backToMenu": "Voltar ao Menu",
       "loading": "Carregando sessões...",
       "noSessions": "Não há sessões de telemedicina registradas",
@@ -1995,7 +1995,7 @@
     }
   },
   "telemedicineSession": {
-    "patientWelcome": "Acesso à Consulta de Telemedicina",
+    "patientWelcome": "Acesso à Consulta de Teleconsulta",
     "sessionStatus": "Estado da Sessão",
     "status": "Estado:",
     "scheduledFor": "Programada para:",
@@ -2044,7 +2044,7 @@
     "waitingForDoctor": "A sessão começará quando o médico se conectar",
     "waitingForDoctorDescription": "Por favor, aguarde o médico se conectar para iniciar a consulta",
     "sessionActiveWindowClosed": "Sessão ativa - Janela fechada",
-    "reopenSession": "Reabrir Sessão de Telemedicina",
+    "reopenSession": "Reabrir Sessão de Teleconsulta",
     "sessionCompleted": "Sessão Finalizada",
     "invalidKeyLength": "Por favor, digite um código de 4 a 8 caracteres alfanuméricos",
     "invalidAccessKey": "Chave de acesso inválida",
@@ -3712,6 +3712,7 @@
     "control-master-admin": "Gestão",
     "medical-management": "Gestão Médica",
     "go-minisite": "Minisite",
+    "client-portal": "Portal do Cliente",
     "outcome-types-master-admin": "Tipos de Despesa",
     "company-master-admin": "Empresas",
     "patient-history-item-admin": "Itens Prontuario",
@@ -3803,7 +3804,7 @@
     "order": "Ordem:",
     "active": "Ativo:",
     "online": "Online:",
-    "telemedicine": "Telemedicina:",
+    "telemedicine": "Teleconsulta:",
     "telemedicineHelp": "Habilita a opção de telemedicina para esta fila",
     "presential": "Atendimento presencial:",
     "presentialHelp": "Habilita o atendimento presencial para esta fila",
@@ -5574,7 +5575,7 @@
     "collaborators": "Colaboradores",
     "resumeByCommerce": "Sumário por Comércio/Unidade",
     "whatsapp": "Conexão Whatsapp",
-    "telemedicine": "Telemedicina",
+    "telemedicine": "Teleconsulta",
     "telemedicineConnections": "Conexões WebSocket",
     "message": {
       "1": {
@@ -5902,7 +5903,7 @@
     "client-portal": {
       "menu": {
         "consents": "Ver Menu - Consentimentos Portal do Cliente",
-        "telemedicine": "Ver Menu - Telemedicina Portal do Cliente",
+        "telemedicine": "Ver Menu - Teleconsulta Portal do Cliente",
         "profile": "Ver Menu - Perfil Portal do Cliente",
         "documents": "Ver Menu - Documentos Portal do Cliente",
         "history": "Ver Menu - Histórico Portal do Cliente"
@@ -5913,7 +5914,7 @@
         "reject": "Rejeitar Consentimentos - Portal do Cliente"
       },
       "telemedicine": {
-        "view": "Ver Telemedicina - Portal do Cliente",
+        "view": "Ver Teleconsulta - Portal do Cliente",
         "schedule": "Agendar Consultas - Portal do Cliente"
       },
       "profile": {
@@ -7122,7 +7123,7 @@
     "client-portal": {
       "menu": {
         "consents": "Ver Menu - Consentimentos Portal Cliente",
-        "telemedicine": "Ver Menu - Telemedicina Portal Cliente",
+        "telemedicine": "Ver Menu - Teleconsulta Portal Cliente",
         "profile": "Ver Menu - Perfil Portal Cliente",
         "documents": "Ver Menu - Documentos Portal Cliente",
         "history": "Ver Menu - Histórico Portal Cliente"
@@ -7133,7 +7134,7 @@
         "reject": "Rejeitar Consentimentos - Portal Cliente"
       },
       "telemedicine": {
-        "view": "Ver Telemedicina - Portal Cliente",
+        "view": "Ver Teleconsulta - Portal Cliente",
         "schedule": "Agendar Consultas - Portal Cliente"
       },
       "profile": {
@@ -7154,7 +7155,7 @@
     "createBooking": "Criar uma Reserva",
     "preselectedQueue": "Fila Pré-selecionada",
     "canChangeBelow": "Você pode alterar a seleção abaixo se necessário",
-    "telemedicineConsultation": "Consulta por Telemedicina",
+    "telemedicineConsultation": "Consulta por Teleconsulta",
     "telemedicineDisclaimer": "Quando a telemedicina não estiver selecionada, o atendimento será presencial.",
     "telemedicineSelectedDisclaimer": "Este atendimento será por telemedicina; se você desativar essa opção, será presencial.",
     "scheduledDateTime": "Data e Hora Agendada",
@@ -7177,7 +7178,7 @@
     "tomorrow": "Amanhã",
     "selectedDate": "Data selecionada",
     "loadingAvailableHours": "Carregando horários disponíveis...",
-    "telemedicineNote": "Consulta por Telemedicina",
+    "telemedicineNote": "Consulta por Teleconsulta",
     "telemedicineScheduleNote": "A data e hora serão definidas pelo bloco selecionado abaixo",
     "selectProcedureAmount": "Selecione a quantidade de sessões",
     "sessions": "sessões",
@@ -7600,7 +7601,7 @@
     "packageSession": "Sessão do Pacote",
     "attentionType": {
       "label": "Tipo de Atenção",
-      "telemedicine": "Telemedicina",
+      "telemedicine": "Teleconsulta",
       "presential": "Presencial"
     },
     "surveyResults": "Resultados da Pesquisa de Satisfação",
@@ -7678,7 +7679,7 @@
         "RESEARCH": "Pesquisa Científica",
         "THIRD_PARTY": "Compartilhamento com Terceiros",
         "DATA_EXPORT": "Exportação de Dados",
-        "TELEMEDICINE": "Telemedicina",
+        "TELEMEDICINE": "Teleconsulta",
         "BIOMETRIC": "Dados Biométricos"
       },
       "status": {
@@ -8161,7 +8162,7 @@
     "acceptsEmergenciesHelp": "Se o profissional atende emergências",
     "homeVisits": "Realiza Visitas Domiciliares",
     "homeVisitsHelp": "Se o profissional faz atendimento em domicílio",
-    "telemedicine": "Oferece Telemedicina",
+    "telemedicine": "Oferece Teleconsulta",
     "telemedicineHelp": "Se o profissional oferece consultas online",
     "languages": "Idiomas",
     "languagesHelp": "Idiomas que fala (separar por vírgula)",

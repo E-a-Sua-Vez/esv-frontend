@@ -701,7 +701,7 @@
       "medicalData": "Medical Data",
       "acceptsEmergencies": "Accepts Emergencies",
       "homeVisits": "Home Visits",
-      "telemedicine": "Telemedicine",
+      "telemedicine": "Teleconsultation",
       "canSignDocuments": "Can Sign Documents",
       "noProfessional": "No professional profile available",
       "notFound": "Professional profile not found. Please contact support if you believe this is an error.",
@@ -941,7 +941,7 @@
       "description": "Let edit the date and hour of a booking"
     },
     "telemedicine-active": {
-      "title": "Telemedicine Active",
+      "title": "Teleconsultation Active",
       "description": "Activates telemedicine functionality for bookings and attentions"
     },
     "attention-stock-register": {
@@ -1100,7 +1100,7 @@
     "acceptsEmergenciesHelp": "Whether the professional handles emergency cases",
     "homeVisits": "Home Visits",
     "homeVisitsHelp": "Whether the professional provides home care visits",
-    "telemedicine": "Offers Telemedicine",
+    "telemedicine": "Offers Teleconsultation",
     "telemedicineHelp": "Whether the professional offers online consultations",
     "languages": "Languages",
     "languagesHelp": "Languages spoken (comma separated)",
@@ -1396,7 +1396,7 @@
     "code3": "Code 3",
     "duration": "Duration: ",
     "totalDuration": "Total Duration: ",
-    "telemedicineAvailable": "Telemedicine available",
+    "telemedicineAvailable": "Teleconsultation available",
     "creating": "Creating...",
     "selectService": "Select the service:",
     "searchCollaboratorQueue": "🔎 Search by name or service",
@@ -1667,7 +1667,7 @@
       }
     },
     "telemedicine": {
-      "title": "Telemedicine Consultation",
+      "title": "Teleconsultation Consultation",
       "subtitle": "This is a telemedicine consultation. You do not need to attend in person.",
       "typeVideo": "Video",
       "typeChat": "Chat",
@@ -2206,7 +2206,7 @@
       }
     },
     "telemedicine": {
-      "title": "My Telemedicine Sessions",
+      "title": "My Teleconsultation Sessions",
       "backToMenu": "Back to Menu",
       "loading": "Loading sessions...",
       "noSessions": "No telemedicine sessions registered",
@@ -2337,7 +2337,7 @@
     }
   },
   "telemedicineSession": {
-    "patientWelcome": "Telemedicine Consultation Access",
+    "patientWelcome": "Teleconsultation Consultation Access",
     "sessionStatus": "Session Status",
     "status": "Status:",
     "scheduledFor": "Scheduled for:",
@@ -2386,7 +2386,7 @@
     "waitingForDoctor": "The session will begin when the doctor connects",
     "waitingForDoctorDescription": "Please wait for the doctor to connect to start the consultation",
     "sessionActiveWindowClosed": "Active session - Window closed",
-    "reopenSession": "Reopen Telemedicine Session",
+    "reopenSession": "Reopen Teleconsultation Session",
     "sessionCompleted": "Session Completed",
     "invalidKeyLength": "Please enter a 4 to 8 character alphanumeric code",
     "invalidAccessKey": "Invalid access key",
@@ -3761,6 +3761,7 @@
     "control-master-admin": "Control",
     "medical-management": "Medical Management",
     "go-minisite": "Minisite",
+    "client-portal": "Client Portal",
     "outcome-types-master-admin": "Outcome Types",
     "patient-history-item-master-admin": "Medical History Items",
     "bookings-master-admin": "Bookings 360° Vision",
@@ -3798,8 +3799,8 @@
     "type": "Type:",
     "active": "Active:",
     "online": "Online:",
-    "telemedicine": "Telemedicine:",
-    "telemedicineValue": "Telemedicine",
+    "telemedicine": "Teleconsultation:",
+    "telemedicineValue": "Teleconsultation",
     "creating": "Creating...",
     "telemedicineHelp": "Enables telemedicine option for this queue",
     "presential": "In-person attention:",
@@ -5640,7 +5641,7 @@
     "collaborators": "Collaborators",
     "resumeByCommerce": "Resume by Commerce",
     "whatsapp": "Whatsapp Connection",
-    "telemedicine": "Telemedicine",
+    "telemedicine": "Teleconsultation",
     "telemedicineConnections": "WebSocket Connections",
     "message": {
       "1": {
@@ -5946,7 +5947,7 @@
     "client-portal": {
       "menu": {
         "consents": "View Menu - Client Portal Consents",
-        "telemedicine": "View Menu - Client Portal Telemedicine",
+        "telemedicine": "View Menu - Client Portal Teleconsultation",
         "profile": "View Menu - Client Portal Profile",
         "documents": "View Menu - Client Portal Documents",
         "history": "View Menu - Client Portal History"
@@ -5957,7 +5958,7 @@
         "reject": "Reject Consents - Client Portal"
       },
       "telemedicine": {
-        "view": "View Telemedicine - Client Portal",
+        "view": "View Teleconsultation - Client Portal",
         "schedule": "Schedule Consultations - Client Portal"
       },
       "profile": {
@@ -7107,7 +7108,7 @@
     "createBooking": "Create a Booking",
     "preselectedQueue": "Preselected Queue",
     "canChangeBelow": "You can change the selection below if needed",
-    "telemedicineConsultation": "Telemedicine Consultation",
+    "telemedicineConsultation": "Teleconsultation Consultation",
     "telemedicineDisclaimer": "When telemedicine is not selected, the appointment will be in person.",
     "telemedicineSelectedDisclaimer": "This appointment will be via telemedicine; if you turn it off, it will be in person.",
     "scheduledDateTime": "Scheduled Date and Time",
@@ -7130,7 +7131,7 @@
     "tomorrow": "Tomorrow",
     "selectedDate": "Selected Date",
     "loadingAvailableHours": "Loading available hours...",
-    "telemedicineNote": "Telemedicine Consultation",
+    "telemedicineNote": "Teleconsultation Consultation",
     "telemedicineScheduleNote": "Date and time will be set by the selected block below",
     "selectProcedureAmount": "Select the number of sessions",
     "sessions": "sessions",
@@ -7291,7 +7292,7 @@
     "packageSession": "Package Session",
     "attentionType": {
       "label": "Attention Type",
-      "telemedicine": "Telemedicine",
+      "telemedicine": "Teleconsultation",
       "presential": "Presential"
     },
     "surveyResults": "Customer Satisfaction Survey Results",
@@ -7738,7 +7739,7 @@
         "RESEARCH": "Scientific Research",
         "THIRD_PARTY": "Third Party Sharing",
         "DATA_EXPORT": "Data Export",
-        "TELEMEDICINE": "Telemedicine",
+        "TELEMEDICINE": "Teleconsultation",
         "BIOMETRIC": "Biometric Data"
       },
       "status": {

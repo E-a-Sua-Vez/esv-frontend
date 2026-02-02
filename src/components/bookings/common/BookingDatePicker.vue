@@ -468,35 +468,24 @@ export default {
     };
 
     const getAvailableBookingBlocks = bookings => {
-      console.log('🟢 [getAvailableBookingBlocks] Called with:', {
-        queueType: queue.value?.type,
-        blocksCount: state.blocks?.length,
-        bookingsCount: bookings?.length,
-      });
 
       let availableBlocks = [];
       let queueBlocks = [];
 
       // Ensure queue is available
       if (!queue.value || !queue.value.id) {
-        console.warn('🟢 [getAvailableBookingBlocks] Queue not available');
         state.availableBookingBlocks = [];
         return;
       }
 
       // Ensure blocks are loaded
       if (!state.blocks || !Array.isArray(state.blocks) || state.blocks.length === 0) {
-        console.warn(
-          '🟢 [getAvailableBookingBlocks] No blocks available. State.blocks:',
-          state.blocks,
-        );
         state.availableBookingBlocks = [];
         return;
       }
 
       if (queue.value.type !== 'SELECT_SERVICE') {
         queueBlocks = state.blocks;
-        console.log('🟢 [getAvailableBookingBlocks] Queue blocks:', queueBlocks.length);
         if (queueBlocks && queueBlocks.length > 0) {
           let bookingsReserved = [];
           if (bookings && Array.isArray(bookings) && bookings.length > 0) {
@@ -552,10 +541,8 @@ export default {
         }
       } else {
         // SELECT_SERVICE queue type - use simpler logic similar to regular queues
-        console.log('🟢 [getAvailableBookingBlocks] SELECT_SERVICE queue type');
         if (state.blocks && Array.isArray(state.blocks) && state.blocks.length > 0) {
           queueBlocks = state.blocks;
-          console.log('🟢 [getAvailableBookingBlocks] SELECT_SERVICE blocks:', queueBlocks.length);
 
           if (queueBlocks && queueBlocks.length > 0) {
             let bookingsReserved = [];
@@ -575,11 +562,6 @@ export default {
                   return null;
                 })
                 .filter(reserved => reserved !== null);
-
-              console.log(
-                '🟢 [getAvailableBookingBlocks] SELECT_SERVICE bookings reserved:',
-                bookingsReserved,
-              );
 
               let limit = 0;
               if (
@@ -606,37 +588,18 @@ export default {
                     !blockedBlocks.includes(block.number) &&
                     !totalBlocksReserved.includes(block.number)
                 );
-                console.log(
-                  '🟢 [getAvailableBookingBlocks] SELECT_SERVICE filtered blocks:',
-                  availableBlocks.length,
-                );
               } else {
                 // No bookings reserved, all blocks are available
                 availableBlocks = queueBlocks;
-                console.log(
-                  '🟢 [getAvailableBookingBlocks] SELECT_SERVICE no bookings, all blocks available',
-                );
               }
             } else {
               // No bookings, all blocks are available
               availableBlocks = queueBlocks;
-              console.log(
-                '🟢 [getAvailableBookingBlocks] SELECT_SERVICE no bookings array, all blocks available',
-              );
             }
-          } else {
-            console.warn('🟢 [getAvailableBookingBlocks] SELECT_SERVICE queue blocks is empty');
           }
-        } else {
-          console.warn('🟢 [getAvailableBookingBlocks] SELECT_SERVICE state.blocks is empty');
         }
       }
       state.availableBookingBlocks = availableBlocks;
-      console.log(
-        '🟢 [getAvailableBookingBlocks] Final available blocks:',
-        availableBlocks.length,
-        availableBlocks,
-      );
     };
 
     const getAvailableBookingSuperBlocks = () => {
@@ -792,7 +755,6 @@ export default {
 
     watch(changeBooking, async (newData, oldData) => {
       if (newData.allBookings !== oldData.allBookings) {
-        console.log('🟡 [changeBooking] Bookings changed:', newData.allBookings.length);
         const newIds = newData.allBookings.map(booking => booking.id);
         const oldIds = oldData.allBookings.map(booking => booking.id);
         if (!newIds.every(id => oldIds.includes(id))) {
@@ -803,23 +765,9 @@ export default {
 
         // Update available blocks when bookings change
         if (state.blocks && Array.isArray(state.blocks) && state.blocks.length > 0) {
-          console.log(
-            '🟡 [changeBooking] Recalculating available blocks with bookings:',
-            state.bookings?.length,
-          );
           getAvailableBookingBlocks(state.bookings || []);
           getAvailableBookingSuperBlocks();
           bookingsAvailables();
-          console.log(
-            '🟡 [changeBooking] Available blocks after update:',
-            state.availableBookingBlocks?.length,
-          );
-          console.log(
-            '🟡 [changeBooking] Available super blocks after update:',
-            state.availableBookingSuperBlocks?.length,
-          );
-        } else {
-          console.warn('🟡 [changeBooking] Cannot recalculate blocks, state.blocks is empty');
         }
 
         let currentDate;
@@ -842,7 +790,6 @@ export default {
 
     watch(changeDate, async (newData, oldData) => {
       if (newData.date && newData.date !== oldData.date) {
-        console.log('🔵 [BookingDatePicker] Date selected:', formattedDate(newData.date));
         loadingHours.value = true;
 
         // Ensure queue is loaded before processing date selection
@@ -857,8 +804,6 @@ export default {
           loadingHours.value = false;
           return;
         }
-        console.log('🔵 [BookingDatePicker] Queue ID:', queueIdToUse);
-
         // Ensure queue object has id (might need to load it from booking.queueId)
         if (!queue.value || !queue.value.id) {
           if (booking.value?.queueId) {
@@ -875,30 +820,18 @@ export default {
         ) {
           state.blocks = getBlocksBySpecificDay();
           state.block = {};
-          console.log('🔵 [BookingDatePicker] Specific calendar blocks:', state.blocks?.length);
         } else {
           // Ensure blocksByDay is loaded before getting blocks
           if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
-            console.log('🔵 [BookingDatePicker] Loading blocksByDay...');
             if (queue.value?.id) {
               state.blocksByDay = await getQueueBlockDetailsByDay(queue.value.id);
             } else if (queueIdToUse) {
               // Try to load blocks using queueId from booking
               state.blocksByDay = await getQueueBlockDetailsByDay(queueIdToUse);
             }
-            console.log(
-              '🔵 [BookingDatePicker] blocksByDay loaded:',
-              Object.keys(state.blocksByDay).length,
-              'days',
-            );
           }
           state.blocks = getBlocksByDay();
           state.block = {};
-          console.log(
-            '🔵 [BookingDatePicker] Blocks for selected date:',
-            state.blocks?.length,
-            state.blocks,
-          );
         }
 
         // Unsubscribe from previous bookings listener

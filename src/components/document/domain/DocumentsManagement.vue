@@ -55,7 +55,10 @@ export default {
     async refresh(page) {
       try {
         this.loading = true;
-        let commerceIds = [this.commerce.id];
+        let commerceIds = [];
+        if (this.commerce?.id) {
+          commerceIds = [this.commerce.id];
+        }
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }
@@ -108,12 +111,12 @@ export default {
     showAddModal() {
       this.showAdd = true;
       this.newDocument = {
-        commerceId: this.commerce.id,
+        commerceId: this.commerce?.id,
       };
     },
     validateAdd() {
       this.errorsAdd = [];
-      if (this.optionSelected) {
+      if (this.optionSelected && this.commerce?.id) {
         this.newDocument.type = 'COMMERCE';
         this.newDocument.name = `${this.commerce.id}`;
         this.newDocument.reportType = this.optionSelected;
