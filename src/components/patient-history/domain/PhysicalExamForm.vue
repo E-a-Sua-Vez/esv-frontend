@@ -413,6 +413,14 @@ export default {
           </div>
         </div>
 
+        <Message
+          v-if="!state.habitsList || state.habitsList.length === 0"
+          type="normal"
+          title="Información"
+          :content="$t('patientHistoryView.noExamItemsConfigured')"
+          class="mt-3"
+        />
+
         <!-- Template Picker -->
         <div class="form-field-modern" v-if="store.commerce && store.user">
           <TemplatePicker
@@ -811,6 +819,7 @@ export default {
   background: white;
   transition: all 0.3s ease;
   font-family: inherit;
+  z-index: 1 !important;
 }
 
 .form-control-modern:focus {

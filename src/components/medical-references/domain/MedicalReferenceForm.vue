@@ -1841,6 +1841,7 @@ export default {
   transition: all 0.2s ease;
   background: white;
   resize: vertical;
+  z-index: 1 !important;
 }
 
 .form-control-modern:focus {

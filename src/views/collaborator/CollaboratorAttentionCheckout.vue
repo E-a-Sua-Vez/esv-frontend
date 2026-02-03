@@ -138,7 +138,7 @@
                   :disabled="loading"
                   @click="finishCheckout"
                 >
-                  {{ $t('collaboratorAttentionValidate.actions.1.action') }}
+                  {{ $t('collaboratorAttentionValidate.checkoutAction') }}
                   <i class="bi bi-check-all"></i>
                 </button>
               </div>

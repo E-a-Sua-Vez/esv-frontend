@@ -440,6 +440,7 @@ export default {
   transition: all 0.2s ease;
   background-color: white;
   color: var(--color-text);
+  z-index: 1 !important;
 }
 
 .form-control-modern:focus {

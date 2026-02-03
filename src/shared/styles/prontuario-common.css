@@ -79,6 +79,7 @@
   color: var(--color-text);
   background: white;
   transition: all 0.2s ease;
+  z-index: 1 !important;
 }
 
 .form-control-modern:focus {
@@ -542,6 +543,7 @@
 .input-group-compact .form-control-modern {
   border-radius: 0;
   border-right: none;
+  z-index: 1 !important;
 }
 
 .input-group-compact .form-control-modern:first-child {
@@ -597,6 +599,7 @@
 
   .form-control-modern {
     font-size: 16px; /* Prevents zoom on iOS */
+    z-index: 1 !important;
   }
 
   .table-modern {

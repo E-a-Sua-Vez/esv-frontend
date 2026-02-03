@@ -1694,7 +1694,7 @@
     },
     "actions": {
       "1": {
-        "action": "Marcar como atendido"
+        "action": "Ir para Check Out"
       },
       "2": {
         "action": "Voltar para a fila"
@@ -1703,6 +1703,7 @@
         "action": "Estoque"
       }
     },
+    "checkoutAction": "Marcar como Atendido",
     "paymentConfirm": "Confirmar / Pagamento",
     "paymentActions": "Ações de Atendimento",
     "paymentActionsSubtitle": "Confirmar pagamento, transferir ou cancelar",
@@ -2177,7 +2178,7 @@
     "bookings": "Reservas",
     "waitlists": "Lista de Espera",
     "hours": "Horários",
-    "todayAttentions": "Atenções de Hoje",
+    "todayAttentions": "Atendimentos de Hoje na sua Fila",
     "attentions": "Atendimentos (Hoje)",
     "selectQueue": "Selecione a fila e a data no calendário",
     "manageAll": "Monitore todas as Agendas:",
@@ -3760,8 +3761,10 @@
     "attentions": "Atendimentos",
     "bookings": "Reservas",
     "today": "Hoje",
-    "todayAttentions": "Atendimentos de Hoje",
+    "todayAttentions": "Atendimentos de Hoje na sua Fila",
+    "otherQueuesAttentions": "Atendimentos em Outras Filas",
     "goToQueue": "Ir para Fila",
+    "goToQueues": "Ir a Filas",
     "weekBookings": "Reservas da Semana",
     "monthBookings": "Reservas do Mês",
     "pendingToAttend": "Pendentes para atender",
@@ -5468,7 +5471,9 @@
         "font": "Deve selecionar a Fonte"
       },
       "personalDataError": "Erro de validação dos dados pessoais"
-    }
+    },
+    "noHistoryItemsConfigured": "Não há elementos de história configurados. É necessário adicioná-los na configuração do produto.",
+    "noExamItemsConfigured": "Não há elementos de exame físico configurados. É necessário adicioná-los na configuração do produto."
   },
   "businessReports": {
     "title": "Download de Dados",
@@ -8274,5 +8279,89 @@
         }
       }
     }
+  },
+  "templateCreate": {
+    "createTemplate": "Criar Template",
+    "editTemplate": "Editar Template",
+    "updateTemplate": "Atualizar Template",
+    "templateName": "Nome do Template",
+    "templateNamePlaceholder": "Ex: Hipertensão Arterial",
+    "templateType": "Tipo",
+    "types": {
+      "general": "Geral",
+      "diagnostic": "Diagnóstico",
+      "anamnesis": "Anamnese",
+      "evolution": "Evolução",
+      "prescription": "Receita",
+      "examOrder": "Pedido de Exame",
+      "reference": "Referência"
+    },
+    "description": "Descrição",
+    "descriptionPlaceholder": "Descrição breve do template",
+    "category": "Categoria",
+    "categoryPlaceholder": "Ex: Cardiologia",
+    "scope": "Escopo",
+    "scopes": {
+      "personal": "Pessoal (apenas para mim)",
+      "commerce": "Comércio (todos os médicos do comércio)",
+      "global": "Global (todos os comércios)"
+    },
+    "tags": "Tags (separados por vírgulas)",
+    "tagsPlaceholder": "Ex: hipertensão, cardiovascular, crônico",
+    "customVariables": "Variáveis Personalizadas",
+    "addVariable": "Adicionar Variável",
+    "required": "Obrigatório",
+    "noVariables": "Não há variáveis personalizadas. Adicione variáveis para tornar o template mais dinâmico.",
+    "templateContent": "Conteúdo do Template",
+    "insertDate": "Inserir data",
+    "insertTime": "Inserir hora",
+    "insertDateTime": "Inserir data e hora",
+    "date": "Data",
+    "time": "Hora",
+    "dateTime": "Data/Hora",
+    "variables": "Variáveis",
+    "contentPlaceholderExample": "Escreva o conteúdo do template. Use {'{{'}variableName{'}'} para variáveis.",
+    "contentPlaceholderPatient": "Paciente",
+    "contentPlaceholderDate": "Data",
+    "contentPlaceholderDiagnosis": "Diagnóstico",
+    "systemVariables": "Variáveis do sistema",
+    "customVariablesLabel": "Variáveis personalizadas",
+    "systemVariablesLabels": {
+      "date": "Data atual",
+      "time": "Hora atual",
+      "datetime": "Data e hora atual"
+    },
+    "preview": "Visualização",
+    "variableName": "Nome da Variável",
+    "variableNamePlaceholder": "Ex: patientName",
+    "variableNameHelp": "Apenas letras, números e underscores. Não pode começar com número.",
+    "variableLabel": "Rótulo",
+    "variableLabelPlaceholder": "Ex: Nome do Paciente",
+    "variableType": "Tipo",
+    "variableTypes": {
+      "text": "Texto",
+      "date": "Data",
+      "number": "Número",
+      "select": "Seleção"
+    },
+    "variableOptions": "Opções (uma por linha)",
+    "variableOptionsPlaceholder": "Opção 1\nOpção 2\nOpção 3",
+    "variableDefaultValue": "Valor Padrão",
+    "variableDefaultValuePlaceholder": "Valor padrão",
+    "variableRequired": "Variável obrigatória"
+  },
+  "templatePicker": {
+    "hide": "Ocultar",
+    "templates": "Templates",
+    "noTemplatesFound": "Nenhum template encontrado",
+    "information": "Informação",
+    "allTypes": "Todos os tipos",
+    "diagnostic": "Diagnóstico",
+    "anamnesis": "Anamnese",
+    "evolution": "Evolução",
+    "prescription": "Receita",
+    "examOrder": "Pedido de Exame",
+    "reference": "Referência",
+    "general": "Geral"
   }
 }

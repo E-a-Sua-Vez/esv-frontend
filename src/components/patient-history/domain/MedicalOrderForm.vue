@@ -1635,6 +1635,7 @@ export default {
   background: white;
   resize: vertical;
   box-sizing: border-box;
+  z-index: 1 !important;
 }
 
 .form-control-modern:focus {

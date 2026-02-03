@@ -1109,6 +1109,14 @@ export default {
       </div>
     </div>
 
+    <Message
+      v-if="!state.habitsList || state.habitsList.length === 0"
+      type="normal"
+      title="Información"
+      :content="$t('patientHistoryView.noHistoryItemsConfigured')"
+      class="mt-3"
+    />
+
     <div class="general-comment-section">
       <div class="form-section-header">
         <div class="form-section-icon">
@@ -1393,6 +1401,7 @@ export default {
   background: white;
   transition: all 0.3s ease;
   font-family: inherit;
+  z-index: 1 !important;
 }
 
 .form-control-modern:focus {

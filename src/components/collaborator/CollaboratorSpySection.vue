@@ -15,15 +15,12 @@ import {
   getBookingsDetails,
 } from '../../application/services/query-stack';
 import { attentionCollection, bookingCollection } from '../../application/firebase';
-import { query, where, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
-import { ATTENTION_STATUS } from '../../shared/constants';
+import { query, where, onSnapshot } from 'firebase/firestore';
 import { getCommerceById } from '../../application/services/commerce';
 import { getGroupedQueueByCommerceId } from '../../application/services/queue';
 import { getActiveFeature } from '../../shared/features';
 import { globalStore } from '../../stores';
 import { getCollaboratorById } from '../../application/services/collaborator';
-import { getUserById } from '../../application/services/user';
-import { DateModel } from '../../shared/utils/date.model';
 import { updatedAvailableAttentionsByCommerce } from '../../application/firebase';
 import Message from '../common/Message.vue';
 import Spinner from '../common/Spinner.vue';
@@ -81,7 +78,7 @@ export default {
     const state = reactive({
       currentUser: {},
       collaborator: {},
-      professional: {}, // Professional data for queue filtering
+      professional: null, // Professional data for queue filtering
       business: {},
       commerces: [],
       commerce: {},
@@ -107,6 +104,13 @@ export default {
     const attentionsWrapper = ref(null);
     let attentions = null;
 
+    // Watch for changes in Firebase attentions and update today's attentions
+    watch(attentionsWrapper, async (newAttentions) => {
+      if (newAttentions && Array.isArray(newAttentions.value)) {
+        await updateTodayAttentionsFromFirebase(newAttentions.value);
+      }
+    }, { deep: true });
+
     // Cache to prevent duplicate API calls
     const lastLoadedCommerceId = ref(null);
     const calendarDataCache = ref(null);
@@ -125,6 +129,11 @@ export default {
         }
         if (attentionsWrapper.value && attentionsWrapper.value._unsubscribe) {
           attentionsWrapper.value._unsubscribe();
+        }
+        // Clean up multiple commerces update interval
+        if (window.attentionsUpdateInterval) {
+          clearInterval(window.attentionsUpdateInterval);
+          window.attentionsUpdateInterval = null;
         }
         // Clean up calendar listeners
         if (unsubscribeCalendarAttentions) unsubscribeCalendarAttentions();
@@ -156,23 +165,21 @@ export default {
         // Get available commerces for this collaborator
         await getAvailableCommerces();
 
-        // Set default commerce (first one) - prefer commerce from props or store
+        // Check if a specific commerce was passed as prop
         if (commerce.value && commerce.value.id) {
+          // Specific commerce selected - use it
           state.commerce = commerce.value;
-        } else if (state.commerces && state.commerces.length > 0) {
-          state.commerce = state.commerces[0];
+          console.log('🏪 initializeSpy: Specific commerce selected:', state.commerce.id, state.commerce.name);
+          // Load data for selected commerce
+          await loadCommerceData();
         } else {
-          // Try to use commerce from store
-          const storeCommerce = store.getCurrentCommerce;
-          if (storeCommerce && storeCommerce.id) {
-            state.commerce = storeCommerce;
-          } else if (state.currentUser.commerceId) {
-            state.commerce = await getCommerceById(state.currentUser.commerceId);
-          }
+          // No specific commerce selected - show total from all commerces
+          console.log('🏪 initializeSpy: No specific commerce selected - loading all commerces data');
+          // Get dedicated queues for all commerces
+          await getDedicatedQueuesForAllCommerces();
+          // Initialize attentions for all commerces
+          initializeAttentionsListener(null); // null means all commerces
         }
-
-        // Load data for selected commerce
-        await loadCommerceData();
 
         loading.value = false;
       } catch (error) {
@@ -240,6 +247,7 @@ export default {
       }
 
       // Get dedicated queues for this collaborator
+      console.log('🏪 loadCommerceData: Getting dedicated queues for commerce:', state.commerce.id);
       await getDedicatedQueues();
 
       // Initialize queue status
@@ -271,13 +279,7 @@ export default {
 
     // Initialize attentions listener (same as CollaboratorQueuesView)
     const initializeAttentionsListener = commerceId => {
-      if (!commerceId) {
-        state.attentionsWrapper = null;
-        initializeQueueStatus();
-        return;
-      }
-
-      // Clean up previous listener if exists
+      // Clean up previous listener/interval if exists
       if (attentions && attentions._unsubscribe) {
         attentions._unsubscribe();
         attentions = null;
@@ -285,7 +287,31 @@ export default {
       if (attentionsWrapper.value && attentionsWrapper.value._unsubscribe) {
         attentionsWrapper.value._unsubscribe();
       }
+      // Clean up any existing interval for multiple commerces
+      if (window.attentionsUpdateInterval) {
+        clearInterval(window.attentionsUpdateInterval);
+        window.attentionsUpdateInterval = null;
+      }
 
+      if (!commerceId) {
+        // No specific commerce selected - get attentions from all commerces using periodic API calls
+        state.attentionsWrapper = null;
+        initializeQueueStatus();
+
+        // Start periodic updates for multiple commerces
+        const startMultipleCommercesUpdates = async () => {
+          await getTodayAttentions(); // Initial load
+          // Update every 30 seconds
+          window.attentionsUpdateInterval = setInterval(async () => {
+            await getTodayAttentions();
+          }, 30000);
+        };
+
+        startMultipleCommercesUpdates();
+        return;
+      }
+
+      // Specific commerce selected - use Firebase listener
       // Reset queue status before creating new listener
       initializeQueueStatus();
 
@@ -408,10 +434,15 @@ export default {
             return false;
           }
 
-          const attentionDateOnly = new Date(attentionDate);
-          attentionDateOnly.setHours(0, 0, 0, 0);
+          // Get date in UTC to avoid timezone issues
+          const attentionDateUTC = new Date(attentionDate.getTime() + (attentionDate.getTimezoneOffset() * 60000));
+          const attentionDateOnly = new Date(attentionDateUTC);
+          attentionDateOnly.setUTCHours(0, 0, 0, 0);
 
-          return attentionDateOnly.getTime() === today.getTime();
+          const todayUTC = new Date(today);
+          todayUTC.setUTCHours(0, 0, 0, 0);
+
+          return attentionDateOnly.getTime() === todayUTC.getTime();
         } catch (e) {
           return false;
         }
@@ -514,6 +545,70 @@ export default {
       return count;
     });
 
+    // Computed property to get the title for the attentions card
+    const getAttentionsCardTitle = computed(() => {
+      if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) {
+        return $t('collaboratorSpySection.todayAttentions');
+      }
+
+      // Find queues that have attentions today
+      const queuesWithAttentions = state.dedicatedQueues.filter(queue => {
+        const count = getQueueAttentionsCount(queue.id);
+        return count > 0;
+      });
+
+      // If only one queue has attentions, show its name
+      if (queuesWithAttentions.length === 1) {
+        const queue = queuesWithAttentions[0];
+        return `${$t('collaboratorSpySection.todayAttentions')} ${queue.name || queue.tag || 'Fila'}`;
+      }
+
+      // If multiple queues have attentions or no queues have attentions, show generic title
+      return $t('collaboratorSpySection.todayAttentions');
+    });
+
+    // Computed property to get the primary queue ID for the "Go to Queue" button
+    const getPrimaryQueueId = computed(() => {
+      console.log('🔍 getPrimaryQueueId: dedicatedQueues:', state.dedicatedQueues);
+
+      if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) {
+        console.log('❌ getPrimaryQueueId: No dedicated queues available');
+        return null;
+      }
+
+      // Priority 1: Find PROFESSIONAL type queue (dedicated collaborator queue)
+      const professionalQueue = state.dedicatedQueues.find(queue => queue.type === 'PROFESSIONAL');
+      if (professionalQueue) {
+        console.log('✅ getPrimaryQueueId: Found PROFESSIONAL queue:', professionalQueue.id);
+        return professionalQueue.id;
+      }
+
+      // Priority 2: Use the first available queue
+      if (state.dedicatedQueues[0] && state.dedicatedQueues[0].id) {
+        console.log('✅ getPrimaryQueueId: Using first queue:', state.dedicatedQueues[0].id);
+        return state.dedicatedQueues[0].id;
+      }
+
+      console.log('❌ getPrimaryQueueId: No valid queue found');
+      return null;
+    });
+
+    // Computed property to get attentions count from queues other than dedicated ones
+    const getOtherQueuesAttentionsCount = computed(() => {
+      if (!state.todayAttentions || state.todayAttentions.length === 0) return 0;
+      if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) return state.todayAttentions.length;
+
+      // Get IDs of dedicated queues
+      const dedicatedQueueIds = state.dedicatedQueues.map(queue => queue.id);
+
+      // Count attentions that are NOT in dedicated queues
+      const otherAttentionsCount = state.todayAttentions.filter(att =>
+        !dedicatedQueueIds.includes(att.queueId)
+      ).length;
+
+      return otherAttentionsCount;
+    });
+
     // Function for queue count - will be reactive because it accesses state.todayAttentions
     const getQueueAttentionsCount = queueId => {
       if (!state.todayAttentions || state.todayAttentions.length === 0) return 0;
@@ -554,190 +649,372 @@ export default {
 
     const getDedicatedQueues = async () => {
       try {
-        if (!state.commerce || !state.commerce.id) return;
+        console.log('🔍 getDedicatedQueues: Starting for commerce:', state.commerce?.id);
+        if (!state.commerce || !state.commerce.id) {
+          console.log('❌ getDedicatedQueues: No commerce or commerce.id');
+          return;
+        }
 
         // Use queues from commerce if available, otherwise fetch
         let queues = [];
         if (state.commerce.queues && state.commerce.queues.length > 0) {
           queues = state.commerce.queues;
+          console.log('📋 getDedicatedQueues: Using queues from commerce cache:', queues.length, 'queues');
         } else {
+          console.log('🔄 getDedicatedQueues: Fetching queues from API for commerce:', state.commerce.id);
           const commerceData = await getCommerceById(state.commerce.id);
           queues = commerceData.queues || [];
+          console.log('📋 getDedicatedQueues: Fetched queues from API:', queues.length, 'queues');
           // Update commerce with full data
           if (commerceData && commerceData.id) {
             state.commerce = { ...state.commerce, ...commerceData };
           }
         }
 
+        console.log('👤 getDedicatedQueues: Collaborator data:', {
+          id: state.collaborator?.id,
+          type: state.collaborator?.type,
+          professionalId: state.collaborator?.professionalId
+        });
+
         // Check for grouped queues if feature is active
         if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
+          console.log('🎯 getDedicatedQueues: Using grouped queues feature');
           const groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
+          console.log('📊 getDedicatedQueues: Grouped queues:', Object.keys(groupedQueues).length, 'groups');
           const collaboratorType = state.collaborator.type;
+          console.log('🏷️ getDedicatedQueues: Collaborator type:', collaboratorType);
 
           // Load professional data if collaborator has professionalId
           if (state.collaborator && state.collaborator.professionalId && !state.professional) {
+            console.log('👨‍⚕️ getDedicatedQueues: Loading professional data for ID:', state.collaborator.professionalId);
             try {
               const { getProfessionalById } = await import(
                 '../../application/services/professional'
               );
               state.professional = await getProfessionalById(state.collaborator.professionalId);
+              console.log('✅ getDedicatedQueues: Professional loaded:', state.professional?.id, state.professional?.name);
             } catch (error) {
-              console.warn('Could not load professional data, falling back to collaborator', error);
+              console.warn('⚠️ getDedicatedQueues: Could not load professional data, falling back to collaborator', error);
               state.professional = state.collaborator;
             }
+          } else {
+            console.log('👨‍⚕️ getDedicatedQueues: Professional already loaded:', state.professional?.id, 'or no professionalId:', state.collaborator?.professionalId);
           }
 
           if (Object.keys(groupedQueues).length > 0) {
             // Build all queues from grouped queues
             const allQueues = Object.values(groupedQueues).flat();
+            console.log('📋 getDedicatedQueues: All queues from groups:', allQueues.length);
 
             if (collaboratorType === 'STANDARD') {
               // STANDARD: Their own professional queues + non-professional queues
               const professionalQueues = (groupedQueues['PROFESSIONAL'] || []).filter(queue => {
-                // Use professionalId if available, otherwise fallback to collaboratorId
-                if (state.professional && state.professional.id) {
-                  return queue.professionalId === state.professional.id;
-                }
-                return queue.collaboratorId === state.collaborator.id;
+                // Use professionalId - queues are associated with professionals, not collaborators directly
+                return state.professional && state.professional.id && queue.professionalId === state.professional.id;
               });
               const otherQueues = allQueues.filter(queue => queue.type !== 'PROFESSIONAL');
               queues = [...professionalQueues, ...otherQueues];
+              console.log('✅ getDedicatedQueues: STANDARD queues - Professional:', professionalQueues.length, 'Other:', otherQueues.length, 'Total:', queues.length);
             } else if (collaboratorType === 'ASSISTANT') {
               // ASSISTANT: No professional queues, only general queues
               queues = allQueues.filter(queue => queue.type !== 'PROFESSIONAL');
+              console.log('✅ getDedicatedQueues: ASSISTANT queues:', queues.length);
             } else {
-              // All other types: Can see all queues
-              queues = allQueues;
+              // FULL and other types: Filter by professional if available, otherwise all queues
+              if (state.professional && state.professional.id) {
+                // Filter queues by professional
+                queues = allQueues.filter(queue =>
+                  !queue.professionalId || queue.professionalId === state.professional.id
+                );
+                console.log('✅ getDedicatedQueues: FULL with professional filter:', queues.length, 'for professional:', state.professional.id);
+              } else {
+                // No professional filter - show all queues
+                queues = allQueues;
+                console.log('✅ getDedicatedQueues: FULL no professional filter - ALL queues:', queues.length);
+              }
             }
           }
         } else {
+          console.log('📋 getDedicatedQueues: Using legacy non-grouped logic');
           // Legacy logic for non-grouped queues
           const collaboratorType = state.collaborator.type;
+          console.log('🏷️ getDedicatedQueues: Legacy collaborator type:', collaboratorType);
           if (collaboratorType === 'STANDARD') {
             // Filter queues where type is PROFESSIONAL and collaboratorId matches
             queues = queues.filter(
               queue =>
                 queue.type === 'PROFESSIONAL' && queue.collaboratorId === state.collaborator.id
             );
+            console.log('✅ getDedicatedQueues: Legacy - Filtered PROFESSIONAL queues:', queues.length);
           } else if (collaboratorType === 'ASSISTANT') {
             // ASSISTANT: No professional queues
             queues = queues.filter(queue => queue.type !== 'PROFESSIONAL');
+            console.log('✅ getDedicatedQueues: Legacy - ASSISTANT queues:', queues.length);
+          } else {
+            // All other types can see all queues
+            console.log('✅ getDedicatedQueues: Legacy - ALL queues:', queues.length);
           }
-          // All other types can see all queues
         }
 
+        console.log('🎯 getDedicatedQueues: Final queues assigned:', queues.length, queues.map(q => ({ id: q.id, name: q.name || q.tag, type: q.type, professionalId: q.professionalId })));
         state.dedicatedQueues = queues;
       } catch (error) {
+        console.error('❌ getDedicatedQueues: Error:', error);
+        state.dedicatedQueues = [];
+      }
+    };
+
+    const getDedicatedQueuesForAllCommerces = async () => {
+      try {
+        console.log('🔍 getDedicatedQueuesForAllCommerces: Starting');
+        if (!state.collaborator || !state.commerces || state.commerces.length === 0) {
+          console.log('❌ getDedicatedQueuesForAllCommerces: No collaborator, commerces, or empty commerces array');
+          state.dedicatedQueues = [];
+          return;
+        }
+
+        console.log('🏪 getDedicatedQueuesForAllCommerces: Processing', state.commerces.length, 'commerces');
+        console.log('👤 getDedicatedQueuesForAllCommerces: Collaborator:', state.collaborator?.id, state.collaborator?.professionalId);
+
+        // Get all queues from all commerces the collaborator has access to
+        const allQueues = [];
+
+        for (const commerce of state.commerces) {
+          try {
+            // Use queues from commerce if available, otherwise fetch
+            let commerceQueues = [];
+            if (commerce.queues && commerce.queues.length > 0) {
+              commerceQueues = commerce.queues;
+            } else {
+              const commerceData = await getCommerceById(commerce.id);
+              commerceQueues = commerceData.queues || [];
+            }
+
+            // Check for grouped queues if feature is active
+            if (getActiveFeature(commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
+              const groupedQueues = await getGroupedQueueByCommerceId(commerce.id);
+              const collaboratorType = state.collaborator.type;
+
+              // Load professional data if collaborator has professionalId
+              if (state.collaborator && state.collaborator.professionalId && !state.professional) {
+                try {
+                  const { getProfessionalById } = await import(
+                    '../../application/services/professional'
+                  );
+                  state.professional = await getProfessionalById(state.collaborator.professionalId);
+                } catch (error) {
+                  console.warn('Could not load professional data, falling back to collaborator', error);
+                  state.professional = state.collaborator;
+                }
+              }
+
+              if (Object.keys(groupedQueues).length > 0) {
+                // Build all queues from grouped queues
+                const allCommerceQueues = Object.values(groupedQueues).flat();
+
+                if (collaboratorType === 'STANDARD') {
+                  // STANDARD: Their own professional queues + non-professional queues
+                  const professionalQueues = (groupedQueues['PROFESSIONAL'] || []).filter(queue => {
+                    // Use professionalId if available, otherwise fallback to collaboratorId
+                    if (state.professional && state.professional.id) {
+                      return queue.professionalId === state.professional.id;
+                    }
+                    return queue.collaboratorId === state.collaborator.id;
+                  });
+                  const otherQueues = allCommerceQueues.filter(queue => queue.type !== 'PROFESSIONAL');
+                  commerceQueues = [...professionalQueues, ...otherQueues];
+                } else if (collaboratorType === 'ASSISTANT') {
+                  // ASSISTANT: No professional queues, only general queues
+                  commerceQueues = allCommerceQueues.filter(queue => queue.type !== 'PROFESSIONAL');
+                } else {
+                  // All other types: Can see all queues
+                  commerceQueues = allCommerceQueues;
+                }
+              }
+            } else {
+              // Legacy logic for non-grouped queues
+              const collaboratorType = state.collaborator.type;
+              if (collaboratorType === 'STANDARD') {
+                // Filter queues where type is PROFESSIONAL and collaboratorId matches
+                commerceQueues = commerceQueues.filter(
+                  queue =>
+                    queue.type === 'PROFESSIONAL' && queue.collaboratorId === state.collaborator.id
+                );
+              } else if (collaboratorType === 'ASSISTANT') {
+                // ASSISTANT: No professional queues
+                commerceQueues = commerceQueues.filter(queue => queue.type !== 'PROFESSIONAL');
+              }
+              // All other types can see all queues
+            }
+
+            allQueues.push(...commerceQueues);
+          } catch (error) {
+            console.error(`❌ getDedicatedQueuesForAllCommerces: Error getting queues for commerce ${commerce.id}:`, error);
+          }
+        }
+
+        console.log('🎯 getDedicatedQueuesForAllCommerces: Final allQueues:', allQueues.length, allQueues.map(q => ({ id: q.id, name: q.name || q.tag, commerceId: q.commerceId, professionalId: q.professionalId })));
+        state.dedicatedQueues = allQueues;
+        initializeQueueStatus();
+      } catch (error) {
+        console.error('❌ getDedicatedQueuesForAllCommerces: Error:', error);
         state.dedicatedQueues = [];
       }
     };
 
     const getTodayAttentions = async () => {
       try {
-        if (state.dedicatedQueues.length === 0) {
-          state.todayAttentions = [];
-          return;
-        }
+        // Check if we should get attentions for all commerces (when no specific commerce is selected)
+        // or for a specific commerce
+        const shouldGetAllCommerces = !state.commerce || !state.commerce.id;
 
-        const today = new Date().toISOString().slice(0, 10);
-        const queueIds = state.dedicatedQueues.map(q => q.id);
-
-        // Get today's attentions
-        let attentions = [];
-
-        if (queueIds.length === 0) {
-          // No queues assigned
-          state.todayAttentions = [];
-          return;
-        } else if (queueIds.length === 1) {
-          // Single queue - filter efficiently in API
-          attentions = await getPendingAttentionsDetails(
-            state.commerce.id,
-            today,
-            today,
-            [state.commerce.id],
-            1,
-            1000,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            queueIds[0], // Pass single queueId to API
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined
-          );
-        } else {
-          // Multiple queues - get all and filter afterwards (more efficient than multiple API calls)
-          attentions = await getPendingAttentionsDetails(
-            state.commerce.id,
-            today,
-            today,
-            [state.commerce.id],
-            1,
-            1000,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined, // No queueId filter in API
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined
-          );
-        }
-
-        // Filter by queue IDs and status PENDING
-        const todayAttentions = (attentions || []).filter(att => {
-          // Always check status first
-          if (att.status !== 'PENDING') return false;
-
-          // If single queue, it's already filtered by API
-          if (queueIds.length === 1) return true;
-
-          // If multiple queues, filter by all queueIds
-          return att.queueId && queueIds.includes(att.queueId);
-        });
-
-        // Format attentions
-        state.todayAttentions = todayAttentions.map(att => {
-          let serviceName = att.serviceName || 'N/A';
-          if (
-            att.servicesDetails &&
-            Array.isArray(att.servicesDetails) &&
-            att.servicesDetails.length > 0
-          ) {
-            serviceName = att.servicesDetails.map(s => s.name || s).join(', ');
+        if (shouldGetAllCommerces) {
+          // Get attentions from all commerces the collaborator has access to
+          const commerces = state.commerces || [];
+          if (commerces.length === 0) {
+            state.todayAttentions = [];
+            return;
           }
 
-          return {
-            id: att.attentionId,
-            clientName:
-              (att.userName || '') + (att.userLastName ? ' ' + att.userLastName : '') ||
-              att.userIdNumber ||
-              'N/A',
-            clientId: att.userIdNumber || att.userId || 'N/A',
-            hour: att.createdDate
-              ? new Date(att.createdDate).toLocaleTimeString('es-ES', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })
-              : 'N/A',
-            service: serviceName,
-            number: att.number,
-            status: att.status,
-            queueId: att.queueId, // Include queueId for filtering
-          };
-        });
+          // Get today's date in YYYY-MM-DD format
+          const today = new Date();
+          const dateStr = today.toISOString().split('T')[0];
+
+          // Fetch attentions for all commerces
+          const attentionPromises = commerces.map(async (commerce) => {
+            try {
+              const response = await getPendingAttentionsDetails(commerce.id, dateStr);
+              return response.data || [];
+            } catch (error) {
+              console.error(`Error fetching attentions for commerce ${commerce.id}:`, error);
+              return [];
+            }
+          });
+
+          const allAttentions = await Promise.all(attentionPromises);
+          const flattenedAttentions = allAttentions.flat();
+
+          // Filter by dedicated queues
+          if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) {
+            state.todayAttentions = [];
+            return;
+          }
+
+          const queueIds = state.dedicatedQueues.map(q => q.id);
+          const filteredAttentions = flattenedAttentions.filter(att =>
+            att.queueId && queueIds.includes(att.queueId)
+          );
+
+          state.todayAttentions = filteredAttentions;
+        } else {
+          // Get attentions for specific commerce (existing logic)
+          if (state.dedicatedQueues.length === 0) {
+            state.todayAttentions = [];
+            return;
+          }
+
+          const today = new Date().toISOString().slice(0, 10);
+          const queueIds = state.dedicatedQueues.map(q => q.id);
+
+          // Get today's attentions
+          let attentions = [];
+
+          if (queueIds.length === 0) {
+            // No queues assigned
+            state.todayAttentions = [];
+            return;
+          } else if (queueIds.length === 1) {
+            // Single queue - filter efficiently in API
+            attentions = await getPendingAttentionsDetails(
+              state.commerce.id,
+              today,
+              today,
+              [state.commerce.id],
+              1,
+              1000,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              queueIds[0], // Pass single queueId to API
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined
+            );
+          } else {
+            // Multiple queues - get all and filter afterwards (more efficient than multiple API calls)
+            attentions = await getPendingAttentionsDetails(
+              state.commerce.id,
+              today,
+              today,
+              [state.commerce.id],
+              1,
+              1000,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined, // No queueId filter in API
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined
+            );
+          }
+
+          // Filter by queue IDs and status PENDING
+          const todayAttentions = (attentions || []).filter(att => {
+            // Always check status first
+            if (att.status !== 'PENDING') return false;
+
+            // If single queue, it's already filtered by API
+            if (queueIds.length === 1) return true;
+
+            // If multiple queues, filter by all queueIds
+            return att.queueId && queueIds.includes(att.queueId);
+          });
+
+          // Format attentions
+          state.todayAttentions = todayAttentions.map(att => {
+            let serviceName = att.serviceName || 'N/A';
+            if (
+              att.servicesDetails &&
+              Array.isArray(att.servicesDetails) &&
+              att.servicesDetails.length > 0
+            ) {
+              serviceName = att.servicesDetails.map(s => s.name || s).join(', ');
+            }
+
+            return {
+              id: att.attentionId,
+              clientName:
+                (att.userName || '') + (att.userLastName ? ' ' + att.userLastName : '') ||
+                att.userIdNumber ||
+                'N/A',
+              clientId: att.userIdNumber || att.userId || 'N/A',
+              hour: att.createdDate
+                ? new Date(att.createdDate).toLocaleTimeString('es-ES', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : 'N/A',
+              service: serviceName,
+              number: att.number,
+              status: att.status,
+              queueId: att.queueId, // Include queueId for filtering
+            };
+          });
+        }
       } catch (error) {
+        console.error('Error in getTodayAttentions:', error);
         state.todayAttentions = [];
       }
     };
@@ -1459,6 +1736,8 @@ export default {
       getAttentionElapsedTime,
       getAttentionStatusMessage,
       getTotalAttentionsCount,
+      getPrimaryQueueId,
+      getOtherQueuesAttentionsCount,
     };
   },
 };
@@ -1471,15 +1750,8 @@ export default {
         <Spinner :show="loading"></Spinner>
       </div>
       <div v-if="loading === false">
-        <div v-if="state.dedicatedQueues.length === 0" class="text-center mt-3">
-          <Message
-            :title="$t('collaboratorSpySection.message.noQueue.title')"
-            :content="$t('collaboratorSpySection.message.noQueue.content')"
-            :icon="'bi bi-info-circle'"
-          >
-          </Message>
-        </div>
-        <div v-else>
+        <!-- Always show the content, regardless of dedicated queues -->
+        <div>
           <!-- Commerce Selector -->
           <div
             v-if="state.commerces && state.commerces.length > 1"
@@ -1500,171 +1772,203 @@ export default {
             </select>
           </div>
 
-          <!-- Today's Attentions Card -->
-          <div class="spy-today-attentions-card mb-3">
-            <div class="spy-card-header">
-              <div
-                class="spy-card-header-content"
-                @click="state.showTodayAttentionsDetails = !state.showTodayAttentionsDetails"
-              >
-                <div class="spy-card-icon">
-                  <i class="bi bi-qr-code"></i>
-                </div>
-                <div class="spy-card-title-content">
-                  <div class="spy-card-title">
-                    {{ $t('collaboratorSpySection.todayAttentions') }}
-                  </div>
+          <!-- Attentions Cards Row -->
+          <div class="row mb-3">
+            <!-- Today's Attentions Card -->
+            <div class="col">
+              <div class="spy-today-attentions-card mb-2">
+                <div class="spy-card-header">
                   <div
-                    v-if="state.dedicatedQueues && state.dedicatedQueues.length > 0"
-                    class="spy-card-value-wrapper"
-                  >
-                    <div class="spy-card-value">
-                      <span v-if="state.dedicatedQueues.length === 1">
-                        {{ getQueueAttentionsCount(state.dedicatedQueues[0].id) }}
-                      </span>
-                      <span v-else>
-                        {{ getTotalAttentionsCount }}
+                    class="spy-card-header-content"
+                  @click="state.showTodayAttentionsDetails = !state.showTodayAttentionsDetails"
+                >
+                  <div class="spy-card-icon">
+                    <i class="bi bi-qr-code"></i>
+                  </div>
+                  <div class="spy-card-title-content">
+                    <div class="spy-card-title">
+                      {{ $t('collaboratorSpySection.todayAttentions') }}
+                    </div>
+                    <div class="spy-card-value-wrapper">
+                      <div class="spy-card-value">
+                        <span v-if="!state.dedicatedQueues || state.dedicatedQueues.length === 0">
+                          0
+                        </span>
+                        <span v-else-if="state.dedicatedQueues.length === 1">
+                          {{ getQueueAttentionsCount(state.dedicatedQueues[0].id) }}
+                        </span>
+                        <span v-else>
+                          {{ getTotalAttentionsCount }}
+                        </span>
+                      </div>
+                      <span class="spy-live-indicator" title="Actualización en tiempo real">
+                        <span class="spy-live-dot"></span>
                       </span>
                     </div>
-                    <span class="spy-live-indicator" title="Actualización en tiempo real">
-                      <span class="spy-live-dot"></span>
-                    </span>
+                  </div>
+                </div>
+                <div class="spy-card-header-actions">
+                  <!-- Queue Link Button -->
+                  <div
+                    v-if="state.dedicatedQueues && state.dedicatedQueues.length > 0 && getPrimaryQueueId"
+                    class="spy-queue-link-inline"
+                  >
+                    <div>
+                      <a
+                        :href="`/interno/colaborador/fila/${getPrimaryQueueId}/atenciones`"
+                        class="btn btn-sm btn-outline-primary spy-queue-button-inline"
+                        @click.stop
+                      >
+                        {{ $t('collaboratorSpySection.goToQueue') }}
+                      </a>
+                    </div>
+                  </div>
+                  <div
+                    class="spy-card-toggle"
+                    @click="state.showTodayAttentionsDetails = !state.showTodayAttentionsDetails"
+                  >
+                    <i
+                      :class="
+                        state.showTodayAttentionsDetails ? 'bi bi-chevron-up' : 'bi bi-chevron-down'
+                      "
+                    ></i>
                   </div>
                 </div>
               </div>
-              <div class="spy-card-header-actions">
-                <!-- Queue Link Button -->
-                <div
-                  v-if="state.dedicatedQueues && state.dedicatedQueues.length > 0"
-                  class="spy-queue-link-inline"
-                >
-                  <div v-if="state.dedicatedQueues.length === 1">
-                    <a
-                      :href="`/interno/colaborador/fila/${state.dedicatedQueues[0].id}/atenciones`"
-                      class="btn btn-sm btn-outline-primary spy-queue-button-inline"
-                      @click.stop
+              <Transition name="slide-down">
+                <div v-if="state.showTodayAttentionsDetails" class="spy-card-details">
+                  <div v-if="state.todayAttentions.length === 0" class="spy-no-data">
+                    <Message
+                      :title="$t('collaboratorSpySection.message.noData.title')"
+                      :content="$t('collaboratorSpySection.message.noData.content')"
+                      :icon="'bi bi-info-circle'"
                     >
-                      {{ $t('collaboratorSpySection.goToQueue') }}
-                    </a>
+                    </Message>
                   </div>
-                  <div v-else>
-                    <a
-                      :href="`/interno/commerce/${state.commerce.id}/colaborador/filas`"
-                      class="btn btn-sm btn-outline-primary spy-queue-button-inline"
-                      @click.stop
+                  <div v-else class="spy-attentions-list">
+                    <div
+                      v-for="(attention, index) in state.todayAttentions"
+                      :key="`today-att-${index}`"
+                      :class="[
+                        'spy-attention-item',
+                        { clickable: index === 0, 'reference-only': index > 0 },
+                      ]"
+                      @click="index === 0 ? goToAttention(attention.id) : null"
                     >
-                      {{ $t('collaboratorSpySection.goToQueue') }}
-                    </a>
+                      <div class="spy-attention-status-indicator">
+                        <Popper
+                          v-if="getAttentionElapsedTime(attention)"
+                          :class="'dark'"
+                          arrow
+                          hover
+                          disable-click-away
+                          placement="left"
+                          :z-index="10001"
+                        >
+                          <template #content>
+                            <div class="popper-content">
+                              <div class="popper-title">Status de Espera</div>
+                              <div class="popper-item">
+                                <span
+                                  class="popper-color"
+                                  :style="{
+                                    background: getAttentionElapsedTime(attention).timeColor,
+                                  }"
+                                ></span>
+                                <span>{{
+                                  getAttentionStatusMessage(
+                                    getAttentionElapsedTime(attention).timeStatus
+                                  )
+                                }}</span>
+                              </div>
+                              <div class="popper-item">
+                                <span
+                                  ><strong>Tempo:</strong>
+                                  {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span>
+                              </div>
+                            </div>
+                          </template>
+                          <div
+                            class="spy-status-dot"
+                            :class="`spy-status-${getAttentionElapsedTime(attention).timeStatus}`"
+                            :style="{ backgroundColor: getAttentionElapsedTime(attention).timeColor }"
+                          ></div>
+                        </Popper>
+                        <div
+                          v-else
+                          class="spy-status-dot spy-status-neutral"
+                          title="Fecha de creación no disponible"
+                        ></div>
+                      </div>
+                      <div class="spy-attention-info">
+                        <div class="spy-attention-header">
+                          <div v-if="attention.number" class="spy-attention-number-large">
+                            {{ $t('collaboratorSpySection.number') }}:
+                            <strong>{{ attention.number }}</strong>
+                          </div>
+                          <div
+                            v-if="attention.clientName && attention.clientName !== 'N/A'"
+                            class="spy-attention-name-secondary"
+                          >
+                            {{ attention.clientName }}
+                          </div>
+                        </div>
+                        <div class="spy-attention-meta">
+                          <span v-if="attention.clientId && attention.clientId !== 'N/A'"
+                            ><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span>
+                          >
+                          <span><i class="bi bi-clock"></i> {{ formattedTime(attention.hour) }}</span>
+                          <span v-if="attention.service && attention.service !== 'N/A'"
+                            ><i class="bi bi-briefcase"></i> {{ attention.service }}</span>
+                          >
+                        </div>
+                      </div>
+                      <div v-if="index === 0" class="spy-attention-action">
+                        <i class="bi bi-arrow-right-circle"></i>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div
-                  class="spy-card-toggle"
-                  @click="state.showTodayAttentionsDetails = !state.showTodayAttentionsDetails"
-                >
-                  <i
-                    :class="
-                      state.showTodayAttentionsDetails ? 'bi bi-chevron-up' : 'bi bi-chevron-down'
-                    "
-                  ></i>
+              </Transition>
+            </div>
+
+            <!-- Other Queues Attentions Card -->
+            <div class="col mb-2">
+              <div class="spy-other-queues-card">
+                <div class="spy-card-header">
+                  <div class="spy-card-header-content">
+                  <div class="spy-card-icon">
+                    <i class="bi bi-list-ul"></i>
+                  </div>
+                  <div class="spy-card-title-content">
+                    <div class="spy-card-title">
+                      {{ $t('collaboratorSpySection.otherQueuesAttentions') }}
+                    </div>
+                    <div class="spy-card-value-wrapper">
+                      <div class="spy-card-value">
+                        <span>{{ getOtherQueuesAttentionsCount }}</span>
+                      </div>
+                      <span class="spy-live-indicator" title="Actualización en tiempo real">
+                        <span class="spy-live-dot"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="spy-card-header-actions">
+                  <div class="spy-queue-link-inline">
+                    <div>
+                      <a
+                        :href="`/interno/commerce/${state.commerce.id}/colaborador/filas`"
+                        class="btn btn-sm btn-outline-primary spy-queue-button-inline"
+                        @click.stop
+                      >
+                        {{ $t('collaboratorSpySection.goToQueues') }}
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-            <Transition name="slide-down">
-              <div v-if="state.showTodayAttentionsDetails" class="spy-card-details">
-                <div v-if="state.todayAttentions.length === 0" class="spy-no-data">
-                  <Message
-                    :title="$t('collaboratorSpySection.message.noData.title')"
-                    :content="$t('collaboratorSpySection.message.noData.content')"
-                    :icon="'bi bi-info-circle'"
-                  >
-                  </Message>
-                </div>
-                <div v-else class="spy-attentions-list">
-                  <div
-                    v-for="(attention, index) in state.todayAttentions"
-                    :key="`today-att-${index}`"
-                    :class="[
-                      'spy-attention-item',
-                      { clickable: index === 0, 'reference-only': index > 0 },
-                    ]"
-                    @click="index === 0 ? goToAttention(attention.id) : null"
-                  >
-                    <div class="spy-attention-status-indicator">
-                      <Popper
-                        v-if="getAttentionElapsedTime(attention)"
-                        :class="'dark'"
-                        arrow
-                        hover
-                        disable-click-away
-                        placement="left"
-                        :z-index="10001"
-                      >
-                        <template #content>
-                          <div class="popper-content">
-                            <div class="popper-title">Status de Espera</div>
-                            <div class="popper-item">
-                              <span
-                                class="popper-color"
-                                :style="{
-                                  background: getAttentionElapsedTime(attention).timeColor,
-                                }"
-                              ></span>
-                              <span>{{
-                                getAttentionStatusMessage(
-                                  getAttentionElapsedTime(attention).timeStatus
-                                )
-                              }}</span>
-                            </div>
-                            <div class="popper-item">
-                              <span
-                                ><strong>Tempo:</strong>
-                                {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span
-                              >
-                            </div>
-                          </div>
-                        </template>
-                        <div
-                          class="spy-status-dot"
-                          :class="`spy-status-${getAttentionElapsedTime(attention).timeStatus}`"
-                          :style="{ backgroundColor: getAttentionElapsedTime(attention).timeColor }"
-                        ></div>
-                      </Popper>
-                      <div
-                        v-else
-                        class="spy-status-dot spy-status-neutral"
-                        title="Fecha de creación no disponible"
-                      ></div>
-                    </div>
-                    <div class="spy-attention-info">
-                      <div class="spy-attention-header">
-                        <div v-if="attention.number" class="spy-attention-number-large">
-                          {{ $t('collaboratorSpySection.number') }}:
-                          <strong>{{ attention.number }}</strong>
-                        </div>
-                        <div
-                          v-if="attention.clientName && attention.clientName !== 'N/A'"
-                          class="spy-attention-name-secondary"
-                        >
-                          {{ attention.clientName }}
-                        </div>
-                      </div>
-                      <div class="spy-attention-meta">
-                        <span v-if="attention.clientId && attention.clientId !== 'N/A'"
-                          ><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span
-                        >
-                        <span><i class="bi bi-clock"></i> {{ formattedTime(attention.hour) }}</span>
-                        <span v-if="attention.service && attention.service !== 'N/A'"
-                          ><i class="bi bi-briefcase"></i> {{ attention.service }}</span
-                        >
-                      </div>
-                    </div>
-                    <div v-if="index === 0" class="spy-attention-action">
-                      <i class="bi bi-arrow-right-circle"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Transition>
           </div>
 
           <!-- Week and Month Bookings Cards -->
@@ -1764,7 +2068,7 @@ export default {
                 <span
                   >{{ $t('collaboratorSpySection.attentions') }} ({{
                     state.dateDetails.attentions.length
-                  }})</span
+                  }})</span>
                 >
               </div>
               <div class="spy-details-list spy-attentions-list">
@@ -1802,7 +2106,7 @@ export default {
                           <div class="popper-item">
                             <span
                               ><strong>Tempo:</strong>
-                              {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span
+                              {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span>
                             >
                           </div>
                         </div>
@@ -1829,12 +2133,10 @@ export default {
                     </div>
                     <div class="spy-attention-meta">
                       <span v-if="attention.clientId && attention.clientId !== 'N/A'"
-                        ><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span
-                      >
+                        ><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span>
                       <span><i class="bi bi-clock"></i> {{ formattedTime(attention.hour) }}</span>
                       <span v-if="attention.service && attention.service !== 'N/A'"
-                        ><i class="bi bi-briefcase"></i> {{ attention.service }}</span
-                      >
+                        ><i class="bi bi-briefcase"></i> {{ attention.service }}</span>
                     </div>
                   </div>
                 </div>
@@ -1848,7 +2150,7 @@ export default {
                 <span
                   >{{ $t('collaboratorSpySection.bookings') }} ({{
                     state.dateDetails.bookings.length
-                  }})</span
+                  }})</span>
                 >
               </div>
               <div class="spy-details-list spy-attentions-list">
@@ -1875,11 +2177,11 @@ export default {
                     </div>
                     <div class="spy-attention-meta">
                       <span v-if="booking.clientId && booking.clientId !== 'N/A'"
-                        ><i class="bi bi-person-badge"></i> {{ booking.clientId }}</span
+                        ><i class="bi bi-person-badge"></i> {{ booking.clientId }}</span>
                       >
                       <span><i class="bi bi-clock"></i> {{ formattedTime(booking.hour) }}</span>
                       <span v-if="booking.service && booking.service !== 'N/A'"
-                        ><i class="bi bi-briefcase"></i> {{ booking.service }}</span
+                        ><i class="bi bi-briefcase"></i> {{ booking.service }}</span>
                       >
                     </div>
                   </div>
@@ -1903,6 +2205,10 @@ export default {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+
       </div>
     </div>
   </div>
@@ -2043,6 +2349,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  line-height: 1rem;
 }
 
 .spy-card-title {
@@ -2108,6 +2415,20 @@ export default {
 .spy-card-toggle {
   font-size: 1.25rem;
   color: rgba(0, 0, 0, 0.5);
+}
+
+/* Other Queues Card */
+.spy-other-queues-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #6c757d;
+}
+
+.spy-other-queues-card .spy-card-icon {
+  background: linear-gradient(135deg, #6c757d 0%, #adb5bd 100%);
 }
 
 .spy-card-details {
@@ -2182,7 +2503,8 @@ export default {
 }
 
 .spy-attention-name-secondary {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   color: rgba(0, 0, 0, 0.65);
   font-style: italic;
   line-height: 1.2;

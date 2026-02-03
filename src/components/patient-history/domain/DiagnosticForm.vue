@@ -898,6 +898,7 @@ export default {
   transition: all 0.3s ease;
   font-family: inherit;
   resize: vertical;
+  z-index: 1 !important;
 }
 
 .form-control-modern:focus {
@@ -1238,7 +1239,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 1050;
   padding: 1rem;
 }
 

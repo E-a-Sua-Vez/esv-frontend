@@ -331,6 +331,7 @@ export function updatedAvailableAttentionsByCommerce(commerceId) {
   const updateAttentions = () => {
     // Combine results from both queries
     const allDocs = [...pendingDocs, ...confirmedDocs];
+
     attentions.value = allDocs.map(doc => {
       const data = doc.data();
       return {

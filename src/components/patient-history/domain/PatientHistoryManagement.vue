@@ -233,9 +233,12 @@ export default {
       // this.newDocuments = undefined;
       // this.newControl = undefined;
     },
-    onPersonalData() {
+    async onPersonalData() {
       this.resetButtons();
       this.showPersonalData = true;
+      if (!this.patientHistory || !this.patientHistory.id) {
+        await this.loadPatientHistoryData();
+      }
     },
     onConsultationReason() {
       this.resetButtons();
@@ -248,6 +251,14 @@ export default {
     onPatientAnamnese() {
       this.resetButtons();
       this.showPatientAnamnese = true;
+    },
+    handleLoadToPersonalData(data) {
+      this.newPersonalData = data;
+      this.onPersonalData();
+    },
+    handleLoadToAnamnese(data) {
+      this.newPatientAnamnese = data;
+      this.onPatientAnamnese();
     },
     onPreprontuarioHistory() {
       this.resetButtons();
@@ -434,11 +445,11 @@ export default {
         this.alertError = error.message;
       }
     },
-    onResume() {
+    async onResume() {
       this.resetButtons();
       this.showResume = true;
       if (!this.patientHistory || !this.patientHistory.id) {
-        this.loadPatientHistoryData();
+        await this.loadPatientHistoryData();
       }
     },
     handleSearchResultSelected(result) {
@@ -808,6 +819,20 @@ export default {
     },
     formatDate(date) {
       if (!date) return 'N/A';
+      // Parse date string as YYYY-MM-DD
+      const parts = date.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0]);
+        const month = parseInt(parts[1]) - 1; // Months are 0-based
+        const day = parseInt(parts[2]);
+        const d = new Date(year, month, day);
+        return d.toLocaleDateString('es-ES', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      }
+      // Fallback
       const d = new Date(date);
       return d.toLocaleDateString('es-ES', {
         year: 'numeric',
@@ -1077,8 +1102,6 @@ export default {
   },
 };
 </script>
-
-// ...existing code (template section remains the same)...
 
 <template>
   <div>

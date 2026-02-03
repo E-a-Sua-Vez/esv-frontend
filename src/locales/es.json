@@ -1788,7 +1788,7 @@
     },
     "actions": {
       "1": {
-        "action": "Marcar como atendido"
+        "action": "Ir a Check Out"
       },
       "2": {
         "action": "Volver a la fila"
@@ -1797,6 +1797,7 @@
         "action": "Registrar Stock"
       }
     },
+    "checkoutAction": "Marcar como Atendido",
     "paymentConfirm": "Confirmar / Pago",
     "paymentActions": "Acciones de Atención",
     "paymentActionsSubtitle": "Confirmar pago, transferir o cancelar",
@@ -3877,8 +3878,10 @@
     "attentions": "Atenciones",
     "bookings": "Reservas",
     "today": "Hoy",
-    "todayAttentions": "Atenciones de Hoy",
+    "todayAttentions": "Atenciones de Hoy en tu Fila",
+    "otherQueuesAttentions": "Atenciones en Otras Filas",
     "goToQueue": "Ir a Fila",
+    "goToQueues": "Ir a Filas",
     "weekBookings": "Reservas de la Semana",
     "monthBookings": "Reservas del Mes",
     "pendingToAttend": "Pendientes por atender",
@@ -5590,7 +5593,9 @@
         "font": "Debes ingresar el Fuente de Confiabilidad"
       },
       "personalDataError": "Error de validación de los datos personales"
-    }
+    },
+    "noHistoryItemsConfigured": "No hay elementos de historia configurados. Es necesario agregarlos en la configuración del producto.",
+    "noExamItemsConfigured": "No hay elementos de examen físico configurados. Es necesario agregarlos en la configuración del producto."
   },
   "businessReports": {
     "title": "Central de Datos",
@@ -8359,5 +8364,90 @@
         }
       }
     }
+  },
+  "templateCreate": {
+    "createTemplate": "Crear Template",
+    "editTemplate": "Editar Template",
+    "updateTemplate": "Actualizar Template",
+    "templateName": "Nombre del Template",
+    "templateNamePlaceholder": "Ej: Hipertensión Arterial",
+    "templateType": "Tipo",
+    "types": {
+      "general": "General",
+      "diagnostic": "Diagnóstico",
+      "anamnesis": "Anamnesis",
+      "evolution": "Evolución",
+      "prescription": "Receta",
+      "examOrder": "Pedido de Examen",
+      "reference": "Referencia"
+    },
+    "description": "Descripción",
+    "descriptionPlaceholder": "Descripción breve del template",
+    "category": "Categoría",
+    "categoryPlaceholder": "Ej: Cardiología",
+    "scope": "Alcance",
+    "scopes": {
+      "personal": "Personal (solo para mí)",
+      "commerce": "Comercio (todos los médicos del comercio)",
+      "global": "Global (todos los comercios)"
+    },
+    "tags": "Tags (separados por comas)",
+    "tagsPlaceholder": "Ej: hipertensión, cardiovascular, crónico",
+    "customVariables": "Variables Personalizadas",
+    "addVariable": "Agregar Variable",
+    "required": "Requerido",
+    "noVariables": "No hay variables personalizadas. Agrega variables para hacer el template más dinámico.",
+    "templateContent": "Contenido del Template",
+    "insertDate": "Insertar fecha",
+    "insertTime": "Insertar hora",
+    "insertDateTime": "Insertar fecha y hora",
+    "date": "Fecha",
+    "time": "Hora",
+    "dateTime": "Fecha/Hora",
+    "variables": "Variables",
+    "contentPlaceholderExample": "Escribe el contenido del template. Usa {'{{'}variableName{'}'} para variables.",
+    "contentPlaceholderPatient": "Paciente",
+    "contentPlaceholderDate": "Fecha",
+    "contentPlaceholderDiagnosis": "Diagnóstico",
+    "systemVariables": "Variables del sistema",
+    "customVariablesLabel": "Variables personalizadas",
+    "systemVariablesLabels": {
+      "date": "Fecha actual",
+      "time": "Hora actual",
+      "datetime": "Fecha y hora actual"
+    },
+    "preview": "Vista Previa",
+    "variableName": "Nombre de la Variable",
+    "variableNamePlaceholder": "Ej: patientName",
+    "variableNameHelp": "Solo letras, números y guiones bajos. No puede empezar con número.",
+    "variableLabel": "Etiqueta",
+    "variableLabelPlaceholder": "Ej: Nombre del Paciente",
+    "variableType": "Tipo",
+    "variableTypes": {
+      "text": "Texto",
+      "date": "Fecha",
+      "number": "Número",
+      "select": "Selección"
+    },
+    "variableOptions": "Opciones (una por línea)",
+    "variableOptionsPlaceholder": "Opción 1\nOpción 2\nOpción 3",
+    "variableDefaultValue": "Valor por Defecto",
+    "variableDefaultValuePlaceholder": "Valor predeterminado",
+    "variableRequired": "Variable requerida"
+  },
+  "templatePicker": {
+    "hide": "Ocultar",
+    "templates": "Templates",
+    "noTemplatesFound": "No se encontraron templates",
+    "information": "Información",
+    "allTypes": "Todos los tipos",
+    "diagnostic": "Diagnóstico",
+    "anamnesis": "Anamnesis",
+    "evolution": "Evolución",
+    "prescription": "Receta",
+    "examOrder": "Pedido de Examen",
+    "reference": "Referencia",
+    "general": "General"
   }
 }
+

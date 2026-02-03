@@ -8,7 +8,7 @@
         :disabled="loading"
       >
         <i class="bi bi-file-earmark-text me-1"></i>
-        {{ showPicker ? 'Ocultar' : 'Templates' }}
+        {{ showPicker ? $t('templatePicker.hide') : $t('templatePicker.templates') }}
       </button>
     </div>
 
@@ -21,15 +21,15 @@
           @input="debouncedSearch"
           placeholder="Buscar templates..."
         />
-        <select v-model="filterType" class="form-control ms-2" style="max-width: 200px">
-          <option value="">Todos los tipos</option>
-          <option value="diagnostic">Diagnóstico</option>
-          <option value="anamnesis">Anamnesis</option>
-          <option value="evolution">Evolución</option>
-          <option value="prescription">Receta</option>
-          <option value="exam_order">Pedido de Examen</option>
-          <option value="reference">Referencia</option>
-          <option value="general">General</option>
+        <select v-model="filterType" class="form-control ms-2 select-with-arrow" style="max-width: 200px">
+          <option value="">{{ $t('templatePicker.allTypes') }}</option>
+          <option value="diagnostic">{{ $t('templatePicker.diagnostic') }}</option>
+          <option value="anamnesis">{{ $t('templatePicker.anamnesis') }}</option>
+          <option value="evolution">{{ $t('templatePicker.evolution') }}</option>
+          <option value="prescription">{{ $t('templatePicker.prescription') }}</option>
+          <option value="exam_order">{{ $t('templatePicker.examOrder') }}</option>
+          <option value="reference">{{ $t('templatePicker.reference') }}</option>
+          <option value="general">{{ $t('templatePicker.general') }}</option>
         </select>
         <button
           type="button"
@@ -46,9 +46,7 @@
         <Spinner />
       </div>
 
-      <div v-else-if="templates.length === 0" class="text-center py-3 text-muted">
-        No se encontraron templates
-      </div>
+      <Message v-else-if="templates.length === 0" type="normal" :title="$t('templatePicker.information')" :content="$t('templatePicker.noTemplatesFound')" class="mt-3" />
 
       <div v-else class="template-list">
         <div
@@ -97,7 +95,9 @@
 
 <script>
 import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Spinner from '../../common/Spinner.vue';
+import Message from '../../common/Message.vue';
 import {
   searchTemplates,
   processTemplate,
@@ -110,6 +110,7 @@ export default {
   name: 'TemplatePicker',
   components: {
     Spinner,
+    Message,
   },
   props: {
     commerceId: {
@@ -131,6 +132,7 @@ export default {
   },
   emits: ['template-selected'],
   setup(props, { emit }) {
+    const { t } = useI18n();
     const showPicker = ref(false);
     const loading = ref(false);
     const templates = ref([]);
@@ -233,6 +235,7 @@ export default {
     });
 
     return {
+      t,
       showPicker,
       loading,
       templates,
@@ -446,5 +449,13 @@ export default {
     width: 100%;
     justify-content: flex-end;
   }
+}
+
+.select-with-arrow {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
 }
 </style>

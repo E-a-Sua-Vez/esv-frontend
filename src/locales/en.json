@@ -1782,7 +1782,7 @@
     },
     "actions": {
       "1": {
-        "action": "Mark as attended"
+        "action": "Go to Check Out"
       },
       "2": {
         "action": "Back to queues"
@@ -1791,6 +1791,7 @@
         "action": "Register Stock"
       }
     },
+    "checkoutAction": "Mark as Attended",
     "paymentConfirm": "Confirm / Payment",
     "paymentActions": "Attention Actions",
     "paymentActionsSubtitle": "Confirm payment, transfer or cancel",
@@ -3703,8 +3704,10 @@
     "attentions": "Attentions",
     "bookings": "Bookings",
     "today": "Today",
-    "todayAttentions": "Today's Attentions",
+    "todayAttentions": "Today's Attentions in your Queue",
+    "otherQueuesAttentions": "Attentions in Other Queues",
     "goToQueue": "Go to Queue",
+    "goToQueues": "Go to Queues",
     "weekBookings": "Week Bookings",
     "monthBookings": "Month Bookings",
     "pendingToAttend": "Pending to attend",
@@ -5534,7 +5537,9 @@
         "sex": "Should select the Sex",
         "font": "Should enter the Font"
       }
-    }
+    },
+    "noHistoryItemsConfigured": "No history items are configured. It is necessary to add them in the product configuration.",
+    "noExamItemsConfigured": "No physical exam items are configured. It is necessary to add them in the product configuration."
   },
   "businessReports": {
     "title": "Data Center",
@@ -8148,5 +8153,89 @@
         "view": "View chats"
       }
     }
+  },
+  "templateCreate": {
+    "createTemplate": "Create Template",
+    "editTemplate": "Edit Template",
+    "updateTemplate": "Update Template",
+    "templateName": "Template Name",
+    "templateNamePlaceholder": "Ex: Arterial Hypertension",
+    "templateType": "Type",
+    "types": {
+      "general": "General",
+      "diagnostic": "Diagnostic",
+      "anamnesis": "Anamnesis",
+      "evolution": "Evolution",
+      "prescription": "Prescription",
+      "examOrder": "Exam Order",
+      "reference": "Reference"
+    },
+    "description": "Description",
+    "descriptionPlaceholder": "Brief template description",
+    "category": "Category",
+    "categoryPlaceholder": "Ex: Cardiology",
+    "scope": "Scope",
+    "scopes": {
+      "personal": "Personal (for me only)",
+      "commerce": "Commerce (all doctors in the commerce)",
+      "global": "Global (all commerces)"
+    },
+    "tags": "Tags (comma separated)",
+    "tagsPlaceholder": "Ex: hypertension, cardiovascular, chronic",
+    "customVariables": "Custom Variables",
+    "addVariable": "Add Variable",
+    "required": "Required",
+    "noVariables": "No custom variables. Add variables to make the template more dynamic.",
+    "templateContent": "Template Content",
+    "insertDate": "Insert date",
+    "insertTime": "Insert time",
+    "insertDateTime": "Insert date and time",
+    "date": "Date",
+    "time": "Time",
+    "dateTime": "Date/Time",
+    "variables": "Variables",
+    "contentPlaceholderExample": "Write the template content. Use {'{{'}variableName{'}'} for variables.",
+    "contentPlaceholderPatient": "Patient",
+    "contentPlaceholderDate": "Date",
+    "contentPlaceholderDiagnosis": "Diagnosis",
+    "systemVariables": "System variables",
+    "customVariablesLabel": "Custom variables",
+    "systemVariablesLabels": {
+      "date": "Current date",
+      "time": "Current time",
+      "datetime": "Current date and time"
+    },
+    "preview": "Preview",
+    "variableName": "Variable Name",
+    "variableNamePlaceholder": "Ex: patientName",
+    "variableNameHelp": "Only letters, numbers and underscores. Cannot start with a number.",
+    "variableLabel": "Label",
+    "variableLabelPlaceholder": "Ex: Patient Name",
+    "variableType": "Type",
+    "variableTypes": {
+      "text": "Text",
+      "date": "Date",
+      "number": "Number",
+      "select": "Selection"
+    },
+    "variableOptions": "Options (one per line)",
+    "variableOptionsPlaceholder": "Option 1\nOption 2\nOption 3",
+    "variableDefaultValue": "Default Value",
+    "variableDefaultValuePlaceholder": "Default value",
+    "variableRequired": "Required variable"
+  },
+  "templatePicker": {
+    "hide": "Hide",
+    "templates": "Templates",
+    "noTemplatesFound": "No templates found",
+    "information": "Information",
+    "allTypes": "All types",
+    "diagnostic": "Diagnostic",
+    "anamnesis": "Anamnesis",
+    "evolution": "Evolution",
+    "prescription": "Prescription",
+    "examOrder": "Exam Order",
+    "reference": "Reference",
+    "general": "General"
   }
 }

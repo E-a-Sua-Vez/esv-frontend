@@ -1611,6 +1611,7 @@ export default {
   font-size: 0.8rem;
   transition: all 0.2s ease;
   background: white;
+  z-index: 1 !important;
 }
 
 .form-control-modern:focus {

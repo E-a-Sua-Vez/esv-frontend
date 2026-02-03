@@ -547,6 +547,7 @@ export default {
   transition: all 0.3s ease;
   font-family: inherit;
   resize: vertical;
+  z-index: 1 !important;
 }
 
 .form-control-modern:focus {

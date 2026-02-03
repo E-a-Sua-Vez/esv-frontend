@@ -4,7 +4,7 @@
       <div class="modal-header">
         <h5 class="modal-title">
           <i class="bi bi-file-earmark-text me-2"></i>
-          {{ editingTemplate ? 'Editar Template' : 'Crear Template' }}
+          {{ editingTemplate ? $t('templateCreate.editTemplate') : $t('templateCreate.createTemplate') }}
         </h5>
         <button type="button" class="btn-close" @click="handleClose"></button>
       </div>
@@ -13,71 +13,71 @@
         <div class="form-section">
           <div class="row mb-3">
             <div class="col-md-8">
-              <label class="form-label">Nombre del Template *</label>
+              <label class="form-label">{{ $t('templateCreate.templateName') }} *</label>
               <input
                 type="text"
                 class="form-control"
                 v-model="formData.name"
-                placeholder="Ej: Hipertensión Arterial"
+                :placeholder="$t('templateCreate.templateNamePlaceholder')"
                 :class="{ 'is-invalid': errors.name }"
               />
               <div v-if="errors.name" class="invalid-feedback">{{ errors.name }}</div>
             </div>
             <div class="col-md-4">
-              <label class="form-label">Tipo *</label>
+              <label class="form-label">{{ $t('templateCreate.templateType') }} *</label>
               <select
                 class="form-control"
                 v-model="formData.type"
                 :class="{ 'is-invalid': errors.type }"
               >
-                <option value="GENERAL">General</option>
-                <option value="DIAGNOSTIC">Diagnóstico</option>
-                <option value="ANAMNESIS">Anamnesis</option>
-                <option value="EVOLUTION">Evolución</option>
-                <option value="PRESCRIPTION">Receta</option>
-                <option value="EXAM_ORDER">Pedido de Examen</option>
-                <option value="REFERENCE">Referencia</option>
+                <option value="GENERAL">{{ $t('templateCreate.types.general') }}</option>
+                <option value="DIAGNOSTIC">{{ $t('templateCreate.types.diagnostic') }}</option>
+                <option value="ANAMNESIS">{{ $t('templateCreate.types.anamnesis') }}</option>
+                <option value="EVOLUTION">{{ $t('templateCreate.types.evolution') }}</option>
+                <option value="PRESCRIPTION">{{ $t('templateCreate.types.prescription') }}</option>
+                <option value="EXAM_ORDER">{{ $t('templateCreate.types.examOrder') }}</option>
+                <option value="REFERENCE">{{ $t('templateCreate.types.reference') }}</option>
               </select>
             </div>
           </div>
 
           <div class="row mb-3">
             <div class="col-md-6">
-              <label class="form-label">Descripción</label>
+              <label class="form-label">{{ $t('templateCreate.description') }}</label>
               <input
                 type="text"
                 class="form-control"
                 v-model="formData.description"
-                placeholder="Descripción breve del template"
+                :placeholder="$t('templateCreate.descriptionPlaceholder')"
               />
             </div>
             <div class="col-md-6">
-              <label class="form-label">Categoría</label>
+              <label class="form-label">{{ $t('templateCreate.category') }}</label>
               <input
                 type="text"
                 class="form-control"
                 v-model="formData.category"
-                placeholder="Ej: Cardiología"
+                :placeholder="$t('templateCreate.categoryPlaceholder')"
               />
             </div>
           </div>
 
           <div class="row mb-3">
             <div class="col-md-6">
-              <label class="form-label">Alcance</label>
+              <label class="form-label">{{ $t('templateCreate.scope') }}</label>
               <select class="form-control" v-model="formData.scope">
-                <option value="PERSONAL">Personal (solo para mí)</option>
-                <option value="COMMERCE">Comercio (todos los médicos del comercio)</option>
-                <option value="GLOBAL">Global (todos los comercios)</option>
+                <option value="PERSONAL">{{ $t('templateCreate.scopes.personal') }}</option>
+                <option value="COMMERCE">{{ $t('templateCreate.scopes.commerce') }}</option>
+                <option value="GLOBAL">{{ $t('templateCreate.scopes.global') }}</option>
               </select>
             </div>
             <div class="col-md-6">
-              <label class="form-label">Tags (separados por comas)</label>
+              <label class="form-label">{{ $t('templateCreate.tags') }}</label>
               <input
                 type="text"
                 class="form-control"
                 v-model="tagsInput"
-                placeholder="Ej: hipertensión, cardiovascular, crónico"
+                :placeholder="$t('templateCreate.tagsPlaceholder')"
               />
             </div>
           </div>
@@ -88,7 +88,7 @@
           <div class="section-header">
             <h6 class="section-title">
               <i class="bi bi-sliders me-2"></i>
-              Variables Personalizadas
+              {{ $t('templateCreate.customVariables') }}
             </h6>
             <button
               type="button"
@@ -96,7 +96,7 @@
               @click="showAddVariable = true"
             >
               <i class="bi bi-plus-circle me-1"></i>
-              Agregar Variable
+              {{ $t('templateCreate.addVariable') }}
             </button>
           </div>
 
@@ -118,7 +118,7 @@
                 <div class="variable-name">
                   <strong>{{ variable.name }}</strong>
                   <span class="badge bg-secondary ms-2">{{ variable.type }}</span>
-                  <span v-if="variable.required" class="badge bg-danger ms-1">Requerido</span>
+                  <span v-if="variable.required" class="badge bg-danger ms-1">{{ $t('templateCreate.required') }}</span>
                 </div>
                 <div class="variable-label text-muted">{{ variable.label }}</div>
               </div>
@@ -143,7 +143,7 @@
             </div>
           </div>
           <div v-else class="text-muted text-center py-3">
-            No hay variables personalizadas. Agrega variables para hacer el template más dinámico.
+            {{ $t('templateCreate.noVariables') }}
           </div>
         </div>
 
@@ -152,35 +152,35 @@
           <div class="section-header">
             <h6 class="section-title">
               <i class="bi bi-file-text me-2"></i>
-              Contenido del Template *
+              {{ $t('templateCreate.templateContent') }} *
             </h6>
             <div class="toolbar">
               <button
                 type="button"
                 class="btn btn-sm btn-outline-secondary"
                 @click="insertSystemVariable('date')"
-                title="Insertar fecha"
+                :title="$t('templateCreate.insertDate')"
               >
                 <i class="bi bi-calendar me-1"></i>
-                Fecha
+                {{ $t('templateCreate.date') }}
               </button>
               <button
                 type="button"
                 class="btn btn-sm btn-outline-secondary"
                 @click="insertSystemVariable('time')"
-                title="Insertar hora"
+                :title="$t('templateCreate.insertTime')"
               >
                 <i class="bi bi-clock me-1"></i>
-                Hora
+                {{ $t('templateCreate.time') }}
               </button>
               <button
                 type="button"
                 class="btn btn-sm btn-outline-secondary"
                 @click="insertSystemVariable('datetime')"
-                title="Insertar fecha y hora"
+                :title="$t('templateCreate.insertDateTime')"
               >
                 <i class="bi bi-calendar-event me-1"></i>
-                Fecha/Hora
+                {{ $t('templateCreate.dateTime') }}
               </button>
               <div v-if="formData.variables && formData.variables.length > 0" class="dropdown ms-2">
                 <button
@@ -189,7 +189,7 @@
                   data-bs-toggle="dropdown"
                 >
                   <i class="bi bi-tag me-1"></i>
-                  Variables
+                  {{ $t('templateCreate.variables') }}
                 </button>
                 <ul class="dropdown-menu">
                   <li v-for="variable in formData.variables" :key="variable.name">
@@ -245,7 +245,7 @@
           <div class="section-header">
             <h6 class="section-title">
               <i class="bi bi-eye me-2"></i>
-              Vista Previa
+              {{ $t('templateCreate.preview') }}
             </h6>
             <button
               type="button"
@@ -262,7 +262,7 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" @click="handleClose">Cancelar</button>
+        <button type="button" class="btn btn-secondary" @click="handleClose">{{ $t('common.cancel') }}</button>
         <button
           type="button"
           class="btn btn-primary"
@@ -270,7 +270,7 @@
           :disabled="!isFormValid || creating"
         >
           <span v-if="creating" class="spinner-border spinner-border-sm me-2"></span>
-          {{ editingTemplate ? 'Actualizar' : 'Crear' }} Template
+          {{ editingTemplate ? $t('templateCreate.updateTemplate') : $t('templateCreate.createTemplate') }}
         </button>
       </div>
     </div>
@@ -283,31 +283,31 @@
     >
       <div class="modal-content variable-modal">
         <div class="modal-header">
-          <h6 class="modal-title">Agregar Variable</h6>
+          <h6 class="modal-title">{{ $t('templateCreate.addVariable') }}</h6>
           <button type="button" class="btn-close" @click="showAddVariable = false"></button>
         </div>
         <div class="modal-body">
           <div class="mb-3">
-            <label class="form-label">Nombre de la Variable *</label>
+            <label class="form-label">{{ $t('templateCreate.variableName') }} *</label>
             <input
               type="text"
               class="form-control"
               v-model="newVariable.name"
-              placeholder="Ej: patientName"
+              :placeholder="$t('templateCreate.variableNamePlaceholder')"
               :class="{ 'is-invalid': variableErrors.name }"
             />
             <div v-if="variableErrors.name" class="invalid-feedback">{{ variableErrors.name }}</div>
             <small class="form-text text-muted">
-              Solo letras, números y guiones bajos. No puede empezar con número.
+              {{ $t('templateCreate.variableNameHelp') }}
             </small>
           </div>
           <div class="mb-3">
-            <label class="form-label">Etiqueta *</label>
+            <label class="form-label">{{ $t('templateCreate.variableLabel') }} *</label>
             <input
               type="text"
               class="form-control"
               v-model="newVariable.label"
-              placeholder="Ej: Nombre del Paciente"
+              :placeholder="$t('templateCreate.variableLabelPlaceholder')"
               :class="{ 'is-invalid': variableErrors.label }"
             />
             <div v-if="variableErrors.label" class="invalid-feedback">
@@ -315,30 +315,30 @@
             </div>
           </div>
           <div class="mb-3">
-            <label class="form-label">Tipo *</label>
+            <label class="form-label">{{ $t('templateCreate.variableType') }} *</label>
             <select class="form-control" v-model="newVariable.type">
-              <option value="text">Texto</option>
-              <option value="date">Fecha</option>
-              <option value="number">Número</option>
-              <option value="select">Selección</option>
+              <option value="text">{{ $t('templateCreate.variableTypes.text') }}</option>
+              <option value="date">{{ $t('templateCreate.variableTypes.date') }}</option>
+              <option value="number">{{ $t('templateCreate.variableTypes.number') }}</option>
+              <option value="select">{{ $t('templateCreate.variableTypes.select') }}</option>
             </select>
           </div>
           <div v-if="newVariable.type === 'select'" class="mb-3">
-            <label class="form-label">Opciones (una por línea) *</label>
+            <label class="form-label">{{ $t('templateCreate.variableOptions') }} *</label>
             <textarea
               class="form-control"
               v-model="newVariable.optionsText"
               rows="4"
-              placeholder="Opción 1&#10;Opción 2&#10;Opción 3"
+              :placeholder="$t('templateCreate.variableOptionsPlaceholder')"
             ></textarea>
           </div>
           <div class="mb-3">
-            <label class="form-label">Valor por Defecto</label>
+            <label class="form-label">{{ $t('templateCreate.variableDefaultValue') }}</label>
             <input
               type="text"
               class="form-control"
               v-model="newVariable.defaultValue"
-              placeholder="Valor predeterminado"
+              :placeholder="$t('templateCreate.variableDefaultValuePlaceholder')"
             />
           </div>
           <div class="form-check">
@@ -348,14 +348,14 @@
               v-model="newVariable.required"
               id="variableRequired"
             />
-            <label class="form-check-label" for="variableRequired"> Variable requerida </label>
+            <label class="form-check-label" for="variableRequired"> {{ $t('templateCreate.variableRequired') }} </label>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" @click="showAddVariable = false">
-            Cancelar
+            {{ $t('common.cancel') }}
           </button>
-          <button type="button" class="btn btn-primary" @click="addVariable">Agregar</button>
+          <button type="button" class="btn btn-primary" @click="addVariable">{{ $t('templateCreate.addVariable') }}</button>
         </div>
       </div>
     </div>
@@ -364,6 +364,7 @@
 
 <script>
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { createTemplate, updateTemplate } from '../../../application/services/medical-template';
 import { globalStore } from '../../../stores';
 
@@ -385,6 +386,7 @@ export default {
   },
   emits: ['close', 'created'],
   setup(props, { emit }) {
+    const { t } = useI18n();
     const store = globalStore();
     const creating = ref(false);
     const showPreview = ref(true);
@@ -424,9 +426,9 @@ export default {
 
     // System variables
     const systemVariables = [
-      { name: 'date', label: 'Fecha actual' },
-      { name: 'time', label: 'Hora actual' },
-      { name: 'datetime', label: 'Fecha y hora actual' },
+      { name: 'date', label: t('templateCreate.systemVariablesLabels.date') },
+      { name: 'time', label: t('templateCreate.systemVariablesLabels.time') },
+      { name: 'datetime', label: t('templateCreate.systemVariablesLabels.datetime') },
     ];
 
     // Reserved variable names
@@ -517,22 +519,21 @@ export default {
     );
 
     const contentPlaceholder = computed(
-      () => `Escribe el contenido del template. Usa {'{{'}variableName{'}}'} para variables.
+      () => `${t('templateCreate.contentPlaceholderExample')}
 
-Ejemplo:
-Paciente: {'{{'}patientName{'}}'}
-Fecha: {'{{'}date{'}}'}
-Diagnóstico: {'{{'}diagnosis{'}}'}`
+${t('templateCreate.contentPlaceholderPatient')}: {{patientName}}
+${t('templateCreate.contentPlaceholderDate')}: {{date}}
+${t('templateCreate.contentPlaceholderDiagnosis')}: {{diagnosis}}`
     );
 
     const contentHelp = computed(() => {
-      const systemVars = systemVariables.map(v => `{'{{'}${v.name}{'}}'}`).join(', ');
+      const systemVars = systemVariables.map(v => `{{${v.name}}}`).join(', ');
       const customVars =
         formData.value.variables && formData.value.variables.length > 0
-          ? formData.value.variables.map(v => `{'{{'}${v.name}{'}}'}`).join(', ')
+          ? formData.value.variables.map(v => `{{${v.name}}}`).join(', ')
           : '';
-      return `Variables del sistema: ${systemVars}${
-        customVars ? `. Variables personalizadas: ${customVars}` : ''
+      return `${t('templateCreate.systemVariables')}: ${systemVars}${
+        customVars ? `. ${t('templateCreate.customVariables')}: ${customVars}` : ''
       }`;
     });
 

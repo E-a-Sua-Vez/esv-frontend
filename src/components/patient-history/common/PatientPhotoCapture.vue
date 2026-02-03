@@ -434,7 +434,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1050;
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -470,7 +470,7 @@ export default {
   align-items: center;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  background-color: var(--azul-turno);
   color: white;
 }
 

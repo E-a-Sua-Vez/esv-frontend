@@ -551,6 +551,7 @@ onMounted(() => {
   border-radius: 5px;
   transition: all 0.2s ease;
   width: 100%;
+  z-index: 1 !important;
 }
 
 .form-control-modern:focus {
