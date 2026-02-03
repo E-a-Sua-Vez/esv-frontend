@@ -130,6 +130,40 @@ export default {
 
     const state = reactive(getInitialState());
 
+    // Cache for API calls to avoid duplicate requests
+    const servicesCache = ref(new Map());
+    const professionalCache = ref(new Map());
+
+    // Helper functions with caching
+    const getServicesByIdCached = async (servicesIds) => {
+      const cacheKey = JSON.stringify(servicesIds.sort());
+      if (servicesCache.value.has(cacheKey)) {
+        return servicesCache.value.get(cacheKey);
+      }
+      try {
+        const result = await getServicesById(servicesIds);
+        servicesCache.value.set(cacheKey, result);
+        return result;
+      } catch (error) {
+        // Don't cache errors, but still throw
+        throw error;
+      }
+    };
+
+    const getProfessionalByIdCached = async (professionalId) => {
+      if (professionalCache.value.has(professionalId)) {
+        return professionalCache.value.get(professionalId);
+      }
+      try {
+        const result = await getProfessionalById(professionalId);
+        professionalCache.value.set(professionalId, result);
+        return result;
+      } catch (error) {
+        // Don't cache errors, but still throw
+        throw error;
+      }
+    };
+
     // Initialize preselected data
     onBeforeMount(async () => {
       if (props.preselectedQueue && props.preselectedQueue.id) {
@@ -271,7 +305,10 @@ export default {
       state.accept = true;
 
       // Load services for PROFESSIONAL queues to display service names in buttons
-      await loadServicesForQueues();
+      // Only load if we have preselected queues or if we're in modal mode
+      if (props.preselectedQueue || props.mode === 'modal' || (props.queues && props.queues.length > 0)) {
+        await loadServicesForQueues();
+      }
 
       // If all critical data is preselected, start at appropriate step
       // IMPORTANT: Always show client form (step 1) if needed, even if other data is preselected
@@ -556,6 +593,19 @@ export default {
       }
       return state.currentStep === 4;
     });
+
+    // Watch for changes in queues or groupedQueues to load services
+    watch(() => props.queues, async (newQueues) => {
+      if (newQueues && newQueues.length > 0) {
+        await loadServicesForQueues();
+      }
+    }, { deep: true });
+
+    watch(() => props.groupedQueues, async (newGroupedQueues) => {
+      if (newGroupedQueues && Object.keys(newGroupedQueues).length > 0) {
+        await loadServicesForQueues();
+      }
+    }, { deep: true });
 
     const handleTelemedicineToggle = () => {
       if (state.isTelemedicine) {
@@ -1064,39 +1114,52 @@ export default {
       localQueues.value = JSON.parse(JSON.stringify(props.queues));
 
       // Load services for PROFESSIONAL queues
-      for (const queue of localQueues.value) {
-        if (queue.type === 'PROFESSIONAL' && (queue.collaboratorId || queue.professionalId)) {
-          const servicesIds = Array.isArray(queue.servicesId) ? queue.servicesId : [queue.servicesId].filter(Boolean);
-          if (servicesIds.length > 0) {
-            try {
-              const loadedServices = await getServicesById(servicesIds);
-              queue.services = loadedServices || [];
-              queue.servicesName = loadedServices && loadedServices.length > 0
-                ? loadedServices.map(serv => serv.name)
-                : [];
-            } catch (error) {
-              console.error(`Error loading services for queue ${queue.name}:`, error);
-              queue.services = [];
-              queue.servicesName = [];
-            }
-          } else {
-            // Try to load professional and use their services
-            try {
-              const professional = await getProfessionalById(queue.collaboratorId || queue.professionalId);
-              if (professional && professional.services && professional.services.length > 0) {
-                queue.services = professional.services;
-                queue.servicesName = professional.services.map(serv => serv.name);
-                queue.collaborator = professional;
-              } else {
+      const professionalQueues = localQueues.value.filter(
+        queue => queue.type === 'PROFESSIONAL' && (queue.collaboratorId || queue.professionalId)
+      );
+
+      // Process in batches of 2 to avoid rate limiting
+      const batchSize = 2;
+      for (let i = 0; i < professionalQueues.length; i += batchSize) {
+        const batch = professionalQueues.slice(i, i + batchSize);
+        await Promise.all(
+          batch.map(async queue => {
+            const servicesIds = Array.isArray(queue.servicesId) ? queue.servicesId : [queue.servicesId].filter(Boolean);
+            if (servicesIds.length > 0) {
+              try {
+                const loadedServices = await getServicesByIdCached(servicesIds);
+                queue.services = loadedServices || [];
+                queue.servicesName = loadedServices && loadedServices.length > 0
+                  ? loadedServices.map(serv => serv.name)
+                  : [];
+              } catch (error) {
+                console.error(`Error loading services for queue ${queue.name}:`, error);
                 queue.services = [];
                 queue.servicesName = [];
               }
-            } catch (error) {
-              console.error(`Error loading professional for queue ${queue.name}:`, error);
-              queue.services = [];
-              queue.servicesName = [];
+            } else {
+              // Try to load professional and use their services
+              try {
+                const professional = await getProfessionalByIdCached(queue.collaboratorId || queue.professionalId);
+                if (professional && professional.services && professional.services.length > 0) {
+                  queue.services = professional.services;
+                  queue.servicesName = professional.services.map(serv => serv.name);
+                  queue.collaborator = professional;
+                } else {
+                  queue.services = [];
+                  queue.servicesName = [];
+                }
+              } catch (error) {
+                console.error(`Error loading professional for queue ${queue.name}:`, error);
+                queue.services = [];
+                queue.servicesName = [];
+              }
             }
-          }
+          })
+        );
+        // Small delay between batches
+        if (i + batchSize < professionalQueues.length) {
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
 
@@ -1104,39 +1167,53 @@ export default {
       if (props.groupedQueues && Object.keys(props.groupedQueues).length > 0) {
         localGroupedQueues.value = JSON.parse(JSON.stringify(props.groupedQueues));
         if (localGroupedQueues.value['PROFESSIONAL']) {
-          for (const queue of localGroupedQueues.value['PROFESSIONAL']) {
-            if (queue.type === 'PROFESSIONAL' && (queue.collaboratorId || queue.professionalId)) {
-              const servicesIds = Array.isArray(queue.servicesId) ? queue.servicesId : [queue.servicesId].filter(Boolean);
-              if (servicesIds.length > 0) {
-                try {
-                  const loadedServices = await getServicesById(servicesIds);
-                  queue.services = loadedServices || [];
-                  queue.servicesName = loadedServices && loadedServices.length > 0
-                    ? loadedServices.map(serv => serv.name)
-                    : [];
-                } catch (error) {
-                  console.error(`Error loading services for grouped queue ${queue.name}:`, error);
-                  queue.services = [];
-                  queue.servicesName = [];
-                }
-              } else {
-                // Try to load professional and use their services
-                try {
-                  const professional = await getProfessionalById(queue.collaboratorId || queue.professionalId);
-                  if (professional && professional.services && professional.services.length > 0) {
-                    queue.services = professional.services;
-                    queue.servicesName = professional.services.map(serv => serv.name);
-                    queue.collaborator = professional;
-                  } else {
+          // Process queues in batches to avoid rate limiting
+          const professionalQueues = localGroupedQueues.value['PROFESSIONAL'].filter(
+            queue => queue.type === 'PROFESSIONAL' && (queue.collaboratorId || queue.professionalId)
+          );
+
+          // Process in batches of 2 to avoid overwhelming the API
+          const batchSize = 2;
+          for (let i = 0; i < professionalQueues.length; i += batchSize) {
+            const batch = professionalQueues.slice(i, i + batchSize);
+            await Promise.all(
+              batch.map(async queue => {
+                const servicesIds = Array.isArray(queue.servicesId) ? queue.servicesId : [queue.servicesId].filter(Boolean);
+                if (servicesIds.length > 0) {
+                  try {
+                    const loadedServices = await getServicesByIdCached(servicesIds);
+                    queue.services = loadedServices || [];
+                    queue.servicesName = loadedServices && loadedServices.length > 0
+                      ? loadedServices.map(serv => serv.name)
+                      : [];
+                  } catch (error) {
+                    console.error(`Error loading services for grouped queue ${queue.name}:`, error);
                     queue.services = [];
                     queue.servicesName = [];
                   }
-                } catch (error) {
-                  console.error(`Error loading professional for grouped queue ${queue.name}:`, error);
-                  queue.services = [];
-                  queue.servicesName = [];
+                } else {
+                  // Try to load professional and use their services
+                  try {
+                    const professional = await getProfessionalByIdCached(queue.collaboratorId || queue.professionalId);
+                    if (professional && professional.services && professional.services.length > 0) {
+                      queue.services = professional.services;
+                      queue.servicesName = professional.services.map(serv => serv.name);
+                      queue.collaborator = professional;
+                    } else {
+                      queue.services = [];
+                      queue.servicesName = [];
+                    }
+                  } catch (error) {
+                    console.error(`Error loading professional for grouped queue ${queue.name}:`, error);
+                    queue.services = [];
+                    queue.servicesName = [];
+                  }
                 }
-              }
+              })
+            );
+            // Small delay between batches
+            if (i + batchSize < professionalQueues.length) {
+              await new Promise(resolve => setTimeout(resolve, 200));
             }
           }
         }
@@ -1582,7 +1659,7 @@ export default {
 
             try {
               const allAttentions = await getAttentionsDetails(
-                [props.commerce.id],
+                props.commerce.id,
                 undefined,
                 undefined,
                 undefined,
@@ -1613,7 +1690,7 @@ export default {
               });
 
               const allBookings = await getBookingsDetails(
-                [props.commerce.id],
+                props.commerce.id,
                 null,
                 null,
                 undefined,
@@ -1638,7 +1715,7 @@ export default {
 
             // Get attentions for this package by filtering all client attentions
             const attentionsDetails = await getAttentionsDetails(
-              [props.commerce.id],
+              props.commerce.id,
               undefined,
               undefined,
               undefined,
@@ -3481,6 +3558,7 @@ export default {
       preselectedServiceIdRef,
       needsProcedureAmountSelection,
       availableProcedureAmounts,
+      loadServicesForQueues,
       t,
       handleAcknowledgeAlert: async alertId => {
         try {

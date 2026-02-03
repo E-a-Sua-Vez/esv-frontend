@@ -139,7 +139,7 @@ export default {
       </div>
 
       <div
-        v-if="toggles['patient.history.control-update'] && status === 'PENDING'"
+        v-if="status === 'PENDING'"
         class="control-card-actions"
       >
         <button class="btn-control-action btn-edit" @click.prevent="showUpdate()">
@@ -184,7 +184,6 @@ export default {
           </label>
           <textarea
             id="control-comment"
-            :disabled="!toggles['patient.history.control-edit']"
             class="form-control-modern"
             rows="5"
             :maxlength="500"
@@ -196,7 +195,6 @@ export default {
           <button
             class="btn-save-control"
             @click="update()"
-            :disabled="!toggles['patient.history.control-update']"
           >
             <i class="bi bi-check-circle-fill me-2"></i>
             {{ $t('patientHistoryView.update') }}

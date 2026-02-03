@@ -84,6 +84,7 @@ export default {
       commerce: {},
       dedicatedQueues: [],
       todayAttentions: [],
+      allAttentions: [],
       weekBookings: [],
       monthBookings: [],
       showTodayAttentionsDetails: false,
@@ -169,12 +170,10 @@ export default {
         if (commerce.value && commerce.value.id) {
           // Specific commerce selected - use it
           state.commerce = commerce.value;
-          console.log('🏪 initializeSpy: Specific commerce selected:', state.commerce.id, state.commerce.name);
           // Load data for selected commerce
           await loadCommerceData();
         } else {
           // No specific commerce selected - show total from all commerces
-          console.log('🏪 initializeSpy: No specific commerce selected - loading all commerces data');
           // Get dedicated queues for all commerces
           await getDedicatedQueuesForAllCommerces();
           // Initialize attentions for all commerces
@@ -247,7 +246,6 @@ export default {
       }
 
       // Get dedicated queues for this collaborator
-      console.log('🏪 loadCommerceData: Getting dedicated queues for commerce:', state.commerce.id);
       await getDedicatedQueues();
 
       // Initialize queue status
@@ -389,68 +387,112 @@ export default {
       // Ensure we have dedicated queues before filtering
       if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) {
         state.todayAttentions = [];
+        state.allAttentions = [];
         return;
       }
 
+      // Filter all attentions by status
+      const allFilteredAttentions = firebaseAttentions.filter(att => {
+        // Filter by status - PENDING and CONFIRMED attentions
+        if (att.status !== 'PENDING' && att.status !== 'CONFIRMED') {
+          return false;
+        }
+        return true;
+      });
+
+      // Get queue IDs for filtering
       const queueIds = state.dedicatedQueues.map(q => q.id);
 
-      // Filter by today's date
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayEnd = new Date(today);
-      todayEnd.setHours(23, 59, 59, 999);
-
-      const filteredAttentions = firebaseAttentions.filter(att => {
+      // Filter dedicated attentions by queue
+      const dedicatedFilteredAttentions = allFilteredAttentions.filter(att => {
         // Filter by queue
         if (!att.queueId || !queueIds.includes(att.queueId)) {
           return false;
         }
-
-        // Filter by status - only PENDING attentions
-        if (att.status !== 'PENDING') {
-          return false;
-        }
-
-        // Filter by today's date
-        if (!att.createdAt) {
-          return false;
-        }
-
-        try {
-          let attentionDate;
-          if (att.createdAt instanceof Date) {
-            attentionDate = new Date(att.createdAt);
-          } else if (typeof att.createdAt === 'string') {
-            attentionDate = new Date(att.createdAt);
-          } else if (att.createdAt.toDate && typeof att.createdAt.toDate === 'function') {
-            attentionDate = att.createdAt.toDate();
-          } else if (att.createdAt.seconds) {
-            attentionDate = new Date(att.createdAt.seconds * 1000);
-          } else {
-            return false;
-          }
-
-          if (isNaN(attentionDate.getTime())) {
-            return false;
-          }
-
-          // Get date in UTC to avoid timezone issues
-          const attentionDateUTC = new Date(attentionDate.getTime() + (attentionDate.getTimezoneOffset() * 60000));
-          const attentionDateOnly = new Date(attentionDateUTC);
-          attentionDateOnly.setUTCHours(0, 0, 0, 0);
-
-          const todayUTC = new Date(today);
-          todayUTC.setUTCHours(0, 0, 0, 0);
-
-          return attentionDateOnly.getTime() === todayUTC.getTime();
-        } catch (e) {
-          return false;
-        }
+        return true;
       });
 
-      // Map and fetch user data in parallel
-      const formattedAttentions = await Promise.all(
-        filteredAttentions.map(async att => {
+      // Map and fetch user data in parallel for all attentions
+      const formattedAllAttentions = await Promise.all(
+        allFilteredAttentions.map(async att => {
+          let serviceName = att.serviceName || 'N/A';
+          if (
+            att.servicesDetails &&
+            Array.isArray(att.servicesDetails) &&
+            att.servicesDetails.length > 0
+          ) {
+            serviceName = att.servicesDetails.map(s => s.name || s).join(', ');
+          }
+
+          // Get user name from attention data
+          let userName = '';
+          let userLastName = '';
+          let userIdNumber = '';
+
+          // Check multiple possible locations for user data
+          if (att.user && typeof att.user === 'object') {
+            userName = att.user.name || '';
+            userLastName = att.user.lastName || '';
+            userIdNumber = att.user.idNumber || att.user.id || '';
+          } else if (att.userName) {
+            userName = att.userName;
+            userLastName = att.userLastName || '';
+            userIdNumber = att.userIdNumber || att.userId || '';
+          } else if (att.userId) {
+            // If only userId is available, use it as identifier
+            // Note: Backend now includes userName/userLastName in Firebase documents
+            // If still missing, show userId as fallback
+            userIdNumber = att.userId;
+          }
+
+          // Build client name - only use actual name, don't fallback to userId
+          let clientName = '';
+          if (userName || userLastName) {
+            const fullName = (userName || '') + (userLastName ? ' ' + userLastName : '').trim();
+            // Only use if it doesn't look like an ID (long alphanumeric string)
+            if (fullName && !fullName.match(/^[A-Za-z0-9]{20,}$/)) {
+              clientName = fullName;
+            }
+          }
+          // Don't set clientName to userId - we'll use 'N/A' if no name exists
+          if (!clientName) {
+            clientName = 'N/A';
+          }
+
+          // Parse createdAt - it comes as string from Firebase
+          let hour = 'N/A';
+          let createdAt = null;
+          if (att.createdAt) {
+            try {
+              const date = new Date(att.createdAt);
+              if (!isNaN(date.getTime())) {
+                hour = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                createdAt = att.createdAt;
+              }
+            } catch (e) {
+              // Error parsing createdAt
+            }
+          } else if (att.createdDate) {
+            createdAt = att.createdDate;
+          }
+
+          return {
+            id: att.id || att.attentionId,
+            clientName,
+            clientId: userIdNumber || att.userId || att.clientId || 'N/A',
+            hour,
+            service: serviceName,
+            number: att.number,
+            status: att.status,
+            queueId: att.queueId,
+            createdAt: createdAt || att.createdAt || att.createdDate || null,
+          };
+        })
+      );
+
+      // Map and fetch user data in parallel for dedicated attentions
+      const formattedDedicatedAttentions = await Promise.all(
+        dedicatedFilteredAttentions.map(async att => {
           let serviceName = att.serviceName || 'N/A';
           if (
             att.servicesDetails &&
@@ -527,14 +569,21 @@ export default {
       );
 
       // Sort by number (ascending) to show next attention first
-      formattedAttentions.sort((a, b) => {
+      formattedAllAttentions.sort((a, b) => {
+        const numA = a.number || 0;
+        const numB = b.number || 0;
+        return numA - numB;
+      });
+
+      formattedDedicatedAttentions.sort((a, b) => {
         const numA = a.number || 0;
         const numB = b.number || 0;
         return numA - numB;
       });
 
       // Create a new array to ensure Vue reactivity
-      state.todayAttentions.splice(0, state.todayAttentions.length, ...formattedAttentions);
+      state.allAttentions = formattedAllAttentions;
+      state.todayAttentions = formattedDedicatedAttentions;
     };
 
     // Function to get queue count - Vue will track state.todayAttentions in template
@@ -569,45 +618,40 @@ export default {
 
     // Computed property to get the primary queue ID for the "Go to Queue" button
     const getPrimaryQueueId = computed(() => {
-      console.log('🔍 getPrimaryQueueId: dedicatedQueues:', state.dedicatedQueues);
 
       if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) {
-        console.log('❌ getPrimaryQueueId: No dedicated queues available');
         return null;
       }
 
       // Priority 1: Find PROFESSIONAL type queue (dedicated collaborator queue)
       const professionalQueue = state.dedicatedQueues.find(queue => queue.type === 'PROFESSIONAL');
       if (professionalQueue) {
-        console.log('✅ getPrimaryQueueId: Found PROFESSIONAL queue:', professionalQueue.id);
         return professionalQueue.id;
       }
 
       // Priority 2: Use the first available queue
       if (state.dedicatedQueues[0] && state.dedicatedQueues[0].id) {
-        console.log('✅ getPrimaryQueueId: Using first queue:', state.dedicatedQueues[0].id);
         return state.dedicatedQueues[0].id;
       }
 
-      console.log('❌ getPrimaryQueueId: No valid queue found');
       return null;
     });
 
-    // Computed property to get attentions count from queues other than dedicated ones
-    const getOtherQueuesAttentionsCount = computed(() => {
-      if (!state.todayAttentions || state.todayAttentions.length === 0) return 0;
-      if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) return state.todayAttentions.length;
+    // Function to get attentions count from queues other than dedicated ones
+    const getOtherQueuesAttentionsCount = () => {
+      if (!state.allAttentions || state.allAttentions.length === 0) return 0;
+      if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) return state.allAttentions.length;
 
       // Get IDs of dedicated queues
       const dedicatedQueueIds = state.dedicatedQueues.map(queue => queue.id);
 
       // Count attentions that are NOT in dedicated queues
-      const otherAttentionsCount = state.todayAttentions.filter(att =>
+      const otherAttentionsCount = state.allAttentions.filter(att =>
         !dedicatedQueueIds.includes(att.queueId)
       ).length;
 
       return otherAttentionsCount;
-    });
+    };
 
     // Function for queue count - will be reactive because it accesses state.todayAttentions
     const getQueueAttentionsCount = queueId => {
@@ -649,9 +693,7 @@ export default {
 
     const getDedicatedQueues = async () => {
       try {
-        console.log('🔍 getDedicatedQueues: Starting for commerce:', state.commerce?.id);
         if (!state.commerce || !state.commerce.id) {
-          console.log('❌ getDedicatedQueues: No commerce or commerce.id');
           return;
         }
 
@@ -659,53 +701,36 @@ export default {
         let queues = [];
         if (state.commerce.queues && state.commerce.queues.length > 0) {
           queues = state.commerce.queues;
-          console.log('📋 getDedicatedQueues: Using queues from commerce cache:', queues.length, 'queues');
         } else {
-          console.log('🔄 getDedicatedQueues: Fetching queues from API for commerce:', state.commerce.id);
           const commerceData = await getCommerceById(state.commerce.id);
           queues = commerceData.queues || [];
-          console.log('📋 getDedicatedQueues: Fetched queues from API:', queues.length, 'queues');
           // Update commerce with full data
           if (commerceData && commerceData.id) {
             state.commerce = { ...state.commerce, ...commerceData };
           }
         }
 
-        console.log('👤 getDedicatedQueues: Collaborator data:', {
-          id: state.collaborator?.id,
-          type: state.collaborator?.type,
-          professionalId: state.collaborator?.professionalId
-        });
-
         // Check for grouped queues if feature is active
         if (getActiveFeature(state.commerce, 'attention-queue-typegrouped', 'PRODUCT')) {
-          console.log('🎯 getDedicatedQueues: Using grouped queues feature');
           const groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
-          console.log('📊 getDedicatedQueues: Grouped queues:', Object.keys(groupedQueues).length, 'groups');
           const collaboratorType = state.collaborator.type;
-          console.log('🏷️ getDedicatedQueues: Collaborator type:', collaboratorType);
 
           // Load professional data if collaborator has professionalId
           if (state.collaborator && state.collaborator.professionalId && !state.professional) {
-            console.log('👨‍⚕️ getDedicatedQueues: Loading professional data for ID:', state.collaborator.professionalId);
             try {
               const { getProfessionalById } = await import(
                 '../../application/services/professional'
               );
               state.professional = await getProfessionalById(state.collaborator.professionalId);
-              console.log('✅ getDedicatedQueues: Professional loaded:', state.professional?.id, state.professional?.name);
             } catch (error) {
               console.warn('⚠️ getDedicatedQueues: Could not load professional data, falling back to collaborator', error);
               state.professional = state.collaborator;
             }
           } else {
-            console.log('👨‍⚕️ getDedicatedQueues: Professional already loaded:', state.professional?.id, 'or no professionalId:', state.collaborator?.professionalId);
           }
-
           if (Object.keys(groupedQueues).length > 0) {
             // Build all queues from grouped queues
             const allQueues = Object.values(groupedQueues).flat();
-            console.log('📋 getDedicatedQueues: All queues from groups:', allQueues.length);
 
             if (collaboratorType === 'STANDARD') {
               // STANDARD: Their own professional queues + non-professional queues
@@ -715,67 +740,53 @@ export default {
               });
               const otherQueues = allQueues.filter(queue => queue.type !== 'PROFESSIONAL');
               queues = [...professionalQueues, ...otherQueues];
-              console.log('✅ getDedicatedQueues: STANDARD queues - Professional:', professionalQueues.length, 'Other:', otherQueues.length, 'Total:', queues.length);
             } else if (collaboratorType === 'ASSISTANT') {
               // ASSISTANT: No professional queues, only general queues
               queues = allQueues.filter(queue => queue.type !== 'PROFESSIONAL');
-              console.log('✅ getDedicatedQueues: ASSISTANT queues:', queues.length);
             } else {
               // FULL and other types: Filter by professional if available, otherwise all queues
               if (state.professional && state.professional.id) {
                 // Filter queues by professional
                 queues = allQueues.filter(queue =>
-                  !queue.professionalId || queue.professionalId === state.professional.id
+                  queue.professionalId === state.professional.id
                 );
                 console.log('✅ getDedicatedQueues: FULL with professional filter:', queues.length, 'for professional:', state.professional.id);
               } else {
                 // No professional filter - show all queues
                 queues = allQueues;
-                console.log('✅ getDedicatedQueues: FULL no professional filter - ALL queues:', queues.length);
               }
             }
           }
         } else {
-          console.log('📋 getDedicatedQueues: Using legacy non-grouped logic');
           // Legacy logic for non-grouped queues
           const collaboratorType = state.collaborator.type;
-          console.log('🏷️ getDedicatedQueues: Legacy collaborator type:', collaboratorType);
           if (collaboratorType === 'STANDARD') {
             // Filter queues where type is PROFESSIONAL and collaboratorId matches
             queues = queues.filter(
               queue =>
                 queue.type === 'PROFESSIONAL' && queue.collaboratorId === state.collaborator.id
             );
-            console.log('✅ getDedicatedQueues: Legacy - Filtered PROFESSIONAL queues:', queues.length);
           } else if (collaboratorType === 'ASSISTANT') {
             // ASSISTANT: No professional queues
             queues = queues.filter(queue => queue.type !== 'PROFESSIONAL');
-            console.log('✅ getDedicatedQueues: Legacy - ASSISTANT queues:', queues.length);
           } else {
             // All other types can see all queues
-            console.log('✅ getDedicatedQueues: Legacy - ALL queues:', queues.length);
           }
         }
 
         console.log('🎯 getDedicatedQueues: Final queues assigned:', queues.length, queues.map(q => ({ id: q.id, name: q.name || q.tag, type: q.type, professionalId: q.professionalId })));
         state.dedicatedQueues = queues;
       } catch (error) {
-        console.error('❌ getDedicatedQueues: Error:', error);
         state.dedicatedQueues = [];
       }
     };
 
     const getDedicatedQueuesForAllCommerces = async () => {
       try {
-        console.log('🔍 getDedicatedQueuesForAllCommerces: Starting');
         if (!state.collaborator || !state.commerces || state.commerces.length === 0) {
-          console.log('❌ getDedicatedQueuesForAllCommerces: No collaborator, commerces, or empty commerces array');
           state.dedicatedQueues = [];
           return;
         }
-
-        console.log('🏪 getDedicatedQueuesForAllCommerces: Processing', state.commerces.length, 'commerces');
-        console.log('👤 getDedicatedQueuesForAllCommerces: Collaborator:', state.collaborator?.id, state.collaborator?.professionalId);
 
         // Get all queues from all commerces the collaborator has access to
         const allQueues = [];
@@ -858,7 +869,6 @@ export default {
         state.dedicatedQueues = allQueues;
         initializeQueueStatus();
       } catch (error) {
-        console.error('❌ getDedicatedQueuesForAllCommerces: Error:', error);
         state.dedicatedQueues = [];
       }
     };
@@ -1074,15 +1084,13 @@ export default {
           undefined
         );
 
-        // Filter by queue IDs and status (not cancelled)
+        // Filter by status (not cancelled) - show all bookings for the commerce
         const filteredWeekBookings = (weekBookings || []).filter(
-          booking =>
-            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED'
+          booking => booking.status !== 'CANCELLED'
         );
 
         const filteredMonthBookings = (monthBookings || []).filter(
-          booking =>
-            booking.queueId && queueIds.includes(booking.queueId) && booking.status !== 'CANCELLED'
+          booking => booking.status !== 'CANCELLED'
         );
 
         // Format bookings
@@ -1946,7 +1954,7 @@ export default {
                     </div>
                     <div class="spy-card-value-wrapper">
                       <div class="spy-card-value">
-                        <span>{{ getOtherQueuesAttentionsCount }}</span>
+                        <span>{{ getOtherQueuesAttentionsCount() }}</span>
                       </div>
                       <span class="spy-live-indicator" title="Actualización en tiempo real">
                         <span class="spy-live-dot"></span>

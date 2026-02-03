@@ -322,7 +322,11 @@ export default {
       try {
         this.saving = true;
         this.alertError = '';
-        if (this.validate(this.newPersonalData)) {
+
+        // Validar campos críticos mínimos para crear un prontuário
+        const criticalErrors = this.validateCriticalFields(this.newPersonalData);
+
+        if (criticalErrors.length === 0) {
           const body = {
             commerceId: this.commerce.id,
             clientId: this.client.id,
@@ -384,10 +388,8 @@ export default {
             available:
               this.patientHistory?.available !== undefined ? this.patientHistory.available : true,
             lastAttentionId: this.attention,
-          };
-
+          }
           this.patientHistory = await savePatientHistory(body);
-
           await this.loadPatientHistoryData();
 
           // NO limpiar datos temporales - el doctor puede querer seguir editando
@@ -399,11 +401,16 @@ export default {
             this.$refs.consultationTimeline.refresh();
           }
           this.$toast?.success('Paciente guardado exitosamente');
+        } else {
+          // Mostrar errores críticos que impiden guardar
+          this.alertError = 'Campos obligatorios faltantes: ' + criticalErrors.join(', ');
+          console.warn('Validación fallida:', criticalErrors);
         }
         this.saving = false;
       } catch (error) {
         this.saving = false;
         this.alertError = error.message || 'Error al guardar el historial del paciente';
+        console.error('Error al guardar prontuário:', error);
       }
     },
     onControlUpdate(updatedControl) {
@@ -725,6 +732,29 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+    validateCriticalFields(personalData) {
+      const criticalErrors = [];
+
+      // Campos críticos mínimos para crear un prontuário
+      if (!personalData) {
+        criticalErrors.push('Datos personales requeridos');
+        return criticalErrors;
+      }
+
+      if (!personalData.name || personalData.name.trim().length === 0) {
+        criticalErrors.push('Nombre');
+      }
+
+      if (!personalData.lastName || personalData.lastName.trim().length === 0) {
+        criticalErrors.push('Apellido');
+      }
+
+      if (!personalData.idNumber || personalData.idNumber.length < 8) {
+        criticalErrors.push('Documento de identidad');
+      }
+
+      return criticalErrors;
     },
     validate(personalData) {
       this.errorsAdd = [];

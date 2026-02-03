@@ -263,7 +263,6 @@ export default {
           <button
             class="btn-add-control"
             @click="showAdd()"
-            :disabled="!toggles['patient.history.control-edit']"
           >
             <i class="bi bi-plus-circle-fill me-2"></i>
             {{ $t('patientHistoryView.addControl') }}
@@ -369,7 +368,6 @@ export default {
               <button
                 class="btn-save-control"
                 @click="addControl()"
-                :disabled="!toggles['patient.history.control-edit']"
               >
                 <i class="bi bi-check-circle-fill me-2"></i>
                 {{ $t('patientHistoryView.add') }}
