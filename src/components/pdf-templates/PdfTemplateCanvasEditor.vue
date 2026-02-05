@@ -14,161 +14,175 @@
 
     <div class="editor-toolbar mb-3">
       <div class="toolbar-section">
-        <div class="toolbar-title">Templates</div>
+        <div class="toolbar-title">{{ $t('pdfTemplateEditor.templates') }}</div>
         <div class="btn-group" role="group">
           <button
             type="button"
             class="btn btn-sm btn-success rounded-pill px-3"
             @click="openTemplateSelector"
-            title="Seleccionar Template Predefinido"
+            :title="$t('pdfTemplateEditor.selectPredefinedTemplate')"
           >
-            <i class="bi bi-layout-text-window-reverse"></i> Templates
+            <i class="bi bi-layout-text-window-reverse"></i>
           </button>
         </div>
       </div>
 
       <div class="toolbar-section">
-        <div class="toolbar-title">Insertar</div>
+        <div class="toolbar-title">{{ $t('pdfTemplateEditor.insert') }}</div>
         <div class="btn-group" role="group">
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="addTextElement"
-            title="Adicionar Texto"
+            :title="$t('pdfTemplateEditor.addText')"
           >
-            <i class="bi bi-type"></i> Texto
+            <i class="bi bi-type"></i>
           </button>
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="addImageElement"
-            title="Adicionar Imagem"
+            :title="$t('pdfTemplateEditor.addImage')"
           >
-            <i class="bi bi-image"></i> Imagem
+            <i class="bi bi-image"></i>
           </button>
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="addLogoElement"
-            title="Adicionar Logo"
+            :title="$t('pdfTemplateEditor.addLogo')"
           >
-            <i class="bi bi-image-fill"></i> Logo
+            <i class="bi bi-image-fill"></i>
           </button>
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="addSignatureElement"
-            title="Adicionar Assinatura"
+            :title="$t('pdfTemplateEditor.addSignature')"
           >
-            <i class="bi bi-pen"></i> Assinatura
+            <i class="bi bi-pen"></i>
           </button>
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="addQrCodeElement"
-            title="Adicionar QR Code"
+            :title="$t('pdfTemplateEditor.addQrCode')"
           >
-            <i class="bi bi-qr-code"></i> QR Code
+            <i class="bi bi-qr-code"></i>
           </button>
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="addLineElement"
-            title="Adicionar Linha"
+            :title="$t('pdfTemplateEditor.addLine')"
           >
-            <i class="bi bi-hr"></i> Linha
+            <i class="bi bi-hr"></i>
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="addRectangleElement"
+            :title="$t('pdfTemplateEditor.addRectangle')"
+          >
+            <i class="bi bi-square"></i>
           </button>
         </div>
       </div>
 
       <div class="toolbar-section">
-        <div class="toolbar-title">Canvas</div>
+        <div class="toolbar-title">{{ $t('pdfTemplateEditor.canvas') }}</div>
         <div class="btn-group" role="group">
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="fitToCanvas">
-            <i class="bi bi-aspect-ratio"></i> Ajustar ao Canvas
+          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="fitToCanvas" :title="$t('pdfTemplateEditor.fitToCanvas')">
+            <i class="bi bi-aspect-ratio"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="bringToFront" :title="$t('pdfTemplateEditor.bringToFront')">
+            <i class="bi bi-front"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="sendToBack" :title="$t('pdfTemplateEditor.sendToBack')">
+            <i class="bi bi-back"></i>
           </button>
         </div>
       </div>
 
       <div class="toolbar-section">
-        <div class="toolbar-title">Alineación</div>
+        <div class="toolbar-title">{{ $t('pdfTemplateEditor.alignment') }}</div>
         <div class="btn-group" role="group">
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="centerElementHorizontally"
-            title="Centrar horizontalmente"
+            :title="$t('pdfTemplateEditor.centerHorizontally')"
           >
-            <i class="bi bi-arrows-collapse-vertical"></i> Centro H
+            <i class="bi bi-align-center"></i>
           </button>
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="centerElementVertically"
-            title="Centrar verticalmente"
+            :title="$t('pdfTemplateEditor.centerVertically')"
           >
-            <i class="bi bi-arrows-collapse-horizontal"></i> Centro V
+            <i class="bi bi-align-middle"></i>
           </button>
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="centerElementBoth"
-            title="Centrar ambos"
+            :title="$t('pdfTemplateEditor.centerBoth')"
           >
-            <i class="bi bi-arrows-move"></i> Centro HV
+            <i class="bi bi-arrows-move"></i>
           </button>
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="alignElementTop"
-            title="Alinear arriba"
+            :title="$t('pdfTemplateEditor.alignTop')"
           >
-            <i class="bi bi-align-top"></i> Top
+            <i class="bi bi-align-top"></i>
           </button>
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="alignElementBottom"
-            title="Alinear abajo"
+            :title="$t('pdfTemplateEditor.alignBottom')"
           >
-            <i class="bi bi-align-bottom"></i> Bottom
+            <i class="bi bi-align-bottom"></i>
           </button>
         </div>
       </div>
 
       <div class="toolbar-section">
-        <div class="toolbar-title">Agrupación</div>
+        <div class="toolbar-title">{{ $t('pdfTemplateEditor.grouping') }}</div>
         <div class="btn-group" role="group">
           <button
             type="button"
             class="btn btn-sm btn-primary rounded-pill px-3"
             @click="groupElements"
             :disabled="selectedElements.length < 2"
-            title="Agrupar elementos seleccionados"
+            :title="$t('pdfTemplateEditor.groupSelectedElements')"
           >
-            <i class="bi bi-collection"></i> Agrupar
+            <i class="bi bi-collection"></i>
           </button>
           <button
             type="button"
             class="btn btn-sm btn-outline-primary rounded-pill px-3"
             @click="ungroupElements"
             :disabled="!canUngroup"
-            title="Desagrupar elementos"
+            :title="$t('pdfTemplateEditor.ungroupElements')"
           >
-            <i class="bi bi-collection"></i> Desagrupar
+            <i class="bi bi-collection"></i>
           </button>
         </div>
       </div>
 
       <div class="toolbar-section">
-        <div class="toolbar-title">Formato</div>
+        <div class="toolbar-title">{{ $t('pdfTemplateEditor.format') }}</div>
         <div class="btn-group" role="group">
           <button
             type="button"
             class="btn btn-sm btn-outline-dark rounded-pill px-3"
             @click="toggleBold"
             :disabled="!isTextSelected"
-            title="Negrita"
+            :title="$t('pdfTemplateEditor.bold')"
           >
             <i
               class="bi bi-type-bold"
@@ -180,7 +194,7 @@
             class="btn btn-sm btn-outline-dark rounded-pill px-3"
             @click="toggleItalic"
             :disabled="!isTextSelected"
-            title="Cursiva"
+            :title="$t('pdfTemplateEditor.italic')"
           >
             <i
               class="bi bi-type-italic"
@@ -192,7 +206,7 @@
             class="btn btn-sm btn-outline-dark rounded-pill px-3"
             @click="toggleUnderline"
             :disabled="!isTextSelected"
-            title="Subrayado"
+            :title="$t('pdfTemplateEditor.underline')"
           >
             <i
               class="bi bi-type-underline"
@@ -205,7 +219,7 @@
             class="btn btn-sm btn-outline-dark rounded-pill px-3"
             @click="setParagraphAlign('left')"
             :disabled="!isTextSelected"
-            title="Alinear izquierda"
+            :title="$t('pdfTemplateEditor.alignLeft')"
           >
             <i
               class="bi bi-text-left"
@@ -217,7 +231,7 @@
             class="btn btn-sm btn-outline-dark rounded-pill px-3"
             @click="setParagraphAlign('center')"
             :disabled="!isTextSelected"
-            title="Alinear centro"
+            :title="$t('pdfTemplateEditor.alignCenter')"
           >
             <i
               class="bi bi-text-center"
@@ -229,7 +243,7 @@
             class="btn btn-sm btn-outline-dark rounded-pill px-3"
             @click="setParagraphAlign('right')"
             :disabled="!isTextSelected"
-            title="Alinear derecha"
+            :title="$t('pdfTemplateEditor.alignRight')"
           >
             <i
               class="bi bi-text-right"
@@ -241,7 +255,7 @@
             class="btn btn-sm btn-outline-dark rounded-pill px-3"
             @click="setParagraphAlign('justify')"
             :disabled="!isTextSelected"
-            title="Justificar"
+            :title="$t('pdfTemplateEditor.justify')"
           >
             <i
               class="bi bi-justify"
@@ -254,7 +268,7 @@
             :disabled="!isTextSelected"
             :value="isTextSelected ? selectedElement.fontSize || 12 : 12"
             @change="setFontSize(parseInt($event.target.value, 10))"
-            title="Tamaño de fuente"
+            :title="$t('pdfTemplateEditor.fontSize')"
           >
             <option v-for="size in [10, 12, 14, 16, 18, 24, 36, 48, 72]" :key="size" :value="size">
               {{ size }} pt
@@ -266,7 +280,7 @@
             :disabled="!isTextSelected"
             :value="isTextSelected ? selectedElement.color || '#000000' : '#000000'"
             @input="setTextColor($event.target.value)"
-            title="Color de texto"
+            :title="$t('pdfTemplateEditor.textColor')"
           />
           <div class="vr mx-1"></div>
           <select
@@ -274,7 +288,7 @@
             :disabled="!isTextSelected"
             :value="isTextSelected ? selectedElement.fontFamily || 'Arial' : 'Arial'"
             @change="setFontFamily($event.target.value)"
-            title="Familia de fuente"
+            :title="$t('pdfTemplateEditor.fontFamily')"
           >
             <option value="Arial">Arial</option>
             <option value="Times New Roman">Times New Roman</option>
@@ -294,63 +308,67 @@
             :disabled="!isTextSelected"
             :value="isTextSelected ? selectedElement.lineHeight || 1.2 : 1.2"
             @input="setLineHeight(parseFloat($event.target.value))"
-            title="Interlineado (multiplicador)"
+            :title="$t('pdfTemplateEditor.lineHeight')"
           />
         </div>
       </div>
 
       <div class="toolbar-section">
-        <div class="toolbar-title">Ver</div>
+        <div class="toolbar-title">{{ $t('pdfTemplateEditor.view') }}</div>
         <div class="btn-group" role="group">
           <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="toggleGrid">
             <i class="bi bi-grid-3x3"></i>
-            {{ showGrid ? 'Ocultar cuadrícula' : 'Mostrar cuadrícula' }}
+            {{ showGrid ? $t('pdfTemplateEditor.hideGrid') : $t('pdfTemplateEditor.showGrid') }}
           </button>
           <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="toggleRulers">
-            <i class="bi bi-rulers"></i> {{ showRulers ? 'Ocultar reglas' : 'Mostrar reglas' }}
+            <i class="bi bi-rulers"></i> {{ showRulers ? $t('pdfTemplateEditor.hideRulers') : $t('pdfTemplateEditor.showRulers') }}
           </button>
         </div>
       </div>
 
       <div class="toolbar-section">
-        <div class="toolbar-title">Historial</div>
+        <div class="toolbar-title">{{ $t('pdfTemplateEditor.history') }}</div>
         <div class="btn-group" role="group">
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="undo"
             :disabled="!canUndo"
+            :title="$t('pdfTemplateEditor.undo')"
           >
-            <i class="bi bi-arrow-counterclockwise"></i> Desfazer
+            <i class="bi bi-arrow-counterclockwise"></i>
           </button>
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="redo"
             :disabled="!canRedo"
+            :title="$t('pdfTemplateEditor.redo')"
           >
-            <i class="bi bi-arrow-clockwise"></i> Refazer
+            <i class="bi bi-arrow-clockwise"></i>
           </button>
           <button
             type="button"
             class="btn btn-sm btn-danger rounded-pill px-3"
             @click="clearCanvas"
+            :title="$t('pdfTemplateEditor.clear')"
           >
-            <i class="bi bi-trash"></i> Limpar
+            <i class="bi bi-trash"></i>
           </button>
         </div>
       </div>
 
       <div class="toolbar-section ms-auto">
-        <div class="toolbar-title">Acciones</div>
+        <div class="toolbar-title">{{ $t('pdfTemplateEditor.actions') }}</div>
         <div class="btn-group" role="group">
           <button
             type="button"
             class="btn btn-sm btn-dark rounded-pill px-3"
             @click="saveTemplate"
             :disabled="saving"
+            :title="$t('pdfTemplateEditor.save')"
           >
-            <i class="bi bi-save"></i> {{ saving ? 'Salvando...' : 'Salvar' }}
+            <i class="bi bi-save"></i>
           </button>
         </div>
       </div>
@@ -358,8 +376,7 @@
 
     <div class="page-info mb-2">
       <small>
-        Tamanho: {{ pageLabel }} ({{ canvasWidth }} × {{ canvasHeight }} pt) • Orientação:
-        {{ orientationLabel }}
+        {{ $t('pdfTemplateEditor.pageInfo', { pageLabel, width: canvasWidth, height: canvasHeight, orientation: orientationLabel }) }}
       </small>
     </div>
 
@@ -399,39 +416,38 @@
       </div>
 
       <div class="properties-panel">
-        <h6 class="mb-3">Propriedades</h6>
+        <h6 class="mb-3">{{ $t('pdfTemplateEditor.properties') }}</h6>
         <div v-if="selectedElements.length > 1" class="element-properties">
           <div class="panel-group">
-            <div class="group-title"><i class="bi bi-collection"></i> Múltiples elementos</div>
+            <div class="group-title"><i class="bi bi-collection"></i> {{ $t('pdfTemplateEditor.multipleElements') }}</div>
             <div class="group-body">
               <div class="alert alert-info small mb-3">
-                <i class="bi bi-info-circle"></i> {{ selectedElements.length }} elementos
-                seleccionados
+                <i class="bi bi-info-circle"></i> {{ selectedElements.length }} {{ $t('pdfTemplateEditor.elementsSelected') }}
               </div>
               <div class="btn-group btn-group-sm w-100 mb-2" role="group">
                 <button
                   type="button"
                   class="btn btn-sm btn-dark rounded-pill px-3"
                   @click="centerElementHorizontally"
-                  title="Centrar horizontalmente"
+                  :title="$t('pdfTemplateEditor.centerHorizontally')"
                 >
-                  <i class="bi bi-arrows-collapse-vertical"></i> H
+                  <i class="bi bi-align-center"></i>
                 </button>
                 <button
                   type="button"
                   class="btn btn-sm btn-dark rounded-pill px-3"
                   @click="centerElementVertically"
-                  title="Centrar verticalmente"
+                  :title="$t('pdfTemplateEditor.centerVertically')"
                 >
-                  <i class="bi bi-arrows-collapse-horizontal"></i> V
+                  <i class="bi bi-align-middle"></i>
                 </button>
                 <button
                   type="button"
                   class="btn btn-sm btn-dark rounded-pill px-3"
                   @click="centerElementBoth"
-                  title="Centrar en ambos ejes"
+                  :title="$t('pdfTemplateEditor.centerBothAxes')"
                 >
-                  <i class="bi bi-arrows-move"></i> HV
+                  <i class="bi bi-arrows-move"></i>
                 </button>
               </div>
               <div class="btn-group btn-group-sm w-100 mb-2" role="group">
@@ -439,17 +455,17 @@
                   type="button"
                   class="btn btn-sm btn-dark rounded-pill px-3"
                   @click="alignElementTop"
-                  title="Alinear arriba"
+                  :title="$t('pdfTemplateEditor.alignTop')"
                 >
-                  <i class="bi bi-align-top"></i> Top
+                  <i class="bi bi-align-top"></i>
                 </button>
                 <button
                   type="button"
                   class="btn btn-sm btn-dark rounded-pill px-3"
                   @click="alignElementBottom"
-                  title="Alinear abajo"
+                  :title="$t('pdfTemplateEditor.alignBottom')"
                 >
-                  <i class="bi bi-align-bottom"></i> Bottom
+                  <i class="bi bi-align-bottom"></i>
                 </button>
               </div>
               <div class="btn-group btn-group-sm w-100 mb-2" role="group">
@@ -458,45 +474,45 @@
                   class="btn btn-sm btn-primary rounded-pill px-3"
                   @click="groupElements"
                   :disabled="selectedElements.length < 2"
-                  title="Agrupar elementos"
+                  :title="$t('pdfTemplateEditor.groupSelectedElements')"
                 >
-                  <i class="bi bi-collection"></i> Agrupar
+                  <i class="bi bi-collection"></i> {{ $t('pdfTemplateEditor.group') }}
                 </button>
                 <button
                   type="button"
                   class="btn btn-sm btn-outline-primary rounded-pill px-3"
                   @click="ungroupElements"
                   :disabled="!canUngroup"
-                  title="Desagrupar"
+                  :title="$t('pdfTemplateEditor.ungroupElements')"
                 >
-                  <i class="bi bi-collection"></i> Desagrupar
+                  <i class="bi bi-collection"></i> {{ $t('pdfTemplateEditor.ungroup') }}
                 </button>
               </div>
               <button
                 type="button"
                 class="btn btn-sm btn-danger rounded-pill w-100"
                 @click="deleteElement"
-                title="Remover elementos"
+                :title="$t('pdfTemplateEditor.removeElements')"
               >
-                <i class="bi bi-trash"></i> Remover todos
+                <i class="bi bi-trash"></i>
               </button>
             </div>
           </div>
           <div class="text-muted small mt-3">
-            <p><strong>Tips:</strong></p>
+            <p><strong>{{ $t('pdfTemplateEditor.tips') }}</strong></p>
             <ul class="mb-0 ps-3">
-              <li>Arrastre para mover todos juntos</li>
-              <li>Use "Agrupar" para mantenerlos unidos</li>
-              <li>Ctrl+Click en elemento para deseleccionar</li>
+              <li>{{ $t('pdfTemplateEditor.dragToMoveTogether') }}</li>
+              <li>{{ $t('pdfTemplateEditor.useGroupToKeepUnited') }}</li>
+              <li>{{ $t('pdfTemplateEditor.ctrlClickToDeselect') }}</li>
             </ul>
           </div>
         </div>
         <div v-else-if="selectedElement" class="element-properties">
           <div class="panel-group">
-            <div class="group-title"><i class="bi bi-info-circle"></i> Elemento</div>
+            <div class="group-title"><i class="bi bi-info-circle"></i> {{ $t('pdfTemplateEditor.element') }}</div>
             <div class="group-body">
               <div class="form-group-modern mb-2">
-                <label class="form-label-modern">Tipo</label>
+                <label class="form-label-modern">{{ $t('pdfTemplateEditor.type') }}</label>
                 <input
                   type="text"
                   class="form-control-modern"
@@ -506,7 +522,7 @@
               </div>
               <div class="form-row">
                 <div class="form-col">
-                  <label class="form-label-modern">Posição X</label>
+                  <label class="form-label-modern">{{ $t('pdfTemplateEditor.positionX') }}</label>
                   <input
                     type="number"
                     v-model.number="selectedElement.x"
@@ -515,7 +531,7 @@
                   />
                 </div>
                 <div class="form-col">
-                  <label class="form-label-modern">Posição Y</label>
+                  <label class="form-label-modern">{{ $t('pdfTemplateEditor.positionY') }}</label>
                   <input
                     type="number"
                     v-model.number="selectedElement.y"
@@ -526,7 +542,7 @@
               </div>
               <div class="form-row mt-2">
                 <div class="form-col">
-                  <label class="form-label-modern">Largura</label>
+                  <label class="form-label-modern">{{ $t('pdfTemplateEditor.width') }}</label>
                   <input
                     type="number"
                     v-model.number="selectedElement.width"
@@ -535,7 +551,7 @@
                   />
                 </div>
                 <div class="form-col">
-                  <label class="form-label-modern">Altura</label>
+                  <label class="form-label-modern">{{ $t('pdfTemplateEditor.height') }}</label>
                   <input
                     type="number"
                     v-model.number="selectedElement.height"
@@ -548,10 +564,10 @@
           </div>
 
           <div v-if="selectedElement.type === 'text'" class="panel-group mt-3">
-            <div class="group-title"><i class="bi bi-text-paragraph"></i> Texto</div>
+            <div class="group-title"><i class="bi bi-text-paragraph"></i> {{ $t('pdfTemplateEditor.text') }}</div>
             <div class="group-body">
               <div class="form-group-modern mb-2">
-                <label class="form-label-modern">Contenido</label>
+                <label class="form-label-modern">{{ $t('pdfTemplateEditor.content') }}</label>
                 <textarea
                   v-model="selectedElement.text"
                   class="form-control-modern"
@@ -561,7 +577,7 @@
               </div>
               <div class="form-row">
                 <div class="form-col">
-                  <label class="form-label-modern">Tamaño de Fuente</label>
+                  <label class="form-label-modern">{{ $t('pdfTemplateEditor.fontSizeLabel') }}</label>
                   <input
                     type="number"
                     v-model.number="selectedElement.fontSize"
@@ -572,7 +588,7 @@
                   />
                 </div>
                 <div class="form-col">
-                  <label class="form-label-modern">Color</label>
+                  <label class="form-label-modern">{{ $t('pdfTemplateEditor.color') }}</label>
                   <input
                     type="color"
                     v-model="selectedElement.color"
@@ -584,7 +600,7 @@
               </div>
 
               <div class="form-group-modern mt-2">
-                <label class="form-label-modern">Alineación</label>
+                <label class="form-label-modern">{{ $t('pdfTemplateEditor.alignmentLabel') }}</label>
                 <div class="btn-group btn-group-sm w-100" role="group">
                   <input
                     type="radio"
@@ -595,7 +611,7 @@
                     v-model="selectedElement.align"
                     @change="updateElement"
                   />
-                  <label class="btn btn-dark rounded-pill px-3" for="align-left" title="Izquierda"
+                  <label class="btn btn-dark rounded-pill px-3" for="align-left" :title="$t('pdfTemplateEditor.left')"
                     ><i class="bi bi-text-left"></i
                   ></label>
                   <input
@@ -607,7 +623,7 @@
                     v-model="selectedElement.align"
                     @change="updateElement"
                   />
-                  <label class="btn btn-dark rounded-pill px-3" for="align-center" title="Centro"
+                  <label class="btn btn-dark rounded-pill px-3" for="align-center" :title="$t('pdfTemplateEditor.center')"
                     ><i class="bi bi-text-center"></i
                   ></label>
                   <input
@@ -619,7 +635,7 @@
                     v-model="selectedElement.align"
                     @change="updateElement"
                   />
-                  <label class="btn btn-dark rounded-pill px-3" for="align-right" title="Derecha"
+                  <label class="btn btn-dark rounded-pill px-3" for="align-right" :title="$t('pdfTemplateEditor.right')"
                     ><i class="bi bi-text-right"></i
                   ></label>
                   <input
@@ -634,14 +650,14 @@
                   <label
                     class="btn btn-dark rounded-pill px-3"
                     for="align-justify"
-                    title="Justificar"
+                    :title="$t('pdfTemplateEditor.justifyLabel')"
                     ><i class="bi bi-justify"></i
                   ></label>
                 </div>
               </div>
 
               <div class="form-group-modern mt-2">
-                <label class="form-label-modern">Estilos</label>
+                <label class="form-label-modern">{{ $t('pdfTemplateEditor.styles') }}</label>
                 <div class="btn-group btn-group-sm w-100" role="group">
                   <input
                     type="checkbox"
@@ -650,7 +666,7 @@
                     v-model="selectedElement.bold"
                     @change="updateElement"
                   />
-                  <label class="btn btn-dark rounded-pill px-3" for="bold" title="Negrita"
+                  <label class="btn btn-dark rounded-pill px-3" for="bold" :title="$t('pdfTemplateEditor.bold')"
                     ><i class="bi bi-type-bold"></i
                   ></label>
                   <input
@@ -660,7 +676,7 @@
                     v-model="selectedElement.italic"
                     @change="updateElement"
                   />
-                  <label class="btn btn-dark rounded-pill px-3" for="italic" title="Cursiva"
+                  <label class="btn btn-dark rounded-pill px-3" for="italic" :title="$t('pdfTemplateEditor.italic')"
                     ><i class="bi bi-type-italic"></i
                   ></label>
                   <input
@@ -670,46 +686,46 @@
                     v-model="selectedElement.underline"
                     @change="updateElement"
                   />
-                  <label class="btn btn-dark rounded-pill px-3" for="underline" title="Subrayado"
+                  <label class="btn btn-dark rounded-pill px-3" for="underline" :title="$t('pdfTemplateEditor.underline')"
                     ><i class="bi bi-type-underline"></i
                   ></label>
                 </div>
               </div>
 
               <div class="form-group-modern mt-2">
-                <label class="form-label-modern">Tipo de Lista</label>
+                <label class="form-label-modern">{{ $t('pdfTemplateEditor.listType') }}</label>
                 <select
                   v-model="selectedElement.listType"
                   class="form-control-modern"
                   @change="updateElement"
                 >
-                  <option value="">Sin lista</option>
-                  <option value="bullet">• Viñetas</option>
-                  <option value="dot">∘ Puntos</option>
-                  <option value="number">Numerada</option>
+                  <option value="">{{ $t('pdfTemplateEditor.noList') }}</option>
+                  <option value="bullet">{{ $t('pdfTemplateEditor.bullets') }}</option>
+                  <option value="dot">{{ $t('pdfTemplateEditor.dots') }}</option>
+                  <option value="number">{{ $t('pdfTemplateEditor.numbered') }}</option>
                 </select>
               </div>
             </div>
           </div>
 
           <div v-if="selectedElement.type === 'line'" class="panel-group mt-3">
-            <div class="group-title"><i class="bi bi-slash-lg"></i> Línea</div>
+            <div class="group-title"><i class="bi bi-slash-lg"></i> {{ $t('pdfTemplateEditor.line') }}</div>
             <div class="group-body">
               <div class="form-row">
                 <div class="form-col">
-                  <label class="form-label-modern">Estilo</label>
+                  <label class="form-label-modern">{{ $t('pdfTemplateEditor.style') }}</label>
                   <select
                     v-model="selectedElement.lineStyle"
                     class="form-control-modern"
                     @change="updateElement"
                   >
-                    <option value="solid">Línea continua</option>
-                    <option value="dashed">Línea punteada</option>
-                    <option value="double">Línea doble</option>
+                    <option value="solid">{{ $t('pdfTemplateEditor.solidLine') }}</option>
+                    <option value="dashed">{{ $t('pdfTemplateEditor.dashedLine') }}</option>
+                    <option value="double">{{ $t('pdfTemplateEditor.doubleLine') }}</option>
                   </select>
                 </div>
                 <div class="form-col">
-                  <label class="form-label-modern">Grosor</label>
+                  <label class="form-label-modern">{{ $t('pdfTemplateEditor.thickness') }}</label>
                   <input
                     type="number"
                     v-model.number="selectedElement.lineWidth"
@@ -723,33 +739,84 @@
             </div>
           </div>
 
+          <div v-if="selectedElement.type === 'rectangle'" class="panel-group mt-3">
+            <div class="group-title"><i class="bi bi-square"></i> {{ $t('pdfTemplateEditor.rectangle') }}</div>
+            <div class="group-body">
+              <div class="form-row">
+                <div class="form-col">
+                  <label class="form-label-modern">{{ $t('pdfTemplateEditor.fillColor') }}</label>
+                  <input
+                    type="color"
+                    v-model="selectedElement.fillColor"
+                    class="form-control-modern"
+                    @input="updateElement"
+                  />
+                </div>
+                <div class="form-col">
+                  <label class="form-label-modern">{{ $t('pdfTemplateEditor.strokeColor') }}</label>
+                  <input
+                    type="color"
+                    v-model="selectedElement.strokeColor"
+                    class="form-control-modern"
+                    @input="updateElement"
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-col">
+                  <label class="form-label-modern">{{ $t('pdfTemplateEditor.strokeStyle') }}</label>
+                  <select
+                    v-model="selectedElement.strokeStyle"
+                    class="form-control-modern"
+                    @change="updateElement"
+                  >
+                    <option value="solid">{{ $t('pdfTemplateEditor.solid') }}</option>
+                    <option value="dashed">{{ $t('pdfTemplateEditor.dashed') }}</option>
+                    <option value="dotted">{{ $t('pdfTemplateEditor.dotted') }}</option>
+                  </select>
+                </div>
+                <div class="form-col">
+                  <label class="form-label-modern">{{ $t('pdfTemplateEditor.strokeWidth') }}</label>
+                  <input
+                    type="number"
+                    v-model.number="selectedElement.strokeWidth"
+                    class="form-control-modern"
+                    min="0"
+                    max="10"
+                    @input="updateElement"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="panel-group mt-3">
-            <div class="group-title"><i class="bi bi-aspect-ratio"></i> Alineación en Canvas</div>
+            <div class="group-title"><i class="bi bi-aspect-ratio"></i> {{ $t('pdfTemplateEditor.canvasAlignment') }}</div>
             <div class="group-body">
               <div class="btn-group btn-group-sm w-100 mb-2" role="group">
                 <button
                   type="button"
                   class="btn btn-sm btn-dark rounded-pill px-3"
                   @click="centerElementHorizontally"
-                  title="Centrar horizontalmente"
+                  :title="$t('pdfTemplateEditor.centerHorizontally')"
                 >
-                  <i class="bi bi-arrows-collapse-vertical"></i> H
+                  <i class="bi bi-align-center"></i>
                 </button>
                 <button
                   type="button"
                   class="btn btn-sm btn-dark rounded-pill px-3"
                   @click="centerElementVertically"
-                  title="Centrar verticalmente"
+                  :title="$t('pdfTemplateEditor.centerVertically')"
                 >
-                  <i class="bi bi-arrows-collapse-horizontal"></i> V
+                  <i class="bi bi-align-middle"></i>
                 </button>
                 <button
                   type="button"
                   class="btn btn-sm btn-dark rounded-pill px-3"
                   @click="centerElementBoth"
-                  title="Centrar en ambos ejes"
+                  :title="$t('pdfTemplateEditor.centerBothAxes')"
                 >
-                  <i class="bi bi-arrows-move"></i> HV
+                  <i class="bi bi-arrows-move"></i>
                 </button>
               </div>
               <div class="btn-group btn-group-sm w-100" role="group">
@@ -757,45 +824,45 @@
                   type="button"
                   class="btn btn-sm btn-dark rounded-pill px-3"
                   @click="alignElementTop"
-                  title="Alinear arriba"
+                  :title="$t('pdfTemplateEditor.alignTop')"
                 >
-                  <i class="bi bi-align-top"></i> Top
+                  <i class="bi bi-align-top"></i>
                 </button>
                 <button
                   type="button"
                   class="btn btn-sm btn-dark rounded-pill px-3"
                   @click="alignElementBottom"
-                  title="Alinear abajo"
+                  :title="$t('pdfTemplateEditor.alignBottom')"
                 >
-                  <i class="bi bi-align-bottom"></i> Bottom
+                  <i class="bi bi-align-bottom"></i>
                 </button>
               </div>
               <button
                 type="button"
                 class="btn btn-sm btn-danger rounded-pill w-100 mt-2"
                 @click="deleteElement"
-                title="Remover elemento"
+                :title="$t('pdfTemplateEditor.removeElement')"
               >
-                <i class="bi bi-trash"></i> Remover
+                <i class="bi bi-trash"></i> {{ $t('pdfTemplateEditor.remove') }}
               </button>
             </div>
           </div>
 
           <div class="text-muted small mt-3">
-            <p><strong>Tips:</strong></p>
+            <p><strong>{{ $t('pdfTemplateEditor.tips') }}</strong></p>
             <ul class="mb-0 ps-3">
-              <li>Ctrl+Click para seleccionar múltiples elementos</li>
-              <li>Click y arrastre en área vacía para selección por rectángulo</li>
-              <li>Arrastre elementos seleccionados para moverlos juntos</li>
-              <li>Use "Agrupar" para mantener elementos unidos</li>
+              <li>{{ $t('pdfTemplateEditor.ctrlClickMultiSelect') }}</li>
+              <li>{{ $t('pdfTemplateEditor.clickDragRectangleSelect') }}</li>
+              <li>{{ $t('pdfTemplateEditor.dragSelectedElements') }}</li>
+              <li>{{ $t('pdfTemplateEditor.useGroupToKeepElementsUnited') }}</li>
             </ul>
           </div>
         </div>
 
         <div v-else class="empty-state">
           <div class="empty-icon"><i class="bi bi-cursor"></i></div>
-          <div class="empty-text">Selecione um elemento para editar</div>
-          <div class="empty-subtext">Use la barra "Insertar" para añadir elementos al canvas</div>
+          <div class="empty-text">{{ $t('pdfTemplateEditor.selectElementToEdit') }}</div>
+          <div class="empty-subtext">{{ $t('pdfTemplateEditor.useInsertBarToAddElements') }}</div>
         </div>
       </div>
 
@@ -1268,6 +1335,30 @@ export default {
         ctx.lineTo((element.x || 0) + (element.width || 100), element.y || 0);
         ctx.stroke();
         ctx.setLineDash([]);
+      } else if (element.type === 'rectangle') {
+        // Dibujar relleno si hay fillColor
+        if (element.fillColor && element.fillColor !== 'transparent') {
+          ctx.fillStyle = element.fillColor;
+          ctx.fillRect(element.x || 0, element.y || 0, element.width || 100, element.height || 50);
+        }
+
+        // Dibujar borde si hay strokeColor y strokeWidth > 0
+        if (element.strokeColor && (element.strokeWidth || 0) > 0) {
+          ctx.strokeStyle = element.strokeColor;
+          ctx.lineWidth = element.strokeWidth || 1;
+
+          // Aplicar estilo de borde
+          if (element.strokeStyle === 'dashed') {
+            ctx.setLineDash([5, 5]);
+          } else if (element.strokeStyle === 'dotted') {
+            ctx.setLineDash([2, 2]);
+          } else {
+            ctx.setLineDash([]);
+          }
+
+          ctx.strokeRect(element.x || 0, element.y || 0, element.width || 100, element.height || 50);
+          ctx.setLineDash([]);
+        }
       } else if (
         element.type === 'image' ||
         element.type === 'logo' ||
@@ -1447,6 +1538,25 @@ export default {
         lineWidth: 2,
         color: '#000000',
         lineStyle: 'solid', // solid, dashed, double
+      };
+      elements.value.push(element);
+      selectedElement.value = element;
+      saveHistory();
+      drawCanvas();
+    };
+
+    const addRectangleElement = () => {
+      const element = {
+        id: Date.now().toString(),
+        type: 'rectangle',
+        x: 50,
+        y: 100,
+        width: 200,
+        height: 100,
+        fillColor: '#ffffff',
+        strokeColor: '#000000',
+        strokeWidth: 1,
+        strokeStyle: 'solid', // solid, dashed, dotted
       };
       elements.value.push(element);
       selectedElement.value = element;
@@ -1827,6 +1937,52 @@ export default {
       drawCanvas();
     };
 
+    const bringToFront = () => {
+      const elementsToBring =
+        selectedElements.value.length > 0
+          ? selectedElements.value
+          : selectedElement.value
+          ? [selectedElement.value]
+          : [];
+
+      if (elementsToBring.length === 0) return;
+
+      // Remove from current positions and add to end
+      elementsToBring.forEach(el => {
+        const index = elements.value.indexOf(el);
+        if (index > -1) {
+          elements.value.splice(index, 1);
+        }
+      });
+      elements.value.push(...elementsToBring);
+
+      saveHistory();
+      drawCanvas();
+    };
+
+    const sendToBack = () => {
+      const elementsToSend =
+        selectedElements.value.length > 0
+          ? selectedElements.value
+          : selectedElement.value
+          ? [selectedElement.value]
+          : [];
+
+      if (elementsToSend.length === 0) return;
+
+      // Remove from current positions and add to beginning
+      elementsToSend.forEach(el => {
+        const index = elements.value.indexOf(el);
+        if (index > -1) {
+          elements.value.splice(index, 1);
+        }
+      });
+      elements.value.unshift(...elementsToSend);
+
+      saveHistory();
+      drawCanvas();
+    };
+
     const alignElementTop = () => {
       const elementsToAlign =
         selectedElements.value.length > 0
@@ -2077,11 +2233,14 @@ export default {
       addSignatureElement,
       addQrCodeElement,
       addLineElement,
+      addRectangleElement,
       updateElement,
       deleteElement,
       centerElementHorizontally,
       centerElementVertically,
       centerElementBoth,
+      bringToFront,
+      sendToBack,
       alignElementTop,
       alignElementBottom,
       groupElements,
@@ -2134,12 +2293,8 @@ export default {
 }
 
 .predefined-selector-overlay > * {
-  background: white;
   border-radius: 0.75rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  max-width: 1200px;
   width: 100%;
-  max-height: 90vh;
   overflow-y: auto;
 }
 
@@ -2356,10 +2511,13 @@ export default {
   margin-top: 0.5rem;
   font-weight: 700;
   color: #495057;
+  line-height: .9rem;
+  margin-bottom: .5rem;
 }
 .empty-subtext {
   font-size: 0.8rem;
   color: #6c757d;
+  line-height: .9rem;
 }
 
 /* Editor buttons style - flat white background with dark text */

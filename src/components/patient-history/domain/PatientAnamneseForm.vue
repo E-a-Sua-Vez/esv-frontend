@@ -1118,13 +1118,10 @@ export default {
     />
 
     <div class="general-comment-section">
-      <div class="form-section-header">
-        <div class="form-section-icon">
-          <i class="bi bi-file-text"></i>
-        </div>
-        <div class="form-section-title d-flex align-items-center flex-wrap">
-          <h4 class="form-title-text">{{ $t('businessPatientHistoryItemAdmin.comment') }}</h4>
-          <p class="form-title-subtitle">Comentários gerais sobre a anamnese</p>
+      <div class="form-field-modern general-comment">
+        <label class="form-label-modern" for="anamnese-comment">
+          <i class="bi bi-file-text me-2"></i>
+          {{ $t('businessPatientHistoryItemAdmin.comment') }}
           <button
             v-if="isSpeechSupported && toggles['patient.history.edit']"
             type="button"
@@ -1148,6 +1145,28 @@ export default {
           >
             <i class="bi bi-eraser"></i>
           </button>
+        </label>
+        <div class="position-relative">
+          <textarea
+            :disabled="!toggles['patient.history.edit']"
+            class="form-control-modern"
+            id="anamnese-comment"
+            rows="6"
+            :max="500"
+            @keyup="sendData"
+            v-model="state.newPatientAnamnese.anamnese"
+          ></textarea>
+          <div v-if="isListeningForField(null)" class="speech-recording-indicator">
+            <span class="recording-dot"></span>
+            <span class="ms-2">{{ $t('patientHistoryView.recordingMessage') }}</span>
+          </div>
+          <div
+            v-if="speechError && isListeningForField(null)"
+            class="speech-error-indicator"
+          >
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            {{ speechError }}
+          </div>
         </div>
       </div>
 

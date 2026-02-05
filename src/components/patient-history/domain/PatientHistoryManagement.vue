@@ -1649,7 +1649,7 @@ export default {
               </div>
             </div>
             <!-- MAIN CONTENT AREA -->
-            <div class="col-12 main-content-area" :class="menuCollapsed ? 'col-lg-12' : 'col-lg-9'">
+            <div class="col-12 main-content-area" :class="menuCollapsed ? 'col-lg-12' : 'col-lg-10'">
               <!-- Patient Header Card - Fixed -->
               <div class="patient-header-card modern-card-header patient-header-fixed">
                 <div class="patient-header-wrapper">
@@ -2089,7 +2089,6 @@ export default {
 /* Modern Patient History Container - Optimizado */
 .patient-history-modern {
   padding: 0.5rem;
-  display: flex;
   height: 100%;
   min-height: 600px;
   position: relative;
@@ -2122,7 +2121,8 @@ export default {
 
 .patient-history-layout > .col-12,
 .patient-history-layout > .col-lg-3,
-.patient-history-layout > .col-lg-9 {
+.patient-history-layout > .col-lg-9,
+.patient-history-layout > .col-lg-10 {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -2237,6 +2237,7 @@ export default {
 }
 
 .col-lg-9,
+.col-lg-10,
 .col-lg-12.main-content-area {
   transition: all 0.3s ease;
 }
@@ -2313,7 +2314,6 @@ export default {
 
 .sidebar-menu-item:hover {
   background: rgba(0, 0, 0, 0.03);
-  transform: translateX(4px);
 }
 
 .sidebar-menu-item-active {

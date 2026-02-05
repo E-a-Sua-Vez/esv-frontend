@@ -1,7 +1,7 @@
 <template>
   <div class="patient-journey-modern">
     <!-- Header -->
-    <div class="modern-card mb-2">
+    <div class="mb-2">
       <div class="form-header-modern">
         <div class="form-header-icon">
           <i class="bi bi-diagram-3-fill"></i>

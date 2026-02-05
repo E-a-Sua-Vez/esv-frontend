@@ -299,6 +299,7 @@ export default {
   font-size: 0.875rem;
   color: var(--color-text, #212529);
   margin-bottom: 0.25rem;
+  line-height: .9rem;
 }
 
 .template-description {

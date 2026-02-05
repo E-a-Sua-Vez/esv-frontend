@@ -390,19 +390,6 @@ export default {
                       </div>
                     </div>
                     <div v-if="state.extendedEntity === index" class="mt-3">
-                      <div id="medication-id-form" class="row mb-1">
-                        <div class="col">
-                          <span><strong>Id:</strong> {{ medication.id }}</span>
-                          <button
-                            type="button"
-                            class="btn btn-link btn-sm p-0 ms-2 align-baseline"
-                            @click="copyIdToClipboard(medication.id)"
-                            :title="$t('copy') || 'Copiar Id'"
-                          >
-                            <i class="bi bi-clipboard"></i>
-                          </button>
-                        </div>
-                      </div>
                       <div class="form-fields-container">
                         <div class="form-group-modern">
                           <label class="form-label-modern">
@@ -479,6 +466,19 @@ export default {
                             :disabled="!state.toggles['medications.admin.update']"
                             placeholder=""
                           />
+                        </div>
+                        <div id="medication-id-form" class="row mb-1 medication-details-container">
+                          <div class="col">
+                            <span><strong>Id:</strong> {{ medication.id }}</span>
+                            <button
+                              type="button"
+                              class="btn btn-link btn-sm p-0 ms-2 align-baseline"
+                              @click="copyIdToClipboard(medication.id)"
+                              :title="$t('copy') || 'Copiar Id'"
+                            >
+                              <i class="bi bi-clipboard"></i>
+                            </button>
+                          </div>
                         </div>
                       </div>
                       <div class="col">
@@ -597,19 +597,6 @@ export default {
                       </div>
                     </div>
                     <div v-if="state.extendedEntity === index" class="mt-3">
-                      <div id="medication-id-form" class="row mb-1">
-                        <div class="col">
-                          <span><strong>Id:</strong> {{ medication.id }}</span>
-                          <button
-                            type="button"
-                            class="btn btn-link btn-sm p-0 ms-2 align-baseline"
-                            @click="copyIdToClipboard(medication.id)"
-                            :title="$t('copy') || 'Copiar Id'"
-                          >
-                            <i class="bi bi-clipboard"></i>
-                          </button>
-                        </div>
-                      </div>
                       <div class="form-fields-container">
                         <div class="form-group-modern">
                           <label class="form-label-modern">
@@ -686,6 +673,19 @@ export default {
                             :disabled="!state.toggles['medications.admin.update']"
                             placeholder=""
                           />
+                        </div>
+                        <div id="medication-id-form" class="row mb-1 medication-details-container">
+                          <div class="col">
+                            <span><strong>Id:</strong> {{ medication.id }}</span>
+                            <button
+                              type="button"
+                              class="btn btn-link btn-sm p-0 ms-2 align-baseline"
+                              @click="copyIdToClipboard(medication.id)"
+                              :title="$t('copy') || 'Copiar Id'"
+                            >
+                              <i class="bi bi-clipboard"></i>
+                            </button>
+                          </div>
                         </div>
                       </div>
                       <div class="col">
@@ -1016,5 +1016,13 @@ export default {
 
 .form-help-icon:hover {
   opacity: 1;
+}
+
+.medication-details-container {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.65);
+  padding: 0.75rem 0.5rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 </style>
