@@ -1,21 +1,28 @@
 <template>
   <div class="document-viewer-container">
     <!-- Document Viewer Header -->
+    <div class="modal-header border-0 active-name modern-modal-header">
+      <div class="modern-modal-header-inner">
+        <div class="modern-modal-icon-wrapper">
+          <i :class="getFileTypeIcon(selectedDocument?.format)" class="document-icon"></i>
+        </div>
+        <div class="modern-modal-title-wrapper">
+          <h5 class="modal-title fw-bold modern-modal-title">{{ selectedDocument?.name || $t('documentViewer.document') }}</h5>
+          <p class="modern-modal-client-name">{{ client?.name || $t('documentViewer.patient') }}</p>
+        </div>
+      </div>
+      <button @click="$emit('close')" class="btn-close modern-modal-close-btn" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Document Viewer Header -->
     <div class="document-viewer-header">
       <div class="document-info">
-        <div class="document-title">
-          <i :class="getFileTypeIcon(selectedDocument?.format)" class="document-icon"></i>
-          <h3>{{ selectedDocument?.name || 'Seleccione un documento' }}</h3>
-        </div>
-        <div class="document-metadata" v-if="selectedDocument">
-          <span class="document-date">{{ formatDate(selectedDocument.createdAt) }}</span>
-          <span class="document-category">{{ getCategoryLabel(selectedDocument.category) }}</span>
-          <span
-            class="document-urgency"
-            :class="`urgency-${selectedDocument.urgency?.toLowerCase()}`"
-          >
-            {{ getUrgencyLabel(selectedDocument.urgency) }}
-          </span>
+        <div class="document-metadata">
+          <span class="document-date">{{ formatDocumentDate(selectedDocument?.createdAt) }}</span>
+          <span class="document-category">{{ getCategoryName(selectedDocument?.category) }}</span>
+          <span :class="`document-urgency urgency-${selectedDocument?.urgency || 'normal'}`">{{ getUrgencyName(selectedDocument?.urgency) }}</span>
         </div>
       </div>
       <div class="document-actions">
@@ -26,7 +33,6 @@
           :disabled="loading"
         >
           <i class="bi bi-download"></i>
-          Descargar
         </button>
         <button
           v-if="selectedDocument && canAnnotate"
@@ -35,7 +41,6 @@
           :class="{ active: showAnnotations }"
         >
           <i class="bi bi-pencil"></i>
-          Anotar
         </button>
         <button @click="toggleFullscreen" class="btn-action btn-fullscreen">
           <i :class="isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen'"></i>
@@ -69,15 +74,15 @@
       <!-- Empty State -->
       <div v-else class="viewer-empty-state">
         <i class="bi bi-file-earmark-text empty-icon"></i>
-        <h4>Seleccione un documento para visualizar</h4>
-        <p>Elija un documento de la lista para ver su contenido aquí</p>
+        <h4>{{ $t('documentViewer.selectDocument') }}</h4>
+        <p>{{ $t('documentViewer.selectDocumentDescription') }}</p>
       </div>
     </div>
 
     <!-- Document Carousel -->
     <div class="document-carousel" v-if="documents.length > 0">
       <div class="carousel-header">
-        <h4>Documentos ({{ documents.length }})</h4>
+        <h4>{{ $t('documentViewer.documents') }} ({{ documents.length }})</h4>
         <div class="carousel-controls">
           <button @click="scrollCarousel('left')" class="carousel-btn">
             <i class="bi bi-chevron-left"></i>
@@ -106,6 +111,7 @@
 
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import PDFViewer from './viewers/PDFViewer.vue';
 import ImageViewer from './viewers/ImageViewer.vue';
 import DocumentPreview from './viewers/DocumentPreview.vue';
@@ -135,6 +141,7 @@ export default {
   },
   emits: ['document-selected', 'annotation-added'],
   setup(props, { emit }) {
+    const { t } = useI18n();
     const selectedDocument = ref(props.initialDocument);
     const loading = ref(false);
     const showAnnotations = ref(false);
@@ -145,20 +152,24 @@ export default {
     const urgencyLevels = getDocumentUrgencyLevels();
 
     const selectDocument = async document => {
-      selectedDocument.value = document;
-      emit('document-selected', document);
-
-      // Log document access
       try {
-        await logDocumentAccess(
-          document.id,
-          'view',
-          'collaborator',
-          window.location.hostname,
-          navigator.userAgent
-        );
+        selectedDocument.value = { ...document };
+        emit('document-selected', { ...document });
+
+        // Log document access
+        try {
+          await logDocumentAccess(
+            document.id,
+            'view',
+            'collaborator',
+            window.location.hostname,
+            navigator.userAgent
+          );
+        } catch (error) {
+          console.warn('Failed to log document access:', error);
+        }
       } catch (error) {
-        console.warn('Failed to log document access:', error);
+        console.error('Error selecting document:', error);
       }
     };
 
@@ -173,7 +184,8 @@ export default {
         loading.value = true;
         const fileBlob = await getClientDocument(
           selectedDocument.value.commerceId,
-          selectedDocument.value.option,
+          selectedDocument.value.clientId,
+          'patient_documents',
           selectedDocument.value.name
         );
 
@@ -280,6 +292,10 @@ export default {
       getUrgencyLabel,
       formatDate,
       getFileTypeIcon,
+      // Alias functions for template
+      formatDocumentDate: formatDate,
+      getCategoryName: getCategoryLabel,
+      getUrgencyName: getUrgencyLabel,
     };
   },
 };
@@ -299,7 +315,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
+  padding: .2rem .5rem;
   background: white;
   border-bottom: 1px solid #e9ecef;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -459,14 +475,14 @@ export default {
 .document-carousel {
   background: white;
   border-top: 1px solid #e9ecef;
-  padding: 1rem;
+  padding: 0.5rem;
 }
 
 .carousel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.25rem;
 }
 
 .carousel-header h4 {
@@ -507,8 +523,8 @@ export default {
 
 .carousel-track {
   display: flex;
-  gap: 1rem;
-  padding-bottom: 0.5rem;
+  gap: .5rem;
+  padding-bottom: 0.25rem;
 }
 
 /* Responsive Design */
@@ -527,5 +543,92 @@ export default {
   .carousel-track {
     gap: 0.5rem;
   }
+}
+
+/* Modern Modal Header Styles */
+.modern-modal-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  border-radius: 1rem 1rem 0 0;
+  min-height: auto;
+  position: relative;
+}
+
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.modern-modal-icon-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-modal-icon-wrapper i {
+  font-size: 1.125rem;
+  color: #ffffff;
+}
+
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-background);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.modern-modal-client-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.modern-modal-close-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+}
+
+.modern-modal-close-btn i {
+  font-size: 1rem;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.modern-modal-close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
 }
 </style>

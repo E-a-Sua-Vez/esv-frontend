@@ -52,8 +52,7 @@
             <i :class="fileIconClass"></i>
           </div>
           <div class="file-info">
-            <span class="file-name" :title="selectedFile.name">{{ selectedFile.name }}</span>
-            <span class="file-size">{{ formatFileSize(selectedFile.size) }}</span>
+            <span class="file-name" :title="selectedFile.name">{{ getFileExtension(selectedFile.name).toUpperCase() }} • {{ formatFileSize(selectedFile.size) }}</span>
           </div>
           <button
             v-if="!disabled"
@@ -264,6 +263,10 @@ export default {
       return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
     };
 
+    const getFileExtension = fileName => {
+      return fileName.split('.').pop().toLowerCase();
+    };
+
     return {
       dropZone,
       fileInput,
@@ -278,6 +281,7 @@ export default {
       triggerFileInput,
       removeFile,
       formatFileSize,
+      getFileExtension,
     };
   },
 };
@@ -291,7 +295,7 @@ export default {
 .drag-drop-zone {
   position: relative;
   width: 100%;
-  min-height: 200px;
+  min-height: 100px;
   border: 2px dashed rgba(0, 0, 0, 0.15);
   border-radius: 0.875rem;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 250, 0.98) 100%);
@@ -301,7 +305,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: .5rem;
 }
 
 .drag-drop-zone:hover:not(.is-disabled):not(.has-file) {
@@ -324,7 +328,7 @@ export default {
   border-style: solid;
   background: linear-gradient(135deg, rgba(40, 167, 69, 0.02) 0%, rgba(40, 167, 69, 0.05) 100%);
   min-height: auto;
-  padding: 1.5rem;
+  padding: .5rem;
 }
 
 .drag-drop-zone.is-disabled {
@@ -356,7 +360,7 @@ export default {
 }
 
 .upload-main-icon {
-  font-size: 3rem;
+  font-size: 2rem;
   color: var(--azul-turno, #007bff);
   position: relative;
   z-index: 2;
@@ -379,8 +383,8 @@ export default {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   background: linear-gradient(135deg, rgba(0, 123, 255, 0.1) 0%, rgba(0, 123, 255, 0.05) 100%);
   border-radius: 50%;
   border-radius: 50%;
@@ -431,8 +435,8 @@ export default {
 .file-preview-content {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
+  gap: .5rem;
+  padding: .5rem;
   background: rgba(255, 255, 255, 0.8);
   border-radius: 0.75rem;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -440,8 +444,8 @@ export default {
 
 .file-icon-wrapper {
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -470,6 +474,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-transform: uppercase;
 }
 
 .file-size {

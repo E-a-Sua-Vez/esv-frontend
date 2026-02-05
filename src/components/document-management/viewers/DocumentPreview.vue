@@ -204,7 +204,8 @@ export default {
         loading.value = true;
         const blob = await getClientDocument(
           props.document.commerceId,
-          props.document.option,
+          props.document.clientId,
+          'patient_documents',
           props.document.name
         );
 
@@ -225,6 +226,7 @@ export default {
       try {
         const blob = await getClientDocument(
           props.document.commerceId,
+          props.document.clientId,
           props.document.option,
           props.document.name
         );
@@ -246,6 +248,7 @@ export default {
       try {
         const blob = await getClientDocument(
           props.document.commerceId,
+          props.document.clientId,
           props.document.option,
           props.document.name
         );

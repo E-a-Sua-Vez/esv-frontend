@@ -1,17 +1,14 @@
 <template>
   <div class="document-batch-operations">
     <!-- Batch Selection Header -->
-    <div class="batch-header" :class="{ visible: selectedDocuments.length > 0 }">
+    <div class="batch-header visible">
       <div class="selection-info">
         <span class="selection-count">
-          {{ selectedDocuments.length }} documento{{
-            selectedDocuments.length !== 1 ? 's' : ''
-          }}
-          seleccionado{{ selectedDocuments.length !== 1 ? 's' : '' }}
+          {{ selectedCountText }}
         </span>
         <button @click="clearSelection" class="clear-selection-btn">
           <i class="bi bi-x"></i>
-          Limpiar selección
+          {{ $t('documents.batchOperations.clearSelection') }}
         </button>
       </div>
 
@@ -22,12 +19,12 @@
           :disabled="loading"
         >
           <i class="bi bi-download"></i>
-          Descargar
+          {{ $t('documents.batchOperations.download') }}
         </button>
 
         <button @click="showBulkTag = true" class="batch-action-btn tag-btn" :disabled="loading">
           <i class="bi bi-tags"></i>
-          Etiquetar
+          {{ $t('documents.batchOperations.tag') }}
         </button>
 
         <button
@@ -36,7 +33,7 @@
           :disabled="loading"
         >
           <i class="bi bi-folder"></i>
-          Categorizar
+          {{ $t('documents.batchOperations.categorize') }}
         </button>
 
         <button
@@ -45,7 +42,7 @@
           :disabled="loading"
         >
           <i class="bi bi-exclamation-triangle"></i>
-          Urgencia
+          {{ $t('documents.batchOperations.urgency') }}
         </button>
 
         <button
@@ -54,7 +51,7 @@
           :disabled="loading"
         >
           <i class="bi bi-trash"></i>
-          Eliminar
+          {{ $t('documents.batchOperations.delete') }}
         </button>
       </div>
     </div>
@@ -62,15 +59,22 @@
     <!-- Bulk Download Modal -->
     <div v-if="showBulkDownload" class="modal-overlay" @click="showBulkDownload = false">
       <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>Descargar Documentos</h3>
-          <button @click="showBulkDownload = false" class="close-modal-btn">
+        <div class="modal-header border-0 active-name modern-modal-header">
+          <div class="modern-modal-header-inner">
+            <div class="modern-modal-icon-wrapper">
+              <i class="bi bi-download document-icon"></i>
+            </div>
+            <div class="modern-modal-title-wrapper">
+              <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.downloadModal.title') }}</h5>
+            </div>
+          </div>
+          <button @click="showBulkDownload = false" class="btn-close modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
 
         <div class="modal-body">
-          <p>¿Cómo desea descargar los {{ selectedDocuments.length }} documentos seleccionados?</p>
+          <p>{{ $t('documents.batchOperations.downloadModal.question', { count: selectedDocuments.length }) }}</p>
 
           <div class="download-options">
             <label class="download-option">
@@ -78,8 +82,8 @@
               <span class="option-content">
                 <i class="bi bi-file-earmark"></i>
                 <div>
-                  <strong>Archivos individuales</strong>
-                  <small>Descargar cada documento por separado</small>
+                  <strong>{{ $t('documents.batchOperations.downloadModal.individualFiles') }}</strong>
+                  <small>{{ $t('documents.batchOperations.downloadModal.individualDescription') }}</small>
                 </div>
               </span>
             </label>
@@ -89,15 +93,15 @@
               <span class="option-content">
                 <i class="bi bi-file-earmark-zip"></i>
                 <div>
-                  <strong>Archivo ZIP</strong>
-                  <small>Comprimir todos los documentos en un archivo</small>
+                  <strong>{{ $t('documents.batchOperations.downloadModal.zipFile') }}</strong>
+                  <small>{{ $t('documents.batchOperations.downloadModal.zipDescription') }}</small>
                 </div>
               </span>
             </label>
           </div>
 
           <div class="filename-input" v-if="downloadFormat === 'zip'">
-            <label class="form-label">Nombre del archivo ZIP:</label>
+            <label class="form-label">{{ $t('documents.batchOperations.downloadModal.zipFilenameLabel') }}</label>
             <input
               v-model="zipFilename"
               type="text"
@@ -108,11 +112,11 @@
         </div>
 
         <div class="modal-actions">
-          <button @click="showBulkDownload = false" class="btn-cancel">Cancelar</button>
+          <button @click="showBulkDownload = false" class="btn-cancel">{{ $t('documents.batchOperations.cancel') }}</button>
           <button @click="executeBulkDownload" class="btn-confirm" :disabled="bulkLoading">
             <i class="bi bi-download me-2"></i>
-            <span v-if="bulkLoading">Descargando...</span>
-            <span v-else>Descargar</span>
+            <span v-if="bulkLoading">{{ $t('documents.batchOperations.downloadModal.downloading') }}</span>
+            <span v-else>{{ $t('documents.batchOperations.downloadModal.download') }}</span>
           </button>
         </div>
       </div>
@@ -121,9 +125,16 @@
     <!-- Bulk Tag Modal -->
     <div v-if="showBulkTag" class="modal-overlay" @click="showBulkTag = false">
       <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>Gestionar Etiquetas</h3>
-          <button @click="showBulkTag = false" class="close-modal-btn">
+        <div class="modal-header border-0 active-name modern-modal-header">
+          <div class="modern-modal-header-inner">
+            <div class="modern-modal-icon-wrapper">
+              <i class="bi bi-tags document-icon"></i>
+            </div>
+            <div class="modern-modal-title-wrapper">
+              <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.tagModal.title') }}</h5>
+            </div>
+          </div>
+          <button @click="showBulkTag = false" class="btn-close modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -132,15 +143,15 @@
           <div class="tag-operation-selector">
             <label class="tag-operation">
               <input type="radio" v-model="tagOperation" value="add" />
-              <span>Agregar etiquetas</span>
+              <span>{{ $t('documents.batchOperations.tagModal.addTags') }}</span>
             </label>
             <label class="tag-operation">
               <input type="radio" v-model="tagOperation" value="remove" />
-              <span>Quitar etiquetas</span>
+              <span>{{ $t('documents.batchOperations.tagModal.removeTags') }}</span>
             </label>
             <label class="tag-operation">
               <input type="radio" v-model="tagOperation" value="replace" />
-              <span>Reemplazar etiquetas</span>
+              <span>{{ $t('documents.batchOperations.tagModal.replaceTags') }}</span>
             </label>
           </div>
 
@@ -150,7 +161,7 @@
                 v-model="newBulkTag"
                 @keyup.enter="addBulkTag"
                 type="text"
-                placeholder="Escribir etiqueta..."
+                placeholder="{{ $t('documents.batchOperations.tagModal.tagPlaceholder') }}"
                 class="tag-input"
               />
               <button @click="addBulkTag" class="add-tag-btn">
@@ -170,7 +181,7 @@
 
           <!-- Common tags suggestions -->
           <div class="common-tags" v-if="commonTags.length > 0">
-            <label class="form-label">Etiquetas comunes:</label>
+            <label class="form-label">{{ $t('documents.batchOperations.tagModal.commonTags') }}</label>
             <div class="tag-suggestions">
               <button
                 v-for="tag in commonTags"
@@ -186,15 +197,15 @@
         </div>
 
         <div class="modal-actions">
-          <button @click="showBulkTag = false" class="btn-cancel">Cancelar</button>
+          <button @click="showBulkTag = false" class="btn-cancel">{{ $t('documents.batchOperations.cancel') }}</button>
           <button
             @click="executeBulkTag"
             class="btn-confirm"
             :disabled="bulkLoading || bulkTags.length === 0"
           >
             <i class="bi bi-tags me-2"></i>
-            <span v-if="bulkLoading">Aplicando...</span>
-            <span v-else>Aplicar Etiquetas</span>
+            <span v-if="bulkLoading">{{ $t('documents.batchOperations.tagModal.applying') }}</span>
+            <span v-else>{{ $t('documents.batchOperations.tagModal.applyTags') }}</span>
           </button>
         </div>
       </div>
@@ -203,15 +214,22 @@
     <!-- Bulk Category Modal -->
     <div v-if="showBulkCategory" class="modal-overlay" @click="showBulkCategory = false">
       <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>Cambiar Categoría</h3>
-          <button @click="showBulkCategory = false" class="close-modal-btn">
+        <div class="modal-header border-0 active-name modern-modal-header">
+          <div class="modern-modal-header-inner">
+            <div class="modern-modal-icon-wrapper">
+              <i class="bi bi-folder document-icon"></i>
+            </div>
+            <div class="modern-modal-title-wrapper">
+              <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.categoryModal.title') }}</h5>
+            </div>
+          </div>
+          <button @click="showBulkCategory = false" class="btn-close modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
 
         <div class="modal-body">
-          <p>Seleccione la nueva categoría para los {{ selectedDocuments.length }} documentos:</p>
+          <p>{{ $t('documents.batchOperations.categoryModal.selectCategory', { count: selectedDocuments.length }) }}</p>
 
           <div class="category-grid">
             <label
@@ -230,15 +248,15 @@
         </div>
 
         <div class="modal-actions">
-          <button @click="showBulkCategory = false" class="btn-cancel">Cancelar</button>
+          <button @click="showBulkCategory = false" class="btn-cancel">{{ $t('documents.batchOperations.cancel') }}</button>
           <button
             @click="executeBulkCategory"
             class="btn-confirm"
             :disabled="bulkLoading || !bulkCategory"
           >
             <i class="bi bi-folder me-2"></i>
-            <span v-if="bulkLoading">Aplicando...</span>
-            <span v-else>Cambiar Categoría</span>
+            <span v-if="bulkLoading">{{ $t('documents.batchOperations.categoryModal.applying') }}</span>
+            <span v-else>{{ $t('documents.batchOperations.categoryModal.changeCategory') }}</span>
           </button>
         </div>
       </div>
@@ -247,17 +265,23 @@
     <!-- Bulk Urgency Modal -->
     <div v-if="showBulkUrgency" class="modal-overlay" @click="showBulkUrgency = false">
       <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>Cambiar Urgencia</h3>
-          <button @click="showBulkUrgency = false" class="close-modal-btn">
+        <div class="modal-header border-0 active-name modern-modal-header">
+          <div class="modern-modal-header-inner">
+            <div class="modern-modal-icon-wrapper">
+              <i class="bi bi-exclamation-triangle document-icon"></i>
+            </div>
+            <div class="modern-modal-title-wrapper">
+              <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.urgencyModal.title') }}</h5>
+            </div>
+          </div>
+          <button @click="showBulkUrgency = false" class="btn-close modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
 
         <div class="modal-body">
           <p>
-            Seleccione el nuevo nivel de urgencia para los
-            {{ selectedDocuments.length }} documentos:
+            {{ $t('documents.batchOperations.urgencyModal.selectUrgency', { count: selectedDocuments.length }) }}
           </p>
 
           <div class="urgency-options">
@@ -280,15 +304,15 @@
         </div>
 
         <div class="modal-actions">
-          <button @click="showBulkUrgency = false" class="btn-cancel">Cancelar</button>
+          <button @click="showBulkUrgency = false" class="btn-cancel">{{ $t('documents.batchOperations.cancel') }}</button>
           <button
             @click="executeBulkUrgency"
             class="btn-confirm"
             :disabled="bulkLoading || !bulkUrgency"
           >
             <i class="bi bi-exclamation-triangle me-2"></i>
-            <span v-if="bulkLoading">Aplicando...</span>
-            <span v-else>Cambiar Urgencia</span>
+            <span v-if="bulkLoading">{{ $t('documents.batchOperations.urgencyModal.applying') }}</span>
+            <span v-else>{{ $t('documents.batchOperations.urgencyModal.changeUrgency') }}</span>
           </button>
         </div>
       </div>
@@ -297,9 +321,16 @@
     <!-- Bulk Delete Modal -->
     <div v-if="showBulkDelete" class="modal-overlay" @click="showBulkDelete = false">
       <div class="modal-content delete-modal" @click.stop>
-        <div class="modal-header">
-          <h3>Eliminar Documentos</h3>
-          <button @click="showBulkDelete = false" class="close-modal-btn">
+        <div class="modal-header border-0 active-name modern-modal-header">
+          <div class="modern-modal-header-inner">
+            <div class="modern-modal-icon-wrapper">
+              <i class="bi bi-trash document-icon"></i>
+            </div>
+            <div class="modern-modal-title-wrapper">
+              <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.deleteModal.title') }}</h5>
+            </div>
+          </div>
+          <button @click="showBulkDelete = false" class="btn-close modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -308,18 +339,18 @@
           <div class="delete-warning">
             <i class="bi bi-exclamation-triangle-fill warning-icon"></i>
             <div class="warning-content">
-              <h4>¿Está seguro de que desea eliminar estos documentos?</h4>
+              <h4>{{ $t('documents.batchOperations.deleteModal.confirmation') }}</h4>
               <p>
-                Esta acción eliminará {{ selectedDocuments.length }} documento{{
-                  selectedDocuments.length !== 1 ? 's' : ''
-                }}
-                y no se puede deshacer.
+                {{ $t('documents.batchOperations.deleteModal.warning', {
+                  count: selectedDocuments.length,
+                  document: t('documents.batchOperations.document', selectedDocuments.length)
+                }) }}
               </p>
             </div>
           </div>
 
           <div class="documents-to-delete">
-            <h5>Documentos que se eliminarán:</h5>
+            <h5>{{ $t('documents.batchOperations.deleteModal.documentsToDelete') }}</h5>
             <div class="delete-list">
               <div v-for="doc in selectedDocuments.slice(0, 5)" :key="doc.id" class="delete-item">
                 <i :class="getFileTypeIcon(doc.format)"></i>
@@ -327,18 +358,18 @@
               </div>
               <div v-if="selectedDocuments.length > 5" class="delete-item more-items">
                 <i class="bi bi-three-dots"></i>
-                <span>y {{ selectedDocuments.length - 5 }} más...</span>
+                <span>{{ $t('documents.batchOperations.deleteModal.andMore', { count: selectedDocuments.length - 5 }) }}</span>
               </div>
             </div>
           </div>
         </div>
 
         <div class="modal-actions">
-          <button @click="showBulkDelete = false" class="btn-cancel">Cancelar</button>
+          <button @click="showBulkDelete = false" class="btn-cancel">{{ $t('documents.batchOperations.cancel') }}</button>
           <button @click="executeBulkDelete" class="btn-delete" :disabled="bulkLoading">
             <i class="bi bi-trash me-2"></i>
-            <span v-if="bulkLoading">Eliminando...</span>
-            <span v-else>Eliminar Documentos</span>
+            <span v-if="bulkLoading">{{ $t('documents.batchOperations.deleteModal.deleting') }}</span>
+            <span v-else>{{ $t('documents.batchOperations.deleteModal.deleteDocuments') }}</span>
           </button>
         </div>
       </div>
@@ -348,11 +379,14 @@
 
 <script>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   getDocumentCategories,
   getDocumentUrgencyLevels,
   getFileTypeIcon,
   updateDocumentTags,
+  updateDocumentCategory,
+  updateDocumentUrgency,
   availableDocument,
   getClientDocument,
 } from '../../application/services/document';
@@ -365,6 +399,7 @@ export default {
   },
   emits: ['clear-selection', 'documents-updated', 'documents-deleted'],
   setup(props, { emit }) {
+    const { t } = useI18n();
     const bulkLoading = ref(false);
 
     // Modal states
@@ -403,6 +438,18 @@ export default {
         .map(([tag]) => tag);
     });
 
+    const selectedCountText = computed(() => {
+      try {
+        return t('documents.batchOperations.selectedCount', {
+          count: props.selectedDocuments.length,
+          document: t('documents.batchOperations.document', props.selectedDocuments.length),
+          selected: t('documents.batchOperations.selected', props.selectedDocuments.length)
+        });
+      } catch (error) {
+        return `${props.selectedDocuments.length} documento(s) seleccionado(s)`;
+      }
+    });
+
     // Methods
     const clearSelection = () => {
       emit('clear-selection');
@@ -430,7 +477,7 @@ export default {
         if (downloadFormat.value === 'individual') {
           // Download each file individually
           for (const doc of props.selectedDocuments) {
-            const blob = await getClientDocument(doc.commerceId, doc.option, doc.name);
+            const blob = await getClientDocument(doc.commerceId, doc.clientId, 'patient_documents', doc.name);
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -499,12 +546,10 @@ export default {
       try {
         bulkLoading.value = true;
 
-        // In a real implementation, you would have a bulk update API
         const updatedDocuments = [];
 
         for (const doc of props.selectedDocuments) {
-          // Simulate category update
-          const updatedDoc = { ...doc, category: bulkCategory.value };
+          const updatedDoc = await updateDocumentCategory(doc.id, bulkCategory.value);
           updatedDocuments.push(updatedDoc);
         }
 
@@ -522,12 +567,10 @@ export default {
       try {
         bulkLoading.value = true;
 
-        // In a real implementation, you would have a bulk update API
         const updatedDocuments = [];
 
         for (const doc of props.selectedDocuments) {
-          // Simulate urgency update
-          const updatedDoc = { ...doc, urgency: bulkUrgency.value };
+          const updatedDoc = await updateDocumentUrgency(doc.id, bulkUrgency.value);
           updatedDocuments.push(updatedDoc);
         }
 
@@ -562,16 +605,11 @@ export default {
     };
 
     const getUrgencyDescription = urgency => {
-      const descriptions = {
-        LOW: 'Prioridad baja, no requiere atención inmediata',
-        NORMAL: 'Prioridad normal, procesamiento estándar',
-        HIGH: 'Prioridad alta, requiere atención pronta',
-        CRITICAL: 'Prioridad crítica, requiere atención inmediata',
-      };
-      return descriptions[urgency] || '';
+      return t(`documents.batchOperations.urgencyModal.descriptions.${urgency}`);
     };
 
     return {
+      t,
       bulkLoading,
       showBulkDownload,
       showBulkTag,
@@ -588,6 +626,7 @@ export default {
       categories,
       urgencyLevels,
       commonTags,
+      selectedCountText,
       clearSelection,
       addBulkTag,
       removeBulkTag,
@@ -610,21 +649,21 @@ export default {
 
 .batch-header {
   position: fixed;
-  bottom: 2rem;
+  bottom: 1rem;
   left: 50%;
   transform: translateX(-50%) translateY(100px);
   background: white;
   border: 1px solid #e9ecef;
   border-radius: 0.75rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  padding: 1rem 1.5rem;
+  padding: 0.4rem .5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 2rem;
+  gap: 1rem;
   z-index: 1000;
   transition: all 0.3s ease;
-  min-width: 600px;
+  min-width: 700px;
 }
 
 .batch-header.visible {
@@ -635,19 +674,22 @@ export default {
   display: flex;
   align-items: center;
   gap: 1rem;
+  font-size: .8rem;
 }
 
 .selection-count {
-  font-weight: 600;
+  font-weight: 500;
   color: #2c3e50;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  line-height: .8rem;
+  text-align: center;
 }
 
 .clear-selection-btn {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.5rem;
   background: #6c757d;
   color: white;
   border: none;
@@ -670,11 +712,11 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.2rem .5rem;
   border: none;
   border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -745,7 +787,6 @@ export default {
 }
 
 .modal-content {
-  background: white;
   border-radius: 0.75rem;
   width: 100%;
   max-width: 500px;

@@ -123,21 +123,6 @@ export default {
         placeholder="1"
       />
     </div>
-    <div class="form-group-modern form-group-toggle">
-      <label class="form-label-modern">
-        {{ $t('businessPatientHistoryItemAdmin.online') }}
-        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-          <template #content>
-            <div>{{ $t('businessPatientHistoryItemAdmin.onlineHelp') }}</div>
-          </template>
-          <i class="bi bi-info-circle-fill form-help-icon"></i>
-        </Popper>
-      </label>
-      <Toggle
-        v-model="item.online"
-        :disabled="isAdd ? false : !toggles['patient-history-item.admin.edit']"
-      />
-    </div>
     <div class="form-group-modern form-group-toggle" v-if="!isAdd">
       <label class="form-label-modern">
         {{ $t('businessPatientHistoryItemAdmin.active') }}

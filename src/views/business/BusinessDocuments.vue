@@ -157,29 +157,6 @@ export default {
 
 <template>
   <div>
-    <!-- Render DocumentsManagement component once outside responsive sections for the modal -->
-    <!-- This ensures single modal ID - buttons in both mobile and desktop will target this modal -->
-    <!-- Bootstrap modals are appended to body when opened, so this hidden instance will work -->
-    <!-- Always render this instance first to ensure modal is always accessible -->
-    <div
-      style="
-        position: absolute;
-        left: -9999px;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        visibility: hidden;
-        pointer-events: none;
-      "
-    >
-      <DocumentsManagement
-        :show-client-management="true"
-        :toggles="state.toggles"
-        :commerce="commerce"
-        :commerces="selectedCommerces"
-      >
-      </DocumentsManagement>
-    </div>
     <!-- Mobile/Tablet Layout -->
     <div class="d-block d-lg-none">
       <div class="content text-center">
@@ -219,6 +196,7 @@ export default {
                   :toggles="state.toggles"
                   :commerce="commerce"
                   :commerces="selectedCommerces"
+                  modal-id="add-document-mobile"
                 >
                 </DocumentsManagement>
               </div>
@@ -288,6 +266,7 @@ export default {
                     :commerce="state.commerce"
                     :commerces="Array.isArray(selectedCommerces) ? selectedCommerces : []"
                     filters-location="slot"
+                    modal-id="add-document-filters"
                   >
                     <template #filters-exposed="filterProps">
                       <div class="filters-content-wrapper">
@@ -440,6 +419,7 @@ export default {
                 :commerce="state.commerce"
                 :commerces="Array.isArray(selectedCommerces) ? selectedCommerces : []"
                 filters-location="slot"
+                modal-id="add-document-desktop"
               >
               </DocumentsManagement>
             </template>

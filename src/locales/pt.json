@@ -808,6 +808,87 @@
     },
     "options": {
       "patient_documents": "Documentos Paciente"
+    },
+    "batchOperations": {
+      "selectedCount": "{count} {document} {selected}",
+      "document": "documento | documentos",
+      "selected": "selecionado | selecionados",
+      "clearSelection": "Limpar",
+      "download": "Baixar",
+      "tag": "Etiquetar",
+      "categorize": "Categorizar",
+      "urgency": "Urgência",
+      "delete": "Excluir",
+      "downloadModal": {
+        "title": "Baixar Documentos",
+        "question": "Como você deseja baixar os {count} documentos selecionados?",
+        "individualFiles": "Arquivos individuais",
+        "individualDescription": "Baixar cada documento separadamente",
+        "zipFile": "Arquivo ZIP",
+        "zipDescription": "Comprimir todos os documentos em um arquivo",
+        "zipFilenameLabel": "Nome do arquivo ZIP:",
+        "zipFilenamePlaceholder": "documentos-paciente",
+        "downloading": "Baixando...",
+        "download": "Baixar"
+      },
+      "tagModal": {
+        "title": "Gerenciar Etiquetas",
+        "addTags": "Adicionar etiquetas",
+        "removeTags": "Remover etiquetas",
+        "replaceTags": "Substituir etiquetas",
+        "tagPlaceholder": "Digite etiqueta...",
+        "commonTags": "Etiquetas comuns:",
+        "applying": "Aplicando...",
+        "applyTags": "Aplicar Etiquetas"
+      },
+      "categoryModal": {
+        "title": "Alterar Categoria",
+        "selectCategory": "Selecione a nova categoria para os {count} documentos:",
+        "applying": "Aplicando...",
+        "changeCategory": "Alterar Categoria"
+      },
+      "urgencyModal": {
+        "title": "Alterar Urgência",
+        "selectUrgency": "Selecione o novo nível de urgência para os {count} documentos:",
+        "applying": "Aplicando...",
+        "changeUrgency": "Alterar Urgência",
+        "descriptions": {
+          "LOW": "Prioridade baixa, não requer atenção imediata",
+          "NORMAL": "Prioridade normal, processamento padrão",
+          "HIGH": "Prioridade alta, requer atenção rápida",
+          "CRITICAL": "Prioridade crítica, requer atenção imediata"
+        }
+      },
+      "deleteModal": {
+        "title": "Excluir Documentos",
+        "confirmation": "Tem certeza de que deseja excluir estes documentos?",
+        "warning": "Esta ação excluirá {count} {document} e não pode ser desfeita.",
+        "documentsToDelete": "Documentos a serem excluídos:",
+        "andMore": "e {count} mais...",
+        "deleting": "Excluindo...",
+        "deleteDocuments": "Excluir Documentos"
+      },
+      "cancel": "Cancelar"
+    },
+    "categories": {
+      "LABORATORY_RESULTS": "Resultados de Laboratório",
+      "IMAGING_STUDIES": "Estudos de Imagem",
+      "PATHOLOGY_REPORTS": "Relatórios de Patologia",
+      "CONSULTATION_NOTES": "Notas de Consulta",
+      "DISCHARGE_SUMMARIES": "Resumos de Alta",
+      "REFERRAL_LETTERS": "Cartas de Encaminhamento",
+      "PRESCRIPTION_RECORDS": "Registros de Prescrição",
+      "CONSENT_FORMS": "Formulários de Consentimento",
+      "INSURANCE_CARDS": "Cartões de Seguro",
+      "IDENTIFICATION": "Documentos de Identificação",
+      "MEDICAL_HISTORY": "Histórico Médico",
+      "ALLERGIES_MEDICATIONS": "Alergias e Medicamentos",
+      "BILLING_DOCUMENTS": "Documentos de Cobrança",
+      "APPOINTMENT_CONFIRMATIONS": "Confirmações de Consulta",
+      "EXTERNAL_REPORTS": "Relatórios Externos",
+      "PREVIOUS_TREATMENTS": "Tratamentos Anteriores",
+      "SPECIALIST_REPORTS": "Relatórios de Especialistas",
+      "OTHER": "Outros"
     }
   },
   "items": {
@@ -839,6 +920,48 @@
     "PENDING": "Pendente",
     "PROCCESSED": "Processado",
     "CANCELLED": "Cancelado"
+  },
+  "documentSearch": {
+    "searchPlaceholder": "Buscar documentos por nome, categoria ou notas...",
+    "filters": "Filtros",
+    "category": "Categoria",
+    "urgency": "Urgência",
+    "all": "Todas",
+    "from": "De",
+    "to": "Até",
+    "tags": "Etiquetas",
+    "addTagPlaceholder": "Adicionar etiqueta...",
+    "clear": "Limpar",
+    "apply": "Aplicar",
+    "activeFilters": "Filtros ativos:"
+  },
+  "documentTreeView": {
+    "tree": "Árvore",
+    "list": "Lista",
+    "gallery": "Galeria",
+    "expandAll": "Expandir tudo",
+    "collapseAll": "Recolher tudo"
+  },
+  "documentViewer": {
+    "document": "Documento",
+    "patient": "Paciente",
+    "documents": "Documentos"
+  },
+  "documentImageCarousel": {
+    "image": "Imagem",
+    "images": "imagens",
+    "fullscreen": "Tela cheia",
+    "download": "Baixar"
+  },
+  "attentionDocumentUpload": {
+    "documentType": "Tipo de documento",
+    "selectDocumentType": "Selecione o tipo de documento..."
+  },
+  "attentionDocuments": {
+    "consultationDocuments": "Documentos da Consulta",
+    "consultationOf": "Consulta de",
+    "uploadDocument": "Enviar Documento",
+    "linkExisting": "Vincular Existente"
   },
   "configuration": {
     "types": {
@@ -5434,7 +5557,7 @@
     "update": "Atualizar",
     "autoSaving": "Salvamento Automático",
     "clickSave": "Clique em Salvar",
-    "patientInfo": "Informações do Paciente",
+    "patientInfo": "Paciente",
     "consultation": "Consulta",
     "examination": "Exame",
     "clinical": "Clínico",

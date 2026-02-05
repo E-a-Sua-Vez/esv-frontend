@@ -1,16 +1,18 @@
 <script>
-import { ref, reactive, onBeforeMount, toRefs, watch } from 'vue';
+import { ref, reactive, onBeforeMount, toRefs, watch, onUnmounted, nextTick } from 'vue';
 import { VueRecaptcha } from 'vue-recaptcha';
 import { getPermissions } from '../../../application/services/permissions';
 import { getDateAndHour } from '../../../shared/utils/date';
 import {
   getClientDocument,
+  getDocumentByCommerceIdAndClient,
   addClientDocument,
   availableDocument,
   searchDocuments,
   getDocumentCategories,
   getDocumentUrgencyLevels,
   updateDocumentTags,
+  getDocumentsByPatientHistory,
   linkDocumentToAttention,
   trackDocumentAccess,
   trackDocumentDownload,
@@ -58,6 +60,8 @@ export default {
     const loading = ref(false);
     const alertError = ref('');
     const file = ref({});
+    const isMounted = ref(true);
+    const isUpdatingFromComponent = ref(false);
 
     const {
       commerce,
@@ -71,6 +75,8 @@ export default {
 
     const { receiveData, onUpdate } = props;
 
+    const selectionMode = ref(false);
+
     const state = reactive({
       newDocuments: {},
       oldDocuments: [],
@@ -78,12 +84,11 @@ export default {
       documentList: [],
       captcha: false,
       documentsError: false,
-      asc: true,
-      showHistory: false,
+      asc: false, // false = descending (newest first), true = ascending (oldest first)
+      showHistory: true,
       showViewer: false,
       selectedDocument: null,
       selectedDocuments: [],
-      selectionMode: false,
       errorsAdd: [],
       togglesDocuments: [],
       newDocument: {},
@@ -94,35 +99,56 @@ export default {
       viewMode: 'list', // 'list' or 'tree'
       showImageCarousel: false,
       selectedImageIndex: 0,
+      showUploadModal: false,
     });
 
     onBeforeMount(async () => {
       try {
         loading.value = true;
         state.togglesDocuments = await getPermissions('document-client', 'admin');
+        console.log('patientHistoryData:', patientHistoryData.value);
         if (patientHistoryItems.value && patientHistoryItems.value.length > 0) {
           state.documentList = patientHistoryItems.value.filter(item =>
             ['PATIENT_DOCUMENTS'].includes(item.type)
           );
           state.documentList = state.documentList.sort((a, b) => b.order - a.order);
         }
-        if (patientHistoryData.value && patientHistoryData.value.id) {
-          // Map PatientDocument to Document objects for display
-          // PatientDocument has structure: { documents: Document, comment, details, attentionId, createdAt, createdBy }
-          state.oldDocuments = patientHistoryData.value.patientDocument
-            .filter(patientDoc => patientDoc.documents && patientDoc.documents.available)
-            .map(patientDoc => {
-              // Merge PatientDocument metadata with Document for display
-              const doc = { ...patientDoc.documents };
-              // Preserve PatientDocument-specific fields
-              doc.patientDocumentComment = patientDoc.comment;
-              doc.patientDocumentDetails = patientDoc.details;
-              doc.patientDocumentAttentionId = patientDoc.attentionId;
-              doc.patientDocumentCreatedAt = patientDoc.createdAt;
-              doc.patientDocumentCreatedBy = patientDoc.createdBy;
-              return doc;
-            });
-          state.filteredDocuments = [...state.oldDocuments];
+        if (patientHistoryData.value) {
+          // Load documents by patient history ID if available, otherwise fall back to client documents
+          if (patientHistoryData.value.id) {
+            try {
+              // Try to get documents by patient history first
+              state.oldDocuments = await getDocumentsByPatientHistory(patientHistoryData.value.id);
+              state.oldDocuments = state.oldDocuments.filter(doc => doc.available);
+              console.log('Patient history documents loaded:', state.oldDocuments.length, state.oldDocuments);
+            } catch (error) {
+              console.warn('Failed to load patient history documents, falling back to client documents:', error);
+              // Fallback to client documents if patient history documents fail
+              if (patientHistoryData.value.clientId) {
+                let docs = await getDocumentByCommerceIdAndClient(
+                  patientHistoryData.value.commerceId,
+                  patientHistoryData.value.clientId
+                );
+                // Filter by patientHistoryId to only show documents for this patient history
+                docs = docs.filter(doc => doc.patientHistoryId === patientHistoryData.value.id);
+                state.oldDocuments = docs.filter(doc => doc.available);
+                console.log('Client documents loaded as fallback:', state.oldDocuments.length, state.oldDocuments);
+              }
+            }
+          } else {
+            // No patient history id, load all client documents
+            if (patientHistoryData.value.clientId) {
+              let docs = await getDocumentByCommerceIdAndClient(
+                patientHistoryData.value.commerceId,
+                patientHistoryData.value.clientId
+              );
+              state.oldDocuments = docs.filter(doc => doc.available);
+              console.log('Client documents loaded (no patient history filter):', state.oldDocuments.length, state.oldDocuments);
+            }
+          }
+          state.filteredDocuments = state.oldDocuments.slice();
+          // Apply initial sorting
+          applySorting();
         }
         // Only use cacheData if no saved data exists in patientHistoryData
         if (!state.oldDocuments && cacheData.value) {
@@ -177,27 +203,57 @@ export default {
       return typeMap[doc.option] || null;
     };
 
-    const checkAsc = event => {
-      if (event.target.checked) {
-        state.asc = true;
-      } else {
-        state.asc = false;
-      }
+    // Get category label
+    const getCategoryLabel = category => {
+      const labels = {
+        LABORATORY_RESULTS: 'Laboratorio',
+        IMAGING_STUDIES: 'Imágenes',
+        PRESCRIPTIONS: 'Recetas',
+        CONSULTATION_NOTES: 'Consultas',
+        DISCHARGE_SUMMARY: 'Altas',
+        REFERRALS: 'Derivaciones',
+        CONSENT_FORMS: 'Consentimientos',
+        INSURANCE_DOCUMENTS: 'Seguros',
+        OTHER: 'Otros',
+      };
+      return labels[category] || category;
+    };
+
+    // Get urgency label
+    const getUrgencyLabel = urgency => {
+      const labels = {
+        LOW: 'Baja',
+        NORMAL: 'Normal',
+        HIGH: 'Alta',
+        CRITICAL: 'Crítica',
+      };
+      return labels[urgency] || urgency;
+    };
+
+    const applySorting = () => {
       if (state.oldDocuments && state.oldDocuments.length > 0) {
-        let elementsSorted = [];
-        const elements = state.oldDocuments;
+        console.log('Applying sorting, asc:', state.asc);
+        let elementsSorted = [...state.oldDocuments]; // Create a copy to avoid mutating original
         if (state.asc) {
-          elementsSorted = elements.sort(
+          elementsSorted.sort(
             (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
           );
+          console.log('Sorted ascending by date');
         } else {
-          elementsSorted = elements.sort(
+          elementsSorted.sort(
             (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
+            console.log('Sorted descending by date');
         }
         state.oldDocuments = elementsSorted.filter(doc => doc.available);
+        console.log('Documents sorted and filtered, new count:', state.oldDocuments.length);
         applyFilters();
       }
+    };
+
+    const toggleSortOrder = () => {
+      state.asc = !state.asc;
+      applySorting();
     };
 
     const validateDocument = file => {
@@ -266,7 +322,19 @@ export default {
     };
 
     const applyFilters = () => {
-      let filtered = [...state.oldDocuments];
+      console.log('Applying filters, oldDocuments length:', state.oldDocuments.length);
+      let filtered = state.oldDocuments.slice();
+
+      // Apply basic filters first
+      filtered = filtered.filter(
+        doc =>
+          doc.available &&
+          doc.active === true &&
+          (patientHistoryData.value?.clientId ||
+            (doc.details &&
+             doc.details.characteristics &&
+             doc.details.characteristics.document === true))
+      );
 
       // Apply search text filter
       if (state.searchText) {
@@ -308,6 +376,7 @@ export default {
       }
 
       state.filteredDocuments = filtered;
+      console.log('Filters applied, filteredDocuments length:', state.filteredDocuments.length);
     };
 
     const selectDocument = async document => {
@@ -322,7 +391,7 @@ export default {
       const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
       const isImage =
         imageTypes.includes(document.format) ||
-        /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(document.name);
+        (document.name && /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(document.name));
 
       if (isImage) {
         openImageCarousel(document, state.filteredDocuments);
@@ -346,7 +415,7 @@ export default {
       // Find the index of the selected document in the image documents
       const imageDocuments = documents.filter(doc => {
         const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
-        return imageTypes.includes(doc.format) || /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(doc.name);
+        return imageTypes.includes(doc.format) || (doc.name && /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(doc.name));
       });
 
       const index = imageDocuments.findIndex(doc => doc.id === document.id);
@@ -361,12 +430,12 @@ export default {
 
         // In a real implementation, this would trigger the actual download
         const downloadUrl = document.url || `/api/documents/${document.id}/download`;
-        const link = document.createElement('a');
+        const link = window.document.createElement('a');
         link.href = downloadUrl;
         link.download = document.name;
-        document.body.appendChild(link);
+        window.document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        window.document.body.removeChild(link);
       } catch (error) {
         console.error('Error downloading document:', error);
       }
@@ -378,8 +447,8 @@ export default {
 
     // Batch operations
     const toggleSelectionMode = () => {
-      state.selectionMode = !state.selectionMode;
-      if (!state.selectionMode) {
+      selectionMode.value = !selectionMode.value;
+      if (!selectionMode.value) {
         state.selectedDocuments = [];
       }
     };
@@ -389,17 +458,21 @@ export default {
       if (index > -1) {
         state.selectedDocuments.splice(index, 1);
       } else {
-        state.selectedDocuments.push(document);
+        state.selectedDocuments = [...state.selectedDocuments, document];
       }
     };
 
     const selectAllDocuments = () => {
-      state.selectedDocuments = [...state.filteredDocuments];
+      state.selectedDocuments = state.filteredDocuments.slice();
     };
 
     const clearSelection = () => {
       state.selectedDocuments = [];
-      state.selectionMode = false;
+      selectionMode.value = false;
+    };
+
+    const onViewModeChanged = mode => {
+      state.viewMode = mode;
     };
 
     const handleBatchDocumentsUpdated = updatedDocuments => {
@@ -448,6 +521,9 @@ export default {
         state.newDocument.category = state.optionSelected.category || 'OTHER';
         state.newDocument.urgency = 'NORMAL';
         state.newDocument.tags = [];
+        if (state.newDocument.customTag && state.newDocument.customTag.trim()) {
+          state.newDocument.tags.push(state.newDocument.customTag.trim());
+        }
         state.newDocument.isConfidential = false;
       } else {
         state.errorsAdd.push('businessDocument.validate.feature');
@@ -466,24 +542,114 @@ export default {
         loading.value = true;
         if (validateAdd()) {
           const body = state.newDocument;
-          state.newDocument = await addClientDocument(body, file.value);
-          state.newDocument.details = state.optionSelected;
+          const uploadedDocument = await addClientDocument(body, file.value);
+          console.log('Document uploaded successfully:', uploadedDocument.id);
+
+          // Refresh documents from server to ensure the new document appears
+          await refreshDocuments();
+
+          // Also call onUpdate to notify parent components
+          await onUpdate(state.oldDocuments);
+
+          state.newDocument = {};
           state.optionSelected = {};
+          state.newDocument.customTag = ''; // Clear custom tag
           sendData();
           file.value = {};
+
+          // Close the upload modal
+          state.showUploadModal = false;
         }
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
+    };
+
+    const addWithoutType = async () => {
+      try {
+        loading.value = true;
+        if (validateAddWithoutType()) {
+          const body = state.newDocument;
+          const uploadedDocument = await addClientDocument(body, file.value);
+          console.log('Document uploaded successfully:', uploadedDocument.id);
+
+          // Refresh documents from server to ensure the new document appears
+          await refreshDocuments();
+
+          // Also call onUpdate to notify parent components
+          await onUpdate(state.oldDocuments);
+
+          state.newDocument = {};
+          state.newDocument.customTag = ''; // Clear custom tag
+          sendData();
+          file.value = {};
+
+          // Close the upload modal
+          state.showUploadModal = false;
+        }
+        alertError.value = '';
+        loading.value = false;
+      } catch (error) {
+        alertError.value = error.response?.status || 500;
+        loading.value = false;
+      }
+    };
+
+    const validateAddWithoutType = () => {
+      state.errorsAdd = [];
+
+      // Create a generic option using the custom tag
+      if (state.newDocument.customTag && state.newDocument.customTag.trim()) {
+        state.optionSelected = {
+          name: state.newDocument.customTag.trim(),
+          category: 'OTHER',
+          characteristics: { document: true }
+        };
+
+        const documentMetadata = {
+          clientName: clientData.value.userName,
+          clientLastName: clientData.value.userLastName,
+          clientIdNumber: clientData.value.userIdNumber,
+          clientEmail: clientData.value.userEmail,
+          optionSelected: state.optionSelected,
+        };
+        const time = new Date().getTime();
+        state.newDocument.type = 'CLIENT';
+        state.newDocument.name = `${state.newDocument.customTag.trim().toLowerCase().replaceAll(' ', '-')}-${
+          clientData.value.id
+        }-${time}`;
+        state.newDocument.commerceId = commerce.value.id;
+        state.newDocument.clientId = clientData.value.id;
+        state.newDocument.documentMetadata = JSON.stringify(documentMetadata);
+        state.newDocument.reportType = 'patient_documents';
+        state.newDocument.details = JSON.stringify(state.optionSelected);
+
+        // Enhanced ecosystem integration
+        state.newDocument.patientHistoryId = patientHistoryData.value?.id;
+        state.newDocument.category = 'OTHER';
+        state.newDocument.urgency = 'NORMAL';
+        state.newDocument.tags = [state.newDocument.customTag.trim()];
+        state.newDocument.isConfidential = false;
+      } else {
+        state.errorsAdd.push('Debe especificar una etiqueta personalizada');
+      }
+
+      if (!state.newDocument.file) {
+        state.errorsAdd.push('businessDocument.validate.file');
+      }
+      if (state.errorsAdd.length === 0) {
+        return true;
+      }
+      return false;
     };
 
     const executeDownload = async item => {
       try {
         loading.value = true;
-        const fileToDownload = await getClientDocument(item.commerceId, item.option, item.name);
+        const fileToDownload = await getClientDocument(item.commerceId, item.clientId, 'patient_documents', item.name);
         if (fileToDownload) {
           const file = new Blob([fileToDownload], { type: item.format });
           const fileURL = URL.createObjectURL(file);
@@ -509,6 +675,7 @@ export default {
 
     const executeDelete = async item => {
       try {
+        isUpdatingFromComponent.value = true;
         loading.value = true;
         const body = item;
         body.available = false;
@@ -517,9 +684,11 @@ export default {
           updateDocument(updatedDocument);
         }
         loading.value = false;
+        isUpdatingFromComponent.value = false;
       } catch (error) {
         alertError.value = error.response.status || 500;
         loading.value = false;
+        isUpdatingFromComponent.value = false;
       }
     };
 
@@ -528,31 +697,138 @@ export default {
     };
 
     watch(patientHistoryData, async () => {
+      if (!isMounted.value || isUpdatingFromComponent.value) return;
       loading.value = true;
-      if (patientHistoryData.value && patientHistoryData.value.id) {
-        if (
-          patientHistoryData.value.patientDocument &&
-          patientHistoryData.value.patientDocument.length > 0 &&
-          patientHistoryData.value.patientDocument[0]
-        ) {
-          // Map PatientDocument to Document objects for display
-          state.oldDocuments = patientHistoryData.value.patientDocument
-            .filter(patientDoc => patientDoc.documents && patientDoc.documents.available)
-            .map(patientDoc => {
-              // Merge PatientDocument metadata with Document for display
-              const doc = { ...patientDoc.documents };
-              // Preserve PatientDocument-specific fields
-              doc.patientDocumentComment = patientDoc.comment;
-              doc.patientDocumentDetails = patientDoc.details;
-              doc.patientDocumentAttentionId = patientDoc.attentionId;
-              doc.patientDocumentCreatedAt = patientDoc.createdAt;
-              doc.patientDocumentCreatedBy = patientDoc.createdBy;
-              return doc;
-            });
-          state.filteredDocuments = [...state.oldDocuments];
+      if (patientHistoryData.value) {
+        console.log('Watcher triggered, patientHistoryData:', patientHistoryData.value);
+        if (patientHistoryData.value.id) {
+          console.log('Has id, trying patient history documents');
+          try {
+            // Try to get documents by patient history first
+            state.oldDocuments = await getDocumentsByPatientHistory(patientHistoryData.value.id);
+            state.oldDocuments = state.oldDocuments.filter(doc => doc.available);
+            console.log('Patient history documents updated via watcher:', state.oldDocuments.length, state.oldDocuments);
+          } catch (error) {
+            console.warn('Failed to update patient history documents via watcher, falling back:', error);
+            // Fallback to client documents if patient history documents fail
+            if (patientHistoryData.value.clientId) {
+              let docs = await getDocumentByCommerceIdAndClient(
+                patientHistoryData.value.commerceId,
+                patientHistoryData.value.clientId
+              );
+              // Filter by patientHistoryId to only show documents for this patient history
+              docs = docs.filter(doc => doc.patientHistoryId === patientHistoryData.value.id);
+              if (!isMounted.value) return;
+              state.oldDocuments = docs.filter(doc => doc.available);
+              console.log('Client documents updated via watcher:', state.oldDocuments.length, state.oldDocuments);
+            } else {
+              // Map PatientDocument to Document objects for display
+              state.oldDocuments = patientHistoryData.value.patientDocument
+                .filter(patientDoc => patientDoc.documents && patientDoc.documents.available)
+                .map(patientDoc => {
+                  // Merge PatientDocument metadata with Document for display
+                  const doc = { ...patientDoc.documents };
+                  // Preserve PatientDocument-specific fields
+                  doc.patientDocumentComment = patientDoc.comment;
+                  doc.patientDocumentDetails = patientDoc.details;
+                  doc.patientDocumentAttentionId = patientDoc.attentionId;
+                  doc.patientDocumentCreatedAt = patientDoc.createdAt;
+                  doc.patientDocumentCreatedBy = patientDoc.createdBy;
+                  return doc;
+                });
+            }
+          }
+        } else {
+          console.log('No id, loading all client documents via watcher');
+          // No patient history id, load all client documents
+          if (patientHistoryData.value.clientId) {
+            let docs = await getDocumentByCommerceIdAndClient(
+              patientHistoryData.value.commerceId,
+              patientHistoryData.value.clientId
+            );
+            state.oldDocuments = docs.filter(doc => doc.available);
+            console.log('All client documents loaded via watcher:', state.oldDocuments.length, state.oldDocuments);
+          } else {
+            // Fallback to patientDocument if no clientId
+            state.oldDocuments = patientHistoryData.value.patientDocument
+              .filter(patientDoc => patientDoc.documents && patientDoc.documents.available)
+              .map(patientDoc => {
+                const doc = { ...patientDoc.documents };
+                doc.patientDocumentComment = patientDoc.comment;
+                doc.patientDocumentDetails = patientDoc.details;
+                doc.patientDocumentAttentionId = patientDoc.attentionId;
+                doc.patientDocumentCreatedAt = patientDoc.createdAt;
+                doc.patientDocumentCreatedBy = patientDoc.createdBy;
+                return doc;
+              });
+            console.log('Patient documents loaded via watcher:', state.oldDocuments.length, state.oldDocuments);
+          }
         }
+        state.filteredDocuments = state.oldDocuments.slice();
+        // Apply sorting after loading documents
+        applySorting();
       }
       loading.value = false;
+    });
+
+    const refreshDocuments = async () => {
+      console.log('refreshDocuments called');
+      try {
+        console.log('Starting refresh, patientHistoryData:', patientHistoryData.value);
+        isUpdatingFromComponent.value = true;
+        loading.value = true;
+        // Re-load documents using the same logic as onBeforeMount
+        if (patientHistoryData.value) {
+          console.log('Has patientHistoryData, proceeding with refresh');
+          if (patientHistoryData.value.id) {
+            console.log('Has id, calling getDocumentsByPatientHistory');
+            try {
+              console.log('Calling getDocumentsByPatientHistory with id:', patientHistoryData.value.id);
+              // Try to get documents by patient history first
+              state.oldDocuments = await getDocumentsByPatientHistory(patientHistoryData.value.id);
+              state.oldDocuments = state.oldDocuments.filter(doc => doc.available);
+              console.log('Patient history documents refreshed:', state.oldDocuments.length, state.oldDocuments);
+            } catch (error) {
+              console.warn('Failed to refresh patient history documents, falling back to client documents:', error);
+              console.log('Falling back to client documents, clientId:', patientHistoryData.value.clientId);
+              // Fallback to client documents if patient history documents fail
+              if (patientHistoryData.value.clientId) {
+                let docs = await getDocumentByCommerceIdAndClient(
+                  patientHistoryData.value.commerceId,
+                  patientHistoryData.value.clientId
+                );
+                // Filter by patientHistoryId to only show documents for this patient history
+                docs = docs.filter(doc => doc.patientHistoryId === patientHistoryData.value.id);
+                state.oldDocuments = docs.filter(doc => doc.available);
+                console.log('Client documents loaded as fallback in refresh:', state.oldDocuments.length, state.oldDocuments);
+              }
+            }
+          } else {
+            console.log('No id, using client documents fallback');
+            // No patient history id, load all client documents
+            if (patientHistoryData.value.clientId) {
+              let docs = await getDocumentByCommerceIdAndClient(
+                patientHistoryData.value.commerceId,
+                patientHistoryData.value.clientId
+              );
+              state.oldDocuments = docs.filter(doc => doc.available);
+              console.log('Client documents loaded (no patient history filter):', state.oldDocuments.length, state.oldDocuments);
+            }
+          }
+          state.filteredDocuments = state.oldDocuments.slice();
+        } else {
+          console.log('No patientHistoryData, skipping refresh');
+        }
+        loading.value = false;
+        isUpdatingFromComponent.value = false;
+      } catch (error) {
+        loading.value = false;
+        isUpdatingFromComponent.value = false;
+      }
+    };
+
+    onUnmounted(() => {
+      isMounted.value = false;
     });
 
     return {
@@ -563,15 +839,20 @@ export default {
       toggles,
       errorsAdd,
       getDateAndHour,
-      checkAsc,
+      applySorting,
+      toggleSortOrder,
       getFile,
       showPopUpFile,
       add,
+      addWithoutType,
+      refreshDocuments,
       executeDownload,
       executeDelete,
       documentIcon,
       isGeneratedDocument,
       getGeneratedDocumentType,
+      getCategoryLabel,
+      getUrgencyLabel,
       handleFileSelected,
       handleFileRemoved,
       handleFileError,
@@ -587,12 +868,16 @@ export default {
       toggleDocumentSelection,
       selectAllDocuments,
       clearSelection,
+      onViewModeChanged,
       handleBatchDocumentsUpdated,
       handleBatchDocumentsDeleted,
+      // Reactive state
+      selectionMode,
     };
   },
 };
 </script>
+
 <template>
   <div class="patient-form-modern documents-form">
     <div class="form-header-modern">
@@ -603,6 +888,17 @@ export default {
         <h3 class="form-header-title">{{ $t('patientHistoryView.documents') }}</h3>
         <p class="form-header-subtitle">Gerencie os documentos do paciente</p>
       </div>
+      <div class="form-header-actions">
+        <button
+          @click="state.showUploadModal = true"
+          class="upload-header-btn"
+          :disabled="!state.togglesDocuments['document-client.admin.edit']"
+          title="Carregar Documento Novo"
+        >
+          <i class="bi bi-cloud-upload"></i>
+          <span class="upload-btn-text">Carregar</span>
+        </button>
+      </div>
     </div>
 
     <Spinner :show="loading"></Spinner>
@@ -610,9 +906,6 @@ export default {
     <!-- Document Viewer Modal -->
     <div v-if="state.showViewer" class="document-viewer-modal" @click="closeViewer">
       <div class="viewer-modal-content" @click.stop>
-        <button @click="closeViewer" class="close-viewer-btn">
-          <i class="bi bi-x-lg"></i>
-        </button>
         <DocumentViewer
           :documents="state.filteredDocuments"
           :initial-document="state.selectedDocument"
@@ -620,6 +913,7 @@ export default {
           :commerce="commerce"
           :client="clientData"
           @annotation-added="handleDocumentAnnotation"
+          @close="closeViewer"
         />
       </div>
     </div>
@@ -633,47 +927,37 @@ export default {
       @download="downloadDocument"
     />
 
-    <div class="form-layout-modern">
-      <!-- Search and Upload Section -->
-      <div class="form-input-section">
-        <!-- Document Search -->
-        <DocumentSearch @search="handleSearch" @filters-changed="handleFiltersChanged" />
-
-        <!-- Tree View Component -->
-        <DocumentTreeView
-          v-if="state.viewMode === 'tree'"
-          :documents="
-            state.filteredDocuments.filter(
-              doc =>
-                doc.available &&
-                doc.active === true &&
-                doc.details &&
-                doc.details.characteristics &&
-                doc.details.characteristics.document === true
-            )
-          "
-          @document-selected="selectDocument"
-          @document-preview="selectDocument"
-          @document-download="downloadDocument"
-        />
-
-        <div
-          v-if="state.documentList && state.documentList.length > 0"
-          class="upload-section-modern"
-        >
-          <div class="upload-section-header">
-            <i class="bi bi-cloud-upload upload-icon"></i>
-            <h4 class="upload-title">{{ $t('businessDocument.uploadNewDocument') }}</h4>
+    <!-- Upload Modal -->
+    <div v-if="state.showUploadModal" class="upload-modal-overlay" @click="state.showUploadModal = false">
+      <div class="upload-modal-content" @click.stop>
+        <div class="modal-header border-0 active-name modern-modal-header">
+          <div class="modern-modal-header-inner">
+            <div class="modern-modal-icon-wrapper">
+              <i class="bi bi-cloud-upload"></i>
+            </div>
+            <div class="modern-modal-title-wrapper">
+              <h5 class="modal-title fw-bold modern-modal-title">{{ $t('businessDocument.uploadNewDocument') }}</h5>
+              <p class="modern-modal-client-name">{{ patientHistoryData?.clientName || 'Paciente' }}</p>
+            </div>
           </div>
+          <button @click="state.showUploadModal = false" class="btn-close modern-modal-close-btn" type="button">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
 
-          <div class="upload-form-modern">
+        <div class="upload-modal-body">
+          <!-- Upload form content -->
+          <div
+            v-if="state.documentList && state.documentList.length > 0"
+            class="upload-form-modern"
+          >
             <div class="form-field-modern">
-              <label class="form-label-modern" for="document-type-select">
+              <label class="form-label-modern" for="modal-document-type-select">
                 <i class="bi bi-file-earmark-text me-1"></i>
                 {{ $t('businessDocument.feature') }}
               </label>
               <select
-                id="document-type-select"
+                id="modal-document-type-select"
                 class="form-control-modern form-select-modern"
                 v-model="state.optionSelected"
                 v-bind:class="{ 'form-control-invalid': state.moduleError }"
@@ -687,13 +971,26 @@ export default {
               </select>
             </div>
 
+            <div v-if="state.optionSelected" class="form-field-modern">
+              <label class="form-label-modern" for="modal-document-tag-input">
+                <i class="bi bi-tag me-1"></i>
+                Etiqueta personalizada (opcional)
+              </label>
+              <input
+                id="modal-document-tag-input"
+                type="text"
+                class="form-control-modern"
+                v-model="state.newDocument.customTag"
+                placeholder="Ej: Consulta enero 2024, Resultados laboratorio"
+                maxlength="50"
+              />
+              <small class="form-text text-muted">
+                Agregue una etiqueta personalizada para identificar fácilmente este documento
+              </small>
+            </div>
+
             <div
-              v-if="
-                state.optionSelected &&
-                state.optionSelected.characteristics &&
-                state.optionSelected.characteristics.document &&
-                state.optionSelected.characteristics.document === true
-              "
+              v-if="state.optionSelected"
               class="upload-actions-modern"
             >
               <DragDropFileUpload
@@ -714,9 +1011,9 @@ export default {
               />
 
               <button
-                id="document-add-button"
+                id="modal-document-add-button"
                 v-if="state.newDocument.file"
-                :disabled="!state.togglesDocuments['document-client.admin.edit'] || loading"
+                :disabled="!state.togglesDocuments['document-client.admin.edit'] || loading || !state.optionSelected"
                 class="btn-save-file-modern"
                 @click="add()"
               >
@@ -724,70 +1021,122 @@ export default {
                 {{ $t('businessDocument.add') }}
               </button>
             </div>
+          </div>
 
-            <div class="form-errors-modern" v-if="state.errorsAdd.length > 0">
-              <Warning>
-                <template v-slot:message>
-                  <li v-for="(error, index) in state.errorsAdd" :key="index">
-                    {{ $t(error) }}
-                  </li>
-                </template>
-              </Warning>
+          <!-- Fallback upload when no document types are available -->
+          <div
+            v-else
+            class="upload-form-modern"
+          >
+            <div class="form-field-modern">
+              <label class="form-label-modern" for="modal-document-tag-input-fallback">
+                <i class="bi bi-tag me-1"></i>
+                Etiqueta personalizada (requerido)
+              </label>
+              <input
+                id="modal-document-tag-input-fallback"
+                type="text"
+                class="form-control-modern"
+                v-model="state.newDocument.customTag"
+                placeholder="Ej: Consulta enero 2024, Resultados laboratorio"
+                maxlength="50"
+                required
+              />
+              <small class="form-text text-muted">
+                Especifique qué tipo de documento está subiendo
+              </small>
+            </div>
+
+            <div class="upload-actions-modern">
+              <DragDropFileUpload
+                :model-value="state.newDocument.file"
+                :disabled="!state.togglesDocuments['document-client.admin.edit']"
+                :loading="loading"
+                :accept="'.pdf,.jpg,.jpeg,.png'"
+                :max-size="5000000"
+                :title="$t('businessDocument.uploadNewDocument')"
+                :subtitle="
+                  $t('businessDocument.dragDropOrClick') ||
+                  'Arraste e solte o arquivo aqui ou clique para selecionar'
+                "
+                :accepted-formats="'PDF, JPG, PNG (máx. 5MB)'"
+                @file-selected="handleFileSelected"
+                @file-removed="handleFileRemoved"
+                @error="handleFileError"
+              />
+
+              <button
+                id="modal-document-add-button-fallback"
+                v-if="state.newDocument.file && state.newDocument.customTag"
+                :disabled="!state.togglesDocuments['document-client.admin.edit'] || loading || !state.newDocument.customTag"
+                class="btn-save-file-modern"
+                @click="addWithoutType()"
+              >
+                <i class="bi bi-check-circle-fill me-2"></i>
+                {{ $t('businessDocument.add') }}
+              </button>
             </div>
           </div>
-        </div>
 
-        <div v-else class="empty-state-modern">
-          <Message
-            :title="$t('patientHistoryView.message.2.title')"
-            :content="$t('patientHistoryView.message.2.content')"
-          />
+          <div class="form-errors-modern" v-if="state.errorsAdd.length > 0">
+            <Warning>
+              <template v-slot:message>
+                <li v-for="(error, index) in state.errorsAdd" :key="index">
+                  {{ $t(error) }}
+                </li>
+              </template>
+            </Warning>
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Collapsed Indicator (visible when collapsed) - Outside the section -->
-      <button
-        v-if="state.oldDocuments && state.oldDocuments.length > 0 && !state.showHistory"
-        class="history-collapsed-indicator"
-        @click="state.showHistory = !state.showHistory"
-        :title="$t('patientHistoryView.showMenu')"
-      >
-        <i class="bi bi-clock-history"></i>
-        <i class="bi bi-chevron-left"></i>
-      </button>
-
+    <div class="form-layout-modern">
       <!-- Documents History -->
-      <div
-        v-if="state.oldDocuments && state.oldDocuments.length > 0"
-        :class="['form-history-section', { collapsed: !state.showHistory }]"
-      >
-        <!-- Full History Section (visible when expanded) -->
-        <template v-if="state.showHistory">
-          <div class="history-section-header">
-            <div class="history-header-content">
-              <button
-                class="history-toggle-btn"
-                @click="state.showHistory = !state.showHistory"
-                :title="$t('patientHistoryView.hideMenu')"
-              >
-                <i class="bi bi-chevron-right"></i>
-              </button>
-              <i class="bi bi-clock-history history-header-icon"></i>
-              <h4 class="history-header-title">{{ $t('patientHistoryView.history') }}</h4>
-            </div>
+      <div class="form-history-section">
+        <!-- Full History Section (always visible) -->
+        <div class="history-section-header">
+          <div class="history-header-content">
+            <i class="bi bi-clock-history history-header-icon"></i>
+            <h4 class="history-header-title">{{ $t('patientHistoryView.history') }}</h4>
+          </div>
 
-            <div class="history-actions">
+          <!-- Document Search integrated in header -->
+          <div class="history-search-section">
+            <DocumentSearch @search="handleSearch" @filters-changed="handleFiltersChanged" />
+          </div>
+
+          <div class="history-actions">
               <button
+                @click="refreshDocuments"
+                class="refresh-btn"
+                :disabled="loading"
+                title="Actualizar documentos"
+              >
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+
+              <button
+                @click="toggleSortOrder"
+                class="sort-btn"
+                :class="{ active: state.asc }"
+                :title="state.asc ? 'Ordenar descendente (más recientes primero)' : 'Ordenar ascendente (más antiguos primero)'"
+              >
+                <i :class="state.asc ? 'bi bi-sort-down' : 'bi bi-sort-up'"></i>
+              </button>
+
+              <button
+                v-if="state.viewMode !== 'grid'"
                 @click="toggleSelectionMode"
                 class="selection-mode-btn"
-                :class="{ active: state.selectionMode }"
-                :title="state.selectionMode ? 'Salir del modo selección' : 'Modo selección'"
+                :class="{ active: selectionMode }"
+                :title="selectionMode ? 'Salir del modo selección' : 'Modo selección'"
               >
-                <i class="bi bi-check-square"></i>
+                <i :class="selectionMode ? 'bi bi-check-square-fill' : 'bi bi-check-square'"></i>
               </button>
 
               <button
-                v-if="state.selectionMode && state.filteredDocuments.length > 0"
+                v-if="selectionMode && state.filteredDocuments.length > 0"
                 @click="selectAllDocuments"
                 class="select-all-btn"
                 title="Seleccionar todos"
@@ -795,140 +1144,21 @@ export default {
                 <i class="bi bi-check-all"></i>
               </button>
             </div>
-            <div class="history-sort-control">
-              <label class="sort-toggle-label" for="asc-documents">
-                <input
-                  class="form-check-input sort-toggle-input"
-                  :class="state.asc === false ? 'sort-desc' : 'sort-asc'"
-                  type="checkbox"
-                  name="asc"
-                  id="asc-documents"
-                  v-model="state.asc"
-                  @click="checkAsc($event)"
-                />
-                <span class="sort-toggle-text">
-                  <i :class="state.asc ? 'bi bi-sort-down' : 'bi bi-sort-up'"></i>
-                  {{ state.asc ? $t('dashboard.asc') : $t('dashboard.desc') }}
-                </span>
-              </label>
-            </div>
-          </div>
-
-          <!-- View Mode Toggle -->
-          <div class="view-mode-selector">
-            <button
-              @click="state.viewMode = 'tree'"
-              :class="['view-mode-btn', { active: state.viewMode === 'tree' }]"
-            >
-              <i class="bi bi-diagram-3"></i>
-              Árbol
-            </button>
-            <button
-              @click="state.viewMode = 'list'"
-              :class="['view-mode-btn', { active: state.viewMode === 'list' }]"
-            >
-              <i class="bi bi-list-ul"></i>
-              Lista
-            </button>
           </div>
 
           <div class="history-timeline">
-            <div v-if="state.viewMode === 'list'" class="documents-list">
-              <div
-                v-for="item in state.filteredDocuments.filter(
-                  doc =>
-                    doc.available &&
-                    doc.active === true &&
-                    doc.details &&
-                    doc.details.characteristics &&
-                    doc.details.characteristics.document === true
-                )"
-                :key="item.id"
-                class="document-card-modern clickable"
-                :class="{
-                  selected: state.selectedDocuments.some(doc => doc.id === item.id),
-                  'selection-mode': state.selectionMode,
-                }"
-                @click="state.selectionMode ? toggleDocumentSelection(item) : selectDocument(item)"
-              >
-                <!-- Selection checkbox -->
-                <div v-if="state.selectionMode" class="selection-checkbox">
-                  <input
-                    type="checkbox"
-                    :checked="state.selectedDocuments.some(doc => doc.id === item.id)"
-                    @click.stop="toggleDocumentSelection(item)"
-                  />
-                </div>
-                <div class="document-card-content">
-                  <div class="document-card-main">
-                    <div class="document-badges">
-                      <!-- Generated Document Badge -->
-                      <span
-                        v-if="isGeneratedDocument(item)"
-                        :class="[
-                          'badge',
-                          getGeneratedDocumentType(item)?.color || 'badge-success',
-                          'badge-generated',
-                        ]"
-                        :title="`Documento generado automáticamente: ${
-                          getGeneratedDocumentType(item)?.label
-                        }`"
-                      >
-                        <i
-                          :class="`bi ${
-                            getGeneratedDocumentType(item)?.icon || 'bi-file-earmark-pdf'
-                          } me-1`"
-                        ></i>
-                        {{ getGeneratedDocumentType(item)?.label }}
-                      </span>
-                      <!-- Regular Document Badges -->
-                      <span
-                        class="badge badge-primary"
-                        v-if="item.details?.tag && !isGeneratedDocument(item)"
-                        >{{ item.details.tag }}</span
-                      >
-                      <span
-                        class="badge badge-secondary"
-                        v-if="item.details?.name && !isGeneratedDocument(item)"
-                        >{{ item.details.name }}</span
-                      >
-                    </div>
-                    <div class="document-meta">
-                      <i :class="`bi ${documentIcon(item.format)} document-type-icon`"></i>
-                      <span class="document-date" v-if="item.createdAt">{{
-                        getDateAndHour(item.createdAt)
-                      }}</span>
-                      <!-- Auto-generated indicator -->
-                      <span
-                        v-if="isGeneratedDocument(item)"
-                        class="auto-generated-indicator"
-                        title="Generado automáticamente"
-                      >
-                        <i class="bi bi-magic"></i>
-                      </span>
-                    </div>
-                  </div>
-                  <div class="document-actions">
-                    <button
-                      class="btn-document-action btn-download"
-                      @click="executeDownload(item)"
-                      title="Download"
-                    >
-                      <i class="bi bi-download"></i>
-                    </button>
-                    <button
-                      class="btn-document-action btn-delete"
-                      @click="executeDelete(item)"
-                      title="Excluir"
-                    >
-                      <i class="bi bi-trash-fill"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <!-- Tree View Component -->
+            <DocumentTreeView
+              :documents="state.filteredDocuments"
+              :selection-mode="selectionMode"
+              :selected-documents="state.selectedDocuments"
+              @document-selected="selectDocument"
+              @document-preview="selectDocument"
+              @document-download="downloadDocument"
+              @document-toggle-selection="toggleDocumentSelection"
+              @view-mode-changed="onViewModeChanged"
+            />
           </div>
-        </template>
       </div>
     </div>
 
@@ -949,6 +1179,52 @@ export default {
 .patient-form-modern.documents-form {
   width: 100%;
   padding: 0;
+}
+
+/* Header button styles */
+.form-header-modern {
+  position: relative;
+  margin-bottom: 0rem !important;
+}
+
+.form-header-actions {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  z-index: 5;
+}
+
+.upload-header-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  border: none;
+  border-radius: 0.5rem;
+  color: white;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.upload-header-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.upload-header-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.upload-btn-text {
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 /* Document Viewer Modal */
@@ -1230,23 +1506,14 @@ export default {
 /* Form Layout */
 .form-layout-modern {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 0.75rem;
   height: 100%;
   position: relative;
   overflow: visible;
+  min-height: 1000px;
 }
 
-/* Ensure the collapsed indicator container has space */
-.form-layout-modern:has(.history-collapsed-indicator) {
-  position: relative;
-}
-
-.form-layout-modern:has(.form-history-section.collapsed) .form-input-section {
-  grid-column: 1 / -1;
-}
-
-.form-input-section,
 .form-history-section {
   display: flex;
   flex-direction: column;
@@ -1256,7 +1523,7 @@ export default {
 
 .form-history-section {
   position: relative;
-  overflow: visible;
+  overflow: auto;
 }
 
 .form-history-section.collapsed {
@@ -1315,9 +1582,17 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.5rem;
+  margin-bottom: 0.1rem;
+  padding-bottom: 0.1rem;
   border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.history-search-section {
+  flex: 1;
+  max-width: 400px;
+  margin: 0 1rem;
 }
 
 .history-actions {
@@ -1326,8 +1601,10 @@ export default {
   align-items: center;
 }
 
+.refresh-btn,
 .selection-mode-btn,
-.select-all-btn {
+.select-all-btn,
+.sort-btn {
   width: 32px;
   height: 32px;
   display: flex;
@@ -1342,17 +1619,38 @@ export default {
   font-size: 0.9rem;
 }
 
+.refresh-btn:hover:not(:disabled),
 .selection-mode-btn:hover,
-.select-all-btn:hover {
+.select-all-btn:hover,
+.sort-btn:hover {
   background: #f8f9fa;
   color: #495057;
   border-color: #adb5bd;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.refresh-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .selection-mode-btn.active {
   background: var(--azul-turno);
   color: white;
   border-color: var(--azul-turno);
+}
+
+.sort-btn.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
 }
 
 .select-all-btn {
@@ -1437,14 +1735,6 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-}
-
-.sort-asc {
-  background-color: #28a745;
-}
-
-.sort-desc {
-  background-color: #dc3545;
 }
 
 /* Documents List */
@@ -1724,5 +2014,172 @@ export default {
     align-items: flex-start;
     gap: 0.75rem;
   }
+}
+
+/* Upload Modal Styles */
+.upload-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.upload-modal-content {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.upload-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.upload-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.upload-modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.upload-modal-close-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #495057;
+}
+
+.upload-modal-body {
+  padding: 1.5rem;
+}
+
+.upload-modal-body .upload-form-modern {
+  margin-bottom: 0;
+}
+
+.upload-modal-body .form-field-modern {
+  margin-bottom: 1rem;
+}
+
+.upload-modal-body .upload-actions-modern {
+  margin-top: 1rem;
+}
+
+.upload-modal-body .btn-save-file-modern {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Modern Modal Header Styles */
+.modern-modal-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  border-radius: 1rem 1rem 0 0;
+  min-height: auto;
+  position: relative;
+}
+
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.modern-modal-icon-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-modal-icon-wrapper i {
+  font-size: 1.125rem;
+  color: #ffffff;
+}
+
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-background);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.modern-modal-client-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.modern-modal-close-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+}
+
+.modern-modal-close-btn i {
+  font-size: 1rem;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.modern-modal-close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
 }
 </style>

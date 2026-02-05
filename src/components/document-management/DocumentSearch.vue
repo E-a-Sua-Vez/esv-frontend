@@ -1,5 +1,5 @@
 <template>
-  <div class="document-search-container">
+  <div>
     <!-- Search Bar -->
     <div class="search-bar">
       <div class="search-input-group">
@@ -8,7 +8,7 @@
           v-model="searchText"
           @input="handleSearch"
           type="text"
-          placeholder="Buscar documentos por nombre, categoría o notas..."
+          :placeholder="$t('documentSearch.searchPlaceholder')"
           class="search-input"
         />
         <button v-if="searchText" @click="clearSearch" class="clear-search-btn">
@@ -16,155 +16,103 @@
         </button>
       </div>
 
-      <button
-        @click="toggleFilters"
-        class="filter-toggle-btn"
-        :class="{ active: showFilters || hasActiveFilters }"
-      >
-        <i class="bi bi-funnel"></i>
-        Filtros
-        <span v-if="activeFilterCount > 0" class="filter-count">{{ activeFilterCount }}</span>
-      </button>
-    </div>
+      <div class="filter-container">
+        <button
+          @click="toggleFilters"
+          class="filter-toggle-btn"
+          :class="{ active: showFilters || hasActiveFilters }"
+        >
+          <i class="bi bi-funnel"></i>
+          {{ $t('documentSearch.filters') }}
+          <span v-if="activeFilterCount > 0" class="filter-count">{{ activeFilterCount }}</span>
+        </button>
 
-    <!-- Compact Filters -->
-    <div class="filters-panel" :class="{ expanded: showFilters }">
-      <div class="filters-content compact-filters">
-        <!-- Row 1: Category and Urgency -->
-        <div class="filter-row">
-          <div class="filter-group compact">
-            <label class="filter-label">Categoría</label>
-            <select v-model="filters.category" @change="applyFilters" class="filter-select compact">
-              <option value="">Todas</option>
-              <option v-for="category in categories" :key="category.value" :value="category.value">
-                {{ category.label }}
-              </option>
-            </select>
-          </div>
+        <!-- Compact Filters -->
+        <div class="filters-panel" :class="{ expanded: showFilters }">
+          <div class="filters-content compact-filters">
+            <!-- Row 1: Category and Urgency -->
+            <div class="filter-row">
+              <div class="filter-group compact">
+                <label class="filter-label">{{ $t('documentSearch.category') }}</label>
+                <select v-model="filters.category" @change="applyFilters" class="filter-select compact">
+                  <option value="">{{ $t('documentSearch.all') }}</option>
+                  <option v-for="category in categories" :key="category.value" :value="category.value">
+                    {{ category.label }}
+                  </option>
+                </select>
+              </div>
 
-          <div class="filter-group compact">
-            <label class="filter-label">Urgencia</label>
-            <select v-model="filters.urgency" @change="applyFilters" class="filter-select compact">
-              <option value="">Todas</option>
-              <option v-for="urgency in urgencyLevels" :key="urgency.value" :value="urgency.value">
-                {{ urgency.label }}
-              </option>
-            </select>
-          </div>
-        </div>
+              <div class="filter-group compact">
+                <label class="filter-label">{{ $t('documentSearch.urgency') }}</label>
+                <select v-model="filters.urgency" @change="applyFilters" class="filter-select compact">
+                  <option value="">{{ $t('documentSearch.all') }}</option>
+                  <option v-for="urgency in urgencyLevels" :key="urgency.value" :value="urgency.value">
+                    {{ urgency.label }}</option>
+                </select>
+              </div>
+            </div>
 
-        <!-- Row 2: Date Range -->
-        <div class="filter-row">
-          <div class="filter-group compact date-range">
-            <label class="filter-label">Fechas</label>
-            <div class="date-range-inputs compact">
-              <input
-                v-model="filters.dateFrom"
-                @change="applyFilters"
-                type="date"
-                class="date-input compact"
-                placeholder="Desde"
-              />
-              <span class="date-separator">-</span>
-              <input
-                v-model="filters.dateTo"
-                @change="applyFilters"
-                type="date"
-                class="date-input compact"
-                placeholder="Hasta"
-              />
+            <!-- Row 2: Date Range -->
+            <div class="filter-row">
+              <div class="filter-group compact">
+                <label class="filter-label">{{ $t('documentSearch.from') }}</label>
+                <input
+                  v-model="filters.dateFrom"
+                  @change="applyFilters"
+                  type="date"
+                  class="filter-input compact"
+                />
+              </div>
+
+              <div class="filter-group compact">
+                <label class="filter-label">{{ $t('documentSearch.to') }}</label>
+                <input
+                  v-model="filters.dateTo"
+                  @change="applyFilters"
+                  type="date"
+                  class="filter-input compact"
+                />
+              </div>
+            </div>
+
+            <!-- Row 3: Tags -->
+            <div class="filter-row">
+              <div class="filter-group compact full-width">
+                <label class="filter-label">{{ $t('documentSearch.tags') }}</label>
+                <input
+                  v-model="newTag"
+                  @keydown.enter="addTag"
+                  @keydown="handleTagInputKeydown"
+                  type="text"
+                  :placeholder="$t('documentSearch.addTagPlaceholder')"
+                  class="filter-input compact"
+                />
+                <div v-if="filters.tags.length > 0" class="tags-display">
+                  <span
+                    v-for="tag in filters.tags"
+                    :key="tag"
+                    class="tag-chip"
+                    @click="removeTag(tag)"
+                  >
+                    {{ tag }} <i class="bi bi-x"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 4: Actions -->
+            <div class="filter-row">
+              <button @click="clearFilters" class="filter-btn clear-btn">{{ $t('documentSearch.clear') }}</button>
+              <button @click="applyFilters" class="filter-btn apply-btn">{{ $t('documentSearch.apply') }}</button>
             </div>
           </div>
-        </div>
-
-        <!-- Status Filter -->
-        <div class="filter-group">
-          <label class="filter-label">Estado</label>
-          <select v-model="filters.status" @change="applyFilters" class="filter-select">
-            <option value="">Todos los estados</option>
-            <option v-for="status in statusOptions" :key="status.value" :value="status.value">
-              {{ status.label }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Tags Filter -->
-        <div class="filter-group">
-          <label class="filter-label">Etiquetas</label>
-          <div class="tags-input-container">
-            <input
-              v-model="newTag"
-              @keyup.enter="addTag"
-              type="text"
-              placeholder="Agregar etiqueta..."
-              class="tag-input"
-            />
-            <button @click="addTag" class="add-tag-btn">
-              <i class="bi bi-plus"></i>
-            </button>
-          </div>
-          <div class="selected-tags" v-if="filters.tags.length > 0">
-            <span v-for="tag in filters.tags" :key="tag" class="selected-tag">
-              {{ tag }}
-              <button @click="removeTag(tag)" class="remove-tag-btn">
-                <i class="bi bi-x"></i>
-              </button>
-            </span>
-          </div>
-        </div>
-
-        <!-- Quick Filters -->
-        <div class="filter-group">
-          <label class="filter-label">Filtros rápidos</label>
-          <div class="quick-filters">
-            <button
-              @click="applyQuickFilter('today')"
-              class="quick-filter-btn"
-              :class="{ active: quickFilter === 'today' }"
-            >
-              Hoy
-            </button>
-            <button
-              @click="applyQuickFilter('week')"
-              class="quick-filter-btn"
-              :class="{ active: quickFilter === 'week' }"
-            >
-              Esta semana
-            </button>
-            <button
-              @click="applyQuickFilter('month')"
-              class="quick-filter-btn"
-              :class="{ active: quickFilter === 'month' }"
-            >
-              Este mes
-            </button>
-            <button
-              @click="applyQuickFilter('critical')"
-              class="quick-filter-btn"
-              :class="{ active: quickFilter === 'critical' }"
-            >
-              Críticos
-            </button>
-          </div>
-        </div>
-
-        <!-- Filter Actions -->
-        <div class="filter-actions">
-          <button @click="clearAllFilters" class="clear-filters-btn">
-            <i class="bi bi-arrow-clockwise"></i>
-            Limpiar filtros
-          </button>
-          <button @click="saveFilterPreset" class="save-preset-btn">
-            <i class="bi bi-bookmark"></i>
-            Guardar preset
-          </button>
         </div>
       </div>
     </div>
 
     <!-- Active Filters Display -->
     <div class="active-filters" v-if="hasActiveFilters">
-      <span class="active-filters-label">Filtros activos:</span>
+      <span class="active-filters-label">{{ $t('documentSearch.activeFilters') }}</span>
 
       <span v-if="filters.category" class="active-filter-chip">
         {{ getCategoryLabel(filters.category) }}
@@ -206,6 +154,7 @@
 
 <script>
 import { ref, computed, reactive } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   getDocumentCategories,
   getDocumentUrgencyLevels,
@@ -216,6 +165,7 @@ export default {
   name: 'DocumentSearch',
   emits: ['search', 'filters-changed'],
   setup(props, { emit }) {
+    const { t } = useI18n();
     const searchText = ref('');
     const showFilters = ref(false);
     const newTag = ref('');
@@ -311,6 +261,23 @@ export default {
       }
     };
 
+    const removeLastTag = () => {
+      if (newTag.value === '' && filters.tags.length > 0) {
+        filters.tags.pop();
+        applyFilters();
+      }
+    };
+
+    const handleTagInputKeydown = event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        addTag();
+      } else if (event.key === 'Backspace' && newTag.value === '') {
+        event.preventDefault();
+        removeLastTag();
+      }
+    };
+
     const applyQuickFilter = type => {
       clearAllFilters();
       quickFilter.value = type;
@@ -400,6 +367,8 @@ export default {
       clearAllFilters,
       addTag,
       removeTag,
+      removeLastTag,
+      handleTagInputKeydown,
       applyQuickFilter,
       getCategoryLabel,
       getUrgencyLabel,
@@ -413,18 +382,18 @@ export default {
 
 <style scoped>
 .document-search-container {
+  position: relative;
   background: white;
   border-radius: 0.375rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   margin-bottom: 0.5rem;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .search-bar {
   display: flex;
   gap: 0.375rem;
   padding: 0.5rem;
-  border-bottom: 1px solid #e9ecef;
 }
 
 .search-input-group {
@@ -448,6 +417,7 @@ export default {
   border-radius: 0.25rem;
   font-size: 0.8rem;
   transition: all 0.2s ease;
+  z-index: 1 !important;
 }
 
 .search-input:focus {
@@ -518,14 +488,33 @@ export default {
   font-weight: 600;
 }
 
+.filter-container {
+  position: relative;
+  display: inline-block;
+}
+
 .filters-panel {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  max-height: 70vh;
+  overflow-y: auto;
+  min-width: 300px;
 }
 
 .filters-panel.expanded {
-  max-height: 600px;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 .filters-content {
@@ -537,7 +526,6 @@ export default {
   align-items: flex-start;
   padding: 0.5rem;
   background: #f8f9fa;
-  border-top: 1px solid #e9ecef;
 }
 
 .filters-content.compact-filters {
@@ -552,6 +540,53 @@ export default {
 
 .filter-row:last-child {
   margin-bottom: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.filter-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.clear-btn {
+  background: white;
+  color: #6c757d;
+  border-color: #dee2e6;
+}
+
+.clear-btn:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+  color: #495057;
+}
+
+.apply-btn {
+  background: var(--azul-turno);
+  color: white;
+  border-color: var(--azul-turno);
+}
+
+.apply-btn:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+  color: white;
+}
+
+.filter-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .filter-group {

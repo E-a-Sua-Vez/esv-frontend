@@ -152,7 +152,8 @@ export default {
         // Get PDF blob from backend
         const pdfBlob = await getClientDocument(
           props.document.commerceId,
-          props.document.option,
+          props.document.clientId || null,
+          'patient_documents',
           props.document.name
         );
 
@@ -243,8 +244,12 @@ export default {
 
     const fitToWidth = () => {
       if (canvasContainer.value) {
-        const containerWidth = canvasContainer.value.clientWidth - 40; // padding
-        scale.value = containerWidth / 800; // 800 is base width
+        if (scale.value === 1) {
+          const containerWidth = canvasContainer.value.clientWidth - 40; // padding
+          scale.value = containerWidth / 800; // 800 is base width
+        } else {
+          scale.value = 1; // reset to 100%
+        }
         renderPage(currentPage.value);
       }
     };

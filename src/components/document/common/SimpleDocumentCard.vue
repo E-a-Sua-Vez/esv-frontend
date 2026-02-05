@@ -49,7 +49,7 @@ export default {
     async executeClientDownload(item) {
       try {
         this.loading = true;
-        const fileToDownload = await getClientDocument(item.commerceId, item.option, item.name);
+        const fileToDownload = await getClientDocument(item.commerceId, item.clientId, 'patient_documents', item.name);
         if (fileToDownload) {
           const file = new Blob([fileToDownload], { type: item.format });
           const fileURL = URL.createObjectURL(file);

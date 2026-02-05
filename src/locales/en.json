@@ -715,6 +715,87 @@
     },
     "options": {
       "patient_documents": "Patient Documents"
+    },
+    "batchOperations": {
+      "selectedCount": "{count} {document} {selected}",
+      "document": "document | documents",
+      "selected": "selected",
+      "clearSelection": "Clear",
+      "download": "Download",
+      "tag": "Tag",
+      "categorize": "Categorize",
+      "urgency": "Urgency",
+      "delete": "Delete",
+      "downloadModal": {
+        "title": "Download Documents",
+        "question": "How would you like to download the {count} selected documents?",
+        "individualFiles": "Individual files",
+        "individualDescription": "Download each document separately",
+        "zipFile": "ZIP file",
+        "zipDescription": "Compress all documents into a file",
+        "zipFilenameLabel": "ZIP file name:",
+        "zipFilenamePlaceholder": "patient-documents",
+        "downloading": "Downloading...",
+        "download": "Download"
+      },
+      "tagModal": {
+        "title": "Manage Tags",
+        "addTags": "Add tags",
+        "removeTags": "Remove tags",
+        "replaceTags": "Replace tags",
+        "tagPlaceholder": "Type tag...",
+        "commonTags": "Common tags:",
+        "applying": "Applying...",
+        "applyTags": "Apply Tags"
+      },
+      "categoryModal": {
+        "title": "Change Category",
+        "selectCategory": "Select the new category for the {count} documents:",
+        "applying": "Applying...",
+        "changeCategory": "Change Category"
+      },
+      "urgencyModal": {
+        "title": "Change Urgency",
+        "selectUrgency": "Select the new urgency level for the {count} documents:",
+        "applying": "Applying...",
+        "changeUrgency": "Change Urgency",
+        "descriptions": {
+          "LOW": "Low priority, does not require immediate attention",
+          "NORMAL": "Normal priority, standard processing",
+          "HIGH": "High priority, requires prompt attention",
+          "CRITICAL": "Critical priority, requires immediate attention"
+        }
+      },
+      "deleteModal": {
+        "title": "Delete Documents",
+        "confirmation": "Are you sure you want to delete these documents?",
+        "warning": "This action will delete {count} {document} and cannot be undone.",
+        "documentsToDelete": "Documents to be deleted:",
+        "andMore": "and {count} more...",
+        "deleting": "Deleting...",
+        "deleteDocuments": "Delete Documents"
+      },
+      "cancel": "Cancel"
+    },
+    "categories": {
+      "LABORATORY_RESULTS": "Laboratory Results",
+      "IMAGING_STUDIES": "Imaging Studies",
+      "PATHOLOGY_REPORTS": "Pathology Reports",
+      "CONSULTATION_NOTES": "Consultation Notes",
+      "DISCHARGE_SUMMARIES": "Discharge Summaries",
+      "REFERRAL_LETTERS": "Referral Letters",
+      "PRESCRIPTION_RECORDS": "Prescription Records",
+      "CONSENT_FORMS": "Consent Forms",
+      "INSURANCE_CARDS": "Insurance Cards",
+      "IDENTIFICATION": "Identification Documents",
+      "MEDICAL_HISTORY": "Medical History",
+      "ALLERGIES_MEDICATIONS": "Allergies and Medications",
+      "BILLING_DOCUMENTS": "Billing Documents",
+      "APPOINTMENT_CONFIRMATIONS": "Appointment Confirmations",
+      "EXTERNAL_REPORTS": "External Reports",
+      "PREVIOUS_TREATMENTS": "Previous Treatments",
+      "SPECIALIST_REPORTS": "Specialist Reports",
+      "OTHER": "Other"
     }
   },
   "patientHistoryItemFrequenciesTypes": {
@@ -735,6 +816,48 @@
     "PENDING": "Pending",
     "PROCCESSED": "Proccessed",
     "CANCELLED": "Cancelled"
+  },
+  "documentSearch": {
+    "searchPlaceholder": "Search documents by name, category or notes...",
+    "filters": "Filters",
+    "category": "Category",
+    "urgency": "Urgency",
+    "all": "All",
+    "from": "From",
+    "to": "To",
+    "tags": "Tags",
+    "addTagPlaceholder": "Add tag...",
+    "clear": "Clear",
+    "apply": "Apply",
+    "activeFilters": "Active filters:"
+  },
+  "documentTreeView": {
+    "tree": "Tree",
+    "list": "List",
+    "gallery": "Gallery",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all"
+  },
+  "documentViewer": {
+    "document": "Document",
+    "patient": "Patient",
+    "documents": "Documents"
+  },
+  "documentImageCarousel": {
+    "image": "Image",
+    "images": "images",
+    "fullscreen": "Fullscreen",
+    "download": "Download"
+  },
+  "attentionDocumentUpload": {
+    "documentType": "Document type",
+    "selectDocumentType": "Select document type..."
+  },
+  "attentionDocuments": {
+    "consultationDocuments": "Consultation Documents",
+    "consultationOf": "Consultation of",
+    "uploadDocument": "Upload Document",
+    "linkExisting": "Link Existing"
   },
   "configuration": {
     "types": {
@@ -5496,7 +5619,7 @@
     "update": "Update",
     "autoSaving": "Autosaving",
     "clickSave": "Click on Save Button",
-    "patientInfo": "Patient Information",
+    "patientInfo": "Patient",
     "consultation": "Consultation",
     "examination": "Examination",
     "clinical": "Clinical",

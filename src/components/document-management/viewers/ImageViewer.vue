@@ -187,7 +187,8 @@ export default {
 
         const imageBlob = await getClientDocument(
           props.document.commerceId,
-          props.document.option,
+          props.document.clientId,
+          'patient_documents',
           props.document.name
         );
 

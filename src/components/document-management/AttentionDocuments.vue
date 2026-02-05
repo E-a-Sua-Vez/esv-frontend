@@ -3,20 +3,20 @@
     <!-- Header -->
     <div class="attention-documents-header">
       <div class="header-info">
-        <h3>Documentos de la Consulta</h3>
+        <h3>{{ $t('attentionDocuments.consultationDocuments') }}</h3>
         <p v-if="attention">
-          Consulta del {{ formatDate(attention.createdAt) }} - {{ attention.userName }}
+          {{ $t('attentionDocuments.consultationOf') }} {{ formatDate(attention.createdAt) }} - {{ attention.userName }}
           {{ attention.userLastName }}
         </p>
       </div>
       <div class="header-actions">
         <button @click="showUploadModal = true" class="btn-upload-document" v-if="canUpload">
           <i class="bi bi-plus-circle"></i>
-          Subir Documento
+          {{ $t('attentionDocuments.uploadDocument') }}
         </button>
         <button @click="linkExistingDocument" class="btn-link-document" v-if="canUpload">
           <i class="bi bi-link-45deg"></i>
-          Vincular Existente
+          {{ $t('attentionDocuments.linkExisting') }}
         </button>
       </div>
     </div>
@@ -78,9 +78,17 @@
     <!-- Upload Modal -->
     <div v-if="showUploadModal" class="upload-modal" @click="showUploadModal = false">
       <div class="upload-modal-content" @click.stop>
-        <div class="upload-modal-header">
-          <h3>Subir Documento a la Consulta</h3>
-          <button @click="showUploadModal = false" class="close-modal-btn">
+        <div class="modal-header border-0 active-name modern-modal-header">
+          <div class="modern-modal-header-inner">
+            <div class="modern-modal-icon-wrapper">
+              <i class="bi bi-cloud-upload"></i>
+            </div>
+            <div class="modern-modal-title-wrapper">
+              <h5 class="modal-title fw-bold modern-modal-title">Subir Documento a la Consulta</h5>
+              <p class="modern-modal-client-name">{{ attention?.patientName || 'Paciente' }}</p>
+            </div>
+          </div>
+          <button @click="showUploadModal = false" class="btn-close modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -122,9 +130,6 @@
     <!-- Document Viewer -->
     <div v-if="showViewer" class="document-viewer-modal" @click="closeViewer">
       <div class="viewer-modal-content" @click.stop>
-        <button @click="closeViewer" class="close-viewer-btn">
-          <i class="bi bi-x-lg"></i>
-        </button>
         <DocumentViewer
           :documents="documents"
           :initial-document="selectedDocument"
@@ -132,6 +137,7 @@
           :commerce="commerce"
           :client="client"
           @annotation-added="handleAnnotationAdded"
+          @close="closeViewer"
         />
       </div>
     </div>
@@ -140,6 +146,7 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   getDocumentsByAttention,
   linkDocumentToAttention,
@@ -169,6 +176,7 @@ export default {
   },
   emits: ['document-added', 'document-linked'],
   setup(props, { emit }) {
+    const { t } = useI18n();
     const documents = ref([]);
     const loading = ref(false);
     const showUploadModal = ref(false);
@@ -205,7 +213,7 @@ export default {
 
     const downloadDocument = async document => {
       try {
-        const blob = await getClientDocument(document.commerceId, document.option, document.name);
+        const blob = await getClientDocument(document.commerceId, document.clientId, 'patient_documents', document.name);
 
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -450,6 +458,7 @@ export default {
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -696,5 +705,92 @@ export default {
     height: 100vh;
     border-radius: 0;
   }
+}
+
+/* Modern Modal Header Styles */
+.modern-modal-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  border-radius: 1rem 1rem 0 0;
+  min-height: auto;
+  position: relative;
+}
+
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.modern-modal-icon-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-modal-icon-wrapper i {
+  font-size: 1.125rem;
+  color: #ffffff;
+}
+
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-background);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.modern-modal-client-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.modern-modal-close-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+}
+
+.modern-modal-close-btn i {
+  font-size: 1rem;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.modern-modal-close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
 }
 </style>

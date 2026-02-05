@@ -5,7 +5,7 @@
       <div class="form-group">
         <label class="form-label">
           <i class="bi bi-file-earmark-text me-2"></i>
-          Tipo de documento *
+          {{ $t('attentionDocumentUpload.documentType') }} *
         </label>
         <select
           v-model="selectedDocumentType"
@@ -13,7 +13,7 @@
           class="form-select"
           required
         >
-          <option value="">Seleccione el tipo de documento...</option>
+          <option value="">{{ $t('attentionDocumentUpload.selectDocumentType') }}</option>
           <option v-for="type in documentTypes" :key="type.value" :value="type">
             {{ type.label }}
           </option>
@@ -140,6 +140,7 @@
 
 <script>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   addClientDocument,
   getDocumentCategories,
@@ -159,6 +160,7 @@ export default {
   },
   emits: ['document-uploaded', 'cancel'],
   setup(props, { emit }) {
+    const { t } = useI18n();
     const loading = ref(false);
     const selectedFile = ref(null);
     const selectedDocumentType = ref('');

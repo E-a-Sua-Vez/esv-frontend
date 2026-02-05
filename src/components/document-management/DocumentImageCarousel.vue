@@ -2,19 +2,18 @@
   <div v-if="show" class="carousel-overlay" @click="closeCarousel">
     <div class="carousel-container" @click.stop>
       <!-- Header -->
-      <div class="carousel-header">
-        <div class="carousel-title">
-          <h3>{{ currentDocument?.name || 'Imagen' }}</h3>
-          <span class="image-counter">{{ currentIndex + 1 }} de {{ images.length }}</span>
+      <div class="modal-header border-0 active-name modern-modal-header">
+        <div class="modern-modal-header-inner">
+          <div class="modern-modal-icon-wrapper">
+            <i class="bi bi-images"></i>
+          </div>
+          <div class="modern-modal-title-wrapper">
+            <h5 class="modal-title fw-bold modern-modal-title">{{ currentDocument?.name || $t('documentImageCarousel.image') }}</h5>
+            <p class="modern-modal-client-name">{{ currentIndex + 1 }} de {{ images.length }} {{ $t('documentImageCarousel.images') }}</p>
+          </div>
         </div>
         <div class="carousel-actions">
-          <button @click="toggleFullscreen" class="header-btn" title="Pantalla completa">
-            <i :class="isFullscreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'"></i>
-          </button>
-          <button @click="downloadCurrent" class="header-btn" title="Descargar">
-            <i class="bi bi-download"></i>
-          </button>
-          <button @click="closeCarousel" class="header-btn close-btn" title="Cerrar">
+          <button @click="closeCarousel" class="btn-close modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -41,7 +40,7 @@
             @wheel="handleZoom"
           >
             <img
-              v-if="currentDocument"
+              v-if="currentDocument && !imageError"
               :src="getImageUrl(currentDocument)"
               :alt="currentDocument.name"
               class="main-image"
@@ -52,6 +51,14 @@
             <div v-if="imageLoading" class="image-loading">
               <div class="loading-spinner"></div>
               <span>Cargando imagen...</span>
+            </div>
+            <div v-if="imageError" class="image-error">
+              <i class="bi bi-exclamation-triangle"></i>
+              <span>Error al cargar la imagen</span>
+              <button @click="retryLoadImage" class="retry-btn">
+                <i class="bi bi-arrow-clockwise"></i>
+                Reintentar
+              </button>
             </div>
           </div>
         </div>
@@ -81,6 +88,12 @@
         </button>
         <button @click="rotateImage" class="zoom-btn" title="Rotar">
           <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <button @click="toggleFullscreen" class="zoom-btn" :title="$t('documentImageCarousel.fullscreen')">
+          <i :class="isFullscreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'"></i>
+        </button>
+        <button @click="downloadCurrent" class="zoom-btn" :title="$t('documentImageCarousel.download')">
+          <i class="bi bi-download"></i>
         </button>
       </div>
 
@@ -145,6 +158,8 @@
 
 <script>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { getClientDocument } from '../../application/services/document';
 
 export default {
   name: 'DocumentImageCarousel',
@@ -164,6 +179,7 @@ export default {
   },
   emits: ['close', 'download'],
   setup(props, { emit }) {
+    const { t } = useI18n();
     const currentIndex = ref(0);
     const zoomLevel = ref(1);
     const panX = ref(0);
@@ -173,6 +189,7 @@ export default {
     const showInfo = ref(false);
     const isFullscreen = ref(false);
     const imageContainer = ref(null);
+    const imageError = ref(false);
 
     // Pan state
     const isPanning = ref(false);
@@ -191,6 +208,19 @@ export default {
 
     const currentDocument = computed(() => images.value[currentIndex.value]);
 
+    const loadImages = async () => {
+      for (const doc of images.value) {
+        if (!doc.url) {
+          try {
+            const blob = await getClientDocument(doc.commerceId, doc.clientId, 'patient_documents', doc.name);
+            doc.url = URL.createObjectURL(blob);
+          } catch (error) {
+            console.error('Error loading image:', doc.name, error);
+          }
+        }
+      }
+    };
+
     // Watch for prop changes
     watch(
       () => props.initialIndex,
@@ -203,16 +233,23 @@ export default {
 
     watch(
       () => props.show,
-      show => {
+      async (show) => {
         if (show) {
           currentIndex.value = props.initialIndex;
           resetView();
           document.addEventListener('keydown', handleKeydown);
+          await loadImages();
         } else {
           document.removeEventListener('keydown', handleKeydown);
         }
       },
     );
+
+    // Reset error state when current image changes
+    watch(currentIndex, () => {
+      imageError.value = false;
+      imageLoading.value = true;
+    });
 
     // Methods
     const closeCarousel = () => {
@@ -256,6 +293,17 @@ export default {
       resetZoom();
       rotation.value = 0;
       imageLoading.value = true;
+      imageError.value = false;
+    };
+
+    const retryLoadImage = () => {
+      imageLoading.value = true;
+      imageError.value = false;
+      // Force reload by updating the src
+      const img = imageContainer.value?.querySelector('.main-image');
+      if (img && currentDocument.value) {
+        img.src = getImageUrl(currentDocument.value) + '?t=' + Date.now();
+      }
     };
 
     const rotateImage = () => {
@@ -343,19 +391,17 @@ export default {
 
     const handleImageLoad = () => {
       imageLoading.value = false;
+      imageError.value = false;
     };
 
     const handleImageError = () => {
       imageLoading.value = false;
+      imageError.value = true;
       console.error('Error loading image:', currentDocument.value?.name);
     };
 
-    const getImageUrl = doc =>
-      // In a real implementation, this would return the actual image URL
-      doc.url || `/api/documents/${doc.id}/content`;
-    const getThumbnailUrl = doc =>
-      // In a real implementation, this would return thumbnail URL
-      doc.thumbnailUrl || getImageUrl(doc);
+    const getImageUrl = doc => doc.url || '';
+    const getThumbnailUrl = doc => doc.thumbnailUrl || doc.url || '';
     const formatDate = dateStr => {
       if (!dateStr) return '';
       const date = new Date(dateStr);
@@ -419,11 +465,13 @@ export default {
       downloadCurrent,
       handleImageLoad,
       handleImageError,
+      retryLoadImage,
       getImageUrl,
       getThumbnailUrl,
       formatDate,
       formatFileSize,
       getCategoryLabel,
+      imageError,
     };
   },
 };
@@ -453,7 +501,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: .5rem;
   background: rgba(0, 0, 0, 0.8);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -575,6 +623,37 @@ export default {
   align-items: center;
   gap: 1rem;
   color: rgba(255, 255, 255, 0.7);
+}
+
+.image-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.image-error i {
+  font-size: 3rem;
+  color: #dc3545;
+}
+
+.retry-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.retry-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .loading-spinner {
@@ -756,7 +835,7 @@ export default {
 /* Responsive Design */
 @media (max-width: 768px) {
   .carousel-header {
-    padding: 0.75rem;
+    padding: 0.25rem;
   }
 
   .carousel-title h3 {
@@ -784,5 +863,92 @@ export default {
   .info-content {
     grid-template-columns: 1fr;
   }
+}
+
+/* Modern Modal Header Styles */
+.modern-modal-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  border-radius: 1rem 1rem 0 0;
+  min-height: auto;
+  position: relative;
+}
+
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.modern-modal-icon-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-modal-icon-wrapper i {
+  font-size: 1.125rem;
+  color: #ffffff;
+}
+
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-background);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.modern-modal-client-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.modern-modal-close-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+}
+
+.modern-modal-close-btn i {
+  font-size: 1rem;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.modern-modal-close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
 }
 </style>

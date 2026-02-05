@@ -1147,7 +1147,7 @@ export default {
           <div class="row g-3 patient-history-layout">
             <!-- MODERN SIDEBAR MENU -->
             <div
-              class="col-12 col-lg-3 d-none d-md-block sidebar-column"
+              class="col-12 col-lg-2 d-none d-md-block sidebar-column"
               :class="{ 'menu-collapsed': menuCollapsed }"
             >
               <div
@@ -2192,15 +2192,15 @@ export default {
 }
 
 .sidebar-collapsed {
-  width: 60px;
+  width: 48px;
   padding: 0.5rem 0.25rem;
-  min-width: 60px;
+  min-width: 48px;
 }
 
 .menu-collapsed {
-  flex: 0 0 60px !important;
-  max-width: 60px !important;
-  min-width: 60px !important;
+  flex: 0 0 48px !important;
+  max-width: 42px !important;
+  min-width: 48px !important;
   transition: all 0.3s ease;
 }
 
@@ -2230,10 +2230,10 @@ export default {
   position: relative;
 }
 
-.col-lg-3.menu-collapsed {
-  flex: 0 0 60px !important;
-  max-width: 60px !important;
-  min-width: 60px !important;
+.col-lg-2.menu-collapsed {
+  flex: 0 0 48px !important;
+  max-width: 48px !important;
+  min-width: 48px !important;
 }
 
 .col-lg-9,

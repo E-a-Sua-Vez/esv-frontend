@@ -113,9 +113,13 @@ export default {
     const isUrgent = computed(() => ['HIGH', 'CRITICAL'].includes(props.document.urgency));
 
     const thumbnailUrl = computed(() => {
-      // In a real implementation, this would be a thumbnail URL from the backend
-      if (isImage.value && props.document.thumbnailLocation) {
-        return props.document.thumbnailLocation;
+      if (isImage.value) {
+        if (props.document.thumbnailLocation) {
+          return props.document.thumbnailLocation;
+        } else {
+          // Use the document URL from backend
+          return `http://localhost:3000/documents/client/${props.document.commerceId}/${props.document.clientId}/patient_documents/${props.document.name}`;
+        }
       }
       return null;
     });
@@ -146,7 +150,8 @@ export default {
       try {
         const fileBlob = await getClientDocument(
           props.document.commerceId,
-          props.document.option,
+          props.document.clientId,
+          'patient_documents',
           props.document.name
         );
 
@@ -181,7 +186,7 @@ export default {
 
 <style scoped>
 .document-thumbnail {
-  width: 180px;
+  width: 140px;
   flex-shrink: 0;
   background: white;
   border: 2px solid #e9ecef;
@@ -209,7 +214,6 @@ export default {
 
 .thumbnail-preview {
   position: relative;
-  height: 120px;
   background: #f8f9fa;
   display: flex;
   align-items: center;
@@ -327,15 +331,15 @@ export default {
 }
 
 .thumbnail-info {
-  padding: 0.75rem;
+  padding: 0.5rem;
 }
 
 .thumbnail-title {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #2c3e50;
   margin-bottom: 0.5rem;
-  line-height: 1.2;
+  line-height: 1;
 }
 
 .thumbnail-meta {
@@ -385,11 +389,11 @@ export default {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .document-thumbnail {
-    width: 150px;
+    width: 120px;
   }
 
   .thumbnail-preview {
-    height: 100px;
+    height: 120px;
   }
 
   .thumbnail-icon i {

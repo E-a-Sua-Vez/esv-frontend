@@ -70,10 +70,12 @@ export const getDocument = async (commerceId, reportType) => {
   return (await requestBackend.get(`/${entity}/${commerceId}/${reportType}`, options)).data;
 };
 
-export const getClientDocument = async (commerceId, reportType, name) => {
+export const getClientDocument = async (commerceId, clientId, reportType, name) => {
   const options = { responseType: 'blob', ...(await getHeaders()) };
+  // If clientId is not provided, use the old format for backward compatibility
+  const documentKey = clientId ? `${commerceId}/${clientId}` : commerceId;
   return (
-    await requestBackend.get(`/${entity}/client/${commerceId}/${reportType}/${name}`, options)
+    await requestBackend.get(`/${entity}/client/${documentKey}/${reportType}/${name}`, options)
   ).data;
 };
 
@@ -89,7 +91,7 @@ export const getDocumentsByAttention = async attentionId => {
   try {
     // Try query stack first for better performance
     const queryUrl = `${
-      process.env.VUE_APP_QUERY_STACK_URL || 'http://localhost:3002'
+      process.env.VITE_QUERY_URL || 'http://localhost:3003'
     }/documents/attention/${attentionId}`;
     const response = await fetch(queryUrl, {
       method: 'GET',
@@ -111,9 +113,32 @@ export const getDocumentsByAttention = async attentionId => {
   }
 };
 
-export const getDocumentsByPatientHistory = async patientHistoryId =>
-  (await requestBackend.get(`/${entity}/patient-history/${patientHistoryId}`, await getHeaders()))
-    .data;
+export const getDocumentsByPatientHistory = async patientHistoryId => {
+  const queryUrl = `${
+    process.env.VITE_QUERY_URL || 'http://localhost:3003'
+  }/documents/patient-history/${patientHistoryId}`;
+
+  try {
+    const response = await fetch(queryUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getHeaders()).headers,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Query stack error: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching documents from query stack:', error);
+    // Fallback to backend if query stack fails
+    return (await requestBackend.get(`/${entity}/patient-history/${patientHistoryId}`, await getHeaders()))
+      .data;
+  }
+};
 
 export const searchDocuments = async searchCriteria => {
   // Use query stack for better performance
@@ -134,7 +159,7 @@ export const searchDocuments = async searchCriteria => {
   });
 
   const queryUrl = `${
-    process.env.VUE_APP_QUERY_STACK_URL || 'http://localhost:3002'
+    process.env.VITE_QUERY_URL || 'http://localhost:3003'
   }/documents?${queryParams.toString()}`;
 
   try {
@@ -171,6 +196,12 @@ export const linkDocumentToAttention = async (documentId, attentionId) =>
 export const updateDocumentTags = async (documentId, tags) =>
   (await requestBackend.patch(`/${entity}/${documentId}/tags`, { tags }, await getHeaders())).data;
 
+export const updateDocumentCategory = async (documentId, category) =>
+  (await requestBackend.patch(`/${entity}/${documentId}/category`, { category }, await getHeaders())).data;
+
+export const updateDocumentUrgency = async (documentId, urgency) =>
+  (await requestBackend.patch(`/${entity}/${documentId}/urgency`, { urgency }, await getHeaders())).data;
+
 export const logDocumentAccess = async (documentId, accessType, userType, ipAddress, userAgent) =>
   (
     await requestBackend.post(
@@ -191,12 +222,19 @@ export const getDocumentCategories = () => [
   { value: 'IMAGING_STUDIES', label: 'Estudios de Imagen', icon: 'bi-camera' },
   { value: 'PATHOLOGY_REPORTS', label: 'Informes de Patología', icon: 'bi-file-medical' },
   { value: 'CONSULTATION_NOTES', label: 'Notas de Consulta', icon: 'bi-journal-text' },
+  { value: 'DISCHARGE_SUMMARIES', label: 'Resúmenes de Alta', icon: 'bi-file-earmark-text' },
+  { value: 'REFERRAL_LETTERS', label: 'Cartas de Referencia', icon: 'bi-envelope-paper' },
   { value: 'PRESCRIPTION_RECORDS', label: 'Recetas Médicas', icon: 'bi-prescription2' },
   { value: 'CONSENT_FORMS', label: 'Formularios de Consentimiento', icon: 'bi-file-earmark-check' },
   { value: 'INSURANCE_CARDS', label: 'Tarjetas de Seguro', icon: 'bi-credit-card' },
   { value: 'IDENTIFICATION', label: 'Documentos de Identificación', icon: 'bi-person-badge' },
+  { value: 'MEDICAL_HISTORY', label: 'Historial Médico', icon: 'bi-journal-medical' },
+  { value: 'ALLERGIES_MEDICATIONS', label: 'Alergias y Medicamentos', icon: 'bi-capsule' },
+  { value: 'BILLING_DOCUMENTS', label: 'Documentos de Facturación', icon: 'bi-receipt' },
+  { value: 'APPOINTMENT_CONFIRMATIONS', label: 'Confirmaciones de Cita', icon: 'bi-calendar-check' },
   { value: 'EXTERNAL_REPORTS', label: 'Informes Externos', icon: 'bi-file-earmark-arrow-up' },
-  { value: 'REFERRAL_LETTERS', label: 'Cartas de Referencia', icon: 'bi-envelope-paper' },
+  { value: 'PREVIOUS_TREATMENTS', label: 'Tratamientos Previos', icon: 'bi-activity' },
+  { value: 'SPECIALIST_REPORTS', label: 'Informes de Especialistas', icon: 'bi-person-hearts' },
   { value: 'OTHER', label: 'Otros', icon: 'bi-file-earmark' },
 ];
 

@@ -2,6 +2,7 @@
 import { ref, reactive, onBeforeMount, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
+import { Modal } from 'bootstrap';
 
 import {
   getPatientHistoryItemByCommerce,
@@ -30,6 +31,7 @@ const store = globalStore();
 
 const loading = ref(false);
 const alertError = ref('');
+const addItemModal = ref(null);
 
 const state = reactive({
   currentUser: {},
@@ -107,7 +109,6 @@ function showAdd() {
   state.newPatientHistoryItem = {
     order: state.items.length + 1,
     active: true,
-    online: true,
     characteristics: {
       actual: false,
       frequency: false,
@@ -133,6 +134,7 @@ async function addItem() {
   await addPatientHistoryItem(state.newPatientHistoryItem);
   await loadItems(commerce.value.id);
   state.showAdd = false;
+  document.getElementById('close-modal').click();
   loading.value = false;
 }
 
@@ -359,6 +361,7 @@ function goBack() {
 
     <!-- MODAL ADD -->
     <div
+      ref="addItemModal"
       class="modal fade"
       id="add-item"
       data-bs-keyboard="false"

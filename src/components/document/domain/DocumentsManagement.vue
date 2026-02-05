@@ -20,6 +20,7 @@ export default {
     commerces: { type: Array, default: undefined },
     business: { type: Object, default: undefined },
     filtersLocation: { type: String, default: 'component' }, // 'component' or 'slot'
+    modalId: { type: String, default: 'add-document' },
   },
   data() {
     return {
@@ -291,7 +292,7 @@ export default {
                     class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
                     @click="showAddModal()"
                     data-bs-toggle="modal"
-                    :data-bs-target="`#add-document`"
+                    :data-bs-target="`#${modalId}`"
                     :disabled="!toggles['document-commerce.admin.add']"
                   >
                     <i class="bi bi-plus-lg"></i> {{ $t('add') }}
@@ -603,7 +604,7 @@ export default {
       <!-- Modal Add -->
       <div
         class="modal fade"
-        :id="`add-document`"
+        :id="modalId"
         data-bs-keyboard="false"
         tabindex="-1"
         aria-labelledby="staticBackdropLabel"
