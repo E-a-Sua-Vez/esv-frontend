@@ -947,7 +947,7 @@ export default {
               <AttentionNumber
                 :number="state.attention.number"
                 :type="'secondary'"
-                :data="state.user"
+                :show-data="false"
               >
               </AttentionNumber>
               <Message
