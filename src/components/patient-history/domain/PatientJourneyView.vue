@@ -655,7 +655,7 @@ export default {
   font-size: 0.8rem;
   color: var(--color-text-muted);
   margin-top: 0.2rem;
-  line-height: 1.2;
+  line-height: .9;
 }
 
 .summary-badge {

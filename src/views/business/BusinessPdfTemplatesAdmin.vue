@@ -1151,25 +1151,20 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('pdfTemplates.isDefault') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('pdfTemplates.isDefaultHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
-                  <div
-                    class="form-check"
-                    style="flex: 1; display: flex; align-items: center; justify-content: flex-start"
-                  >
+                  <div class="form-check form-switch">
                     <input
                       v-model="state.newTemplate.isDefault"
                       type="checkbox"
                       class="form-check-input"
                       id="isDefault"
-                      style="margin-top: 0; margin-right: 0.5rem; flex-shrink: 0"
                     />
-                    <label
-                      class="form-check-label"
-                      for="isDefault"
-                      style="margin-bottom: 0; cursor: pointer"
-                    >
-                      {{ $t('pdfTemplates.isDefault') }}
-                    </label>
                   </div>
                 </div>
               </div>

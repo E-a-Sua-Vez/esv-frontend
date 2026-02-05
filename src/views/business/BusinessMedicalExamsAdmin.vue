@@ -725,9 +725,15 @@ export default {
             <div id="add-exam" class="result-card mb-4" v-if="state.showAdd">
               <div class="form-fields-container">
                 <div class="form-group-modern">
-                  <label class="form-label-modern"
-                    >{{ $t('businessMedicalExamsAdmin.name') }} *</label
-                  >
+                  <label class="form-label-modern">
+                    {{ $t('businessMedicalExamsAdmin.name') }} *
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('businessMedicalExamsAdmin.nameHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
+                  </label>
                   <input
                     v-model="state.newExam.name"
                     type="text"
@@ -737,9 +743,15 @@ export default {
                   />
                 </div>
                 <div class="form-group-modern">
-                  <label class="form-label-modern"
-                    >{{ $t('businessMedicalExamsAdmin.type') }} *</label
-                  >
+                  <label class="form-label-modern">
+                    {{ $t('businessMedicalExamsAdmin.type') }} *
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('businessMedicalExamsAdmin.typeHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
+                  </label>
                   <select v-model="state.newExam.type" class="form-control-modern">
                     <option value="laboratory">Laboratorio</option>
                     <option value="imaging">Imagenología</option>
@@ -748,9 +760,15 @@ export default {
                   </select>
                 </div>
                 <div class="form-group-modern">
-                  <label class="form-label-modern">{{
-                    $t('businessMedicalExamsAdmin.description')
-                  }}</label>
+                  <label class="form-label-modern">
+                    {{ $t('businessMedicalExamsAdmin.description') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('businessMedicalExamsAdmin.descriptionHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
+                  </label>
                   <textarea
                     v-model="state.newExam.description"
                     class="form-control-modern"
@@ -759,9 +777,15 @@ export default {
                   ></textarea>
                 </div>
                 <div class="form-group-modern">
-                  <label class="form-label-modern">{{
-                    $t('businessMedicalExamsAdmin.preparation')
-                  }}</label>
+                  <label class="form-label-modern">
+                    {{ $t('businessMedicalExamsAdmin.preparation') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('businessMedicalExamsAdmin.preparationHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
+                  </label>
                   <textarea
                     v-model="state.newExam.preparation"
                     class="form-control-modern"

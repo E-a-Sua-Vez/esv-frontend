@@ -446,6 +446,7 @@ export default {
   font-size: 0.9rem;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.7);
+  line-height: .9rem;
 }
 
 .summary-value-section {
@@ -503,7 +504,6 @@ export default {
 .summary-insights {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
   padding-top: 1rem;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
 }

@@ -20,6 +20,7 @@ import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import AreYouSure from '../../components/common/AreYouSure.vue';
 import Toggle from '@vueform/toggle';
+import Popper from 'vue3-popper';
 import ConsentTypeMultiSelector from '../../components/lgpd/ConsentTypeMultiSelector.vue';
 import ConsentTemplateSelector from '../../components/lgpd/ConsentTemplateSelector.vue';
 import MarkdownEditor from '../../components/lgpd/MarkdownEditor.vue';
@@ -38,6 +39,7 @@ export default {
     SearchAdminItem,
     AreYouSure,
     Toggle,
+    Popper,
     ConsentTypeMultiSelector,
     ConsentTemplateSelector,
     MarkdownEditor,
@@ -1312,6 +1314,12 @@ export default {
                 <div v-if="state.selectedConsentTypes.length === 0" class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.consentType') }} *
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.consentTypeHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <select
                     v-model="state.newRequirement.consentType"
@@ -1329,6 +1337,12 @@ export default {
                 <div class="form-group-modern form-group-toggle">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.required') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.requiredHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <Toggle v-model="state.newRequirement.required" />
                 </div>
@@ -1336,12 +1350,25 @@ export default {
                 <div class="form-group-modern form-group-toggle">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.blockingForAttention') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.blockingForAttentionHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <Toggle v-model="state.newRequirement.blockingForAttention" />
                 </div>
 
                 <div class="form-group-modern">
-                  <label class="form-label-modern"> {{ $t('lgpd.consent.admin.timing') }} * </label>
+                  <label class="form-label-modern"> {{ $t('lgpd.consent.admin.timing') }} *
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.timingHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
+                  </label>
                   <select
                     v-model="state.newRequirement.requestStrategy.timing"
                     class="form-control-modern form-select-modern"
@@ -1356,6 +1383,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.methods') }} *
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.methodsHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <div class="d-flex flex-wrap gap-2" style="flex: 1">
                     <div v-for="method in state.methodOptions" :key="method" class="form-check">
@@ -1376,6 +1409,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.reminderIntervalHours') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.reminderIntervalHoursHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <input
                     type="number"
@@ -1389,6 +1428,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.maxReminders') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.maxRemindersHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <input
                     type="number"
@@ -1402,6 +1447,12 @@ export default {
                 <div class="form-group-modern form-group-textarea">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.whatsappTemplate') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.whatsappTemplateHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <textarea
                     class="form-control-modern"
@@ -1414,6 +1465,12 @@ export default {
                 <div class="form-group-modern form-group-textarea">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.formIntroText') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.formIntroTextHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <textarea
                     class="form-control-modern"
@@ -1426,6 +1483,12 @@ export default {
                 <div class="form-group-modern form-group-textarea">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.fullTerms') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.fullTermsHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <MarkdownEditor
                     v-model="state.newRequirement.templates.fullTerms"
@@ -1437,6 +1500,12 @@ export default {
                 <div class="form-group-modern form-group-textarea">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.dataDescription') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.dataDescriptionHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <MarkdownEditor
                     v-model="state.newRequirement.templates.dataDescription"
@@ -1448,6 +1517,12 @@ export default {
                 <div class="form-group-modern form-group-textarea">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.legalBasis') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.legalBasisHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <MarkdownEditor
                     v-model="state.newRequirement.templates.legalBasis"
@@ -1459,6 +1534,12 @@ export default {
                 <div class="form-group-modern form-group-textarea">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.retentionPeriod') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.retentionPeriodHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <MarkdownEditor
                     v-model="state.newRequirement.templates.retentionPeriod"
@@ -1470,6 +1551,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.privacyPolicyLink') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.privacyPolicyLinkHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <input
                     type="url"
@@ -1482,6 +1569,12 @@ export default {
                 <div class="form-group-modern form-group-textarea">
                   <label class="form-label-modern">
                     {{ $t('lgpd.consent.admin.revocationInstructions') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.revocationInstructionsHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <MarkdownEditor
                     v-model="state.newRequirement.templates.revocationInstructions"
@@ -1493,6 +1586,12 @@ export default {
                 <div class="form-group-modern form-group-toggle">
                   <label class="form-label-modern">
                     {{ $t('active') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('lgpd.consent.admin.activeHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <Toggle v-model="state.newRequirement.active" />
                 </div>

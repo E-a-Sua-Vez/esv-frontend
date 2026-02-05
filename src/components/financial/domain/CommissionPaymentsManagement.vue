@@ -1991,6 +1991,7 @@ export default {
   color: rgba(0, 0, 0, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  line-height: .8rem;
 }
 
 .summary-value {

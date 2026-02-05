@@ -756,6 +756,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('businessMedicationsAdmin.name') }} *
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('businessMedicationsAdmin.nameHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <input
                     id="add-medication-name-form"
@@ -769,6 +775,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('businessMedicationsAdmin.commercialName') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('businessMedicationsAdmin.commercialNameHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <input
                     id="add-medication-commercialName-form"
@@ -781,6 +793,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('businessMedicationsAdmin.activePrinciple') }} *
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('businessMedicationsAdmin.activePrincipleHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <input
                     id="add-medication-activePrinciple-form"
@@ -793,6 +811,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('businessMedicationsAdmin.presentation') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('businessMedicationsAdmin.presentationHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <input
                     id="add-medication-presentation-form"
@@ -805,6 +829,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('businessMedicationsAdmin.dosageForm') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('businessMedicationsAdmin.dosageFormHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <input
                     id="add-medication-dosageForm-form"
@@ -817,6 +847,12 @@ export default {
                 <div class="form-group-modern">
                   <label class="form-label-modern">
                     {{ $t('businessMedicationsAdmin.route') }}
+                    <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+                      <template #content>
+                        <div>{{ $t('businessMedicationsAdmin.routeHelp') }}</div>
+                      </template>
+                      <i class="bi bi-info-circle-fill form-help-icon"></i>
+                    </Popper>
                   </label>
                   <input
                     id="add-medication-route-form"
@@ -966,5 +1002,19 @@ export default {
     width: auto;
     text-align: left;
   }
+}
+
+/* Form Help Icon Styles */
+.form-help-icon {
+  color: #6c757d;
+  cursor: help;
+  font-size: 0.8rem;
+  margin-left: 0.25rem;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.form-help-icon:hover {
+  opacity: 1;
 }
 </style>

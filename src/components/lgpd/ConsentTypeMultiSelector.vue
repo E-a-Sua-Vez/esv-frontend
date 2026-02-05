@@ -4,6 +4,12 @@
       <label class="form-label-modern">
         {{ $t('lgpd.consent.admin.consentTypes') }}
         <span class="text-danger">*</span>
+        <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+          <template #content>
+            <div>{{ $t('lgpd.consent.admin.consentTypeHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill form-help-icon"></i>
+        </Popper>
       </label>
       <div style="flex: 1">
         <div class="d-flex justify-content-between align-items-center mb-2" style="gap: 0.5rem">
@@ -62,9 +68,13 @@
 <script>
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import Popper from 'vue3-popper';
 
 export default {
   name: 'ConsentTypeMultiSelector',
+  components: {
+    Popper,
+  },
   props: {
     modelValue: {
       type: Array,

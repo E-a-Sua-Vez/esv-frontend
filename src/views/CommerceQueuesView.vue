@@ -5986,6 +5986,7 @@ export default {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  line-height: .8rem;
 }
 
 .summary-value {
