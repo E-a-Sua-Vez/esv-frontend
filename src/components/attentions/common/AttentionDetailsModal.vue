@@ -49,6 +49,7 @@ export default {
     commerce: { type: Object, default: undefined },
     queues: { type: Array, default: undefined },
     toggles: { type: Object, default: undefined },
+    handleMainModal: { type: Boolean, default: false },
   },
   emits: ['close', 'attention-updated'],
   data() {
@@ -146,6 +147,20 @@ export default {
         }
       },
       immediate: true,
+    },
+    show: {
+      handler(newValue) {
+        if (newValue) {
+          // Cuando se abre el modal, ocultar el modal principal
+          this.hideMainModal();
+        } else {
+          // Cuando se cierra el modal, restaurar el modal principal
+          setTimeout(() => {
+            this.restoreMainModal();
+          }, 100); // Pequeño delay para asegurar que el modal se haya cerrado completamente
+        }
+      },
+      immediate: false,
     },
   },
   computed: {
@@ -363,6 +378,52 @@ export default {
     },
     closeModal() {
       this.$emit('close');
+    },
+    hideMainModal() {
+      if (!this.handleMainModal) return;
+
+      const mainModal = document.querySelector('#modalAgenda');
+      if (mainModal) {
+        mainModal.style.display = 'none';
+      }
+    },
+    restoreMainModal() {
+      if (!this.handleMainModal) return;
+
+      const mainModal = document.querySelector('#modalAgenda');
+      if (mainModal) {
+        // Restaurar estilos
+        mainModal.style.display = '';
+        mainModal.style.pointerEvents = '';
+        mainModal.style.opacity = '';
+        mainModal.style.visibility = '';
+
+        // IMPORTANTE: Reactivar el modal de Bootstrap si está inactivo
+        if (!mainModal.classList.contains('show')) {
+          mainModal.classList.add('show');
+          mainModal.style.display = 'block';
+        }
+
+        // Asegurar que el body tenga las clases correctas para modals
+        if (!document.body.classList.contains('modal-open')) {
+          document.body.classList.add('modal-open');
+        }
+
+      }
+
+      // Restaurar o crear backdrop si es necesario
+      let backdrop = document.querySelector('.modal-backdrop');
+      if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop fade show';
+        document.body.appendChild(backdrop);
+      } else {
+        backdrop.style.display = '';
+        backdrop.style.visibility = '';
+        if (!backdrop.classList.contains('show')) {
+          backdrop.classList.add('show');
+        }
+      }
     },
     getDate(dateIn, timeZoneIn) {
       return getDate(dateIn, timeZoneIn);

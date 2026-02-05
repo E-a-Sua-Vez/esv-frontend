@@ -124,6 +124,7 @@ export default {
       collapsedQueues: new Set(),
       selectedBooking: null,
       drawerOpen: false,
+      drawerWasOpen: false,
       showQueueSelector: false,
       showDateSelector: false,
       tempSelectedDate: undefined,
@@ -1805,6 +1806,20 @@ export default {
     };
 
     const openAttentionModal = attention => {
+      // Close the booking calendar drawer if it's open (only if drawerOpen exists in state)
+      if (state.hasOwnProperty('drawerOpen') && state.drawerOpen) {
+        state.drawerWasOpen = true;
+        state.drawerOpen = false;
+      } else {
+        state.drawerWasOpen = false;
+      }
+
+      // Hide main modal before opening attention modal
+      const mainModal = document.querySelector('#modalAgenda');
+      if (mainModal) {
+        mainModal.style.display = 'none';
+      }
+
       state.selectedAttention = attention;
       state.showAttentionModal = true;
     };
@@ -1812,6 +1827,40 @@ export default {
     const closeAttentionModal = () => {
       state.showAttentionModal = false;
       state.selectedAttention = undefined;
+
+      // Restore main modal
+      const mainModal = document.querySelector('#modalAgenda');
+      if (mainModal) {
+        mainModal.style.display = '';
+        mainModal.style.pointerEvents = '';
+        mainModal.style.opacity = '';
+        mainModal.style.visibility = '';
+
+        // Reactivate Bootstrap modal if inactive
+        if (!mainModal.classList.contains('show')) {
+          mainModal.classList.add('show');
+          mainModal.style.display = 'block';
+        }
+
+        // Ensure body has correct classes for modals
+        if (!document.body.classList.contains('modal-open')) {
+          document.body.classList.add('modal-open');
+        }
+      }
+
+      // Restore or create backdrop if necessary
+      let backdrop = document.querySelector('.modal-backdrop');
+      if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop fade show';
+        document.body.appendChild(backdrop);
+      }
+
+      // Reopen the booking calendar drawer if it was open before (only if drawerOpen exists in state)
+      if (state.hasOwnProperty('drawerWasOpen') && state.drawerWasOpen && state.hasOwnProperty('drawerOpen')) {
+        state.drawerOpen = true;
+        state.drawerWasOpen = false;
+      }
     };
 
     const handleAttentionUpdated = async () => {
@@ -3345,8 +3394,7 @@ input[ref="commissionInputRef"] {
 /* Queue Selector Section */
 .queue-selector-section {
   flex: 0 0 auto;
-  margin-bottom: 0.5rem;
-  padding: 0.75rem;
+  padding: 0.5rem;
   background: rgba(255, 255, 255, 0.6);
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -3389,7 +3437,7 @@ input[ref="commissionInputRef"] {
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  padding: 0.35rem 0.6rem;
+  padding: 0.4rem 0.6rem;
   font-size: 0.8125rem;
   font-weight: 600;
   color: #333;
@@ -3398,6 +3446,7 @@ input[ref="commissionInputRef"] {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
+  line-height: .9rem;
 }
 
 .queue-selector-btn:hover {
@@ -3739,9 +3788,8 @@ input[ref="commissionInputRef"] {
 /* Management Area Header - Tab Buttons */
 .management-header {
   display: flex;
-  gap: 0.4rem;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
+  gap: 0.2rem;
+  margin-bottom: 0.5rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -3751,8 +3799,8 @@ input[ref="commissionInputRef"] {
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  padding: 0.35rem 0.65rem;
-  font-size: 0.8125rem;
+  padding: 0.25rem 0.45rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #333;
   background: #fff;

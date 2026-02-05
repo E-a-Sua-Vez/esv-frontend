@@ -1088,10 +1088,11 @@ export default {
 
             <!-- Desktop: Organized in rows | Mobile: Vertical stack -->
             <div class="payment-form-rows">
-              <!-- Row 1: Tipo de Pagamento | Método de Pagamento -->
-              <div class="payment-form-row">
+              <!-- Row 1: Tipo de Pagamento | Método de Pagamento | Nota Fiscal -->
+              <div class="payment-form-row payment-form-row-three">
                 <div class="payment-form-field">
                   <label class="payment-form-label">
+                    <i class="bi bi-receipt"></i>
                     {{ $t('collaboratorBookingsView.paymentType') }}
                     <Popper :class="'dark'" arrow hover>
                       <template #content>
@@ -1119,6 +1120,7 @@ export default {
                 </div>
                 <div class="payment-form-field">
                   <label class="payment-form-label">
+                    <i class="bi bi-credit-card"></i>
                     {{ $t('collaboratorBookingsView.paymentMethod') }}
                     <Popper :class="'dark'" arrow hover>
                       <template #content>
@@ -1144,12 +1146,9 @@ export default {
                     </option>
                   </select>
                 </div>
-              </div>
-
-              <!-- Row 2: Nota Fiscal | Total Procedimiento -->
-              <div class="payment-form-row">
                 <div class="payment-form-field">
                   <label class="payment-form-label">
+                    <i class="bi bi-file-earmark-text"></i>
                     {{ $t('collaboratorBookingsView.paymentFiscalNote') }}
                     <Popper :class="'dark'" arrow hover>
                       <template #content>
@@ -1174,8 +1173,13 @@ export default {
                     </option>
                   </select>
                 </div>
+              </div>
+
+              <!-- Row 2: Total Procedimiento | Valor Pago | Parcelas -->
+              <div class="payment-form-row payment-form-row-three">
                 <div class="payment-form-field">
                   <label class="payment-form-label">
+                    <i class="bi bi-cash-coin"></i>
                     {{ $t('collaboratorBookingsView.totalAmount') }}
                     <Popper :class="'dark'" arrow hover>
                       <template #content>
@@ -1196,30 +1200,30 @@ export default {
                       {{ $t('paymentForm.includedInPackage') || '(Incluido en paquete)' }}
                     </span>
                   </label>
-                  <input
-                    min="1"
-                    type="number"
-                    class="payment-form-input"
-                    :class="{
-                      'is-invalid': state.totalAmountError,
-                      'package-paid-input': packagePaymentStatus && packagePaymentStatus.isPaid,
-                    }"
-                    v-model="state.newConfirmationData.totalAmount"
-                    placeholder="100"
-                    :disabled="packagePaymentStatus && packagePaymentStatus.isPaid"
-                    @input="
-                      userEditedTotalAmount = true;
-                      calculatePaymentAmount();
-                      sendData();
-                    "
-                  />
+                  <div class="payment-form-input-group">
+                    <span class="payment-form-currency">R$</span>
+                    <input
+                      min="1"
+                      type="number"
+                      class="payment-form-input"
+                      :class="{
+                        'is-invalid': state.totalAmountError,
+                        'package-paid-input': packagePaymentStatus && packagePaymentStatus.isPaid,
+                      }"
+                      v-model="state.newConfirmationData.totalAmount"
+                      placeholder="Ej: 150.00"
+                      :disabled="packagePaymentStatus && packagePaymentStatus.isPaid"
+                      @input="
+                        userEditedTotalAmount = true;
+                        calculatePaymentAmount();
+                        sendData();
+                      "
+                    />
+                  </div>
                 </div>
-              </div>
-
-              <!-- Row 3: Valor Pago | Parcelas -->
-              <div class="payment-form-row">
                 <div class="payment-form-field">
                   <label class="payment-form-label">
+                    <i class="bi bi-cash"></i>
                     {{ $t('collaboratorBookingsView.paymentAmount') }}
                     <Popper :class="'dark'" arrow hover>
                       <template #content>
@@ -1240,25 +1244,29 @@ export default {
                       {{ $t('paymentForm.includedInPackage') || '(Incluido en paquete)' }}
                     </span>
                   </label>
-                  <input
-                    min="1"
-                    type="number"
-                    class="payment-form-input"
-                    :class="{
-                      'is-invalid': state.paymentAmountError,
-                      'package-paid-input': packagePaymentStatus && packagePaymentStatus.isPaid,
-                    }"
-                    v-model="state.newConfirmationData.paymentAmount"
-                    placeholder="100"
-                    :disabled="packagePaymentStatus && packagePaymentStatus.isPaid"
-                    @input="
-                      userEditedPaymentAmount = true;
-                      sendData();
-                    "
-                  />
+                  <div class="payment-form-input-group">
+                    <span class="payment-form-currency">R$</span>
+                    <input
+                      min="1"
+                      type="number"
+                      class="payment-form-input"
+                      :class="{
+                        'is-invalid': state.paymentAmountError,
+                        'package-paid-input': packagePaymentStatus && packagePaymentStatus.isPaid,
+                      }"
+                      v-model="state.newConfirmationData.paymentAmount"
+                      placeholder="Ej: 150.00"
+                      :disabled="packagePaymentStatus && packagePaymentStatus.isPaid"
+                      @input="
+                        userEditedPaymentAmount = true;
+                        sendData();
+                      "
+                    />
+                  </div>
                 </div>
                 <div class="payment-form-field">
                   <label class="payment-form-label">
+                    <i class="bi bi-calendar-event"></i>
                     {{ $t('collaboratorBookingsView.installments') }}
                     <Popper :class="'dark'" arrow hover>
                       <template #content>
@@ -1278,7 +1286,7 @@ export default {
                     class="payment-form-input"
                     :class="{ 'is-invalid': state.installmentsError }"
                     v-model="state.newConfirmationData.installments"
-                    placeholder="100"
+                    placeholder="1"
                     @input="
                       calculatePaymentAmount();
                       sendData();
@@ -1288,7 +1296,7 @@ export default {
                 </div>
               </div>
 
-              <!-- Row 4: Professional Commission Info (full width) -->
+              <!-- Row 3: Professional Commission Info (full width) -->
               <div v-if="professionalName" class="payment-form-row payment-form-row-single">
                 <div class="payment-form-field payment-commission-section">
                   <div class="professional-commission-header">
@@ -1316,10 +1324,11 @@ export default {
                 </div>
               </div>
 
-              <!-- Row 5: Comisión de Pago (full width) -->
+              <!-- Row 4: Comisión de Pago (full width) -->
               <div class="payment-form-row payment-form-row-single">
                 <div class="payment-form-field">
                   <label class="payment-form-label">
+                    <i class="bi bi-percent"></i>
                     {{ $t('collaboratorBookingsView.paymentCommission') }}
                     <Popper :class="'dark'" arrow hover>
                       <template #content>
@@ -1333,25 +1342,29 @@ export default {
                       <i class="bi bi-info-circle-fill payment-field-info-icon"></i>
                     </Popper>
                   </label>
-                  <input
-                    min="1"
-                    type="number"
-                    class="payment-form-input"
-                    v-model.number="state.newConfirmationData.paymentCommission"
-                    placeholder="100"
-                    @input="
-                      userEditedPaymentCommission = true;
-                      sendData();
-                    "
-                    @change="sendData"
-                  />
+                  <div class="payment-form-input-group">
+                    <span class="payment-form-currency">R$</span>
+                    <input
+                      min="1"
+                      type="number"
+                      class="payment-form-input"
+                      v-model.number="state.newConfirmationData.paymentCommission"
+                      placeholder="Ej: 15.00"
+                      @input="
+                        userEditedPaymentCommission = true;
+                        sendData();
+                      "
+                      @change="sendData"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <!-- Row 6: Confirmar Parcela (switch, full width) -->
-              <div class="payment-form-row payment-form-row-single">
+              <!-- Row 5: Confirmar Parcela | Comentário -->
+              <div class="payment-form-row">
                 <div class="payment-form-field payment-form-switch">
                   <label class="payment-form-label">
+                    <i class="bi bi-check-circle"></i>
                     {{ $t('collaboratorBookingsView.confirmInstallments') }}
                     <Popper :class="'dark'" arrow hover>
                       <template #content>
@@ -1376,12 +1389,9 @@ export default {
                     />
                   </div>
                 </div>
-              </div>
-
-              <!-- Row 6: Comentário (textarea, full width) -->
-              <div class="payment-form-row payment-form-row-single">
                 <div class="payment-form-field">
                   <label class="payment-form-label">
+                    <i class="bi bi-chat-text"></i>
                     {{ $t('collaboratorBookingsView.paymentComment') }}
                     <Popper :class="'dark'" arrow hover>
                       <template #content>
@@ -1985,5 +1995,54 @@ export default {
 :deep([data-popper-placement] > div) {
   z-index: 10000 !important;
   max-width: 320px !important;
+}
+
+/* NEW STYLES FOR VISUAL ENHANCEMENTS */
+
+/* Row layout for up to 3 fields on desktop */
+.payment-form-row-three {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Mobile: stack fields vertically */
+@media (max-width: 767px) {
+  .payment-form-row-three {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+/* Currency input group styles */
+.payment-form-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.payment-form-currency {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.payment-form-input-with-currency {
+  padding-left: 2.5rem !important;
+}
+
+/* Ensure currency symbol doesn't interfere with input focus */
+.payment-form-input-group input:focus + .payment-form-currency,
+.payment-form-input-group input:focus ~ .payment-form-currency {
+  color: #007bff;
+}
+
+/* Adjust spacing for currency inputs in grid layout */
+.payment-form-row-three .payment-form-input-group {
+  width: 100%;
 }
 </style>
