@@ -490,7 +490,7 @@ export default {
             doc = undefined;
             this.loading = false;
           }
-        }, 5000);
+        }, 3000);
       } catch (error) {
         this.loading = false;
         this.detailsOpened = false;
@@ -1524,29 +1524,11 @@ export default {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  animation: fadeInUp 0.6s ease-out;
-  animation-fill-mode: both;
   will-change: transform, box-shadow;
   display: flex;
   flex-direction: column;
   height: 100%;
   box-sizing: border-box;
-}
-
-.summary-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.summary-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.summary-card:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-.summary-card:nth-child(4) {
-  animation-delay: 0.4s;
 }
 
 @keyframes fadeInUp {
@@ -1991,7 +1973,6 @@ export default {
   margin: 1.5rem auto;
   max-width: 100%;
   padding: 0 0.5rem;
-  animation: fadeInUp 0.6s ease-out;
 }
 
 .health-score-card {
@@ -2240,7 +2221,6 @@ export default {
   margin: 2rem auto;
   max-width: 100%;
   padding: 0 0.5rem;
-  animation: fadeInUp 0.6s ease-out 0.2s both;
 }
 
 .gauge-charts-grid {

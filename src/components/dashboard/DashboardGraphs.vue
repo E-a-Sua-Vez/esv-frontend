@@ -174,74 +174,105 @@ export default {
       this.showAttentions = false;
       this.showBookings = true;
     },
+    async handleDownload() {
+      try {
+        await this.exportToPDF();
+      } catch (error) {
+        this.loading = false;
+      }
+    },
     async exportToPDF() {
-      console.log('Starting PDF export for graphs');
-      this.loading = true;
-      this.downloading = true;
-      const filename = 'graphs-report.pdf';
-      const options = {
-        margin: 0.5,
-        filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, allowTaint: true },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-      };
-      let doc = document.getElementById('graphs-component');
-      console.log('Graphs component found:', !!doc);
-      document.getElementById('pdf-header').style.display = 'block';
-      document.getElementById('pdf-footer').style.display = 'block';
+      try {
+        this.loading = true;
 
-      // Expand all accordions for PDF capture
-      document.querySelectorAll('.collapse').forEach(el => el.classList.add('show'));
-      // Trigger resize to update charts
-      window.dispatchEvent(new Event('resize'));
-      // Force chart resize
-      document.querySelectorAll('canvas').forEach(canvas => {
-        if (canvas.__chartjs) {
-          canvas.__chartjs.resize();
+        // Validate commerce exists
+        if (!this.commerce || !this.commerce.id) {
+          this.loading = false;
+          return;
         }
-      });
 
-      setTimeout(async () => {
-        try {
-          const html2pdf = await lazyLoadHtml2Pdf();
-          console.log('html2pdf loaded successfully');
-          html2pdf()
-            .set(options)
-            .from(doc)
-            .save()
-            .then(() => {
-              console.log('PDF save completed');
-              // Collapse accordions back if needed
-              document.querySelectorAll('.collapse').forEach(el => el.classList.remove('show'));
-              document.getElementById('pdf-header').style.display = 'none';
-              document.getElementById('pdf-footer').style.display = 'none';
-              doc = undefined;
-              this.loading = false;
-              this.downloading = false;
-            })
-            .catch(error => {
-              console.error('Error in html2pdf save:', error);
-              // Collapse accordions back
-              document.querySelectorAll('.collapse').forEach(el => el.classList.remove('show'));
-              document.getElementById('pdf-header').style.display = 'none';
-              document.getElementById('pdf-footer').style.display = 'none';
-              doc = undefined;
-              this.loading = false;
-              this.downloading = false;
-            });
-        } catch (error) {
-          console.error('Error in graphs PDF export:', error);
-          // Collapse accordions back
-          document.querySelectorAll('.collapse').forEach(el => el.classList.remove('show'));
-          document.getElementById('pdf-header').style.display = 'none';
-          document.getElementById('pdf-footer').style.display = 'none';
-          doc = undefined;
+        const commerceName = this.commerce.name || 'commerce';
+        const commerceTag = this.commerce.tag || 'tag';
+        const filename = `graphs-${commerceName}-${commerceTag}-${this.startDate || 'start'}-${
+          this.endDate || 'end'
+        }.pdf`;
+        const options = {
+          margin: 0.5,
+          filename,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 3, useCORS: true, logging: false },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+          jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+        };
+
+        let doc = document.getElementById('graphs-component');
+        const pdfHeader = doc.querySelector('#pdf-header');
+        const pdfFooter = doc.querySelector('#pdf-footer');
+
+        if (!doc) {
           this.loading = false;
           this.downloading = false;
+          return;
         }
-      }, 12000);
+
+        // Ensure all details are opened and health score is shown for PDF capture
+        this.downloading = true;
+
+        // Trigger resize to update charts
+        window.dispatchEvent(new Event('resize'));
+
+        setTimeout(async () => {
+          // Force minimum dimensions on all canvases to prevent PDF errors
+          document.querySelectorAll('#graphs-component canvas').forEach(canvas => {
+            if (canvas.width === 0 || canvas.height === 0) {
+              console.log('Forcing dimensions on empty canvas');
+              canvas.width = 400;
+              canvas.height = 200;
+              // Clear the canvas to avoid rendering artifacts
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+              }
+            }
+          });
+
+          try {
+            if (pdfHeader) pdfHeader.style.display = 'block';
+            if (pdfFooter) pdfFooter.style.display = 'block';
+
+            const html2pdf = await lazyLoadHtml2Pdf();
+            html2pdf()
+              .set(options)
+              .from(doc)
+              .save()
+              .then(() => {
+                if (pdfHeader) pdfHeader.style.display = 'none';
+                if (pdfFooter) pdfFooter.style.display = 'none';
+                doc = undefined;
+                this.downloading = false;
+                this.loading = false;
+              })
+              .catch(error => {
+                console.error('PDF generation error:', error);
+                if (pdfHeader) pdfHeader.style.display = 'none';
+                if (pdfFooter) pdfFooter.style.display = 'none';
+                this.downloading = false;
+                doc = undefined;
+                this.loading = false;
+              });
+          } catch (error) {
+            console.error('Lazy load html2pdf error:', error);
+            if (pdfHeader) pdfHeader.style.display = 'none';
+            if (pdfFooter) pdfFooter.style.display = 'none';
+            this.downloading = false;
+            doc = undefined;
+            this.loading = false;
+          }
+        }, 4000);
+      } catch (error) {
+        this.loading = false;
+        this.downloading = false;
+      }
     },
   },
 };
@@ -250,7 +281,6 @@ export default {
 <template>
   <div>
     <div id="graphs" class="row" v-if="showGraphs === true && toggles['dashboard.graphs.view']">
-      <Spinner :show="loading"></Spinner>
       <div class="row col m-0 mb-2">
         <hr />
         <div class="col-6 centered">
@@ -283,8 +313,9 @@ export default {
         :description="$t('dashboard.reports.graphs.description')"
         :icon="'file-earmark-pdf'"
         :can-download="toggles['dashboard.reports.graphs'] === true"
-        @download="exportToPDF"
+        @download="handleDownload"
       ></SimpleDownloadCard>
+      <Spinner :show="loading"></Spinner>
       <div id="graphs-component">
         <PDFHeader
           :show="toggles['dashboard.reports.graphs']"
@@ -295,13 +326,14 @@ export default {
         >
         </PDFHeader>
         <!-- cards desktop -->
-        <div class="d-block">
+        <div>
           <div id="accordion">
             <div>
               <div
                 id="collapseOne"
                 v-if="showAttentions === true && toggles['dashboard.graphs-attentions.view']"
               >
+
                 <div class="card-body">
                   <!-- attention-number-evolution -->
                   <div
@@ -320,6 +352,7 @@ export default {
                         </div>
                         <div class="row" style="width: 60%">
                           <LineChart
+                            v-if="calculatedMetrics.attentionNumberEvolutionProps"
                             class="centered"
                             v-bind="calculatedMetrics.attentionNumberEvolutionProps"
                           />
@@ -484,6 +517,7 @@ export default {
                         </div>
                         <div class="row" style="width: 50%">
                           <DoughnutChart
+                            v-if="calculatedMetrics.attentionQueuesProps"
                             class="centered"
                             v-bind="calculatedMetrics.attentionQueuesProps"
                           />
@@ -543,7 +577,7 @@ export default {
                             ><strong> {{ $t('dashboard.items.attentions.graph.3') }} </strong></span
                           >
                         </div>
-                        <BarChart class="centered" v-bind="calculatedMetrics.attentionFlowProps" />
+                        <BarChart v-if="calculatedMetrics.attentionFlowProps" class="centered" v-bind="calculatedMetrics.attentionFlowProps" />
                         <div class="col-12 mt-1">
                           <div
                             class="row centered mx-0 my-0"
@@ -651,7 +685,7 @@ export default {
                             ><strong> {{ $t('dashboard.items.attentions.graph.7') }} </strong></span
                           >
                         </div>
-                        <BarChart class="centered" v-bind="calculatedMetrics.surveyFlowProps" />
+                        <BarChart v-if="calculatedMetrics.surveyFlowProps" class="centered" v-bind="calculatedMetrics.surveyFlowProps" />
                         <div class="col-12 mt-1">
                           <div
                             class="row centered mx-0 my-0"
@@ -767,6 +801,7 @@ export default {
                           >
                         </div>
                         <LineChart
+                          v-if="calculatedMetrics.attentionDurationEvolutionProps"
                           class="centered"
                           v-bind="calculatedMetrics.attentionDurationEvolutionProps"
                         />
@@ -831,6 +866,7 @@ export default {
                           >
                         </div>
                         <LineChart
+                          v-if="calculatedMetrics.attentionRateDurationEvolutionProps"
                           class="centered"
                           v-bind="calculatedMetrics.attentionRateDurationEvolutionProps"
                         />
@@ -901,6 +937,7 @@ export default {
                           >
                         </div>
                         <LineChart
+                          v-if="calculatedMetrics.attentionHourDistributionProps"
                           class="centered"
                           v-bind="calculatedMetrics.attentionHourDistributionProps"
                         />
@@ -953,6 +990,7 @@ export default {
                           >
                         </div>
                         <LineChart
+                          v-if="calculatedMetrics.attentionDayDistributionProps"
                           class="centered"
                           v-bind="calculatedMetrics.attentionDayDistributionProps"
                         />
@@ -1019,6 +1057,7 @@ export default {
                         <div class="row">
                           <div class="centered booking-chart-container">
                             <LineChart
+                              v-if="calculatedMetrics.bookingNumberEvolutionProps"
                               class="centered"
                               v-bind="calculatedMetrics.bookingNumberEvolutionProps"
                             />
@@ -1047,7 +1086,7 @@ export default {
                           >
                         </div>
                         <div class="centered booking-chart-container">
-                          <BarChart class="centered" v-bind="calculatedMetrics.bookingFlowProps" />
+                          <BarChart v-if="calculatedMetrics.bookingFlowProps" class="centered" v-bind="calculatedMetrics.bookingFlowProps" />
                         </div>
                         <div class="col-12 mt-1">
                           <div class="booking-status-breakdown">
@@ -1163,6 +1202,7 @@ export default {
                         </div>
                         <div class="centered booking-chart-container">
                           <LineChart
+                            v-if="calculatedMetrics.bookingHourDistributionProps"
                             class="centered"
                             v-bind="calculatedMetrics.bookingHourDistributionProps"
                           />
@@ -1222,6 +1262,7 @@ export default {
                         </div>
                         <div class="row">
                           <LineChart
+                            v-if="calculatedMetrics.telemedicineEvolutionProps"
                             class="centered"
                             v-bind="calculatedMetrics.telemedicineEvolutionProps"
                           />
@@ -1293,6 +1334,7 @@ export default {
                         </div>
                         <div class="centered booking-chart-container">
                           <LineChart
+                            v-if="calculatedMetrics.bookingDayDistributionProps"
                             class="centered"
                             v-bind="calculatedMetrics.bookingDayDistributionProps"
                           />
@@ -1395,11 +1437,8 @@ export default {
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  animation: fadeInUp 0.6s ease-out;
-  will-change: transform, box-shadow;
 }
 
 .metric-card-graph::before {
@@ -1411,7 +1450,6 @@ export default {
   height: 4px;
   background: linear-gradient(90deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
   opacity: 0.8;
-  transition: height 0.3s ease;
 }
 
 .metric-card-graph::after {
@@ -1422,7 +1460,6 @@ export default {
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  transition: left 0.5s ease;
   pointer-events: none;
 }
 
@@ -1441,16 +1478,7 @@ export default {
   left: 100%;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+
 
 .metric-conclusion {
   padding: 0.75rem;
@@ -1460,7 +1488,6 @@ export default {
   background: linear-gradient(135deg, rgba(0, 74, 173, 0.03) 0%, rgba(0, 194, 203, 0.02) 100%);
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
@@ -1474,7 +1501,6 @@ export default {
   height: 100%;
   background: linear-gradient(180deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
   opacity: 0.6;
-  transition: opacity 0.3s ease;
 }
 
 .metric-card-graph:hover .metric-conclusion {
@@ -1499,7 +1525,6 @@ export default {
   padding-bottom: 0.75rem;
   border-bottom: 2px solid rgba(0, 74, 173, 0.1);
   position: relative;
-  transition: all 0.3s ease;
 }
 
 .metric-card-title::after {
@@ -1511,7 +1536,6 @@ export default {
   width: 0;
   height: 2px;
   background: linear-gradient(90deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
-  transition: width 0.3s ease;
 }
 
 .metric-card-graph:hover .metric-card-title::after {
@@ -1520,7 +1544,6 @@ export default {
 
 .metric-card-title strong {
   color: var(--azul-turno);
-  transition: color 0.3s ease;
 }
 
 .metric-card-graph:hover .metric-card-title strong {
@@ -1531,11 +1554,11 @@ export default {
 .centered {
   padding: 0.75rem 0;
   position: relative;
-  transition: all 0.3s ease;
 }
 
 .centered canvas {
-  transition: transform 0.3s ease;
+  min-width: 400px !important;
+  min-height: 200px !important;
 }
 
 .metric-card-graph:hover .centered canvas {
@@ -1554,7 +1577,6 @@ export default {
 .metric-conclusion i {
   font-size: 1.25rem;
   margin-right: 0.5rem;
-  transition: transform 0.3s ease, color 0.3s ease;
   display: inline-block;
 }
 
@@ -1576,7 +1598,6 @@ export default {
 
 .bg-primary {
   background: linear-gradient(135deg, var(--azul-turno) 0%, #446ffc 100%) !important;
-  transition: all 0.3s ease;
   box-shadow: 0 1px 4px rgba(0, 74, 173, 0.15);
 }
 
@@ -1588,7 +1609,6 @@ export default {
 .bg-secondary {
   background: rgba(0, 0, 0, 0.08) !important;
   color: #000 !important;
-  transition: all 0.3s ease;
 }
 
 .bg-secondary:hover {
@@ -1649,7 +1669,6 @@ export default {
   background: linear-gradient(135deg, rgba(0, 74, 173, 0.02) 0%, rgba(0, 194, 203, 0.01) 100%);
   border-radius: 0.5rem;
   border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
 }
 
 .booking-status-row:hover {

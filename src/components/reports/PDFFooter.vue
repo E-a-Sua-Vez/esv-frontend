@@ -22,7 +22,7 @@ export default {
   <div id="pdf-footer" v-if="show" class="pdf-details" style="display: none">
     <hr />
     <div class="d-flex justify-content-between">
-      <span> Report provided By EsTuTurno </span>
+      <span> Report provided By Hub </span>
       <span> Generated on: {{ currentDate }}</span>
     </div>
   </div>

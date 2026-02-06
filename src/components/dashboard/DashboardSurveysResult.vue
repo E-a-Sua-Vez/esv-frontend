@@ -119,8 +119,26 @@ export default {
       const pdfHeader = doc.querySelector('#pdf-header');
       const pdfFooter = doc.querySelector('#pdf-footer');
 
+      if (!doc) {
+        this.loading = false;
+        this.detailsOpened = false;
+        return;
+      }
+
       if (pdfHeader) pdfHeader.style.display = 'block';
       if (pdfFooter) pdfFooter.style.display = 'block';
+
+      // Expand all accordions for PDF capture
+      document.querySelectorAll('.collapse').forEach(el => el.classList.add('show'));
+      // Trigger resize to update charts
+      window.dispatchEvent(new Event('resize'));
+      // Force chart resize
+      document.querySelectorAll('canvas').forEach(canvas => {
+        if (canvas.__chartjs) {
+          canvas.__chartjs.resize();
+        }
+      });
+
       setTimeout(async () => {
         try {
           const html2pdf = await lazyLoadHtml2Pdf();
@@ -129,6 +147,7 @@ export default {
             .from(doc)
             .save()
             .then(() => {
+              document.querySelectorAll('.collapse').forEach(el => el.classList.remove('show'));
               if (pdfHeader) pdfHeader.style.display = 'none';
               if (pdfFooter) pdfFooter.style.display = 'none';
               this.detailsOpened = false;
@@ -136,6 +155,7 @@ export default {
               doc = undefined;
             })
             .catch(error => {
+              document.querySelectorAll('.collapse').forEach(el => el.classList.remove('show'));
               if (pdfHeader) pdfHeader.style.display = 'none';
               if (pdfFooter) pdfFooter.style.display = 'none';
               this.detailsOpened = false;
@@ -143,13 +163,14 @@ export default {
               doc = undefined;
             });
         } catch (error) {
+          document.querySelectorAll('.collapse').forEach(el => el.classList.remove('show'));
           if (pdfHeader) pdfHeader.style.display = 'none';
           if (pdfFooter) pdfFooter.style.display = 'none';
           this.detailsOpened = false;
           this.loading = false;
           doc = undefined;
         }
-      }, 4000);
+      }, 3000);
     },
   },
   computed: {

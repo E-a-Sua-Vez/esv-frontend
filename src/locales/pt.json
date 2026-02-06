@@ -3367,7 +3367,7 @@
         "38": "R. Cancelada",
         "39": "Terms y Cond.",
         "graph": {
-          "1": "Evolução das Atendimentos",
+          "1": "Evolução dos Atendimentos",
           "2": "Atendimentos por Linha",
           "3": "Fluxo de Atendimentos",
           "4": "Evolução Duração de Atendimentos (prom/min)",
@@ -3568,7 +3568,7 @@
           "view": "Notificações Enviadas"
         },
         "attention-number-evolution": {
-          "view": "Evolução das Atendimentos"
+          "view": "Evolução dos Atendimentos"
         },
         "attention-duration-evolution": {
           "view": "Evolução da duração Atendimentos (prom/min)"

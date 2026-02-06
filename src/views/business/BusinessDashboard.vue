@@ -529,6 +529,8 @@ export default {
     });
     const { barChartProps: attentionNumberEvolutionProps } = useBarChart({
       chartData: attentionNumberEvolution,
+    }, {
+      animation: false,
     });
 
     const attentionDurationEvolution = computed(() => {
@@ -567,6 +569,8 @@ export default {
     });
     const { barChartProps: attentionDurationEvolutionProps } = useBarChart({
       chartData: attentionDurationEvolution,
+    }, {
+      animation: false,
     });
 
     const attentionHourDistribution = computed(() => {
@@ -596,6 +600,8 @@ export default {
     });
     const { barChartProps: attentionHourDistributionProps } = useBarChart({
       chartData: attentionHourDistribution,
+    }, {
+      animation: false,
     });
 
     const attentionDayDistribution = computed(() => {
@@ -625,6 +631,8 @@ export default {
     });
     const { barChartProps: attentionDayDistributionProps } = useBarChart({
       chartData: attentionDayDistribution,
+    }, {
+      animation: false,
     });
 
     const attentionQueues = computed(() => {
@@ -642,7 +650,9 @@ export default {
       }
       return undefined;
     });
-    const { barChartProps: attentionQueuesProps } = useBarChart({ chartData: attentionQueues });
+    const { barChartProps: attentionQueuesProps } = useBarChart({ chartData: attentionQueues }, {
+      animation: false,
+    });
 
     const attentionFlow = computed(() => {
       const data = state.calculatedMetrics['attention.created'].attentionFlow;
@@ -661,7 +671,9 @@ export default {
       }
       return undefined;
     });
-    const { barChartProps: attentionFlowProps } = useBarChart({ chartData: attentionFlow });
+    const { barChartProps: attentionFlowProps } = useBarChart({ chartData: attentionFlow }, {
+      animation: false,
+    });
 
     const surveyFlow = computed(() => {
       const data = state.calculatedMetrics['attention.created'].attentionFlow;
@@ -682,7 +694,9 @@ export default {
       }
       return undefined;
     });
-    const { barChartProps: surveyFlowProps } = useBarChart({ chartData: surveyFlow });
+    const { barChartProps: surveyFlowProps } = useBarChart({ chartData: surveyFlow }, {
+      animation: false,
+    });
 
     const attentionRateDurationEvolution = computed(() => {
       const data = state.calculatedMetrics['attention.created'].rateDurationFlow;
@@ -720,6 +734,8 @@ export default {
     });
     const { barChartProps: attentionRateDurationEvolutionProps } = useBarChart({
       chartData: attentionRateDurationEvolution,
+    }, {
+      animation: false,
     });
 
     const bookingFlow = computed(() => {
@@ -741,7 +757,9 @@ export default {
       }
       return undefined;
     });
-    const { barChartProps: bookingFlowProps } = useBarChart({ chartData: bookingFlow });
+    const { barChartProps: bookingFlowProps } = useBarChart({ chartData: bookingFlow }, {
+      animation: false,
+    });
 
     const bookingNumberEvolution = computed(() => {
       const data = state.calculatedMetrics['booking.created']
@@ -861,6 +879,8 @@ export default {
     });
     const { lineChartProps: telemedicineEvolutionProps } = useBarChart({
       chartData: telemedicineEvolution,
+    }, {
+      animation: false,
     });
 
     const bookingDayDistribution = computed(() => {

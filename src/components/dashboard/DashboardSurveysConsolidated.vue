@@ -212,10 +212,20 @@ export default {
       const pdfHeader = doc.querySelector('#pdf-header');
       const pdfFooter = doc.querySelector('#pdf-footer');
 
-      if (pdfHeader) pdfHeader.style.display = 'none';
-      if (pdfFooter) pdfFooter.style.display = 'none';
+      if (!doc) {
+        loading.value = false;
+        state.detailsOpened = false;
+        return;
+      }
+
+      // Ensure all details are opened and health score is shown for PDF capture
+      state.detailsOpened = true;
+
       setTimeout(async () => {
         try {
+          if (pdfHeader) pdfHeader.style.display = 'block';
+          if (pdfFooter) pdfFooter.style.display = 'block';
+
           const html2pdf = await lazyLoadHtml2Pdf();
           html2pdf()
             .set(options)

@@ -268,7 +268,6 @@ export default {
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(0, 0, 0, 0.08);
-  animation: fadeInUp 0.6s ease-out;
   width: 100%;
   box-sizing: border-box;
 }
@@ -325,24 +324,6 @@ export default {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  animation: slideInRight 0.5s ease-out;
-  animation-fill-mode: both;
-}
-
-.recommendation-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-.recommendation-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.recommendation-card:nth-child(3) {
-  animation-delay: 0.3s;
-}
-.recommendation-card:nth-child(4) {
-  animation-delay: 0.4s;
-}
-.recommendation-card:nth-child(5) {
-  animation-delay: 0.5s;
 }
 
 @keyframes slideInRight {
