@@ -64,6 +64,7 @@ export default {
     preselectedServiceId: { type: String, default: null }, // Service ID to filter services/collaborators
     packageInfo: { type: Object, default: null }, // Package reminder info
     loadingPackageReminder: { type: Boolean, default: false }, // Loading state for package reminder
+    isVisible: { type: Boolean, default: false }, // Whether the modal is visible
   },
   emits: ['attention-created', 'cancel', 'step-change', 'error'],
   setup(props, { emit }) {
@@ -304,10 +305,15 @@ export default {
       // For modal mode, always accept terms by default to streamline the flow
       state.accept = true;
 
-      // Load services for PROFESSIONAL queues to display service names in buttons
+      // Load services for all queue types to display service names in buttons
       // Only load if we have preselected queues or if we're in modal mode
       if (props.preselectedQueue || props.mode === 'modal' || (props.queues && props.queues.length > 0)) {
-        await loadServicesForQueues();
+
+        // Load services for all queue types initially for modal
+        const queueTypes = ['PROFESSIONAL', 'SERVICE', 'SELECT_SERVICE'];
+        for (const type of queueTypes) {
+          await loadServicesForQueues(type);
+        }
       }
 
       // If all critical data is preselected, start at appropriate step
@@ -594,18 +600,7 @@ export default {
       return state.currentStep === 4;
     });
 
-    // Watch for changes in queues or groupedQueues to load services
-    watch(() => props.queues, async (newQueues) => {
-      if (newQueues && newQueues.length > 0) {
-        await loadServicesForQueues();
-      }
-    }, { deep: true });
-
-    watch(() => props.groupedQueues, async (newGroupedQueues) => {
-      if (newGroupedQueues && Object.keys(newGroupedQueues).length > 0) {
-        await loadServicesForQueues();
-      }
-    }, { deep: true });
+    // Services are loaded on demand when user selects queue type
 
     const handleTelemedicineToggle = () => {
       if (state.isTelemedicine) {
@@ -1106,22 +1101,25 @@ export default {
       });
     };
 
-    // Function to load services for PROFESSIONAL queues to display service names
-    const loadServicesForQueues = async () => {
-      if (!props.queues || props.queues.length === 0) return;
+    // Function to load services for queues of a specific type to display service names
+    const loadServicesForQueues = async (queueType = 'PROFESSIONAL') => {
+
+      if (!props.queues || props.queues.length === 0) {
+        return;
+      }
 
       // Create a copy of queues
       localQueues.value = JSON.parse(JSON.stringify(props.queues));
 
-      // Load services for PROFESSIONAL queues
-      const professionalQueues = localQueues.value.filter(
-        queue => queue.type === 'PROFESSIONAL' && (queue.collaboratorId || queue.professionalId)
+      // Load services for queues of the specified type
+      const queuesOfType = localQueues.value.filter(
+        queue => queue.type === queueType && (queue.collaboratorId || queue.professionalId)
       );
 
       // Process in batches of 2 to avoid rate limiting
       const batchSize = 2;
-      for (let i = 0; i < professionalQueues.length; i += batchSize) {
-        const batch = professionalQueues.slice(i, i + batchSize);
+      for (let i = 0; i < queuesOfType.length; i += batchSize) {
+        const batch = queuesOfType.slice(i, i + batchSize);
         await Promise.all(
           batch.map(async queue => {
             const servicesIds = Array.isArray(queue.servicesId) ? queue.servicesId : [queue.servicesId].filter(Boolean);
@@ -1158,7 +1156,7 @@ export default {
           })
         );
         // Small delay between batches
-        if (i + batchSize < professionalQueues.length) {
+        if (i + batchSize < queuesOfType.length) {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
@@ -1166,16 +1164,16 @@ export default {
       // Also handle groupedQueues if provided
       if (props.groupedQueues && Object.keys(props.groupedQueues).length > 0) {
         localGroupedQueues.value = JSON.parse(JSON.stringify(props.groupedQueues));
-        if (localGroupedQueues.value['PROFESSIONAL']) {
+        if (localGroupedQueues.value[queueType]) {
           // Process queues in batches to avoid rate limiting
-          const professionalQueues = localGroupedQueues.value['PROFESSIONAL'].filter(
-            queue => queue.type === 'PROFESSIONAL' && (queue.collaboratorId || queue.professionalId)
+          const queuesOfType = localGroupedQueues.value[queueType].filter(
+            queue => queue.type === queueType && (queue.collaboratorId || queue.professionalId)
           );
 
           // Process in batches of 2 to avoid overwhelming the API
           const batchSize = 2;
-          for (let i = 0; i < professionalQueues.length; i += batchSize) {
-            const batch = professionalQueues.slice(i, i + batchSize);
+          for (let i = 0; i < queuesOfType.length; i += batchSize) {
+            const batch = queuesOfType.slice(i, i + batchSize);
             await Promise.all(
               batch.map(async queue => {
                 const servicesIds = Array.isArray(queue.servicesId) ? queue.servicesId : [queue.servicesId].filter(Boolean);
@@ -1212,7 +1210,7 @@ export default {
               })
             );
             // Small delay between batches
-            if (i + batchSize < professionalQueues.length) {
+            if (i + batchSize < queuesOfType.length) {
               await new Promise(resolve => setTimeout(resolve, 200));
             }
           }
@@ -2892,6 +2890,25 @@ export default {
       }
     );
 
+    // Watch for changes in queues prop to update localQueues
+    watch(
+      () => props.queues,
+      (newQueues) => {
+        localQueues.value = newQueues || [];
+        localGroupedQueues.value = props.groupedQueues || {};
+      },
+      { immediate: true }
+    );
+
+    // Watch for changes in groupedQueues prop
+    watch(
+      () => props.groupedQueues,
+      (newGroupedQueues) => {
+        localGroupedQueues.value = newGroupedQueues || {};
+      },
+      { immediate: true }
+    );
+
     const formatTelemedicineDate = dateTimeString => {
       if (!dateTimeString) return '';
       try {
@@ -3568,6 +3585,9 @@ export default {
           // Error acknowledging alert
         }
       },
+      handleLoadServices: async (type) => {
+        await loadServicesForQueues(type);
+      },
     };
   },
 };
@@ -3636,6 +3656,7 @@ export default {
           :receive-queue="receiveQueue"
           :receive-services="receiveServices"
           :preselected-service-id="preselectedServiceIdRef"
+          @load-services="handleLoadServices"
         />
 
         <!-- SERVICES SELECTOR (show when queue is selected) -->

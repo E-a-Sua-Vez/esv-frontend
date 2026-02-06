@@ -58,6 +58,7 @@ export default {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(0, 0, 0, 0.08);
   transition: all 0.2s ease;
+  overflow: visible;
 }
 
 .metric-card:hover {
@@ -92,5 +93,9 @@ export default {
   font-size: 1rem;
   border: 1.2px solid var(--rojo-warning);
   border-radius: 0.5rem;
+}
+
+.popper {
+  z-index: 9999;
 }
 </style>

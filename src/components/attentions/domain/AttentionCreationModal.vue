@@ -30,6 +30,7 @@ export default {
     const modalRef = ref(null);
     const modalId = ref(`attention-creation-modal-${Date.now()}`);
     const attentionFlowRef = ref(null);
+    const isVisible = ref(false);
     let modalInstance = null;
 
     const closeModal = () => {
@@ -75,8 +76,10 @@ export default {
           if (attentionFlowRef.value && attentionFlowRef.value.resetState) {
             await attentionFlowRef.value.resetState();
           }
+          isVisible.value = true;
           modalInstance.show();
         } else {
+          isVisible.value = false;
           modalInstance.hide();
         }
       }
@@ -98,6 +101,7 @@ export default {
       closeModal,
       handleAttentionCreated,
       handleError,
+      isVisible,
     };
   },
 };
@@ -157,6 +161,7 @@ export default {
               :toggles="toggles"
               :creation-type="creationType"
               :session-id="sessionId"
+              :is-visible="isVisible"
               mode="modal"
               @attention-created="handleAttentionCreated"
               @cancel="closeModal"

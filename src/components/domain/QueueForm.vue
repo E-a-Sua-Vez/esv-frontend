@@ -22,7 +22,8 @@ export default {
     receiveServices: { type: Function, default: () => {} },
     preselectedServiceId: { type: String, default: null }, // Service ID to filter collaborators
   },
-  async setup(props) {
+  emits: ['load-services'],
+  async setup(props, { emit }) {
     const loading = ref(false);
     const captchaEnabled = import.meta.env.VITE_RECAPTCHA_ENABLED || false;
     const professionalTitleRef = ref(null);
@@ -97,7 +98,7 @@ export default {
                     }
 
                     // For PROFESSIONAL queues, get services from queue.servicesId
-                    if (queue.servicesId && queue.servicesId.length > 0) {
+                    if (queue.servicesId && queue.servicesId.length > 0 && (!queue.services || queue.services.length === 0)) {
                       try {
                         const loadedServices = await getServicesById(queue.servicesId);
                         queue.services = loadedServices || [];
@@ -105,15 +106,16 @@ export default {
                         console.error(`Error loading professional ${queue.name} services:`, error);
                         queue.services = [];
                       }
-                    } else {
+                    } else if (!queue.services) {
                       queue.services = [];
                     }
                     queue.servicesName =
                       queue.services && queue.services.length > 0
                         ? queue.services.map(serv => serv.name)
                         : [];
+                    queueAux.push(queue);
+                  } else {
                   }
-                  queueAux.push(queue);
                 }
               }
               groupedQueues.value['PROFESSIONAL'] = queueAux;
@@ -156,7 +158,7 @@ export default {
                     }
 
                     // For PROFESSIONAL queues, get services from queue.servicesId
-                    if (queue.servicesId && queue.servicesId.length > 0) {
+                    if (queue.servicesId && queue.servicesId.length > 0 && (!queue.services || queue.services.length === 0)) {
                       try {
                         const loadedServices = await getServicesById(queue.servicesId);
                         queue.services = loadedServices || [];
@@ -164,7 +166,7 @@ export default {
                         console.error(`[StandardMode] Error loading professional ${queue.name} services:`, error);
                         queue.services = [];
                       }
-                    } else {
+                    } else if (!queue.services) {
                       queue.services = [];
                     }
                     queue.servicesName =
@@ -178,6 +180,7 @@ export default {
               groupedQueues.value['PROFESSIONAL'] = queueAux;
             }
             state.filteredCollaboratorQueues = groupedQueues.value['PROFESSIONAL'];
+            console.log('🔍 DEBUG: Final state.filteredCollaboratorQueues:', state.filteredCollaboratorQueues);
             refresh(state.filteredCollaboratorQueues);
           }
         }
@@ -194,6 +197,22 @@ export default {
           await getQueue(queues.value[0]);
         }
         loading.value = false;
+
+        // Auto-activate first available tab if no tab is active
+        if (!state.showProfessional && !state.showService && !state.showSelectServices) {
+
+          // Always try to show professional tab first if we have any queues
+          if (queues.value && queues.value.length > 0) {
+            showByProfessional();
+          } else if (groupedQueues.value['SERVICE'] && groupedQueues.value['SERVICE'].length > 0) {
+            showByService();
+          } else if (groupedQueues.value['SELECT_SERVICE'] && groupedQueues.value['SELECT_SERVICE'].length > 0) {
+            showServices();
+          } else if (groupedQueues.value['STANDARD'] && groupedQueues.value['STANDARD'].length > 0) {
+            showByService();
+          } else {
+          }
+        }
       } catch (error) {
         loading.value = false;
       }
@@ -266,11 +285,13 @@ export default {
     };
 
     const showByProfessional = () => {
+      console.log('🔍 DEBUG: showByProfessional called');
       state.showProfessional = true;
       state.showService = false;
       state.showSelectServices = false;
       receiveQueue({});
       receiveServices([]);
+      emit('load-services', 'PROFESSIONAL');
 
       // Scroll to professional title after DOM update
       setTimeout(() => {
@@ -286,6 +307,7 @@ export default {
       state.showSelectServices = false;
       receiveQueue({});
       receiveServices([]);
+      emit('load-services', 'SERVICE');
 
       // Scroll to service section after DOM update
       setTimeout(() => {
@@ -296,6 +318,7 @@ export default {
     };
 
     const showServices = () => {
+      console.log('🔍 DEBUG: showServices called');
       state.showService = false;
       state.showProfessional = false;
       state.showSelectServices = true;
@@ -305,6 +328,7 @@ export default {
       }
       receiveQueue({});
       receiveServices([]);
+      emit('load-services', 'SELECT_SERVICE');
     };
 
     const clearSearchCollaborator = () => {
@@ -385,6 +409,14 @@ export default {
         refresh(groupedQueues.value['PROFESSIONAL']);
       }
     });
+
+    // Watch for changes in groupedQueues to update filtered queues
+    watch(() => groupedQueues.value, (newGroupedQueues) => {
+      if (newGroupedQueues && newGroupedQueues['PROFESSIONAL']) {
+        state.filteredCollaboratorQueues = newGroupedQueues['PROFESSIONAL'];
+        refresh(state.filteredCollaboratorQueues);
+      }
+    }, { deep: true });
 
     return {
       state,
@@ -545,6 +577,19 @@ export default {
               v-if="state.filteredCollaboratorQueues && state.filteredCollaboratorQueues.length > 0"
             >
               <div v-for="(queue, index) in state.filteredCollaboratorQueues" :key="index">
+                <QueueButton
+                  :queue="queue"
+                  :selected-queue="state.queue"
+                  :get-queue="getQueue"
+                  :accept="accept"
+                  :telemedicine-enabled="isTelemedicineEnabled(commerce, queue)"
+                  :presential-enabled="queue.presentialEnabled !== false"
+                >
+                </QueueButton>
+              </div>
+            </div>
+            <div v-else-if="groupedQueues['PROFESSIONAL'] && groupedQueues['PROFESSIONAL'].length > 0">
+              <div v-for="(queue, index) in groupedQueues['PROFESSIONAL']" :key="index">
                 <QueueButton
                   :queue="queue"
                   :selected-queue="state.queue"

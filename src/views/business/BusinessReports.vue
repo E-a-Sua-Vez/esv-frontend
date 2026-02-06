@@ -5,19 +5,8 @@ import { globalStore } from '../../stores';
 import {
   getAttentionsReport,
   getNotificationsReport,
-  getSurveysReport,
-  getBookingsReport,
-  getWaitlistsReport,
-  getClientsReport,
-  getClientContactsReport,
-  getBookingPaymentsResume,
-  getAttentionPaymentsResume,
-  getAttentionProductsResume,
-  getIncomesResume,
-  getOutcomesResume,
 } from '../../application/services/query-stack';
 import { getPermissions } from '../../application/services/permissions';
-import jsonToCsv from '../../shared/utils/jsonToCsv';
 import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import Spinner from '../../components/common/Spinner.vue';
@@ -59,16 +48,16 @@ export default {
       activeBusiness: false,
       startDate: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().slice(0, 10),
       endDate: new Date().toISOString().slice(0, 10),
-      reports: ref({}),
+      reports: {},
       toggles: {},
       format: 'csv',
       // Filter state for desktop layout
       filtersCollapsed: false,
-      allCommerces: ref([]),
+      allCommerces: [],
     });
 
     // Use global commerce from store
-    const commerce = computed(() => store.getCurrentCommerce);
+    const commerce = computed(() => store.getCurrentCommerce || {});
 
     // Compute selectedCommerces as array of IDs for reports
     const selectedCommerces = computed(() => {
@@ -115,26 +104,39 @@ export default {
       }
     };
 
-    const downloadReport = (data, prefix) => {
+    const downloadFromBackend = async (type) => {
       try {
-        loading.value = true;
-        let dataAsBlob = [];
-        if (data && data.length > 0) {
-          if (state.format === 'csv') {
-            dataAsBlob = jsonToCsv(data);
-          } else if (state.format === 'json') {
-            dataAsBlob = JSON.stringify(data);
-          } else if (state.format === 'xls') {
-            dataAsBlob = jsonToCsv(data);
-          }
+        if (!commerce.value || !commerce.value.id) {
+          alertError.value = 'Comercio no seleccionado';
+          return;
         }
-        const blobURL = URL.createObjectURL(new Blob([dataAsBlob]));
+        loading.value = true;
+        // Build query parameters manually to handle arrays correctly
+        const queryParams = new URLSearchParams();
+        selectedCommerces.value.forEach(id => {
+          queryParams.append('commerceIds[]', id);
+        });
+        queryParams.set('from', state.startDate);
+        queryParams.set('to', state.endDate);
+        queryParams.set('format', state.format);
+
+        const baseUrl = (import.meta.env.VITE_QUERY_URL || 'http://localhost:3003').replace(/\/$/, '');
+        const response = await fetch(`${baseUrl}/reports/download/${type}?${queryParams}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        if (!response.ok) throw new Error('Download failed');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.style = 'display: none';
-        a.download = `${prefix}-${commerce.value.tag}-${state.startDate}-${state.endDate}.${state.format}`;
-        a.href = blobURL;
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `${type}-${commerce.value.tag || 'commerce'}-${state.startDate}-${state.endDate}.${state.format === 'xls' ? 'xlsx' : state.format === 'pdf' ? 'pdf' : state.format === 'json' ? 'json' : 'csv'}`;
         document.body.appendChild(a);
         a.click();
+        window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         alertError.value = '';
         loading.value = false;
@@ -145,219 +147,51 @@ export default {
     };
 
     const downloadAttentionsReport = async () => {
-      try {
-        loading.value = true;
-        alertError.value = '';
-        const result = await getAttentionsReport(
-          commerce.value.id,
-          selectedCommerces.value,
-          state.startDate,
-          state.endDate
-        );
-        downloadReport(result, 'attentions');
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || error.message || 500;
-        loading.value = false;
-      }
+      await downloadFromBackend('attentions');
     };
 
     const downloadNotificationsReport = async () => {
-      try {
-        loading.value = true;
-        alertError.value = '';
-        const result = await getNotificationsReport(
-          commerce.value.id,
-          selectedCommerces.value,
-          state.startDate,
-          state.endDate
-        );
-        downloadReport(result, 'notifications');
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || error.message || 500;
-        loading.value = false;
-      }
+      await downloadFromBackend('notifications');
     };
 
     const downloadSurveysReport = async () => {
-      try {
-        loading.value = true;
-        alertError.value = '';
-        const result = await getSurveysReport(
-          commerce.value.id,
-          selectedCommerces.value,
-          state.startDate,
-          state.endDate
-        );
-        downloadReport(result, 'surveys');
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || error.message || 500;
-        loading.value = false;
-      }
+      await downloadFromBackend('surveys');
     };
 
     const downloadBookingsReport = async () => {
-      try {
-        loading.value = true;
-        alertError.value = '';
-        const result = await getBookingsReport(
-          commerce.value.id,
-          selectedCommerces.value,
-          state.startDate,
-          state.endDate
-        );
-        downloadReport(result, 'bookings');
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || error.message || 500;
-        loading.value = false;
-      }
+      await downloadFromBackend('bookings');
     };
 
     const downloadWaitlistsReport = async () => {
-      try {
-        loading.value = true;
-        alertError.value = '';
-        const result = await getWaitlistsReport(
-          commerce.value.id,
-          selectedCommerces.value,
-          state.startDate,
-          state.endDate
-        );
-        downloadReport(result, 'waitlist');
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || error.message || 500;
-        loading.value = false;
-      }
+      await downloadFromBackend('waitlists');
     };
 
     const downloadClientsReport = async () => {
-      try {
-        loading.value = true;
-        alertError.value = '';
-        const result = await getClientsReport(
-          commerce.value.id,
-          selectedCommerces.value,
-          state.startDate,
-          state.endDate
-        );
-        downloadReport(result, 'clients');
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || error.message || 500;
-        loading.value = false;
-      }
+      await downloadFromBackend('clients');
     };
 
     const downloadClientContactsReport = async () => {
-      try {
-        loading.value = true;
-        alertError.value = '';
-        const result = await getClientContactsReport(
-          commerce.value.id,
-          selectedCommerces.value,
-          state.startDate,
-          state.endDate
-        );
-        downloadReport(result, 'client-contacts');
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || error.message || 500;
-        loading.value = false;
-      }
+      await downloadFromBackend('client-contacts');
     };
 
     const downloadBookingPaymentsReport = async () => {
-      try {
-        loading.value = true;
-        alertError.value = '';
-        const result = await getBookingPaymentsResume(
-          commerce.value.id,
-          selectedCommerces.value,
-          state.startDate,
-          state.endDate
-        );
-        downloadReport(result, 'booking-payments');
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || error.message || 500;
-        loading.value = false;
-      }
+      await downloadFromBackend('booking-payments');
     };
 
     const downloadAttentionPaymentsReport = async () => {
-      try {
-        loading.value = true;
-        alertError.value = '';
-        const result = await getAttentionPaymentsResume(
-          commerce.value.id,
-          selectedCommerces.value,
-          state.startDate,
-          state.endDate
-        );
-        downloadReport(result, 'attention-payments');
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || error.message || 500;
-        loading.value = false;
-      }
+      await downloadFromBackend('attention-payments');
     };
 
     const downloadAttentionProductsReport = async () => {
-      try {
-        loading.value = true;
-        alertError.value = '';
-        const result = await getAttentionProductsResume(
-          commerce.value.id,
-          selectedCommerces.value,
-          state.startDate,
-          state.endDate
-        );
-        downloadReport(result, 'attention-products');
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || error.message || 500;
-        loading.value = false;
-      }
+      await downloadFromBackend('attention-products');
     };
 
     const downloadIncomesReport = async () => {
-      try {
-        loading.value = true;
-        alertError.value = '';
-        const result = await getIncomesResume(
-          commerce.value.id,
-          selectedCommerces.value,
-          state.startDate,
-          state.endDate
-        );
-        downloadReport(result, 'incomes');
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || error.message || 500;
-        loading.value = false;
-      }
+      await downloadFromBackend('incomes');
     };
 
     const downloadOutcomesReport = async () => {
-      try {
-        loading.value = true;
-        alertError.value = '';
-        const result = await getOutcomesResume(
-          commerce.value.id,
-          selectedCommerces.value,
-          state.startDate,
-          state.endDate
-        );
-        downloadReport(result, 'outcomes');
-        loading.value = false;
-      } catch (error) {
-        alertError.value = error.response?.status || error.status || error.message || 500;
-        loading.value = false;
-      }
+      await downloadFromBackend('outcomes');
     };
 
     const getToday = async () => {
@@ -547,13 +381,27 @@ export default {
                     <i :class="`bi bi-filetype-json`"></i>
                   </label>
                 </div>
+                <div class="col centered form-check form-switch check-option">
+                  <input
+                    type="radio"
+                    class="form-check-input btn-sm"
+                    v-model="state.format"
+                    value="pdf"
+                    name="pdf-type"
+                    id="pdf-since"
+                    autocomplete="off"
+                  />
+                  <label class="btn" for="pdf-since">
+                    <i :class="`bi bi-filetype-pdf`"></i>
+                  </label>
+                </div>
               </div>
             </div>
             <div v-if="!loading" id="businessReports-result" class="mt-4">
               <div>
                 <SimpleDownloadCard
                   :show="!!state.toggles['reports.admin.attentions']"
-                  :can-donwload="!!state.toggles['reports.admin.attentions']"
+                  :can-download="!!state.toggles['reports.admin.attentions']"
                   :title="$t('businessReports.items.reports.1.name')"
                   :show-tooltip="true"
                   :description="$t('businessReports.items.reports.1.description')"
@@ -563,7 +411,7 @@ export default {
                 ></SimpleDownloadCard>
                 <SimpleDownloadCard
                   :show="!!state.toggles['reports.admin.notifications']"
-                  :can-donwload="!!state.toggles['reports.admin.notifications']"
+                  :can-download="!!state.toggles['reports.admin.notifications']"
                   :title="$t('businessReports.items.reports.2.name')"
                   :show-tooltip="true"
                   :description="$t('businessReports.items.reports.2.description')"
@@ -815,6 +663,20 @@ export default {
                             />
                             <label class="btn" for="json-desktop">
                               <i :class="`bi bi-filetype-json`"></i>
+                            </label>
+                          </div>
+                          <div class="form-check form-switch check-option">
+                            <input
+                              type="radio"
+                              class="form-check-input btn-sm"
+                              v-model="state.format"
+                              value="pdf"
+                              name="pdf-type-desktop"
+                              id="pdf-desktop"
+                              autocomplete="off"
+                            />
+                            <label class="btn" for="pdf-desktop">
+                              <i :class="`bi bi-filetype-pdf`"></i>
                             </label>
                           </div>
                         </div>

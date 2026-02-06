@@ -37,6 +37,7 @@ import LgpdDataPortability from '../../lgpd/LgpdDataPortability.vue';
 import { getGroupedQueueByCommerceId } from '../../../application/services/queue';
 import { searchClientByIdNumber, getClientById } from '../../../application/services/client';
 import { getConsentStatus } from '../../../application/services/consent';
+import { getProfessionalsByCommerce } from '../../../application/services/professional';
 
 export default {
   name: 'ClientDetailsCard',
@@ -102,6 +103,7 @@ export default {
       ],
       // Flags para rastrear qué datos ya se han cargado (lazy loading)
       loadedQueues: null, // Cache para queues cargadas dinámicamente
+      loadedProfessionals: null, // Cache para professionals cargados dinámicamente
       attentionsLoaded: false,
       bookingsLoaded: false,
       packagesLoaded: false,
@@ -352,18 +354,20 @@ export default {
         await this.checkPreprontuarioCompletion();
       }
 
-      // Always try to load queues BEFORE opening the modal to ensure they are available
       if (this.commerce?.id) {
         try {
           const groupedQueues = await getGroupedQueueByCommerceId(this.commerce.id);
+
           // Convert grouped queues object to flat array
           this.loadedQueues = Object.values(groupedQueues).flat();
+
+          this.loadedProfessionals = await getProfessionalsByCommerce(this.commerce.id);
 
           // Force Vue to update by waiting for next tick
           await this.$nextTick();
         } catch (error) {
-          // Error loading queues, but continue opening modal
-          console.warn('Failed to load queues for attention creation modal:', error);
+          // Error loading queues or professionals, but continue opening modal
+          console.warn('Failed to load data for attention creation modal:', error);
         }
       }
 
@@ -2665,7 +2669,7 @@ export default {
       :commerce="commerce"
       :queues="queuesArray"
       :grouped-queues="groupedQueuesForModal"
-      :collaborators="[]"
+      :collaborators="loadedProfessionals || []"
       :preselected-client="client"
       :preselected-queue="preselectedQueueForModal"
       :preselected-service-id="preselectedServiceIdForModal"
