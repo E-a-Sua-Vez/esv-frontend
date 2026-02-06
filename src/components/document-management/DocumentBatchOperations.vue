@@ -68,7 +68,7 @@
               <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.downloadModal.title') }}</h5>
             </div>
           </div>
-          <button @click="showBulkDownload = false" class="btn-close modern-modal-close-btn" type="button">
+          <button @click="showBulkDownload = false" class="modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -134,7 +134,7 @@
               <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.tagModal.title') }}</h5>
             </div>
           </div>
-          <button @click="showBulkTag = false" class="btn-close modern-modal-close-btn" type="button">
+          <button @click="showBulkTag = false" class="modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -223,7 +223,7 @@
               <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.categoryModal.title') }}</h5>
             </div>
           </div>
-          <button @click="showBulkCategory = false" class="btn-close modern-modal-close-btn" type="button">
+          <button @click="showBulkCategory = false" class="modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -274,7 +274,7 @@
               <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.urgencyModal.title') }}</h5>
             </div>
           </div>
-          <button @click="showBulkUrgency = false" class="btn-close modern-modal-close-btn" type="button">
+          <button @click="showBulkUrgency = false" class="modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -330,7 +330,7 @@
               <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.deleteModal.title') }}</h5>
             </div>
           </div>
-          <button @click="showBulkDelete = false" class="btn-close modern-modal-close-btn" type="button">
+          <button @click="showBulkDelete = false" class="modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>

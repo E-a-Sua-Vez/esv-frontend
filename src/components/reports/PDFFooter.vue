@@ -1,4 +1,6 @@
 <script>
+import dayjs from 'dayjs';
+
 export default {
   name: 'PDFFooter',
   props: {
@@ -7,6 +9,11 @@ export default {
   data() {
     return {};
   },
+  computed: {
+    currentDate() {
+      return dayjs().format('DD/MM/YYYY HH:mm');
+    },
+  },
   methods: {},
 };
 </script>
@@ -14,7 +21,10 @@ export default {
 <template>
   <div id="pdf-footer" v-if="show" class="pdf-details" style="display: none">
     <hr />
-    <span> Report provided By EsTuTurno </span>
+    <div class="d-flex justify-content-between">
+      <span> Report provided By EsTuTurno </span>
+      <span> Generated on: {{ currentDate }}</span>
+    </div>
   </div>
 </template>
 

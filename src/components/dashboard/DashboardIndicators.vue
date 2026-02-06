@@ -60,6 +60,7 @@ export default {
     return {
       loading: false,
       detailsOpened: false,
+      isExporting: false,
       sentimentScore: {},
       queueDetailsExpanded: false,
     };
@@ -435,23 +436,28 @@ export default {
           margin: 0.5,
           filename,
           image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2 },
+          html2canvas: { scale: 3, useCORS: true, logging: false },
           pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+          jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
         };
 
         let doc = document.getElementById('indicators-component');
-        const pdfHeader = document.getElementById('pdf-header');
-        const pdfFooter = document.getElementById('pdf-footer');
+        const pdfHeader = doc.querySelector('#pdf-header');
+        const pdfFooter = doc.querySelector('#pdf-footer');
 
         if (!doc) {
           this.loading = false;
           this.detailsOpened = false;
+          this.isExporting = false;
           return;
         }
 
         if (pdfHeader) pdfHeader.style.display = 'block';
         if (pdfFooter) pdfFooter.style.display = 'block';
+
+        // Ensure all details are opened and health score is shown for PDF capture
+        this.detailsOpened = true;
+        this.isExporting = true;
 
         setTimeout(async () => {
           try {
@@ -465,12 +471,14 @@ export default {
                 if (pdfFooter) pdfFooter.style.display = 'none';
                 doc = undefined;
                 this.detailsOpened = false;
+                this.isExporting = false;
                 this.loading = false;
               })
               .catch(error => {
                 if (pdfHeader) pdfHeader.style.display = 'none';
                 if (pdfFooter) pdfFooter.style.display = 'none';
                 this.detailsOpened = false;
+                this.isExporting = false;
                 doc = undefined;
                 this.loading = false;
               });
@@ -478,13 +486,15 @@ export default {
             if (pdfHeader) pdfHeader.style.display = 'none';
             if (pdfFooter) pdfFooter.style.display = 'none';
             this.detailsOpened = false;
+            this.isExporting = false;
             doc = undefined;
             this.loading = false;
           }
-        }, 1000);
+        }, 5000);
       } catch (error) {
         this.loading = false;
         this.detailsOpened = false;
+        this.isExporting = false;
       }
     },
   },
@@ -510,8 +520,16 @@ export default {
       ></SimpleDownloadCard>
       <Spinner :show="loading"></Spinner>
       <div id="indicators-component">
+        <PDFHeader
+          :show="toggles['dashboard.reports.indicators']"
+          :title="$t('dashboard.reports.indicators.title')"
+          :start-date="startDate"
+          :end-date="endDate"
+          :commerce="commerce"
+        >
+        </PDFHeader>
         <!-- Health Score Card -->
-        <div class="health-score-section" v-if="!detailsOpened && !hideSummary">
+        <div class="health-score-section" v-if="(!detailsOpened && !hideSummary) || isExporting">
           <div class="health-score-card">
             <div class="health-score-header">
               <div class="health-score-icon">
@@ -653,7 +671,7 @@ export default {
         <!-- Gauge Charts Section -->
         <div
           class="gauge-charts-section"
-          v-if="!detailsOpened && !hideSummary && gaugeMetrics.length > 0"
+          v-if="(!detailsOpened && !hideSummary && gaugeMetrics.length > 0) || isExporting"
         >
           <div class="section-header">
             <h4 class="section-title">
@@ -690,13 +708,13 @@ export default {
 
         <!-- Smart Recommendations Panel -->
         <SmartRecommendationsPanel
-          v-if="!detailsOpened && !hideSummary"
+          v-if="(!detailsOpened && !hideSummary) || isExporting"
           :calculated-metrics="calculatedMetrics"
           :commerce="commerce"
         />
 
         <!-- Enhanced Summary Section -->
-        <div class="dashboard-summary-section" v-if="!detailsOpened && !hideSummary">
+        <div class="dashboard-summary-section" v-if="(!detailsOpened && !hideSummary) || isExporting">
           <div class="summary-cards-grid">
             <!-- Attention Summary Card -->
             <div
@@ -988,7 +1006,7 @@ export default {
           <!-- Queue Details Card -->
           <div
             class="queue-details-section"
-            v-if="!detailsOpened && !hideSummary && getQueueDetails().length > 0"
+            v-if="(!detailsOpened && !hideSummary && getQueueDetails().length > 0) || isExporting"
           >
             <div class="queue-details-card">
               <div class="queue-details-header">
@@ -1408,6 +1426,7 @@ export default {
         :content="$t('dashboard.message.1.content')"
       />
     </div>
+    <PDFFooter :show="toggles['dashboard.reports.indicators']"></PDFFooter>
   </div>
 </template>
 

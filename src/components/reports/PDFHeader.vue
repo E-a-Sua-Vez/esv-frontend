@@ -18,7 +18,7 @@ export default {
 <template>
   <div id="pdf-header" v-if="show" class="my-4" style="display: none">
     <div class="centered">
-      <img style="width: 220px" :src="$t('logoPoweredBy')" />
+      <img style="width: 220px" :src="'/images/esv/esv-color-horizontal-transparente.png'" />
     </div>
     <div class="centered">
       <span class="fw-bold" style="font-size: 1rem"> {{ title }} </span>

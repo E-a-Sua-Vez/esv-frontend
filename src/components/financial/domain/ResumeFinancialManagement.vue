@@ -832,7 +832,7 @@ export default {
     async downloadCashFlowReport() {
       try {
         this.loading = true;
-        const commerceIds = [this.commerce.id];
+        let commerceIds = [this.commerce.id];
         if (this.commerces && this.commerces.length > 0) {
           commerceIds = this.commerces.map(commerce => commerce.id);
         }

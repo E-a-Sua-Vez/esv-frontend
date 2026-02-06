@@ -977,7 +977,7 @@ export default {
                       </div>
                       <button
                         type="button"
-                        class="btn-close modern-modal-close-btn"
+                        class="modern-modal-close-btn"
                         @click="closeBusinessActionModal"
                         aria-label="Close"
                       >
@@ -1034,7 +1034,7 @@ export default {
                       </div>
                       <button
                         type="button"
-                        class="btn-close modern-modal-close-btn"
+                        class="modern-modal-close-btn"
                         @click="clearBusinessSelection()"
                         aria-label="Close"
                       >
@@ -1451,7 +1451,7 @@ export default {
                       </div>
                       <button
                         type="button"
-                        class="btn-close modern-modal-close-btn"
+                        class="modern-modal-close-btn"
                         @click="closeBusinessActionModal"
                         aria-label="Close"
                       >
@@ -1508,7 +1508,7 @@ export default {
                       </div>
                       <button
                         type="button"
-                        class="btn-close modern-modal-close-btn"
+                        class="modern-modal-close-btn"
                         @click="clearBusinessSelection()"
                         aria-label="Close"
                       >

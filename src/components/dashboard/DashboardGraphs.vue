@@ -175,28 +175,46 @@ export default {
       this.showBookings = true;
     },
     async exportToPDF() {
+      console.log('Starting PDF export for graphs');
       this.loading = true;
       this.downloading = true;
-      const filename = `graphs-${this.commerce.name}-${this.commerce.tag}-${this.startDate}-${this.endDate}.pdf`;
+      const filename = 'graphs-report.pdf';
       const options = {
         margin: 0.5,
         filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, allowTaint: true },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
       };
       let doc = document.getElementById('graphs-component');
+      console.log('Graphs component found:', !!doc);
       document.getElementById('pdf-header').style.display = 'block';
       document.getElementById('pdf-footer').style.display = 'block';
+
+      // Expand all accordions for PDF capture
+      document.querySelectorAll('.collapse').forEach(el => el.classList.add('show'));
+      // Trigger resize to update charts
+      window.dispatchEvent(new Event('resize'));
+      // Force chart resize
+      document.querySelectorAll('canvas').forEach(canvas => {
+        if (canvas.__chartjs) {
+          canvas.__chartjs.resize();
+        }
+      });
+
       setTimeout(async () => {
         try {
           const html2pdf = await lazyLoadHtml2Pdf();
+          console.log('html2pdf loaded successfully');
           html2pdf()
             .set(options)
             .from(doc)
             .save()
             .then(() => {
+              console.log('PDF save completed');
+              // Collapse accordions back if needed
+              document.querySelectorAll('.collapse').forEach(el => el.classList.remove('show'));
               document.getElementById('pdf-header').style.display = 'none';
               document.getElementById('pdf-footer').style.display = 'none';
               doc = undefined;
@@ -204,6 +222,9 @@ export default {
               this.downloading = false;
             })
             .catch(error => {
+              console.error('Error in html2pdf save:', error);
+              // Collapse accordions back
+              document.querySelectorAll('.collapse').forEach(el => el.classList.remove('show'));
               document.getElementById('pdf-header').style.display = 'none';
               document.getElementById('pdf-footer').style.display = 'none';
               doc = undefined;
@@ -211,13 +232,16 @@ export default {
               this.downloading = false;
             });
         } catch (error) {
+          console.error('Error in graphs PDF export:', error);
+          // Collapse accordions back
+          document.querySelectorAll('.collapse').forEach(el => el.classList.remove('show'));
           document.getElementById('pdf-header').style.display = 'none';
           document.getElementById('pdf-footer').style.display = 'none';
           doc = undefined;
           this.loading = false;
           this.downloading = false;
         }
-      }, 2100);
+      }, 12000);
     },
   },
 };

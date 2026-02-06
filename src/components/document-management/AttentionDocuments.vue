@@ -88,7 +88,7 @@
               <p class="modern-modal-client-name">{{ attention?.patientName || 'Paciente' }}</p>
             </div>
           </div>
-          <button @click="showUploadModal = false" class="btn-close modern-modal-close-btn" type="button">
+          <button @click="showUploadModal = false" class="modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>

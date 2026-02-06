@@ -103,7 +103,7 @@ export default {
         margin: 0.5,
         filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 3, useCORS: true, logging: false },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
       };
@@ -135,7 +135,7 @@ export default {
           this.loading = false;
           doc = undefined;
         }
-      }, 1000);
+      }, 4000);
     },
   },
   watch: {

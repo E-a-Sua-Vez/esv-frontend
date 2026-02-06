@@ -1090,7 +1090,7 @@ export default {
               </div>
               <button
                 :id="`close-modal-lgpd-${attention.clientId}`"
-                class="btn-close modern-modal-close-btn"
+                class="modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"

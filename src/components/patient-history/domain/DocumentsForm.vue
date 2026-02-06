@@ -940,7 +940,7 @@ export default {
               <p class="modern-modal-client-name">{{ patientHistoryData?.clientName || 'Paciente' }}</p>
             </div>
           </div>
-          <button @click="state.showUploadModal = false" class="btn-close modern-modal-close-btn" type="button">
+          <button @click="state.showUploadModal = false" class="modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>

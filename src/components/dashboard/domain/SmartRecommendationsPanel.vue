@@ -1,5 +1,6 @@
 <script>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Popper from 'vue3-popper';
 
 export default {
@@ -10,6 +11,7 @@ export default {
     commerce: { type: Object, default: undefined },
   },
   setup(props) {
+    const { t } = useI18n();
     const recommendations = computed(() => {
       const recs = [];
       const metrics = props.calculatedMetrics;
@@ -26,20 +28,20 @@ export default {
           recs.push({
             type: 'warning',
             icon: 'bi-exclamation-triangle-fill',
-            title: 'Tasa de Conversión Baja',
-            message: `Solo ${conversionRate.toFixed(1)}% de las reservas se confirman.`,
-            recommendation: 'Implementar recordatorios automáticos 24h antes de la cita.',
-            impact: 'Alta',
+            title: t('dashboard.smartRecommendations.recommendations.lowConversionRate.title'),
+            message: t('dashboard.smartRecommendations.recommendations.lowConversionRate.message', { conversionRate: conversionRate.toFixed(1) }),
+            recommendation: t('dashboard.smartRecommendations.recommendations.lowConversionRate.recommendation'),
+            impact: t('dashboard.smartRecommendations.recommendations.lowConversionRate.impact'),
             priority: 'high',
           });
         } else if (conversionRate > 80) {
           recs.push({
             type: 'success',
             icon: 'bi-check-circle-fill',
-            title: 'Excelente Tasa de Conversión',
-            message: `${conversionRate.toFixed(1)}% de conversión - ¡Sigue así!`,
-            recommendation: 'Considera aumentar la capacidad en horarios pico.',
-            impact: 'Media',
+            title: t('dashboard.smartRecommendations.recommendations.excellentConversionRate.title'),
+            message: t('dashboard.smartRecommendations.recommendations.excellentConversionRate.message', { conversionRate: conversionRate.toFixed(1) }),
+            recommendation: t('dashboard.smartRecommendations.recommendations.excellentConversionRate.recommendation'),
+            impact: t('dashboard.smartRecommendations.recommendations.excellentConversionRate.impact'),
             priority: 'low',
           });
         }
@@ -54,10 +56,10 @@ export default {
           recs.push({
             type: 'warning',
             icon: 'bi-clock-fill',
-            title: 'Tiempo de Atención Elevado',
-            message: `Tiempo promedio: ${avgMinutes} minutos.`,
-            recommendation: 'Revisar procesos operativos o considerar más personal.',
-            impact: 'Alta',
+            title: t('dashboard.smartRecommendations.recommendations.highAttentionTime.title'),
+            message: t('dashboard.smartRecommendations.recommendations.highAttentionTime.message', { avgMinutes }),
+            recommendation: t('dashboard.smartRecommendations.recommendations.highAttentionTime.recommendation'),
+            impact: t('dashboard.smartRecommendations.recommendations.highAttentionTime.impact'),
             priority: 'high',
           });
         }
@@ -69,20 +71,20 @@ export default {
           recs.push({
             type: 'error',
             icon: 'bi-star-fill',
-            title: 'Satisfacción del Cliente Baja',
-            message: `Calificación promedio: ${survey.avgRating.toFixed(1)}/5.`,
-            recommendation: 'Revisar comentarios de clientes y mejorar puntos críticos.',
-            impact: 'Crítica',
+            title: t('dashboard.smartRecommendations.recommendations.lowCustomerSatisfaction.title'),
+            message: t('dashboard.smartRecommendations.recommendations.lowCustomerSatisfaction.message', { avgRating: survey.avgRating.toFixed(1) }),
+            recommendation: t('dashboard.smartRecommendations.recommendations.lowCustomerSatisfaction.recommendation'),
+            impact: t('dashboard.smartRecommendations.recommendations.lowCustomerSatisfaction.impact'),
             priority: 'critical',
           });
         } else if (survey.avgRating >= 4.5) {
           recs.push({
             type: 'success',
             icon: 'bi-star-fill',
-            title: 'Excelente Satisfacción',
-            message: `Calificación: ${survey.avgRating.toFixed(1)}/5 - ¡Felicitaciones!`,
-            recommendation: 'Aprovecha para solicitar referencias y reseñas.',
-            impact: 'Media',
+            title: t('dashboard.smartRecommendations.recommendations.excellentSatisfaction.title'),
+            message: t('dashboard.smartRecommendations.recommendations.excellentSatisfaction.message', { avgRating: survey.avgRating.toFixed(1) }),
+            recommendation: t('dashboard.smartRecommendations.recommendations.excellentSatisfaction.recommendation'),
+            impact: t('dashboard.smartRecommendations.recommendations.excellentSatisfaction.impact'),
             priority: 'low',
           });
         }
@@ -95,20 +97,20 @@ export default {
           recs.push({
             type: 'error',
             icon: 'bi-megaphone-fill',
-            title: 'NPS Negativo',
-            message: `NPS: ${roundedNps > 0 ? '+' : ''}${roundedNps}`,
-            recommendation: 'Acción urgente: Contactar detractores y mejorar experiencia.',
-            impact: 'Crítica',
+            title: t('dashboard.smartRecommendations.recommendations.negativeNPS.title'),
+            message: t('dashboard.smartRecommendations.recommendations.negativeNPS.message', { nps: `${roundedNps > 0 ? '+' : ''}${roundedNps}` }),
+            recommendation: t('dashboard.smartRecommendations.recommendations.negativeNPS.recommendation'),
+            impact: t('dashboard.smartRecommendations.recommendations.negativeNPS.impact'),
             priority: 'critical',
           });
         } else if (survey.nps >= 50) {
           recs.push({
             type: 'success',
             icon: 'bi-megaphone-fill',
-            title: 'NPS Excelente',
-            message: `NPS: +${roundedNps} - Clientes muy satisfechos.`,
-            recommendation: 'Mantén el nivel de servicio y considera programas de lealtad.',
-            impact: 'Media',
+            title: t('dashboard.smartRecommendations.recommendations.excellentNPS.title'),
+            message: t('dashboard.smartRecommendations.recommendations.excellentNPS.message', { nps: roundedNps }),
+            recommendation: t('dashboard.smartRecommendations.recommendations.excellentNPS.recommendation'),
+            impact: t('dashboard.smartRecommendations.recommendations.excellentNPS.impact'),
             priority: 'low',
           });
         }
@@ -128,10 +130,10 @@ export default {
           recs.push({
             type: 'info',
             icon: 'bi-graph-up-arrow',
-            title: 'Oportunidad de Optimización',
-            message: `Pico de demanda a las ${maxHourLabel}:00 (${maxHour} atenciones).`,
-            recommendation: 'Considera redistribuir personal o abrir más turnos en este horario.',
-            impact: 'Media',
+            title: t('dashboard.smartRecommendations.recommendations.optimizationOpportunity.title'),
+            message: t('dashboard.smartRecommendations.recommendations.optimizationOpportunity.message', { maxHourLabel, maxHour }),
+            recommendation: t('dashboard.smartRecommendations.recommendations.optimizationOpportunity.recommendation'),
+            impact: t('dashboard.smartRecommendations.recommendations.optimizationOpportunity.impact'),
             priority: 'medium',
           });
         }
@@ -148,21 +150,20 @@ export default {
           recs.push({
             type: 'success',
             icon: 'bi-arrow-up-circle-fill',
-            title: 'Crecimiento Significativo',
-            message: `+${change.toFixed(1)}% más atenciones que el período anterior.`,
-            recommendation:
-              'Asegúrate de mantener la calidad del servicio con el aumento de demanda.',
-            impact: 'Media',
+            title: t('dashboard.smartRecommendations.recommendations.significantGrowth.title'),
+            message: t('dashboard.smartRecommendations.recommendations.significantGrowth.message', { change: change.toFixed(1) }),
+            recommendation: t('dashboard.smartRecommendations.recommendations.significantGrowth.recommendation'),
+            impact: t('dashboard.smartRecommendations.recommendations.significantGrowth.impact'),
             priority: 'medium',
           });
         } else if (change < -15) {
           recs.push({
             type: 'warning',
             icon: 'bi-arrow-down-circle-fill',
-            title: 'Caída en Demand',
-            message: `${change.toFixed(1)}% menos atenciones que el período anterior.`,
-            recommendation: 'Revisa estrategias de marketing y promoción de servicios.',
-            impact: 'Alta',
+            title: t('dashboard.smartRecommendations.recommendations.demandDrop.title'),
+            message: t('dashboard.smartRecommendations.recommendations.demandDrop.message', { change: change.toFixed(1) }),
+            recommendation: t('dashboard.smartRecommendations.recommendations.demandDrop.recommendation'),
+            impact: t('dashboard.smartRecommendations.recommendations.demandDrop.impact'),
             priority: 'high',
           });
         }
@@ -183,14 +184,14 @@ export default {
       return classes[type] || 'recommendation-info';
     };
 
-    const getImpactBadgeClass = impact => {
+    const getImpactBadgeClass = priority => {
       const classes = {
-        Crítica: 'impact-critical',
-        Alta: 'impact-high',
-        Media: 'impact-medium',
-        Baja: 'impact-low',
+        critical: 'impact-critical',
+        high: 'impact-high',
+        medium: 'impact-medium',
+        low: 'impact-low',
       };
-      return classes[impact] || 'impact-medium';
+      return classes[priority] || 'impact-medium';
     };
 
     return {
@@ -242,7 +243,7 @@ export default {
           <div class="recommendation-content">
             <div class="recommendation-title-row">
               <h4 class="recommendation-title">{{ rec.title }}</h4>
-              <span class="impact-badge" :class="getImpactBadgeClass(rec.impact)">
+              <span class="impact-badge" :class="getImpactBadgeClass(rec.priority)">
                 {{ rec.impact }}
               </span>
             </div>

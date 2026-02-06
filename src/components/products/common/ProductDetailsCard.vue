@@ -766,7 +766,7 @@ export default {
                 </div>
               </div>
               <button
-                class="btn-close modern-modal-close-btn"
+                class="modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
@@ -845,7 +845,7 @@ export default {
                 </div>
               </div>
               <button
-                class="btn-close modern-modal-close-btn"
+                class="modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"

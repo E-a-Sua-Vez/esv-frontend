@@ -2144,7 +2144,7 @@ export default {
                 </div>
               </div>
               <button
-                class="btn-close modern-modal-close-btn"
+                class="modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
@@ -2223,7 +2223,7 @@ export default {
                 </div>
               </div>
               <button
-                class="btn-close modern-modal-close-btn"
+                class="modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
@@ -2302,7 +2302,7 @@ export default {
                 </div>
               </div>
               <button
-                class="btn-close modern-modal-close-btn"
+                class="modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
@@ -2389,7 +2389,7 @@ export default {
               </div>
               <button
                 :id="`close-modal-client-edit-${this.client.id}`"
-                class="btn-close modern-modal-close-btn"
+                class="modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
@@ -2452,7 +2452,7 @@ export default {
                 </div>
               </div>
               <button
-                class="btn-close modern-modal-close-btn"
+                class="modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
@@ -2532,7 +2532,7 @@ export default {
               </div>
               <button
                 :id="`close-modal-patient-history-${this.client.id}`"
-                class="btn-close modern-modal-close-btn"
+                class="modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
@@ -2587,7 +2587,7 @@ export default {
                 </div>
                 <button
                   :id="`close-modal-lgpd-${client.id}`"
-                  class="btn-close modern-modal-close-btn"
+                  class="modern-modal-close-btn"
                   type="button"
                   data-bs-dismiss="modal"
                   aria-label="Close"

@@ -323,11 +323,11 @@ export default {
 <style scoped>
 .logo {
   display: flex;
-  max-width: 250px;
-  max-height: 230px;
+  max-width: 220px;
+  max-height: 200px;
   background-repeat: no-repeat;
   background-size: 100%;
-  margin-bottom: 0.3rem;
+  margin-bottom: 1rem;
   cursor: pointer;
 }
 

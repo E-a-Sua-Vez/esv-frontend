@@ -11,7 +11,7 @@
           <p class="modern-modal-client-name">{{ client?.name || $t('documentViewer.patient') }}</p>
         </div>
       </div>
-      <button @click="$emit('close')" class="btn-close modern-modal-close-btn" type="button">
+      <button @click="$emit('close')" class="modern-modal-close-btn" type="button">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>

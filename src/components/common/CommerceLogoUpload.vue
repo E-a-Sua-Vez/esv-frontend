@@ -181,14 +181,20 @@ export default {
     <div class="logo-upload-overlay" @click="closeModal"></div>
     <div class="logo-upload-container">
       <!-- Header -->
-      <div class="logo-upload-header">
-        <h4 class="logo-upload-title">
-          <i class="bi bi-image me-2"></i>
-          {{ $t('commerceAdmin.logoUpload.title') }}
-        </h4>
-        <button class="btn-close-modal" @click="closeModal">
-          <i class="bi bi-x"></i>
-        </button>
+      <div class="logo-upload-header border-0 active-name modern-modal-header">
+        <div class="modern-modal-header-inner">
+          <div class="modern-modal-icon-wrapper">
+            <i class="bi bi-image"></i>
+          </div>
+          <div class="modern-modal-title-wrapper">
+            <h4 class="logo-upload-title modern-modal-title">
+              {{ $t('commerceAdmin.logoUpload.title') }}
+            </h4>
+          </div>
+          <button class="modern-modal-close-btn" @click="closeModal">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Content -->
@@ -327,7 +333,7 @@ export default {
   align-items: center;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  background: linear-gradient(135deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  background: var(--azul-turno);
   color: white;
 }
 
@@ -563,5 +569,92 @@ export default {
   .btn-retake {
     width: 100%;
   }
+}
+
+/* Modern Modal Header Styles */
+.modern-modal-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  border-radius: 1rem 1rem 0 0;
+  min-height: auto;
+  position: relative;
+}
+
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.modern-modal-icon-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-modal-icon-wrapper i {
+  font-size: 1.125rem;
+  color: #ffffff;
+}
+
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-background);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.modern-modal-client-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.modern-modal-close-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+}
+
+.modern-modal-close-btn i {
+  font-size: 1rem;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.modern-modal-close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
 }
 </style>

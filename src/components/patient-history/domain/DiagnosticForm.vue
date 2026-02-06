@@ -695,7 +695,7 @@ export default {
               <p class="modern-modal-client-name">Códigos de Diagnóstico</p>
             </div>
           </div>
-          <button type="button" class="btn-close modern-modal-close-btn" @click="closeCIE10Catalog">
+          <button type="button" class="modern-modal-close-btn" @click="closeCIE10Catalog">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>

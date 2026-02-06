@@ -204,13 +204,16 @@ export default {
         margin: 0.5,
         filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 3, useCORS: true, logging: false },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
       };
       let doc = document.getElementById('survey-consolidated-component');
-      document.getElementById('pdf-header').style.display = 'block';
-      document.getElementById('pdf-footer').style.display = 'block';
+      const pdfHeader = doc.querySelector('#pdf-header');
+      const pdfFooter = doc.querySelector('#pdf-footer');
+
+      if (pdfHeader) pdfHeader.style.display = 'none';
+      if (pdfFooter) pdfFooter.style.display = 'none';
       setTimeout(async () => {
         try {
           const html2pdf = await lazyLoadHtml2Pdf();
@@ -219,27 +222,27 @@ export default {
             .from(doc)
             .save()
             .then(() => {
-              document.getElementById('pdf-header').style.display = 'none';
-              document.getElementById('pdf-footer').style.display = 'none';
+              if (pdfHeader) pdfHeader.style.display = 'none';
+              if (pdfFooter) pdfFooter.style.display = 'none';
               state.detailsOpened = false;
               loading.value = false;
               doc = undefined;
             })
             .catch(error => {
-              document.getElementById('pdf-header').style.display = 'none';
-              document.getElementById('pdf-footer').style.display = 'none';
+              if (pdfHeader) pdfHeader.style.display = 'none';
+              if (pdfFooter) pdfFooter.style.display = 'none';
               state.detailsOpened = false;
               loading.value = false;
               doc = undefined;
             });
         } catch (error) {
-          document.getElementById('pdf-header').style.display = 'none';
-          document.getElementById('pdf-footer').style.display = 'none';
+          if (pdfHeader) pdfHeader.style.display = 'none';
+          if (pdfFooter) pdfFooter.style.display = 'none';
           state.detailsOpened = false;
           loading.value = false;
           doc = undefined;
         }
-      }, 2000);
+      }, 4000);
     };
 
     const surveysConsolidatedNPSEvolution = computed(() => {
@@ -526,7 +529,7 @@ export default {
           </div>
           <div id="survey-consolidated-component">
             <PDFHeader
-              :show="toggles['dashboard.reports.surveys-consolidated']"
+              :show="true"
               :title="$t('dashboard.reports.surveys-consolidated.title')"
               :start-date="startDate"
               :end-date="endDate"
@@ -781,7 +784,7 @@ export default {
                 />
               </div>
             </div>
-            <PDFFooter :show="toggles['dashboard.reports.surveys-consolidated']"></PDFFooter>
+            <PDFFooter :show="true"></PDFFooter>
           </div>
         </div>
       </div>

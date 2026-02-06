@@ -3262,7 +3262,79 @@
     "smartRecommendations": {
       "title": "Recomendaciones Inteligentes",
       "items": "sugerencias",
-      "tooltip": "Recomendaciones inteligentes basadas en análisis de datos y métricas clave. Estas sugerencias se generan automáticamente analizando patrones, tendencias y oportunidades de mejora en tu negocio."
+      "tooltip": "Recomendaciones inteligentes basadas en análisis de datos y métricas clave. Estas sugerencias se generan automáticamente analizando patrones, tendencias y oportunidades de mejora en tu negocio.",
+      "recommendations": {
+        "lowConversionRate": {
+          "title": "Tasa de Conversión Baja",
+          "message": "Solo {conversionRate}% de las reservas se confirman.",
+          "recommendation": "Implementar recordatorios automáticos 24h antes de la cita.",
+          "impact": "Alta",
+          "priority": "high"
+        },
+        "excellentConversionRate": {
+          "title": "Excelente Tasa de Conversión",
+          "message": "{conversionRate}% de conversión - ¡Sigue así!",
+          "recommendation": "Considera aumentar la capacidad en horarios pico.",
+          "impact": "Media",
+          "priority": "low"
+        },
+        "highAttentionTime": {
+          "title": "Tiempo de Atención Elevado",
+          "message": "Tiempo promedio: {avgMinutes} minutos.",
+          "recommendation": "Revisar procesos operativos o considerar más personal.",
+          "impact": "Alta",
+          "priority": "high"
+        },
+        "lowCustomerSatisfaction": {
+          "title": "Satisfacción del Cliente Baja",
+          "message": "Calificación promedio: {avgRating}/5.",
+          "recommendation": "Revisar comentarios de clientes y mejorar puntos críticos.",
+          "impact": "Crítica",
+          "priority": "critical"
+        },
+        "excellentSatisfaction": {
+          "title": "Excelente Satisfacción",
+          "message": "Calificación: {avgRating}/5 - ¡Felicitaciones!",
+          "recommendation": "Aprovecha para solicitar referencias y reseñas.",
+          "impact": "Media",
+          "priority": "low"
+        },
+        "negativeNPS": {
+          "title": "NPS Negativo",
+          "message": "NPS: {nps}",
+          "recommendation": "Acción urgente: Contactar detractores y mejorar experiencia.",
+          "impact": "Crítica",
+          "priority": "critical"
+        },
+        "excellentNPS": {
+          "title": "NPS Excelente",
+          "message": "NPS: +{nps} - Clientes muy satisfechos.",
+          "recommendation": "Mantén el nivel de servicio y considera programas de lealtad.",
+          "impact": "Media",
+          "priority": "low"
+        },
+        "optimizationOpportunity": {
+          "title": "Oportunidad de Optimización",
+          "message": "Pico de demanda a las {maxHourLabel}:00 ({maxHour} atenciones).",
+          "recommendation": "Considera redistribuir personal o abrir más turnos en este horario.",
+          "impact": "Media",
+          "priority": "medium"
+        },
+        "significantGrowth": {
+          "title": "Crecimiento Significativo",
+          "message": "+{change}% más atenciones que el período anterior.",
+          "recommendation": "Asegúrate de mantener la calidad del servicio con el aumento de demanda.",
+          "impact": "Media",
+          "priority": "medium"
+        },
+        "demandDrop": {
+          "title": "Caída en Demanda",
+          "message": "{change}% menos atenciones que el período anterior.",
+          "recommendation": "Revisa estrategias de marketing y promoción de servicios.",
+          "impact": "Alta",
+          "priority": "high"
+        }
+      }
     },
     "tracing": {
       "title": "Gestión de Clientes",

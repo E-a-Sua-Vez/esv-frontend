@@ -111,13 +111,16 @@ export default {
         margin: 0.5,
         filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 3, useCORS: true, logging: false },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
       };
       let doc = document.getElementById('survey-component');
-      document.getElementById('pdf-header').style.display = 'block';
-      document.getElementById('pdf-footer').style.display = 'block';
+      const pdfHeader = doc.querySelector('#pdf-header');
+      const pdfFooter = doc.querySelector('#pdf-footer');
+
+      if (pdfHeader) pdfHeader.style.display = 'block';
+      if (pdfFooter) pdfFooter.style.display = 'block';
       setTimeout(async () => {
         try {
           const html2pdf = await lazyLoadHtml2Pdf();
@@ -126,27 +129,27 @@ export default {
             .from(doc)
             .save()
             .then(() => {
-              document.getElementById('pdf-header').style.display = 'none';
-              document.getElementById('pdf-footer').style.display = 'none';
+              if (pdfHeader) pdfHeader.style.display = 'none';
+              if (pdfFooter) pdfFooter.style.display = 'none';
               this.detailsOpened = false;
               this.loading = false;
               doc = undefined;
             })
             .catch(error => {
-              document.getElementById('pdf-header').style.display = 'none';
-              document.getElementById('pdf-footer').style.display = 'none';
+              if (pdfHeader) pdfHeader.style.display = 'none';
+              if (pdfFooter) pdfFooter.style.display = 'none';
               this.detailsOpened = false;
               this.loading = false;
               doc = undefined;
             });
         } catch (error) {
-          document.getElementById('pdf-header').style.display = 'none';
-          document.getElementById('pdf-footer').style.display = 'none';
+          if (pdfHeader) pdfHeader.style.display = 'none';
+          if (pdfFooter) pdfFooter.style.display = 'none';
           this.detailsOpened = false;
           this.loading = false;
           doc = undefined;
         }
-      }, 1000);
+      }, 4000);
     },
   },
   computed: {

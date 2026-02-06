@@ -42,17 +42,17 @@ export async function lazyLoadHtml2Pdf() {
       return await loadingPromise;
     }
 
-    // Try npm first with workarounds (more reliable), then fallback to CDN
+    // Try CDN first (more reliable), then fallback to npm with workarounds
     loadingPromise = (async () => {
       try {
-        return await loadHtml2PdfFromNpm();
-      } catch (npmError) {
-        console.warn('NPM load failed, trying CDN as fallback:', npmError);
+        return await loadHtml2PdfFromCDN();
+      } catch (cdnError) {
+        console.warn('CDN load failed, trying NPM as fallback:', cdnError);
         try {
-          return await loadHtml2PdfFromCDN();
-        } catch (cdnError) {
-          console.error('Both NPM and CDN failed:', { npmError, cdnError });
-          throw new Error('Failed to load html2pdf.js from both NPM and CDN sources');
+          return await loadHtml2PdfFromNpm();
+        } catch (npmError) {
+          console.error('Both CDN and NPM failed:', { cdnError, npmError });
+          throw new Error('Failed to load html2pdf.js from both CDN and NPM sources');
         }
       }
     })();
@@ -67,7 +67,7 @@ export async function lazyLoadHtml2Pdf() {
   }
 }
 
-// Load html2pdf.js bundle from CDN (includes all dependencies)
+// Load html2pdf.js from CDN with jsPDF loaded first
 async function loadHtml2PdfFromCDN() {
   return new Promise((resolve, reject) => {
     if (typeof window === 'undefined') {
@@ -104,59 +104,71 @@ async function loadHtml2PdfFromCDN() {
       return;
     }
 
-    // Try multiple CDN sources
-    const cdnSources = [
-      'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
-      'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js',
-      'https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js',
-    ];
-
-    const currentSourceIndex = 0;
-
-    const tryLoadFromCDN = sourceIndex => {
-      if (sourceIndex >= cdnSources.length) {
-        reject(new Error('Failed to load html2pdf.js from all CDN sources'));
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = cdnSources[sourceIndex];
-      script.async = true;
-      script.crossOrigin = 'anonymous';
-
-      script.onload = () => {
-        // Wait a bit for the library to initialize
-        const checkInterval = setInterval(() => {
-          if (window.html2pdf) {
-            clearInterval(checkInterval);
-            html2pdfCache = window.html2pdf;
-            resolve(window.html2pdf);
-          }
-        }, 50);
-
-        // Timeout after 5 seconds
-        setTimeout(() => {
-          clearInterval(checkInterval);
-          if (!window.html2pdf) {
-            // Try next CDN source
-            document.head.removeChild(script);
-            tryLoadFromCDN(sourceIndex + 1);
-          }
-        }, 5000);
-      };
-
-      script.onerror = () => {
-        // Try next CDN source
-        if (script.parentNode) {
-          script.parentNode.removeChild(script);
+    // First load jsPDF
+    const loadJsPDF = () => {
+      return new Promise((resolveJsPDF, rejectJsPDF) => {
+        if (window.jsPDF) {
+          resolveJsPDF();
+          return;
         }
-        tryLoadFromCDN(sourceIndex + 1);
-      };
 
-      document.head.appendChild(script);
+        const jsPDFScript = document.createElement('script');
+        jsPDFScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        jsPDFScript.async = true;
+        jsPDFScript.crossOrigin = 'anonymous';
+
+        jsPDFScript.onload = () => {
+          // Wait a bit for initialization
+          setTimeout(() => {
+            if (window.jsPDF) {
+              resolveJsPDF();
+            } else {
+              rejectJsPDF(new Error('jsPDF not available after loading'));
+            }
+          }, 100);
+        };
+
+        jsPDFScript.onerror = () => {
+          rejectJsPDF(new Error('Failed to load jsPDF from CDN'));
+        };
+
+        document.head.appendChild(jsPDFScript);
+      });
     };
 
-    tryLoadFromCDN(0);
+    // Then load html2pdf
+    const loadHtml2PDF = () => {
+      return new Promise((resolveHtml2PDF, rejectHtml2PDF) => {
+        const html2pdfScript = document.createElement('script');
+        html2pdfScript.src = 'https://unpkg.com/html2pdf.js@0.9.3/dist/html2pdf.min.js';
+        html2pdfScript.async = true;
+        html2pdfScript.crossOrigin = 'anonymous';
+
+        html2pdfScript.onload = () => {
+          // Wait a bit for initialization
+          setTimeout(() => {
+            if (window.html2pdf) {
+              html2pdfCache = window.html2pdf;
+              resolveHtml2PDF(window.html2pdf);
+            } else {
+              rejectHtml2PDF(new Error('html2pdf not available after loading'));
+            }
+          }, 500);
+        };
+
+        html2pdfScript.onerror = () => {
+          rejectHtml2PDF(new Error('Failed to load html2pdf.js from CDN'));
+        };
+
+        document.head.appendChild(html2pdfScript);
+      });
+    };
+
+    // Load jsPDF first, then html2pdf
+    loadJsPDF()
+      .then(() => loadHtml2PDF())
+      .then(resolve)
+      .catch(reject);
   });
 }
 
@@ -201,6 +213,13 @@ async function loadHtml2PdfFromNpm() {
       }
       window.require.cache['jspdf'] = jsPDF;
       window.require.cache['./jspdf'] = jsPDF;
+      window.require.cache['jspdf/dist/jspdf.es.min.js'] = { jsPDF };
+      window.require.cache['jspdf/dist/jspdf.es.min'] = { jsPDF };
+    }
+
+    // Also set global require
+    if (typeof globalThis !== 'undefined') {
+      globalThis.require = window.require;
     }
 
     // Step 4: Wait to ensure everything is initialized

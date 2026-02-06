@@ -133,7 +133,7 @@ export default {
             </div>
             <button
               type="button"
-              class="btn-close modern-modal-close-btn"
+              class="modern-modal-close-btn"
               @click="closeModal"
               aria-label="Close"
             >

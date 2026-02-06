@@ -13,7 +13,7 @@
           </div>
         </div>
         <div class="carousel-actions">
-          <button @click="closeCarousel" class="btn-close modern-modal-close-btn" type="button">
+          <button @click="closeCarousel" class="modern-modal-close-btn" type="button">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
