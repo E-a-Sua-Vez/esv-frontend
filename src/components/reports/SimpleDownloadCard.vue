@@ -30,7 +30,7 @@ export default {
   <div v-if="show">
     <div class="row metric-card h4">
       <div class="metric-card-title col-8 lefted">
-        <i :class="`bi ${icon} ${iconStyleClass} centered p-1`"></i>
+        <i :class="`bi bi-${icon} ${iconStyleClass} centered p-1`"></i>
         <span class="p-1"> {{ title }} </span>
         <Popper v-if="showTooltip" :class="'dark'" arrow disable-click-away :content="description">
           <i class="bi bi-info-circle-fill h7 m-2"></i>
