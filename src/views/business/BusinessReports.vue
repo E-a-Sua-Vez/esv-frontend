@@ -150,7 +150,7 @@ export default {
         alertError.value = '';
         const result = await getAttentionsReport(
           commerce.value.id,
-          state.selectedCommerces,
+          selectedCommerces.value,
           state.startDate,
           state.endDate
         );
@@ -168,7 +168,7 @@ export default {
         alertError.value = '';
         const result = await getNotificationsReport(
           commerce.value.id,
-          state.selectedCommerces,
+          selectedCommerces.value,
           state.startDate,
           state.endDate
         );
@@ -186,7 +186,7 @@ export default {
         alertError.value = '';
         const result = await getSurveysReport(
           commerce.value.id,
-          state.selectedCommerces,
+          selectedCommerces.value,
           state.startDate,
           state.endDate
         );
@@ -204,7 +204,7 @@ export default {
         alertError.value = '';
         const result = await getBookingsReport(
           commerce.value.id,
-          state.selectedCommerces,
+          selectedCommerces.value,
           state.startDate,
           state.endDate
         );
@@ -222,7 +222,7 @@ export default {
         alertError.value = '';
         const result = await getWaitlistsReport(
           commerce.value.id,
-          state.selectedCommerces,
+          selectedCommerces.value,
           state.startDate,
           state.endDate
         );
@@ -240,7 +240,7 @@ export default {
         alertError.value = '';
         const result = await getClientsReport(
           commerce.value.id,
-          state.selectedCommerces,
+          selectedCommerces.value,
           state.startDate,
           state.endDate
         );
@@ -258,7 +258,7 @@ export default {
         alertError.value = '';
         const result = await getClientContactsReport(
           commerce.value.id,
-          state.selectedCommerces,
+          selectedCommerces.value,
           state.startDate,
           state.endDate
         );
@@ -276,7 +276,7 @@ export default {
         alertError.value = '';
         const result = await getBookingPaymentsResume(
           commerce.value.id,
-          state.selectedCommerces,
+          selectedCommerces.value,
           state.startDate,
           state.endDate
         );
@@ -294,7 +294,7 @@ export default {
         alertError.value = '';
         const result = await getAttentionPaymentsResume(
           commerce.value.id,
-          state.selectedCommerces,
+          selectedCommerces.value,
           state.startDate,
           state.endDate
         );
@@ -312,7 +312,7 @@ export default {
         alertError.value = '';
         const result = await getAttentionProductsResume(
           commerce.value.id,
-          state.selectedCommerces,
+          selectedCommerces.value,
           state.startDate,
           state.endDate
         );
@@ -330,7 +330,7 @@ export default {
         alertError.value = '';
         const result = await getIncomesResume(
           commerce.value.id,
-          state.selectedCommerces,
+          selectedCommerces.value,
           state.startDate,
           state.endDate
         );
@@ -348,7 +348,7 @@ export default {
         alertError.value = '';
         const result = await getOutcomesResume(
           commerce.value.id,
-          state.selectedCommerces,
+          selectedCommerces.value,
           state.startDate,
           state.endDate
         );
