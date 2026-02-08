@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, onMounted, onUnmounted, computed, watch } from 'vue';
+import { ref, reactive, onBeforeMount, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { globalStore } from '../../stores';
@@ -398,6 +398,14 @@ export default {
             });
           }
 
+          // Apply conversion filter if set
+          if (showConvertedOnly.value !== 'all') {
+            filtered = filtered.filter(lead => {
+              const isConverted = lead.convertedToClientId != null;
+              return showConvertedOnly.value === 'converted' ? isConverted : !isConverted;
+            });
+          }
+
           // Then apply date filter if set
           if (!dateFilterFrom.value && !dateFilterTo.value) {
             return filtered;
@@ -428,6 +436,17 @@ export default {
         alertError.value = Array.isArray(errorMsg) ? errorMsg[0] : errorMsg;
       }
     };
+
+    // Setup watchers for filter changes to avoid recursive updates
+    watch([dateFilterFrom, dateFilterTo, selectedOrigin, showConvertedOnly, serviceFilter], () => {
+      // Use nextTick to avoid triggering during reactive setup
+      nextTick(() => {
+        loadLeads(true);
+      });
+    }, { 
+      // Don't trigger on initial setup
+      flush: 'post' 
+    });
 
     // Refresh function
     const refreshLeads = async () => {
@@ -733,7 +752,11 @@ export default {
 
         // Show success message
         const successMsg = $t('businessLeadPipeline.convertSuccess') || 'Lead successfully converted to client!';
-        store.user.selectedCommerce.toastSuccess(successMsg);
+        // Clear any error messages to show the success
+        alertError.value = '';
+
+        // Force reload of leads to ensure the client tag is displayed correctly
+        await loadLeads(true);
 
       } catch (error) {
         converting.value = null;
@@ -2988,20 +3011,6 @@ export default {
         });
       }
 
-      // Apply conversion filter if selected
-      if (showConvertedOnly.value !== 'all') {
-        if (!baseLeads.NEW) {
-          baseLeads = { ...leads };
-        }
-
-        Object.keys(baseLeads).forEach(stage => {
-          baseLeads[stage] = baseLeads[stage].filter(lead => {
-            const isConverted = lead.convertedToClientId != null;
-            return showConvertedOnly.value === 'converted' ? isConverted : !isConverted;
-          });
-        });
-      }
-
       // Then apply pagination if not showing all
       if (!showAll.value) {
         const paginated = {
@@ -3669,10 +3678,10 @@ const onBirthdayInput = (val) => {
         addModal.addEventListener('hidden.bs.modal', resetAddForm);
         addModal.addEventListener('show.bs.modal', async () => {
           showAddLead.value = true;
-          
+
           // Load services from backend before showing modal
           await loadServices();
-          
+
           // Ensure toggles are set if not loaded yet
           if (!toggles.value || Object.keys(toggles.value).length === 0) {
             const userType = store.getCurrentUserType;
@@ -3718,7 +3727,7 @@ const onBirthdayInput = (val) => {
       if (globalCommerce.value?.id) {
         await loadServices();
       }
-      
+
       // Ensure initial load uses only date filters: clear status and time indicator filters
       statusFilter.value = [];
       timeIndicatorFilter.value = [];
@@ -3981,7 +3990,6 @@ const onBirthdayInput = (val) => {
                         class="form-control form-control-sm compact-date-input"
                         type="date"
                         v-model="dateFilterFrom"
-                        @change="loadLeads(true)"
                       />
                     </div>
                     <Popper
@@ -4002,7 +4010,6 @@ const onBirthdayInput = (val) => {
                         class="form-control form-control-sm compact-date-input"
                         type="date"
                         v-model="dateFilterTo"
-                        @change="loadLeads(true)"
                       />
                     </div>
                     <Popper
@@ -4020,7 +4027,6 @@ const onBirthdayInput = (val) => {
                       <select
                         class="form-control form-control-sm compact-select-input"
                         v-model="selectedOrigin"
-                        @change="loadLeads(true)"
                       >
                         <option
                           v-for="option in originOptions"
@@ -5400,7 +5406,6 @@ const onBirthdayInput = (val) => {
                   <select
                     class="form-control form-control-sm compact-select-input"
                     v-model="showConvertedOnly"
-                    @change="loadLeads(true)"
                   >
                     <option value="all">{{ $t('businessLeadPipeline.allLeads') || 'All Leads' }}</option>
                     <option value="converted">{{ $t('businessLeadPipeline.convertedOnly') || 'Converted to Client' }}</option>
@@ -5424,7 +5429,6 @@ const onBirthdayInput = (val) => {
                   <select
                     class="form-control form-control-sm compact-select-input"
                     v-model="serviceFilter"
-                    @change="loadLeads(true)"
                   >
                     <option value="">{{ $t('businessLeadPipeline.allServices') || 'Todos os Serviços' }}</option>
                     <option
