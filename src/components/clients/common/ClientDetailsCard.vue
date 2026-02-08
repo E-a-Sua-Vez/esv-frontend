@@ -435,8 +435,9 @@ export default {
         // Prepare client data for modal
         this.attentionCreationClientData = {
           queryStackClientId: clientForModal?.queryStackId || clientForModal?.id,
-          firebaseClientId: undefined,
-          sendingClientId: false,
+          firebaseClientId: clientForModal?.clientId || clientForModal?.id, // Use actual clientId if available
+          clientId: clientForModal?.clientId || clientForModal?.id, // Include clientId for AttentionCreationFlow
+          sendingClientId: true, // Allow sending clientId since we have it
           hasIdNumber: !!clientForModal?.userIdNumber,
           hasEmail: !!clientForModal?.userEmail,
           hasPhone: !!clientForModal?.userPhone,
@@ -499,8 +500,9 @@ export default {
       // Prepare client data for modal
       this.attentionCreationClientData = {
         queryStackClientId: clientForModal?.queryStackId || clientForModal?.id,
-        firebaseClientId: undefined,
-        sendingClientId: false,
+        firebaseClientId: clientForModal?.clientId || clientForModal?.id, // Use actual clientId if available
+        clientId: clientForModal?.clientId || clientForModal?.id, // Include clientId for AttentionCreationFlow
+        sendingClientId: true, // Allow sending clientId since we have it
         hasIdNumber: !!clientForModal?.userIdNumber,
         hasEmail: !!clientForModal?.userEmail,
         hasPhone: !!clientForModal?.userPhone,
@@ -1235,12 +1237,13 @@ export default {
     attentionCreationClientData() {
       if (!this.client) return null;
 
-      // ✅ CRITICAL: Use Firebase client ID if available (searched via searchClientByIdNumber)
-      // This ensures we use the correct ID that matches between Firebase and query-stack
-      // If _firebaseClientId is not available, don't send clientId and let backend search by idNumber/email
-      const firebaseClientId = this.client._firebaseClientId;
+      // ✅ Use the client ID directly if available
+      // For clients from ClientDetailsCard, we should have a valid clientId
+      const validClientId = this.client.clientId || this.client.id;
       const clientData = {
-        ...(firebaseClientId && { clientId: firebaseClientId }), // Only include clientId if we have the correct Firebase ID
+        ...(validClientId && { clientId: validClientId }), // Include clientId if we have it
+        firebaseClientId: validClientId, // Same value for compatibility
+        sendingClientId: !!validClientId, // Allow sending if we have a clientId
         userIdNumber: this.client.userIdNumber || this.client.idNumber,
         name: this.client.userName || this.client.name,
         lastName: this.client.userLastName || this.client.lastName,

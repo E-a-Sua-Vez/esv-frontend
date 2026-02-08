@@ -2472,18 +2472,12 @@ export default {
         // ✅ Spread bodyUser FIRST to preserve all client data, then add commerce-specific fields
         let userData = undefined;
         if (isDataActive(props.commerce)) {
-          // ✅ CRITICAL: Preserve clientId explicitly before destructuring
-          // The clientId must be in userData for the backend to identify existing clients
-          const clientIdToPreserve = bodyUser.clientId || bodyUser.id;
-
-          // ✅ If we have clientId, remove id to avoid backend trying to create new user
-          // BUT preserve clientId explicitly
+          // ✅ Remove both id and clientId from userData - clientId will be sent separately
+          // This avoids confusion and follows the correct API structure
           const { id, clientId, ...bodyUserWithoutIdAndClientId } = bodyUser;
 
           userData = {
             ...bodyUserWithoutIdAndClientId, // ✅ This includes: name, lastName, phone, email, idNumber, personalInfo, etc. (but NOT id or clientId)
-            // ✅ CRITICAL: Explicitly set clientId - this is required for the backend to find existing clients
-            ...(clientIdToPreserve && { clientId: clientIdToPreserve }),
             commerceId: props.commerce.id,
             notificationOn: state.accept,
             notificationEmailOn: state.accept,
@@ -2576,26 +2570,26 @@ export default {
           const store = globalStore();
           const currentChannel = store.getCurrentAttentionChannel;
 
-          // ✅ Get clientId from userData or rawUserData (in case userData is undefined)
-          // Priority: userData.clientId > rawUserData.clientId > userData.id > rawUserData.id
-          // Note: For bookings with existing clients, clientId should be in userData.clientId
-          let clientIdValue =
-            userData?.clientId || rawUserData?.clientId || userData?.id || rawUserData?.id;
+          // ✅ Get clientId from bodyUser (NOT from userData since we removed it)
+          // Priority: bodyUser.clientId > bodyUser.id
+          let clientIdValue = bodyUser.clientId || bodyUser.id;
 
-          // ✅ CRITICAL FIX: Query-stack IDs don't match Firebase client IDs
-          // If clientId comes from query-stack (not from props.clientData), we need to find the correct Firebase ID
-          // Solution: Don't send clientId, let backend find/create client by idNumber/email
-          // The backend will search for existing client by idNumber/email and use the correct Firebase ID
-          if (
+          // ✅ Enhanced clientId validation logic
+          // We need to determine if the clientId is valid for Firebase or if it's a query-stack ID
+          // If we have props.clientData with a clientId or firebaseClientId, use that (it's verified)
+          if (props.clientData?.clientId) {
+            clientIdValue = props.clientData.clientId;
+          } else if (props.clientData?.firebaseClientId) {
+            clientIdValue = props.clientData.firebaseClientId;
+          } else if (
             clientIdValue &&
-            !props.clientData?.queryStackClientId &&
-            !props.clientData?.clientId &&
-            !props.clientData?.id
+            props.clientData?.sendingClientId === false
           ) {
-            // Client data came from state.newUser (query-stack), not from props.clientData
-            // Query-stack IDs (e.g., 'C3EZW0TwfptTPG7g4VOH') don't match Firebase IDs (e.g., '3AbBN5PkZqKEvGP6v7bP')
-            // Don't send clientId - backend will search by idNumber/email and find/create with correct Firebase ID
+            // ClientDetailsCard explicitly told us not to send clientId (query-stack ID mismatch)
             clientIdValue = undefined;
+          } else if (clientIdValue) {
+            // We have a clientId but no specific guidance from ClientDetailsCard
+            // Log for debugging but keep it - let backend validate
           }
 
           // ✅ Final validation: Log exactly what we're sending
@@ -2603,10 +2597,10 @@ export default {
           const bookingData = {
             queueId: state.queue.id,
             channel: currentChannel,
-            user: userData, // Can be undefined if isDataActive is false
+            user: userData, // Does NOT contain clientId
             date: formattedDate,
             block: convertedBlock,
-            ...(clientIdValue && { clientId: clientIdValue }), // Only include clientId if we have it and are confident it's correct
+            ...(clientIdValue && { clientId: clientIdValue }), // ClientId as separate field
             sessionId: props.sessionId,
           };
           // Add professionalId if queue has one
@@ -2728,21 +2722,16 @@ export default {
           const store = globalStore();
           const currentChannel = store.getCurrentAttentionChannel;
 
-          // ✅ Get clientId from userData or rawUserData (in case userData is undefined)
-          const clientIdValue =
-            userData?.clientId || userData?.id || rawUserData?.clientId || rawUserData?.id;
-
           let attentionData;
           try {
-            // ✅ Get clientId from userData or rawUserData (in case userData is undefined)
-            const clientIdValue =
-              userData?.clientId || userData?.id || rawUserData?.clientId || rawUserData?.id;
+            // ✅ Get clientId from bodyUser (NOT from userData since we removed it)
+            const clientIdValue = bodyUser?.clientId || bodyUser?.id;
 
             attentionData = {
               queueId: state.queue.id,
               channel: currentChannel,
-              user: userData, // Can be undefined if isDataActive is false
-              clientId: clientIdValue, // Use userData.id as fallback, or rawUserData
+              user: userData, // Does NOT contain clientId
+              clientId: clientIdValue, // ClientId as separate field
               block: convertedBlock,
               ...(props.preselectedPackageId && { packageId: props.preselectedPackageId }), // Add packageId if provided
             };
