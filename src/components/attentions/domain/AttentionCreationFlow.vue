@@ -2527,16 +2527,50 @@ export default {
               ? new Date(dateToUse).toISOString().slice(0, 10)
               : undefined;
 
-          // Convert block to plain object (same as CommerceQueuesView.convertBlockToPlainObject)
-          const convertedBlock = blockToUse
-            ? {
-                number: blockToUse.number,
-                hourFrom: blockToUse.hourFrom,
-                hourTo: blockToUse.hourTo,
-                ...(blockToUse.blockNumbers && { blockNumbers: blockToUse.blockNumbers }),
-                ...(blockToUse.blocks && { blocks: blockToUse.blocks }),
+          // Convert block to plain object to avoid Firestore serialization issues
+          // Backend validation rejects nested arrays, so we clean the structure
+          const convertedBlock = blockToUse ? (() => {
+            const cleanBlock = {};
+            
+            // Always include basic properties if they exist
+            if (blockToUse.number !== undefined && blockToUse.number !== null) {
+              cleanBlock.number = blockToUse.number;
+            }
+            if (blockToUse.hourFrom) {
+              cleanBlock.hourFrom = blockToUse.hourFrom;
+            }
+            if (blockToUse.hourTo) {
+              cleanBlock.hourTo = blockToUse.hourTo;
+            }
+            
+            // Handle blockNumbers array (for super blocks) 
+            if (blockToUse.blockNumbers && Array.isArray(blockToUse.blockNumbers) && blockToUse.blockNumbers.length > 0) {
+              // Only include blockNumbers, don't include blocks array to avoid nesting
+              cleanBlock.blockNumbers = [...blockToUse.blockNumbers]; // Create copy
+              // If no number is set, use first blockNumber
+              if (!cleanBlock.number) {
+                cleanBlock.number = blockToUse.blockNumbers[0];
               }
-            : undefined;
+            }
+            
+            // Only include blocks array if there are no blockNumbers (to avoid conflicts)
+            if (!cleanBlock.blockNumbers && blockToUse.blocks && Array.isArray(blockToUse.blocks) && blockToUse.blocks.length > 0) {
+              // Clean each nested block recursively
+              cleanBlock.blocks = blockToUse.blocks.map(nestedBlock => {
+                if (!nestedBlock || typeof nestedBlock !== 'object') {
+                  return nestedBlock;
+                }
+                return {
+                  number: nestedBlock.number,
+                  hourFrom: nestedBlock.hourFrom,
+                  hourTo: nestedBlock.hourTo,
+                  // Don't include blockNumbers in nested blocks to avoid deep nesting
+                };
+              });
+            }
+            
+            return cleanBlock;
+          })() : undefined;
 
           // Get current channel exactly like CommerceQueuesView
           const store = globalStore();
@@ -2645,16 +2679,50 @@ export default {
         } else {
           // Create attention for TODAY (same logic as CommerceQueuesView.getAttention)
 
-          // Convert block to plain object (same as CommerceQueuesView.convertBlockToPlainObject)
-          const convertedBlock = blockToUse
-            ? {
-                number: blockToUse.number,
-                hourFrom: blockToUse.hourFrom,
-                hourTo: blockToUse.hourTo,
-                ...(blockToUse.blockNumbers && { blockNumbers: blockToUse.blockNumbers }),
-                ...(blockToUse.blocks && { blocks: blockToUse.blocks }),
+          // Convert block to plain object to avoid Firestore serialization issues
+          // Backend validation rejects nested arrays, so we clean the structure
+          const convertedBlock = blockToUse ? (() => {
+            const cleanBlock = {};
+            
+            // Always include basic properties if they exist
+            if (blockToUse.number !== undefined && blockToUse.number !== null) {
+              cleanBlock.number = blockToUse.number;
+            }
+            if (blockToUse.hourFrom) {
+              cleanBlock.hourFrom = blockToUse.hourFrom;
+            }
+            if (blockToUse.hourTo) {
+              cleanBlock.hourTo = blockToUse.hourTo;
+            }
+            
+            // Handle blockNumbers array (for super blocks) 
+            if (blockToUse.blockNumbers && Array.isArray(blockToUse.blockNumbers) && blockToUse.blockNumbers.length > 0) {
+              // Only include blockNumbers, don't include blocks array to avoid nesting
+              cleanBlock.blockNumbers = [...blockToUse.blockNumbers]; // Create copy
+              // If no number is set, use first blockNumber
+              if (!cleanBlock.number) {
+                cleanBlock.number = blockToUse.blockNumbers[0];
               }
-            : undefined;
+            }
+            
+            // Only include blocks array if there are no blockNumbers (to avoid conflicts)
+            if (!cleanBlock.blockNumbers && blockToUse.blocks && Array.isArray(blockToUse.blocks) && blockToUse.blocks.length > 0) {
+              // Clean each nested block recursively
+              cleanBlock.blocks = blockToUse.blocks.map(nestedBlock => {
+                if (!nestedBlock || typeof nestedBlock !== 'object') {
+                  return nestedBlock;
+                }
+                return {
+                  number: nestedBlock.number,
+                  hourFrom: nestedBlock.hourFrom,
+                  hourTo: nestedBlock.hourTo,
+                  // Don't include blockNumbers in nested blocks to avoid deep nesting
+                };
+              });
+            }
+            
+            return cleanBlock;
+          })() : undefined;
 
           // Get current channel exactly like CommerceQueuesView
           const store = globalStore();
