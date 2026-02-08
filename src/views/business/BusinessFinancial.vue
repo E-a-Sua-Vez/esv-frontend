@@ -683,7 +683,7 @@ export default {
       refreshResumeContent,
       refreshResumeContentDelayed,
       getAllResumeFilterValues,
-      nextTick(),
+      nextTick,
     };
   },
 };
