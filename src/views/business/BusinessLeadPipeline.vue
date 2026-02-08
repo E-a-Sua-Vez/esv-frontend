@@ -1,5 +1,5 @@
 <script>
-import { ref, reactive, onBeforeMount, onMounted, onUnmounted, computed } from 'vue';
+import { ref, reactive, onBeforeMount, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { globalStore } from '../../stores';
@@ -823,15 +823,12 @@ export default {
         modalLoading.value = true;
 
         // Ensure services are loaded for service display
-        console.log('Opening lead details, checking services...');
         if (!serviceStore.services || serviceStore.services.length === 0) {
-          console.log('Services not loaded in details, loading now...');
           await loadServices();
         }
 
-        // Final check - ensure services are available
+        // Final check - ensure services array is initialized
         ensureServicesAvailable();
-        console.log('Services available for details:', serviceStore.services?.length || 0);
 
         // Always get from Firebase (backend) for immediate, consistent data
         let leadDetails = null;
@@ -2130,279 +2127,52 @@ export default {
       return service?.name || $t('businessLeadPipeline.unknownService') || 'Serviço Desconhecido';
     };
 
+    // Use global commerce from store
+    const globalCommerce = computed(() => store.getCurrentCommerce);
+
+    // Watch for commerce changes and load services accordingly
+    watch(globalCommerce, async (newCommerce, oldCommerce) => {
+      if (newCommerce && newCommerce.id && newCommerce.id !== oldCommerce?.id) {
+        await loadServices();
+      }
+    }, { immediate: false });
+
     // Helper function to load services for current commerce
     const loadServices = async () => {
       try {
-        let currentCommerce = store.getCurrentCommerce;
-        console.log('Loading services - Initial commerce:', currentCommerce);
+        // Use global commerce directly
+        const currentCommerce = globalCommerce.value;
 
-        // Strategy 1: Try with current commerce from store
         if (currentCommerce && currentCommerce.id) {
           try {
-            console.log('Strategy 1: Fetching services for commerce:', currentCommerce.id);
             await serviceStore.fetchActiveServicesByCommerce(currentCommerce.id);
-            console.log('Services loaded successfully via Strategy 1:', serviceStore.services?.length || 0);
             return;
           } catch (error) {
-            console.warn('Strategy 1 failed:', error);
+            console.error('Failed to load services for commerce:', currentCommerce.id, error);
           }
         }
 
-        // Strategy 2: Try to get commerce from current user
-        const currentUser = store.getCurrentUser;
-        console.log('Strategy 2: Trying with user commerce:', currentUser);
-
-        if (currentUser) {
-          let commerceId = null;
-
-          // Try different ways to get commerceId
-          if (currentUser.commerceId) {
-            commerceId = currentUser.commerceId;
-          } else if (currentUser.commerce?.id) {
-            commerceId = currentUser.commerce.id;
-          } else if (currentUser.business?.commerces?.length > 0) {
-            commerceId = currentUser.business.commerces[0].id;
-          }
-
-          if (commerceId) {
-            try {
-              console.log('Strategy 2: Fetching services for commerce:', commerceId);
-              await serviceStore.fetchActiveServicesByCommerce(commerceId);
-              console.log('Services loaded successfully via Strategy 2:', serviceStore.services?.length || 0);
-              return;
-            } catch (error) {
-              console.warn('Strategy 2 failed:', error);
-            }
-          }
-        }
-
-        // Strategy 3: Try to get available commerces and use the first one
-        try {
-          console.log('Strategy 3: Trying to get available commerces');
-          const availableCommerces = store.getAvailableCommerces;
-          console.log('Strategy 3: Available commerces:', availableCommerces);
-
-          if (availableCommerces && availableCommerces.length > 0) {
-            const firstCommerce = availableCommerces[0];
-            console.log('Strategy 3: Using first available commerce:', firstCommerce.id);
-            await serviceStore.fetchActiveServicesByCommerce(firstCommerce.id);
-            console.log('Services loaded successfully via Strategy 3:', serviceStore.services?.length || 0);
-            return;
-          }
-        } catch (error) {
-          console.warn('Strategy 3 failed:', error);
-        }
-
-        // Strategy 4: Try with hardcoded example commerce for testing
-        try {
-          console.log('Strategy 4: Trying with example commerce IDs for testing...');
-          const testCommerceIds = [
-            'example-commerce-1',
-            'test-commerce',
-            'default-commerce',
-            'beleza-commerce'
-          ];
-
-          for (const commerceId of testCommerceIds) {
-            try {
-              console.log(`Strategy 4: Testing commerce ID: ${commerceId}`);
-              await serviceStore.fetchActiveServicesByCommerce(commerceId);
-              console.log(`Services loaded successfully with test commerce ${commerceId}:`, serviceStore.services?.length || 0);
-              if (serviceStore.services && serviceStore.services.length > 0) {
-                return;
-              }
-            } catch (error) {
-              console.log(`Test commerce ${commerceId} failed:`, error.message);
-            }
-          }
-        } catch (error) {
-          console.warn('Strategy 4 failed:', error);
-        }
-
-        // Strategy 5: Load example services directly without backend
-        try {
-          console.log('Strategy 5: Loading example services for development...');
-          const exampleServices = [
-            {
-              id: 'example-serv-1',
-              name: 'Corte de Cabelo Feminino',
-              tag: 'corte-feminino',
-              type: 'HAIR',
-              active: true,
-              available: true,
-              serviceInfo: {
-                price: 60.00,
-                currency: 'BRL',
-                shortDescription: 'Corte profissional para cabelos femininos',
-                estimatedTime: 60,
-                blockTime: 60
-              }
-            },
-            {
-              id: 'example-serv-2',
-              name: 'Corte de Cabelo Masculino',
-              tag: 'corte-masculino',
-              type: 'HAIR',
-              active: true,
-              available: true,
-              serviceInfo: {
-                price: 40.00,
-                currency: 'BRL',
-                shortDescription: 'Corte profissional para cabelos masculinos',
-                estimatedTime: 45,
-                blockTime: 45
-              }
-            },
-            {
-              id: 'example-serv-3',
-              name: 'Manicure Completa',
-              tag: 'manicure',
-              type: 'NAILS',
-              active: true,
-              available: true,
-              serviceInfo: {
-                price: 35.00,
-                currency: 'BRL',
-                shortDescription: 'Serviço completo de manicure',
-                estimatedTime: 30,
-                blockTime: 30
-              }
-            }
-          ];
-
-          serviceStore.services = exampleServices;
-          serviceStore.error = null;
-          console.log('Example services loaded successfully:', exampleServices.length);
-          return;
-        } catch (error) {
-          console.warn('Strategy 5 failed:', error);
-        }
-
-        console.warn('All strategies failed - no commerce available for loading services');
-
-        // Final fallback: Ensure services are available for the UI
-        console.log('Final fallback: Ensuring services are available...');
+        // Fallback: ensure services array is initialized
         ensureServicesAvailable();
 
       } catch (error) {
         console.error('Critical error in loadServices:', error);
-        // Even on critical error, ensure services are available
         ensureServicesAvailable();
       }
     };
 
-    // Ensure services are always available, even as simulation
+    // Ensure services array is initialized, don't load fake data
     const ensureServicesAvailable = () => {
-      console.log('Ensuring services are available...');
-      if (!serviceStore.services || serviceStore.services.length === 0) {
-        console.log('No services in store, loading default services...');
-        const defaultServices = [
-          {
-            id: 'default-1',
-            name: 'Corte de Cabelo Feminino',
-            tag: 'corte-feminino',
-            type: 'HAIR',
-            active: true,
-            available: true,
-            serviceInfo: {
-              price: 60.00,
-              currency: 'BRL',
-              shortDescription: 'Corte profissional para cabelos femininos',
-              estimatedTime: 60,
-              blockTime: 60
-            }
-          },
-          {
-            id: 'default-2',
-            name: 'Corte de Cabelo Masculino',
-            tag: 'corte-masculino',
-            type: 'HAIR',
-            active: true,
-            available: true,
-            serviceInfo: {
-              price: 40.00,
-              currency: 'BRL',
-              shortDescription: 'Corte profissional para cabelos masculinos',
-              estimatedTime: 45,
-              blockTime: 45
-            }
-          },
-          {
-            id: 'default-3',
-            name: 'Manicure Completa',
-            tag: 'manicure',
-            type: 'NAILS',
-            active: true,
-            available: true,
-            serviceInfo: {
-              price: 35.00,
-              currency: 'BRL',
-              shortDescription: 'Serviço completo de manicure',
-              estimatedTime: 30,
-              blockTime: 30
-            }
-          },
-          {
-            id: 'default-4',
-            name: 'Pedicure Completa',
-            tag: 'pedicure',
-            type: 'NAILS',
-            active: true,
-            available: true,
-            serviceInfo: {
-              price: 40.00,
-              currency: 'BRL',
-              shortDescription: 'Serviço completo de pedicure',
-              estimatedTime: 45,
-              blockTime: 45
-            }
-          },
-          {
-            id: 'default-5',
-            name: 'Escova e Prancha',
-            tag: 'escova-prancha',
-            type: 'HAIR',
-            active: true,
-            available: true,
-            serviceInfo: {
-              price: 50.00,
-              currency: 'BRL',
-              shortDescription: 'Escova modeladora com prancha',
-              estimatedTime: 50,
-              blockTime: 50
-            }
-          },
-          {
-            id: 'default-6',
-            name: 'Limpeza de Pele',
-            tag: 'limpeza-pele',
-            type: 'FACIAL',
-            active: true,
-            available: true,
-            serviceInfo: {
-              price: 80.00,
-              currency: 'BRL',
-              shortDescription: 'Limpeza facial profissional',
-              estimatedTime: 90,
-              blockTime: 90
-            }
-          }
-        ];
-
-        serviceStore.services = defaultServices;
+      if (!serviceStore.services) {
+        serviceStore.services = [];
         serviceStore.error = null;
-        console.log('Default services loaded:', defaultServices.length);
-      } else {
-        console.log('Services already available:', serviceStore.services.length);
       }
     };
 
     // Direct REST call fallback function for services
     const loadServicesDirect = async (commerceId) => {
       try {
-        console.log('Direct REST call: Loading services for commerce:', commerceId);
         const services = await getActiveServicesByCommerceId(commerceId);
-        console.log('Direct REST call: Services loaded:', services?.length || 0);
 
         // Update store directly
         serviceStore.services = services || [];
@@ -2420,92 +2190,25 @@ export default {
     // Test backend connectivity
     const testBackendConnectivity = async () => {
       try {
-        console.log('Testing backend connectivity...');
-        const currentUser = store.getCurrentUser;
-        const currentCommerce = store.getCurrentCommerce;
-
-        console.log('Current user:', currentUser);
-        console.log('Current commerce:', currentCommerce);
-        console.log('User commerces count:', currentUser?.commercesId?.length || 0);
-        console.log('Available commerces:', store.getAvailableCommerces);
+        const currentCommerce = globalCommerce.value;
 
         // Test network connectivity first
         try {
-          console.log('Testing basic network connectivity...');
           const response = await fetch('/api/health', {
             method: 'GET',
             timeout: 5000
           });
-          console.log('Network test response status:', response.status);
         } catch (networkError) {
-          console.warn('Network connectivity issue detected:', networkError.message);
-          console.log('Proceeding with example data...');
+          // Silent fail for network test
         }
 
         // Try to make a simple backend call to test connectivity
         if (currentCommerce?.id) {
           try {
             const services = await loadServicesDirect(currentCommerce.id);
-            console.log('Backend test successful - services:', services.length);
           } catch (apiError) {
-            console.warn('Backend API test failed:', apiError.message);
+            // Silent fail for backend test
           }
-        } else {
-          console.warn('No commerce available for backend test - user has no associated commerces');
-          console.log('User commerce array length:', currentUser?.commercesId?.length || 0);
-
-          // Force load example services since no commerce is available
-          console.log('Loading example services due to no commerce...');
-          const exampleServices = [
-            {
-              id: 'fallback-serv-1',
-              name: 'Corte de Cabelo',
-              tag: 'corte',
-              type: 'HAIR',
-              active: true,
-              available: true,
-              serviceInfo: {
-                price: 50.00,
-                currency: 'BRL',
-                shortDescription: 'Serviço de corte profissional',
-                estimatedTime: 60,
-                blockTime: 60
-              }
-            },
-            {
-              id: 'fallback-serv-2',
-              name: 'Manicure',
-              tag: 'manicure',
-              type: 'NAILS',
-              active: true,
-              available: true,
-              serviceInfo: {
-                price: 30.00,
-                currency: 'BRL',
-                shortDescription: 'Serviço de manicure completa',
-                estimatedTime: 30,
-                blockTime: 30
-              }
-            },
-            {
-              id: 'fallback-serv-3',
-              name: 'Escova Progressiva',
-              tag: 'escova-progressiva',
-              type: 'HAIR',
-              active: true,
-              available: true,
-              serviceInfo: {
-                price: 120.00,
-                currency: 'BRL',
-                shortDescription: 'Tratamento capilar progressivo',
-                estimatedTime: 180,
-                blockTime: 180
-              }
-            }
-          ];
-
-          serviceStore.services = exampleServices;
-          console.log('Fallback services loaded:', exampleServices.length);
         }
 
       } catch (error) {
@@ -3385,15 +3088,12 @@ export default {
       showAddLead.value = true;
 
       // Ensure services are loaded
-      console.log('Opening add lead modal, checking services...');
       if (!serviceStore.services || serviceStore.services.length === 0) {
-        console.log('Services not loaded in modal, loading now...');
         await loadServices();
       }
 
-      // Final check - ensure services are available
+      // Final check - ensure services array is initialized
       ensureServicesAvailable();
-      console.log('Services available for modal:', serviceStore.services?.length || 0);
 
       // Ensure toggles are set if not loaded yet
       if (!toggles.value || Object.keys(toggles.value).length === 0) {
@@ -3537,15 +3237,12 @@ export default {
           formState.loadingAddress = true;
           formState.addressCodeError = false;
 
-          console.log('Buscando CEP:', cleanCep);
           const result = await getAddressBR(cleanCep);
-          console.log('Resultado CEP:', result);
 
           if (result && !result.erro) {
             newLead.personalInfo.addressText = `${result.logradouro}, ${result.bairro}, ${result.localidade} - ${result.uf}`;
             formState.addressCodeError = false;
           } else {
-            console.warn('CEP não encontrado:', result);
             formState.addressCodeError = true;
           }
         } catch (error) {
@@ -3909,6 +3606,19 @@ const onBirthdayInput = (val) => {
       try {
         loading.value = true;
 
+        // Initialize current user and business first
+        const currentUser = await store.getCurrentUser;
+        const business = await store.getActualBusiness();
+
+        // Initialize commerce in store if not set (critical for services loading)
+        const currentCommerce = store.getCurrentCommerce;
+        if (!currentCommerce || !currentCommerce.id) {
+          const availableCommerces = await store.getAvailableCommerces(business.commerces);
+          if (availableCommerces && availableCommerces.length > 0) {
+            await store.setCurrentCommerce(availableCommerces[0]);
+          }
+        }
+
         // Load permissions based on user type
         const userType = store.getCurrentUserType;
         if (userType === USER_TYPES.BUSINESS || userType === 'business' || userType === 'administrator') {
@@ -3935,7 +3645,6 @@ const onBirthdayInput = (val) => {
         newLead.phoneCode = '+55';
 
         // Test backend connectivity
-        console.log('BusinessLeadPipeline: Testing backend connectivity...');
         await testBackendConnectivity();
 
         // Load services for the current commerce
@@ -3954,12 +3663,16 @@ const onBirthdayInput = (val) => {
       }
     });
 
-    onMounted(() => {
+    onMounted(async () => {
       const addModal = document.getElementById('add-lead');
       if (addModal) {
         addModal.addEventListener('hidden.bs.modal', resetAddForm);
-        addModal.addEventListener('show.bs.modal', () => {
+        addModal.addEventListener('show.bs.modal', async () => {
           showAddLead.value = true;
+          
+          // Load services from backend before showing modal
+          await loadServices();
+          
           // Ensure toggles are set if not loaded yet
           if (!toggles.value || Object.keys(toggles.value).length === 0) {
             const userType = store.getCurrentUserType;
@@ -4001,6 +3714,11 @@ const onBirthdayInput = (val) => {
         });
       }
 
+      // Load services from backend using current commerce - only if commerce is ready
+      if (globalCommerce.value?.id) {
+        await loadServices();
+      }
+      
       // Ensure initial load uses only date filters: clear status and time indicator filters
       statusFilter.value = [];
       timeIndicatorFilter.value = [];
@@ -7015,22 +6733,6 @@ const onBirthdayInput = (val) => {
                       <div v-if="formState.addressCodeError" class="invalid-feedback">
                         {{ $t('businessLeadPipeline.invalidAddressCode') || 'Invalid ZIP/Postal code' }}
                       </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-md-12">
-                    <div class="form-group-modern">
-                      <label class="form-label-modern">
-                        {{ $t('businessLeadPipeline.address') || 'Address' }}
-                      </label>
-                      <input
-                        type="text"
-                        class="form-control-modern"
-                        v-model="newLead.personalInfo.addressText"
-                        :placeholder="$t('businessLeadPipeline.addressPlaceholder') || 'Street address'"
-                        readonly
-                      />
                     </div>
                   </div>
                 </div>
