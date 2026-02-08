@@ -29,7 +29,8 @@ export default {
     const professionalTitleRef = ref(null);
     const serviceSectionRef = ref(null);
 
-    const { commerce, queues, groupedQueues, collaborators, professionals, queueId, accept } = toRefs(props);
+    const { commerce, queues, groupedQueues, collaborators, professionals, queueId, accept } =
+      toRefs(props);
 
     const { receiveQueue, receiveServices } = props;
 
@@ -64,9 +65,9 @@ export default {
                   let professionalsAux = [];
 
                   if (professionals.value.length > 0) {
-                    professionalsAux = professionals.value.filter(professional => {
-                      return professional.id === queue.professionalId;
-                    });
+                    professionalsAux = professionals.value.filter(
+                      professional => professional.id === queue.professionalId
+                    );
                   }
 
                   // Fallback to collaborators if no match found in professionals
@@ -98,7 +99,11 @@ export default {
                     }
 
                     // For PROFESSIONAL queues, get services from queue.servicesId
-                    if (queue.servicesId && queue.servicesId.length > 0 && (!queue.services || queue.services.length === 0)) {
+                    if (
+                      queue.servicesId &&
+                      queue.servicesId.length > 0 &&
+                      (!queue.services || queue.services.length === 0)
+                    ) {
                       try {
                         const loadedServices = await getServicesById(queue.servicesId);
                         queue.services = loadedServices || [];
@@ -125,7 +130,8 @@ export default {
               for (const queue of queues.value) {
                 if (queue.type === 'PROFESSIONAL') {
                   // Use professionals array if available, fallback to collaborators for backward compatibility
-                  const professionalsArray = professionals.value.length > 0 ? professionals.value : collaborators.value;
+                  const professionalsArray =
+                    professionals.value.length > 0 ? professionals.value : collaborators.value;
                   const professionalsAux = professionalsArray.filter(professional => {
                     // If preselectedServiceId is provided, filter professionals that have this service
                     if (props.preselectedServiceId) {
@@ -158,12 +164,19 @@ export default {
                     }
 
                     // For PROFESSIONAL queues, get services from queue.servicesId
-                    if (queue.servicesId && queue.servicesId.length > 0 && (!queue.services || queue.services.length === 0)) {
+                    if (
+                      queue.servicesId &&
+                      queue.servicesId.length > 0 &&
+                      (!queue.services || queue.services.length === 0)
+                    ) {
                       try {
                         const loadedServices = await getServicesById(queue.servicesId);
                         queue.services = loadedServices || [];
                       } catch (error) {
-                        console.error(`[StandardMode] Error loading professional ${queue.name} services:`, error);
+                        console.error(
+                          `[StandardMode] Error loading professional ${queue.name} services:`,
+                          error,
+                        );
                         queue.services = [];
                       }
                     } else if (!queue.services) {
@@ -180,7 +193,10 @@ export default {
               groupedQueues.value['PROFESSIONAL'] = queueAux;
             }
             state.filteredCollaboratorQueues = groupedQueues.value['PROFESSIONAL'];
-            console.log('🔍 DEBUG: Final state.filteredCollaboratorQueues:', state.filteredCollaboratorQueues);
+            console.log(
+              '🔍 DEBUG: Final state.filteredCollaboratorQueues:',
+              state.filteredCollaboratorQueues,
+            );
             refresh(state.filteredCollaboratorQueues);
           }
         }
@@ -200,15 +216,20 @@ export default {
 
         // Auto-activate first available tab if no tab is active
         if (!state.showProfessional && !state.showService && !state.showSelectServices) {
-
           // Always try to show professional tab first if we have any queues
           if (queues.value && queues.value.length > 0) {
             showByProfessional();
           } else if (groupedQueues.value['SERVICE'] && groupedQueues.value['SERVICE'].length > 0) {
             showByService();
-          } else if (groupedQueues.value['SELECT_SERVICE'] && groupedQueues.value['SELECT_SERVICE'].length > 0) {
+          } else if (
+            groupedQueues.value['SELECT_SERVICE'] &&
+            groupedQueues.value['SELECT_SERVICE'].length > 0
+          ) {
             showServices();
-          } else if (groupedQueues.value['STANDARD'] && groupedQueues.value['STANDARD'].length > 0) {
+          } else if (
+            groupedQueues.value['STANDARD'] &&
+            groupedQueues.value['STANDARD'].length > 0
+          ) {
             showByService();
           } else {
           }
@@ -274,7 +295,11 @@ export default {
 
       // Scroll to service selection title for queues with services
       const queueTypesWithServices = ['PROFESSIONAL', 'SELECT_SERVICE', 'MULTI_SERVICE', 'SERVICE'];
-      if (queueTypesWithServices.includes(queueIn.type) && queueIn.services && queueIn.services.length > 0) {
+      if (
+        queueTypesWithServices.includes(queueIn.type) &&
+        queueIn.services &&
+        queueIn.services.length > 0
+      ) {
         setTimeout(() => {
           const serviceTitle = document.getElementById('service-selection-title');
           if (serviceTitle) {
@@ -411,12 +436,16 @@ export default {
     });
 
     // Watch for changes in groupedQueues to update filtered queues
-    watch(() => groupedQueues.value, (newGroupedQueues) => {
-      if (newGroupedQueues && newGroupedQueues['PROFESSIONAL']) {
-        state.filteredCollaboratorQueues = newGroupedQueues['PROFESSIONAL'];
-        refresh(state.filteredCollaboratorQueues);
-      }
-    }, { deep: true });
+    watch(
+      () => groupedQueues.value,
+      newGroupedQueues => {
+        if (newGroupedQueues && newGroupedQueues['PROFESSIONAL']) {
+          state.filteredCollaboratorQueues = newGroupedQueues['PROFESSIONAL'];
+          refresh(state.filteredCollaboratorQueues);
+        }
+      },
+      { deep: true },
+    );
 
     return {
       state,
@@ -530,7 +559,11 @@ export default {
             </div>
             <div
               class="centered mt-1"
-              v-if="state.filteredCollaboratorQueues && (professionals.length > 0 ? professionals.length : collaborators.length) > state.limit"
+              v-if="
+                state.filteredCollaboratorQueues &&
+                (professionals.length > 0 ? professionals.length : collaborators.length) >
+                  state.limit
+              "
             >
               <nav>
                 <ul class="pagination pagination-ul">
@@ -588,7 +621,9 @@ export default {
                 </QueueButton>
               </div>
             </div>
-            <div v-else-if="groupedQueues['PROFESSIONAL'] && groupedQueues['PROFESSIONAL'].length > 0">
+            <div
+              v-else-if="groupedQueues['PROFESSIONAL'] && groupedQueues['PROFESSIONAL'].length > 0"
+            >
               <div v-for="(queue, index) in groupedQueues['PROFESSIONAL']" :key="index">
                 <QueueButton
                   :queue="queue"
@@ -612,7 +647,11 @@ export default {
         </div>
 
         <!-- Service Selection Content Card -->
-        <div ref="serviceSectionRef" class="col col-md-10 offset-md-1 data-card" v-if="state.showService">
+        <div
+          ref="serviceSectionRef"
+          class="col col-md-10 offset-md-1 data-card"
+          v-if="state.showService"
+        >
           <div id="attention-service-queue">
             <div
               v-if="groupedQueues['SELECT_SERVICE'] && groupedQueues['SELECT_SERVICE'].length > 0"

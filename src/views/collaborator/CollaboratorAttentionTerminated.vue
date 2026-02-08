@@ -265,10 +265,7 @@
         <!-- Gestão de Atendimento (homologado con /atender y /checkout) -->
         <div class="client-management-section my-3">
           <h5 class="client-management-title">
-            {{
-              $t('collaboratorQueueAttentions.attentionManagement') ||
-              'Gestão de Atendimento:'
-            }}
+            {{ $t('collaboratorQueueAttentions.attentionManagement') || 'Gestão de Atendimento:' }}
           </h5>
 
           <!-- Payment / Transfer Card (reusable component) -->
@@ -1182,7 +1179,9 @@ export default {
       const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
 
       // Firebase already filters by today and PENDING status, just sort by number
-      const filteredPending = [...pendingList].filter(att => att && ['PENDING', 'CONFIRMED'].includes(att.status));
+      const filteredPending = [...pendingList].filter(
+        att => att && ['PENDING', 'CONFIRMED'].includes(att.status),
+      );
       const sortedPending = [...filteredPending].sort((a, b) => {
         const numA = a.number || 0;
         const numB = b.number || 0;
@@ -1350,10 +1349,7 @@ export default {
 
     const handleAttentionUpdatedFromModal = async () => {
       // Reload complete attention details to get updated status and all data
-      const updatedAttention = await getAttentionDetails(
-        state.attention.id,
-        state.currentUser?.id
-      );
+      const updatedAttention = await getAttentionDetails(state.attention.id, state.currentUser?.id);
 
       // Update related state
       if (updatedAttention.queue) {

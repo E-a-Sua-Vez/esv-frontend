@@ -26,7 +26,10 @@ import {
   createBooking,
 } from '../../../application/services/booking';
 import { createAttention } from '../../../application/services/attention';
-import { getPackageById, getAvailablePackagesForService } from '../../../application/services/package';
+import {
+  getPackageById,
+  getAvailablePackagesForService,
+} from '../../../application/services/package';
 import { getAttentionsDetails } from '../../../application/services/query-stack';
 import { getBookingsDetails } from '../../../application/services/query-stack';
 import NextAvailableSlot from '../../bookings/common/NextAvailableSlot.vue';
@@ -136,7 +139,7 @@ export default {
     const professionalCache = ref(new Map());
 
     // Helper functions with caching
-    const getServicesByIdCached = async (servicesIds) => {
+    const getServicesByIdCached = async servicesIds => {
       const cacheKey = JSON.stringify(servicesIds.sort());
       if (servicesCache.value.has(cacheKey)) {
         return servicesCache.value.get(cacheKey);
@@ -151,7 +154,7 @@ export default {
       }
     };
 
-    const getProfessionalByIdCached = async (professionalId) => {
+    const getProfessionalByIdCached = async professionalId => {
       if (professionalCache.value.has(professionalId)) {
         return professionalCache.value.get(professionalId);
       }
@@ -168,7 +171,6 @@ export default {
     // Initialize preselected data
     onBeforeMount(async () => {
       if (props.preselectedQueue && props.preselectedQueue.id) {
-
         // Only set the queue if it's valid for preselection
         if (isPreselectedQueueValid()) {
           state.queue = props.preselectedQueue;
@@ -286,7 +288,6 @@ export default {
         state.date = props.preselectedDate;
         // Always load blocks for preselected date to show ALL available options
         if (props.preselectedQueue && props.preselectedQueue.id) {
-
           await loadBlocksForDate(props.preselectedDate);
 
           // Force a recalculation of available blocks
@@ -307,8 +308,11 @@ export default {
 
       // Load services for all queue types to display service names in buttons
       // Only load if we have preselected queues or if we're in modal mode
-      if (props.preselectedQueue || props.mode === 'modal' || (props.queues && props.queues.length > 0)) {
-
+      if (
+        props.preselectedQueue ||
+        props.mode === 'modal' ||
+        (props.queues && props.queues.length > 0)
+      ) {
         // Load services for all queue types initially for modal
         const queueTypes = ['PROFESSIONAL', 'SERVICE', 'SELECT_SERVICE'];
         for (const type of queueTypes) {
@@ -558,7 +562,7 @@ export default {
         state.newUser?.id ||
         props.clientData?.queryStackClientId ||
         props.clientData?.clientId ||
-        props.clientData?.id
+        props.clientData?.id;
 
       if (hasClientId && step2PackageInfo.value) {
         return false; // Client has active package, no need to select amount
@@ -792,7 +796,6 @@ export default {
             totalSessions,
             sessionsRemaining: pkg.proceduresLeft || 0,
           };
-
         }
       } catch (error) {
         console.error('Error loading package info:', error);
@@ -948,7 +951,6 @@ export default {
                 totalSessions,
                 sessionsRemaining: activePackage.proceduresLeft || 0,
               };
-
             }
           } else {
             if (isMounted.value) {
@@ -1083,7 +1085,7 @@ export default {
       }
 
       // Debounce the API call by 300ms
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         loadClinicalAlertsTimeout = setTimeout(async () => {
           try {
             state.loadingAlerts = true;
@@ -1103,7 +1105,6 @@ export default {
 
     // Function to load services for queues of a specific type to display service names
     const loadServicesForQueues = async (queueType = 'PROFESSIONAL') => {
-
       if (!props.queues || props.queues.length === 0) {
         return;
       }
@@ -1122,14 +1123,17 @@ export default {
         const batch = queuesOfType.slice(i, i + batchSize);
         await Promise.all(
           batch.map(async queue => {
-            const servicesIds = Array.isArray(queue.servicesId) ? queue.servicesId : [queue.servicesId].filter(Boolean);
+            const servicesIds = Array.isArray(queue.servicesId)
+              ? queue.servicesId
+              : [queue.servicesId].filter(Boolean);
             if (servicesIds.length > 0) {
               try {
                 const loadedServices = await getServicesByIdCached(servicesIds);
                 queue.services = loadedServices || [];
-                queue.servicesName = loadedServices && loadedServices.length > 0
-                  ? loadedServices.map(serv => serv.name)
-                  : [];
+                queue.servicesName =
+                  loadedServices && loadedServices.length > 0
+                    ? loadedServices.map(serv => serv.name)
+                    : [];
               } catch (error) {
                 console.error(`Error loading services for queue ${queue.name}:`, error);
                 queue.services = [];
@@ -1138,7 +1142,9 @@ export default {
             } else {
               // Try to load professional and use their services
               try {
-                const professional = await getProfessionalByIdCached(queue.collaboratorId || queue.professionalId);
+                const professional = await getProfessionalByIdCached(
+                  queue.collaboratorId || queue.professionalId,
+                );
                 if (professional && professional.services && professional.services.length > 0) {
                   queue.services = professional.services;
                   queue.servicesName = professional.services.map(serv => serv.name);
@@ -1176,14 +1182,17 @@ export default {
             const batch = queuesOfType.slice(i, i + batchSize);
             await Promise.all(
               batch.map(async queue => {
-                const servicesIds = Array.isArray(queue.servicesId) ? queue.servicesId : [queue.servicesId].filter(Boolean);
+                const servicesIds = Array.isArray(queue.servicesId)
+                  ? queue.servicesId
+                  : [queue.servicesId].filter(Boolean);
                 if (servicesIds.length > 0) {
                   try {
                     const loadedServices = await getServicesByIdCached(servicesIds);
                     queue.services = loadedServices || [];
-                    queue.servicesName = loadedServices && loadedServices.length > 0
-                      ? loadedServices.map(serv => serv.name)
-                      : [];
+                    queue.servicesName =
+                      loadedServices && loadedServices.length > 0
+                        ? loadedServices.map(serv => serv.name)
+                        : [];
                   } catch (error) {
                     console.error(`Error loading services for grouped queue ${queue.name}:`, error);
                     queue.services = [];
@@ -1192,7 +1201,9 @@ export default {
                 } else {
                   // Try to load professional and use their services
                   try {
-                    const professional = await getProfessionalByIdCached(queue.collaboratorId || queue.professionalId);
+                    const professional = await getProfessionalByIdCached(
+                      queue.collaboratorId || queue.professionalId,
+                    );
                     if (professional && professional.services && professional.services.length > 0) {
                       queue.services = professional.services;
                       queue.servicesName = professional.services.map(serv => serv.name);
@@ -1202,7 +1213,10 @@ export default {
                       queue.servicesName = [];
                     }
                   } catch (error) {
-                    console.error(`Error loading professional for grouped queue ${queue.name}:`, error);
+                    console.error(
+                      `Error loading professional for grouped queue ${queue.name}:`,
+                      error,
+                    );
                     queue.services = [];
                     queue.servicesName = [];
                   }
@@ -1373,7 +1387,9 @@ export default {
       // For PROFESSIONAL queues, load services and collaborator details
       if (queue.type === 'PROFESSIONAL') {
         // Load services using queue.servicesId first
-        const servicesIds = Array.isArray(queue.servicesId) ? queue.servicesId : [queue.servicesId].filter(Boolean);
+        const servicesIds = Array.isArray(queue.servicesId)
+          ? queue.servicesId
+          : [queue.servicesId].filter(Boolean);
         if (servicesIds.length > 0) {
           try {
             const loadedServices = await getServicesById(servicesIds);
@@ -1410,7 +1426,9 @@ export default {
         // Load professional details if available
         if (queue.collaboratorId || queue.professionalId) {
           try {
-            const professional = await getProfessionalById(queue.collaboratorId || queue.professionalId);
+            const professional = await getProfessionalById(
+              queue.collaboratorId || queue.professionalId,
+            );
             if (professional && professional.id) {
               state.queue.collaborator = professional;
             } else {
@@ -1459,7 +1477,6 @@ export default {
         state.amountofBlocksNeeded = Math.ceil(
           state.totalDurationRequested / (queue.blockTime || 30),
         );
-
       }
 
       // Set available services for UI display
@@ -1575,14 +1592,12 @@ export default {
         return;
       }
 
-
       try {
         const availablePackages = await getAvailablePackagesForService(
           props.commerce.id,
           serviceId,
           clientId
         );
-
 
         if (availablePackages && availablePackages.length > 0) {
           // Filter for active packages with pending sessions
@@ -1633,7 +1648,6 @@ export default {
         return;
       }
 
-
       try {
         state.loadingPackageReminder = true;
         const availablePackages = await getAvailablePackagesForService(
@@ -1642,14 +1656,12 @@ export default {
           clientId
         );
 
-
         if (availablePackages && availablePackages.length > 0) {
           const activePackage = availablePackages.find(pkg => {
             const isActive = ['ACTIVE', 'CONFIRMED', 'REQUESTED'].includes(pkg.status);
             const hasPendingSessions = (pkg.proceduresLeft || 0) > 0;
             return isActive && hasPendingSessions;
           });
-
 
           if (activePackage) {
             let pendingAttentions = [];
@@ -1704,9 +1716,7 @@ export default {
                 undefined
               );
 
-              pendingBookings = (allBookings || []).filter(booking => {
-                return booking.status === 'PENDING'
-              });
+              pendingBookings = (allBookings || []).filter(booking => booking.status === 'PENDING');
             } catch (error) {
               console.error('Error loading package attentions/bookings:', error);
             }
@@ -1735,10 +1745,13 @@ export default {
               clientId,
               undefined
             );
-            const allPackageAttentions = attentionsDetails?.attentions?.filter(a => a.packageId === activePackage.id) || [];
+            const allPackageAttentions =
+              attentionsDetails?.attentions?.filter(a => a.packageId === activePackage.id) || [];
 
             // Find last terminated or rated attention
-            const terminatedAttentions = allPackageAttentions.filter(a => ['TERMINATED', 'RATED'].includes(a.status)).sort((a,b) => b.createdAt - a.createdAt);
+            const terminatedAttentions = allPackageAttentions
+              .filter(a => ['TERMINATED', 'RATED'].includes(a.status))
+              .sort((a, b) => b.createdAt - a.createdAt);
             const lastAttention = terminatedAttentions[0];
             const lastAttentionDate = lastAttention?.createdAt?.toDate?.() || null;
 
@@ -1751,12 +1764,16 @@ export default {
 
             // Find next expected date from pending attentions or bookings
             let nextExpectedDate = null;
-            const pendingPackageAttentions = allPackageAttentions.filter(a => a.status === 'PENDING').sort((a,b) => a.createdAt - b.createdAt);
+            const pendingPackageAttentions = allPackageAttentions
+              .filter(a => a.status === 'PENDING')
+              .sort((a, b) => a.createdAt - b.createdAt);
             const nextPendingAttention = pendingPackageAttentions[0];
             if (nextPendingAttention) {
               nextExpectedDate = nextPendingAttention.createdAt.toDate();
             } else {
-              const nextPendingBooking = pendingBookings.sort((a,b) => new Date(a.date) - new Date(b.date))[0];
+              const nextPendingBooking = pendingBookings.sort(
+                (a, b) => new Date(a.date) - new Date(b.date),
+              )[0];
               if (nextPendingBooking) {
                 nextExpectedDate = new Date(nextPendingBooking.date);
               } else if (lastAttentionDate && service?.daysBetweenSessions) {
@@ -1840,7 +1857,6 @@ export default {
     };
 
     const handleDateSelection = async date => {
-
       state.date = date;
 
       // Only clear the selected block if we're changing to a different date
@@ -1866,7 +1882,6 @@ export default {
     };
 
     const handleBlockSelection = block => {
-
       // Determine if we're selecting for TODAY (attention) or future (booking)
       const currentDate = state.date || props.preselectedDate;
       const isToday =
@@ -2017,7 +2032,6 @@ export default {
 
     const loadBookingsForDate = async dateStr => {
       try {
-
         // Alinear con CommerceQueuesView / BookingCalendar:
         // getPendingBookingsBetweenDates(queueId, dateFrom, dateTo)
         const dateFrom = new Date(dateStr + 'T00:00:00');
@@ -2034,7 +2048,6 @@ export default {
     };
 
     const calculateAvailableBlocks = () => {
-
       // Determine availability calculation based on date (same logic as CommerceQueuesView)
       const currentDate = state.date || props.preselectedDate;
       const isToday =
@@ -2476,12 +2489,10 @@ export default {
             notificationEmailOn: state.accept,
             acceptTermsAndConditions: state.accept,
           };
-
         } else {
           // If data is not active, userData should be undefined (not an empty object)
           userData = undefined;
         }
-
 
         // Prepare telemedicine config if enabled
         let telemedicineConfig = null;
@@ -2504,7 +2515,6 @@ export default {
         }
 
         const shouldCreateBooking = !isTodaySubmission;
-
 
         let result;
 
@@ -2542,13 +2552,17 @@ export default {
           // If clientId comes from query-stack (not from props.clientData), we need to find the correct Firebase ID
           // Solution: Don't send clientId, let backend find/create client by idNumber/email
           // The backend will search for existing client by idNumber/email and use the correct Firebase ID
-          if (clientIdValue && !props.clientData?.queryStackClientId && !props.clientData?.clientId && !props.clientData?.id) {
+          if (
+            clientIdValue &&
+            !props.clientData?.queryStackClientId &&
+            !props.clientData?.clientId &&
+            !props.clientData?.id
+          ) {
             // Client data came from state.newUser (query-stack), not from props.clientData
             // Query-stack IDs (e.g., 'C3EZW0TwfptTPG7g4VOH') don't match Firebase IDs (e.g., '3AbBN5PkZqKEvGP6v7bP')
             // Don't send clientId - backend will search by idNumber/email and find/create with correct Firebase ID
             clientIdValue = undefined;
           }
-
 
           // ✅ Final validation: Log exactly what we're sending
 
@@ -2565,7 +2579,6 @@ export default {
           if (state.queue.professionalId) {
             bookingData.professionalId = state.queue.professionalId;
           }
-
 
           // Add services if selected (same format as CommerceQueuesView)
           if (state.selectedServices && state.selectedServices.length > 0) {
@@ -2643,7 +2656,6 @@ export default {
               }
             : undefined;
 
-
           // Get current channel exactly like CommerceQueuesView
           const store = globalStore();
           const currentChannel = store.getCurrentAttentionChannel;
@@ -2651,7 +2663,6 @@ export default {
           // ✅ Get clientId from userData or rawUserData (in case userData is undefined)
           const clientIdValue =
             userData?.clientId || userData?.id || rawUserData?.clientId || rawUserData?.id;
-
 
           let attentionData;
           try {
@@ -2671,8 +2682,6 @@ export default {
             if (state.queue.professionalId) {
               attentionData.professionalId = state.queue.professionalId;
             }
-
-
           } catch (error) {
             console.error('📋 ❌ Error creating basic attentionData:', error);
             throw error;
@@ -2716,7 +2725,6 @@ export default {
             if (state.selectedProcedureAmount) {
               attentionData.selectedProcedureAmount = state.selectedProcedureAmount;
             }
-
           }
 
           // Only send packageId if it was preselected (from package button)
@@ -2739,7 +2747,6 @@ export default {
             result = { success: false, error: error.message || 'Error creating attention' };
           }
         }
-
 
         if (result.success || result.id || result.attention) {
           // Emit the created attention or booking
@@ -2844,10 +2851,8 @@ export default {
         if (newStep === 4) {
           const currentDate = state.date || props.preselectedDate;
           if (currentDate && state.queue) {
-
             // ALWAYS reload blocks when reaching step 4 to ensure we have ALL blocks
             await loadBlocksForDate(currentDate);
-
           }
         }
       }
@@ -2886,14 +2891,13 @@ export default {
     // Temporary watcher for debugging canBook changes
     watch(
       () => state.canBook,
-      (newValue, oldValue) => {
-      }
+      (newValue, oldValue) => {},
     );
 
     // Watch for changes in queues prop to update localQueues
     watch(
       () => props.queues,
-      (newQueues) => {
+      newQueues => {
         localQueues.value = newQueues || [];
         localGroupedQueues.value = props.groupedQueues || {};
       },
@@ -2903,7 +2907,7 @@ export default {
     // Watch for changes in groupedQueues prop
     watch(
       () => props.groupedQueues,
-      (newGroupedQueues) => {
+      newGroupedQueues => {
         localGroupedQueues.value = newGroupedQueues || {};
       },
       { immediate: true }
@@ -2963,7 +2967,6 @@ export default {
 
     // Handle quick slot selection from NextAvailableSlot component
     const handleQuickSlotSelection = async slotData => {
-
       // Set the selected date
       state.date = slotData.date;
 
@@ -3011,7 +3014,6 @@ export default {
         const scheduledDateTime = new Date(dateStr + 'T' + slotData.block.hourFrom + ':00');
         state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
       }
-
     };
 
     // Handle show manual selection
@@ -3022,7 +3024,6 @@ export default {
 
     // Get all available blocks - show ALL blocks but mark availability status
     const getAllAvailableBlocks = computed(() => {
-
       const blockMap = new Map();
       const currentDate = state.date || props.preselectedDate;
       const isToday =
@@ -3128,7 +3129,6 @@ export default {
 
         sortedBlocks = finalBlocks.sort((a, b) => a.number - b.number);
       }
-
 
       return sortedBlocks;
     });
@@ -3585,7 +3585,7 @@ export default {
           // Error acknowledging alert
         }
       },
-      handleLoadServices: async (type) => {
+      handleLoadServices: async type => {
         await loadServicesForQueues(type);
       },
     };
@@ -5036,7 +5036,7 @@ export default {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  line-height: .8rem;
+  line-height: 0.8rem;
 }
 
 .summary-value {
@@ -5322,7 +5322,7 @@ export default {
   width: 20px;
   height: 20px;
   border: 2px solid #d1baba;
-  background-color: #007bff !important;;
+  background-color: #007bff !important;
   border-radius: 3px;
   position: relative;
   appearance: none;

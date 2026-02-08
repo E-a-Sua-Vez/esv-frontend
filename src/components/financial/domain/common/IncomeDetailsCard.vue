@@ -245,17 +245,25 @@ export default {
             </Popper>
 
             <!-- Commission Status Indicator -->
-            <Popper v-if="income?.professionalCommission" :class="'dark'" arrow disable-click-away hover>
+            <Popper
+              v-if="income?.professionalCommission"
+              :class="'dark'"
+              arrow
+              disable-click-away
+              hover
+            >
               <template #content>
-                <div>{{ isCommissionPaid(income) ? $t('commissionPayments.commissionPaid') : $t('commissionPayments.commissionUnpaid') }}</div>
+                <div>
+                  {{
+                    isCommissionPaid(income)
+                      ? $t('commissionPayments.commissionPaid')
+                      : $t('commissionPayments.commissionUnpaid')
+                  }}
+                </div>
               </template>
               <span class="badge-mini commission-status" @click.stop>
-                <span v-if="isCommissionPaid(income)" class="badge bg-success">
-                  $
-                </span>
-                <span v-else class="badge bg-warning">
-                  $
-                </span>
+                <span v-if="isCommissionPaid(income)" class="badge bg-success"> $ </span>
+                <span v-else class="badge bg-warning"> $ </span>
               </span>
             </Popper>
           </div>
@@ -406,7 +414,11 @@ export default {
             <span v-if="income?.professionalCommission" class="info-badge">
               <span class="badge-label">{{ $t('paymentData.professionalCommission') }}:</span>
               <span class="badge-value">{{ formatAmount(income.professionalCommission) }}</span>
-              <i v-if="isCommissionPaid(income)" class="bi bi-check-circle-fill green-icon ms-2" :title="$t('commissionPayments.commissionPaid')"></i>
+              <i
+                v-if="isCommissionPaid(income)"
+                class="bi bi-check-circle-fill green-icon ms-2"
+                :title="$t('commissionPayments.commissionPaid')"
+              ></i>
             </span>
 
             <span v-if="income?.createdBy" class="info-badge">
@@ -513,7 +525,7 @@ export default {
   background: rgba(255, 255, 255, 0.95);
   padding: 0.5rem 0.625rem;
   margin: 0;
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
   border-radius: 8px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;

@@ -153,8 +153,6 @@ export default {
     this.toggles = await getPermissions('patient', 'history');
     this.userType = await this.store.getCurrentUserType;
 
-
-
     document.addEventListener('click', this.handleDocumentClick);
   },
   mounted() {
@@ -388,7 +386,7 @@ export default {
             available:
               this.patientHistory?.available !== undefined ? this.patientHistory.available : true,
             lastAttentionId: this.attention,
-          }
+          };
           this.patientHistory = await savePatientHistory(body);
           await this.loadPatientHistoryData();
 
@@ -1124,8 +1122,7 @@ export default {
         if (newForms && newForms.length > 0) {
           const firstAttentionForms = newForms.filter(form => form.type === 'FIRST_ATTENTION');
 
-          firstAttentionForms.forEach((form, index) => {
-          });
+          firstAttentionForms.forEach((form, index) => {});
         }
       },
     },
@@ -1649,7 +1646,10 @@ export default {
               </div>
             </div>
             <!-- MAIN CONTENT AREA -->
-            <div class="col-12 main-content-area" :class="menuCollapsed ? 'col-lg-12' : 'col-lg-10'">
+            <div
+              class="col-12 main-content-area"
+              :class="menuCollapsed ? 'col-lg-12' : 'col-lg-10'"
+            >
               <!-- Patient Header Card - Fixed -->
               <div class="patient-header-card modern-card-header patient-header-fixed">
                 <div class="patient-header-wrapper">

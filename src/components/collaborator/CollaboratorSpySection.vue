@@ -106,11 +106,15 @@ export default {
     let attentions = null;
 
     // Watch for changes in Firebase attentions and update today's attentions
-    watch(attentionsWrapper, async (newAttentions) => {
-      if (newAttentions && Array.isArray(newAttentions.value)) {
-        await updateTodayAttentionsFromFirebase(newAttentions.value);
-      }
-    }, { deep: true });
+    watch(
+      attentionsWrapper,
+      async newAttentions => {
+        if (newAttentions && Array.isArray(newAttentions.value)) {
+          await updateTodayAttentionsFromFirebase(newAttentions.value);
+        }
+      },
+      { deep: true },
+    );
 
     // Cache to prevent duplicate API calls
     const lastLoadedCommerceId = ref(null);
@@ -609,7 +613,9 @@ export default {
       // If only one queue has attentions, show its name
       if (queuesWithAttentions.length === 1) {
         const queue = queuesWithAttentions[0];
-        return `${$t('collaboratorSpySection.todayAttentions')} ${queue.name || queue.tag || 'Fila'}`;
+        return `${$t('collaboratorSpySection.todayAttentions')} ${
+          queue.name || queue.tag || 'Fila'
+        }`;
       }
 
       // If multiple queues have attentions or no queues have attentions, show generic title
@@ -618,7 +624,6 @@ export default {
 
     // Computed property to get the primary queue ID for the "Go to Queue" button
     const getPrimaryQueueId = computed(() => {
-
       if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) {
         return null;
       }
@@ -640,14 +645,15 @@ export default {
     // Function to get attentions count from queues other than dedicated ones
     const getOtherQueuesAttentionsCount = () => {
       if (!state.allAttentions || state.allAttentions.length === 0) return 0;
-      if (!state.dedicatedQueues || state.dedicatedQueues.length === 0) return state.allAttentions.length;
+      if (!state.dedicatedQueues || state.dedicatedQueues.length === 0)
+        return state.allAttentions.length;
 
       // Get IDs of dedicated queues
       const dedicatedQueueIds = state.dedicatedQueues.map(queue => queue.id);
 
       // Count attentions that are NOT in dedicated queues
-      const otherAttentionsCount = state.allAttentions.filter(att =>
-        !dedicatedQueueIds.includes(att.queueId)
+      const otherAttentionsCount = state.allAttentions.filter(
+        att => !dedicatedQueueIds.includes(att.queueId)
       ).length;
 
       return otherAttentionsCount;
@@ -723,7 +729,10 @@ export default {
               );
               state.professional = await getProfessionalById(state.collaborator.professionalId);
             } catch (error) {
-              console.warn('⚠️ getDedicatedQueues: Could not load professional data, falling back to collaborator', error);
+              console.warn(
+                '⚠️ getDedicatedQueues: Could not load professional data, falling back to collaborator',
+                error,
+              );
               state.professional = state.collaborator;
             }
           } else {
@@ -734,10 +743,13 @@ export default {
 
             if (collaboratorType === 'STANDARD') {
               // STANDARD: Their own professional queues + non-professional queues
-              const professionalQueues = (groupedQueues['PROFESSIONAL'] || []).filter(queue => {
-                // Use professionalId - queues are associated with professionals, not collaborators directly
-                return state.professional && state.professional.id && queue.professionalId === state.professional.id;
-              });
+              const professionalQueues = (groupedQueues['PROFESSIONAL'] || []).filter(
+                queue =>
+                  // Use professionalId - queues are associated with professionals, not collaborators directly
+                  state.professional &&
+                  state.professional.id &&
+                  queue.professionalId === state.professional.id,
+              );
               const otherQueues = allQueues.filter(queue => queue.type !== 'PROFESSIONAL');
               queues = [...professionalQueues, ...otherQueues];
             } else if (collaboratorType === 'ASSISTANT') {
@@ -747,10 +759,13 @@ export default {
               // FULL and other types: Filter by professional if available, otherwise all queues
               if (state.professional && state.professional.id) {
                 // Filter queues by professional
-                queues = allQueues.filter(queue =>
-                  queue.professionalId === state.professional.id
+                queues = allQueues.filter(queue => queue.professionalId === state.professional.id);
+                console.log(
+                  '✅ getDedicatedQueues: FULL with professional filter:',
+                  queues.length,
+                  'for professional:',
+                  state.professional.id,
                 );
-                console.log('✅ getDedicatedQueues: FULL with professional filter:', queues.length, 'for professional:', state.professional.id);
               } else {
                 // No professional filter - show all queues
                 queues = allQueues;
@@ -774,7 +789,16 @@ export default {
           }
         }
 
-        console.log('🎯 getDedicatedQueues: Final queues assigned:', queues.length, queues.map(q => ({ id: q.id, name: q.name || q.tag, type: q.type, professionalId: q.professionalId })));
+        console.log(
+          '🎯 getDedicatedQueues: Final queues assigned:',
+          queues.length,
+          queues.map(q => ({
+            id: q.id,
+            name: q.name || q.tag,
+            type: q.type,
+            professionalId: q.professionalId,
+          })),
+        );
         state.dedicatedQueues = queues;
       } catch (error) {
         state.dedicatedQueues = [];
@@ -815,7 +839,10 @@ export default {
                   );
                   state.professional = await getProfessionalById(state.collaborator.professionalId);
                 } catch (error) {
-                  console.warn('Could not load professional data, falling back to collaborator', error);
+                  console.warn(
+                    'Could not load professional data, falling back to collaborator',
+                    error,
+                  );
                   state.professional = state.collaborator;
                 }
               }
@@ -833,7 +860,9 @@ export default {
                     }
                     return queue.collaboratorId === state.collaborator.id;
                   });
-                  const otherQueues = allCommerceQueues.filter(queue => queue.type !== 'PROFESSIONAL');
+                  const otherQueues = allCommerceQueues.filter(
+                    queue => queue.type !== 'PROFESSIONAL',
+                  );
                   commerceQueues = [...professionalQueues, ...otherQueues];
                 } else if (collaboratorType === 'ASSISTANT') {
                   // ASSISTANT: No professional queues, only general queues
@@ -861,11 +890,23 @@ export default {
 
             allQueues.push(...commerceQueues);
           } catch (error) {
-            console.error(`❌ getDedicatedQueuesForAllCommerces: Error getting queues for commerce ${commerce.id}:`, error);
+            console.error(
+              `❌ getDedicatedQueuesForAllCommerces: Error getting queues for commerce ${commerce.id}:`,
+              error,
+            );
           }
         }
 
-        console.log('🎯 getDedicatedQueuesForAllCommerces: Final allQueues:', allQueues.length, allQueues.map(q => ({ id: q.id, name: q.name || q.tag, commerceId: q.commerceId, professionalId: q.professionalId })));
+        console.log(
+          '🎯 getDedicatedQueuesForAllCommerces: Final allQueues:',
+          allQueues.length,
+          allQueues.map(q => ({
+            id: q.id,
+            name: q.name || q.tag,
+            commerceId: q.commerceId,
+            professionalId: q.professionalId,
+          })),
+        );
         state.dedicatedQueues = allQueues;
         initializeQueueStatus();
       } catch (error) {
@@ -892,7 +933,7 @@ export default {
           const dateStr = today.toISOString().split('T')[0];
 
           // Fetch attentions for all commerces
-          const attentionPromises = commerces.map(async (commerce) => {
+          const attentionPromises = commerces.map(async commerce => {
             try {
               const response = await getPendingAttentionsDetails(commerce.id, dateStr);
               return response.data || [];
@@ -912,8 +953,8 @@ export default {
           }
 
           const queueIds = state.dedicatedQueues.map(q => q.id);
-          const filteredAttentions = flattenedAttentions.filter(att =>
-            att.queueId && queueIds.includes(att.queueId)
+          const filteredAttentions = flattenedAttentions.filter(
+            att => att.queueId && queueIds.includes(att.queueId)
           );
 
           state.todayAttentions = filteredAttentions;
@@ -1788,84 +1829,325 @@ export default {
                 <div class="spy-card-header">
                   <div
                     class="spy-card-header-content"
-                  @click="state.showTodayAttentionsDetails = !state.showTodayAttentionsDetails"
-                >
-                  <div class="spy-card-icon">
-                    <i class="bi bi-qr-code"></i>
-                  </div>
-                  <div class="spy-card-title-content">
-                    <div class="spy-card-title">
-                      {{ $t('collaboratorSpySection.todayAttentions') }}
+                    @click="state.showTodayAttentionsDetails = !state.showTodayAttentionsDetails"
+                  >
+                    <div class="spy-card-icon">
+                      <i class="bi bi-qr-code"></i>
                     </div>
-                    <div class="spy-card-value-wrapper">
-                      <div class="spy-card-value">
-                        <span v-if="!state.dedicatedQueues || state.dedicatedQueues.length === 0">
-                          0
-                        </span>
-                        <span v-else-if="state.dedicatedQueues.length === 1">
-                          {{ getQueueAttentionsCount(state.dedicatedQueues[0].id) }}
-                        </span>
-                        <span v-else>
-                          {{ getTotalAttentionsCount }}
+                    <div class="spy-card-title-content">
+                      <div class="spy-card-title">
+                        {{ $t('collaboratorSpySection.todayAttentions') }}
+                      </div>
+                      <div class="spy-card-value-wrapper">
+                        <div class="spy-card-value">
+                          <span v-if="!state.dedicatedQueues || state.dedicatedQueues.length === 0">
+                            0
+                          </span>
+                          <span v-else-if="state.dedicatedQueues.length === 1">
+                            {{ getQueueAttentionsCount(state.dedicatedQueues[0].id) }}
+                          </span>
+                          <span v-else>
+                            {{ getTotalAttentionsCount }}
+                          </span>
+                        </div>
+                        <span class="spy-live-indicator" title="Actualización en tiempo real">
+                          <span class="spy-live-dot"></span>
                         </span>
                       </div>
-                      <span class="spy-live-indicator" title="Actualización en tiempo real">
-                        <span class="spy-live-dot"></span>
-                      </span>
+                    </div>
+                  </div>
+                  <div class="spy-card-header-actions">
+                    <!-- Queue Link Button -->
+                    <div
+                      v-if="
+                        state.dedicatedQueues &&
+                        state.dedicatedQueues.length > 0 &&
+                        getPrimaryQueueId
+                      "
+                      class="spy-queue-link-inline"
+                    >
+                      <div>
+                        <a
+                          :href="`/interno/colaborador/fila/${getPrimaryQueueId}/atenciones`"
+                          class="btn btn-sm btn-outline-primary spy-queue-button-inline"
+                          @click.stop
+                        >
+                          {{ $t('collaboratorSpySection.goToQueue') }}
+                        </a>
+                      </div>
+                    </div>
+                    <div
+                      class="spy-card-toggle"
+                      @click="state.showTodayAttentionsDetails = !state.showTodayAttentionsDetails"
+                    >
+                      <i
+                        :class="
+                          state.showTodayAttentionsDetails
+                            ? 'bi bi-chevron-up'
+                            : 'bi bi-chevron-down'
+                        "
+                      ></i>
                     </div>
                   </div>
                 </div>
-                <div class="spy-card-header-actions">
-                  <!-- Queue Link Button -->
-                  <div
-                    v-if="state.dedicatedQueues && state.dedicatedQueues.length > 0 && getPrimaryQueueId"
-                    class="spy-queue-link-inline"
-                  >
-                    <div>
-                      <a
-                        :href="`/interno/colaborador/fila/${getPrimaryQueueId}/atenciones`"
-                        class="btn btn-sm btn-outline-primary spy-queue-button-inline"
-                        @click.stop
+                <Transition name="slide-down">
+                  <div v-if="state.showTodayAttentionsDetails" class="spy-card-details">
+                    <div v-if="state.todayAttentions.length === 0" class="spy-no-data">
+                      <Message
+                        :title="$t('collaboratorSpySection.message.noData.title')"
+                        :content="$t('collaboratorSpySection.message.noData.content')"
+                        :icon="'bi bi-info-circle'"
                       >
-                        {{ $t('collaboratorSpySection.goToQueue') }}
-                      </a>
+                      </Message>
+                    </div>
+                    <div v-else class="spy-attentions-list">
+                      <div
+                        v-for="(attention, index) in state.todayAttentions"
+                        :key="`today-att-${index}`"
+                        :class="[
+                          'spy-attention-item',
+                          { clickable: index === 0, 'reference-only': index > 0 },
+                        ]"
+                        @click="index === 0 ? goToAttention(attention.id) : null"
+                      >
+                        <div class="spy-attention-status-indicator">
+                          <Popper
+                            v-if="getAttentionElapsedTime(attention)"
+                            :class="'dark'"
+                            arrow
+                            hover
+                            disable-click-away
+                            placement="left"
+                            :z-index="10001"
+                          >
+                            <template #content>
+                              <div class="popper-content">
+                                <div class="popper-title">Status de Espera</div>
+                                <div class="popper-item">
+                                  <span
+                                    class="popper-color"
+                                    :style="{
+                                      background: getAttentionElapsedTime(attention).timeColor,
+                                    }"
+                                  ></span>
+                                  <span>{{
+                                    getAttentionStatusMessage(
+                                      getAttentionElapsedTime(attention).timeStatus
+                                    )
+                                  }}</span>
+                                </div>
+                                <div class="popper-item">
+                                  <span
+                                    ><strong>Tempo:</strong>
+                                    {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span
+                                  >
+                                </div>
+                              </div>
+                            </template>
+                            <div
+                              class="spy-status-dot"
+                              :class="`spy-status-${getAttentionElapsedTime(attention).timeStatus}`"
+                              :style="{
+                                backgroundColor: getAttentionElapsedTime(attention).timeColor,
+                              }"
+                            ></div>
+                          </Popper>
+                          <div
+                            v-else
+                            class="spy-status-dot spy-status-neutral"
+                            title="Fecha de creación no disponible"
+                          ></div>
+                        </div>
+                        <div class="spy-attention-info">
+                          <div class="spy-attention-header">
+                            <div v-if="attention.number" class="spy-attention-number-large">
+                              {{ $t('collaboratorSpySection.number') }}:
+                              <strong>{{ attention.number }}</strong>
+                            </div>
+                            <div
+                              v-if="attention.clientName && attention.clientName !== 'N/A'"
+                              class="spy-attention-name-secondary"
+                            >
+                              {{ attention.clientName }}
+                            </div>
+                          </div>
+                          <div class="spy-attention-meta">
+                            <span v-if="attention.clientId && attention.clientId !== 'N/A'"
+                              ><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span
+                            >
+                            >
+                            <span
+                              ><i class="bi bi-clock"></i> {{ formattedTime(attention.hour) }}</span
+                            >
+                            <span v-if="attention.service && attention.service !== 'N/A'"
+                              ><i class="bi bi-briefcase"></i> {{ attention.service }}</span
+                            >
+                            >
+                          </div>
+                        </div>
+                        <div v-if="index === 0" class="spy-attention-action">
+                          <i class="bi bi-arrow-right-circle"></i>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div
-                    class="spy-card-toggle"
-                    @click="state.showTodayAttentionsDetails = !state.showTodayAttentionsDetails"
-                  >
-                    <i
-                      :class="
-                        state.showTodayAttentionsDetails ? 'bi bi-chevron-up' : 'bi bi-chevron-down'
-                      "
-                    ></i>
+                </Transition>
+              </div>
+
+              <!-- Other Queues Attentions Card -->
+              <div class="col mb-2">
+                <div class="spy-other-queues-card">
+                  <div class="spy-card-header">
+                    <div class="spy-card-header-content">
+                      <div class="spy-card-icon">
+                        <i class="bi bi-list-ul"></i>
+                      </div>
+                      <div class="spy-card-title-content">
+                        <div class="spy-card-title">
+                          {{ $t('collaboratorSpySection.otherQueuesAttentions') }}
+                        </div>
+                        <div class="spy-card-value-wrapper">
+                          <div class="spy-card-value">
+                            <span>{{ getOtherQueuesAttentionsCount() }}</span>
+                          </div>
+                          <span class="spy-live-indicator" title="Actualización en tiempo real">
+                            <span class="spy-live-dot"></span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="spy-card-header-actions">
+                      <div class="spy-queue-link-inline">
+                        <div>
+                          <a
+                            :href="`/interno/commerce/${state.commerce.id}/colaborador/filas`"
+                            class="btn btn-sm btn-outline-primary spy-queue-button-inline"
+                            @click.stop
+                          >
+                            {{ $t('collaboratorSpySection.goToQueues') }}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <Transition name="slide-down">
-                <div v-if="state.showTodayAttentionsDetails" class="spy-card-details">
-                  <div v-if="state.todayAttentions.length === 0" class="spy-no-data">
-                    <Message
-                      :title="$t('collaboratorSpySection.message.noData.title')"
-                      :content="$t('collaboratorSpySection.message.noData.content')"
-                      :icon="'bi bi-info-circle'"
-                    >
-                    </Message>
+
+              <!-- Week and Month Bookings Cards -->
+              <div class="spy-bookings-cards mb-3">
+                <div class="spy-booking-card">
+                  <div class="spy-card-header">
+                    <div class="spy-card-header-content">
+                      <div class="spy-card-icon spy-card-icon-week">
+                        <i class="bi bi-calendar-week"></i>
+                      </div>
+                      <div class="spy-card-title-content">
+                        <div class="spy-card-title">
+                          {{ $t('collaboratorSpySection.weekBookings') }}
+                        </div>
+                        <div class="spy-card-value">{{ state.weekBookings.length }}</div>
+                      </div>
+                    </div>
                   </div>
-                  <div v-else class="spy-attentions-list">
-                    <div
-                      v-for="(attention, index) in state.todayAttentions"
-                      :key="`today-att-${index}`"
-                      :class="[
-                        'spy-attention-item',
-                        { clickable: index === 0, 'reference-only': index > 0 },
-                      ]"
-                      @click="index === 0 ? goToAttention(attention.id) : null"
+                  <div class="spy-card-subtitle">
+                    <span class="spy-card-subtitle-text">
+                      {{ $t('collaboratorSpySection.pendingToAttend') }}:
+                      <strong>{{ pendingBookingsCount(state.weekBookings) }}</strong>
+                    </span>
+                  </div>
+                </div>
+                <div class="spy-booking-card">
+                  <div class="spy-card-header">
+                    <div class="spy-card-header-content">
+                      <div class="spy-card-icon spy-card-icon-month">
+                        <i class="bi bi-calendar-month"></i>
+                      </div>
+                      <div class="spy-card-title-content">
+                        <div class="spy-card-title">
+                          {{ $t('collaboratorSpySection.monthBookings') }}
+                        </div>
+                        <div class="spy-card-value">{{ state.monthBookings.length }}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="spy-card-subtitle">
+                    <span class="spy-card-subtitle-text">
+                      {{ $t('collaboratorSpySection.pendingToAttend') }}:
+                      <strong>{{ pendingBookingsCount(state.monthBookings) }}</strong>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Calendar -->
+              <div class="spy-calendar-section">
+                <div class="spy-calendar-title mb-3">
+                  <i class="bi bi-calendar3-range"></i>
+                  <span>{{ $t('collaboratorSpySection.calendarTitle') }}</span>
+                </div>
+                <Spinner :show="loadingCalendar"></Spinner>
+                <div v-if="!loadingCalendar" class="spy-calendar-container">
+                  <div class="spy-calendar-wrapper">
+                    <VDatePicker
+                      :locale="state.locale"
+                      v-model="state.selectedDate"
+                      :mask="dateMask"
+                      :min-date="state.minDate"
+                      :max-date="state.maxDate"
+                      :attributes="calendarAttributes"
+                      @dayclick="selectDate"
+                      class="spy-date-picker"
+                    />
+                  </div>
+                  <div class="spy-calendar-legend">
+                    <div class="legend-item">
+                      <span class="legend-color legend-blue"></span>
+                      <span class="legend-text">{{ $t('collaboratorSpySection.attentions') }}</span>
+                    </div>
+                    <div class="legend-item">
+                      <span class="legend-color legend-green"></span>
+                      <span class="legend-text">{{ $t('collaboratorSpySection.bookings') }}</span>
+                    </div>
+                    <div class="legend-item">
+                      <span class="legend-color legend-purple"></span>
+                      <span class="legend-text">{{ $t('collaboratorSpySection.both') }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Date Details -->
+              <div v-if="state.selectedDate" class="spy-date-details mt-3">
+                <div class="spy-title mb-2">
+                  <i class="bi bi-list-ul"></i>
+                  <span>{{ formattedDate(state.selectedDate) }}</span>
+                </div>
+
+                <!-- Attentions List -->
+                <div
+                  v-if="state.dateDetails.attentions.length > 0"
+                  class="spy-details-section mb-3"
+                >
+                  <div class="spy-details-header">
+                    <i class="bi bi-qr-code"></i>
+                    <span
+                      >{{ $t('collaboratorSpySection.attentions') }} ({{
+                        state.dateDetails.attentions.length
+                      }})</span
                     >
-                      <div class="spy-attention-status-indicator">
+                    >
+                  </div>
+                  <div class="spy-details-list spy-attentions-list">
+                    <div
+                      v-for="(attention, index) in state.dateDetails.attentions"
+                      :key="`att-${index}`"
+                      :class="['spy-attention-item', { 'reference-only': index > 0 }]"
+                    >
+                      <div
+                        class="spy-attention-status-indicator"
+                        v-if="getAttentionElapsedTime(attention)"
+                      >
                         <Popper
-                          v-if="getAttentionElapsedTime(attention)"
                           :class="'dark'"
                           arrow
                           hover
@@ -1892,21 +2174,20 @@ export default {
                               <div class="popper-item">
                                 <span
                                   ><strong>Tempo:</strong>
-                                  {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span>
+                                  {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span
+                                >
+                                >
                               </div>
                             </div>
                           </template>
                           <div
                             class="spy-status-dot"
                             :class="`spy-status-${getAttentionElapsedTime(attention).timeStatus}`"
-                            :style="{ backgroundColor: getAttentionElapsedTime(attention).timeColor }"
+                            :style="{
+                              backgroundColor: getAttentionElapsedTime(attention).timeColor,
+                            }"
                           ></div>
                         </Popper>
-                        <div
-                          v-else
-                          class="spy-status-dot spy-status-neutral"
-                          title="Fecha de creación no disponible"
-                        ></div>
                       </div>
                       <div class="spy-attention-info">
                         <div class="spy-attention-header">
@@ -1923,300 +2204,88 @@ export default {
                         </div>
                         <div class="spy-attention-meta">
                           <span v-if="attention.clientId && attention.clientId !== 'N/A'"
-                            ><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span>
+                            ><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span
                           >
-                          <span><i class="bi bi-clock"></i> {{ formattedTime(attention.hour) }}</span>
+                          <span
+                            ><i class="bi bi-clock"></i> {{ formattedTime(attention.hour) }}</span
+                          >
                           <span v-if="attention.service && attention.service !== 'N/A'"
-                            ><i class="bi bi-briefcase"></i> {{ attention.service }}</span>
+                            ><i class="bi bi-briefcase"></i> {{ attention.service }}</span
                           >
                         </div>
                       </div>
-                      <div v-if="index === 0" class="spy-attention-action">
-                        <i class="bi bi-arrow-right-circle"></i>
-                      </div>
                     </div>
                   </div>
                 </div>
-              </Transition>
-            </div>
 
-            <!-- Other Queues Attentions Card -->
-            <div class="col mb-2">
-              <div class="spy-other-queues-card">
-                <div class="spy-card-header">
-                  <div class="spy-card-header-content">
-                  <div class="spy-card-icon">
-                    <i class="bi bi-list-ul"></i>
-                  </div>
-                  <div class="spy-card-title-content">
-                    <div class="spy-card-title">
-                      {{ $t('collaboratorSpySection.otherQueuesAttentions') }}
-                    </div>
-                    <div class="spy-card-value-wrapper">
-                      <div class="spy-card-value">
-                        <span>{{ getOtherQueuesAttentionsCount() }}</span>
-                      </div>
-                      <span class="spy-live-indicator" title="Actualización en tiempo real">
-                        <span class="spy-live-dot"></span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div class="spy-card-header-actions">
-                  <div class="spy-queue-link-inline">
-                    <div>
-                      <a
-                        :href="`/interno/commerce/${state.commerce.id}/colaborador/filas`"
-                        class="btn btn-sm btn-outline-primary spy-queue-button-inline"
-                        @click.stop
-                      >
-                        {{ $t('collaboratorSpySection.goToQueues') }}
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Week and Month Bookings Cards -->
-          <div class="spy-bookings-cards mb-3">
-            <div class="spy-booking-card">
-              <div class="spy-card-header">
-                <div class="spy-card-header-content">
-                  <div class="spy-card-icon spy-card-icon-week">
-                    <i class="bi bi-calendar-week"></i>
-                  </div>
-                  <div class="spy-card-title-content">
-                    <div class="spy-card-title">
-                      {{ $t('collaboratorSpySection.weekBookings') }}
-                    </div>
-                    <div class="spy-card-value">{{ state.weekBookings.length }}</div>
-                  </div>
-                </div>
-              </div>
-              <div class="spy-card-subtitle">
-                <span class="spy-card-subtitle-text">
-                  {{ $t('collaboratorSpySection.pendingToAttend') }}:
-                  <strong>{{ pendingBookingsCount(state.weekBookings) }}</strong>
-                </span>
-              </div>
-            </div>
-            <div class="spy-booking-card">
-              <div class="spy-card-header">
-                <div class="spy-card-header-content">
-                  <div class="spy-card-icon spy-card-icon-month">
-                    <i class="bi bi-calendar-month"></i>
-                  </div>
-                  <div class="spy-card-title-content">
-                    <div class="spy-card-title">
-                      {{ $t('collaboratorSpySection.monthBookings') }}
-                    </div>
-                    <div class="spy-card-value">{{ state.monthBookings.length }}</div>
-                  </div>
-                </div>
-              </div>
-              <div class="spy-card-subtitle">
-                <span class="spy-card-subtitle-text">
-                  {{ $t('collaboratorSpySection.pendingToAttend') }}:
-                  <strong>{{ pendingBookingsCount(state.monthBookings) }}</strong>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Calendar -->
-          <div class="spy-calendar-section">
-            <div class="spy-calendar-title mb-3">
-              <i class="bi bi-calendar3-range"></i>
-              <span>{{ $t('collaboratorSpySection.calendarTitle') }}</span>
-            </div>
-            <Spinner :show="loadingCalendar"></Spinner>
-            <div v-if="!loadingCalendar" class="spy-calendar-container">
-              <div class="spy-calendar-wrapper">
-                <VDatePicker
-                  :locale="state.locale"
-                  v-model="state.selectedDate"
-                  :mask="dateMask"
-                  :min-date="state.minDate"
-                  :max-date="state.maxDate"
-                  :attributes="calendarAttributes"
-                  @dayclick="selectDate"
-                  class="spy-date-picker"
-                />
-              </div>
-              <div class="spy-calendar-legend">
-                <div class="legend-item">
-                  <span class="legend-color legend-blue"></span>
-                  <span class="legend-text">{{ $t('collaboratorSpySection.attentions') }}</span>
-                </div>
-                <div class="legend-item">
-                  <span class="legend-color legend-green"></span>
-                  <span class="legend-text">{{ $t('collaboratorSpySection.bookings') }}</span>
-                </div>
-                <div class="legend-item">
-                  <span class="legend-color legend-purple"></span>
-                  <span class="legend-text">{{ $t('collaboratorSpySection.both') }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Date Details -->
-          <div v-if="state.selectedDate" class="spy-date-details mt-3">
-            <div class="spy-title mb-2">
-              <i class="bi bi-list-ul"></i>
-              <span>{{ formattedDate(state.selectedDate) }}</span>
-            </div>
-
-            <!-- Attentions List -->
-            <div v-if="state.dateDetails.attentions.length > 0" class="spy-details-section mb-3">
-              <div class="spy-details-header">
-                <i class="bi bi-qr-code"></i>
-                <span
-                  >{{ $t('collaboratorSpySection.attentions') }} ({{
-                    state.dateDetails.attentions.length
-                  }})</span>
-                >
-              </div>
-              <div class="spy-details-list spy-attentions-list">
-                <div
-                  v-for="(attention, index) in state.dateDetails.attentions"
-                  :key="`att-${index}`"
-                  :class="['spy-attention-item', { 'reference-only': index > 0 }]"
-                >
-                  <div
-                    class="spy-attention-status-indicator"
-                    v-if="getAttentionElapsedTime(attention)"
-                  >
-                    <Popper
-                      :class="'dark'"
-                      arrow
-                      hover
-                      disable-click-away
-                      placement="left"
-                      :z-index="10001"
+                <!-- Bookings List -->
+                <div v-if="state.dateDetails.bookings.length > 0" class="spy-details-section mb-3">
+                  <div class="spy-details-header">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    <span
+                      >{{ $t('collaboratorSpySection.bookings') }} ({{
+                        state.dateDetails.bookings.length
+                      }})</span
                     >
-                      <template #content>
-                        <div class="popper-content">
-                          <div class="popper-title">Status de Espera</div>
-                          <div class="popper-item">
-                            <span
-                              class="popper-color"
-                              :style="{ background: getAttentionElapsedTime(attention).timeColor }"
-                            ></span>
-                            <span>{{
-                              getAttentionStatusMessage(
-                                getAttentionElapsedTime(attention).timeStatus
-                              )
-                            }}</span>
+                    >
+                  </div>
+                  <div class="spy-details-list spy-attentions-list">
+                    <div
+                      v-for="(booking, index) in state.dateDetails.bookings"
+                      :key="`book-${index}`"
+                      :class="[
+                        'spy-attention-item',
+                        { clickable: index === 0, 'reference-only': index > 0 },
+                      ]"
+                    >
+                      <div class="spy-attention-info">
+                        <div class="spy-attention-header">
+                          <div class="spy-attention-number-large">
+                            <i class="bi bi-calendar-check-fill"></i>
+                            {{ $t('collaboratorSpySection.bookings') }}
                           </div>
-                          <div class="popper-item">
-                            <span
-                              ><strong>Tempo:</strong>
-                              {{ getAttentionElapsedTime(attention).elapsedDisplay }}</span>
-                            >
+                          <div
+                            v-if="booking.clientName && booking.clientName !== 'N/A'"
+                            class="spy-attention-name-secondary"
+                          >
+                            {{ booking.clientName }}
                           </div>
                         </div>
-                      </template>
-                      <div
-                        class="spy-status-dot"
-                        :class="`spy-status-${getAttentionElapsedTime(attention).timeStatus}`"
-                        :style="{ backgroundColor: getAttentionElapsedTime(attention).timeColor }"
-                      ></div>
-                    </Popper>
-                  </div>
-                  <div class="spy-attention-info">
-                    <div class="spy-attention-header">
-                      <div v-if="attention.number" class="spy-attention-number-large">
-                        {{ $t('collaboratorSpySection.number') }}:
-                        <strong>{{ attention.number }}</strong>
+                        <div class="spy-attention-meta">
+                          <span v-if="booking.clientId && booking.clientId !== 'N/A'"
+                            ><i class="bi bi-person-badge"></i> {{ booking.clientId }}</span
+                          >
+                          >
+                          <span><i class="bi bi-clock"></i> {{ formattedTime(booking.hour) }}</span>
+                          <span v-if="booking.service && booking.service !== 'N/A'"
+                            ><i class="bi bi-briefcase"></i> {{ booking.service }}</span
+                          >
+                          >
+                        </div>
                       </div>
-                      <div
-                        v-if="attention.clientName && attention.clientName !== 'N/A'"
-                        class="spy-attention-name-secondary"
-                      >
-                        {{ attention.clientName }}
-                      </div>
-                    </div>
-                    <div class="spy-attention-meta">
-                      <span v-if="attention.clientId && attention.clientId !== 'N/A'"
-                        ><i class="bi bi-person-badge"></i> {{ attention.clientId }}</span>
-                      <span><i class="bi bi-clock"></i> {{ formattedTime(attention.hour) }}</span>
-                      <span v-if="attention.service && attention.service !== 'N/A'"
-                        ><i class="bi bi-briefcase"></i> {{ attention.service }}</span>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <!-- Bookings List -->
-            <div v-if="state.dateDetails.bookings.length > 0" class="spy-details-section mb-3">
-              <div class="spy-details-header">
-                <i class="bi bi-calendar-check-fill"></i>
-                <span
-                  >{{ $t('collaboratorSpySection.bookings') }} ({{
-                    state.dateDetails.bookings.length
-                  }})</span>
-                >
-              </div>
-              <div class="spy-details-list spy-attentions-list">
+                <!-- No data message -->
                 <div
-                  v-for="(booking, index) in state.dateDetails.bookings"
-                  :key="`book-${index}`"
-                  :class="[
-                    'spy-attention-item',
-                    { clickable: index === 0, 'reference-only': index > 0 },
-                  ]"
+                  v-if="
+                    state.dateDetails.attentions.length === 0 &&
+                    state.dateDetails.bookings.length === 0
+                  "
+                  class="text-center mt-3"
                 >
-                  <div class="spy-attention-info">
-                    <div class="spy-attention-header">
-                      <div class="spy-attention-number-large">
-                        <i class="bi bi-calendar-check-fill"></i>
-                        {{ $t('collaboratorSpySection.bookings') }}
-                      </div>
-                      <div
-                        v-if="booking.clientName && booking.clientName !== 'N/A'"
-                        class="spy-attention-name-secondary"
-                      >
-                        {{ booking.clientName }}
-                      </div>
-                    </div>
-                    <div class="spy-attention-meta">
-                      <span v-if="booking.clientId && booking.clientId !== 'N/A'"
-                        ><i class="bi bi-person-badge"></i> {{ booking.clientId }}</span>
-                      >
-                      <span><i class="bi bi-clock"></i> {{ formattedTime(booking.hour) }}</span>
-                      <span v-if="booking.service && booking.service !== 'N/A'"
-                        ><i class="bi bi-briefcase"></i> {{ booking.service }}</span>
-                      >
-                    </div>
-                  </div>
+                  <Message
+                    :title="$t('collaboratorSpySection.message.noData.title')"
+                    :content="$t('collaboratorSpySection.message.noData.content')"
+                    :icon="'bi bi-calendar-x'"
+                  >
+                  </Message>
                 </div>
               </div>
-            </div>
-
-            <!-- No data message -->
-            <div
-              v-if="
-                state.dateDetails.attentions.length === 0 && state.dateDetails.bookings.length === 0
-              "
-              class="text-center mt-3"
-            >
-              <Message
-                :title="$t('collaboratorSpySection.message.noData.title')"
-                :content="$t('collaboratorSpySection.message.noData.content')"
-                :icon="'bi bi-calendar-x'"
-              >
-              </Message>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-
-
       </div>
     </div>
   </div>

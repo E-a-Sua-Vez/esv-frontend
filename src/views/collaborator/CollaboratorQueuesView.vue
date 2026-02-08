@@ -288,7 +288,11 @@ export default {
 
       try {
         // Create combined array of all attentions
-        const allAttentionsArray = [...attentionsArray, ...processingAttentionsArray, ...terminatedAttentionsArray];
+        const allAttentionsArray = [
+          ...attentionsArray,
+          ...processingAttentionsArray,
+          ...terminatedAttentionsArray,
+        ];
 
         // Group pending attentions by queue
         const filteredPendingByQueue = attentionsArray.reduce((acc, attention) => {
@@ -363,12 +367,12 @@ export default {
 
             // Update terminated count from Firebase
             // Include: checkout attentions
-            let terminatedCount = checkoutAttentionsByQueue[queue.id] ? checkoutAttentionsByQueue[queue.id].length : 0;
+            const terminatedCount = checkoutAttentionsByQueue[queue.id]
+              ? checkoutAttentionsByQueue[queue.id].length
+              : 0;
             state.queueTerminatedStatus[queue.id] = terminatedCount;
           }
         });
-
-
       } catch (error) {
         console.error('Error checking queue status:', error);
         initializeQueueStatus();

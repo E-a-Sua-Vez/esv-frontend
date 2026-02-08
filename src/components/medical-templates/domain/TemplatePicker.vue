@@ -21,7 +21,11 @@
           @input="debouncedSearch"
           placeholder="Buscar templates..."
         />
-        <select v-model="filterType" class="form-control ms-2 select-with-arrow" style="max-width: 200px">
+        <select
+          v-model="filterType"
+          class="form-control ms-2 select-with-arrow"
+          style="max-width: 200px"
+        >
           <option value="">{{ $t('templatePicker.allTypes') }}</option>
           <option value="diagnostic">{{ $t('templatePicker.diagnostic') }}</option>
           <option value="anamnesis">{{ $t('templatePicker.anamnesis') }}</option>
@@ -46,7 +50,13 @@
         <Spinner />
       </div>
 
-      <Message v-else-if="templates.length === 0" type="normal" :title="$t('templatePicker.information')" :content="$t('templatePicker.noTemplatesFound')" class="mt-3" />
+      <Message
+        v-else-if="templates.length === 0"
+        type="normal"
+        :title="$t('templatePicker.information')"
+        :content="$t('templatePicker.noTemplatesFound')"
+        class="mt-3"
+      />
 
       <div v-else class="template-list">
         <div

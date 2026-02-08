@@ -29,7 +29,10 @@ import { getPatientHistoryItemByCommerce } from '../../application/services/pati
 import { getFormsByClient } from '../../application/services/form';
 import { getClientById } from '../../application/services/client';
 import { getCommerceById } from '../../application/services/commerce';
-import { getAverageAttentionDuration, getGroupedQueueByCommerceId } from '../../application/services/queue';
+import {
+  getAverageAttentionDuration,
+  getGroupedQueueByCommerceId,
+} from '../../application/services/queue';
 import { getSurveyPersonalizedByCommerceId } from '../../application/services/survey-personalized';
 import {
   updatedAvailableAttentions,
@@ -304,7 +307,11 @@ export default {
               const groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
               state.commerce.queues = Object.values(groupedQueues).flat();
             } catch (error) {
-              console.warn('❌ Failed to load queues for validate commerce:', state.commerce.id, error);
+              console.warn(
+                '❌ Failed to load queues for validate commerce:',
+                state.commerce.id,
+                error,
+              );
             }
           }
 
@@ -488,7 +495,9 @@ export default {
       const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
 
       // Firebase already filters by today and PENDING status, just sort by number
-      const filteredPending = [...pendingList].filter(att => att && ['PENDING', 'CONFIRMED'].includes(att.status));
+      const filteredPending = [...pendingList].filter(
+        att => att && ['PENDING', 'CONFIRMED'].includes(att.status),
+      );
       const sortedPending = [...filteredPending].sort((a, b) => {
         const numA = a.number || 0;
         const numB = b.number || 0;
@@ -1717,9 +1726,9 @@ export default {
     });
 
     // Computed for professional name
-    const professionalName = computed(() => {
-      return state.attention.professionalName || state.attention.collaboratorName || '';
-    });
+    const professionalName = computed(
+      () => state.attention.professionalName || state.attention.collaboratorName || ''
+    );
 
     // Computed for booking scheduled time
     const bookingScheduledTime = computed(() => {
@@ -1746,20 +1755,28 @@ export default {
 
     // Computed for payment status
     const paymentStatusText = computed(() => {
-      if (state.attention.status === 'CONFIRMED' || state.attention.confirmed || state.attention.paid) {
+      if (
+        state.attention.status === 'CONFIRMED' ||
+        state.attention.confirmed ||
+        state.attention.paid
+      ) {
         return 'Pago';
       } else {
         return 'Pendente';
       }
     });
 
-    const paymentStatusBadgeClass = computed(() => {
-      return (state.attention.status === 'CONFIRMED' || state.attention.confirmed || state.attention.paid) ? 'attention-paid-badge' : 'attention-pending-badge';
-    });
+    const paymentStatusBadgeClass = computed(() =>
+      state.attention.status === 'CONFIRMED' || state.attention.confirmed || state.attention.paid
+        ? 'attention-paid-badge'
+        : 'attention-pending-badge'
+    );
 
-    const paymentStatusIcon = computed(() => {
-      return (state.attention.status === 'CONFIRMED' || state.attention.confirmed || state.attention.paid) ? 'bi bi-check-circle-fill' : 'bi bi-clock-history';
-    });
+    const paymentStatusIcon = computed(() =>
+      state.attention.status === 'CONFIRMED' || state.attention.confirmed || state.attention.paid
+        ? 'bi bi-check-circle-fill'
+        : 'bi bi-clock-history'
+    );
 
     return {
       id,
@@ -1928,7 +1945,10 @@ export default {
             </div>
 
             <!-- Booking Scheduled Time Card (if attention comes from a booking or block) -->
-            <div v-if="state.attention.bookingId || state.attention.booking || state.attention.block" class="stat-card stat-card-booking">
+            <div
+              v-if="state.attention.bookingId || state.attention.booking || state.attention.block"
+              class="stat-card stat-card-booking"
+            >
               <div class="stat-card-icon">
                 <i class="bi bi-calendar-check"></i>
               </div>
@@ -1947,7 +1967,12 @@ export default {
               <div class="stat-card-content">
                 <div class="stat-card-label">Profissional</div>
                 <div class="stat-card-value">{{ professionalName || 'Não atribuído' }}</div>
-                <div v-if="state.attention.bookingId || state.attention.booking || state.attention.block" class="stat-card-subvalue">
+                <div
+                  v-if="
+                    state.attention.bookingId || state.attention.booking || state.attention.block
+                  "
+                  class="stat-card-subvalue"
+                >
                   <div :class="paymentStatusBadgeClass">
                     <i :class="paymentStatusIcon"></i>
                     <span class="paid-text">{{ paymentStatusText }}</span>
@@ -2423,7 +2448,10 @@ export default {
             </div>
 
             <!-- Booking Scheduled Time Card (if attention comes from a booking or block) -->
-            <div v-if="state.attention.bookingId || state.attention.booking || state.attention.block" class="stat-card stat-card-booking">
+            <div
+              v-if="state.attention.bookingId || state.attention.booking || state.attention.block"
+              class="stat-card stat-card-booking"
+            >
               <div class="stat-card-icon">
                 <i class="bi bi-calendar-check"></i>
               </div>
@@ -2442,7 +2470,12 @@ export default {
               <div class="stat-card-content">
                 <div class="stat-card-label">Profissional</div>
                 <div class="stat-card-value">{{ professionalName || 'Não atribuído' }}</div>
-                <div v-if="state.attention.bookingId || state.attention.booking || state.attention.block" class="stat-card-subvalue">
+                <div
+                  v-if="
+                    state.attention.bookingId || state.attention.booking || state.attention.block
+                  "
+                  class="stat-card-subvalue"
+                >
                   <div :class="paymentStatusBadgeClass">
                     <i :class="paymentStatusIcon"></i>
                     <span class="paid-text">{{ paymentStatusText }}</span>

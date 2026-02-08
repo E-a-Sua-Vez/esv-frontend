@@ -3903,6 +3903,7 @@
     "choose": "¿Qué quieres hacer hoy?",
     "dashboard": "Performance Hub",
     "tracing": "Clientes",
+    "lead-pipeline": "Pipeline de Ventas",
     "product-stock": "Stock",
     "financial": "Financiero",
     "marketing": "Marketing",
@@ -3951,6 +3952,7 @@
           "business-resume": "Estado del Sistema",
           "dashboard": "Performance Hub",
           "tracing": "Gestión de Clientes",
+          "lead-pipeline": "Pipeline de Ventas",
           "product-stock": "Control de Stock",
           "reports": "Central de Datos",
           "commerce-admin": "Administrar Sucursales",
@@ -6650,6 +6652,7 @@
     "filterFromDate": "Fecha Desde",
     "filterToDate": "Fecha Hasta",
     "clearFilter": "Limpiar Filtro",
+    "clearAllFilters": "Limpiar Todos los Filtros",
     "exportCSV": "Exportar a CSV",
     "noLeadsToExport": "No hay leads para exportar",
     "exportError": "Error al exportar leads",
@@ -6676,6 +6679,25 @@
         "read": "Leer Leads",
         "edit": "Editar Lead",
         "update": "Actualizar Lead"
+      },
+      "business": {
+        "lead-pipeline": {
+          "view": "Ver Pipeline de Ventas",
+          "add": "Agregar Leads al Pipeline",
+          "edit": "Editar Leads del Pipeline",
+          "delete": "Eliminar Leads del Pipeline",
+          "convert": "Convertir Leads a Clientes",
+          "limit": "Límite de Leads en Pipeline"
+        }
+      },
+      "collaborator": {
+        "lead-pipeline": {
+          "view": "Ver Pipeline de Ventas",
+          "add": "Agregar Leads al Pipeline",
+          "edit": "Editar Leads del Pipeline",
+          "delete": "Eliminar Leads del Pipeline",
+          "convert": "Convertir Leads a Clientes"
+        }
       }
     },
     "dashboard": {
@@ -6867,7 +6889,16 @@
         "medical-templates-admin": "Habilitar Gestionar Plantillas Médicas - Menú Principal Negocio",
         "pdf-templates-admin": "Habilitar Gestionar Plantillas PDF - Menú Principal Negocio",
         "audit-log": "Habilitar Auditoría y Cumplimiento - Menú Principal Negocio",
-        "documents": "Habilitar Documentos - Menú Principal Negocio"
+        "documents": "Habilitar Documentos - Menú Principal Negocio",
+        "lead-pipeline": "Habilitar Pipeline de Ventas - Menú Principal Negocio"
+      },
+      "lead-pipeline": {
+        "view": "Ver Pipeline de Ventas",
+        "add": "Agregar Leads al Pipeline",
+        "edit": "Editar Leads del Pipeline",
+        "delete": "Eliminar Leads del Pipeline",
+        "convert": "Convertir Leads a Clientes",
+        "limit": "Límite de Leads en Pipeline"
       },
       "bookings": {
         "manage": "Reservas Visión 360°"
@@ -6889,7 +6920,13 @@
         "reports": "Habilitar Reportes - Menú Principal Colaborador",
         "queue-manage": "Habilitar Atender Filas del Día - Menú Principal Colaborador",
         "booking-manage": "Habilitar Gestionar Reservas - Menú Principal Colaborador",
-        "product-stock": "Habilitar Gestionar Stock - Menú Principal Colaborador"
+        "product-stock": "Habilitar Gestionar Stock - Menú Principal Colaborador",
+        "lead-pipeline": "Habilitar Pipeline de Ventas - Menú Principal Colaborador"
+      },
+      "lead-pipeline": {
+        "view": "Ver Pipeline de Ventas",
+        "add": "Agregar Leads al Pipeline",
+        "edit": "Editar Leads del Pipeline"
       }
     },
     "administrators": {
@@ -8774,6 +8811,329 @@
     "useGroupToKeepElementsUnited": "Use \"Agrupar\" para mantener elementos unidos",
     "selectElementToEdit": "Selecione um elemento para editar",
     "useInsertBarToAddElements": "Use la barra \"Insertar\" para añadir elementos al canvas"
+  },
+  "businessLeadPipeline": {
+    "title": "Pipeline de Ventas",
+    "search": "Buscar por nombre, empresa, email...",
+    "searchPlaceholder": "Buscar por nombre, empresa, email o ID...",
+    "searchLeads": "Buscar Leads",
+    "clearSearch": "Limpiar búsqueda",
+    "filters": "Filtros",
+    "hideFilters": "Ocultar",
+    "filterFromDate": "Fecha Desde",
+    "filterToDate": "Fecha Hasta",
+    "filterByOrigin": "Filtrar por Origen",
+    "allOrigins": "Todos los orígenes",
+    "originReference": "Referencia",
+    "originWebsite": "Sitio Web",
+    "originMarketing": "Publicidad",
+    "originTV": "Televisión",
+    "originRadio": "Radio",
+    "originCall": "Llamada",
+    "originOther": "Otro",
+    "clearFilter": "Limpiar Filtro",
+    "convertToClient": "Convertir a Cliente",
+    "converting": "Convirtiendo...",
+    "convertConfirm": "¿Estás seguro de que quieres convertir este lead a cliente? Esta acción no se puede deshacer.",
+    "convertSuccess": "¡Lead convertido a cliente exitosamente!",
+    "convertedToClient": "Convertido a Cliente",
+    "clientStatus": "Estado de Cliente",
+    "allLeads": "Todos los Leads",
+    "convertedOnly": "Convertidos a Cliente",
+    "notConvertedOnly": "No Convertidos",
+    "filterByClientStatus": "Filtrar por Estado de Cliente",
+    "filterByStatus": "Filtrar por Status",
+    "filterByTime": "Filtrar por Tiempo desde Creación",
+    "filterByTemperature": "Filtrar por Prioridad",
+    "status": "Status",
+    "refresh": "Actualizar",
+    "refreshing": "Actualizando...",
+    "showAll": "Mostrar Todos",
+    "showLimited": "Mostrar Limitado",
+    "noLeads": "Sin Leads",
+    "addContact": "Adicionar Contacto",
+    "convertToClient": "Convertir a Cliente",
+    "convertConfirm": "¿Desea convertir este lead en cliente?",
+    "stages": {
+      "NEW": "Nuevo",
+      "IN_CONTACT": "En Contacto",
+      "WAITLIST": "Lista de Espera",
+      "IN_DEAL": "En Negociación",
+      "CLOSED": "Cerrado",
+      "ARCHIVED": "Archivado"
+    },
+    "status": {
+      "INTERESTED": "Interesado",
+      "REJECTED": "Rechazado",
+      "MAYBE_LATER": "Quizás Después",
+      "SUCCESS": "Éxito"
+    },
+    "temperature": {
+      "QUENTE": "Caliente",
+      "MORNO": "Tibio",
+      "FRIO": "Frío"
+    },
+    "temperatureFrio": "Frío",
+    "temperatureQuente": "Caliente",
+    "temperatureMorno": "Tibio",
+    "temperature": "Temperatura",
+    "createLead": "Crear Lead",
+    "leadDetails": "Detalles del Lead",
+    "edit": "Editar",
+    "leadInfo": "Información del Lead",
+    "contacts": "Contactos",
+    "transitions": "Transiciones",
+    "contactHistory": "Historial de Contactos",
+    "noContacts": "Sin contactos",
+    "noContactsDesc": "Aún no se han registrado contactos para este lead.",
+    "pipelineHistory": "Historial del Pipeline",
+    "noTransitions": "Sin transiciones",
+    "noTransitionsDesc": "Aún no se han registrado transiciones en el pipeline para este lead.",
+    "archiveLead": "Archivar Lead",
+    "archive": "Archivar",
+    "success": "Éxito",
+    "maybeLater": "Tal vez Más Tarde",
+    "noResponse": "Sin Respuesta",
+    "interested": "Interesado",
+    "rejected": "Rechazado",
+    "addLead": "Agregar Lead",
+    "exportCSV": "Exportar CSV",
+    "newLeads": "Nuevos Leads",
+    "noLeadsDesc": "No hay leads en esta etapa",
+    "inContact": "En Contacto",
+    "waitlist": "Lista de Espera",
+    "inDeal": "En Negociación",
+    "closed": "Cerrados",
+    "personalInformation": "Información Personal",
+    "name": "Nombre",
+    "namePlaceholder": "Ingrese el nombre",
+    "lastName": "Apellido",
+    "lastNamePlaceholder": "Ingrese el apellido",
+    "email": "Email",
+    "emailPlaceholder": "Ingrese el email",
+    "phone": "Teléfono",
+    "selectCountry": "Seleccionar País",
+    "phonePlaceholder": "Ingrese el teléfono",
+    "idNumber": "Número de Identificación",
+    "idNumberPlaceholder": "Ingrese el número de identificación",
+    "birthday": "Fecha de Nacimiento",
+    "birthdayPlaceholder": "DD/MM/AAAA",
+    "birthdayFormat": "Formato: DD/MM/AAAA",
+    "businessInformation": "Información Empresarial",
+    "company": "Empresa",
+    "companyPlaceholder": "Ingrese el nombre de la empresa",
+    "addressInformation": "Información de Dirección",
+    "address": "Dirección",
+    "addressPlaceholder": "Ingrese la dirección",
+    "addressCode": "Código Postal",
+    "addressCodePlaceholder": "Ingrese el código postal",
+    "addressComplement": "Complemento de Dirección",
+    "addressComplementPlaceholder": "Departamento, piso, etc.",
+    "additionalInformation": "Información Adicional",
+    "origin": "Origen",
+    "selectOrigin": "Seleccionar Origen",
+    "healthAgreement": "Convenio de Salud",
+    "healthAgreementPlaceholder": "Ingrese el convenio de salud",
+    "code1": "Código 1",
+    "code1Placeholder": "Ingrese el código 1",
+    "code2": "Código 2",
+    "code2Placeholder": "Ingrese el código 2",
+    "code3": "Código 3",
+    "code3Placeholder": "Ingrese el código 3",
+    "message": "Mensaje",
+    "messagePlaceholder": "Ingrese un mensaje o notas adicionales",
+    "product": "Producto de Interés",
+    "selectProduct": "Seleccionar producto (opcional)",
+    "noProductSelected": "Sin producto seleccionado",
+    "unknownProduct": "Producto desconocido",
+    "filterByProduct": "Filtrar por Producto",
+    "allProducts": "Todos los productos",
+    "service": "Servicio de Interés",
+    "selectService": "Seleccionar servicio (opcional)",
+    "noServiceSelected": "Sin servicio seleccionado",
+    "unknownService": "Servicio desconocido",
+    "filterByService": "Filtrar por Servicio",
+    "allServices": "Todos los servicios",
+    "timeIndicator": {
+      "green": "0-3 días (Reciente)",
+      "yellow": "4-7 días (Atención)",
+      "red": "8+ días (Urgente)"
+    },
+    "analytics": {
+      "title": "Analytics y Métricas",
+      "conversionFunnel": "Embudo de Conversión",
+      "keyMetrics": "Indicadores Clave",
+      "totalLeads": "Total de Leads",
+      "conversionRate": "Tasa de Conversión",
+      "avgDays": "Días Promedio",
+      "convertedLeads": "Leads Convertidos",
+      "converted": "Convertidos",
+      "stageDistribution": "Distribución por Etapa",
+      "temperatureDistribution": "Distribución por Temperatura",
+      "funnel": "Embudo",
+      "contacted": "Contactados",
+      "won": "Ganados",
+      "successfulSales": "Ventas Exitosas",
+      "ageDistribution": "Distribución por Edad",
+      "insights": {
+        "title": "Insights y Recomendaciones",
+        "highConversion": "Excelente Tasa de Conversión",
+        "highConversionDesc": "Tu tasa de conversión del {rate}% está por encima del promedio. ¡Sigue así!",
+        "lowConversion": "Tasa de Conversión Baja",
+        "lowConversionDesc": "Tu tasa de conversión del {rate}% necesita atención. Revisa tu proceso de seguimiento.",
+        "fastConversion": "Conversión Rápida",
+        "fastConversionDesc": "Conviertes leads en {days} días promedio. ¡Excelente velocidad!",
+        "slowConversion": "Conversión Lenta",
+        "slowConversionDesc": "Tus leads tardan {days} días en convertir. Considera acelerar el proceso.",
+        "hotLeads": "Muchos Leads Calientes",
+        "hotLeadsDesc": "Tienes {count} leads calientes. ¡Prioriza su atención para maximizar conversiones!",
+        "staleLeads": {
+          "title": "Leads Obsoletos Detectados",
+          "message": "📊 {count} leads ({percent}% de activos) tienen más de 3 meses. Edad promedio: {avgAge} días. Estos leads corren alto riesgo de volverse fríos.",
+          "action": "Priorizar contacto o archivarlos"
+        },
+        "bottleneck": {
+          "title": "Cuello de Botella en Etapa NUEVO",
+          "message": "📊 {count} leads ({percent}% del total) esperan primer contacto. Ratio NUEVO:EN_CONTACTO es {ratio}:1. Esto puede indicar un problema de capacidad.",
+          "action": "Aumentar velocidad de contacto"
+        },
+        "lowConversion": {
+          "title": "Tasa de Conversión Baja",
+          "message": "📊 Tasa de conversión: {rate}% ({wins} ganados / {total} cerrados). Promedio industria: 20-30%. Brecha: {gap}%",
+          "action": "Revisar criterios de calificación y proceso de ventas"
+        },
+        "excellentConversion": {
+          "title": "Excelente Tasa de Conversión",
+          "message": "📊 ¡Tu tasa de conversión es {rate}% ({wins} ganados) — {above}% por encima del promedio industria (25%)!",
+          "action": "Documentar lo que funciona para consistencia"
+        },
+        "noActiveDeals": {
+          "title": "Sin Negocios Activos",
+          "message": "📊 Tienes {contactCount} leads en contacto pero 0 en negociación. Tasa Contacto→Negocio: {contactToDealRate}%. Oportunidad potencial: Convertir al menos 1-2 leads.",
+          "action": "Enfocarse en calificar y mover leads interesados hacia adelante"
+        }
+      },
+      "errors": {
+        "leadIdMissing": "Falta el ID del lead",
+        "nameRequired": "El nombre es obligatorio",
+        "invalidEmail": "Por favor ingrese un email válido",
+        "noLeadSelected": "No hay lead seleccionado",
+        "commentTooShort": "El comentario debe tener al menos 10 caracteres",
+        "contactTypeRequired": "El tipo de contacto es obligatorio",
+        "contactResultRequired": "El resultado del contacto es obligatorio",
+        "updateLead": "Error al actualizar lead",
+        "updateTemperature": "Error al actualizar temperatura",
+        "updateMessage": "Error al actualizar mensaje",
+        "createLead": "Error al crear lead",
+        "loadPipeline": "Error al cargar el pipeline de leads",
+        "leadNotConvertible": "El lead debe estar cerrado con estado de éxito para convertirse en cliente",
+        "leadAlreadyConverted": "El lead ya se convirtió en cliente"
+      },
+      "contactResults": {
+        "interested": "Interesado",
+        "rejected": "Rechazado",
+        "noResponse": "Sin Respuesta",
+        "contactLater": "Contactar Después",
+        "waitingResponse": "Esperando Respuesta"
+      },
+      "csv": {
+        "leadId": "ID Lead",
+        "name": "Nombre",
+        "email": "Email",
+        "phone": "Teléfono",
+        "company": "Empresa",
+        "source": "Origen",
+        "pipelineStage": "Etapa Pipeline",
+        "status": "Estado",
+        "createdAt": "Fecha Creación",
+        "updatedAt": "Fecha Actualización",
+        "lastContactedAt": "Último Contacto",
+        "assignedTo": "Asignado a Usuario ID",
+        "businessId": "ID Negocio",
+        "commerceId": "ID Comercio",
+        "message": "Mensaje",
+        "notes": "Notas",
+        "contactCount": "Total Contactos",
+        "contacts": "Contactos",
+        "transitionCount": "Total Transiciones",
+        "transitions": "Transiciones"
+      }
+    },
+    "source": {
+      "label": "Origen",
+      "manual": "Manual",
+      "website": "Sitio Web",
+      "social": "Redes Sociales",
+      "referral": "Referencia",
+      "advertising": "Publicidad"
+    },
+    "archived": "Archivado",
+    "created": "Creado",
+    "moveToContact": "Mover a En Contacto",
+    "commentPlaceholder": "Ingrese un comentario sobre este contacto...",
+    "saveContact": "Guardar Contacto",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "contactType": "Tipo de Contacto",
+    "contactResult": "Resultado del Contacto",
+    "comment": "Comentario",
+    "dashboard": {
+      "activeLeads": "Leads Activos"
+    },
+    "messages": {
+      "1": {
+        "title": "Sin permisos",
+        "content": "No tienes permisos para ver el Pipeline de Ventas"
+      },
+      "2": {
+        "title": "Sin permisos para agregar",
+        "content": "No tienes permisos para agregar leads al Pipeline"
+      },
+      "3": {
+        "title": "Sin permisos para editar",
+        "content": "No tienes permisos para editar leads en el Pipeline"
+      },
+      "4": {
+        "title": "Sin permisos para convertir",
+        "content": "No tienes permisos para convertir leads a clientes"
+      }
+    },
+    "validationErrors": {
+      "newStageContactOnly": "La etapa NUEVO solo puede moverse mediante creación de contactos",
+      "cannotMoveToNewStage": "No se puede mover leads a la etapa NUEVO",
+      "invalidStageTransition": "Transición de etapa no válida",
+      "readOnlyStage": "La etapa es de solo lectura",
+      "readOnlyTarget": "La etapa de destino es de solo lectura",
+      "closedFromDealOnly": "La etapa CERRADO solo se puede alcanzar desde EN_NEGOCIO mediante arrastre, o desde EN_CONTACTO mediante contacto con resultado RECHAZADO",
+      "noDragDrop": "Esta etapa no se puede mover mediante arrastre"
+    },
+    "insights": {
+      "bottleneck": {
+        "title": "Cuello de Botella en Etapa NUEVO",
+        "message": "📊 {count} leads ({percent}% del total) esperan primer contacto. Ratio NUEVO:EN_CONTACTO es {ratio}:1. Esto puede indicar un problema de capacidad.",
+        "action": "Aumentar velocidad de contacto"
+      },
+      "lowConversion": {
+        "title": "Tasa de Conversión Baja",
+        "message": "📊 Tasa de conversión: {rate}% ({wins} ganados / {total} cerrados). Promedio industria: 20-30%. Brecha: {gap}%",
+        "action": "Revisar criterios de calificación y proceso de ventas"
+      },
+      "staleLeads": {
+        "title": "Leads Obsoletos Detectados",
+        "message": "📊 {count} leads ({percent}% de activos) tienen más de 3 meses. Edad promedio: {avgAge} días. Estos leads corren alto riesgo de volverse fríos.",
+        "action": "Priorizar contacto o archivarlos"
+      },
+      "excellentConversion": {
+        "title": "Excelente Tasa de Conversión",
+        "message": "📊 Tu tasa de conversión es {rate}% ({wins} ganados) — {above}% por encima del promedio de la industria (25%)!",
+        "action": "Documentar lo que funciona para consistencia"
+      },
+      "noActiveDeals": {
+        "title": "Sin Negociaciones Activas",
+        "message": "📊 Tienes {contactCount} leads en contacto pero 0 en negociación. Tasa Contacto→Negocio: {contactToDealRate}%. Oportunidad potencial: Convertir al menos 1-2 leads.",
+        "action": "Enfocar en calificar y avanzar leads interesados"
+      }
+    }
   }
 }
 

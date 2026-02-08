@@ -257,7 +257,6 @@ export default {
         }
       }
 
-
       this.showAttentionCreationModal = true;
     },
     closeAttentionCreationModal() {

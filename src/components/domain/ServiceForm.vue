@@ -91,8 +91,8 @@ export default {
       }
 
       const hasProcedures = service.serviceInfo.procedures && service.serviceInfo.procedures > 1;
-      const hasProceduresList = service.serviceInfo.proceduresList &&
-                                 service.serviceInfo.proceduresList.trim().length > 0;
+      const hasProceduresList =
+        service.serviceInfo.proceduresList && service.serviceInfo.proceduresList.trim().length > 0;
 
       return hasProcedures || hasProceduresList;
     };
@@ -101,9 +101,10 @@ export default {
     const syncCheckboxes = () => {
       nextTick(() => {
         const selectedIds = state.selectedServices.map(s => s.id);
-        const allServices = state.filteredServices && state.filteredServices.length > 0
-          ? state.filteredServices
-          : state.services;
+        const allServices =
+          state.filteredServices && state.filteredServices.length > 0
+            ? state.filteredServices
+            : state.services;
 
         allServices.forEach(svc => {
           const checkbox = document.getElementById(`queue-${svc.id}`);
@@ -118,9 +119,8 @@ export default {
     };
 
     // Check if multiple service selection is allowed
-    const isMultipleSelectionAllowed = () => {
-      return getActiveFeature(commerce.value, 'attention-multiple-service-selection', 'PRODUCT');
-    };
+    const isMultipleSelectionAllowed = () =>
+      getActiveFeature(commerce.value, 'attention-multiple-service-selection', 'PRODUCT');
 
     const checkService = (event, service) => {
       state.validationError = '';
@@ -130,8 +130,9 @@ export default {
         // RULE 1: Services with multiple sessions cannot be combined with others (ALWAYS applies)
         if (hasMultipleSessions(service)) {
           // If service has multiple sessions, deselect all others and select only this one
-          const hadOtherServices = state.selectedServices.length > 0 &&
-                                    !state.selectedServices.some(s => s.id === service.id);
+          const hadOtherServices =
+            state.selectedServices.length > 0 &&
+            !state.selectedServices.some(s => s.id === service.id);
           state.selectedServices = [service];
           if (hadOtherServices) {
             state.validationError = t('commerceQueuesView.multipleSessionsWarning');
@@ -350,10 +351,19 @@ export default {
           </div>
 
           <!-- Validation Error Alert -->
-          <div v-if="state.validationError" class="alert alert-warning alert-dismissible fade show" role="alert">
+          <div
+            v-if="state.validationError"
+            class="alert alert-warning alert-dismissible fade show"
+            role="alert"
+          >
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
             {{ state.validationError }}
-            <button type="button" class="btn-close" @click="state.validationError = ''" aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              @click="state.validationError = ''"
+              aria-label="Close"
+            ></button>
           </div>
 
           <div v-if="state.filteredServices">
@@ -437,9 +447,11 @@ export default {
                   </div>
                   <div class="col">
                     <div class="row queue-time-title col-12">
-                      <label class="form-check-label queue-title fw-bold" :for="`queue-${service.id}`">{{
-                        service.name
-                      }}</label>
+                      <label
+                        class="form-check-label queue-title fw-bold"
+                        :for="`queue-${service.id}`"
+                        >{{ service.name }}</label
+                      >
                     </div>
                     <div class="row queue-time-title col-12">
                       <span>

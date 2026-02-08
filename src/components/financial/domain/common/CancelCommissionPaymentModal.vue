@@ -56,7 +56,11 @@ export default {
           <h5 class="modal-title fw-bold">
             <i class="bi bi-x-circle"></i> {{ $t('commissionPayments.cancelPayment') }}
           </h5>
-          <button type="button" class="btn-close cancel-payment-close-btn" @click="$emit('close')"></button>
+          <button
+            type="button"
+            class="btn-close cancel-payment-close-btn"
+            @click="$emit('close')"
+          ></button>
         </div>
 
         <div class="modal-body cancel-payment-modal-body">

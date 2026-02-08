@@ -775,7 +775,9 @@ export default {
       // Si no hay botón de cierre, usar Bootstrap modal hide
       const modalElement = document.getElementById('addModal');
       if (modalElement) {
-        const modal = window.bootstrap.Modal.getInstance(modalElement) || new window.bootstrap.Modal(modalElement);
+        const modal =
+          window.bootstrap.Modal.getInstance(modalElement) ||
+          new window.bootstrap.Modal(modalElement);
         modal.hide();
         return;
       }
@@ -1967,7 +1969,9 @@ export default {
                   type="button"
                   data-bs-dismiss="modal"
                   aria-label="Close"
-                ><i class="bi bi-x-lg"></i></button>
+                >
+                  <i class="bi bi-x-lg"></i>
+                </button>
               </div>
             </div>
             <div class="modal-body text-center mb-0" id="attentions-component">

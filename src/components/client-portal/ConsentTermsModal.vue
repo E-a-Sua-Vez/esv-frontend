@@ -7,9 +7,13 @@
             <i class="bi bi-file-text"></i>
           </div>
           <div class="modern-modal-title-wrapper">
-            <h5 class="modal-title fw-bold modern-modal-title">{{ $t('clientPortal.consents.terms.title') }}</h5>
+            <h5 class="modal-title fw-bold modern-modal-title">
+              {{ $t('clientPortal.consents.terms.title') }}
+            </h5>
           </div>
-          <button class="modern-modal-close-btn" type="button" @click="$emit('close')"><i class="bi bi-x-lg"></i></button>
+          <button class="modern-modal-close-btn" type="button" @click="$emit('close')">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
       </div>
       <div class="modal-body">

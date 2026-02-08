@@ -469,91 +469,91 @@ export default {
               // Clear previous data immediately
               contentInstance.clients = [];
               contentInstance.counter = 0;
-            contentInstance.totalPages = 0;
+              contentInstance.totalPages = 0;
 
-            // Set flag to skip watch during manual sync
-            contentInstance._skipWatch = true;
+              // Set flag to skip watch during manual sync
+              contentInstance._skipWatch = true;
 
-            // Sync all filter properties - read from filterPropsOverride if provided, otherwise from filterInstance
-            contentInstance.page = 1;
+              // Sync all filter properties - read from filterPropsOverride if provided, otherwise from filterInstance
+              contentInstance.page = 1;
 
-            // Helper function to get value - prioritize override, then filterInstance, then undefined
-            // CRITICAL: Must handle undefined, null, empty string, and false values correctly
-            const getValue = key => {
-              // If override is provided and has the key (even if value is undefined/null), use it
-              if (filterPropsOverride && key in filterPropsOverride) {
-                return filterPropsOverride[key];
-              }
-              // Otherwise, get from filterInstance (which may be undefined)
-              return filterInstance[key];
-            };
-
-            // Helper to normalize string values (empty string -> undefined, trim whitespace)
-            const normalizeString = value => {
-              if (value === null || value === undefined) return undefined;
-              const str = String(value).trim();
-              return str === '' ? undefined : str;
-            };
-
-            // Sync all filter values - EXACTLY as they are in filterInstance
-            // This ensures mobile and desktop use identical filter values
-            contentInstance.daysSinceType = getValue('daysSinceType');
-            contentInstance.daysSinceContacted = getValue('daysSinceContacted');
-            contentInstance.contactResultType = getValue('contactResultType');
-            contentInstance.contactable = getValue('contactable');
-            contentInstance.contacted = getValue('contacted');
-            contentInstance.survey = getValue('survey');
-            // For asc, default to true if undefined (matching mobile behavior)
-            const ascValue = getValue('asc');
-            contentInstance.asc = ascValue !== undefined ? ascValue : true;
-
-            // Normalize searchText - empty string becomes undefined (matching mobile behavior)
-            const searchTextValue = getValue('searchText');
-            contentInstance.searchText = normalizeString(searchTextValue);
-
-            // Normalize queueId and serviceId - empty string becomes undefined
-            const queueIdValue = getValue('queueId');
-            contentInstance.queueId = normalizeString(queueIdValue);
-
-            const serviceIdValue = getValue('serviceId');
-            contentInstance.serviceId = normalizeString(serviceIdValue);
-
-            // Sync date filters - normalize to YYYY-MM-DD format or undefined
-            const startDateValue = getValue('startDate');
-            contentInstance.startDate = normalizeString(startDateValue);
-
-            const endDateValue = getValue('endDate');
-            contentInstance.endDate = normalizeString(endDateValue);
-
-            // Sync client-specific filters
-            contentInstance.pendingControls = getValue('pendingControls');
-            contentInstance.pendingBookings = getValue('pendingBookings');
-            contentInstance.firstAttentionForm = getValue('firstAttentionForm');
-            contentInstance.ratingType = getValue('ratingType');
-            contentInstance.npsType = getValue('npsType');
-
-            // Clear skip flag and refresh
-            contentInstance._skipWatch = false;
-
-            // Force Vue to update the reactive properties
-            nextTick(() => {
-              nextTick(() => {
-                try {
-                  if (contentInstance && contentInstance.refresh) {
-                    contentInstance.refresh(1);
-                  }
-                } finally {
-                  refreshInProgress = false;
+              // Helper function to get value - prioritize override, then filterInstance, then undefined
+              // CRITICAL: Must handle undefined, null, empty string, and false values correctly
+              const getValue = key => {
+                // If override is provided and has the key (even if value is undefined/null), use it
+                if (filterPropsOverride && key in filterPropsOverride) {
+                  return filterPropsOverride[key];
                 }
+                // Otherwise, get from filterInstance (which may be undefined)
+                return filterInstance[key];
+              };
+
+              // Helper to normalize string values (empty string -> undefined, trim whitespace)
+              const normalizeString = value => {
+                if (value === null || value === undefined) return undefined;
+                const str = String(value).trim();
+                return str === '' ? undefined : str;
+              };
+
+              // Sync all filter values - EXACTLY as they are in filterInstance
+              // This ensures mobile and desktop use identical filter values
+              contentInstance.daysSinceType = getValue('daysSinceType');
+              contentInstance.daysSinceContacted = getValue('daysSinceContacted');
+              contentInstance.contactResultType = getValue('contactResultType');
+              contentInstance.contactable = getValue('contactable');
+              contentInstance.contacted = getValue('contacted');
+              contentInstance.survey = getValue('survey');
+              // For asc, default to true if undefined (matching mobile behavior)
+              const ascValue = getValue('asc');
+              contentInstance.asc = ascValue !== undefined ? ascValue : true;
+
+              // Normalize searchText - empty string becomes undefined (matching mobile behavior)
+              const searchTextValue = getValue('searchText');
+              contentInstance.searchText = normalizeString(searchTextValue);
+
+              // Normalize queueId and serviceId - empty string becomes undefined
+              const queueIdValue = getValue('queueId');
+              contentInstance.queueId = normalizeString(queueIdValue);
+
+              const serviceIdValue = getValue('serviceId');
+              contentInstance.serviceId = normalizeString(serviceIdValue);
+
+              // Sync date filters - normalize to YYYY-MM-DD format or undefined
+              const startDateValue = getValue('startDate');
+              contentInstance.startDate = normalizeString(startDateValue);
+
+              const endDateValue = getValue('endDate');
+              contentInstance.endDate = normalizeString(endDateValue);
+
+              // Sync client-specific filters
+              contentInstance.pendingControls = getValue('pendingControls');
+              contentInstance.pendingBookings = getValue('pendingBookings');
+              contentInstance.firstAttentionForm = getValue('firstAttentionForm');
+              contentInstance.ratingType = getValue('ratingType');
+              contentInstance.npsType = getValue('npsType');
+
+              // Clear skip flag and refresh
+              contentInstance._skipWatch = false;
+
+              // Force Vue to update the reactive properties
+              nextTick(() => {
+                nextTick(() => {
+                  try {
+                    if (contentInstance && contentInstance.refresh) {
+                      contentInstance.refresh(1);
+                    }
+                  } finally {
+                    refreshInProgress = false;
+                  }
+                });
               });
-            });
+            }
+          } catch (error) {
+            console.error('Error in refreshClientsContent:', error);
+            refreshInProgress = false;
           }
-        } catch (error) {
-          console.error('Error in refreshClientsContent:', error);
-          refreshInProgress = false;
-        }
+        });
       });
-    });
     };
 
     const refreshAttentionsContent = (filterPropsOverride = null) => {
@@ -1327,10 +1327,19 @@ export default {
               <p><strong>!commerce:</strong> {{ !commerce }}</p>
               <p><strong>commerce value:</strong> {{ JSON.stringify(commerce, null, 2) }}</p>
               <p><strong>state.allCommerces exists:</strong> {{ !!state.allCommerces }}</p>
-              <p><strong>state.allCommerces.length:</strong> {{ state.allCommerces?.length || 'NO LENGTH' }}</p>
-              <p><strong>allCommerces === 0:</strong> {{ state.allCommerces && state.allCommerces.length === 0 }}</p>
-              <p><strong>Full condition result:</strong> {{ !commerce || (state.allCommerces && state.allCommerces.length === 0) }}</p>
-              <br>
+              <p>
+                <strong>state.allCommerces.length:</strong>
+                {{ state.allCommerces?.length || 'NO LENGTH' }}
+              </p>
+              <p>
+                <strong>allCommerces === 0:</strong>
+                {{ state.allCommerces && state.allCommerces.length === 0 }}
+              </p>
+              <p>
+                <strong>Full condition result:</strong>
+                {{ !commerce || (state.allCommerces && state.allCommerces.length === 0) }}
+              </p>
+              <br />
               <p><strong>state.allCommerces content:</strong></p>
               <pre>{{ JSON.stringify(state.allCommerces, null, 2) }}</pre>
             </div>

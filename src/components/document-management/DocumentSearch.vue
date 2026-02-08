@@ -34,9 +34,17 @@
             <div class="filter-row">
               <div class="filter-group compact">
                 <label class="filter-label">{{ $t('documentSearch.category') }}</label>
-                <select v-model="filters.category" @change="applyFilters" class="filter-select compact">
+                <select
+                  v-model="filters.category"
+                  @change="applyFilters"
+                  class="filter-select compact"
+                >
                   <option value="">{{ $t('documentSearch.all') }}</option>
-                  <option v-for="category in categories" :key="category.value" :value="category.value">
+                  <option
+                    v-for="category in categories"
+                    :key="category.value"
+                    :value="category.value"
+                  >
                     {{ category.label }}
                   </option>
                 </select>
@@ -44,10 +52,19 @@
 
               <div class="filter-group compact">
                 <label class="filter-label">{{ $t('documentSearch.urgency') }}</label>
-                <select v-model="filters.urgency" @change="applyFilters" class="filter-select compact">
+                <select
+                  v-model="filters.urgency"
+                  @change="applyFilters"
+                  class="filter-select compact"
+                >
                   <option value="">{{ $t('documentSearch.all') }}</option>
-                  <option v-for="urgency in urgencyLevels" :key="urgency.value" :value="urgency.value">
-                    {{ urgency.label }}</option>
+                  <option
+                    v-for="urgency in urgencyLevels"
+                    :key="urgency.value"
+                    :value="urgency.value"
+                  >
+                    {{ urgency.label }}
+                  </option>
                 </select>
               </div>
             </div>
@@ -102,8 +119,12 @@
 
             <!-- Row 4: Actions -->
             <div class="filter-row">
-              <button @click="clearFilters" class="filter-btn clear-btn">{{ $t('documentSearch.clear') }}</button>
-              <button @click="applyFilters" class="filter-btn apply-btn">{{ $t('documentSearch.apply') }}</button>
+              <button @click="clearFilters" class="filter-btn clear-btn">
+                {{ $t('documentSearch.clear') }}
+              </button>
+              <button @click="applyFilters" class="filter-btn apply-btn">
+                {{ $t('documentSearch.apply') }}
+              </button>
             </div>
           </div>
         </div>
@@ -519,7 +540,7 @@ export default {
 
 .filters-content {
   font-size: 0.8rem;
-  line-height: .9;
+  line-height: 0.9;
   font-weight: 300 !important;
   color: rgba(0, 0, 0, 0.7);
   text-transform: uppercase;

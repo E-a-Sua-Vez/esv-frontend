@@ -979,7 +979,7 @@ export default {
 
 /* Allow tooltips to overflow parent containers */
 .client-row-card {
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
   overflow: visible;
 }
 

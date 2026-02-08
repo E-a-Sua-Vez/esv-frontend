@@ -300,11 +300,13 @@ export default {
           state.graphs['attention-number-evolution'] = true;
         }
       }
-      if (state.calculatedMetrics['attention.created'].durationFlow.datasets.length > 0 &&
-          state.calculatedMetrics['attention.created'].durationFlow.datasets.some(val => {
-            const numVal = typeof val === 'string' ? parseInt(val, 10) : val;
-            return numVal > 0;
-          })) {
+      if (
+        state.calculatedMetrics['attention.created'].durationFlow.datasets.length > 0 &&
+        state.calculatedMetrics['attention.created'].durationFlow.datasets.some(val => {
+          const numVal = typeof val === 'string' ? parseInt(val, 10) : val;
+          return numVal > 0;
+        })
+      ) {
         if (state.toggles['dashboard.attention-duration-evolution.view']) {
           state.graphs['attention-duration-evolution'] = true;
         }
@@ -638,7 +640,9 @@ export default {
               boxWidth: 10,
               borderColor: '#004aad',
               backgroundColor: 'rgba(127, 134, 255, 0.7)',
-              data: (data.datasets || []).map(val => typeof val === 'string' ? parseInt(val, 10) : val),
+              data: (data.datasets || []).map(val =>
+                typeof val === 'string' ? parseInt(val, 10) : val,
+              ),
               fill: false,
               tension: 0.2,
               type: 'bar',

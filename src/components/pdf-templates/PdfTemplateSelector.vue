@@ -281,7 +281,7 @@ onMounted(() => {
   font-size: 0.9375rem;
   color: #2c3e50;
   margin-bottom: 0.375rem;
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 
 .template-description {

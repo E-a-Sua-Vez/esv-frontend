@@ -61,10 +61,7 @@
                     :key="option"
                     class="col-8 mobile-card-wrapper"
                   >
-                    <div
-                      class="menu-card mobile-menu-card"
-                      @click="goToOption(option)"
-                    >
+                    <div class="menu-card mobile-menu-card" @click="goToOption(option)">
                       <div class="card-icon">
                         <i :class="`bi ${getOptionIcon(option)}`"></i>
                       </div>
@@ -144,10 +141,7 @@
                 :key="option"
                 class="col-12 col-md-6 col-lg-4 menu-card-wrapper"
               >
-                <div
-                  class="menu-card"
-                  @click="goToOption(option)"
-                >
+                <div class="menu-card" @click="goToOption(option)">
                   <div class="card-icon">
                     <i :class="`bi ${getOptionIcon(option)}`"></i>
                   </div>

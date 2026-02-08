@@ -82,7 +82,9 @@ export default {
         if (professional.personalInfo) {
           const firstName = professional.personalInfo.firstName || '';
           const lastName = professional.personalInfo.lastName || '';
-          return `${firstName} ${lastName}`.trim() || professional.personalInfo.name || professionalId;
+          return (
+            `${firstName} ${lastName}`.trim() || professional.personalInfo.name || professionalId
+          );
         }
         return professional.name || professionalId;
       }
@@ -255,7 +257,9 @@ export default {
             }}</span>
             <Popper :class="'dark'" arrow disable-click-away hover>
               <template #content>
-                <div>{{ $t('dashboard.outcomeCard.tooltip.outcomeType') || 'Tipo de despesa' }}</div>
+                <div>
+                  {{ $t('dashboard.outcomeCard.tooltip.outcomeType') || 'Tipo de despesa' }}
+                </div>
               </template>
               <span class="badge-mini payment-type" @click.stop>
                 <span v-if="outcome?.type === 'PROFESSIONAL_COMMISSION'" class="badge bg-primary">
@@ -311,7 +315,9 @@ export default {
         <div class="info-section">
           <div class="info-section-header">
             <i class="bi bi-person-badge"></i>
-            <span class="info-section-title">{{ $t('dashboard.outcomeCard.beneficiaryInfo') || 'Informação do Beneficiário' }}</span>
+            <span class="info-section-title">{{
+              $t('dashboard.outcomeCard.beneficiaryInfo') || 'Informação do Beneficiário'
+            }}</span>
           </div>
           <div class="contact-data-grid">
             <div class="client-contact-row">
@@ -320,11 +326,21 @@ export default {
                   <i class="bi bi-person-badge"></i>
                   <span>{{ beneficiaryName }}</span>
                 </div>
-                <div v-if="outcome?.beneficiary && outcome?.type === 'PROFESSIONAL_COMMISSION' && getProfessionalIdNumber(outcome.beneficiary)" class="contact-item-compact">
+                <div
+                  v-if="
+                    outcome?.beneficiary &&
+                    outcome?.type === 'PROFESSIONAL_COMMISSION' &&
+                    getProfessionalIdNumber(outcome.beneficiary)
+                  "
+                  class="contact-item-compact"
+                >
                   <i class="bi bi-person-vcard"></i>
                   <span>{{ formatIdNumber(getProfessionalIdNumber(outcome.beneficiary)) }}</span>
                 </div>
-                <div v-if="outcome?.outcomesTypesName || outcome?.type" class="contact-item-compact">
+                <div
+                  v-if="outcome?.outcomesTypesName || outcome?.type"
+                  class="contact-item-compact"
+                >
                   <i class="bi bi-tag"></i>
                   <span>{{ outcome?.outcomesTypesName || outcome?.type || 'N/I' }}</span>
                 </div>
@@ -347,7 +363,9 @@ export default {
             </span>
 
             <span v-if="outcome?.type" class="info-badge success">
-              <span class="badge-value">{{ $t(`outcomeTypes.${outcome.type}`) || outcome.type }}</span>
+              <span class="badge-value">{{
+                $t(`outcomeTypes.${outcome.type}`) || outcome.type
+              }}</span>
             </span>
 
             <span v-if="outcome?.paymentMethod" class="info-badge">
@@ -380,7 +398,9 @@ export default {
 
             <span v-if="outcome?.paymentType" class="info-badge">
               <span class="badge-label">{{ $t('paymentData.paymentType') }}:</span>
-              <span class="badge-value">{{ $t(`paymentTypes.${outcome.paymentType}`) || outcome.paymentType }}</span>
+              <span class="badge-value">{{
+                $t(`paymentTypes.${outcome.paymentType}`) || outcome.paymentType
+              }}</span>
             </span>
 
             <span v-if="outcome?.code" class="info-badge">
@@ -389,7 +409,9 @@ export default {
             </span>
 
             <span v-if="outcome?.quantity" class="info-badge">
-              <span class="badge-label">{{ $t('paymentData.productQuantity') || 'Quantidade' }}:</span>
+              <span class="badge-label"
+                >{{ $t('paymentData.productQuantity') || 'Quantidade' }}:</span
+              >
               <span class="badge-value">{{ outcome.quantity }}</span>
             </span>
 
@@ -406,14 +428,24 @@ export default {
               </span>
             </span>
 
-            <span v-if="outcome?.beneficiary && outcome?.type === 'PROFESSIONAL_COMMISSION'" class="info-badge">
+            <span
+              v-if="outcome?.beneficiary && outcome?.type === 'PROFESSIONAL_COMMISSION'"
+              class="info-badge"
+            >
               <span class="badge-label">{{ $t('professionals.professional') }}:</span>
               <span class="badge-value">
                 <i class="bi bi-person-badge"></i>
                 {{ getProfessionalName(outcome.beneficiary) }}
               </span>
             </span>
-            <span v-if="outcome?.beneficiary && outcome?.type === 'PROFESSIONAL_COMMISSION' && getProfessionalIdNumber(outcome.beneficiary)" class="info-badge">
+            <span
+              v-if="
+                outcome?.beneficiary &&
+                outcome?.type === 'PROFESSIONAL_COMMISSION' &&
+                getProfessionalIdNumber(outcome.beneficiary)
+              "
+              class="info-badge"
+            >
               <span class="badge-label">{{ $t('professionals.idNumber') || 'ID Number' }}:</span>
               <span class="badge-value">
                 <i class="bi bi-person-vcard"></i>
@@ -433,7 +465,9 @@ export default {
           <div class="info-badges">
             <span v-if="outcome?.commerceName && outcome?.commerceTag" class="info-badge">
               <span class="badge-label">{{ $t('dashboard.commerceData') }}:</span>
-              <span class="badge-value">{{ outcome.commerceName }} - {{ outcome.commerceTag }}</span>
+              <span class="badge-value"
+                >{{ outcome.commerceName }} - {{ outcome.commerceTag }}</span
+              >
             </span>
             <span v-else-if="outcome?.commerceId" class="info-badge">
               <span class="badge-label">{{ $t('dashboard.commerceData') }}:</span>
@@ -452,7 +486,9 @@ export default {
             <div class="metadata-separator">•</div>
             <div class="metadata-item-inline">
               <strong>Date:</strong>
-              <span>{{ formatDate(outcome?.date || outcome?.paymentDate || outcome?.createdAt) }}</span>
+              <span>{{
+                formatDate(outcome?.date || outcome?.paymentDate || outcome?.createdAt)
+              }}</span>
             </div>
             <div v-if="outcome?.paidAt" class="metadata-separator">•</div>
             <div v-if="outcome?.paidAt" class="metadata-item-inline">
@@ -475,7 +511,7 @@ export default {
   background: rgba(255, 255, 255, 0.95);
   padding: 0.5rem 0.625rem;
   margin: 0;
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
   border-radius: 8px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;

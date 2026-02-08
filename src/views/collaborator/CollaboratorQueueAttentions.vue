@@ -166,7 +166,9 @@ export default {
       const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
 
       // Firebase already filters by today and PENDING status, just sort by number
-      const filteredPending = [...pendingList].filter(att => att && ['PENDING', 'CONFIRMED'].includes(att.status));
+      const filteredPending = [...pendingList].filter(
+        att => att && ['PENDING', 'CONFIRMED'].includes(att.status),
+      );
 
       // Sort and create a new array to ensure Vue reactivity
       const sortedPending = [...filteredPending].sort((a, b) => {

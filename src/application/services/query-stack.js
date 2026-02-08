@@ -834,7 +834,11 @@ export const getIncomesDetails = async (
   };
 
   // Only include professionalFilter if it has a value
-  if (professionalFilter !== undefined && professionalFilter !== null && professionalFilter !== '') {
+  if (
+    professionalFilter !== undefined &&
+    professionalFilter !== null &&
+    professionalFilter !== ''
+  ) {
     options.params.professionalFilter = professionalFilter;
   }
 

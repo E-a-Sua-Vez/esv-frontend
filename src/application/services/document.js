@@ -135,8 +135,9 @@ export const getDocumentsByPatientHistory = async patientHistoryId => {
   } catch (error) {
     console.error('Error fetching documents from query stack:', error);
     // Fallback to backend if query stack fails
-    return (await requestBackend.get(`/${entity}/patient-history/${patientHistoryId}`, await getHeaders()))
-      .data;
+    return (
+      await requestBackend.get(`/${entity}/patient-history/${patientHistoryId}`, await getHeaders())
+    ).data;
   }
 };
 
@@ -197,10 +198,17 @@ export const updateDocumentTags = async (documentId, tags) =>
   (await requestBackend.patch(`/${entity}/${documentId}/tags`, { tags }, await getHeaders())).data;
 
 export const updateDocumentCategory = async (documentId, category) =>
-  (await requestBackend.patch(`/${entity}/${documentId}/category`, { category }, await getHeaders())).data;
+  (
+    await requestBackend.patch(
+      `/${entity}/${documentId}/category`,
+      { category },
+      await getHeaders(),
+    )
+  ).data;
 
 export const updateDocumentUrgency = async (documentId, urgency) =>
-  (await requestBackend.patch(`/${entity}/${documentId}/urgency`, { urgency }, await getHeaders())).data;
+  (await requestBackend.patch(`/${entity}/${documentId}/urgency`, { urgency }, await getHeaders()))
+    .data;
 
 export const logDocumentAccess = async (documentId, accessType, userType, ipAddress, userAgent) =>
   (
@@ -231,7 +239,11 @@ export const getDocumentCategories = () => [
   { value: 'MEDICAL_HISTORY', label: 'Historial Médico', icon: 'bi-journal-medical' },
   { value: 'ALLERGIES_MEDICATIONS', label: 'Alergias y Medicamentos', icon: 'bi-capsule' },
   { value: 'BILLING_DOCUMENTS', label: 'Documentos de Facturación', icon: 'bi-receipt' },
-  { value: 'APPOINTMENT_CONFIRMATIONS', label: 'Confirmaciones de Cita', icon: 'bi-calendar-check' },
+  {
+    value: 'APPOINTMENT_CONFIRMATIONS',
+    label: 'Confirmaciones de Cita',
+    icon: 'bi-calendar-check',
+  },
   { value: 'EXTERNAL_REPORTS', label: 'Informes Externos', icon: 'bi-file-earmark-arrow-up' },
   { value: 'PREVIOUS_TREATMENTS', label: 'Tratamientos Previos', icon: 'bi-activity' },
   { value: 'SPECIALIST_REPORTS', label: 'Informes de Especialistas', icon: 'bi-person-hearts' },

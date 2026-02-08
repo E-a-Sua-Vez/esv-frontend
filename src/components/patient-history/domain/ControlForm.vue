@@ -260,10 +260,7 @@ export default {
       <!-- Form Input Section -->
       <div class="form-input-section">
         <div class="form-actions-modern">
-          <button
-            class="btn-add-control"
-            @click="showAdd()"
-          >
+          <button class="btn-add-control" @click="showAdd()">
             <i class="bi bi-plus-circle-fill me-2"></i>
             {{ $t('patientHistoryView.addControl') }}
           </button>
@@ -365,10 +362,7 @@ export default {
             </div>
 
             <div class="form-actions-inline">
-              <button
-                class="btn-save-control"
-                @click="addControl()"
-              >
+              <button class="btn-save-control" @click="addControl()">
                 <i class="bi bi-check-circle-fill me-2"></i>
                 {{ $t('patientHistoryView.add') }}
               </button>

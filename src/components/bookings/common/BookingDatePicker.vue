@@ -468,7 +468,6 @@ export default {
     };
 
     const getAvailableBookingBlocks = bookings => {
-
       let availableBlocks = [];
       let queueBlocks = [];
 

@@ -76,7 +76,7 @@ export default {
       }
 
       // Debounce the refresh by 500ms
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         this._refreshTimeout = setTimeout(async () => {
           try {
             this.loading = true;
@@ -87,70 +87,70 @@ export default {
             let commerceIds = [this.commerce.id];
             if (this.commerces && this.commerces.length > 0) {
               commerceIds = this.commerces.map(commerce => commerce.id);
-        }
-        this.page = page ? page : this.page;
+            }
+            this.page = page ? page : this.page;
 
-        // CRITICAL: Normalize all filter values to ensure consistency between mobile and desktop
-        // Helper to normalize string values (empty string -> undefined, trim whitespace)
-        const normalizeString = value => {
-          if (value === null || value === undefined) return undefined;
-          const str = String(value).trim();
-          return str === '' ? undefined : str;
-        };
+            // CRITICAL: Normalize all filter values to ensure consistency between mobile and desktop
+            // Helper to normalize string values (empty string -> undefined, trim whitespace)
+            const normalizeString = value => {
+              if (value === null || value === undefined) return undefined;
+              const str = String(value).trim();
+              return str === '' ? undefined : str;
+            };
 
-        // Normalize searchText - empty string becomes undefined
-        const searchTextParam = normalizeString(this.searchText);
+            // Normalize searchText - empty string becomes undefined
+            const searchTextParam = normalizeString(this.searchText);
 
-        // Normalize dates - empty string becomes undefined, ensure YYYY-MM-DD format
-        const startDateParam = normalizeString(this.startDate);
-        const endDateParam = normalizeString(this.endDate);
+            // Normalize dates - empty string becomes undefined, ensure YYYY-MM-DD format
+            const startDateParam = normalizeString(this.startDate);
+            const endDateParam = normalizeString(this.endDate);
 
-        // Normalize queueId and serviceId - empty string becomes undefined
-        const queueIdParam = normalizeString(this.queueId);
-        const serviceIdParam = normalizeString(this.serviceId);
+            // Normalize queueId and serviceId - empty string becomes undefined
+            const queueIdParam = normalizeString(this.queueId);
+            const serviceIdParam = normalizeString(this.serviceId);
 
-        this.clients = await getClientsDetails(
-          this.business.id,
-          this.commerce.id,
-          startDateParam,
-          endDateParam,
-          commerceIds,
-          this.page,
-          this.limit,
-          this.daysSinceType,
-          this.daysSinceContacted,
-          this.contactable,
-          this.contacted,
-          searchTextParam,
-          queueIdParam,
-          this.survey,
-          this.asc,
-          this.contactResultType,
-          undefined,
-          serviceIdParam,
-          this.pendingControls,
-          this.pendingBookings,
-          this.firstAttentionForm,
-          this.ratingType,
-          this.npsType
-        );
-        if (this.clients && this.clients.length > 0) {
-          const { counter } = this.clients[0];
-          this.counter = counter;
-          const total = counter / this.limit;
-          const totalB = Math.trunc(total);
-          this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
-        } else {
-          this.clients = [];
-          this.counter = 0;
-          this.totalPages = 0;
-        }
-        this.loading = false;
-        resolve();
-      } catch (error) {
-        this.loading = false;
-        resolve();
-      }
+            this.clients = await getClientsDetails(
+              this.business.id,
+              this.commerce.id,
+              startDateParam,
+              endDateParam,
+              commerceIds,
+              this.page,
+              this.limit,
+              this.daysSinceType,
+              this.daysSinceContacted,
+              this.contactable,
+              this.contacted,
+              searchTextParam,
+              queueIdParam,
+              this.survey,
+              this.asc,
+              this.contactResultType,
+              undefined,
+              serviceIdParam,
+              this.pendingControls,
+              this.pendingBookings,
+              this.firstAttentionForm,
+              this.ratingType,
+              this.npsType
+            );
+            if (this.clients && this.clients.length > 0) {
+              const { counter } = this.clients[0];
+              this.counter = counter;
+              const total = counter / this.limit;
+              const totalB = Math.trunc(total);
+              this.totalPages = totalB <= 0 ? 1 : counter % this.limit === 0 ? totalB : totalB + 1;
+            } else {
+              this.clients = [];
+              this.counter = 0;
+              this.totalPages = 0;
+            }
+            this.loading = false;
+            resolve();
+          } catch (error) {
+            this.loading = false;
+            resolve();
+          }
         }, 500);
       });
     },

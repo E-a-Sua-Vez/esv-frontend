@@ -1614,7 +1614,7 @@ export default {
   font-weight: 600;
   text-align: center;
   color: var(--color-text);
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 
 .template-usage {

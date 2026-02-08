@@ -65,7 +65,9 @@
               <i class="bi bi-download document-icon"></i>
             </div>
             <div class="modern-modal-title-wrapper">
-              <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.downloadModal.title') }}</h5>
+              <h5 class="modal-title fw-bold modern-modal-title">
+                {{ $t('documents.batchOperations.downloadModal.title') }}
+              </h5>
             </div>
           </div>
           <button @click="showBulkDownload = false" class="modern-modal-close-btn" type="button">
@@ -74,7 +76,13 @@
         </div>
 
         <div class="modal-body">
-          <p>{{ $t('documents.batchOperations.downloadModal.question', { count: selectedDocuments.length }) }}</p>
+          <p>
+            {{
+              $t('documents.batchOperations.downloadModal.question', {
+                count: selectedDocuments.length,
+              })
+            }}
+          </p>
 
           <div class="download-options">
             <label class="download-option">
@@ -82,8 +90,12 @@
               <span class="option-content">
                 <i class="bi bi-file-earmark"></i>
                 <div>
-                  <strong>{{ $t('documents.batchOperations.downloadModal.individualFiles') }}</strong>
-                  <small>{{ $t('documents.batchOperations.downloadModal.individualDescription') }}</small>
+                  <strong>{{
+                    $t('documents.batchOperations.downloadModal.individualFiles')
+                  }}</strong>
+                  <small>{{
+                    $t('documents.batchOperations.downloadModal.individualDescription')
+                  }}</small>
                 </div>
               </span>
             </label>
@@ -101,7 +113,9 @@
           </div>
 
           <div class="filename-input" v-if="downloadFormat === 'zip'">
-            <label class="form-label">{{ $t('documents.batchOperations.downloadModal.zipFilenameLabel') }}</label>
+            <label class="form-label">{{
+              $t('documents.batchOperations.downloadModal.zipFilenameLabel')
+            }}</label>
             <input
               v-model="zipFilename"
               type="text"
@@ -112,10 +126,14 @@
         </div>
 
         <div class="modal-actions">
-          <button @click="showBulkDownload = false" class="btn-cancel">{{ $t('documents.batchOperations.cancel') }}</button>
+          <button @click="showBulkDownload = false" class="btn-cancel">
+            {{ $t('documents.batchOperations.cancel') }}
+          </button>
           <button @click="executeBulkDownload" class="btn-confirm" :disabled="bulkLoading">
             <i class="bi bi-download me-2"></i>
-            <span v-if="bulkLoading">{{ $t('documents.batchOperations.downloadModal.downloading') }}</span>
+            <span v-if="bulkLoading">{{
+              $t('documents.batchOperations.downloadModal.downloading')
+            }}</span>
             <span v-else>{{ $t('documents.batchOperations.downloadModal.download') }}</span>
           </button>
         </div>
@@ -131,7 +149,9 @@
               <i class="bi bi-tags document-icon"></i>
             </div>
             <div class="modern-modal-title-wrapper">
-              <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.tagModal.title') }}</h5>
+              <h5 class="modal-title fw-bold modern-modal-title">
+                {{ $t('documents.batchOperations.tagModal.title') }}
+              </h5>
             </div>
           </div>
           <button @click="showBulkTag = false" class="modern-modal-close-btn" type="button">
@@ -181,7 +201,9 @@
 
           <!-- Common tags suggestions -->
           <div class="common-tags" v-if="commonTags.length > 0">
-            <label class="form-label">{{ $t('documents.batchOperations.tagModal.commonTags') }}</label>
+            <label class="form-label">{{
+              $t('documents.batchOperations.tagModal.commonTags')
+            }}</label>
             <div class="tag-suggestions">
               <button
                 v-for="tag in commonTags"
@@ -197,7 +219,9 @@
         </div>
 
         <div class="modal-actions">
-          <button @click="showBulkTag = false" class="btn-cancel">{{ $t('documents.batchOperations.cancel') }}</button>
+          <button @click="showBulkTag = false" class="btn-cancel">
+            {{ $t('documents.batchOperations.cancel') }}
+          </button>
           <button
             @click="executeBulkTag"
             class="btn-confirm"
@@ -220,7 +244,9 @@
               <i class="bi bi-folder document-icon"></i>
             </div>
             <div class="modern-modal-title-wrapper">
-              <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.categoryModal.title') }}</h5>
+              <h5 class="modal-title fw-bold modern-modal-title">
+                {{ $t('documents.batchOperations.categoryModal.title') }}
+              </h5>
             </div>
           </div>
           <button @click="showBulkCategory = false" class="modern-modal-close-btn" type="button">
@@ -229,7 +255,13 @@
         </div>
 
         <div class="modal-body">
-          <p>{{ $t('documents.batchOperations.categoryModal.selectCategory', { count: selectedDocuments.length }) }}</p>
+          <p>
+            {{
+              $t('documents.batchOperations.categoryModal.selectCategory', {
+                count: selectedDocuments.length,
+              })
+            }}
+          </p>
 
           <div class="category-grid">
             <label
@@ -248,14 +280,18 @@
         </div>
 
         <div class="modal-actions">
-          <button @click="showBulkCategory = false" class="btn-cancel">{{ $t('documents.batchOperations.cancel') }}</button>
+          <button @click="showBulkCategory = false" class="btn-cancel">
+            {{ $t('documents.batchOperations.cancel') }}
+          </button>
           <button
             @click="executeBulkCategory"
             class="btn-confirm"
             :disabled="bulkLoading || !bulkCategory"
           >
             <i class="bi bi-folder me-2"></i>
-            <span v-if="bulkLoading">{{ $t('documents.batchOperations.categoryModal.applying') }}</span>
+            <span v-if="bulkLoading">{{
+              $t('documents.batchOperations.categoryModal.applying')
+            }}</span>
             <span v-else>{{ $t('documents.batchOperations.categoryModal.changeCategory') }}</span>
           </button>
         </div>
@@ -271,7 +307,9 @@
               <i class="bi bi-exclamation-triangle document-icon"></i>
             </div>
             <div class="modern-modal-title-wrapper">
-              <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.urgencyModal.title') }}</h5>
+              <h5 class="modal-title fw-bold modern-modal-title">
+                {{ $t('documents.batchOperations.urgencyModal.title') }}
+              </h5>
             </div>
           </div>
           <button @click="showBulkUrgency = false" class="modern-modal-close-btn" type="button">
@@ -281,7 +319,11 @@
 
         <div class="modal-body">
           <p>
-            {{ $t('documents.batchOperations.urgencyModal.selectUrgency', { count: selectedDocuments.length }) }}
+            {{
+              $t('documents.batchOperations.urgencyModal.selectUrgency', {
+                count: selectedDocuments.length,
+              })
+            }}
           </p>
 
           <div class="urgency-options">
@@ -304,14 +346,18 @@
         </div>
 
         <div class="modal-actions">
-          <button @click="showBulkUrgency = false" class="btn-cancel">{{ $t('documents.batchOperations.cancel') }}</button>
+          <button @click="showBulkUrgency = false" class="btn-cancel">
+            {{ $t('documents.batchOperations.cancel') }}
+          </button>
           <button
             @click="executeBulkUrgency"
             class="btn-confirm"
             :disabled="bulkLoading || !bulkUrgency"
           >
             <i class="bi bi-exclamation-triangle me-2"></i>
-            <span v-if="bulkLoading">{{ $t('documents.batchOperations.urgencyModal.applying') }}</span>
+            <span v-if="bulkLoading">{{
+              $t('documents.batchOperations.urgencyModal.applying')
+            }}</span>
             <span v-else>{{ $t('documents.batchOperations.urgencyModal.changeUrgency') }}</span>
           </button>
         </div>
@@ -327,7 +373,9 @@
               <i class="bi bi-trash document-icon"></i>
             </div>
             <div class="modern-modal-title-wrapper">
-              <h5 class="modal-title fw-bold modern-modal-title">{{ $t('documents.batchOperations.deleteModal.title') }}</h5>
+              <h5 class="modal-title fw-bold modern-modal-title">
+                {{ $t('documents.batchOperations.deleteModal.title') }}
+              </h5>
             </div>
           </div>
           <button @click="showBulkDelete = false" class="modern-modal-close-btn" type="button">
@@ -341,10 +389,12 @@
             <div class="warning-content">
               <h4>{{ $t('documents.batchOperations.deleteModal.confirmation') }}</h4>
               <p>
-                {{ $t('documents.batchOperations.deleteModal.warning', {
-                  count: selectedDocuments.length,
-                  document: t('documents.batchOperations.document', selectedDocuments.length)
-                }) }}
+                {{
+                  $t('documents.batchOperations.deleteModal.warning', {
+                    count: selectedDocuments.length,
+                    document: t('documents.batchOperations.document', selectedDocuments.length),
+                  })
+                }}
               </p>
             </div>
           </div>
@@ -358,17 +408,25 @@
               </div>
               <div v-if="selectedDocuments.length > 5" class="delete-item more-items">
                 <i class="bi bi-three-dots"></i>
-                <span>{{ $t('documents.batchOperations.deleteModal.andMore', { count: selectedDocuments.length - 5 }) }}</span>
+                <span>{{
+                  $t('documents.batchOperations.deleteModal.andMore', {
+                    count: selectedDocuments.length - 5,
+                  })
+                }}</span>
               </div>
             </div>
           </div>
         </div>
 
         <div class="modal-actions">
-          <button @click="showBulkDelete = false" class="btn-cancel">{{ $t('documents.batchOperations.cancel') }}</button>
+          <button @click="showBulkDelete = false" class="btn-cancel">
+            {{ $t('documents.batchOperations.cancel') }}
+          </button>
           <button @click="executeBulkDelete" class="btn-delete" :disabled="bulkLoading">
             <i class="bi bi-trash me-2"></i>
-            <span v-if="bulkLoading">{{ $t('documents.batchOperations.deleteModal.deleting') }}</span>
+            <span v-if="bulkLoading">{{
+              $t('documents.batchOperations.deleteModal.deleting')
+            }}</span>
             <span v-else>{{ $t('documents.batchOperations.deleteModal.deleteDocuments') }}</span>
           </button>
         </div>
@@ -443,7 +501,7 @@ export default {
         return t('documents.batchOperations.selectedCount', {
           count: props.selectedDocuments.length,
           document: t('documents.batchOperations.document', props.selectedDocuments.length),
-          selected: t('documents.batchOperations.selected', props.selectedDocuments.length)
+          selected: t('documents.batchOperations.selected', props.selectedDocuments.length),
         });
       } catch (error) {
         return `${props.selectedDocuments.length} documento(s) seleccionado(s)`;
@@ -477,7 +535,12 @@ export default {
         if (downloadFormat.value === 'individual') {
           // Download each file individually
           for (const doc of props.selectedDocuments) {
-            const blob = await getClientDocument(doc.commerceId, doc.clientId, 'patient_documents', doc.name);
+            const blob = await getClientDocument(
+              doc.commerceId,
+              doc.clientId,
+              'patient_documents',
+              doc.name,
+            );
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -604,9 +667,8 @@ export default {
       }
     };
 
-    const getUrgencyDescription = urgency => {
-      return t(`documents.batchOperations.urgencyModal.descriptions.${urgency}`);
-    };
+    const getUrgencyDescription = urgency =>
+      t(`documents.batchOperations.urgencyModal.descriptions.${urgency}`);
 
     return {
       t,
@@ -656,7 +718,7 @@ export default {
   border: 1px solid #e9ecef;
   border-radius: 0.75rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  padding: 0.4rem .5rem;
+  padding: 0.4rem 0.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -674,14 +736,14 @@ export default {
   display: flex;
   align-items: center;
   gap: 1rem;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 
 .selection-count {
   font-weight: 500;
   color: #2c3e50;
   font-size: 0.8rem;
-  line-height: .8rem;
+  line-height: 0.8rem;
   text-align: center;
 }
 
@@ -712,7 +774,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.2rem .5rem;
+  padding: 0.2rem 0.5rem;
   border: none;
   border-radius: 0.5rem;
   font-size: 0.8rem;

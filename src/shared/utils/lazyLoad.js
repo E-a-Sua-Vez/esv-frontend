@@ -105,8 +105,8 @@ async function loadHtml2PdfFromCDN() {
     }
 
     // First load jsPDF
-    const loadJsPDF = () => {
-      return new Promise((resolveJsPDF, rejectJsPDF) => {
+    const loadJsPDF = () =>
+      new Promise((resolveJsPDF, rejectJsPDF) => {
         if (window.jsPDF) {
           resolveJsPDF();
           return;
@@ -134,11 +134,10 @@ async function loadHtml2PdfFromCDN() {
 
         document.head.appendChild(jsPDFScript);
       });
-    };
 
     // Then load html2pdf
-    const loadHtml2PDF = () => {
-      return new Promise((resolveHtml2PDF, rejectHtml2PDF) => {
+    const loadHtml2PDF = () =>
+      new Promise((resolveHtml2PDF, rejectHtml2PDF) => {
         const html2pdfScript = document.createElement('script');
         html2pdfScript.src = 'https://unpkg.com/html2pdf.js@0.9.3/dist/html2pdf.min.js';
         html2pdfScript.async = true;
@@ -162,7 +161,6 @@ async function loadHtml2PdfFromCDN() {
 
         document.head.appendChild(html2pdfScript);
       });
-    };
 
     // Load jsPDF first, then html2pdf
     loadJsPDF()

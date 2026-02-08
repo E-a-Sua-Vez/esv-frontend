@@ -26,6 +26,7 @@ const BusinessPatientHistoryItemAdmin = () =>
 const BusinessFormAdmin = () => import('@/views/business/BusinessFormAdmin.vue');
 const BusinessLgpdConsentAdmin = () => import('@/views/business/BusinessLgpdConsentAdmin.vue');
 const BusinessProfessionalsAdmin = () => import('@/views/business/BusinessProfessionalsAdmin.vue');
+const BusinessLeadPipeline = () => import('@/views/business/BusinessLeadPipeline.vue');
 
 const PrivateCommerceRoutes = [
   {
@@ -42,6 +43,11 @@ const PrivateCommerceRoutes = [
     path: '/interno/negocio/tracing',
     name: 'business-tracing',
     component: BusinessTracing,
+  },
+  {
+    path: '/interno/negocio/lead-pipeline',
+    name: 'business-lead-pipeline',
+    component: BusinessLeadPipeline,
   },
   {
     path: '/interno/negocio/financial',

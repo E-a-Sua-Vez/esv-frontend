@@ -86,10 +86,7 @@ export default {
       <div class="metric-value-section">
         <span class="metric-value">{{ getFormattedValue() }}</span>
       </div>
-      <div
-        v-if="change !== undefined && change !== null"
-        class="metric-change-section"
-      >
+      <div v-if="change !== undefined && change !== null" class="metric-change-section">
         <span class="metric-change" :class="getChangeClass()">
           <i :class="`bi ${getChangeIcon()}`"></i>
           <span>{{ Math.abs(change).toFixed(2) }}%</span>

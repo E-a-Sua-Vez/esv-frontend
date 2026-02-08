@@ -35,7 +35,6 @@ export const addProfessional = async professional =>
   (await requestBackend.post(`/${entity}`, professional, await getHeaders())).data;
 
 export const updateProfessional = async professional => {
-
   // Si hay profilePhoto con File en personalInfo, primero hacer upload separado
   if (
     professional.personalInfo?.profilePhoto &&
@@ -70,7 +69,11 @@ export const updateProfessional = async professional => {
     }
   }
 
-  const result = await requestBackend.patch(`/${entity}/${professional.id}`, professional, await getHeaders());
+  const result = await requestBackend.patch(
+    `/${entity}/${professional.id}`,
+    professional,
+    await getHeaders(),
+  );
 
   return result.data;
 };

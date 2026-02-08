@@ -217,7 +217,8 @@ export default {
         if (!this.booking) return 'client-card-error';
         const status = this.booking?.status;
         if (status === 'CONFIRMED' || status === 'PROCESSED') return 'client-card-success';
-        if (status === 'USER_CANCELED' || status === 'RESERVE_CANCELLED') return 'client-card-error';
+        if (status === 'USER_CANCELED' || status === 'RESERVE_CANCELLED')
+          return 'client-card-error';
         if (status === 'PENDING') return 'client-card-warning';
         return 'client-card-error';
       } catch (error) {
@@ -861,7 +862,7 @@ export default {
   background: rgba(255, 255, 255, 0.95);
   padding: 0.5rem 0.625rem;
   margin: 0.25rem 0.375rem;
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
   border-radius: 8px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;

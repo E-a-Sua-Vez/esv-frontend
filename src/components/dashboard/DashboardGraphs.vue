@@ -333,7 +333,6 @@ export default {
                 id="collapseOne"
                 v-if="showAttentions === true && toggles['dashboard.graphs-attentions.view']"
               >
-
                 <div class="card-body">
                   <!-- attention-number-evolution -->
                   <div
@@ -577,7 +576,11 @@ export default {
                             ><strong> {{ $t('dashboard.items.attentions.graph.3') }} </strong></span
                           >
                         </div>
-                        <BarChart v-if="calculatedMetrics.attentionFlowProps" class="centered" v-bind="calculatedMetrics.attentionFlowProps" />
+                        <BarChart
+                          v-if="calculatedMetrics.attentionFlowProps"
+                          class="centered"
+                          v-bind="calculatedMetrics.attentionFlowProps"
+                        />
                         <div class="col-12 mt-1">
                           <div
                             class="row centered mx-0 my-0"
@@ -685,7 +688,11 @@ export default {
                             ><strong> {{ $t('dashboard.items.attentions.graph.7') }} </strong></span
                           >
                         </div>
-                        <BarChart v-if="calculatedMetrics.surveyFlowProps" class="centered" v-bind="calculatedMetrics.surveyFlowProps" />
+                        <BarChart
+                          v-if="calculatedMetrics.surveyFlowProps"
+                          class="centered"
+                          v-bind="calculatedMetrics.surveyFlowProps"
+                        />
                         <div class="col-12 mt-1">
                           <div
                             class="row centered mx-0 my-0"
@@ -1086,7 +1093,11 @@ export default {
                           >
                         </div>
                         <div class="centered booking-chart-container">
-                          <BarChart v-if="calculatedMetrics.bookingFlowProps" class="centered" v-bind="calculatedMetrics.bookingFlowProps" />
+                          <BarChart
+                            v-if="calculatedMetrics.bookingFlowProps"
+                            class="centered"
+                            v-bind="calculatedMetrics.bookingFlowProps"
+                          />
                         </div>
                         <div class="col-12 mt-1">
                           <div class="booking-status-breakdown">
@@ -1477,8 +1488,6 @@ export default {
 .metric-card-graph:hover::after {
   left: 100%;
 }
-
-
 
 .metric-conclusion {
   padding: 0.75rem;

@@ -184,9 +184,7 @@ export default {
     });
 
     // Computed to check if payment is already confirmed
-    const isPaymentConfirmed = computed(() => {
-      return existingConfirmationData.value?.paid === true;
-    });
+    const isPaymentConfirmed = computed(() => existingConfirmationData.value?.paid === true);
 
     const confirmationMessage = computed(() => {
       if (isPaymentConfirmed.value) {
@@ -197,10 +195,12 @@ export default {
 
         return {
           title: 'Pagamento Confirmado',
-          details: `Confirmado em ${formattedDate}${amount ? ` - ${amount} ${commerce.value?.currency || 'BRL'}` : ''}${method ? ` via ${method}` : ''}`,
+          details: `Confirmado em ${formattedDate}${
+            amount ? ` - ${amount} ${commerce.value?.currency || 'BRL'}` : ''
+          }${method ? ` via ${method}` : ''}`,
           date: formattedDate,
-          amount: amount,
-          method: method
+          amount,
+          method,
         };
       }
       return null;
@@ -526,7 +526,7 @@ export default {
     // Watch for changes in calculated professional commission to update payment commission
     watch(
       calculatedProfessionalCommission,
-      (newCommissionAmount) => {
+      newCommissionAmount => {
         if (newCommissionAmount && newCommissionAmount > 0 && !userEditedPaymentCommission.value) {
           state.newConfirmationData.paymentCommission = newCommissionAmount;
           // Sincronizar con el componente padre
@@ -613,7 +613,8 @@ export default {
       // Asegurar que los datos del profesional se incluyan en confirmationData
       if (professionalId.value) {
         state.newConfirmationData.professionalId = professionalId.value;
-        state.newConfirmationData.professionalCommissionType = professionalCommissionType.value || 'PERCENTAGE';
+        state.newConfirmationData.professionalCommissionType =
+          professionalCommissionType.value || 'PERCENTAGE';
         state.newConfirmationData.professionalCommissionValue = professionalCommission.value;
 
         // Calcular professionalCommissionAmount basado en paymentAmount
@@ -1168,7 +1169,11 @@ export default {
                     @change="sendData"
                     id="types"
                   >
-                    <option v-for="typ in state.paymentFicalNoteTypes" :key="typ.name" :value="typ.id">
+                    <option
+                      v-for="typ in state.paymentFicalNoteTypes"
+                      :key="typ.name"
+                      :value="typ.id"
+                    >
                       {{ $t(`paymentFiscalNotes.${typ.name}`) }}
                     </option>
                   </select>
@@ -1308,15 +1313,22 @@ export default {
                       <span class="professional-name">{{ professionalName }}</span>
                       <span v-if="professionalCommission" class="suggested-commission">
                         Comisión Asignada:
-                        <strong>{{ professionalCommission }}{{ professionalCommissionType === 'PERCENTAGE' ? '%' : ' BRL' }}</strong>
+                        <strong
+                          >{{ professionalCommission
+                          }}{{ professionalCommissionType === 'PERCENTAGE' ? '%' : ' BRL' }}</strong
+                        >
                       </span>
                       <span
-                        v-if="calculatedProfessionalCommission && state.newConfirmationData.paymentAmount"
+                        v-if="
+                          calculatedProfessionalCommission &&
+                          state.newConfirmationData.paymentAmount
+                        "
                         class="calculated-commission"
                       >
                         {{ $t('professionals.calculatedAmount') || 'Monto Calculado' }}:
                         <strong
-                          >{{ calculatedProfessionalCommission }} {{ commerce?.currency || 'BRL' }}</strong
+                          >{{ calculatedProfessionalCommission }}
+                          {{ commerce?.currency || 'BRL' }}</strong
                         >
                       </span>
                     </div>
@@ -1528,7 +1540,7 @@ export default {
   border-radius: 0.25rem;
 }
 
-.form-check-input[type="checkbox"]:checked {
+.form-check-input[type='checkbox']:checked {
   background-color: #0d6efd;
   border-color: #0d6efd;
 }
@@ -1539,7 +1551,7 @@ export default {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280,0,0,.25%29'/%3e%3c/svg%3e");
   background-position: left center;
   border-radius: 2em;
-  transition: background-position .15s ease-in-out;
+  transition: background-position 0.15s ease-in-out;
   background-color: #fff !important;
   border-color: rgba(0, 0, 0, 0.25) !important;
 }
@@ -1563,7 +1575,9 @@ export default {
   background-size: contain !important;
 }
 
-.payment-form-field.payment-form-switch .form-switch .form-check-input.payment-switch-input:checked {
+.payment-form-field.payment-form-switch
+  .form-switch
+  .form-check-input.payment-switch-input:checked {
   background-color: #0d6efd !important;
   border-color: #0d6efd !important;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;

@@ -60,24 +60,24 @@ export default {
 
         // Fetch all incomes for the period and professional
         const allIncomes = await getIncomesDetails(
-          props.business.id,                    // businessId
-          props.commerce.id,                    // commerceId
-          periodFrom || '2020-01-01',           // from
+          props.business.id, // businessId
+          props.commerce.id, // commerceId
+          periodFrom || '2020-01-01', // from
           periodTo || new Date().toISOString().split('T')[0], // to
-          [props.commerce.id],                   // commerceIds
-          1,                                     // page
-          10000,                                 // limit (large limit to get all incomes)
-          undefined,                             // searchText
-          true,                                  // asc
-          undefined,                             // incomeStatus
-          undefined,                             // fiscalNote
-          undefined,                             // automatic
-          undefined,                             // commissionPaid
-          undefined,                             // minAmount
-          undefined,                             // maxAmount
-          undefined,                             // incomeTypeFilter
-          undefined,                             // paymentMethodFilter
-          props.payment.professionalId          // professionalFilter
+          [props.commerce.id], // commerceIds
+          1, // page
+          10000, // limit (large limit to get all incomes)
+          undefined, // searchText
+          true, // asc
+          undefined, // incomeStatus
+          undefined, // fiscalNote
+          undefined, // automatic
+          undefined, // commissionPaid
+          undefined, // minAmount
+          undefined, // maxAmount
+          undefined, // incomeTypeFilter
+          undefined, // paymentMethodFilter
+          props.payment.professionalId // professionalFilter
         );
 
         // Filter to only include incomes that are in the payment's incomeIds
@@ -127,7 +127,7 @@ export default {
     // Watch autoExpand prop to auto-load details when component is shown in expanded row
     watch(
       () => props.autoExpand,
-      (newVal) => {
+      newVal => {
         if (newVal) {
           showDetails.value = true;
           // Small delay to ensure component is fully mounted
@@ -142,7 +142,7 @@ export default {
     // Watch showDetails to load when it becomes true
     watch(
       () => showDetails.value,
-      (newVal) => {
+      newVal => {
         if (newVal && incomeDetails.value.length === 0 && !loadingIncomes.value) {
           loadIncomeDetails();
         }
@@ -212,8 +212,14 @@ export default {
     <div class="row align-items-center mb-3">
       <div class="col-md-6">
         <div class="d-flex align-items-center gap-2 mb-2">
-          <div class="commission-icon-container" :class="{ 'commission-paid-icon': payment.status === 'PAID' }">
-            <i class="bi" :class="payment.status === 'PAID' ? 'bi-check-circle-fill' : 'bi-person-badge'"></i>
+          <div
+            class="commission-icon-container"
+            :class="{ 'commission-paid-icon': payment.status === 'PAID' }"
+          >
+            <i
+              class="bi"
+              :class="payment.status === 'PAID' ? 'bi-check-circle-fill' : 'bi-person-badge'"
+            ></i>
           </div>
           <div>
             <h5 class="mb-0 commission-professional-name">
@@ -224,15 +230,20 @@ export default {
                 {{ $t(`commissionPayments.status.${payment.status}`) }}
               </span>
               <span v-if="payment.status === 'PAID'" class="badge bg-success commission-paid-badge">
-                <i class="bi bi-check-circle"></i> {{ $t('commissionPayments.commissionPaid') || 'Comissão Paga' }}
+                <i class="bi bi-check-circle"></i>
+                {{ $t('commissionPayments.commissionPaid') || 'Comissão Paga' }}
               </span>
             </div>
           </div>
         </div>
       </div>
       <div class="col-md-6 text-end">
-        <h3 class="text-success mb-0 commission-total">${{ formatCurrency(payment.totalCommission) }}</h3>
-        <small class="text-muted commission-label">{{ $t('commissionPayments.totalCommission') }}</small>
+        <h3 class="text-success mb-0 commission-total">
+          ${{ formatCurrency(payment.totalCommission) }}
+        </h3>
+        <small class="text-muted commission-label">{{
+          $t('commissionPayments.totalCommission')
+        }}</small>
       </div>
     </div>
 
@@ -256,7 +267,9 @@ export default {
       <div class="col-md-3">
         <div class="commission-info-item">
           <small class="commission-info-label">{{ $t('commissionPayments.totalAmount') }}</small>
-          <p class="mb-0 commission-info-value fw-bold">${{ formatCurrency(payment.totalAmount) }}</p>
+          <p class="mb-0 commission-info-value fw-bold">
+            ${{ formatCurrency(payment.totalAmount) }}
+          </p>
         </div>
       </div>
       <div class="col-md-3">
@@ -284,19 +297,27 @@ export default {
           <div class="row g-3">
             <div class="col-md-3">
               <div class="commission-info-item">
-                <strong class="commission-info-label">{{ $t('commissionPayments.paidAt') }}:</strong>
+                <strong class="commission-info-label"
+                  >{{ $t('commissionPayments.paidAt') }}:</strong
+                >
                 <span class="commission-info-value">{{ formatDate(payment.paidAt) }}</span>
               </div>
             </div>
             <div class="col-md-3">
               <div class="commission-info-item">
-                <strong class="commission-info-label">{{ $t('commissionPayments.paymentMethod') }}:</strong>
-                <span class="commission-info-value">{{ $t(`paymentClientMethods.${payment.paymentMethod}`) }}</span>
+                <strong class="commission-info-label"
+                  >{{ $t('commissionPayments.paymentMethod') }}:</strong
+                >
+                <span class="commission-info-value">{{
+                  $t(`paymentClientMethods.${payment.paymentMethod}`)
+                }}</span>
               </div>
             </div>
             <div v-if="payment.paymentNotes" class="col-md-3">
               <div class="commission-info-item">
-                <strong class="commission-info-label">{{ $t('commissionPayments.paymentNotes') }}:</strong>
+                <strong class="commission-info-label"
+                  >{{ $t('commissionPayments.paymentNotes') }}:</strong
+                >
                 <span class="commission-info-value">{{ payment.paymentNotes }}</span>
               </div>
             </div>
@@ -312,13 +333,17 @@ export default {
           <div class="row g-3">
             <div class="col-md-6">
               <div class="commission-info-item">
-                <strong class="commission-info-label">{{ $t('commissionPayments.cancelledAt') }}:</strong>
+                <strong class="commission-info-label"
+                  >{{ $t('commissionPayments.cancelledAt') }}:</strong
+                >
                 <span class="commission-info-value">{{ formatDate(payment.cancelledAt) }}</span>
               </div>
             </div>
             <div class="col-md-6">
               <div class="commission-info-item">
-                <strong class="commission-info-label">{{ $t('commissionPayments.cancellationReason') }}:</strong>
+                <strong class="commission-info-label"
+                  >{{ $t('commissionPayments.cancellationReason') }}:</strong
+                >
                 <span class="commission-info-value">{{ payment.cancellationReason }}</span>
               </div>
             </div>
@@ -331,7 +356,10 @@ export default {
     <div class="row mt-3">
       <div class="col-12">
         <div class="commission-actions-group">
-          <button @click="toggleDetails" class="btn btn-sm btn-size fw-bold btn-outline-primary rounded-pill px-3">
+          <button
+            @click="toggleDetails"
+            class="btn btn-sm btn-size fw-bold btn-outline-primary rounded-pill px-3"
+          >
             <i class="bi" :class="showDetails ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
             {{
               showDetails
@@ -369,9 +397,18 @@ export default {
             class="btn btn-sm btn-size fw-bold btn-outline-primary rounded-pill px-3"
             :disabled="downloadingPdf"
           >
-            <span v-if="downloadingPdf" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            <span
+              v-if="downloadingPdf"
+              class="spinner-border spinner-border-sm me-1"
+              role="status"
+              aria-hidden="true"
+            ></span>
             <i v-else class="bi bi-file-earmark-pdf-fill"></i>
-            {{ downloadingPdf ? $t('commissionPayments.downloading') : $t('commissionPayments.downloadPdf') }}
+            {{
+              downloadingPdf
+                ? $t('commissionPayments.downloading')
+                : $t('commissionPayments.downloadPdf')
+            }}
           </button>
         </div>
       </div>
@@ -396,7 +433,9 @@ export default {
               <div class="spinner-border spinner-border-sm text-primary" role="status">
                 <span class="visually-hidden">Carregando...</span>
               </div>
-              <small class="d-block mt-2 text-muted">{{ $t('commissionPayments.loading') || 'Carregando receitas...' }}</small>
+              <small class="d-block mt-2 text-muted">{{
+                $t('commissionPayments.loading') || 'Carregando receitas...'
+              }}</small>
             </div>
 
             <!-- Income Details Table -->
@@ -404,7 +443,7 @@ export default {
               <table class="table table-sm table-hover">
                 <thead>
                   <tr>
-                    <th style="width: 80px;">#</th>
+                    <th style="width: 80px">#</th>
                     <th>{{ $t('commissionPayments.date') }}</th>
                     <th>{{ $t('commissionPayments.type') }}</th>
                     <th>{{ $t('client') || $t('commissionPayments.client') || 'Cliente' }}</th>
@@ -416,7 +455,9 @@ export default {
                   <tr v-for="(income, index) in incomeDetails" :key="income.id">
                     <td class="text-muted">{{ index + 1 }}</td>
                     <td>
-                      <small>{{ formatDate(income.paidAt || income.createdDate || income.paymentDate) }}</small>
+                      <small>{{
+                        formatDate(income.paidAt || income.createdDate || income.paymentDate)
+                      }}</small>
                     </td>
                     <td>
                       <span class="badge bg-info">
@@ -433,7 +474,15 @@ export default {
                     </td>
                     <td class="text-end text-success fw-bold">
                       ${{ formatCurrency(income.professionalCommission) }}
-                      <i v-if="income?.commissionPaid === true || income?.commissionPaid === 'true' || income?.commissionPaid === 1" class="bi bi-check-circle-fill text-success ms-2" :title="$t('commissionPayments.commissionPaid')"></i>
+                      <i
+                        v-if="
+                          income?.commissionPaid === true ||
+                          income?.commissionPaid === 'true' ||
+                          income?.commissionPaid === 1
+                        "
+                        class="bi bi-check-circle-fill text-success ms-2"
+                        :title="$t('commissionPayments.commissionPaid')"
+                      ></i>
                     </td>
                   </tr>
                 </tbody>
@@ -443,10 +492,24 @@ export default {
                       {{ $t('commissionPayments.totalAmount') }}:
                     </td>
                     <td class="text-end fw-bold">
-                      ${{ formatCurrency(incomeDetails.reduce((sum, inc) => sum + (parseFloat(inc.totalAmount || inc.amount || 0)), 0)) }}
+                      ${{
+                        formatCurrency(
+                          incomeDetails.reduce(
+                            (sum, inc) => sum + parseFloat(inc.totalAmount || inc.amount || 0),
+                            0
+                          )
+                        )
+                      }}
                     </td>
                     <td class="text-end text-success fw-bold">
-                      ${{ formatCurrency(incomeDetails.reduce((sum, inc) => sum + (parseFloat(inc.professionalCommission || 0)), 0)) }}
+                      ${{
+                        formatCurrency(
+                          incomeDetails.reduce(
+                            (sum, inc) => sum + parseFloat(inc.professionalCommission || 0),
+                            0
+                          )
+                        )
+                      }}
                     </td>
                   </tr>
                 </tfoot>
@@ -458,7 +521,10 @@ export default {
               <div class="alert alert-warning mb-2">
                 <small>
                   <i class="bi bi-exclamation-triangle"></i>
-                  {{ $t('commissionPayments.incomeDetailsNotAvailable') || 'Detalhes das receitas não disponíveis. Tentando carregar...' }}
+                  {{
+                    $t('commissionPayments.incomeDetailsNotAvailable') ||
+                    'Detalhes das receitas não disponíveis. Tentando carregar...'
+                  }}
                 </small>
               </div>
               <span
@@ -474,7 +540,8 @@ export default {
                   class="btn btn-sm btn-outline-primary"
                   :disabled="loadingIncomes"
                 >
-                  <i class="bi bi-arrow-clockwise"></i> {{ $t('commissionPayments.retry') || 'Tentar Novamente' }}
+                  <i class="bi bi-arrow-clockwise"></i>
+                  {{ $t('commissionPayments.retry') || 'Tentar Novamente' }}
                 </button>
               </div>
             </div>

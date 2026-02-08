@@ -446,7 +446,7 @@ export default {
   font-size: 0.9rem;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.7);
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 
 .summary-value-section {

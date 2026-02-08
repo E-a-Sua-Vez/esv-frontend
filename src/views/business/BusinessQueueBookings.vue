@@ -456,7 +456,7 @@ export default {
               </div>
             </div>
           </div>
-      </div>
+        </div>
       </div>
     </div>
 
@@ -647,8 +647,12 @@ export default {
                   <i class="bi bi-calendar-check-fill"></i>
                 </div>
                 <div class="modern-modal-title-wrapper">
-                  <h5 class="modal-title fw-bold modern-modal-title">Agenda {{ commerce && commerce.name ? commerce.name : '' }}</h5>
-                  <p class="modern-modal-client-name">{{ commerce && commerce.tag ? commerce.tag : '' }}</p>
+                  <h5 class="modal-title fw-bold modern-modal-title">
+                    Agenda {{ commerce && commerce.name ? commerce.name : '' }}
+                  </h5>
+                  <p class="modern-modal-client-name">
+                    {{ commerce && commerce.tag ? commerce.tag : '' }}
+                  </p>
                 </div>
                 <button
                   id="close-modal"
@@ -656,7 +660,9 @@ export default {
                   type="button"
                   data-bs-dismiss="modal"
                   aria-label="Close"
-                ><i class="bi bi-x-lg"></i></button>
+                >
+                  <i class="bi bi-x-lg"></i>
+                </button>
               </div>
             </div>
             <Spinner :show="loading"></Spinner>

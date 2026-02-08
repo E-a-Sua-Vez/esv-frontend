@@ -119,7 +119,7 @@ export default {
         template =>
           template.section === props.section &&
           (!template.documentType || template.documentType === props.documentType),
-      )
+      ),
     );
 
     const selectTemplate = templateId => {
@@ -299,7 +299,7 @@ export default {
   font-size: 0.875rem;
   color: var(--color-text, #212529);
   margin-bottom: 0.25rem;
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 
 .template-description {

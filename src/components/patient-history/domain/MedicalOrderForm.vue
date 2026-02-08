@@ -453,7 +453,6 @@ export default {
           text: state.newMedicalOrder?.medicalOrder || '',
         };
 
-
         if (typeof receiveData === 'function') {
           receiveData(data);
         } else {

@@ -52,7 +52,10 @@
             <i :class="fileIconClass"></i>
           </div>
           <div class="file-info">
-            <span class="file-name" :title="selectedFile.name">{{ getFileExtension(selectedFile.name).toUpperCase() }} • {{ formatFileSize(selectedFile.size) }}</span>
+            <span class="file-name" :title="selectedFile.name"
+              >{{ getFileExtension(selectedFile.name).toUpperCase() }} •
+              {{ formatFileSize(selectedFile.size) }}</span
+            >
           </div>
           <button
             v-if="!disabled"
@@ -263,9 +266,7 @@ export default {
       return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
     };
 
-    const getFileExtension = fileName => {
-      return fileName.split('.').pop().toLowerCase();
-    };
+    const getFileExtension = fileName => fileName.split('.').pop().toLowerCase();
 
     return {
       dropZone,
@@ -305,7 +306,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: .5rem;
+  padding: 0.5rem;
 }
 
 .drag-drop-zone:hover:not(.is-disabled):not(.has-file) {
@@ -328,7 +329,7 @@ export default {
   border-style: solid;
   background: linear-gradient(135deg, rgba(40, 167, 69, 0.02) 0%, rgba(40, 167, 69, 0.05) 100%);
   min-height: auto;
-  padding: .5rem;
+  padding: 0.5rem;
 }
 
 .drag-drop-zone.is-disabled {
@@ -435,8 +436,8 @@ export default {
 .file-preview-content {
   display: flex;
   align-items: center;
-  gap: .5rem;
-  padding: .5rem;
+  gap: 0.5rem;
+  padding: 0.5rem;
   background: rgba(255, 255, 255, 0.8);
   border-radius: 0.75rem;
   border: 1px solid rgba(0, 0, 0, 0.08);

@@ -352,7 +352,6 @@ export default {
     const goToCreateBooking = () => {
       // If we have client data, use the modal instead of redirecting
       if (state.client && state.client.id) {
-
         // Use the modal with client data
         const options = {};
 
@@ -1116,10 +1115,8 @@ export default {
           state.errorsSearch.push('dashboard.validate.search');
           state.searchTextError = true;
         } else {
-
           // Get businessId from commerce or store as fallback
           const businessId = commerce.value?.businessId || store.getCurrentBusiness?.id;
-
 
           // Validate required parameters
           if (!businessId) {
@@ -1156,8 +1153,6 @@ export default {
             true, // asc
             null // contactResultType
           );
-
-
 
           if (result && result.length > 0) {
             state.client = result[0];
@@ -1696,7 +1691,6 @@ export default {
     };
 
     const handleBookingUpdated = async updatedBooking => {
-
       // Update the selected booking with the new data
       if (updatedBooking && updatedBooking.id === state.selectedBooking?.id) {
         state.selectedBooking = { ...updatedBooking };
@@ -1744,7 +1738,6 @@ export default {
           month: new Date().getMonth(),
           year: new Date().getFullYear(),
         });
-
       } catch (error) {
         console.error('📅 BookingCalendar - Error refreshing calendar:', error);
       }
@@ -1776,7 +1769,6 @@ export default {
 
     // New method to open attention drawer with client data (for "Criar uma Reserva" button)
     const openAttentionDrawerWithClient = (clientData, options = {}) => {
-
       const { queue = null, date = null, block = null } = options;
 
       // Set client data
@@ -1857,7 +1849,11 @@ export default {
       }
 
       // Reopen the booking calendar drawer if it was open before (only if drawerOpen exists in state)
-      if (state.hasOwnProperty('drawerWasOpen') && state.drawerWasOpen && state.hasOwnProperty('drawerOpen')) {
+      if (
+        state.hasOwnProperty('drawerWasOpen') &&
+        state.drawerWasOpen &&
+        state.hasOwnProperty('drawerOpen')
+      ) {
         state.drawerOpen = true;
         state.drawerWasOpen = false;
       }
@@ -1883,7 +1879,6 @@ export default {
     };
 
     const handleAttentionCreated = async attention => {
-
       // Close the drawer first
       closeAttentionDrawer();
 
@@ -1916,7 +1911,6 @@ export default {
           const pages = [{ id: `${year}-${month}-01` }];
           await getAvailableDatesByCalendarMonth(pages);
         }
-
       }
     };
 
@@ -2979,7 +2973,7 @@ export default {
 .booking-details-modal-content input,
 .modal-body input,
 input.form-control,
-input[ref="commissionInputRef"] {
+input[ref='commissionInputRef'] {
   pointer-events: auto !important;
   user-select: text !important;
   cursor: text !important;
@@ -3446,7 +3440,7 @@ input[ref="commissionInputRef"] {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 
 .queue-selector-btn:hover {
@@ -3982,7 +3976,6 @@ input[ref="commissionInputRef"] {
 .client-action-btn i {
   font-size: 0.875rem;
 }
-
 </style>
 
 <style>

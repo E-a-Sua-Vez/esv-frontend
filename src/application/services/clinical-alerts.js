@@ -27,24 +27,24 @@ export const getAlertsByClient = async (commerceId, clientId, activeOnly = true)
   }
 
   // Crear nueva petición
-  const requestPromise = requestBackend.get(
-    `/${entity}/client/${commerceId}/${clientId}${params}`,
-    await getHeaders()
-  ).then(response => {
-    const data = response.data;
-    // Guardar en cache
-    alertsCache.set(cacheKey, {
-      data,
-      timestamp: Date.now()
+  const requestPromise = requestBackend
+    .get(`/${entity}/client/${commerceId}/${clientId}${params}`, await getHeaders())
+    .then(response => {
+      const data = response.data;
+      // Guardar en cache
+      alertsCache.set(cacheKey, {
+        data,
+        timestamp: Date.now(),
+      });
+      // Eliminar de peticiones pendientes
+      pendingRequests.delete(cacheKey);
+      return data;
+    })
+    .catch(error => {
+      // Eliminar de peticiones pendientes en caso de error
+      pendingRequests.delete(cacheKey);
+      throw error;
     });
-    // Eliminar de peticiones pendientes
-    pendingRequests.delete(cacheKey);
-    return data;
-  }).catch(error => {
-    // Eliminar de peticiones pendientes en caso de error
-    pendingRequests.delete(cacheKey);
-    throw error;
-  });
 
   // Guardar petición pendiente
   pendingRequests.set(cacheKey, requestPromise);

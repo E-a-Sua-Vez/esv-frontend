@@ -55,9 +55,9 @@ export default {
       menuIcons: {
         'queue-manage': 'bi-list-check',
         'booking-manage': 'bi-calendar-check',
-        'tracing': 'bi-search',
+        tracing: 'bi-search',
         'product-stock': 'bi-box-seam',
-        'dashboard': 'bi-speedometer2',
+        dashboard: 'bi-speedometer2',
         'go-minisite': 'bi-globe',
         'client-portal': 'bi-person-circle',
       },
@@ -236,7 +236,9 @@ export default {
                 <!-- Main menu options (including portal and minisite) -->
                 <div class="row col-12">
                   <div
-                    v-for="option in state.collaboratorOptions.filter(opt => opt !== 'go-minisite' && opt !== 'client-portal')"
+                    v-for="option in state.collaboratorOptions.filter(
+                      opt => opt !== 'go-minisite' && opt !== 'client-portal'
+                    )"
                     :key="option"
                     class="col-6 centered mobile-card-wrapper"
                   >
@@ -346,7 +348,9 @@ export default {
             <!-- Main menu options (excluding portal and minisite) -->
             <div class="row menu-cards-grid">
               <div
-                v-for="option in state.collaboratorOptions.filter(opt => opt !== 'go-minisite' && opt !== 'client-portal')"
+                v-for="option in state.collaboratorOptions.filter(
+                  opt => opt !== 'go-minisite' && opt !== 'client-portal'
+                )"
                 :key="option"
                 class="col-12 col-md-6 col-lg-4 menu-card-wrapper"
               >

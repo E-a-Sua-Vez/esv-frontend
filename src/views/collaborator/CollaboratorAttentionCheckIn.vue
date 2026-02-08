@@ -900,7 +900,11 @@ export default {
                 const groupedQueues = await getGroupedQueueByCommerceId(state.commerce.id);
                 state.commerce.queues = Object.values(groupedQueues).flat();
               } catch (error) {
-                console.warn('❌ Failed to load queues for check-in commerce:', state.commerce.id, error);
+                console.warn(
+                  '❌ Failed to load queues for check-in commerce:',
+                  state.commerce.id,
+                  error,
+                );
               }
             }
           } else {

@@ -133,7 +133,6 @@ export default {
         return;
       }
 
-
       if (field === 'general') {
         const currentText = state.newPatientAnamnese.habits || '';
         const newText =
@@ -165,7 +164,6 @@ export default {
 
         // Update habitsDetails to trigger reactivity
         state.newPatientAnamnese.habitsDetails = { ...state.habitsAux };
-
       }
 
       sendData();
@@ -1160,10 +1158,7 @@ export default {
             <span class="recording-dot"></span>
             <span class="ms-2">{{ $t('patientHistoryView.recordingMessage') }}</span>
           </div>
-          <div
-            v-if="speechError && isListeningForField(null)"
-            class="speech-error-indicator"
-          >
+          <div v-if="speechError && isListeningForField(null)" class="speech-error-indicator">
             <i class="bi bi-exclamation-triangle me-1"></i>
             {{ speechError }}
           </div>

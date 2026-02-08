@@ -397,14 +397,16 @@ export default {
     handleOpenAttentionModalFromPackage(data) {
       // Check if this is a request to show attention details (not create new)
       if (data.mode === 'details' && data.attention) {
-
         // Hide packages modal temporarily
         this.hidePackagesModal();
 
         // Wait a bit for the packages modal to close
         setTimeout(() => {
           // Call the openAttentionModal method directly on ClientAttentionsManagement
-          if (this.$refs.attentionsManagementRef && this.$refs.attentionsManagementRef.openAttentionModal) {
+          if (
+            this.$refs.attentionsManagementRef &&
+            this.$refs.attentionsManagementRef.openAttentionModal
+          ) {
             this.$refs.attentionsManagementRef.openAttentionModal(data.attention);
 
             // Listen for when the attention details modal closes to restore packages modal
@@ -456,14 +458,16 @@ export default {
     },
 
     handleOpenBookingModalFromPackage(booking) {
-
       // Hide packages modal temporarily
       this.hidePackagesModal();
 
       // Wait a bit for the packages modal to close
       setTimeout(() => {
         // Call the openBookingDetailsModal method directly on ClientBookingsManagement
-        if (this.$refs.bookingsManagementRef && this.$refs.bookingsManagementRef.openBookingDetailsModal) {
+        if (
+          this.$refs.bookingsManagementRef &&
+          this.$refs.bookingsManagementRef.openBookingDetailsModal
+        ) {
           this.$refs.bookingsManagementRef.openBookingDetailsModal(booking);
 
           // Listen for when the booking details modal closes to restore packages modal
@@ -2690,7 +2694,7 @@ export default {
   background: rgba(255, 255, 255, 0.95);
   padding: 0.5rem 0.625rem;
   margin: 0;
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
   border-radius: 8px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;

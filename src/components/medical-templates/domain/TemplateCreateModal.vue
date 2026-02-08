@@ -4,7 +4,11 @@
       <div class="modal-header">
         <h5 class="modal-title">
           <i class="bi bi-file-earmark-text me-2"></i>
-          {{ editingTemplate ? $t('templateCreate.editTemplate') : $t('templateCreate.createTemplate') }}
+          {{
+            editingTemplate
+              ? $t('templateCreate.editTemplate')
+              : $t('templateCreate.createTemplate')
+          }}
         </h5>
         <button type="button" class="btn-close" @click="handleClose"></button>
       </div>
@@ -118,7 +122,9 @@
                 <div class="variable-name">
                   <strong>{{ variable.name }}</strong>
                   <span class="badge bg-secondary ms-2">{{ variable.type }}</span>
-                  <span v-if="variable.required" class="badge bg-danger ms-1">{{ $t('templateCreate.required') }}</span>
+                  <span v-if="variable.required" class="badge bg-danger ms-1">{{
+                    $t('templateCreate.required')
+                  }}</span>
                 </div>
                 <div class="variable-label text-muted">{{ variable.label }}</div>
               </div>
@@ -262,7 +268,9 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" @click="handleClose">{{ $t('common.cancel') }}</button>
+        <button type="button" class="btn btn-secondary" @click="handleClose">
+          {{ $t('common.cancel') }}
+        </button>
         <button
           type="button"
           class="btn btn-primary"
@@ -270,7 +278,11 @@
           :disabled="!isFormValid || creating"
         >
           <span v-if="creating" class="spinner-border spinner-border-sm me-2"></span>
-          {{ editingTemplate ? $t('templateCreate.updateTemplate') : $t('templateCreate.createTemplate') }}
+          {{
+            editingTemplate
+              ? $t('templateCreate.updateTemplate')
+              : $t('templateCreate.createTemplate')
+          }}
         </button>
       </div>
     </div>
@@ -348,14 +360,18 @@
               v-model="newVariable.required"
               id="variableRequired"
             />
-            <label class="form-check-label" for="variableRequired"> {{ $t('templateCreate.variableRequired') }} </label>
+            <label class="form-check-label" for="variableRequired">
+              {{ $t('templateCreate.variableRequired') }}
+            </label>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" @click="showAddVariable = false">
             {{ $t('common.cancel') }}
           </button>
-          <button type="button" class="btn btn-primary" @click="addVariable">{{ $t('templateCreate.addVariable') }}</button>
+          <button type="button" class="btn btn-primary" @click="addVariable">
+            {{ $t('templateCreate.addVariable') }}
+          </button>
         </div>
       </div>
     </div>

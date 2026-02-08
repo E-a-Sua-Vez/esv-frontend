@@ -138,10 +138,7 @@ export default {
         <p class="control-card-text">{{ content }}</p>
       </div>
 
-      <div
-        v-if="status === 'PENDING'"
-        class="control-card-actions"
-      >
+      <div v-if="status === 'PENDING'" class="control-card-actions">
         <button class="btn-control-action btn-edit" @click.prevent="showUpdate()">
           <i class="bi bi-pencil-fill me-1"></i>
           <span>{{ $t('patientHistoryView.attendControl') }}</span>
@@ -192,10 +189,7 @@ export default {
         </div>
 
         <div class="form-actions-modern">
-          <button
-            class="btn-save-control"
-            @click="update()"
-          >
+          <button class="btn-save-control" @click="update()">
             <i class="bi bi-check-circle-fill me-2"></i>
             {{ $t('patientHistoryView.update') }}
           </button>

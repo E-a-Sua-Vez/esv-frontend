@@ -104,7 +104,7 @@ export default {
       }
     };
 
-    const downloadFromBackend = async (type) => {
+    const downloadFromBackend = async type => {
       try {
         if (!commerce.value || !commerce.value.id) {
           alertError.value = 'Comercio no seleccionado';
@@ -120,11 +120,14 @@ export default {
         queryParams.set('to', state.endDate);
         queryParams.set('format', state.format);
 
-        const baseUrl = (import.meta.env.VITE_QUERY_URL || 'http://localhost:3003').replace(/\/$/, '');
+        const baseUrl = (import.meta.env.VITE_QUERY_URL || 'http://localhost:3003').replace(
+          /\/$/,
+          '',
+        );
         const response = await fetch(`${baseUrl}/reports/download/${type}?${queryParams}`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         });
         if (!response.ok) throw new Error('Download failed');
@@ -133,7 +136,17 @@ export default {
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = `${type}-${commerce.value.tag || 'commerce'}-${state.startDate}-${state.endDate}.${state.format === 'xls' ? 'xlsx' : state.format === 'pdf' ? 'pdf' : state.format === 'json' ? 'json' : 'csv'}`;
+        a.download = `${type}-${commerce.value.tag || 'commerce'}-${state.startDate}-${
+          state.endDate
+        }.${
+          state.format === 'xls'
+            ? 'xlsx'
+            : state.format === 'pdf'
+            ? 'pdf'
+            : state.format === 'json'
+            ? 'json'
+            : 'csv'
+        }`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);

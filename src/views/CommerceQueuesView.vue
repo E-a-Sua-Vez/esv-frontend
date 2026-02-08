@@ -21,7 +21,10 @@ import {
   bookingBlockNumberUsedCollection,
 } from '../application/firebase';
 import { ATTENTION_STATUS, BOOKING_STATUS } from '../shared/constants';
-import { getActiveProfessionalsByCommerce, getProfessionalByCollaboratorId, getProfessionalById } from '../application/services/professional';
+import {
+  getActiveProfessionalsByCommerce,
+  getProfessionalById,
+} from '../application/services/professional';
 import Message from '../components/common/Message.vue';
 import CommerceLogo from '../components/common/CommerceLogo.vue';
 import Spinner from '../components/common/Spinner.vue';
@@ -502,7 +505,9 @@ export default {
             acc + (service.serviceInfo.blockTime || service.serviceInfo.estimatedTime),
           0
         );
-        state.amountofBlocksNeeded = Math.ceil(state.totalDurationRequested / state.queue.blockTime);
+        state.amountofBlocksNeeded = Math.ceil(
+          state.totalDurationRequested / state.queue.blockTime,
+        );
         if (state.specificCalendar === true) {
           state.specificCalendarDate = undefined;
           if (state.specificCalendarDate && state.specificCalendarDate !== 'TODAY') {
@@ -2396,7 +2401,7 @@ export default {
       }
     };
 
-     // Check if procedure amount selection is needed
+    // Check if procedure amount selection is needed
     const needsProcedureAmountSelection = computed(() => {
       // Only check if we have selected services
       if (!state.selectedServices || state.selectedServices.length === 0) {
@@ -2573,9 +2578,7 @@ export default {
                 undefined
               );
 
-              pendingBookings = (allBookings || []).filter(booking => {
-                return booking.status === 'PENDING'
-              });
+              pendingBookings = (allBookings || []).filter(booking => booking.status === 'PENDING');
             } catch (error) {
               console.error('Error loading package attentions/bookings:', error);
             }
@@ -2604,10 +2607,13 @@ export default {
               clientId,
               undefined
             );
-            const allPackageAttentions = attentionsDetails?.attentions?.filter(a => a.packageId === activePackage.id) || [];
+            const allPackageAttentions =
+              attentionsDetails?.attentions?.filter(a => a.packageId === activePackage.id) || [];
 
             // Find last terminated or rated attention
-            const terminatedAttentions = allPackageAttentions.filter(a => ['TERMINATED', 'RATED'].includes(a.status)).sort((a,b) => b.createdAt - a.createdAt);
+            const terminatedAttentions = allPackageAttentions
+              .filter(a => ['TERMINATED', 'RATED'].includes(a.status))
+              .sort((a, b) => b.createdAt - a.createdAt);
             const lastAttention = terminatedAttentions[0];
             const lastAttentionDate = lastAttention?.createdAt?.toDate?.() || null;
 
@@ -2620,12 +2626,16 @@ export default {
 
             // Find next expected date from pending attentions or bookings
             let nextExpectedDate = null;
-            const pendingPackageAttentions = allPackageAttentions.filter(a => a.status === 'PENDING').sort((a,b) => a.createdAt - b.createdAt);
+            const pendingPackageAttentions = allPackageAttentions
+              .filter(a => a.status === 'PENDING')
+              .sort((a, b) => a.createdAt - b.createdAt);
             const nextPendingAttention = pendingPackageAttentions[0];
             if (nextPendingAttention) {
               nextExpectedDate = nextPendingAttention.createdAt.toDate();
             } else {
-              const nextPendingBooking = pendingBookings.sort((a,b) => new Date(a.date) - new Date(b.date))[0];
+              const nextPendingBooking = pendingBookings.sort(
+                (a, b) => new Date(a.date) - new Date(b.date),
+              )[0];
               if (nextPendingBooking) {
                 nextExpectedDate = new Date(nextPendingBooking.date);
               } else if (lastAttentionDate && service?.daysBetweenSessions) {
@@ -2670,11 +2680,7 @@ export default {
 
     // Watch for changes in selected services or client ID to load package reminder and check active packages
     watch(
-      () => [
-        state.selectedServices,
-        state.newUser?.clientId,
-        state.newUser?.id,
-      ],
+      () => [state.selectedServices, state.newUser?.clientId, state.newUser?.id],
       () => {
         if (isMounted.value && state.newUser?.clientId) {
           try {
@@ -2689,7 +2695,7 @@ export default {
     );
 
     // Watch for procedure amount selection to become visible and scroll to it
-    watch(needsProcedureAmountSelection, (newValue) => {
+    watch(needsProcedureAmountSelection, newValue => {
       if (newValue === true) {
         setTimeout(() => {
           const procedureSection = document.getElementById('procedure-amount-selection');
@@ -3093,49 +3099,54 @@ export default {
     });
 
     // Watch for changes that affect the confirm button visibility/enabled state
-    watch([
-      () => state.showPickHours,
-      () => state.block,
-      () => state.attentionBlock,
-      () => state.date,
-      () => state.specificCalendarDate,
-      () => state.accept,
-      () => state.queue?.id,
-      () => isProcedureAmountSelectionValid?.value,
-      () => loadingService?.value,
-      () => state.isTelemedicine,
-      () => state.telemedicineConfig?.scheduledAt
-    ], () => {
-      // Check if the confirm button should be visible (same condition as v-else-if)
-      const shouldShowButton =
-        state.showPickHours &&
-        ((state.block &&
-          state.block.hourFrom &&
-          (state.date || state.specificCalendarDate)) ||
-          (state.attentionBlock &&
-            (state.attentionBlock.number || state.attentionBlock.hourFrom) &&
-            (state.date === 'TODAY' || state.specificCalendarDate === 'TODAY')));
+    watch(
+      [
+        () => state.showPickHours,
+        () => state.block,
+        () => state.attentionBlock,
+        () => state.date,
+        () => state.specificCalendarDate,
+        () => state.accept,
+        () => state.queue?.id,
+        () => isProcedureAmountSelectionValid?.value,
+        () => loadingService?.value,
+        () => state.isTelemedicine,
+        () => state.telemedicineConfig?.scheduledAt,
+      ],
+      () => {
+        // Check if the confirm button should be visible (same condition as v-else-if)
+        const shouldShowButton =
+          state.showPickHours &&
+          ((state.block && state.block.hourFrom && (state.date || state.specificCalendarDate)) ||
+            (state.attentionBlock &&
+              (state.attentionBlock.number || state.attentionBlock.hourFrom) &&
+              (state.date === 'TODAY' || state.specificCalendarDate === 'TODAY')));
 
-      // Check if the button should be enabled (opposite of :disabled condition)
-      const shouldEnableButton =
-        state.accept &&
-        state.queue?.id &&
-        isProcedureAmountSelectionValid?.value !== false &&
-        !loadingService?.value &&
-        !((state.date === 'TODAY' || state.specificCalendarDate === 'TODAY') &&
-          !state.attentionBlock) &&
-        !(state.isTelemedicine &&
-          (!state.telemedicineConfig || !state.telemedicineConfig.scheduledAt));
+        // Check if the button should be enabled (opposite of :disabled condition)
+        const shouldEnableButton =
+          state.accept &&
+          state.queue?.id &&
+          isProcedureAmountSelectionValid?.value !== false &&
+          !loadingService?.value &&
+          !(
+            (state.date === 'TODAY' || state.specificCalendarDate === 'TODAY') &&
+            !state.attentionBlock
+          ) &&
+          !(
+            state.isTelemedicine &&
+            (!state.telemedicineConfig || !state.telemedicineConfig.scheduledAt)
+          );
 
-      // Expand summary if button is visible AND enabled, collapse otherwise
-      const shouldExpand = shouldShowButton && shouldEnableButton;
+        // Expand summary if button is visible AND enabled, collapse otherwise
+        const shouldExpand = shouldShowButton && shouldEnableButton;
 
-      if (shouldExpand && !state.summaryExpanded) {
-        state.summaryExpanded = true;
-      } else if (!shouldExpand && state.summaryExpanded) {
-        state.summaryExpanded = false;
-      }
-    });
+        if (shouldExpand && !state.summaryExpanded) {
+          state.summaryExpanded = true;
+        } else if (!shouldExpand && state.summaryExpanded) {
+          state.summaryExpanded = false;
+        }
+      },
+    );
 
     const convertDuration = duration => {
       if (duration) {
@@ -5142,15 +5153,14 @@ export default {
                   :class="{ 'summary-collapsed': !state.summaryExpanded }"
                 >
                   <!-- Toggle Button Header -->
-                  <div class="summary-header" @click="state.summaryExpanded = !state.summaryExpanded">
+                  <div
+                    class="summary-header"
+                    @click="state.summaryExpanded = !state.summaryExpanded"
+                  >
                     <div v-if="!state.summaryExpanded" class="summary-collapsed-content">
                       <i class="bi bi-chevron-down summary-icon pulse-btn"></i>
                     </div>
-                    <button
-                      v-else
-                      class="summary-toggle-btn"
-                      type="button"
-                    >
+                    <button v-else class="summary-toggle-btn" type="button">
                       <i class="bi bi-chevron-up"></i>
                     </button>
                   </div>
@@ -5335,7 +5345,9 @@ export default {
                     v-else-if="state.showPickQueue"
                     class="btn btn-lg flex-grow-1 btn-size fw-bold btn-next-sticky rounded-pill px-5 py-3"
                     @click="showPickHours()"
-                    :disabled="!state.queue.id || !state.canBook || !isProcedureAmountSelectionValid"
+                    :disabled="
+                      !state.queue.id || !state.canBook || !isProcedureAmountSelectionValid
+                    "
                   >
                     {{ $t('continue') }}
                     <i class="bi bi-arrow-right-circle-fill ms-2"></i>
@@ -5986,7 +5998,7 @@ export default {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  line-height: .8rem;
+  line-height: 0.8rem;
 }
 
 .summary-value {

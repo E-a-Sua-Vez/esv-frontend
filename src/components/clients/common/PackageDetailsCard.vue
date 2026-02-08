@@ -21,7 +21,13 @@ export default {
     disableClick: { type: Boolean, default: false },
     queues: { type: Array, default: () => [] },
   },
-  emits: ['package-updated', 'refresh', 'open-attention-modal', 'open-booking-modal', 'open-payment-form'],
+  emits: [
+    'package-updated',
+    'refresh',
+    'open-attention-modal',
+    'open-booking-modal',
+    'open-payment-form',
+  ],
   data() {
     return {
       loading: false,
@@ -123,8 +129,8 @@ export default {
     },
     pendingBookings() {
       // Show both PENDING and CONFIRMED bookings (until they become attentions)
-      return this.packageBookings.filter(booking =>
-        booking.status === 'PENDING' || booking.status === 'CONFIRMED'
+      return this.packageBookings.filter(
+        booking => booking.status === 'PENDING' || booking.status === 'CONFIRMED'
       );
     },
     canCreateNewReservation() {
@@ -140,21 +146,22 @@ export default {
       // If no total amount is set, calculate based on sessions instead
       const totalSessions = this.pkg.proceduresAmount || 0;
       const sessionsPaid = this.calculatedProceduresUsed || 0; // Sessions consumed/reserved
-      const sessionsPaymentPercentage = totalSessions > 0
-        ? Math.round((sessionsPaid / totalSessions) * 100)
-        : 0;
+      const sessionsPaymentPercentage =
+        totalSessions > 0 ? Math.round((sessionsPaid / totalSessions) * 100) : 0;
 
       // Use amount-based calculation if totalAmount is set, otherwise use session-based
       const useSessionBased = totalAmount === 0 && totalSessions > 0;
       const paymentPercentage = useSessionBased
         ? sessionsPaymentPercentage
-        : (totalAmount > 0 ? Math.round((paid / totalAmount) * 100) : 0);
+        : totalAmount > 0
+        ? Math.round((paid / totalAmount) * 100)
+        : 0;
 
       // Only consider fully paid if all sessions are paid (when no totalAmount)
       // or if amount is fully paid (when totalAmount is set)
       const isFullyPaid = useSessionBased
         ? sessionsPaid >= totalSessions
-        : (this.pkg.paid === true || remaining <= 0);
+        : this.pkg.paid === true || remaining <= 0;
 
       return {
         totalAmount,
@@ -521,8 +528,8 @@ export default {
     openAttentionDetailsModal(attention) {
       // Emit event to open attention details modal
       this.$emit('open-attention-modal', {
-        attention: attention,
-        mode: 'details'
+        attention,
+        mode: 'details',
       });
     },
     openBookingDetailsModal(booking) {
@@ -543,7 +550,6 @@ export default {
       }
       this.openBookingDetailsModal(booking);
     },
-
   },
   watch: {
     detailsOpened: {
@@ -826,7 +832,7 @@ export default {
                 class="package-item-card clickable-item"
                 :class="getAttentionStatusClass(attention.status)"
                 @click="handleAttentionClick(attention, $event)"
-                style="cursor: pointer;"
+                style="cursor: pointer"
               >
                 <div class="package-item-info">
                   <div class="package-item-main">
@@ -892,7 +898,7 @@ export default {
                 class="package-item-card clickable-item"
                 :class="getBookingStatusClass(booking.status)"
                 @click="handleBookingClick(booking, $event)"
-                style="cursor: pointer;"
+                style="cursor: pointer"
               >
                 <div class="package-item-info">
                   <div class="package-item-main">
@@ -994,10 +1000,16 @@ export default {
             </div>
 
             <!-- No Payment Info Message - Only show if no total amount AND no payment history -->
-            <div v-if="paymentInfo.totalAmount === 0 && packageIncomes.length === 0" class="package-no-payment-message">
+            <div
+              v-if="paymentInfo.totalAmount === 0 && packageIncomes.length === 0"
+              class="package-no-payment-message"
+            >
               <div class="no-payment-card">
                 <i class="bi bi-exclamation-circle-fill yellow-icon"></i>
-                <span class="no-payment-text">{{ $t('package.noPaymentInfo') || 'No hay información de pago establecida para este paquete' }}</span>
+                <span class="no-payment-text">{{
+                  $t('package.noPaymentInfo') ||
+                  'No hay información de pago establecida para este paquete'
+                }}</span>
               </div>
             </div>
 
@@ -1034,9 +1046,10 @@ export default {
                 <div class="payment-card-header">
                   <i class="bi bi-check-circle-fill green-icon"></i>
                   <span class="payment-card-label">
-                    {{ paymentInfo.useSessionBased
-                      ? ($t('package.sessionsPaid') || 'Sesiones Pagas')
-                      : ($t('package.paidAmount') || 'Pagado')
+                    {{
+                      paymentInfo.useSessionBased
+                        ? $t('package.sessionsPaid') || 'Sesiones Pagas'
+                        : $t('package.paidAmount') || 'Pagado'
                     }}
                   </span>
                 </div>
@@ -1076,9 +1089,10 @@ export default {
                     "
                   ></i>
                   <span class="payment-card-label">
-                    {{ paymentInfo.useSessionBased
-                      ? ($t('package.sessionsRemaining') || 'Sesiones Restantes')
-                      : ($t('package.remainingAmount') || 'Pendiente')
+                    {{
+                      paymentInfo.useSessionBased
+                        ? $t('package.sessionsRemaining') || 'Sesiones Restantes'
+                        : $t('package.remainingAmount') || 'Pendiente'
                     }}
                   </span>
                 </div>
@@ -1096,9 +1110,10 @@ export default {
                 <div v-if="paymentInfo.isFullyPaid" class="payment-card-footer">
                   <span class="payment-footer-text fully-paid-text">
                     <i class="bi bi-check-circle-fill"></i>
-                    {{ paymentInfo.useSessionBased
-                      ? ($t('package.allSessionsPaid') || 'Todas las Sesiones Pagas')
-                      : ($t('package.fullyPaid') || 'Completamente Pagado')
+                    {{
+                      paymentInfo.useSessionBased
+                        ? $t('package.allSessionsPaid') || 'Todas las Sesiones Pagas'
+                        : $t('package.fullyPaid') || 'Completamente Pagado'
                     }}
                   </span>
                 </div>
@@ -1106,7 +1121,10 @@ export default {
             </div>
 
             <!-- Info message when using session-based payment with actual payments made -->
-            <div v-if="paymentInfo.useSessionBased && paymentInfo.paidAmount > 0" class="package-payment-info-message">
+            <div
+              v-if="paymentInfo.useSessionBased && paymentInfo.paidAmount > 0"
+              class="package-payment-info-message"
+            >
               <i class="bi bi-info-circle-fill"></i>
               <span>
                 {{ $t('package.sessionBasedPaymentInfo') || 'Monto pagado' }}:
@@ -1116,7 +1134,10 @@ export default {
 
             <!-- Payment Actions -->
             <!-- Payment Actions - Only show when using amount-based payment -->
-            <div v-if="!paymentInfo.isFullyPaid && !paymentInfo.useSessionBased" class="package-payment-actions">
+            <div
+              v-if="!paymentInfo.isFullyPaid && !paymentInfo.useSessionBased"
+              class="package-payment-actions"
+            >
               <button
                 class="btn btn-sm btn-dark rounded-pill px-3"
                 @click.stop="openPaymentForm(false)"
@@ -1310,7 +1331,7 @@ export default {
   background: rgba(255, 255, 255, 0.95);
   padding: 0.5rem 0.625rem;
   margin: 0.25rem 0.375rem;
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
   border-radius: 8px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;

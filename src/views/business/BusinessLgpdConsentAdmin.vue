@@ -1289,7 +1289,9 @@ export default {
                 data-bs-dismiss="modal"
                 aria-label="Close"
                 id="close-modal-lgpd"
-              ><i class="bi bi-x-lg"></i></button>
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
             </div>
           </div>
           <div class="modal-body text-center mb-0" id="attentions-component">
@@ -1368,7 +1370,8 @@ export default {
                 </div>
 
                 <div class="form-group-modern">
-                  <label class="form-label-modern"> {{ $t('lgpd.consent.admin.timing') }} *
+                  <label class="form-label-modern">
+                    {{ $t('lgpd.consent.admin.timing') }} *
                     <Popper :class="'dark p-1'" arrow :disable-click-away="false">
                       <template #content>
                         <div>{{ $t('lgpd.consent.admin.timingHelp') }}</div>

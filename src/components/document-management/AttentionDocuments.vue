@@ -5,7 +5,8 @@
       <div class="header-info">
         <h3>{{ $t('attentionDocuments.consultationDocuments') }}</h3>
         <p v-if="attention">
-          {{ $t('attentionDocuments.consultationOf') }} {{ formatDate(attention.createdAt) }} - {{ attention.userName }}
+          {{ $t('attentionDocuments.consultationOf') }} {{ formatDate(attention.createdAt) }} -
+          {{ attention.userName }}
           {{ attention.userLastName }}
         </p>
       </div>
@@ -213,7 +214,12 @@ export default {
 
     const downloadDocument = async document => {
       try {
-        const blob = await getClientDocument(document.commerceId, document.clientId, 'patient_documents', document.name);
+        const blob = await getClientDocument(
+          document.commerceId,
+          document.clientId,
+          'patient_documents',
+          document.name,
+        );
 
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');

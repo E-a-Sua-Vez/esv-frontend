@@ -836,7 +836,7 @@ export default {
 
     const getControlSubMenuOptions = () => {
       if (state.currentUserType === USER_TYPES.BUSINESS) {
-        return ['tracing', 'product-stock', 'financial'];
+        return ['tracing', 'lead-pipeline', 'product-stock', 'financial'];
       }
       return [];
     };
@@ -939,6 +939,12 @@ export default {
             }
             return;
           } else {
+            // Verificar permisos antes de navegar
+            const permissionKey = `business.main-menu.${option}`;
+            if (state.toggles && state.toggles[permissionKey] === false) {
+              // No tiene permisos, no navegar
+              return;
+            }
             router.push({ path: `/interno/negocio/${option}` });
           }
         } else if (userType === USER_TYPES.COLLABORATOR) {
@@ -983,22 +989,22 @@ export default {
       return '';
     };
 
-    const getMenuIcon = (opt) => {
+    const getMenuIcon = opt => {
       const iconMap = {
-        'dashboard': 'bi-speedometer2',
-        'reports': 'bi-bar-chart',
+        dashboard: 'bi-speedometer2',
+        reports: 'bi-bar-chart',
         'booking-manage': 'bi-calendar-check',
         'control-admin': 'bi-gear',
         'manage-admin': 'bi-people',
         'medical-management': 'bi-heart-pulse',
-        'configuration': 'bi-sliders',
-        'documents': 'bi-file-earmark-text',
+        configuration: 'bi-sliders',
+        documents: 'bi-file-earmark-text',
         'your-plan': 'bi-credit-card',
         'business-resume': 'bi-building',
         'go-minisite': 'bi-globe',
         'client-portal': 'bi-person-circle',
         'queue-manage': 'bi-list-check',
-        'tracing': 'bi-search',
+        tracing: 'bi-search',
         'product-stock': 'bi-boxes',
         'business-master-admin': 'bi-building',
         'plans-master-admin': 'bi-credit-card',
@@ -1010,15 +1016,15 @@ export default {
         'agendas-reservas': 'bi-calendar-event',
         'perfil-empresa': 'bi-building',
         'gestao-medica': 'bi-heart-pulse',
-        'configuracoes': 'bi-sliders',
-        'documentos': 'bi-file-earmark-text',
+        configuracoes: 'bi-sliders',
+        documentos: 'bi-file-earmark-text',
         'seu-plano': 'bi-credit-card',
         'estado-sistema': 'bi-activity',
       };
       return `bi ${iconMap[opt] || 'bi-circle'}`;
     };
 
-    const getSubmenuIcon = (opt) => {
+    const getSubmenuIcon = opt => {
       const iconMap = {
         'commerce-admin': 'bi-building',
         'service-admin': 'bi-tools',
@@ -1033,9 +1039,10 @@ export default {
         'forms-admin': 'bi-file-text',
         'lgpd-consent-admin': 'bi-shield-check',
         'permissions-admin': 'bi-key',
-        'tracing': 'bi-search',
+        tracing: 'bi-search',
+        'lead-pipeline': 'bi-funnel',
         'product-stock': 'bi-boxes',
-        'financial': 'bi-cash',
+        financial: 'bi-cash',
         'patient-history-item-admin': 'bi-file-medical',
         'medications-admin': 'bi-capsule',
         'medical-exams-admin': 'bi-clipboard-data',
@@ -1535,7 +1542,7 @@ export default {
                     :class="{
                       disabled:
                         state.currentUserType === USER_TYPES.BUSINESS &&
-                        !state.toggles[`business.main-menu.${option}`]
+                        !state.toggles[`business.main-menu.${option}`],
                     }"
                   >
                     <div class="card-icon">
@@ -1580,13 +1587,15 @@ export default {
                       <div
                         class="submenu-card"
                         @click="
-                          navigateToMenuOption(subOption);
-                          closeDesktopMenu();
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                            ? null
+                            : (navigateToMenuOption(subOption), closeDesktopMenu())
                         "
                         :class="{
                           disabled:
                             state.currentUserType === USER_TYPES.BUSINESS &&
-                            !state.toggles[`business.main-menu.${subOption}`]
+                            !state.toggles[`business.main-menu.${subOption}`],
                         }"
                         :title="
                           state.currentUserType === USER_TYPES.BUSINESS &&
@@ -1617,13 +1626,15 @@ export default {
                       <div
                         class="submenu-card"
                         @click="
-                          navigateToMenuOption(subOption);
-                          closeDesktopMenu();
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                            ? null
+                            : (navigateToMenuOption(subOption), closeDesktopMenu())
                         "
                         :class="{
                           disabled:
                             state.currentUserType === USER_TYPES.BUSINESS &&
-                            !state.toggles[`business.main-menu.${subOption}`]
+                            !state.toggles[`business.main-menu.${subOption}`],
                         }"
                         :title="
                           state.currentUserType === USER_TYPES.BUSINESS &&
@@ -1657,13 +1668,15 @@ export default {
                       <div
                         class="submenu-card"
                         @click="
-                          navigateToMenuOption(subOption);
-                          closeDesktopMenu();
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                            ? null
+                            : (navigateToMenuOption(subOption), closeDesktopMenu())
                         "
                         :class="{
                           disabled:
                             state.currentUserType === USER_TYPES.BUSINESS &&
-                            !state.toggles[`business.main-menu.${subOption}`]
+                            !state.toggles[`business.main-menu.${subOption}`],
                         }"
                         :title="
                           state.currentUserType === USER_TYPES.BUSINESS &&
@@ -1698,10 +1711,7 @@ export default {
                 class="d-grid btn-group btn-group-justified desktop-button-wrapper"
               >
                 <div class="centered">
-                  <div
-                    class="submenu-card"
-                    @click="navigateToMenuOption(option, true)"
-                  >
+                  <div class="submenu-card" @click="navigateToMenuOption(option, true)">
                     <div class="card-icon">
                       <i :class="`bi ${getMenuIcon(option)}`"></i>
                     </div>
@@ -1982,8 +1992,17 @@ export default {
                   <div
                     class="mobile-submenu-card"
                     @click="navigateToMenuOption(option)"
-                    :class="{ disabled: state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${option}`] }"
-                    :title="state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${option}`] ? $t('common.disabled') : ''"
+                    :class="{
+                      disabled:
+                        state.currentUserType === USER_TYPES.BUSINESS &&
+                        !state.toggles[`business.main-menu.${option}`],
+                    }"
+                    :title="
+                      state.currentUserType === USER_TYPES.BUSINESS &&
+                      !state.toggles[`business.main-menu.${option}`]
+                        ? $t('common.disabled')
+                        : ''
+                    "
                   >
                     <div class="card-icon">
                       <i :class="`bi ${getMenuIcon(option)}`"></i>
@@ -2027,8 +2046,17 @@ export default {
                       <div
                         class="mobile-submenu-card"
                         @click="navigateToMenuOption(subOption)"
-                        :class="{ disabled: state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${subOption}`] }"
-                        :title="state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${subOption}`] ? $t(`${getMenuTranslationKey()}.permissionRequired`) : ''"
+                        :class="{
+                          disabled:
+                            state.currentUserType === USER_TYPES.BUSINESS &&
+                            !state.toggles[`business.main-menu.${subOption}`],
+                        }"
+                        :title="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                            ? $t(`${getMenuTranslationKey()}.permissionRequired`)
+                            : ''
+                        "
                       >
                         <div class="card-icon">
                           <i :class="`bi ${getSubmenuIcon(subOption)}`"></i>
@@ -2052,8 +2080,17 @@ export default {
                       <div
                         class="mobile-submenu-card"
                         @click="navigateToMenuOption(subOption)"
-                        :class="{ disabled: state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${subOption}`] }"
-                        :title="state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${subOption}`] ? $t(`${getMenuTranslationKey()}.permissionRequired`) : ''"
+                        :class="{
+                          disabled:
+                            state.currentUserType === USER_TYPES.BUSINESS &&
+                            !state.toggles[`business.main-menu.${subOption}`],
+                        }"
+                        :title="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                            ? $t(`${getMenuTranslationKey()}.permissionRequired`)
+                            : ''
+                        "
                       >
                         <div class="card-icon">
                           <i :class="`bi ${getSubmenuIcon(subOption)}`"></i>
@@ -2080,8 +2117,17 @@ export default {
                       <div
                         class="mobile-submenu-card"
                         @click="navigateToMenuOption(subOption)"
-                        :class="{ disabled: state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${subOption}`] }"
-                        :title="state.currentUserType === USER_TYPES.BUSINESS && !state.toggles[`business.main-menu.${subOption}`] ? $t(`${getMenuTranslationKey()}.permissionRequired`) : ''"
+                        :class="{
+                          disabled:
+                            state.currentUserType === USER_TYPES.BUSINESS &&
+                            !state.toggles[`business.main-menu.${subOption}`],
+                        }"
+                        :title="
+                          state.currentUserType === USER_TYPES.BUSINESS &&
+                          !state.toggles[`business.main-menu.${subOption}`]
+                            ? $t(`${getMenuTranslationKey()}.permissionRequired`)
+                            : ''
+                        "
                       >
                         <div class="card-icon">
                           <i :class="`bi ${getSubmenuIcon(subOption)}`"></i>
@@ -2109,10 +2155,7 @@ export default {
                 class="d-grid btn-group btn-group-justified mobile-button-wrapper"
               >
                 <div class="centered">
-                  <div
-                    class="mobile-submenu-card"
-                    @click="navigateToMenuOption(option)"
-                  >
+                  <div class="mobile-submenu-card" @click="navigateToMenuOption(option)">
                     <div class="card-icon">
                       <i :class="`bi ${getMenuIcon(option)}`"></i>
                     </div>
@@ -2735,7 +2778,7 @@ export default {
 
 .mobile-menu-item-wrapper {
   border-bottom: 1px solid var(--gris-default, #e0e0e0);
-  padding: .6rem;
+  padding: 0.6rem;
 }
 
 .mobile-menu-item {
@@ -2873,7 +2916,7 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-left: .2rem;
+    margin-left: 0.2rem;
     margin-right: 1rem;
   }
 
@@ -3298,7 +3341,7 @@ export default {
   display: flex;
   height: 40px;
   padding: 0.2rem 0.8rem;
-  margin: .1rem;
+  margin: 0.1rem;
   width: 100%;
   flex-direction: row;
   flex-wrap: nowrap;

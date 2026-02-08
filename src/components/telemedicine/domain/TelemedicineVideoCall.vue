@@ -255,7 +255,6 @@ export default {
 
     const initializeWebRTC = async () => {
       try {
-
         // Verificar que getUserMedia esté disponible
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           throw new Error(
@@ -275,7 +274,6 @@ export default {
             noiseSuppression: true,
           },
         });
-
 
         localStream.value = stream;
 
@@ -316,7 +314,6 @@ export default {
 
         // Manejar stream remoto
         peerConnection.ontrack = async event => {
-
           if (event.streams && event.streams.length > 0) {
             remoteStream.value = event.streams[0];
 
@@ -344,13 +341,11 @@ export default {
           }
         };
 
-
         // Variable para rastrear si ya se recibió una oferta
         const offerReceived = ref(false);
 
         // Escuchar ofertas/respuestas de video
         onVideoOffer(async data => {
-
           // Aceptar ofertas de otros usuarios (comparar por userId, no socketId)
           if (data.from !== props.currentUserId && data.offer) {
             // Marcar que se recibió una oferta
@@ -365,7 +360,6 @@ export default {
             }
 
             try {
-
               await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
 
               // Verificar nuevamente antes de crear la respuesta
@@ -392,7 +386,6 @@ export default {
         });
 
         onVideoAnswer(async data => {
-
           if (data.from !== props.currentUserId && data.answer) {
             // Verificar que la conexión esté activa
             if (!peerConnection || peerConnection.signalingState === 'closed') {
@@ -417,7 +410,6 @@ export default {
         });
 
         onIceCandidate(async data => {
-
           if (data.from !== props.currentUserId && data.candidate) {
             try {
               await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
@@ -840,7 +832,6 @@ export default {
 
     onMounted(async () => {
       try {
-
         if (!props.sessionId) {
           throw new Error('Session ID is required');
         }

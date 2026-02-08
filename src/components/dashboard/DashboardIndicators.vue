@@ -714,7 +714,10 @@ export default {
         />
 
         <!-- Enhanced Summary Section -->
-        <div class="dashboard-summary-section" v-if="(!detailsOpened && !hideSummary) || isExporting">
+        <div
+          class="dashboard-summary-section"
+          v-if="(!detailsOpened && !hideSummary) || isExporting"
+        >
           <div class="summary-cards-grid">
             <!-- Attention Summary Card -->
             <div
@@ -1654,7 +1657,7 @@ export default {
   font-size: 0.9rem;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.7);
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 
 .summary-period {

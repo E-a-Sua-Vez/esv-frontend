@@ -414,7 +414,7 @@ export default {
   opacity: 1;
   overflow: hidden;
   font-size: 0.8rem;
-  line-height: .9;
+  line-height: 0.9;
   font-weight: 300 !important;
   color: rgba(0, 0, 0, 0.7);
   text-transform: uppercase;

@@ -7,9 +7,7 @@ import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import { globalStore } from '../../../stores';
 import { getDate } from '../../../shared/utils/date';
-import {
-  downloadFormattedCSV,
-} from '../../../shared/utils/excelExport';
+import { downloadFormattedCSV } from '../../../shared/utils/excelExport';
 import SimpleCard from '../../dashboard/common/SimpleCard.vue';
 import { LineChart, DoughnutChart } from 'vue-chart-3';
 import { Chart, registerables } from 'chart.js';
@@ -224,54 +222,57 @@ export default {
         );
 
         // Only create chart if we have labels
-        const chartData = allLabels.length > 0 ? {
-          labels: allLabels,
-          datasets: [
-            {
-              label: this.$t('dashboard.incomes') || 'Recebido',
-              borderColor: '#004aad',
-              backgroundColor: 'rgba(0, 74, 173, 0.1)',
-              data: incomesData,
-              fill: true,
-              tension: 0.4,
-              pointRadius: 4,
-              pointHoverRadius: 6,
-              pointBorderWidth: 2,
-              pointBackgroundColor: '#004aad',
-              pointBorderColor: '#ffffff',
-              borderWidth: 2,
-            },
-            {
-              label: this.$t('businessFinancial.commission') || 'Comissão',
-              borderColor: '#f9c322',
-              backgroundColor: 'rgba(249, 195, 34, 0.1)',
-              borderDash: [5, 5],
-              data: commissionsData,
-              fill: false,
-              tension: 0.4,
-              pointRadius: 4,
-              pointHoverRadius: 6,
-              pointBorderWidth: 2,
-              pointBackgroundColor: '#f9c322',
-              pointBorderColor: '#ffffff',
-              borderWidth: 2,
-            },
-            {
-              label: this.$t('dashboard.outcomes') || 'Despesas',
-              borderColor: '#a52a2a',
-              backgroundColor: 'rgba(165, 42, 42, 0.1)',
-              data: outcomesData,
-              fill: true,
-              tension: 0.4,
-              pointRadius: 4,
-              pointHoverRadius: 6,
-              pointBorderWidth: 2,
-              pointBackgroundColor: '#a52a2a',
-              pointBorderColor: '#ffffff',
-              borderWidth: 2,
-            },
-          ],
-        } : null;
+        const chartData =
+          allLabels.length > 0
+            ? {
+                labels: allLabels,
+                datasets: [
+                  {
+                    label: this.$t('dashboard.incomes') || 'Recebido',
+                    borderColor: '#004aad',
+                    backgroundColor: 'rgba(0, 74, 173, 0.1)',
+                    data: incomesData,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBorderWidth: 2,
+                    pointBackgroundColor: '#004aad',
+                    pointBorderColor: '#ffffff',
+                    borderWidth: 2,
+                  },
+                  {
+                    label: this.$t('businessFinancial.commission') || 'Comissão',
+                    borderColor: '#f9c322',
+                    backgroundColor: 'rgba(249, 195, 34, 0.1)',
+                    borderDash: [5, 5],
+                    data: commissionsData,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBorderWidth: 2,
+                    pointBackgroundColor: '#f9c322',
+                    pointBorderColor: '#ffffff',
+                    borderWidth: 2,
+                  },
+                  {
+                    label: this.$t('dashboard.outcomes') || 'Despesas',
+                    borderColor: '#a52a2a',
+                    backgroundColor: 'rgba(165, 42, 42, 0.1)',
+                    data: outcomesData,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBorderWidth: 2,
+                    pointBackgroundColor: '#a52a2a',
+                    pointBorderColor: '#ffffff',
+                    borderWidth: 2,
+                  },
+                ],
+              }
+            : null;
         const chartOptions = {
           responsive: true,
           maintainAspectRatio: false,
@@ -337,7 +338,7 @@ export default {
                   size: 9,
                 },
                 padding: 5,
-                callback: function(value) {
+                callback(value) {
                   return value.toLocaleString('de-DE', {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0,
@@ -373,7 +374,9 @@ export default {
           const distributionLabels = Object.keys(incomeTypeDistribution).map(
             key => this.$t(`incomeTypes.${key}`) || key
           );
-          const distributionData = Object.values(incomeTypeDistribution).map(item => +(item.totalAmount || 0));
+          const distributionData = Object.values(incomeTypeDistribution).map(
+            item => +(item.totalAmount || 0),
+          );
 
           // Color palette for distribution chart
           const colorPalette = [
@@ -394,8 +397,8 @@ export default {
             datasets: [
               {
                 data: distributionData,
-                backgroundColor: distributionLabels.map((_, index) =>
-                  colorPalette[index % colorPalette.length]
+                backgroundColor: distributionLabels.map(
+                  (_, index) => colorPalette[index % colorPalette.length]
                 ),
                 borderWidth: 2,
                 borderColor: '#ffffff',
@@ -647,7 +650,7 @@ export default {
         }
 
         // Get professionals to map IDs to names
-        let professionalsMap = {};
+        const professionalsMap = {};
         try {
           const professionals = await getProfessionalsByCommerce(this.commerce.id);
           if (Array.isArray(professionals)) {
@@ -655,7 +658,8 @@ export default {
               if (prof.id && prof.personalInfo) {
                 const firstName = prof.personalInfo.firstName || '';
                 const lastName = prof.personalInfo.lastName || '';
-                professionalsMap[prof.id] = `${firstName} ${lastName}`.trim() || prof.personalInfo.name || 'Sin Nombre';
+                professionalsMap[prof.id] =
+                  `${firstName} ${lastName}`.trim() || prof.personalInfo.name || 'Sin Nombre';
               }
             });
           }
@@ -765,8 +769,8 @@ export default {
           datasets: [
             {
               data: chartData,
-              backgroundColor: chartLabels.map((_, index) =>
-                colorPalette[index % colorPalette.length]
+              backgroundColor: chartLabels.map(
+                (_, index) => colorPalette[index % colorPalette.length]
               ),
               borderWidth: 2,
               borderColor: '#ffffff',
@@ -820,9 +824,11 @@ export default {
           chartData: donutChartData,
           options: donutChartOptions,
         };
-
       } catch (error) {
-        console.error('[calculateProfessionalIncomes] Error calculating professional incomes:', error);
+        console.error(
+          '[calculateProfessionalIncomes] Error calculating professional incomes:',
+          error,
+        );
         this.financialResume.professionalIncomes = null;
       }
     },
@@ -1250,14 +1256,18 @@ export default {
 
           // === RESUMEN FINANCIERO ===
           if (this.calculatedMetrics && Object.keys(this.calculatedMetrics).length > 0) {
-            const incomesAmount = this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 0;
-            const incomesCount = this.calculatedMetrics['incomes.created']?.paymentData?.paymentCounter || 0;
-            const outcomesAmount = this.calculatedMetrics['outcomes.created']?.paymentData?.paymentAmountSum || 0;
-            const outcomesCount = this.calculatedMetrics['outcomes.created']?.paymentData?.paymentCounter || 0;
+            const incomesAmount =
+              this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 0;
+            const incomesCount =
+              this.calculatedMetrics['incomes.created']?.paymentData?.paymentCounter || 0;
+            const outcomesAmount =
+              this.calculatedMetrics['outcomes.created']?.paymentData?.paymentAmountSum || 0;
+            const outcomesCount =
+              this.calculatedMetrics['outcomes.created']?.paymentData?.paymentCounter || 0;
             const balance = incomesAmount - outcomesAmount;
             const margin = incomesAmount > 0 ? ((balance / incomesAmount) * 100).toFixed(1) : '0';
-            const avgIncomePerOp = incomesCount > 0 ? (incomesAmount / incomesCount) : 0;
-            const avgOutcomePerOp = outcomesCount > 0 ? (outcomesAmount / outcomesCount) : 0;
+            const avgIncomePerOp = incomesCount > 0 ? incomesAmount / incomesCount : 0;
+            const avgOutcomePerOp = outcomesCount > 0 ? outcomesAmount / outcomesCount : 0;
 
             // Financial summary cards
             pdf.setFillColor(240, 248, 255);
@@ -1286,9 +1296,17 @@ export default {
             pdf.setTextColor(100, 100, 100);
             pdf.setFont(undefined, 'normal');
             pdf.text(`${incomesCount} operaciones`, 17, yPos + 26);
-            pdf.text(`Promedio: R$${Math.round(avgIncomePerOp).toLocaleString('de-DE')}`, 17, yPos + 32);
+            pdf.text(
+              `Promedio: R$${Math.round(avgIncomePerOp).toLocaleString('de-DE')}`,
+              17,
+              yPos + 32,
+            );
             pdf.text(`${outcomesCount} operaciones`, 77, yPos + 26);
-            pdf.text(`Promedio: R$${Math.round(avgOutcomePerOp).toLocaleString('de-DE')}`, 77, yPos + 32);
+            pdf.text(
+              `Promedio: R$${Math.round(avgOutcomePerOp).toLocaleString('de-DE')}`,
+              77,
+              yPos + 32,
+            );
             pdf.text(`Margen: ${margin}%`, 137, yPos + 26);
             pdf.text(`ROI: ${margin}%`, 137, yPos + 32);
 
@@ -1311,13 +1329,20 @@ export default {
           pdf.setFont(undefined, 'normal');
 
           if (this.calculatedMetrics && Object.keys(this.calculatedMetrics).length > 0) {
-            const days = Math.ceil((new Date(this.endDate) - new Date(this.startDate)) / (1000 * 60 * 60 * 24)) || 1;
-            const incomesAmount = this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 0;
-            const outcomesAmount = this.calculatedMetrics['outcomes.created']?.paymentData?.paymentAmountSum || 0;
+            const days =
+              Math.ceil(
+                (new Date(this.endDate) - new Date(this.startDate)) / (1000 * 60 * 60 * 24),
+              ) || 1;
+            const incomesAmount =
+              this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 0;
+            const outcomesAmount =
+              this.calculatedMetrics['outcomes.created']?.paymentData?.paymentAmountSum || 0;
             const dailyAvgIncome = incomesAmount / days;
             const dailyAvgOutcome = outcomesAmount / days;
-            const incomesCount = this.calculatedMetrics['incomes.created']?.paymentData?.paymentCounter || 0;
-            const outcomesCount = this.calculatedMetrics['outcomes.created']?.paymentData?.paymentCounter || 0;
+            const incomesCount =
+              this.calculatedMetrics['incomes.created']?.paymentData?.paymentCounter || 0;
+            const outcomesCount =
+              this.calculatedMetrics['outcomes.created']?.paymentData?.paymentCounter || 0;
             const totalOps = incomesCount + outcomesCount;
 
             pdf.text('• Ingreso promedio diario:', 15, yPos);
@@ -1329,7 +1354,7 @@ export default {
             pdf.text('• Días analizados:', 15, yPos);
             pdf.text(`${days}`, 80, yPos);
             pdf.text('• Frecuencia operaciones:', 110, yPos);
-            pdf.text(`${(totalOps/days).toFixed(1)}/día`, 170, yPos);
+            pdf.text(`${(totalOps / days).toFixed(1)}/día`, 170, yPos);
             yPos += 15;
           } else {
             pdf.text('No hay suficientes datos para análisis de rendimiento.', 15, yPos);
@@ -1344,7 +1369,8 @@ export default {
             yPos += 10;
 
             const paymentDist = this.calculatedMetrics['incomes.created'].paymentDistribution;
-            const totalIncome = this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 1;
+            const totalIncome =
+              this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 1;
 
             pdf.setFontSize(7);
             pdf.setFont(undefined, 'normal');
@@ -1353,7 +1379,7 @@ export default {
             let col = 0;
             Object.entries(paymentDist).forEach(([method, data]) => {
               if (data.paymentAmountSum > 0) {
-                const percentage = ((data.paymentAmountSum || 0) / totalIncome * 100).toFixed(1);
+                const percentage = (((data.paymentAmountSum || 0) / totalIncome) * 100).toFixed(1);
 
                 pdf.setFillColor(240, 240, 240);
                 pdf.rect(xPos, yPos, 45, 12, 'F');
@@ -1377,7 +1403,10 @@ export default {
           }
 
           // === INGRESOS POR PROFESIONAL ===
-          if (this.financialResume?.professionalIncomes?.list && this.financialResume.professionalIncomes.list.length > 0) {
+          if (
+            this.financialResume?.professionalIncomes?.list &&
+            this.financialResume.professionalIncomes.list.length > 0
+          ) {
             pdf.setFontSize(10);
             pdf.setFont(undefined, 'bold');
             pdf.text('TOP PROFESIONALES', 15, yPos);
@@ -1398,7 +1427,7 @@ export default {
 
             pdf.setFont(undefined, 'normal');
             let rank = 1;
-            topProfessionals.forEach((prof) => {
+            topProfessionals.forEach(prof => {
               const gross = prof.grossIncome || 0;
               const net = prof.netIncome || 0;
               const effectiveness = gross > 0 ? ((net / gross) * 100).toFixed(1) : '0';
@@ -1435,7 +1464,9 @@ export default {
             pdf.setFont(undefined, 'normal');
 
             recentTrends.forEach((trend, index) => {
-              const date = new Date(trend.month || trend.date).toLocaleDateString('es', {month: 'short'});
+              const date = new Date(trend.month || trend.date).toLocaleDateString('es', {
+                month: 'short',
+              });
               const incomes = trend.incomes || 0;
               const outcomes = trend.outcomes || 0;
               const profit = incomes - outcomes;
@@ -1466,9 +1497,18 @@ export default {
           const insights = [];
 
           if (this.calculatedMetrics) {
-            const balance = (this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 0) -
-                           (this.calculatedMetrics['outcomes.created']?.paymentData?.paymentAmountSum || 0);
-            const margin = balance > 0 ? ((balance / (this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 1)) * 100).toFixed(1) : 0;
+            const balance =
+              (this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 0) -
+              (this.calculatedMetrics['outcomes.created']?.paymentData?.paymentAmountSum || 0);
+            const margin =
+              balance > 0
+                ? (
+                    (balance /
+                      (this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum ||
+                        1)) *
+                    100
+                  ).toFixed(1)
+                : 0;
 
             if (margin > 80) {
               insights.push('✓ Excelente rentabilidad. Considera expandir operaciones.');
@@ -1480,8 +1520,9 @@ export default {
               insights.push('⚠ Baja rentabilidad. Requiere análisis de costos urgente.');
             }
 
-            const avgTicket = (this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 0) /
-                             (this.calculatedMetrics['incomes.created']?.paymentData?.paymentCounter || 1);
+            const avgTicket =
+              (this.calculatedMetrics['incomes.created']?.paymentData?.paymentAmountSum || 0) /
+              (this.calculatedMetrics['incomes.created']?.paymentData?.paymentCounter || 1);
 
             if (avgTicket > 500) {
               insights.push('✓ Ticket promedio alto. Cliente objetivo premium.');
@@ -1492,7 +1533,8 @@ export default {
 
           if (this.professionalIncomes && this.professionalIncomes.length > 1) {
             const topPerformer = this.professionalIncomes.reduce((max, prof) =>
-              (prof.grossIncome || 0) > (max.grossIncome || 0) ? prof : max);
+              (prof.grossIncome || 0) > (max.grossIncome || 0) ? prof : max,
+            );
             insights.push(`• Top performer: ${topPerformer.name}`);
           }
 
@@ -1519,10 +1561,10 @@ export default {
             pdf.text(`${new Date().toLocaleDateString()}`, 170, 292);
           }
 
-          const fileName = `reporte-${this.commerce?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'comercio'}-${this.startDate}.pdf`;
+          const fileName = `reporte-${
+            this.commerce?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'comercio'
+          }-${this.startDate}.pdf`;
           pdf.save(fileName);
-
-
         } catch (error) {
           console.error('Error generating PDF:', error);
           alert('Error al generar el PDF: ' + error.message);
@@ -2065,9 +2107,11 @@ export default {
                               <button
                                 class="btn btn-sm btn-primary w-100"
                                 style="font-size: 0.75rem; padding: 0.25rem 0.5rem"
-                                @click="() => {
-                                  exportToPDF();
-                                }"
+                                @click="
+                                  () => {
+                                    exportToPDF();
+                                  }
+                                "
                                 :disabled="!toggles['financial.reports.resume']"
                               >
                                 <i class="bi bi-download me-1"></i>
@@ -2604,8 +2648,16 @@ export default {
                         financialResume.evolution.chartData.datasets.length > 0
                       "
                     >
-                      <div class="modern-card p-3" style="min-height: 500px; max-height: 500px; display: flex; flex-direction: column;">
-                        <div class="fw-bold mb-2" style="flex-shrink: 0; font-size: 0.9rem;">
+                      <div
+                        class="modern-card p-3"
+                        style="
+                          min-height: 500px;
+                          max-height: 500px;
+                          display: flex;
+                          flex-direction: column;
+                        "
+                      >
+                        <div class="fw-bold mb-2" style="flex-shrink: 0; font-size: 0.9rem">
                           <span>{{ $t('businessFinancial.evolution') }} </span>
                         </div>
                         <div>
@@ -2627,17 +2679,26 @@ export default {
                         financialResume.incomeDistribution.chartData.labels.length > 0
                       "
                     >
-                      <div class="modern-card p-3" style="min-height: 500px; max-height: 500px; display: flex; flex-direction: column; overflow: hidden;">
-                        <div class="fw-bold mb-2" style="flex-shrink: 0; font-size: 0.9rem;">
+                      <div
+                        class="modern-card p-3"
+                        style="
+                          min-height: 500px;
+                          max-height: 500px;
+                          display: flex;
+                          flex-direction: column;
+                          overflow: hidden;
+                        "
+                      >
+                        <div class="fw-bold mb-2" style="flex-shrink: 0; font-size: 0.9rem">
                           <span>{{ $t('businessFinancial.distribution.title') }} </span>
                         </div>
-                        <div style="height: 300px; width: 100%; padding:1rem" class="centered">
+                        <div style="height: 300px; width: 100%; padding: 1rem" class="centered">
                           <DoughnutChart
                             :chart-data="financialResume.incomeDistribution.chartData"
                             :options="financialResume.incomeDistribution.options"
                           />
                         </div>
-                        <div class="mt-2" style="flex: 1; overflow-y: auto; min-height: 0;">
+                        <div class="mt-2" style="flex: 1; overflow-y: auto; min-height: 0">
                           <div
                             v-for="(label, index) in financialResume.incomeDistribution.chartData
                               .labels"
@@ -2647,7 +2708,7 @@ export default {
                             <div class="d-flex align-items-center">
                               <div
                                 class="distribution-color-indicator me-2"
-                                style="width: 12px; height: 12px; border-radius: 2px;"
+                                style="width: 12px; height: 12px; border-radius: 2px"
                                 :style="{
                                   backgroundColor:
                                     financialResume.incomeDistribution.chartData.datasets[0]
@@ -2680,14 +2741,26 @@ export default {
                         financialResume.professionalIncomes.list.length > 0
                       "
                     >
-                      <div class="modern-card p-3" style="min-height: 400px; max-height: 400px; display: flex; flex-direction: column; overflow: hidden;">
-                        <div class="fw-bold mb-3" style="flex-shrink: 0; font-size: 0.9rem;">
+                      <div
+                        class="modern-card p-3"
+                        style="
+                          min-height: 400px;
+                          max-height: 400px;
+                          display: flex;
+                          flex-direction: column;
+                          overflow: hidden;
+                        "
+                      >
+                        <div class="fw-bold mb-3" style="flex-shrink: 0; font-size: 0.9rem">
                           <span>{{ $t('businessFinancial.professionalIncomes.title') }} </span>
                         </div>
-                        <div class="row g-3" style="flex: 1; min-height: 0; overflow: hidden;">
+                        <div class="row g-3" style="flex: 1; min-height: 0; overflow: hidden">
                           <!-- Chart Section -->
-                          <div class="col-12 col-md-6 d-flex align-items-center justify-content-center" style="min-height: 300px;">
-                            <div style="width: 100%; max-width: 300px; height: 300px;">
+                          <div
+                            class="col-12 col-md-6 d-flex align-items-center justify-content-center"
+                            style="min-height: 300px"
+                          >
+                            <div style="width: 100%; max-width: 300px; height: 300px">
                               <DoughnutChart
                                 :chart-data="financialResume.professionalIncomes.chartData"
                                 :options="financialResume.professionalIncomes.options"
@@ -2695,22 +2768,44 @@ export default {
                             </div>
                           </div>
                           <!-- List Section -->
-                          <div class="col-12 col-md-6 d-flex flex-column" style="min-height: 0; overflow: hidden;">
+                          <div
+                            class="col-12 col-md-6 d-flex flex-column"
+                            style="min-height: 0; overflow: hidden"
+                          >
                             <!-- Header -->
-                            <div class="d-flex align-items-center py-2 px-2 fw-bold" style="border-bottom: 2px solid rgba(0, 0, 0, 0.1); font-size: 0.8rem; background-color: rgba(0, 0, 0, 0.02); flex-shrink: 0;">
-                              <div style="width: 10px; flex-shrink: 0;"></div>
-                              <div class="flex-grow-1 d-flex align-items-center justify-content-between" style="min-width: 0;">
-                                <div style="max-width: 40%;">
-                                  {{ $t('businessFinancial.filters.professional') || 'Profesional' }}
+                            <div
+                              class="d-flex align-items-center py-2 px-2 fw-bold"
+                              style="
+                                border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+                                font-size: 0.8rem;
+                                background-color: rgba(0, 0, 0, 0.02);
+                                flex-shrink: 0;
+                              "
+                            >
+                              <div style="width: 10px; flex-shrink: 0"></div>
+                              <div
+                                class="flex-grow-1 d-flex align-items-center justify-content-between"
+                                style="min-width: 0"
+                              >
+                                <div style="max-width: 40%">
+                                  {{
+                                    $t('businessFinancial.filters.professional') || 'Profesional'
+                                  }}
                                 </div>
-                                <div class="d-flex align-items-center gap-3" style="flex-shrink: 0;">
-                                  <div class="text-center" style="min-width: 100px;">
-                                    <span class="badge bg-primary" style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">
+                                <div class="d-flex align-items-center gap-3" style="flex-shrink: 0">
+                                  <div class="text-center" style="min-width: 100px">
+                                    <span
+                                      class="badge bg-primary"
+                                      style="font-size: 0.65rem; padding: 0.2rem 0.4rem"
+                                    >
                                       {{ $t('businessFinancial.professionalIncomes.grossIncome') }}
                                     </span>
                                   </div>
-                                  <div class="text-center" style="min-width: 100px;">
-                                    <span class="badge bg-warning text-dark" style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">
+                                  <div class="text-center" style="min-width: 100px">
+                                    <span
+                                      class="badge bg-warning text-dark"
+                                      style="font-size: 0.65rem; padding: 0.2rem 0.4rem"
+                                    >
                                       {{ $t('businessFinancial.commission') }}
                                     </span>
                                   </div>
@@ -2718,38 +2813,76 @@ export default {
                               </div>
                             </div>
                             <!-- List with scroll -->
-                            <div style="overflow-y: auto; max-height: 320px; min-height: 0; flex: 1;">
+                            <div
+                              style="overflow-y: auto; max-height: 320px; min-height: 0; flex: 1"
+                            >
                               <div
-                                v-for="(professional, index) in financialResume.professionalIncomes.list"
+                                v-for="(professional, index) in financialResume.professionalIncomes
+                                  .list"
                                 :key="professional.id"
                                 class="d-flex align-items-center py-2 px-2"
-                                style="border-bottom: 1px solid rgba(0, 0, 0, 0.05); min-height: 40px;"
+                                style="
+                                  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+                                  min-height: 40px;
+                                "
                               >
                                 <div
                                   class="distribution-color-indicator me-2"
-                                  style="width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;"
+                                  style="
+                                    width: 10px;
+                                    height: 10px;
+                                    border-radius: 2px;
+                                    flex-shrink: 0;
+                                  "
                                   :style="{
                                     backgroundColor:
                                       financialResume.professionalIncomes.chartData.datasets[0]
                                         .backgroundColor[index],
                                   }"
                                 ></div>
-                                <div class="flex-grow-1 d-flex align-items-center justify-content-between" style="min-width: 0;">
-                                  <div class="fw-bold text-truncate me-2" style="font-size: 0.85rem; max-width: 40%;">
+                                <div
+                                  class="flex-grow-1 d-flex align-items-center justify-content-between"
+                                  style="min-width: 0"
+                                >
+                                  <div
+                                    class="fw-bold text-truncate me-2"
+                                    style="font-size: 0.85rem; max-width: 40%"
+                                  >
                                     {{ professional.name }}
                                   </div>
-                                  <div class="d-flex align-items-center gap-3" style="flex-shrink: 0;">
-                                    <div class="text-end fw-bold" style="font-size: 0.8rem; white-space: nowrap; min-width: 100px;">
-                                      {{ professional.totalAmount.toLocaleString('de-DE', {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                      }) }}
+                                  <div
+                                    class="d-flex align-items-center gap-3"
+                                    style="flex-shrink: 0"
+                                  >
+                                    <div
+                                      class="text-end fw-bold"
+                                      style="
+                                        font-size: 0.8rem;
+                                        white-space: nowrap;
+                                        min-width: 100px;
+                                      "
+                                    >
+                                      {{
+                                        professional.totalAmount.toLocaleString('de-DE', {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        })
+                                      }}
                                     </div>
-                                    <div class="text-end fw-bold" style="font-size: 0.8rem; white-space: nowrap; min-width: 100px;">
-                                      {{ professional.totalCommission.toLocaleString('de-DE', {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                      }) }}
+                                    <div
+                                      class="text-end fw-bold"
+                                      style="
+                                        font-size: 0.8rem;
+                                        white-space: nowrap;
+                                        min-width: 100px;
+                                      "
+                                    >
+                                      {{
+                                        professional.totalCommission.toLocaleString('de-DE', {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        })
+                                      }}
                                     </div>
                                   </div>
                                 </div>
@@ -3133,7 +3266,6 @@ export default {
         />
       </div>
     </div>
-
   </div>
 </template>
 

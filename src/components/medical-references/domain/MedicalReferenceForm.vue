@@ -123,7 +123,6 @@ export default {
 
     // Initialize reference data
     onMounted(async () => {
-
       // Extract attention ID first (could be string, object with id, or object with full details)
       let attentionId = null;
       if (typeof attention.value === 'string') {
@@ -421,7 +420,6 @@ export default {
             .toString(36)
             .substr(2, 9)}`;
         }
-
 
         if (typeof receiveData.value === 'function') {
           receiveData.value(state.reference);
@@ -1539,7 +1537,7 @@ export default {
   font-weight: 600;
   text-align: center;
   color: var(--color-text);
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 
 .template-description {

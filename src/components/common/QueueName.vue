@@ -40,13 +40,19 @@ export default {
   computed: {
     // Prioritize external props if available, otherwise use internal Firebase data for independence
     finalPendingDetails() {
-      return this.queuePendingDetails && this.queuePendingDetails.length > 0 ? this.queuePendingDetails : this.internalPendingDetails;
+      return this.queuePendingDetails && this.queuePendingDetails.length > 0
+        ? this.queuePendingDetails
+        : this.internalPendingDetails;
     },
     finalProcessingDetails() {
-      return this.queueProcessingDetails && this.queueProcessingDetails.length > 0 ? this.queueProcessingDetails : this.internalProcessingDetails;
+      return this.queueProcessingDetails && this.queueProcessingDetails.length > 0
+        ? this.queueProcessingDetails
+        : this.internalProcessingDetails;
     },
     finalTerminatedDetails() {
-      return this.queueTerminatedDetails && this.queueTerminatedDetails.length > 0 ? this.queueTerminatedDetails : this.internalTerminatedDetails;
+      return this.queueTerminatedDetails && this.queueTerminatedDetails.length > 0
+        ? this.queueTerminatedDetails
+        : this.internalTerminatedDetails;
     },
   },
   mounted() {
@@ -217,9 +223,18 @@ export default {
     saveCachedData() {
       if (!this.queue?.id) return;
       try {
-        sessionStorage.setItem(`queue-${this.queue.id}-pending`, JSON.stringify(this.internalPendingDetails));
-        sessionStorage.setItem(`queue-${this.queue.id}-processing`, JSON.stringify(this.internalProcessingDetails));
-        sessionStorage.setItem(`queue-${this.queue.id}-terminated`, JSON.stringify(this.internalTerminatedDetails));
+        sessionStorage.setItem(
+          `queue-${this.queue.id}-pending`,
+          JSON.stringify(this.internalPendingDetails),
+        );
+        sessionStorage.setItem(
+          `queue-${this.queue.id}-processing`,
+          JSON.stringify(this.internalProcessingDetails),
+        );
+        sessionStorage.setItem(
+          `queue-${this.queue.id}-terminated`,
+          JSON.stringify(this.internalTerminatedDetails),
+        );
       } catch (e) {
         console.warn('Error saving cached queue data', e);
       }
@@ -304,7 +319,10 @@ export default {
             </div>
             <div class="modal-body text-center pb-3">
               <div v-if="isLoading" class="text-center">
-                <i class="bi bi-arrow-repeat fs-1 text-primary" style="animation: spin 1s linear infinite;"></i>
+                <i
+                  class="bi bi-arrow-repeat fs-1 text-primary"
+                  style="animation: spin 1s linear infinite"
+                ></i>
                 <p class="mt-2">Carregando dados...</p>
               </div>
               <QueueAttentionDetails
@@ -390,7 +408,11 @@ export default {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

@@ -29,8 +29,12 @@ export default {
             type: 'warning',
             icon: 'bi-exclamation-triangle-fill',
             title: t('dashboard.smartRecommendations.recommendations.lowConversionRate.title'),
-            message: t('dashboard.smartRecommendations.recommendations.lowConversionRate.message', { conversionRate: conversionRate.toFixed(1) }),
-            recommendation: t('dashboard.smartRecommendations.recommendations.lowConversionRate.recommendation'),
+            message: t('dashboard.smartRecommendations.recommendations.lowConversionRate.message', {
+              conversionRate: conversionRate.toFixed(1),
+            }),
+            recommendation: t(
+              'dashboard.smartRecommendations.recommendations.lowConversionRate.recommendation',
+            ),
             impact: t('dashboard.smartRecommendations.recommendations.lowConversionRate.impact'),
             priority: 'high',
           });
@@ -38,10 +42,19 @@ export default {
           recs.push({
             type: 'success',
             icon: 'bi-check-circle-fill',
-            title: t('dashboard.smartRecommendations.recommendations.excellentConversionRate.title'),
-            message: t('dashboard.smartRecommendations.recommendations.excellentConversionRate.message', { conversionRate: conversionRate.toFixed(1) }),
-            recommendation: t('dashboard.smartRecommendations.recommendations.excellentConversionRate.recommendation'),
-            impact: t('dashboard.smartRecommendations.recommendations.excellentConversionRate.impact'),
+            title: t(
+              'dashboard.smartRecommendations.recommendations.excellentConversionRate.title',
+            ),
+            message: t(
+              'dashboard.smartRecommendations.recommendations.excellentConversionRate.message',
+              { conversionRate: conversionRate.toFixed(1) },
+            ),
+            recommendation: t(
+              'dashboard.smartRecommendations.recommendations.excellentConversionRate.recommendation',
+            ),
+            impact: t(
+              'dashboard.smartRecommendations.recommendations.excellentConversionRate.impact',
+            ),
             priority: 'low',
           });
         }
@@ -57,8 +70,12 @@ export default {
             type: 'warning',
             icon: 'bi-clock-fill',
             title: t('dashboard.smartRecommendations.recommendations.highAttentionTime.title'),
-            message: t('dashboard.smartRecommendations.recommendations.highAttentionTime.message', { avgMinutes }),
-            recommendation: t('dashboard.smartRecommendations.recommendations.highAttentionTime.recommendation'),
+            message: t('dashboard.smartRecommendations.recommendations.highAttentionTime.message', {
+              avgMinutes,
+            }),
+            recommendation: t(
+              'dashboard.smartRecommendations.recommendations.highAttentionTime.recommendation',
+            ),
             impact: t('dashboard.smartRecommendations.recommendations.highAttentionTime.impact'),
             priority: 'high',
           });
@@ -71,10 +88,19 @@ export default {
           recs.push({
             type: 'error',
             icon: 'bi-star-fill',
-            title: t('dashboard.smartRecommendations.recommendations.lowCustomerSatisfaction.title'),
-            message: t('dashboard.smartRecommendations.recommendations.lowCustomerSatisfaction.message', { avgRating: survey.avgRating.toFixed(1) }),
-            recommendation: t('dashboard.smartRecommendations.recommendations.lowCustomerSatisfaction.recommendation'),
-            impact: t('dashboard.smartRecommendations.recommendations.lowCustomerSatisfaction.impact'),
+            title: t(
+              'dashboard.smartRecommendations.recommendations.lowCustomerSatisfaction.title',
+            ),
+            message: t(
+              'dashboard.smartRecommendations.recommendations.lowCustomerSatisfaction.message',
+              { avgRating: survey.avgRating.toFixed(1) },
+            ),
+            recommendation: t(
+              'dashboard.smartRecommendations.recommendations.lowCustomerSatisfaction.recommendation',
+            ),
+            impact: t(
+              'dashboard.smartRecommendations.recommendations.lowCustomerSatisfaction.impact',
+            ),
             priority: 'critical',
           });
         } else if (survey.avgRating >= 4.5) {
@@ -82,9 +108,16 @@ export default {
             type: 'success',
             icon: 'bi-star-fill',
             title: t('dashboard.smartRecommendations.recommendations.excellentSatisfaction.title'),
-            message: t('dashboard.smartRecommendations.recommendations.excellentSatisfaction.message', { avgRating: survey.avgRating.toFixed(1) }),
-            recommendation: t('dashboard.smartRecommendations.recommendations.excellentSatisfaction.recommendation'),
-            impact: t('dashboard.smartRecommendations.recommendations.excellentSatisfaction.impact'),
+            message: t(
+              'dashboard.smartRecommendations.recommendations.excellentSatisfaction.message',
+              { avgRating: survey.avgRating.toFixed(1) },
+            ),
+            recommendation: t(
+              'dashboard.smartRecommendations.recommendations.excellentSatisfaction.recommendation',
+            ),
+            impact: t(
+              'dashboard.smartRecommendations.recommendations.excellentSatisfaction.impact',
+            ),
             priority: 'low',
           });
         }
@@ -98,8 +131,12 @@ export default {
             type: 'error',
             icon: 'bi-megaphone-fill',
             title: t('dashboard.smartRecommendations.recommendations.negativeNPS.title'),
-            message: t('dashboard.smartRecommendations.recommendations.negativeNPS.message', { nps: `${roundedNps > 0 ? '+' : ''}${roundedNps}` }),
-            recommendation: t('dashboard.smartRecommendations.recommendations.negativeNPS.recommendation'),
+            message: t('dashboard.smartRecommendations.recommendations.negativeNPS.message', {
+              nps: `${roundedNps > 0 ? '+' : ''}${roundedNps}`,
+            }),
+            recommendation: t(
+              'dashboard.smartRecommendations.recommendations.negativeNPS.recommendation',
+            ),
             impact: t('dashboard.smartRecommendations.recommendations.negativeNPS.impact'),
             priority: 'critical',
           });
@@ -108,8 +145,12 @@ export default {
             type: 'success',
             icon: 'bi-megaphone-fill',
             title: t('dashboard.smartRecommendations.recommendations.excellentNPS.title'),
-            message: t('dashboard.smartRecommendations.recommendations.excellentNPS.message', { nps: roundedNps }),
-            recommendation: t('dashboard.smartRecommendations.recommendations.excellentNPS.recommendation'),
+            message: t('dashboard.smartRecommendations.recommendations.excellentNPS.message', {
+              nps: roundedNps,
+            }),
+            recommendation: t(
+              'dashboard.smartRecommendations.recommendations.excellentNPS.recommendation',
+            ),
             impact: t('dashboard.smartRecommendations.recommendations.excellentNPS.impact'),
             priority: 'low',
           });
@@ -130,10 +171,19 @@ export default {
           recs.push({
             type: 'info',
             icon: 'bi-graph-up-arrow',
-            title: t('dashboard.smartRecommendations.recommendations.optimizationOpportunity.title'),
-            message: t('dashboard.smartRecommendations.recommendations.optimizationOpportunity.message', { maxHourLabel, maxHour }),
-            recommendation: t('dashboard.smartRecommendations.recommendations.optimizationOpportunity.recommendation'),
-            impact: t('dashboard.smartRecommendations.recommendations.optimizationOpportunity.impact'),
+            title: t(
+              'dashboard.smartRecommendations.recommendations.optimizationOpportunity.title',
+            ),
+            message: t(
+              'dashboard.smartRecommendations.recommendations.optimizationOpportunity.message',
+              { maxHourLabel, maxHour },
+            ),
+            recommendation: t(
+              'dashboard.smartRecommendations.recommendations.optimizationOpportunity.recommendation',
+            ),
+            impact: t(
+              'dashboard.smartRecommendations.recommendations.optimizationOpportunity.impact',
+            ),
             priority: 'medium',
           });
         }
@@ -151,8 +201,12 @@ export default {
             type: 'success',
             icon: 'bi-arrow-up-circle-fill',
             title: t('dashboard.smartRecommendations.recommendations.significantGrowth.title'),
-            message: t('dashboard.smartRecommendations.recommendations.significantGrowth.message', { change: change.toFixed(1) }),
-            recommendation: t('dashboard.smartRecommendations.recommendations.significantGrowth.recommendation'),
+            message: t('dashboard.smartRecommendations.recommendations.significantGrowth.message', {
+              change: change.toFixed(1),
+            }),
+            recommendation: t(
+              'dashboard.smartRecommendations.recommendations.significantGrowth.recommendation',
+            ),
             impact: t('dashboard.smartRecommendations.recommendations.significantGrowth.impact'),
             priority: 'medium',
           });
@@ -161,8 +215,12 @@ export default {
             type: 'warning',
             icon: 'bi-arrow-down-circle-fill',
             title: t('dashboard.smartRecommendations.recommendations.demandDrop.title'),
-            message: t('dashboard.smartRecommendations.recommendations.demandDrop.message', { change: change.toFixed(1) }),
-            recommendation: t('dashboard.smartRecommendations.recommendations.demandDrop.recommendation'),
+            message: t('dashboard.smartRecommendations.recommendations.demandDrop.message', {
+              change: change.toFixed(1),
+            }),
+            recommendation: t(
+              'dashboard.smartRecommendations.recommendations.demandDrop.recommendation',
+            ),
             impact: t('dashboard.smartRecommendations.recommendations.demandDrop.impact'),
             priority: 'high',
           });

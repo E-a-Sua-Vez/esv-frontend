@@ -39,7 +39,7 @@ export default {
       if (oldValue === true && newValue === false) {
         this.$emit('booking-modal-closed');
       }
-    }
+    },
   },
   data() {
     return {

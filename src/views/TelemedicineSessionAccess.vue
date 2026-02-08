@@ -927,7 +927,6 @@ export default {
       ) {
         showChat.value = true;
       }
-
     };
 
     // Try to load commerce info from public session endpoint

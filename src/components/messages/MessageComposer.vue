@@ -760,7 +760,6 @@ function clearChatCommerce() {
 }
 
 function selectChatRecipientType(type) {
-
   chatRecipientType.value = type;
   chatSelectedRecipient.value = '';
 
@@ -1457,7 +1456,6 @@ async function send() {
         recipientType,
         commerceId
       );
-
 
       // Emitir conversationId para que se seleccione automáticamente
       emit('sent', { conversationId: conversation.id });

@@ -38,12 +38,12 @@ export default {
         'features-master-admin': 'bi-gear',
         'plan-activations-admin': 'bi-check-circle',
         'lead-pipeline': 'bi-funnel',
-        'dashboard': 'bi-speedometer2',
-        'reports': 'bi-bar-chart',
+        dashboard: 'bi-speedometer2',
+        reports: 'bi-bar-chart',
         'bookings-master-admin': 'bi-calendar-check',
         'manage-master-admin': 'bi-people',
-        'configuration': 'bi-sliders',
-        'documents': 'bi-file-earmark-text',
+        configuration: 'bi-sliders',
+        documents: 'bi-file-earmark-text',
         'your-plan': 'bi-credit-card',
         'business-master-resume': 'bi-building',
         'go-minisite': 'bi-globe',
@@ -171,10 +171,7 @@ export default {
               :key="option"
               class="col-12 col-md-6 col-lg-4 menu-card-wrapper"
             >
-              <div
-                class="menu-card"
-                @click="goToOption(option)"
-              >
+              <div class="menu-card" @click="goToOption(option)">
                 <div class="card-icon">
                   <i :class="`bi ${state.menuIcons[option]}`"></i>
                 </div>

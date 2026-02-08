@@ -483,7 +483,7 @@ onMounted(() => {
 
 .picker-intro {
   margin-bottom: 0.5rem;
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 
 .search-box {
@@ -612,7 +612,7 @@ onMounted(() => {
   background: #fff3cd;
   border: 1px solid #ffeaa7;
   border-radius: var(--border-radius-sm, 0.375rem);
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 
 .quick-help i {

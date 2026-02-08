@@ -8,8 +8,12 @@
             <i class="bi bi-images"></i>
           </div>
           <div class="modern-modal-title-wrapper">
-            <h5 class="modal-title fw-bold modern-modal-title">{{ currentDocument?.name || $t('documentImageCarousel.image') }}</h5>
-            <p class="modern-modal-client-name">{{ currentIndex + 1 }} de {{ images.length }} {{ $t('documentImageCarousel.images') }}</p>
+            <h5 class="modal-title fw-bold modern-modal-title">
+              {{ currentDocument?.name || $t('documentImageCarousel.image') }}
+            </h5>
+            <p class="modern-modal-client-name">
+              {{ currentIndex + 1 }} de {{ images.length }} {{ $t('documentImageCarousel.images') }}
+            </p>
           </div>
         </div>
         <div class="carousel-actions">
@@ -89,10 +93,18 @@
         <button @click="rotateImage" class="zoom-btn" title="Rotar">
           <i class="bi bi-arrow-clockwise"></i>
         </button>
-        <button @click="toggleFullscreen" class="zoom-btn" :title="$t('documentImageCarousel.fullscreen')">
+        <button
+          @click="toggleFullscreen"
+          class="zoom-btn"
+          :title="$t('documentImageCarousel.fullscreen')"
+        >
           <i :class="isFullscreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'"></i>
         </button>
-        <button @click="downloadCurrent" class="zoom-btn" :title="$t('documentImageCarousel.download')">
+        <button
+          @click="downloadCurrent"
+          class="zoom-btn"
+          :title="$t('documentImageCarousel.download')"
+        >
           <i class="bi bi-download"></i>
         </button>
       </div>
@@ -212,7 +224,12 @@ export default {
       for (const doc of images.value) {
         if (!doc.url) {
           try {
-            const blob = await getClientDocument(doc.commerceId, doc.clientId, 'patient_documents', doc.name);
+            const blob = await getClientDocument(
+              doc.commerceId,
+              doc.clientId,
+              'patient_documents',
+              doc.name,
+            );
             doc.url = URL.createObjectURL(blob);
           } catch (error) {
             console.error('Error loading image:', doc.name, error);
@@ -233,7 +250,7 @@ export default {
 
     watch(
       () => props.show,
-      async (show) => {
+      async show => {
         if (show) {
           currentIndex.value = props.initialIndex;
           resetView();
@@ -501,7 +518,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: .5rem;
+  padding: 0.5rem;
   background: rgba(0, 0, 0, 0.8);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }

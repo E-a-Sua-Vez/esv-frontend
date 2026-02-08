@@ -175,12 +175,11 @@ export default {
       }
 
       // Convert empty string or "undefined" string to undefined
-      const newValue = selectedValue === '' || selectedValue === 'undefined' ? undefined : selectedValue;
-
+      const newValue =
+        selectedValue === '' || selectedValue === 'undefined' ? undefined : selectedValue;
 
       // Update the value
       this.professionalFilter = newValue;
-
 
       this.page = 1; // Reset to first page when filter changes
       this.refresh();
@@ -197,7 +196,6 @@ export default {
         this.financialIncomes = [];
         this.counter = 0;
         this.totalPages = 0;
-
 
         // Call refresh to get new data
         this.refresh();
@@ -241,7 +239,6 @@ export default {
           this.professionalFilter,
         );
 
-
         // Clear first to force UI update
         this.financialIncomes = [];
         this.counter = 0;
@@ -252,7 +249,6 @@ export default {
 
         // Force reactivity by creating a new array reference
         this.financialIncomes = Array.isArray(incomes) ? [...incomes] : [];
-
 
         // Set default minAmount to 0 and maxAmount to maximum value from records if not already set
         // Only set these values if they haven't been explicitly set by the user
@@ -596,8 +592,7 @@ export default {
               oldData.paymentMethodFilter !== newData.paymentMethodFilter;
 
             const onlyProfessionalFilterChanged =
-              !otherFiltersChanged &&
-              oldData.professionalFilter !== newData.professionalFilter;
+              !otherFiltersChanged && oldData.professionalFilter !== newData.professionalFilter;
 
             // Only call refresh if other filters changed
             // If ONLY professionalFilter changed, skip - let handleProfessionalFilterChange handle it
@@ -640,7 +635,6 @@ export default {
     // Watch for changes in professionalFilter
     professionalFilter: {
       handler(newVal, oldVal) {
-
         // When filters are in slot mode and value changes, ensure refresh is called
         if (this.filtersLocation === 'slot' && newVal !== oldVal && oldVal !== undefined) {
           // setProfessionalFilter should have already called refresh, but ensure it
@@ -955,11 +949,15 @@ export default {
                             v-model="commissionPaid"
                             @click="checkCommissionPaid($event)"
                           />
-                          <label class="form-check-label metric-card-subtitle" for="commissionPaid">{{
-                            commissionPaid
-                              ? $t('commissionPayments.commissionPaid')
-                              : $t('commissionPayments.commissionUnpaid') || 'Comisión No Pagada'
-                          }}</label>
+                          <label
+                            class="form-check-label metric-card-subtitle"
+                            for="commissionPaid"
+                            >{{
+                              commissionPaid
+                                ? $t('commissionPayments.commissionPaid')
+                                : $t('commissionPayments.commissionUnpaid') || 'Comisión No Pagada'
+                            }}</label
+                          >
                         </div>
                       </div>
                     </div>
@@ -1060,15 +1058,21 @@ export default {
                             {{ $t('businessFinancial.filters.all') }}
                           </option>
                           <option value="MONEY">{{ $t('paymentClientMethods.MONEY') }}</option>
-                          <option value="CREDIT_CARD">{{ $t('paymentClientMethods.CREDIT_CARD') }}</option>
-                          <option value="DEBIT_CARD">{{ $t('paymentClientMethods.DEBIT_CARD') }}</option>
+                          <option value="CREDIT_CARD">
+                            {{ $t('paymentClientMethods.CREDIT_CARD') }}
+                          </option>
+                          <option value="DEBIT_CARD">
+                            {{ $t('paymentClientMethods.DEBIT_CARD') }}
+                          </option>
                           <option value="WIRE_TRANSFER">
                             {{ $t('paymentClientMethods.WIRE_TRANSFER') }}
                           </option>
                           <option value="PIX">{{ $t('paymentClientMethods.PIX') }}</option>
                           <option value="BOLETO">{{ $t('paymentClientMethods.BOLETO') }}</option>
                           <option value="CHECK">{{ $t('paymentClientMethods.CHECK') }}</option>
-                          <option value="HEALTH_AGREEMENT">{{ $t('paymentClientMethods.HEALTH_AGREEMENT') }}</option>
+                          <option value="HEALTH_AGREEMENT">
+                            {{ $t('paymentClientMethods.HEALTH_AGREEMENT') }}
+                          </option>
                           <option value="OTHER">{{ $t('paymentClientMethods.OTHER') }}</option>
                         </select>
                       </div>
@@ -1177,11 +1181,16 @@ export default {
                   </ul>
                 </nav>
               </div>
-              <div v-if="financialIncomes && financialIncomes.length > 0" :key="`incomes-list-${professionalFilter || 'all'}-${page}`">
+              <div
+                v-if="financialIncomes && financialIncomes.length > 0"
+                :key="`incomes-list-${professionalFilter || 'all'}-${page}`"
+              >
                 <div
                   class="row"
                   v-for="(income, index) in financialIncomes"
-                  :key="`income-${income.id || income.incomeId || index}-${professionalFilter || 'all'}-${page}`"
+                  :key="`income-${income.id || income.incomeId || index}-${
+                    professionalFilter || 'all'
+                  }-${page}`"
                 >
                   <IncomeDetailsCard
                     :show="true"
@@ -1206,7 +1215,6 @@ export default {
           </div>
         </div>
       </div>
-
     </div>
     <div v-if="showIncomesFinancialManagement === true && !toggles['financial.incomes.view']">
       <Message
@@ -1216,16 +1224,16 @@ export default {
       />
     </div>
 
-     <!-- Modal Add -->
-     <Teleport to="body">
-     <div
+    <!-- Modal Add -->
+    <Teleport to="body">
+      <div
         class="modal fade"
         :id="`add-income`"
         data-bs-keyboard="false"
         tabindex="-1"
         aria-labelledby="staticBackdropLabel"
         aria-hidden="true"
-        style="z-index: 1055;"
+        style="z-index: 1055"
       >
         <div class="modal-dialog modal-xl">
           <div class="modal-content">
@@ -1355,7 +1363,7 @@ export default {
           </div>
         </div>
       </div>
-      </Teleport>
+    </Teleport>
   </div>
 </template>
 

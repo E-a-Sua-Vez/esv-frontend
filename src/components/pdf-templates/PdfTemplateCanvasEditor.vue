@@ -92,13 +92,28 @@
       <div class="toolbar-section">
         <div class="toolbar-title">{{ $t('pdfTemplateEditor.canvas') }}</div>
         <div class="btn-group" role="group">
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="fitToCanvas" :title="$t('pdfTemplateEditor.fitToCanvas')">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="fitToCanvas"
+            :title="$t('pdfTemplateEditor.fitToCanvas')"
+          >
             <i class="bi bi-aspect-ratio"></i>
           </button>
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="bringToFront" :title="$t('pdfTemplateEditor.bringToFront')">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="bringToFront"
+            :title="$t('pdfTemplateEditor.bringToFront')"
+          >
             <i class="bi bi-front"></i>
           </button>
-          <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="sendToBack" :title="$t('pdfTemplateEditor.sendToBack')">
+          <button
+            type="button"
+            class="btn btn-sm btn-dark rounded-pill px-3"
+            @click="sendToBack"
+            :title="$t('pdfTemplateEditor.sendToBack')"
+          >
             <i class="bi bi-back"></i>
           </button>
         </div>
@@ -321,7 +336,10 @@
             {{ showGrid ? $t('pdfTemplateEditor.hideGrid') : $t('pdfTemplateEditor.showGrid') }}
           </button>
           <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" @click="toggleRulers">
-            <i class="bi bi-rulers"></i> {{ showRulers ? $t('pdfTemplateEditor.hideRulers') : $t('pdfTemplateEditor.showRulers') }}
+            <i class="bi bi-rulers"></i>
+            {{
+              showRulers ? $t('pdfTemplateEditor.hideRulers') : $t('pdfTemplateEditor.showRulers')
+            }}
           </button>
         </div>
       </div>
@@ -376,7 +394,14 @@
 
     <div class="page-info mb-2">
       <small>
-        {{ $t('pdfTemplateEditor.pageInfo', { pageLabel, width: canvasWidth, height: canvasHeight, orientation: orientationLabel }) }}
+        {{
+          $t('pdfTemplateEditor.pageInfo', {
+            pageLabel,
+            width: canvasWidth,
+            height: canvasHeight,
+            orientation: orientationLabel,
+          })
+        }}
       </small>
     </div>
 
@@ -419,10 +444,13 @@
         <h6 class="mb-3">{{ $t('pdfTemplateEditor.properties') }}</h6>
         <div v-if="selectedElements.length > 1" class="element-properties">
           <div class="panel-group">
-            <div class="group-title"><i class="bi bi-collection"></i> {{ $t('pdfTemplateEditor.multipleElements') }}</div>
+            <div class="group-title">
+              <i class="bi bi-collection"></i> {{ $t('pdfTemplateEditor.multipleElements') }}
+            </div>
             <div class="group-body">
               <div class="alert alert-info small mb-3">
-                <i class="bi bi-info-circle"></i> {{ selectedElements.length }} {{ $t('pdfTemplateEditor.elementsSelected') }}
+                <i class="bi bi-info-circle"></i> {{ selectedElements.length }}
+                {{ $t('pdfTemplateEditor.elementsSelected') }}
               </div>
               <div class="btn-group btn-group-sm w-100 mb-2" role="group">
                 <button
@@ -499,7 +527,9 @@
             </div>
           </div>
           <div class="text-muted small mt-3">
-            <p><strong>{{ $t('pdfTemplateEditor.tips') }}</strong></p>
+            <p>
+              <strong>{{ $t('pdfTemplateEditor.tips') }}</strong>
+            </p>
             <ul class="mb-0 ps-3">
               <li>{{ $t('pdfTemplateEditor.dragToMoveTogether') }}</li>
               <li>{{ $t('pdfTemplateEditor.useGroupToKeepUnited') }}</li>
@@ -509,7 +539,9 @@
         </div>
         <div v-else-if="selectedElement" class="element-properties">
           <div class="panel-group">
-            <div class="group-title"><i class="bi bi-info-circle"></i> {{ $t('pdfTemplateEditor.element') }}</div>
+            <div class="group-title">
+              <i class="bi bi-info-circle"></i> {{ $t('pdfTemplateEditor.element') }}
+            </div>
             <div class="group-body">
               <div class="form-group-modern mb-2">
                 <label class="form-label-modern">{{ $t('pdfTemplateEditor.type') }}</label>
@@ -564,7 +596,9 @@
           </div>
 
           <div v-if="selectedElement.type === 'text'" class="panel-group mt-3">
-            <div class="group-title"><i class="bi bi-text-paragraph"></i> {{ $t('pdfTemplateEditor.text') }}</div>
+            <div class="group-title">
+              <i class="bi bi-text-paragraph"></i> {{ $t('pdfTemplateEditor.text') }}
+            </div>
             <div class="group-body">
               <div class="form-group-modern mb-2">
                 <label class="form-label-modern">{{ $t('pdfTemplateEditor.content') }}</label>
@@ -577,7 +611,9 @@
               </div>
               <div class="form-row">
                 <div class="form-col">
-                  <label class="form-label-modern">{{ $t('pdfTemplateEditor.fontSizeLabel') }}</label>
+                  <label class="form-label-modern">{{
+                    $t('pdfTemplateEditor.fontSizeLabel')
+                  }}</label>
                   <input
                     type="number"
                     v-model.number="selectedElement.fontSize"
@@ -600,7 +636,9 @@
               </div>
 
               <div class="form-group-modern mt-2">
-                <label class="form-label-modern">{{ $t('pdfTemplateEditor.alignmentLabel') }}</label>
+                <label class="form-label-modern">{{
+                  $t('pdfTemplateEditor.alignmentLabel')
+                }}</label>
                 <div class="btn-group btn-group-sm w-100" role="group">
                   <input
                     type="radio"
@@ -611,7 +649,10 @@
                     v-model="selectedElement.align"
                     @change="updateElement"
                   />
-                  <label class="btn btn-dark rounded-pill px-3" for="align-left" :title="$t('pdfTemplateEditor.left')"
+                  <label
+                    class="btn btn-dark rounded-pill px-3"
+                    for="align-left"
+                    :title="$t('pdfTemplateEditor.left')"
                     ><i class="bi bi-text-left"></i
                   ></label>
                   <input
@@ -623,7 +664,10 @@
                     v-model="selectedElement.align"
                     @change="updateElement"
                   />
-                  <label class="btn btn-dark rounded-pill px-3" for="align-center" :title="$t('pdfTemplateEditor.center')"
+                  <label
+                    class="btn btn-dark rounded-pill px-3"
+                    for="align-center"
+                    :title="$t('pdfTemplateEditor.center')"
                     ><i class="bi bi-text-center"></i
                   ></label>
                   <input
@@ -635,7 +679,10 @@
                     v-model="selectedElement.align"
                     @change="updateElement"
                   />
-                  <label class="btn btn-dark rounded-pill px-3" for="align-right" :title="$t('pdfTemplateEditor.right')"
+                  <label
+                    class="btn btn-dark rounded-pill px-3"
+                    for="align-right"
+                    :title="$t('pdfTemplateEditor.right')"
                     ><i class="bi bi-text-right"></i
                   ></label>
                   <input
@@ -666,7 +713,10 @@
                     v-model="selectedElement.bold"
                     @change="updateElement"
                   />
-                  <label class="btn btn-dark rounded-pill px-3" for="bold" :title="$t('pdfTemplateEditor.bold')"
+                  <label
+                    class="btn btn-dark rounded-pill px-3"
+                    for="bold"
+                    :title="$t('pdfTemplateEditor.bold')"
                     ><i class="bi bi-type-bold"></i
                   ></label>
                   <input
@@ -676,7 +726,10 @@
                     v-model="selectedElement.italic"
                     @change="updateElement"
                   />
-                  <label class="btn btn-dark rounded-pill px-3" for="italic" :title="$t('pdfTemplateEditor.italic')"
+                  <label
+                    class="btn btn-dark rounded-pill px-3"
+                    for="italic"
+                    :title="$t('pdfTemplateEditor.italic')"
                     ><i class="bi bi-type-italic"></i
                   ></label>
                   <input
@@ -686,7 +739,10 @@
                     v-model="selectedElement.underline"
                     @change="updateElement"
                   />
-                  <label class="btn btn-dark rounded-pill px-3" for="underline" :title="$t('pdfTemplateEditor.underline')"
+                  <label
+                    class="btn btn-dark rounded-pill px-3"
+                    for="underline"
+                    :title="$t('pdfTemplateEditor.underline')"
                     ><i class="bi bi-type-underline"></i
                   ></label>
                 </div>
@@ -709,7 +765,9 @@
           </div>
 
           <div v-if="selectedElement.type === 'line'" class="panel-group mt-3">
-            <div class="group-title"><i class="bi bi-slash-lg"></i> {{ $t('pdfTemplateEditor.line') }}</div>
+            <div class="group-title">
+              <i class="bi bi-slash-lg"></i> {{ $t('pdfTemplateEditor.line') }}
+            </div>
             <div class="group-body">
               <div class="form-row">
                 <div class="form-col">
@@ -740,7 +798,9 @@
           </div>
 
           <div v-if="selectedElement.type === 'rectangle'" class="panel-group mt-3">
-            <div class="group-title"><i class="bi bi-square"></i> {{ $t('pdfTemplateEditor.rectangle') }}</div>
+            <div class="group-title">
+              <i class="bi bi-square"></i> {{ $t('pdfTemplateEditor.rectangle') }}
+            </div>
             <div class="group-body">
               <div class="form-row">
                 <div class="form-col">
@@ -791,7 +851,9 @@
           </div>
 
           <div class="panel-group mt-3">
-            <div class="group-title"><i class="bi bi-aspect-ratio"></i> {{ $t('pdfTemplateEditor.canvasAlignment') }}</div>
+            <div class="group-title">
+              <i class="bi bi-aspect-ratio"></i> {{ $t('pdfTemplateEditor.canvasAlignment') }}
+            </div>
             <div class="group-body">
               <div class="btn-group btn-group-sm w-100 mb-2" role="group">
                 <button
@@ -849,7 +911,9 @@
           </div>
 
           <div class="text-muted small mt-3">
-            <p><strong>{{ $t('pdfTemplateEditor.tips') }}</strong></p>
+            <p>
+              <strong>{{ $t('pdfTemplateEditor.tips') }}</strong>
+            </p>
             <ul class="mb-0 ps-3">
               <li>{{ $t('pdfTemplateEditor.ctrlClickMultiSelect') }}</li>
               <li>{{ $t('pdfTemplateEditor.clickDragRectangleSelect') }}</li>
@@ -1356,7 +1420,12 @@ export default {
             ctx.setLineDash([]);
           }
 
-          ctx.strokeRect(element.x || 0, element.y || 0, element.width || 100, element.height || 50);
+          ctx.strokeRect(
+            element.x || 0,
+            element.y || 0,
+            element.width || 100,
+            element.height || 50,
+          );
           ctx.setLineDash([]);
         }
       } else if (
@@ -2511,13 +2580,13 @@ export default {
   margin-top: 0.5rem;
   font-weight: 700;
   color: #495057;
-  line-height: .9rem;
-  margin-bottom: .5rem;
+  line-height: 0.9rem;
+  margin-bottom: 0.5rem;
 }
 .empty-subtext {
   font-size: 0.8rem;
   color: #6c757d;
-  line-height: .9rem;
+  line-height: 0.9rem;
 }
 
 /* Editor buttons style - flat white background with dark text */

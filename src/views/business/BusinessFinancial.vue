@@ -140,7 +140,7 @@ export default {
           }
         }
       },
-      { immediate: false }
+      { immediate: false },
     );
 
     onBeforeMount(async () => {
@@ -213,7 +213,7 @@ export default {
       state.showCommissionPaymentsModal = false;
     };
 
-    const handleViewOutcome = (outcomeId) => {
+    const handleViewOutcome = outcomeId => {
       // Close commission payments modal
       state.showCommissionPaymentsModal = false;
 
@@ -284,13 +284,15 @@ export default {
 
             // Handle boolean values - ensure they are properly set (true/false or undefined)
             const fiscalNoteValue = getValue('fiscalNote');
-            contentInstance.fiscalNote = fiscalNoteValue !== undefined ? fiscalNoteValue : undefined;
+            contentInstance.fiscalNote =
+              fiscalNoteValue !== undefined ? fiscalNoteValue : undefined;
 
             const automaticValue = getValue('automatic');
             contentInstance.automatic = automaticValue !== undefined ? automaticValue : undefined;
 
             const commissionPaidValue = getValue('commissionPaid');
-            contentInstance.commissionPaid = commissionPaidValue !== undefined ? commissionPaidValue : undefined;
+            contentInstance.commissionPaid =
+              commissionPaidValue !== undefined ? commissionPaidValue : undefined;
 
             const ascValue = getValue('asc');
             contentInstance.asc = ascValue !== undefined ? ascValue : false;
@@ -300,13 +302,26 @@ export default {
 
             // Handle filter values - ensure undefined is properly handled
             const incomeTypeValue = getValue('incomeTypeFilter');
-            contentInstance.incomeTypeFilter = incomeTypeValue !== undefined && incomeTypeValue !== null && incomeTypeValue !== '' ? incomeTypeValue : undefined;
+            contentInstance.incomeTypeFilter =
+              incomeTypeValue !== undefined && incomeTypeValue !== null && incomeTypeValue !== ''
+                ? incomeTypeValue
+                : undefined;
 
             const paymentMethodValue = getValue('paymentMethodFilter');
-            contentInstance.paymentMethodFilter = paymentMethodValue !== undefined && paymentMethodValue !== null && paymentMethodValue !== '' ? paymentMethodValue : undefined;
+            contentInstance.paymentMethodFilter =
+              paymentMethodValue !== undefined &&
+              paymentMethodValue !== null &&
+              paymentMethodValue !== ''
+                ? paymentMethodValue
+                : undefined;
 
             const professionalValue = getValue('professionalFilter');
-            contentInstance.professionalFilter = professionalValue !== undefined && professionalValue !== null && professionalValue !== '' ? professionalValue : undefined;
+            contentInstance.professionalFilter =
+              professionalValue !== undefined &&
+              professionalValue !== null &&
+              professionalValue !== ''
+                ? professionalValue
+                : undefined;
 
             // Clear skip flag and refresh
             contentInstance._skipWatch = false;
@@ -325,8 +340,7 @@ export default {
     };
 
     // Helper function to get all current filter values from filterProps
-    const getAllFilterValues = (filterProps, override = {}) => {
-      return {
+    const getAllFilterValues = (filterProps, override = {}) => ({
         startDate: override.startDate !== undefined ? override.startDate : filterProps.startDate,
         endDate: override.endDate !== undefined ? override.endDate : filterProps.endDate,
         searchText: override.searchText !== undefined ? override.searchText : filterProps.searchText,
@@ -339,8 +353,7 @@ export default {
         incomeTypeFilter: override.incomeTypeFilter !== undefined ? override.incomeTypeFilter : filterProps.incomeTypeFilter,
         paymentMethodFilter: override.paymentMethodFilter !== undefined ? override.paymentMethodFilter : filterProps.paymentMethodFilter,
         professionalFilter: override.professionalFilter !== undefined ? override.professionalFilter : filterProps.professionalFilter,
-      };
-    };
+      });
 
     // Helper function to refresh incomes content with delay (debounce)
     const refreshIncomesContentDelayed = (filterPropsOverride = null, delay = 50) => {
@@ -354,8 +367,7 @@ export default {
     };
 
     // Helper function to get all current filter values for Outcomes
-    const getAllOutcomesFilterValues = (filterProps, override = {}) => {
-      return {
+    const getAllOutcomesFilterValues = (filterProps, override = {}) => ({
         startDate: override.startDate !== undefined ? override.startDate : filterProps.startDate,
         endDate: override.endDate !== undefined ? override.endDate : filterProps.endDate,
         searchText: override.searchText !== undefined ? override.searchText : filterProps.searchText,
@@ -366,8 +378,7 @@ export default {
         outcomeSystemTypeFilter: override.outcomeSystemTypeFilter !== undefined ? override.outcomeSystemTypeFilter : filterProps.outcomeSystemTypeFilter,
         paymentMethodFilter: override.paymentMethodFilter !== undefined ? override.paymentMethodFilter : filterProps.paymentMethodFilter,
         professionalFilter: override.professionalFilter !== undefined ? override.professionalFilter : filterProps.professionalFilter,
-      };
-    };
+      });
 
     // Wrapper function to refresh outcomes content instance when filters change
     const refreshOutcomesContent = (filterPropsOverride = null) => {
@@ -414,13 +425,31 @@ export default {
             contentInstance.minAmount = getValue('minAmount');
             contentInstance.maxAmount = getValue('maxAmount');
             const outcomeTypeValue = getValue('outcomeTypeFilter');
-            contentInstance.outcomeTypeFilter = outcomeTypeValue !== undefined && outcomeTypeValue !== null && outcomeTypeValue !== '' ? outcomeTypeValue : undefined;
+            contentInstance.outcomeTypeFilter =
+              outcomeTypeValue !== undefined && outcomeTypeValue !== null && outcomeTypeValue !== ''
+                ? outcomeTypeValue
+                : undefined;
             const outcomeSystemTypeValue = getValue('outcomeSystemTypeFilter');
-            contentInstance.outcomeSystemTypeFilter = outcomeSystemTypeValue !== undefined && outcomeSystemTypeValue !== null && outcomeSystemTypeValue !== '' ? outcomeSystemTypeValue : undefined;
+            contentInstance.outcomeSystemTypeFilter =
+              outcomeSystemTypeValue !== undefined &&
+              outcomeSystemTypeValue !== null &&
+              outcomeSystemTypeValue !== ''
+                ? outcomeSystemTypeValue
+                : undefined;
             const paymentMethodValue = getValue('paymentMethodFilter');
-            contentInstance.paymentMethodFilter = paymentMethodValue !== undefined && paymentMethodValue !== null && paymentMethodValue !== '' ? paymentMethodValue : undefined;
+            contentInstance.paymentMethodFilter =
+              paymentMethodValue !== undefined &&
+              paymentMethodValue !== null &&
+              paymentMethodValue !== ''
+                ? paymentMethodValue
+                : undefined;
             const professionalValue = getValue('professionalFilter');
-            contentInstance.professionalFilter = professionalValue !== undefined && professionalValue !== null && professionalValue !== '' ? professionalValue : undefined;
+            contentInstance.professionalFilter =
+              professionalValue !== undefined &&
+              professionalValue !== null &&
+              professionalValue !== ''
+                ? professionalValue
+                : undefined;
 
             // Clear skip flag and refresh
             contentInstance._skipWatch = false;
@@ -450,12 +479,10 @@ export default {
     };
 
     // Helper function to get all current filter values for Resume
-    const getAllResumeFilterValues = (filterProps, override = {}) => {
-      return {
+    const getAllResumeFilterValues = (filterProps, override = {}) => ({
         startDate: override.startDate !== undefined ? override.startDate : filterProps.startDate,
         endDate: override.endDate !== undefined ? override.endDate : filterProps.endDate,
-      };
-    };
+      });
 
     // Wrapper function to refresh resume content instance when filters change
     const refreshResumeContent = (filterPropsOverride = null) => {
@@ -656,7 +683,7 @@ export default {
       refreshResumeContent,
       refreshResumeContentDelayed,
       getAllResumeFilterValues,
-      nextTick,
+      nextTick(),
     };
   },
 };
@@ -844,7 +871,9 @@ export default {
                                       resumeFilterRef.value.startDate = filterProps.startDate;
                                       resumeFilterRef.value.endDate = filterProps.endDate;
                                     }
-                                    refreshResumeContentDelayed(getAllResumeFilterValues(filterProps));
+                                    refreshResumeContentDelayed(
+                                      getAllResumeFilterValues(filterProps)
+                                    );
                                   });
                                 "
                                 :disabled="filterProps.loading"
@@ -862,7 +891,9 @@ export default {
                                       resumeFilterRef.value.startDate = filterProps.startDate;
                                       resumeFilterRef.value.endDate = filterProps.endDate;
                                     }
-                                    refreshResumeContentDelayed(getAllResumeFilterValues(filterProps));
+                                    refreshResumeContentDelayed(
+                                      getAllResumeFilterValues(filterProps)
+                                    );
                                   });
                                 "
                                 :disabled="filterProps.loading"
@@ -880,7 +911,9 @@ export default {
                                       resumeFilterRef.value.startDate = filterProps.startDate;
                                       resumeFilterRef.value.endDate = filterProps.endDate;
                                     }
-                                    refreshResumeContentDelayed(getAllResumeFilterValues(filterProps));
+                                    refreshResumeContentDelayed(
+                                      getAllResumeFilterValues(filterProps)
+                                    );
                                   });
                                 "
                                 :disabled="filterProps.loading"
@@ -898,7 +931,9 @@ export default {
                                       resumeFilterRef.value.startDate = filterProps.startDate;
                                       resumeFilterRef.value.endDate = filterProps.endDate;
                                     }
-                                    refreshResumeContentDelayed(getAllResumeFilterValues(filterProps));
+                                    refreshResumeContentDelayed(
+                                      getAllResumeFilterValues(filterProps)
+                                    );
                                   });
                                 "
                                 :disabled="filterProps.loading"
@@ -1079,9 +1114,7 @@ export default {
                                 }
                               }
                             "
-                            @search="
-                              refreshIncomesContentDelayed(getAllFilterValues(filterProps))
-                            "
+                            @search="refreshIncomesContentDelayed(getAllFilterValues(filterProps))"
                           />
 
                           <!-- Search field -->
@@ -1182,7 +1215,9 @@ export default {
                                     }
                                     // Use the new value directly instead of filterProps
                                     nextTick(() => {
-                                      refreshIncomesContentDelayed(getAllFilterValues(filterProps, { fiscalNote: newValue }));
+                                      refreshIncomesContentDelayed(
+                                        getAllFilterValues(filterProps, { fiscalNote: newValue })
+                                      );
                                     });
                                   }
                                 "
@@ -1208,7 +1243,9 @@ export default {
                                     }
                                     // Use the new value directly instead of filterProps
                                     nextTick(() => {
-                                      refreshIncomesContentDelayed(getAllFilterValues(filterProps, { automatic: newValue }));
+                                      refreshIncomesContentDelayed(
+                                        getAllFilterValues(filterProps, { automatic: newValue })
+                                      );
                                     });
                                   }
                                 "
@@ -1236,7 +1273,11 @@ export default {
                                     }
                                     // Use the new value directly instead of filterProps
                                     nextTick(() => {
-                                      refreshIncomesContentDelayed(getAllFilterValues(filterProps, { commissionPaid: newValue }));
+                                      refreshIncomesContentDelayed(
+                                        getAllFilterValues(filterProps, {
+                                          commissionPaid: newValue,
+                                        })
+                                      );
                                     });
                                   }
                                 "
@@ -1262,7 +1303,9 @@ export default {
                                     }
                                     // Use the new value directly instead of filterProps
                                     nextTick(() => {
-                                      refreshIncomesContentDelayed(getAllFilterValues(filterProps, { asc: newValue }));
+                                      refreshIncomesContentDelayed(
+                                        getAllFilterValues(filterProps, { asc: newValue })
+                                      );
                                     });
                                   }
                                 "
@@ -1349,7 +1392,11 @@ export default {
                                     e => {
                                       // Handle undefined value correctly - empty string or 'undefined' string should be undefined
                                       let newValue = e.target.value;
-                                      if (newValue === '' || newValue === 'undefined' || newValue === 'null') {
+                                      if (
+                                        newValue === '' ||
+                                        newValue === 'undefined' ||
+                                        newValue === 'null'
+                                      ) {
                                         newValue = undefined;
                                       }
 
@@ -1363,7 +1410,11 @@ export default {
 
                                       // Use the new value directly
                                       nextTick(() => {
-                                        refreshIncomesContentDelayed(getAllFilterValues(filterProps, { incomeTypeFilter: newValue }));
+                                        refreshIncomesContentDelayed(
+                                          getAllFilterValues(filterProps, {
+                                            incomeTypeFilter: newValue,
+                                          })
+                                        );
                                       });
                                     }
                                   "
@@ -1400,7 +1451,11 @@ export default {
                                     e => {
                                       // Handle undefined value correctly - empty string or 'undefined' string should be undefined
                                       let newValue = e.target.value;
-                                      if (newValue === '' || newValue === 'undefined' || newValue === 'null') {
+                                      if (
+                                        newValue === '' ||
+                                        newValue === 'undefined' ||
+                                        newValue === 'null'
+                                      ) {
                                         newValue = undefined;
                                       }
 
@@ -1414,7 +1469,11 @@ export default {
 
                                       // Use the new value directly
                                       nextTick(() => {
-                                        refreshIncomesContentDelayed(getAllFilterValues(filterProps, { paymentMethodFilter: newValue }));
+                                        refreshIncomesContentDelayed(
+                                          getAllFilterValues(filterProps, {
+                                            paymentMethodFilter: newValue,
+                                          })
+                                        );
                                       });
                                     }
                                   "
@@ -1426,13 +1485,20 @@ export default {
                                     {{ $t('paymentClientMethods.MONEY') || 'Dinheiro' }}
                                   </option>
                                   <option value="CREDIT_CARD">
-                                    {{ $t('paymentClientMethods.CREDIT_CARD') || 'Cartão de Crédito' }}
+                                    {{
+                                      $t('paymentClientMethods.CREDIT_CARD') || 'Cartão de Crédito'
+                                    }}
                                   </option>
                                   <option value="DEBIT_CARD">
-                                    {{ $t('paymentClientMethods.DEBIT_CARD') || 'Cartão de Débito' }}
+                                    {{
+                                      $t('paymentClientMethods.DEBIT_CARD') || 'Cartão de Débito'
+                                    }}
                                   </option>
                                   <option value="WIRE_TRANSFER">
-                                    {{ $t('paymentClientMethods.WIRE_TRANSFER') || 'Transferência Bancária' }}
+                                    {{
+                                      $t('paymentClientMethods.WIRE_TRANSFER') ||
+                                      'Transferência Bancária'
+                                    }}
                                   </option>
                                   <option value="PIX">
                                     {{ $t('paymentClientMethods.PIX') || 'Pix' }}
@@ -1444,7 +1510,10 @@ export default {
                                     {{ $t('paymentClientMethods.CHECK') || 'Cheque' }}
                                   </option>
                                   <option value="HEALTH_AGREEMENT">
-                                    {{ $t('paymentClientMethods.HEALTH_AGREEMENT') || 'Convenio Saúde' }}
+                                    {{
+                                      $t('paymentClientMethods.HEALTH_AGREEMENT') ||
+                                      'Convenio Saúde'
+                                    }}
                                   </option>
                                   <option value="OTHER">
                                     {{ $t('paymentClientMethods.OTHER') || 'Outro' }}
@@ -1464,7 +1533,11 @@ export default {
                             >
                             <select
                               class="form-select form-select-sm"
-                              :value="filterProps.professionalFilter === undefined ? '' : filterProps.professionalFilter"
+                              :value="
+                                filterProps.professionalFilter === undefined
+                                  ? ''
+                                  : filterProps.professionalFilter
+                              "
                               @change="
                                 e => {
                                   const selectedValue = e.target.value;
@@ -1613,7 +1686,9 @@ export default {
                                       outcomesFilterRef.value.startDate = filterProps.startDate;
                                       outcomesFilterRef.value.endDate = filterProps.endDate;
                                     }
-                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps));
+                                    refreshOutcomesContentDelayed(
+                                      getAllOutcomesFilterValues(filterProps)
+                                    );
                                   });
                                 "
                                 :disabled="filterProps.loading"
@@ -1631,7 +1706,9 @@ export default {
                                       outcomesFilterRef.value.startDate = filterProps.startDate;
                                       outcomesFilterRef.value.endDate = filterProps.endDate;
                                     }
-                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps));
+                                    refreshOutcomesContentDelayed(
+                                      getAllOutcomesFilterValues(filterProps)
+                                    );
                                   });
                                 "
                                 :disabled="filterProps.loading"
@@ -1649,7 +1726,9 @@ export default {
                                       outcomesFilterRef.value.startDate = filterProps.startDate;
                                       outcomesFilterRef.value.endDate = filterProps.endDate;
                                     }
-                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps));
+                                    refreshOutcomesContentDelayed(
+                                      getAllOutcomesFilterValues(filterProps)
+                                    );
                                   });
                                 "
                                 :disabled="filterProps.loading"
@@ -1667,7 +1746,9 @@ export default {
                                       outcomesFilterRef.value.startDate = filterProps.startDate;
                                       outcomesFilterRef.value.endDate = filterProps.endDate;
                                     }
-                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps));
+                                    refreshOutcomesContentDelayed(
+                                      getAllOutcomesFilterValues(filterProps)
+                                    );
                                   });
                                 "
                                 :disabled="filterProps.loading"
@@ -1729,7 +1810,9 @@ export default {
                               <button
                                 class="btn btn-sm btn-dark rounded-pill"
                                 @click="
-                                  refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps))
+                                  refreshOutcomesContentDelayed(
+                                    getAllOutcomesFilterValues(filterProps)
+                                  )
                                 "
                                 :disabled="filterProps.loading"
                                 style="flex-shrink: 0"
@@ -1755,7 +1838,9 @@ export default {
                                       outcomesFilterRef.value.asc = newValue;
                                     }
                                     nextTick(() => {
-                                      refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps, { asc: newValue }));
+                                      refreshOutcomesContentDelayed(
+                                        getAllOutcomesFilterValues(filterProps, { asc: newValue })
+                                      );
                                     });
                                   }
                                 "
@@ -1818,7 +1903,9 @@ export default {
                                 <button
                                   class="btn btn-sm btn-dark rounded-pill"
                                   @click="
-                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps))
+                                    refreshOutcomesContentDelayed(
+                                      getAllOutcomesFilterValues(filterProps)
+                                    )
                                   "
                                   :disabled="filterProps.loading"
                                 >
@@ -1835,11 +1922,20 @@ export default {
                             }}</label>
                             <select
                               class="form-control form-select"
-                              :value="filterProps.outcomeSystemTypeFilter === undefined ? '' : filterProps.outcomeSystemTypeFilter"
+                              :value="
+                                filterProps.outcomeSystemTypeFilter === undefined
+                                  ? ''
+                                  : filterProps.outcomeSystemTypeFilter
+                              "
                               @change="
                                 e => {
                                   const selectedValue = e.target.value;
-                                  const newValue = selectedValue === '' || selectedValue === 'undefined' || selectedValue === 'null' ? undefined : selectedValue;
+                                  const newValue =
+                                    selectedValue === '' ||
+                                    selectedValue === 'undefined' ||
+                                    selectedValue === 'null'
+                                      ? undefined
+                                      : selectedValue;
 
                                   filterProps.outcomeSystemTypeFilter = newValue;
 
@@ -1848,7 +1944,11 @@ export default {
                                   }
 
                                   nextTick(() => {
-                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps, { outcomeSystemTypeFilter: newValue }));
+                                    refreshOutcomesContentDelayed(
+                                      getAllOutcomesFilterValues(filterProps, {
+                                        outcomeSystemTypeFilter: newValue,
+                                      })
+                                    );
                                   });
                                 }
                               "
@@ -1857,7 +1957,10 @@ export default {
                                 {{ $t('businessFinancial.filters.all') }}
                               </option>
                               <option value="PROFESSIONAL_COMMISSION">
-                                {{ $t('outcomeTypes.PROFESSIONAL_COMMISSION') || 'Comissão Profissional' }}
+                                {{
+                                  $t('outcomeTypes.PROFESSIONAL_COMMISSION') ||
+                                  'Comissão Profissional'
+                                }}
                               </option>
                               <option value="PRODUCT">
                                 {{ $t('outcomeTypes.PRODUCT') || 'Produto' }}
@@ -1872,14 +1975,23 @@ export default {
                           </div>
 
                           <!-- Professional Filter for Outcomes -->
-                          <div class="mb-3" v-if="filterProps.professionals && filterProps.professionals.length > 0">
-                            <label class="form-label fw-bold mb-2">{{
-                              $t('businessFinancial.filters.professional') || 'Profissional'
-                            }}
-                            ({{ filterProps.professionals?.length || 0 }})</label>
+                          <div
+                            class="mb-3"
+                            v-if="filterProps.professionals && filterProps.professionals.length > 0"
+                          >
+                            <label class="form-label fw-bold mb-2"
+                              >{{
+                                $t('businessFinancial.filters.professional') || 'Profissional'
+                              }}
+                              ({{ filterProps.professionals?.length || 0 }})</label
+                            >
                             <select
                               class="form-control form-select"
-                              :value="filterProps.professionalFilter === undefined ? '' : filterProps.professionalFilter"
+                              :value="
+                                filterProps.professionalFilter === undefined
+                                  ? ''
+                                  : filterProps.professionalFilter
+                              "
                               @change="
                                 e => {
                                   const selectedValue = e.target.value;
@@ -1892,17 +2004,23 @@ export default {
                                   }
 
                                   nextTick(() => {
-                                    refreshOutcomesContentDelayed(getAllOutcomesFilterValues(filterProps, { professionalFilter: newValue }));
+                                    refreshOutcomesContentDelayed(
+                                      getAllOutcomesFilterValues(filterProps, {
+                                        professionalFilter: newValue,
+                                      })
+                                    );
                                   });
                                 }
                               "
-                              :disabled="!filterProps.professionals || filterProps.professionals.length === 0"
+                              :disabled="
+                                !filterProps.professionals || filterProps.professionals.length === 0
+                              "
                             >
                               <option :value="undefined">
                                 {{ $t('businessFinancial.filters.all') }}
                               </option>
                               <option
-                                v-for="professional in (filterProps.professionals || [])"
+                                v-for="professional in filterProps.professionals || []"
                                 :key="professional.id"
                                 :value="professional.id"
                               >

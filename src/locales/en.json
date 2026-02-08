@@ -415,10 +415,6 @@
       "title": "No services match the selected filters",
       "subtitle": "Adjust the filters to see more results"
     },
-    "noFilteredResults": {
-      "title": "No services match the selected filters",
-      "subtitle": "Adjust the filters to see more results"
-    },
     "messages": {
       "selectProfessional": "Select a professional to begin",
       "noUnpaidIncomes": "No incomes with unpaid commission",
@@ -1118,8 +1114,7 @@
     "attention-checkout-enabled": {
       "title": "Check-Out Enabled",
       "description": "Activates the Check-Out stage in the attention flow"
-    }
-    ,
+    },
     "allow-attention-without-consents": {
       "title": "Allow attention without consents",
       "description": "Allows starting/advancing attention even if required LGPD consents are missing"
@@ -1267,7 +1262,6 @@
     "personalInfo": "Personal Information",
     "professionalInfo": "Professional Information",
     "financialInfo": "Financial Information",
-    "specialties": "Specialties",
     "status": {
       "active": "Active",
       "inactive": "Inactive",
@@ -1300,7 +1294,6 @@
     "suggestedCommission": "Suggested commission",
     "calculatedAmount": "Calculated Amount",
     "commissionWithoutProfessional": "⚠️ You have entered a commission without assigning a professional",
-    "professional": "Professional",
     "alreadyAssigned": "Professional already assigned",
     "canReplace": "You can replace it by selecting another"
   },
@@ -2123,18 +2116,15 @@
     "proceduresTotalNumber": "Procedure",
     "procedureNumber": "of",
     "confirmData": "Confirmation Data",
-    "paymentType": "Payment type:",
-    "paymentMethod": "Payment method:",
-    "paymentAmount": "Amount paid:",
+    "paymentType": "Payment Type",
+    "paymentMethod": "Payment Method",
+    "paymentAmount": "Paid Amount",
     "totalAmount": "Total Amount:",
     "installments": "Installemnts:",
     "paymentCommission": "Commission:",
     "commission": "Commission",
-    "paymentType": "Payment Type",
-    "paymentMethod": "Payment Method",
-    "paymentAmount": "Paid Amount",
     "paymentDate": "Payment Date",
-    "fiscalNote": "Fiscal Note",
+    "fiscalNote": "F. Note",
     "paymentFiscalNote": "Fiscal Note:",
     "edit": "Edit Booking",
     "paymentComment": "Comment (Optional)",
@@ -2152,7 +2142,6 @@
     "processPaymentNow": "Process payment now:",
     "confirmInstallments": "Confirm Installment:",
     "confirmPayment": "Confirm Payment",
-    "fiscalNote": "F. Note",
     "gerencial": "Gerencial",
     "automatic": "Automatic",
     "attend": "Attend",
@@ -2931,7 +2920,13 @@
     "month": "Month",
     "year": "Year",
     "all": "All",
-    "status": "Status",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "processed": "Completed",
+      "cancelled": "Cancelled",
+      "unknown": "Unknown"
+    },
     "type": "Type:",
     "result": "Result:",
     "attentionStatus": {
@@ -3491,13 +3486,6 @@
         }
       }
     },
-    "status": {
-      "pending": "Pending",
-      "confirmed": "Confirmed",
-      "processed": "Completed",
-      "cancelled": "Cancelled",
-      "unknown": "Unknown"
-    },
     "message": {
       "1": {
         "title": "Ups!",
@@ -3780,6 +3768,7 @@
     "choose": "What do you want to do today?",
     "dashboard": "Performance Hub",
     "tracing": "Clients",
+    "lead-pipeline": "Sales Pipeline",
     "financial": "Financial",
     "marketing": "Marketing",
     "patients": "Patients",
@@ -3829,6 +3818,7 @@
           "business-resume": "System State",
           "dashboard": "Performance Hub",
           "tracing": "Clients Management",
+          "lead-pipeline": "Sales Pipeline",
           "product-stock": "Stock Control",
           "reports": "Data Center",
           "commerce-admin": "Commerce Settings",
@@ -3859,7 +3849,8 @@
           "medical-templates-admin": "Manage Medical Templates",
           "pdf-templates-admin": "Manage PDF Templates",
           "lgpd-consent-admin": "Manage LGPD Consents",
-          "audit-log": "Audit and Compliance"
+          "audit-log": "Audit and Compliance",
+          "lead-pipeline": "Sales Pipeline"
         }
       }
     }
@@ -6674,637 +6665,34 @@
     "showLimited": "Show Limited (20 per page)"
   },
   "permissions": {
-    "sections": {
-      "client": "Client Management",
-      "document-client": "Client Documents",
-      "dashboard": "Performance Hub",
-      "collaborator": "Actions Collaborator",
-      "patient": "Patient",
-      "products-stock": "Stock"
-    },
-    "activations": {
+    "chats": {
       "admin": {
-        "view": "Get to Section - Section Plan Activation",
-        "read": "Read data - Section Plan Activation",
-        "add": "Add Plan Activation - Section Plan Activation",
-        "desactivate": "Desactivate Plan - Section Plan Activation",
-        "validate": "Validate plan activation - Section Plan Activation"
-      }
-    },
-    "audit-log": {
-      "admin": {
-        "view": "Get to this Section - Audit Log",
-        "read": "Read data - Section Audit Log",
-        "export": "Export data - Section Audit Log",
-        "limit": "Limit of data - Section Audit Log"
-      },
-      "title": "Audit Log",
-      "refresh": "Refresh",
-      "export": "Export",
-      "filters": {
-        "action": "Action",
-        "entityType": "Entity Type",
-        "search": "Search",
-        "searchPlaceholder": "Search by user, email, entity, IP..."
-      },
-      "summary": {
-        "total": "Total Records",
-        "byAction": "By Action",
-        "byEntityType": "By Entity Type",
-        "uniqueUsers": "Unique Users"
-      },
-      "logs": "Logs",
-      "noLogs": "No audit logs found",
-      "message": {
-        "1": {
-          "title": "Oops!",
-          "content": "At this time there are no options to manage. Verify that your plan is active or contact us."
-        },
-        "noCommerce": {
-          "title": "Select a Commerce",
-          "content": "You must select a commerce to view audit logs"
-        }
-      },
-      "table": {
-        "timestamp": "Timestamp",
-        "user": "User",
-        "action": "Action",
-        "entityType": "Type",
-        "entityId": "Entity ID",
-        "result": "Result",
-        "ipAddress": "IP Address",
-        "details": "Details",
-        "viewDetails": "View Details"
-      }
-    },
-    "client": {
-      "notify": {
-        "whatsapp": "Field of Number Whatsapp para notifications",
-        "email": "Field of email para notifications"
-      },
-      "admin": {
-        "edit": "Edit data - Section Client Admin",
-        "add": "Add data - Section Client Admin"
-      }
-    },
-    "businesses": {
-      "admin": {
-        "view": "Get to this Section - Manage Business",
-        "read": "Read data - Section Manage Business",
-        "edit": "Edit data - Section Manage Business",
-        "update": "Update data - Section Manage Business",
-        "add": "Add data - Section Manage Businesss",
-        "limit": "Limit of data - Section Manage Business"
+        "participate": "Participate in chats",
+        "start": "Start chats",
+        "view": "View chats"
       }
     },
     "business": {
       "main-menu": {
-        "business-resume": "Enable Estado del Sistema - Main Menu Business",
-        "dashboard": "Enable Performance Hub - Main Menu Business",
-        "tracing": "Enable Clients Management - Main Menu Business",
-        "reports": "Enable Reportes - Main Menu Business",
-        "commerce-admin": "Enable Manage Commerces - Main Menu Business",
-        "modules-admin": "Enable Manage Modules - Main Menu Business",
-        "queues-admin": "Enable Attend Queues of the Day - Main Menu Business",
-        "collaborators-admin": "Enable Manage Collaborators - Main Menu Business",
-        "permissions-admin": "Enable Manage Permissions - Main Menu Business",
-        "administrators-admin": "Enable Manage Administrators - Main Menu Business",
-        "configuration": "Enable Manage Configurations - Main Menu Business",
-        "documents": "Enable Manage Documents - Main Menu Business",
-        "forms-admin": "Enable Manage Forms - Main Menu Business",
-        "lgpd-consent-admin": "Enable Manage LGPD Consents - Main Menu Business",
-        "your-plan": "Enable Tu Plan - Main Menu Business",
-        "surveys-admin": "Enable Surveys - Main Menu Business",
-        "manage-admin": "Enable Business Profile - Main Menu Business",
-        "control-admin": "Enable Transactional Control - Main Menu Business",
-        "outcome-types-admin": "Enable Manage Outcome Types - Main Menu Business"
-      }
-    },
-    "administrators": {
-      "admin": {
-        "view": "Get to this Section - Manage Administrators",
-        "read": "Read data - Section Manage Administrators",
-        "edit": "Edit data - Section Manage Administrators",
-        "update": "Update data - Section Manage Administrators",
-        "add": "Add data Section - Manage Administrators",
-        "limit": "Limit of data Section - Manage Administrators"
+        "lead-pipeline": "Enable Sales Pipeline - Main Menu Business"
+      },
+      "lead-pipeline": {
+        "view": "View Sales Pipeline",
+        "add": "Add Leads to Pipeline",
+        "edit": "Edit Pipeline Leads",
+        "delete": "Delete Pipeline Leads",
+        "convert": "Convert Leads to Clients",
+        "limit": "Leads Limit in Pipeline"
       }
     },
     "collaborators": {
-      "admin": {
-        "view": "Get to this Section - Manage Collaborators",
-        "read": "Read data - Section Manage Collaborators",
-        "edit": "Edit data - Section Manage Collaborators",
-        "update": "Update data - Section Manage Collaborators",
-        "add": "Add data Section - Manage Collaborators",
-        "limit": "Limit of data Section - Manage Collaborators"
-      },
       "main-menu": {
-        "dashboard": "Enable Performance Hub - Main Menu Collaborators",
-        "tracing": "Enable Clients Management - Main Menu Collaborators",
-        "queue-manage": "Enable Queue Management - Main Menu Collaborators",
-        "booking-manage": "Enable Booking Management - Main Menu Collaborators",
-        "product-stock": "Enable Product Stock Management - Main Menu Collaborators"
+        "lead-pipeline": "Enable Sales Pipeline - Main Menu Collaborator"
       },
-      "bookings": {
-        "cancel": "Cancel Booking",
-        "manage": "Bookings 360° Vision",
-        "confirm": "Booking Confirm",
-        "transfer": "Transfer Booking",
-        "edit": "Booking Edition"
-      },
-      "waitlists": {
-        "book": "Book Waitlist"
-      }
-    },
-    "commerces": {
-      "admin": {
-        "view": "Get to this Section - Manage Commerces",
-        "read": "Read data - Section Manage Commerces",
-        "edit": "Edit data - Section Manage Commerces",
-        "update": "Update data - Section Manage Commerces",
-        "add": "Add data - Section Manage Commerces",
-        "limit": "Limit of data - Section Manage Commerces"
-      }
-    },
-    "surveys": {
-      "admin": {
-        "view": "Get to this Section - Manage Surveys",
-        "read": "Read data - Section Manage Surveys",
-        "edit": "Edit data - Section Manage Surveys",
-        "update": "Update data - Section Manage Surveys",
-        "add": "Add data Section - Manage Surveys",
-        "limit": "Limit of data Section - Manage Surveys",
-        "unavailable": "Delete Surveys - Section Manage Surveys"
-      }
-    },
-    "configuration": {
-      "admin": {
-        "view": "Get to this Section - Manage Configurations",
-        "read": "Read data - Section Manage Configurations",
-        "edit": "Edit data - Section Manage Configurations",
-        "add": "Add data - Section Manage Configurations",
-        "whatsapp-notify-now": "Edit configuración Notificación Whatsapp Es tu Turno",
-        "whatsapp-notify-five": "Edit configuración Notificación Whatsapp Faltan 5",
-        "only-survey": "Edit configuración Modo Encuesta",
-        "whatsapp-notify-one": "Edit configuración Notificación Whatsapp Falta 1",
-        "get-number-remote": "Edit configuration get remote number"
-      }
-    },
-    "documents": {
-      "admin": {
-        "view": "Get to this Section - Manage Documents",
-        "read": "Read data - Section Manage Documents",
-        "edit": "Edit data - Section Manage Documents",
-        "add": "Add data - Section Manage Documents"
-      }
-    },
-    "document-commerce": {
-      "admin": {
-        "view": "Get to this Section - Manage Commerce Documents",
-        "edit": "Edit Commerce Documents",
-        "add": "Add Commerce Documents"
-      }
-    },
-    "dashboard": {
-      "indicators": {
-        "view": "Get to the Indicadores - Section Performance Hub"
-      },
-      "graphs": {
-        "view": "Get to the Gráficos - Section Performance Hub"
-      },
-      "attention-number": {
-        "view": "Get to the Number of Attentions - Section Performance Hub"
-      },
-      "attention-time-avg": {
-        "view": "Get to the Tiempo promedio of atención - Section Performance Hub"
-      },
-      "attention-rating-avg": {
-        "view": "Get to the Calificación promedio Section - Performance Hub"
-      },
-      "attention-queue": {
-        "view": "Get to the La Fila con más attentions - Section Performance Hub"
-      },
-      "attention-no-device": {
-        "view": "Get to the Number of attentions manuales - Section Performance Hub"
-      },
-      "attention-notification": {
-        "view": "Get to the Number of notifications - Section Performance Hub"
-      },
-      "attention-number-evolution": {
-        "view": "Get to the Evolution of attentions - Section Performance Hub"
-      },
-      "attention-number-queue": {
-        "view": "Get to the Attentions por filas - Section Performance Hub"
-      },
-      "attention-duration-evolution": {
-        "view": "Get to the Evolution duration of attentions - Section Performance Hub"
-      },
-      "attention-rate-duration-evolution": {
-        "view": "Get to the Evolution duration of surveys - Section Performance Hub"
-      },
-      "attention-flow": {
-        "view": "Get to Attentions Flow - Section Performance Hub"
-      },
-      "survey-flow": {
-        "view": "Get to Surveys Flow - Section Performance Hub"
-      },
-      "surveys": {
-        "view": "Get to the Surveys (Resume) - Section Performance Hub"
-      },
-      "surveys-management": {
-        "view": "Get to the Surveys (Details) - Section Performance Hub"
-      },
-      "surveys-consolidated": {
-        "view": "Get to the Surveys (Consolidated) - Section Performance Hub"
-      },
-      "attention-hour-distribution": {
-        "view": "Get to attention's hour-distribution - Seção Performance Hub"
-      },
-      "booking-day-distribution": {
-        "view": "Get to Booking Day Distribution - Section Performance Hub"
-      },
-      "booking-flow": {
-        "view": "Get to Booking Flow - Section Performance Hub"
-      },
-      "booking-hour-distribution": {
-        "view": "Get to Booking Hour Distribution - Section Performance Hub"
-      },
-      "booking-number-evolution": {
-        "view": "Get to Booking Number Evolution - Section Performance Hub"
-      },
-      "booking-number": {
-        "view": "Get to Booking Number - Section Performance Hub"
-      },
-      "graphs-attentions": {
-        "view": "Get to Attentions Graphs - Section Performance Hub"
-      },
-      "graphs-bookings": {
-        "view": "Get to Bookings Graphs - Section Performance Hub"
-      },
-      "surveys-consolidated-nps-evolution": {
-        "view": "Get to the NPS Evolution - Section Performance Hub"
-      },
-      "surveys-consolidated-csat-evolution": {
-        "view": "Get to the CSAT Evolution - Section Performance Hub"
-      },
-      "attention-origin-avg": {
-        "view": "See Origin of Cliente - Section Performance Hub"
-      },
-      "attention-client-contact": {
-        "view": "See Client Contacts - Section Performance Hub"
-      },
-      "attention-days-since-clients": {
-        "view": "See Days Since Attention Clients - Section Performance Hub"
-      },
-      "attentions-management": {
-        "view": "See Attentions - Clients Management Section"
-      },
-      "bookings-management": {
-        "view": "See Bookings - Clients Management Section"
-      },
-      "client-contacts-management": {
-        "view": "See Client Contacts - Clients Management Section"
-      },
-      "clients-management": {
-        "view": "See Clients Management - Clients Management Section"
-      },
-      "collection-details": {
-        "view": "See Collection Details - Financial Section"
-      },
-      "tracing": {
-        "view": "See Section - Clients Management Section"
-      },
-      "client-data-management": {
-        "view": "See Client Section - Clients Management Section"
-      },
-      "reports": {
-        "surveys": "Download Report Surveys (Summary) - Section Performance Hub",
-        "indicators": "Download Report Indicators - Section Performance Hub",
-        "graphs": "Download Report de Trends - Section Performance Hub",
-        "surveys-management": "Download Report Surveys (Details) - Section Performance Hub",
-        "surveys-consolidated": "Download Report Surveys (Consolidated) - Section Performance Hub",
-        "attentions-management": "Download Report Attentions",
-        "bookings-management": "Download Report Bookings",
-        "client-contacts-management": "Download Report Client Contacts",
-        "clients-management": "Download Report Clients (Details)"
-      }
-    },
-    "executive": {
-      "admin": {
-        "view": "Get to this Section - Estado del Sistema",
-        "download": "Download Estado del Sistema"
-      }
-    },
-    "financial": {
-      "incomes": {
-        "add": "Add Income - Financial Section",
-        "confirm": "Confirm Income - Financial Section",
-        "view": "View Incomes - Financial Section"
-      },
-      "outcomes": {
-        "add": "Add Outcome - Financial Section",
-        "view": "View Outcomes - Financial Section"
-      },
-      "reports": {
-        "incomes": "View Income Report - Financial Section",
-        "outcomes": "View Outcome Report - Financial Section",
-        "resume": "View Financial Summary - Financial Section"
-      },
-      "resume": {
-        "view": "View Financial Summary - Financial Section"
-      }
-    },
-    "modules": {
-      "admin": {
-        "view": "Get to this Section -- Manage Modules",
-        "read": "Read data - Section Manage Modules",
-        "edit": "Edit data - Section Manage Modules",
-        "update": "Update data - Section Manage Modules",
-        "add": "Add data - Section Manage Modules",
-        "limit": "Limit of data - Section Manage Modules",
-        "unavailable": "Delete Modules - Section Manage Modules"
-      }
-    },
-    "queues": {
-      "admin": {
-        "view": "Get to this Section - Attend Queues of the Day",
-        "read": "Read data - Section Attend Queues of the Day",
-        "edit": "Edit data - Section Attend Queues of the Day",
-        "update": "Update data - Section Attend Queues of the Day",
-        "add": "Add data - Section Attend Queues of the Day",
-        "limit": "Limit of data - Section Attend Queues of the Day",
-        "queue-limit": "Limit of attentions daily of the Queues",
-        "unavailable": "Delete Queues - Section Attend Queues of the Day"
-      }
-    },
-    "reports": {
-      "admin": {
-        "view": "Get to this Section - Reportes",
-        "attentions": "Download Inform of Attentions",
-        "notifications": "Download Inform of notifications",
-        "bookings": "Download Booking Report",
-        "waitlist": "Download Waitlist Report",
-        "waitlists": "Download Waitlist Report",
-        "client-contacts": "Download Client Contacts Report",
-        "clients": "Download Client Report",
-        "booking-payments": "Download Booking Payments Report",
-        "attention-payments": "Download Attention Payments Report",
-        "attention-products": "Dowload Attention Stock Use Report",
-        "incomes": "Download Income Report",
-        "outcomes": "Download Outcome Report"
-      }
-    },
-    "collaborator": {
-      "module": {
-        "update": "Update module - Section Collaborator Attentions"
-      },
-      "attention": {
-        "attend": "Atender - Section Collaborator Attentions",
-        "finish": "Marcar atención como atendida - Section Collaborator Attentions",
-        "skip": "Saltar atención - Section Collaborator Attentions",
-        "payment-confirm": "Confirm Payment - Section Collaborator Attentions",
-        "cancel": "Cancel Attention - Section Collaborator Attentions",
-        "patient-history": "Medical History - Section Collaborator Attentions",
-        "products": "Products - Section Collaborator Attentions",
-        "transfer": "Transfer Attention - Section Collaborator Attentions"
-      },
-      "bookings": {
-        "cancel": "Cancela Bookings",
-        "manage": "Manage Bookings",
-        "confirm": "Confirm Booking",
-        "transfer": "Transfer Bookings",
-        "edit": "Edit Bookings",
-        "admin": "Admin Bookings"
-      },
-      "waitlists": {
-        "book": "Waitlist Reserve"
-      },
-      "main-menu": {
-        "booking-manage": "Enable Bookings Manage - Main Menu Collaborator",
-        "dashboard": "Enable Performance Hub - Main Menu Collaborator",
-        "queue-manage": "Enable Attend Queues of the Day - Main Menu Collaborator",
-        "tracing": "Enable Manage Clients - Main Menu Collaborator",
-        "product-stock": "Enable Stock Manage - Main Menu Collaborator"
-      }
-    },
-    "roles": {
-      "admin": {
-        "view": "Get to this Section - Manage Permisos",
-        "read": "Read data - Section Manage Permisos",
-        "edit": "Edit data - Section Manage Permisos",
-        "update": "Update data - Section Manage Permisos",
-        "add": "Add data - Section Manage Permisos"
-      }
-    },
-    "user": {
-      "notification": {
-        "add": "Add notification - Attention of Usuario"
-      }
-    },
-    "plans": {
-      "admin": {
-        "view": "Get to this Section - Manage Plans",
-        "read": "Read data - Section Manage Plans",
-        "edit": "Edit data - Section Manage Plans",
-        "update": "Update data - Section Manage Plans",
-        "add": "Add data - Section Manage Plans",
-        "limit": "Limit of data - Section Manage Plans"
-      }
-    },
-    "plan": {
-      "admin": {
-        "view": "Get to this Section - Manage Plan",
-        "read": "Read data - Section Manage Plan",
-        "edit": "Edit data - Section Manage Plan",
-        "update": "Update data - Section Manage Plan",
-        "add": "Add data - Section Manage Plan"
-      }
-    },
-    "permissions": {
-      "admin": {
-        "plans": "Get to the Plans permissions",
-        "roles": "Get to the Roles permissions",
-        "users": "See the Users Permissions",
-        "collaborators": "See the Collaborators Permissions"
-      },
-      "collaborators": {
-        "view": "View permissions - Section Collaborators Permissions",
-        "add": "Add permissions - Section Collaborators Permissions",
-        "update": "Update permissions - Section Collaborators Permissions"
-      }
-    },
-    "services": {
-      "admin": {
-        "view": "Get to this Section - Manage Services",
-        "read": "Read data - Section Manage Services",
-        "edit": "Edit data - Section Manage Services",
-        "update": "Update data - Section Manage Services",
-        "add": "Add data - Section Manage Services",
-        "limit": "Limit of data - Section Manage Services"
-      }
-    },
-    "products": {
-      "admin": {
-        "view": "Get to this Section - Manage Products",
-        "read": "Read data - Section Manage Products",
-        "edit": "Edit data - Section Manage Products",
-        "update": "Update data - Section Manage Products",
-        "add": "Add data - Section Manage Products",
-        "limit": "Limit of data - Section Manage Products",
-        "unavailable": "Delete Products - Section Manage Products"
-      }
-    },
-    "products-stock": {
-      "attentions": {
-        "view": "See Section - Stock Attentions",
-        "add-consumption": "Add Consumption - Stock Attentions",
-        "add-replacement": "Add Reposition - Stock Attentions"
-      },
-      "products": {
-        "view": "See Section - Stock Management",
-        "add-consumption": "Add Consumption - Stock Management",
-        "add-replacement": "Add Reposition - Stock Management",
-        "view-attention": "See Consumption Attentions - Stock Management",
-        "view-consumption": "See Consumption - Stock Management",
-        "view-replacement": "See Reposition - Stock Management"
-      },
-      "reports": {
-        "details": "Inform Stock Control - Stock Management",
-        "replacement-details": "Inform Product Reposition - Stock Management",
-        "consumption-details": "Inform Product Consumption - Stock Management"
-      }
-    },
-    "document-client": {
-      "admin": {
-        "view": "Get to this Section - Manage Client Documents",
-        "read": "Read data - Section Manage Client Documents",
-        "edit": "Edit data - Section Manage Client Documents",
-        "update": "Update data - Section Manage Client Documents",
-        "add": "Add data - Section Manage Client Documents",
-        " add": "Add data - Section Manage Client Documents",
-        "limit": "Limit of data - Section Manage Client Documents"
-      }
-    },
-    "leadPipeline": {
-      "admin": {
-        "view": "Get to this Section - Sales Pipeline",
-        "read": "Read data - Section Sales Pipeline",
-        "edit": "Edit data - Section Sales Pipeline",
-        "update": "Update data - Section Sales Pipeline",
-        "add": "Add data - Section Sales Pipeline",
-        "limit": "Limit of data - Section Sales Pipeline"
-      }
-    },
-    "medical-exams": {
-      "admin": {
-        "view": "Get to this Section - Manage Medical Exams",
-        "read": "Read data - Section Manage Medical Exams",
-        "edit": "Edit data - Section Manage Medical Exams",
-        "update": "Update data - Section Manage Medical Exams",
-        "add": "Add data - Section Manage Medical Exams",
-        "delete": "Delete data - Section Manage Medical Exams",
-        "limit": "Limit of data - Section Manage Medical Exams"
-      }
-    },
-    "medical-templates": {
-      "admin": {
-        "view": "Get to this Section - Manage Medical Templates",
-        "read": "Read data - Section Manage Medical Templates",
-        "edit": "Edit data - Section Manage Medical Templates",
-        "update": "Update data - Section Manage Medical Templates",
-        "add": "Add data - Section Manage Medical Templates",
-        "delete": "Delete data - Section Manage Medical Templates",
-        "limit": "Limit of data - Section Manage Medical Templates"
-      }
-    },
-    "medications": {
-      "admin": {
-        "view": "Get to this Section - Manage Medications",
-        "read": "Read data - Section Manage Medications",
-        "edit": "Edit data - Section Manage Medications",
-        "update": "Update data - Section Manage Medications",
-        "add": "Add data - Section Manage Medications",
-        "delete": "Delete data - Section Manage Medications",
-        "limit": "Limit of data - Section Manage Medications"
-      }
-    },
-    "pdf-templates": {
-      "admin": {
-        "view": "Get to this Section - Manage PDF Templates",
-        "read": "Read data - Section Manage PDF Templates",
-        "edit": "Edit data - Section Manage PDF Templates",
-        "update": "Update data - Section Manage PDF Templates",
-        "add": "Add data - Section Manage PDF Templates",
-        "delete": "Delete data - Section Manage PDF Templates",
-        "limit": "Limit of data - Section Manage PDF Templates"
-      },
-      "capacitiesList": {
-        "admin": {
-          "view": "Get to this Section - Manage PDF Templates",
-          "read": "Read data - Section Manage PDF Templates",
-          "edit": "Edit data - Section Manage PDF Templates",
-          "update": "Update data - Section Manage PDF Templates",
-          "add": "Add data - Section Manage PDF Templates",
-          "delete": "Delete data - Section Manage PDF Templates",
-          "limit": "Limit of data - Section Manage PDF Templates"
-        }
-      }
-    },
-    "forms": {
-      "admin": {
-        "view": "Get to this Section - Manage Forms",
-        "read": "Read data - Section Manage Forms",
-        "edit": "Edit data - Section Manage Forms",
-        "update": "Update data - Section Manage Forms",
-        "add": "Add data - Section Manage Forms",
-        "limit": "Limit of data - Section Manage Forms",
-        "unavailable": "Delete Forms - Section Manage Forms"
-      }
-    },
-    "lgpd": {
-      "admin": {
-        "view": "Get to this Section - Manage LGPD Requirements",
-        "read": "Read data - Section Manage LGPD Requirements",
-        "edit": "Edit data - Section Manage LGPD Requirements",
-        "update": "Update data - Section Manage LGPD Requirements",
-        "add": "Add data - Section Manage LGPD Requirements",
-        "delete": "Delete data - Section Manage LGPD Requirements",
-        "limit": "Limit of data - Section Manage LGPD Requirements"
-      }
-    },
-    "outcome-types": {
-      "admin": {
-        "view": "Get to this Section - Manage Outcome Types",
-        "read": "Read data - Section Manage Outcome Types",
-        "edit": "Edit data - Section Manage Outcome Types",
-        "update": "Update data - Section Manage Outcome Types",
-        "add": "Add data - Section Manage Outcome Types",
-        "limit": "Limit of data - Section Manage Outcome Types",
-        "unavailable": "Delete Outcome Types - Section Manage Outcome Types"
-      }
-    },
-    "patient-history-item": {
-      "admin": {
-        "view": "Get to this Section - Manage Medical History Items",
-        "read": "Read data - Section Manage Medical History Items",
-        "edit": "Edit data - Section Manage Medical History Items",
-        "update": "Update data - Section Manage Medical History Items",
-        "add": "Add data - Section Manage Medical History Items",
-        "limit": "Limit of data - Section Manage Medical History Items",
-        "unavailable": "Delete Medical History Items - Section Manage Medical History Items"
-      }
-    },
-    "patient": {
-      "history": {
-        "view": "Get to this Section - Manage Medical History",
-        "read": "Read data - Section Manage Medical History",
-        "edit": "Edit data - Section Manage Medical History",
-        "update": "Update data - Section Manage Medical History",
-        "add": "Add data - Section Manage Medical History",
-        "control-edit": "Edit Control Patient - Section Manage Medical History",
-        "control-update": "Update Control Patien - Section Manage Medical History",
-        "download": "Download History - Section Manage Medical History"
+      "lead-pipeline": {
+        "view": "View Sales Pipeline",
+        "add": "Add Leads to Pipeline",
+        "edit": "Edit Pipeline Leads"
       }
     }
   },
@@ -8360,15 +7748,6 @@
       "hint": "Press Enter to send, Shift + Enter for new line"
     }
   },
-  "permissions": {
-    "chats": {
-      "admin": {
-        "participate": "Participate in chats",
-        "start": "Start chats",
-        "view": "View chats"
-      }
-    }
-  },
   "templateCreate": {
     "createTemplate": "Create Template",
     "editTemplate": "Edit Template",
@@ -8563,5 +7942,174 @@
     "useGroupToKeepElementsUnited": "Use \"Group\" to keep elements united",
     "selectElementToEdit": "Select an element to edit",
     "useInsertBarToAddElements": "Use the \"Insert\" bar to add elements to the canvas"
+  },
+  "businessLeadPipeline": {
+    "title": "Sales Pipeline",
+    "search": "Search by name, company, email...",
+    "searchPlaceholder": "Search by name, company or email...",
+    "searchLeads": "Search Leads",
+    "clearSearch": "Clear search",
+    "filters": "Filters",
+    "hideFilters": "Hide",
+    "filterFromDate": "Date From",
+    "filterToDate": "Date To",
+    "clearFilter": "Clear Filter",
+    "clearAllFilters": "Clear All Filters",
+    "filterByStatus": "Filter by Status",
+    "filterByTime": "Filter by Time since Creation",
+    "filterByTemperature": "Filter by Priority",
+    "status": "Status",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing...",
+    "showAll": "Show All",
+    "showLimited": "Show Limited",
+    "noLeads": "No Leads",
+    "addContact": "Add Contact",
+    "convertToClient": "Convert to Client",
+    "convertConfirm": "Do you want to convert this lead into a client?",
+    "stages": {
+      "NEW": "New",
+      "IN_CONTACT": "In Contact",
+      "WAITLIST": "Waitlist",
+      "IN_DEAL": "In Deal",
+      "CLOSED": "Closed",
+      "ARCHIVED": "Archived"
+    },
+    "status": {
+      "INTERESTED": "Interested",
+      "REJECTED": "Rejected",
+      "MAYBE_LATER": "Maybe Later",
+      "SUCCESS": "Success"
+    },
+    "temperature": {
+      "QUENTE": "Hot",
+      "MORNO": "Warm",
+      "FRIO": "Cold"
+    },
+    "timeIndicator": {
+      "green": "0-3 days (Recent)",
+      "yellow": "4-7 days (Attention)",
+      "red": "8+ days (Urgent)"
+    },
+    "analytics": {
+      "title": "Analytics & Metrics",
+      "conversionFunnel": "Conversion Funnel",
+      "keyMetrics": "Key Performance Indicators",
+      "totalLeads": "Total Leads",
+      "conversionRate": "Conversion Rate",
+      "avgDays": "Avg Days",
+      "convertedLeads": "Converted Leads",
+      "converted": "Converted",
+      "stageDistribution": "Stage Distribution",
+      "temperatureDistribution": "Temperature Distribution",
+      "insights": {
+        "title": "Insights & Recommendations",
+        "highConversion": "Excellent Conversion Rate",
+        "highConversionDesc": "Your conversion rate of {rate}% is above average. Keep it up!",
+        "lowConversion": "Low Conversion Rate",
+        "lowConversionDesc": "Your conversion rate of {rate}% needs attention. Review your follow-up process.",
+        "fastConversion": "Fast Conversion",
+        "fastConversionDesc": "You convert leads in {days} days on average. Excellent speed!",
+        "slowConversion": "Slow Conversion",
+        "slowConversionDesc": "Your leads take {days} days to convert. Consider speeding up the process.",
+        "hotLeads": "Many Hot Leads",
+        "hotLeadsDesc": "You have {count} hot leads. Prioritize them to maximize conversions!",
+        "staleLeads": {
+          "title": "Stale Leads Detected",
+          "message": "📊 {count} leads ({percent}% of active) are older than 3 months. Average age: {avgAge} days. These leads are at high risk of becoming cold.",
+          "action": "Prioritize contact or archive them"
+        },
+        "bottleneck": {
+          "title": "Bottleneck at NEW Stage",
+          "message": "📊 {count} leads ({percent}% of total) are waiting for first contact. Ratio NEW:IN_CONTACT is {ratio}:1. This may indicate a capacity issue.",
+          "action": "Increase contact velocity"
+        },
+        "lowConversion": {
+          "title": "Low Conversion Rate",
+          "message": "📊 Conversion rate: {rate}% ({wins} wins / {total} closed). Industry average: 20-30%. Gap: {gap}%",
+          "action": "Review qualification criteria and sales process"
+        },
+        "excellentConversion": {
+          "title": "Excellent Conversion Rate",
+          "message": "📊 Your conversion rate is {rate}% ({wins} wins) — {above}% above industry average (25%)!",
+          "action": "Document what's working for consistency"
+        },
+        "noActiveDeals": {
+          "title": "No Active Deals",
+          "message": "📊 You have {contactCount} leads in contact but 0 in negotiation. Contact→Deal rate: {contactToDealRate}%. Potential opportunity: Convert at least 1-2 leads.",
+          "action": "Focus on qualifying and moving interested leads forward"
+        }
+      },
+      "errors": {
+        "leadIdMissing": "Lead ID is missing",
+        "nameRequired": "Name is required",
+        "invalidEmail": "Please enter a valid email address",
+        "noLeadSelected": "No lead selected",
+        "commentTooShort": "Comment must be at least 10 characters",
+        "contactTypeRequired": "Contact type is required",
+        "contactResultRequired": "Contact result is required",
+        "updateLead": "Error updating lead",
+        "updateTemperature": "Error updating temperature",
+        "updateMessage": "Error updating message",
+        "createLead": "Error creating lead",
+        "loadPipeline": "Error loading lead pipeline"
+      },
+      "contactResults": {
+        "interested": "Interested",
+        "rejected": "Rejected",
+        "noResponse": "No Response",
+        "contactLater": "Contact Later",
+        "waitingResponse": "Waiting for Response"
+      },
+      "csv": {
+        "leadId": "Lead ID",
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "company": "Company",
+        "source": "Source",
+        "pipelineStage": "Pipeline Stage",
+        "status": "Status",
+        "createdAt": "Created At",
+        "updatedAt": "Updated At",
+        "lastContactedAt": "Last Contacted At",
+        "assignedTo": "Assigned To User ID",
+        "businessId": "Business ID",
+        "commerceId": "Commerce ID",
+        "message": "Message",
+        "notes": "Notes",
+        "contactCount": "Contact Count",
+        "contacts": "Contacts",
+        "transitionCount": "Transition Count",
+        "transitions": "Transitions"
+      }
+    },
+    "validationErrors": {
+      "newStageContactOnly": "NEW stage can only be moved via contact creation",
+      "cannotMoveToNewStage": "Cannot move leads to NEW stage",
+      "invalidStageTransition": "Invalid stage transition",
+      "readOnlyStage": "Stage is read-only",
+      "readOnlyTarget": "Target stage is read-only",
+      "closedFromDealOnly": "CLOSED stage can only be reached from IN_DEAL via drag and drop, or from IN_CONTACT via contact with REJECTED result",
+      "noDragDrop": "This stage cannot be moved via drag and drop"
+    },
+    "message": {
+      "1": {
+        "title": "No permissions",
+        "content": "You don't have permissions to view the Sales Pipeline"
+      },
+      "2": {
+        "title": "No permissions to add",
+        "content": "You don't have permissions to add leads to the Pipeline"
+      },
+      "3": {
+        "title": "No permissions to edit",
+        "content": "You don't have permissions to edit leads in the Pipeline"
+      },
+      "4": {
+        "title": "No permissions to convert",
+        "content": "You don't have permissions to convert leads to clients"
+      }
+    }
   }
 }

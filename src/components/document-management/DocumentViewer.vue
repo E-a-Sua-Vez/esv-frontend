@@ -7,7 +7,9 @@
           <i :class="getFileTypeIcon(selectedDocument?.format)" class="document-icon"></i>
         </div>
         <div class="modern-modal-title-wrapper">
-          <h5 class="modal-title fw-bold modern-modal-title">{{ selectedDocument?.name || $t('documentViewer.document') }}</h5>
+          <h5 class="modal-title fw-bold modern-modal-title">
+            {{ selectedDocument?.name || $t('documentViewer.document') }}
+          </h5>
           <p class="modern-modal-client-name">{{ client?.name || $t('documentViewer.patient') }}</p>
         </div>
       </div>
@@ -22,7 +24,9 @@
         <div class="document-metadata">
           <span class="document-date">{{ formatDocumentDate(selectedDocument?.createdAt) }}</span>
           <span class="document-category">{{ getCategoryName(selectedDocument?.category) }}</span>
-          <span :class="`document-urgency urgency-${selectedDocument?.urgency || 'normal'}`">{{ getUrgencyName(selectedDocument?.urgency) }}</span>
+          <span :class="`document-urgency urgency-${selectedDocument?.urgency || 'normal'}`">{{
+            getUrgencyName(selectedDocument?.urgency)
+          }}</span>
         </div>
       </div>
       <div class="document-actions">
@@ -315,7 +319,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: .2rem .5rem;
+  padding: 0.2rem 0.5rem;
   background: white;
   border-bottom: 1px solid #e9ecef;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -523,7 +527,7 @@ export default {
 
 .carousel-track {
   display: flex;
-  gap: .5rem;
+  gap: 0.5rem;
   padding-bottom: 0.25rem;
 }
 

@@ -488,7 +488,8 @@ export default {
           undefined,
           'CONFIRMED'
         );
-        state.stats.totalActiveCount = (pendingBookings?.length || 0) + (confirmedBookings?.length || 0);
+        state.stats.totalActiveCount =
+          (pendingBookings?.length || 0) + (confirmedBookings?.length || 0);
 
         // Get recent bookings (last 5) filtered by commerce only (no queueId filter)
         const recentBookings = await getBookingsDetails(
@@ -1026,48 +1027,48 @@ export default {
             </div>
           </div>
         </div>
-         <!-- Recent Attentions (when clicking Hoje) -->
-         <div
-            class="recent-bookings-container mt-4"
-            v-if="state.showAttentions && state.recentAttentions.length > 0"
-          >
-            <div class="section-header">
-              <h5 class="section-title">
-                <i class="bi bi-clock-history"></i>
-                {{ $t('collaboratorBookingsView.todayAttentions') }}
-              </h5>
-            </div>
-            <div class="">
-              <div
-                class=""
-                v-for="(attention, index) in state.recentAttentions"
-                :key="`attention-${index}`"
-              >
-                <AttentionDetailsCard :show="true" :attention="attention" :commerce="commerce" />
-              </div>
+        <!-- Recent Attentions (when clicking Hoje) -->
+        <div
+          class="recent-bookings-container mt-4"
+          v-if="state.showAttentions && state.recentAttentions.length > 0"
+        >
+          <div class="section-header">
+            <h5 class="section-title">
+              <i class="bi bi-clock-history"></i>
+              {{ $t('collaboratorBookingsView.todayAttentions') }}
+            </h5>
+          </div>
+          <div class="">
+            <div
+              class=""
+              v-for="(attention, index) in state.recentAttentions"
+              :key="`attention-${index}`"
+            >
+              <AttentionDetailsCard :show="true" :attention="attention" :commerce="commerce" />
             </div>
           </div>
-          <!-- Recent Bookings -->
-          <div
-            class="recent-bookings-container mt-4"
-            v-else-if="!state.showAttentions && state.recentBookings.length > 0"
-          >
-            <div class="section-header">
-              <h5 class="section-title">
-                <i class="bi bi-clock-history"></i>
-                {{ $t('collaboratorBookingsView.recentBookings') }}
-              </h5>
-            </div>
-            <div class="">
-              <div
-                class=""
-                v-for="(booking, index) in state.recentBookings"
-                :key="`booking-${index}`"
-              >
-                <BookingDetailsCard :show="true" :booking="booking" :commerce="commerce" />
-              </div>
+        </div>
+        <!-- Recent Bookings -->
+        <div
+          class="recent-bookings-container mt-4"
+          v-else-if="!state.showAttentions && state.recentBookings.length > 0"
+        >
+          <div class="section-header">
+            <h5 class="section-title">
+              <i class="bi bi-clock-history"></i>
+              {{ $t('collaboratorBookingsView.recentBookings') }}
+            </h5>
+          </div>
+          <div class="">
+            <div
+              class=""
+              v-for="(booking, index) in state.recentBookings"
+              :key="`booking-${index}`"
+            >
+              <BookingDetailsCard :show="true" :booking="booking" :commerce="commerce" />
             </div>
           </div>
+        </div>
       </div>
     </div>
     <!-- Modal Agenda - Use Teleport to render outside component to avoid overflow/position issues -->

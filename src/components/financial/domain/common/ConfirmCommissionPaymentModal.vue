@@ -70,7 +70,11 @@ export default {
           <h5 class="modal-title fw-bold">
             <i class="bi bi-check-circle"></i> {{ $t('commissionPayments.confirmPayment') }}
           </h5>
-          <button type="button" class="btn-close confirm-payment-close-btn" @click="$emit('close')"></button>
+          <button
+            type="button"
+            class="btn-close confirm-payment-close-btn"
+            @click="$emit('close')"
+          ></button>
         </div>
 
         <div class="modal-body confirm-payment-modal-body">
@@ -85,14 +89,22 @@ export default {
             <div class="row g-3">
               <div class="col-6">
                 <div class="confirm-payment-summary-item">
-                  <small class="confirm-payment-summary-label">{{ $t('commissionPayments.incomes') }}</small>
-                  <p class="mb-0 confirm-payment-summary-value fw-bold">{{ payment.totalIncomes }}</p>
+                  <small class="confirm-payment-summary-label">{{
+                    $t('commissionPayments.incomes')
+                  }}</small>
+                  <p class="mb-0 confirm-payment-summary-value fw-bold">
+                    {{ payment.totalIncomes }}
+                  </p>
                 </div>
               </div>
               <div class="col-6">
                 <div class="confirm-payment-summary-item">
-                  <small class="confirm-payment-summary-label">{{ $t('commissionPayments.totalAmount') }}</small>
-                  <p class="mb-0 confirm-payment-summary-value fw-bold">${{ formatCurrency(payment.totalAmount) }}</p>
+                  <small class="confirm-payment-summary-label">{{
+                    $t('commissionPayments.totalAmount')
+                  }}</small>
+                  <p class="mb-0 confirm-payment-summary-value fw-bold">
+                    ${{ formatCurrency(payment.totalAmount) }}
+                  </p>
                 </div>
               </div>
               <div class="col-12 mt-2">
@@ -245,7 +257,7 @@ export default {
   color: rgba(0, 0, 0, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  line-height: .8rem;
+  line-height: 0.8rem;
 }
 
 .confirm-payment-summary-value {

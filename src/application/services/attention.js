@@ -115,14 +115,22 @@ export const getAttentionsByStage = async (queueId, stage, commerceId, date) => 
 export const advanceStage = async (id, body) =>
   (await requestBackend.patch(`/${entity}/stage/${id}/advance`, body, await getHeaders())).data;
 
-export const assignProfessional = async (id, professionalId, professionalName, professionalCommission = null, professionalCommissionType = null) =>
+export const assignProfessional = async (
+  id,
+  professionalId,
+  professionalName,
+  professionalCommission = null,
+  professionalCommissionType = null,
+) =>
   (
     await requestBackend.patch(
       `/${entity}/${id}/assign-professional`,
       {
         professionalId,
         professionalName,
-        ...(professionalCommission !== null && professionalCommission !== undefined ? { professionalCommission } : {}),
+        ...(professionalCommission !== null && professionalCommission !== undefined
+          ? { professionalCommission }
+          : {}),
         ...(professionalCommissionType ? { professionalCommissionType } : {}),
       },
       await getHeaders(),

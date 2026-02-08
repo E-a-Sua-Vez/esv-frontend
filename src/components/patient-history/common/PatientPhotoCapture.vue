@@ -143,7 +143,6 @@ export default {
       canvas.toBlob(
         blob => {
           if (blob) {
-
             const photoUrl = URL.createObjectURL(blob);
             capturedPhoto.value = {
               blob,

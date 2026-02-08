@@ -107,7 +107,10 @@ export default {
           this.startConsentStatusPolling();
 
           // Solo inicializar si es una atención nueva o ha cambiado el professionalId
-          if (newVal.professionalId && (!oldVal || newVal.professionalId !== oldVal.professionalId)) {
+          if (
+            newVal.professionalId &&
+            (!oldVal || newVal.professionalId !== oldVal.professionalId)
+          ) {
             this.$nextTick(() => {
               this.initializeProfessionalData();
             });
@@ -142,7 +145,11 @@ export default {
     // También watch para cuando toda la atención cambie (para inicialización)
     attention: {
       handler(newAttention) {
-        if (newAttention?.professionalCommissionValue !== undefined && newAttention?.professionalCommissionValue !== null && !this.commissionManuallyEdited) {
+        if (
+          newAttention?.professionalCommissionValue !== undefined &&
+          newAttention?.professionalCommissionValue !== null &&
+          !this.commissionManuallyEdited
+        ) {
           this.professionalCommission = String(newAttention.professionalCommissionValue);
         }
       },
@@ -218,7 +225,8 @@ export default {
       }
 
       // If we have professionalId, show loading or the ID as fallback
-      const professionalId = this.attention.professionalId || this.attention.paymentConfirmationData?.professionalId;
+      const professionalId =
+        this.attention.professionalId || this.attention.paymentConfirmationData?.professionalId;
       if (professionalId) {
         return this.loadingProfessionalData ? 'Carregando...' : professionalId;
       }
@@ -228,10 +236,12 @@ export default {
     // Check if professional is assigned
     isProfessionalAssigned() {
       if (!this.attention) return false;
-      return !!(this.attention.professionalName ||
-                this.attention.professionalId ||
-                this.attention.paymentConfirmationData?.professionalId ||
-                this.loadedProfessionalName);
+      return !!(
+        this.attention.professionalName ||
+        this.attention.professionalId ||
+        this.attention.paymentConfirmationData?.professionalId ||
+        this.loadedProfessionalName
+      );
     },
     // Selected professional ID for the selector
     selectedProfessionalId: {
@@ -253,7 +263,7 @@ export default {
         } else {
           console.warn('[AttentionDetailsModal] Professional not found in list:', newId);
         }
-      }
+      },
     },
     // Professional commission type para PaymentForm
     professionalCommissionType() {
@@ -274,7 +284,9 @@ export default {
 
       // 4. Si hay profesional asignado, buscar en la lista
       if (this.attention?.professionalId && this.professionals?.length > 0) {
-        const assignedProfessional = this.professionals.find(p => p.id === this.attention.professionalId);
+        const assignedProfessional = this.professionals.find(
+          p => p.id === this.attention.professionalId,
+        );
         if (assignedProfessional?.financialInfo?.commissionType) {
           return assignedProfessional.financialInfo.commissionType;
         }
@@ -285,9 +297,10 @@ export default {
     },
     // Professional display name para PaymentForm
     professionalDisplayName() {
-      const selectedName = this.selectedProfessional?.personalInfo?.name ||
-                           this.selectedProfessional?.name ||
-                           this.loadedProfessionalName;
+      const selectedName =
+        this.selectedProfessional?.personalInfo?.name ||
+        this.selectedProfessional?.name ||
+        this.loadedProfessionalName;
 
       const attentionName = this.attention?.professionalName;
 
@@ -296,7 +309,10 @@ export default {
     // Professional commission value para PaymentForm (computed property que lee primero de la atención)
     computedProfessionalCommission() {
       // 1. Primero verificar si la atención ya tiene comisión asignada
-      if (this.attention?.professionalCommissionValue !== undefined && this.attention?.professionalCommissionValue !== null) {
+      if (
+        this.attention?.professionalCommissionValue !== undefined &&
+        this.attention?.professionalCommissionValue !== null
+      ) {
         return this.attention.professionalCommissionValue;
       }
 
@@ -317,7 +333,9 @@ export default {
 
       // 5. Fallback: profesional asignado en la lista
       if (this.attention?.professionalId && this.professionals?.length > 0) {
-        const assignedProfessional = this.professionals.find(p => p.id === this.attention.professionalId);
+        const assignedProfessional = this.professionals.find(
+          p => p.id === this.attention.professionalId,
+        );
         if (assignedProfessional?.financialInfo?.commissionValue) {
           return assignedProfessional.financialInfo.commissionValue;
         }
@@ -408,7 +426,6 @@ export default {
         if (!document.body.classList.contains('modal-open')) {
           document.body.classList.add('modal-open');
         }
-
       }
 
       // Restaurar o crear backdrop si es necesario
@@ -525,14 +542,16 @@ export default {
           }
 
           // NO cargar comisión si el usuario ya editó manualmente
-          if (!this.commissionManuallyEdited && this.selectedProfessional?.financialInfo?.commissionValue) {
+          if (
+            !this.commissionManuallyEdited &&
+            this.selectedProfessional?.financialInfo?.commissionValue
+          ) {
             this.professionalCommission = this.selectedProfessional.financialInfo.commissionValue;
           } else if (this.commissionManuallyEdited) {
           }
 
           // NO emitir evento que puede causar que se cierre el modal
           // this.$emit('attention-updated', this.attention);
-
         } else {
           console.warn('[AttentionDetailsModal] No fresh attention data received');
         }
@@ -540,7 +559,10 @@ export default {
         // If attention not found in backend (404), log warning but don't treat as error
         // The query-stack may have data for attentions that no longer exist in the main collection
         if (error.response?.status === 404) {
-          console.warn('[AttentionDetailsModal] Attention not found in backend (may be deleted or archived):', attentionId);
+          console.warn(
+            '[AttentionDetailsModal] Attention not found in backend (may be deleted or archived):',
+            attentionId,
+          );
           console.warn('[AttentionDetailsModal] Using data from query-stack instead');
         } else {
           console.error('[AttentionDetailsModal] Error refreshing attention data:', error);
@@ -555,7 +577,6 @@ export default {
       // Si ya tenemos el profesional seleccionado, no hacer nada
       if (this.selectedProfessional?.id === this.attention.professionalId) return;
 
-
       try {
         // Cargar lista de profesionales si no está disponible
         if (!this.professionals || this.professionals.length === 0) {
@@ -566,20 +587,31 @@ export default {
         let professional = this.professionals.find(p => p.id === this.attention.professionalId);
 
         // Si no se encuentra o no tiene información financiera completa, cargar por ID
-        if (!professional || !professional.financialInfo || professional.financialInfo.commissionValue === undefined) {
+        if (
+          !professional ||
+          !professional.financialInfo ||
+          professional.financialInfo.commissionValue === undefined
+        ) {
           professional = await getProfessionalById(this.attention.professionalId);
         }
 
         if (professional) {
           this.selectedProfessional = professional;
-          this.loadedProfessionalName = professional.personalInfo?.name || professional.name || this.attention.professionalId;
+          this.loadedProfessionalName =
+            professional.personalInfo?.name || professional.name || this.attention.professionalId;
 
           // Cargar comisión si no ha sido editada manualmente
-          if (!this.commissionManuallyEdited && professional?.financialInfo?.commissionValue !== undefined) {
+          if (
+            !this.commissionManuallyEdited &&
+            professional?.financialInfo?.commissionValue !== undefined
+          ) {
             this.professionalCommission = professional.financialInfo.commissionValue;
           }
         } else {
-          console.warn('[AttentionDetailsModal] Professional not found:', this.attention.professionalId);
+          console.warn(
+            '[AttentionDetailsModal] Professional not found:',
+            this.attention.professionalId,
+          );
         }
       } catch (error) {
         console.error('[AttentionDetailsModal] Error initializing professional data:', error);
@@ -595,7 +627,8 @@ export default {
       }
 
       // Get professionalId from various sources
-      const professionalId = this.attention.professionalId || this.attention.paymentConfirmationData?.professionalId;
+      const professionalId =
+        this.attention.professionalId || this.attention.paymentConfirmationData?.professionalId;
 
       if (!professionalId) return;
 
@@ -604,7 +637,8 @@ export default {
 
         // Load commission data if available
         if (this.attention.paymentConfirmationData?.professionalCommissionValue) {
-          this.professionalCommission = this.attention.paymentConfirmationData.professionalCommissionValue;
+          this.professionalCommission =
+            this.attention.paymentConfirmationData.professionalCommissionValue;
           this.commissionManuallyEdited = true; // Mark as manually edited to maintain priority
         }
 
@@ -627,7 +661,8 @@ export default {
 
         if (professional) {
           this.selectedProfessional = professional;
-          this.loadedProfessionalName = professional.personalInfo?.name || professional.name || professionalId;
+          this.loadedProfessionalName =
+            professional.personalInfo?.name || professional.name || professionalId;
         } else {
           this.loadedProfessionalName = professionalId;
         }
@@ -694,7 +729,10 @@ export default {
     },
     getSuggestedCommission() {
       // 1. Primero verificar si la atención ya tiene comisión asignada
-      if (this.attention?.professionalCommissionValue && this.attention?.professionalCommissionType) {
+      if (
+        this.attention?.professionalCommissionValue &&
+        this.attention?.professionalCommissionType
+      ) {
         const { professionalCommissionType, professionalCommissionValue } = this.attention;
         if (professionalCommissionType === 'PERCENTAGE') {
           return `${professionalCommissionValue}%`;
@@ -717,7 +755,9 @@ export default {
 
       // 3. Si no hay selectedProfessional pero sí hay profesional asignado, buscar en la lista
       if (this.attention?.professionalId && this.professionals?.length > 0) {
-        const assignedProfessional = this.professionals.find(p => p.id === this.attention.professionalId);
+        const assignedProfessional = this.professionals.find(
+          p => p.id === this.attention.professionalId,
+        );
         if (assignedProfessional?.financialInfo) {
           const { commissionType, commissionValue } = assignedProfessional.financialInfo;
           if (commissionValue) {
@@ -780,10 +820,14 @@ export default {
       }
 
       // 0) FIRST: Check for commission data directly on attention (from assign-professional)
-      if (this.attention?.professionalCommissionType && this.attention?.professionalCommissionValue !== undefined && this.attention?.professionalCommissionValue !== null) {
+      if (
+        this.attention?.professionalCommissionType &&
+        this.attention?.professionalCommissionValue !== undefined &&
+        this.attention?.professionalCommissionValue !== null
+      ) {
         const { professionalCommissionType, professionalCommissionValue } = this.attention;
         let suggestedAmount = 0;
-        let commissionDisplay = '';
+        const commissionDisplay = '';
 
         if (professionalCommissionValue && professionalCommissionValue > 0) {
           if (professionalCommissionType === 'PERCENTAGE') {
@@ -808,7 +852,9 @@ export default {
       if (confirmationData?.professionalCommissionAmount) {
         return {
           name: this.professionalDisplayName,
-          commission: `${confirmationData.professionalCommissionAmount} ${this.commerce?.currency || 'BRL'}`,
+          commission: `${confirmationData.professionalCommissionAmount} ${
+            this.commerce?.currency || 'BRL'
+          }`,
           suggestedAmount: Number(confirmationData.professionalCommissionAmount),
         };
       }
@@ -820,7 +866,7 @@ export default {
       ) {
         const { professionalCommissionType, professionalCommissionValue } = confirmationData;
         let suggestedAmount = 0;
-        let commissionDisplay = '';
+        const commissionDisplay = '';
 
         if (professionalCommissionValue && professionalCommissionValue > 0) {
           if (professionalCommissionType === 'PERCENTAGE') {
@@ -847,7 +893,7 @@ export default {
       if (this.selectedProfessional?.financialInfo) {
         const { commissionType, commissionValue } = this.selectedProfessional.financialInfo;
         let suggestedAmount = 0;
-        let commissionDisplay = '';
+        const commissionDisplay = '';
 
         if (commissionValue) {
           if (commissionType === 'PERCENTAGE') {
@@ -869,12 +915,9 @@ export default {
       }
 
       // 3) If we have professionalId but not the professional data yet, reload it
-      const professionalId = this.attention?.professionalId || this.attention?.paymentConfirmationData?.professionalId;
-      if (
-        professionalId &&
-        !this.selectedProfessional &&
-        !this.loadingProfessionalData
-      ) {
+      const professionalId =
+        this.attention?.professionalId || this.attention?.paymentConfirmationData?.professionalId;
+      if (professionalId && !this.selectedProfessional && !this.loadingProfessionalData) {
         // fire and forget; computed will re-run after state updates
         this.loadProfessionalDataIfNeeded();
       }
@@ -894,7 +937,6 @@ export default {
       this.goToAssignProfessional = false;
     },
     async confirmAssignProfessional() {
-
       if (!this.attention || !this.attention.id) {
         console.error('[AttentionDetailsModal] No attention or attention.id');
         this.alertError = 'No se puede asignar un profesional sin atención';
@@ -925,17 +967,15 @@ export default {
           }
         }
 
-        const name =
-          professional.personalInfo?.name ||
-          professional.name ||
-          professional.id;
+        const name = professional.personalInfo?.name || professional.name || professional.id;
 
         // Usar la comisión editada por el usuario si existe, sino usar la del profesional
         // Convertir a número si es string
         let commissionToUse = null;
-        const commissionValue = typeof this.professionalCommission === 'string'
-          ? this.professionalCommission.trim()
-          : String(this.professionalCommission || '').trim();
+        const commissionValue =
+          typeof this.professionalCommission === 'string'
+            ? this.professionalCommission.trim()
+            : String(this.professionalCommission || '').trim();
         if (commissionValue && commissionValue !== '') {
           const parsed = parseFloat(commissionValue);
           if (!isNaN(parsed) && isFinite(parsed)) {
@@ -946,8 +986,6 @@ export default {
           commissionToUse = professional.financialInfo?.commissionValue || null;
         }
         const commissionType = professional.financialInfo?.commissionType || null;
-
-
 
         await assignProfessional(
           this.attention.id,
@@ -1547,10 +1585,7 @@ export default {
       }
     },
     async loadTimelineData() {
-
-
       if (this.attention) {
-
       }
 
       const attentionId = this.attention?.id || this.attention?.attentionId;
@@ -1721,672 +1756,667 @@ export default {
 <template>
   <Teleport to="body">
     <div v-if="show" class="attention-modal-overlay" @click.self="closeModal">
-        <div
-          class="modal-dialog modal-dialog-scrollable modal-lg attention-modal-dialog"
-          @click.stop
-        >
-          <div class="modal-content attention-modal-content">
-            <!-- Modal Header -->
-            <div class="modal-header">
-              <h5 class="modal-title" id="attentionDetailsModalLabel">
-                <i class="bi bi-qr-code"></i>
-                {{ $t('dashboard.attentionDetails') || 'Detalles del Atendimiento' }}
-              </h5>
-              <button
-                type="button"
-                class="btn-close"
-                @click="closeModal"
-                aria-label="Close"
-              ></button>
+      <div class="modal-dialog modal-dialog-scrollable modal-lg attention-modal-dialog" @click.stop>
+        <div class="modal-content attention-modal-content">
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h5 class="modal-title" id="attentionDetailsModalLabel">
+              <i class="bi bi-qr-code"></i>
+              {{ $t('dashboard.attentionDetails') || 'Detalles del Atendimiento' }}
+            </h5>
+            <button type="button" class="btn-close" @click="closeModal" aria-label="Close"></button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <Spinner :show="loading"></Spinner>
+
+            <!-- Client Info Section - Matching Booking Style -->
+            <div class="attention-client-info">
+              <div class="attention-client-header">
+                <div class="attention-client-name-section">
+                  <div class="attention-client-avatar">
+                    <i class="bi bi-person-circle"></i>
+                  </div>
+                  <div class="attention-client-details">
+                    <span class="attention-client-name">{{ attentionFullName }}</span>
+                    <span
+                      v-if="attention && attention.number"
+                      class="attention-number-badge-inline"
+                    >
+                      #{{ attention.number }}
+                    </span>
+                    <!-- Paid Status Badge -->
+                    <div
+                      v-if="
+                        attention?.paymentConfirmationData?.paid === true ||
+                        attention?.paid === true
+                      "
+                      class="attention-paid-badge"
+                      :title="
+                        $t('collaboratorBookingsView.paymentConfirmed') || 'Pagamento Confirmado'
+                      "
+                    >
+                      <i class="bi bi-check-circle-fill"></i>
+                      <span class="paid-text">{{ $t('dashboard.paid') }}</span>
+                    </div>
+                    <button class="btn-copy-mini" @click="copyAttention()" title="Copiar datos">
+                      <i class="bi bi-file-earmark-spreadsheet"></i>
+                    </button>
+                    <button
+                      v-if="attention && canCancelAttention(attention)"
+                      class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3 card-action"
+                      @click="goCancel()"
+                      :disabled="togglesLoaded && !hasCollaboratorAttentionPermission('cancel')"
+                      title="Cancelar atención"
+                    >
+                      <i class="bi bi-person-x-fill"></i>
+                      {{ $t('collaboratorBookingsView.cancel') }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="attention-client-contact">
+                <a
+                  class="attention-contact-item whatsapp-item"
+                  :href="'https://wa.me/' + clientPhone"
+                  target="_blank"
+                >
+                  <div class="contact-icon-wrapper whatsapp-bg">
+                    <i class="bi bi-whatsapp"></i>
+                  </div>
+                  <span class="contact-text">{{ clientPhone || 'N/I' }}</span>
+                </a>
+                <a
+                  class="attention-contact-item email-item"
+                  :href="'mailto:' + clientEmail"
+                  target="_blank"
+                >
+                  <div class="contact-icon-wrapper email-bg">
+                    <i class="bi bi-envelope"></i>
+                  </div>
+                  <span class="contact-text">{{ clientEmail || 'N/I' }}</span>
+                </a>
+                <div class="attention-contact-item id-item">
+                  <div class="contact-icon-wrapper id-bg">
+                    <i class="bi bi-person-vcard"></i>
+                  </div>
+                  <span class="contact-text">{{ formatIdNumber(clientIdNumber) || 'N/I' }}</span>
+                </div>
+              </div>
             </div>
 
-            <!-- Modal Body -->
-            <div class="modal-body">
-              <Spinner :show="loading"></Spinner>
+            <!-- Attention Context Info -->
+            <div
+              v-if="
+                attention.queueName ||
+                (queues && queues.length > 0 && queues[0]?.name) ||
+                attention.collaboratorName ||
+                professionalDisplayName ||
+                (attention.servicesDetails && attention.servicesDetails.length > 0) ||
+                attention.createdDate
+              "
+              class="attention-context-info-compact"
+            >
+              <div
+                v-if="attention.queueName || (queues && queues.length > 0 && queues[0]?.name)"
+                class="attention-context-item-inline"
+              >
+                <i class="bi bi-person-lines-fill"></i>
+                <span class="attention-context-label-inline">Fila</span>
+                <span class="attention-context-value-inline">{{
+                  attention.queueName || (queues && queues.length > 0 ? queues[0].name : 'N/I')
+                }}</span>
+              </div>
+              <div v-if="attention.collaboratorName" class="attention-context-item-inline">
+                <i class="bi bi-person-fill"></i>
+                <span class="attention-context-label-inline">Colaborador</span>
+                <span class="attention-context-value-inline">{{
+                  attention.collaboratorName || 'N/I'
+                }}</span>
+              </div>
+              <div v-if="professionalDisplayName" class="attention-context-item-inline">
+                <i class="bi bi-person-badge"></i>
+                <span class="attention-context-label-inline">{{
+                  $t('professionals.professional') || 'Profesional'
+                }}</span>
+                <span class="attention-context-value-inline">{{ professionalDisplayName }}</span>
+              </div>
+              <div v-if="attention.createdDate" class="attention-context-item-inline">
+                <i class="bi bi-calendar-event"></i>
+                <span class="attention-context-label-inline">Fecha</span>
+                <span class="attention-context-value-inline">{{
+                  getDate(attention.createdDate)
+                }}</span>
+              </div>
+              <div
+                v-if="attention.servicesDetails && attention.servicesDetails.length > 0"
+                class="attention-context-item-inline"
+              >
+                <i class="bi bi-scissors"></i>
+                <span class="attention-context-label-inline">Servicio(s)</span>
+                <span class="attention-context-value-inline">
+                  {{ attention.servicesDetails.map(s => s.name).join(', ') }}
+                </span>
+              </div>
+              <div
+                v-if="attention.daysSinceAttention !== undefined"
+                class="attention-context-item-inline"
+              >
+                <i :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)}`"></i>
+                <span class="attention-context-label-inline">Días desde atención</span>
+                <span class="attention-context-value-inline">{{
+                  attention.daysSinceAttention || 0
+                }}</span>
+              </div>
+            </div>
 
-              <!-- Client Info Section - Matching Booking Style -->
-              <div class="attention-client-info">
-                <div class="attention-client-header">
-                  <div class="attention-client-name-section">
-                    <div class="attention-client-avatar">
-                      <i class="bi bi-person-circle"></i>
-                    </div>
-                    <div class="attention-client-details">
-                      <span class="attention-client-name">{{ attentionFullName }}</span>
-                      <span
-                        v-if="attention && attention.number"
-                        class="attention-number-badge-inline"
-                      >
-                        #{{ attention.number }}
-                      </span>
-                      <!-- Paid Status Badge -->
-                      <div
-                        v-if="
-                          attention?.paymentConfirmationData?.paid === true ||
-                          attention?.paid === true
-                        "
-                        class="attention-paid-badge"
-                        :title="
-                          $t('collaboratorBookingsView.paymentConfirmed') || 'Pagamento Confirmado'
-                        "
-                      >
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span class="paid-text">{{ $t('dashboard.paid') }}</span>
-                      </div>
-                      <button class="btn-copy-mini" @click="copyAttention()" title="Copiar datos">
-                        <i class="bi bi-file-earmark-spreadsheet"></i>
-                      </button>
-                      <button
-                        v-if="attention && canCancelAttention(attention)"
-                        class="btn btn-sm btn-size fw-bold btn-danger rounded-pill px-3 card-action"
-                        @click="goCancel()"
-                        :disabled="togglesLoaded && !hasCollaboratorAttentionPermission('cancel')"
-                        title="Cancelar atención"
-                      >
-                        <i class="bi bi-person-x-fill"></i>
-                        {{ $t('collaboratorBookingsView.cancel') }}
-                      </button>
-                    </div>
-                  </div>
+            <div class="attention-divider"></div>
+
+            <!-- Payment Data Section -->
+            <div
+              v-if="attention.paid !== undefined && attention.paid === true"
+              class="attention-confirmation-badges"
+            >
+              <div class="attention-confirmation-header">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>{{
+                  $t('collaboratorBookingsView.paymentData') || 'Dados de Pagamento'
+                }}</span>
+              </div>
+              <div class="attention-context-info-compact">
+                <div
+                  v-if="attention.paymentConfirmationData?.paymentType"
+                  class="attention-context-item-inline"
+                >
+                  <i class="bi bi-credit-card"></i>
+                  <span class="attention-context-label-inline">{{
+                    $t('collaboratorBookingsView.paymentType') || 'Tipo de Pago'
+                  }}</span>
+                  <span class="attention-context-value-inline">{{
+                    $t(`paymentTypes.${attention.paymentConfirmationData.paymentType}`)
+                  }}</span>
                 </div>
-                <div class="attention-client-contact">
-                  <a
-                    class="attention-contact-item whatsapp-item"
-                    :href="'https://wa.me/' + clientPhone"
-                    target="_blank"
-                  >
-                    <div class="contact-icon-wrapper whatsapp-bg">
-                      <i class="bi bi-whatsapp"></i>
-                    </div>
-                    <span class="contact-text">{{ clientPhone || 'N/I' }}</span>
-                  </a>
-                  <a
-                    class="attention-contact-item email-item"
-                    :href="'mailto:' + clientEmail"
-                    target="_blank"
-                  >
-                    <div class="contact-icon-wrapper email-bg">
-                      <i class="bi bi-envelope"></i>
-                    </div>
-                    <span class="contact-text">{{ clientEmail || 'N/I' }}</span>
-                  </a>
-                  <div class="attention-contact-item id-item">
-                    <div class="contact-icon-wrapper id-bg">
-                      <i class="bi bi-person-vcard"></i>
-                    </div>
-                    <span class="contact-text">{{ formatIdNumber(clientIdNumber) || 'N/I' }}</span>
-                  </div>
+                <div
+                  v-if="attention.paymentConfirmationData?.paymentMethod"
+                  class="attention-context-item-inline"
+                >
+                  <i class="bi bi-wallet2"></i>
+                  <span class="attention-context-label-inline">{{
+                    $t('collaboratorBookingsView.paymentMethod') || 'Método de Pago'
+                  }}</span>
+                  <span class="attention-context-value-inline">{{
+                    $t(`paymentClientMethods.${attention.paymentConfirmationData.paymentMethod}`)
+                  }}</span>
+                </div>
+                <div
+                  v-if="attention.paymentConfirmationData?.paymentFiscalNote"
+                  class="attention-context-item-inline"
+                >
+                  <i class="bi bi-receipt"></i>
+                  <span class="attention-context-label-inline">{{
+                    $t('collaboratorBookingsView.fiscalNote') || 'Nota Fiscal'
+                  }}</span>
+                  <span class="attention-context-value-inline">{{
+                    attention.paymentConfirmationData.paymentFiscalNote
+                  }}</span>
+                </div>
+                <div
+                  v-if="attention.paymentConfirmationData?.paymentAmount"
+                  class="attention-context-item-inline"
+                >
+                  <i class="bi bi-coin"></i>
+                  <span class="attention-context-label-inline">{{
+                    $t('collaboratorBookingsView.paymentAmount') || 'Valor Pagado'
+                  }}</span>
+                  <span class="attention-context-value-inline payment-amount-value">{{
+                    attention.paymentConfirmationData.paymentAmount
+                  }}</span>
+                </div>
+                <div
+                  v-if="attention.paymentConfirmationData?.totalAmount"
+                  class="attention-context-item-inline"
+                >
+                  <i class="bi bi-cash-stack"></i>
+                  <span class="attention-context-label-inline">{{
+                    $t('collaboratorBookingsView.totalAmount') || 'Total'
+                  }}</span>
+                  <span class="attention-context-value-inline">{{
+                    attention.paymentConfirmationData.totalAmount
+                  }}</span>
+                </div>
+                <div
+                  v-if="attention.paymentConfirmationData?.paymentCommission"
+                  class="attention-context-item-inline"
+                >
+                  <i class="bi bi-percent"></i>
+                  <span class="attention-context-label-inline">{{
+                    $t('collaboratorBookingsView.commission') || 'Comissão'
+                  }}</span>
+                  <span class="attention-context-value-inline payment-commission-value">{{
+                    attention.paymentConfirmationData.paymentCommission
+                  }}</span>
+                </div>
+                <div
+                  v-if="
+                    attention.paymentConfirmationData?.installments &&
+                    attention.paymentConfirmationData.installments > 1
+                  "
+                  class="attention-context-item-inline"
+                >
+                  <i class="bi bi-calendar-check"></i>
+                  <span class="attention-context-label-inline">{{
+                    $t('collaboratorBookingsView.installments') || 'Parcelas'
+                  }}</span>
+                  <span class="attention-context-value-inline">{{
+                    attention.paymentConfirmationData.installments
+                  }}</span>
+                </div>
+                <div
+                  v-if="attention.paymentConfirmationData?.packageId && attention.packageName"
+                  class="attention-context-item-inline"
+                >
+                  <i class="bi bi-box-seam"></i>
+                  <span class="attention-context-label-inline">{{
+                    $t('package.package') || 'Pacote'
+                  }}</span>
+                  <span class="attention-context-value-inline">{{ attention.packageName }}</span>
                 </div>
               </div>
+            </div>
 
-              <!-- Attention Context Info -->
+            <!-- Survey Data Section -->
+            <div v-if="attention.rating || attention.nps" class="attention-confirmation-badges">
+              <div class="attention-confirmation-header">
+                <i class="bi bi-star-fill"></i>
+                <span>{{ $t('dashboard.surveyData') || 'Dados da Pesquisa' }}</span>
+              </div>
+              <div class="attention-confirmation-tags">
+                <span v-if="attention.rating" class="badge-mini confirmation-tag">
+                  <i class="bi bi-star-fill yellow-icon"></i>
+                  CSAT: {{ attention.rating }}
+                </span>
+                <span v-if="attention.nps" class="badge-mini confirmation-tag">
+                  <i class="bi bi-emoji-smile-fill blue-icon"></i>
+                  NPS: {{ attention.nps }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="attention-actions-tabs">
+              <button
+                v-if="getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')"
+                class="attention-action-tab"
+                :class="{
+                  'attention-action-tab-active': extendedPaymentEntity,
+                  'attention-action-tab-disabled': isAttentionTerminatedOrCancelled,
+                }"
+                :disabled="isAttentionTerminatedOrCancelled"
+                @click.prevent="showPaymentDetails()"
+              >
+                <i class="bi bi-cash-coin"></i>
+                <span>{{ $t('collaboratorBookingsView.paymentConfirm') }}</span>
+                <i :class="`bi ${extendedPaymentEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"></i>
+              </button>
+              <button
+                v-if="getActiveFeature(commerce, 'professional-assignment-enabled', 'PRODUCT')"
+                class="attention-action-tab"
+                :class="{
+                  'attention-action-tab-active': extendedProfessionalEntity,
+                  'attention-action-tab-disabled': isAttentionTerminatedOrCancelled,
+                }"
+                :disabled="isAttentionTerminatedOrCancelled"
+                @click.prevent="showProfessionalDetails()"
+              >
+                <i class="bi bi-person-badge"></i>
+                <span>{{ $t('professionals.assignProfessional') }}</span>
+                <i
+                  :class="`bi ${extendedProfessionalEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
+                ></i>
+              </button>
+              <button
+                v-if="getActiveFeature(commerce, 'attention-transfer-queue', 'PRODUCT')"
+                class="attention-action-tab"
+                :class="{
+                  'attention-action-tab-active': extendedTransferEntity,
+                  'attention-action-tab-disabled': isAttentionTerminatedOrCancelled,
+                }"
+                :disabled="isAttentionTerminatedOrCancelled"
+                @click.prevent="showTransferDetails()"
+              >
+                <i class="bi bi-arrow-left-right"></i>
+                <span>{{ $t('collaboratorBookingsView.transferQueue') }}</span>
+                <i
+                  :class="`bi ${extendedTransferEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
+                ></i>
+              </button>
+            </div>
+
+            <!-- PAYMENT -->
+            <Transition name="slide-fade">
               <div
                 v-if="
-                  attention.queueName ||
-                  (queues && queues.length > 0 && queues[0]?.name) ||
-                  attention.collaboratorName ||
-                  professionalDisplayName ||
-                  (attention.servicesDetails && attention.servicesDetails.length > 0) ||
-                  attention.createdDate
+                  extendedPaymentEntity &&
+                  getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')
                 "
-                class="attention-context-info-compact"
+                class="attention-action-section"
               >
-                <div
-                  v-if="attention.queueName || (queues && queues.length > 0 && queues[0]?.name)"
-                  class="attention-context-item-inline"
-                >
-                  <i class="bi bi-person-lines-fill"></i>
-                  <span class="attention-context-label-inline">Fila</span>
-                  <span class="attention-context-value-inline">{{
-                    attention.queueName || (queues && queues.length > 0 ? queues[0].name : 'N/I')
-                  }}</span>
-                </div>
-                <div v-if="attention.collaboratorName" class="attention-context-item-inline">
-                  <i class="bi bi-person-fill"></i>
-                  <span class="attention-context-label-inline">Colaborador</span>
-                  <span class="attention-context-value-inline">{{
-                    attention.collaboratorName || 'N/I'
-                  }}</span>
-                </div>
-                <div
-                  v-if="professionalDisplayName"
-                  class="attention-context-item-inline"
-                >
-                  <i class="bi bi-person-badge"></i>
-                  <span class="attention-context-label-inline">{{
-                    $t('professionals.professional') || 'Profesional'
-                  }}</span>
-                  <span class="attention-context-value-inline">{{ professionalDisplayName }}</span>
-                </div>
-                <div v-if="attention.createdDate" class="attention-context-item-inline">
-                  <i class="bi bi-calendar-event"></i>
-                  <span class="attention-context-label-inline">Fecha</span>
-                  <span class="attention-context-value-inline">{{
-                    getDate(attention.createdDate)
-                  }}</span>
-                </div>
-                <div
-                  v-if="attention.servicesDetails && attention.servicesDetails.length > 0"
-                  class="attention-context-item-inline"
-                >
-                  <i class="bi bi-scissors"></i>
-                  <span class="attention-context-label-inline">Servicio(s)</span>
-                  <span class="attention-context-value-inline">
-                    {{ attention.servicesDetails.map(s => s.name).join(', ') }}
-                  </span>
-                </div>
-                <div
-                  v-if="attention.daysSinceAttention !== undefined"
-                  class="attention-context-item-inline"
-                >
-                  <i
-                    :class="`bi ${clasifyDaysSinceComment(attention.daysSinceAttention || 0)}`"
-                  ></i>
-                  <span class="attention-context-label-inline">Días desde atención</span>
-                  <span class="attention-context-value-inline">{{
-                    attention.daysSinceAttention || 0
-                  }}</span>
-                </div>
-              </div>
-
-              <div class="attention-divider"></div>
-
-              <!-- Payment Data Section -->
-              <div
-                v-if="attention.paid !== undefined && attention.paid === true"
-                class="attention-confirmation-badges"
-              >
-                <div class="attention-confirmation-header">
-                  <i class="bi bi-check-circle-fill"></i>
-                  <span>{{
-                    $t('collaboratorBookingsView.paymentData') || 'Dados de Pagamento'
-                  }}</span>
-                </div>
-                <div class="attention-context-info-compact">
-                  <div
-                    v-if="attention.paymentConfirmationData?.paymentType"
-                    class="attention-context-item-inline"
-                  >
-                    <i class="bi bi-credit-card"></i>
-                    <span class="attention-context-label-inline">{{
-                      $t('collaboratorBookingsView.paymentType') || 'Tipo de Pago'
-                    }}</span>
-                    <span class="attention-context-value-inline">{{
-                      $t(`paymentTypes.${attention.paymentConfirmationData.paymentType}`)
-                    }}</span>
-                  </div>
-                  <div
-                    v-if="attention.paymentConfirmationData?.paymentMethod"
-                    class="attention-context-item-inline"
-                  >
-                    <i class="bi bi-wallet2"></i>
-                    <span class="attention-context-label-inline">{{
-                      $t('collaboratorBookingsView.paymentMethod') || 'Método de Pago'
-                    }}</span>
-                    <span class="attention-context-value-inline">{{
-                      $t(`paymentClientMethods.${attention.paymentConfirmationData.paymentMethod}`)
-                    }}</span>
-                  </div>
-                  <div
-                    v-if="attention.paymentConfirmationData?.paymentFiscalNote"
-                    class="attention-context-item-inline"
-                  >
-                    <i class="bi bi-receipt"></i>
-                    <span class="attention-context-label-inline">{{
-                      $t('collaboratorBookingsView.fiscalNote') || 'Nota Fiscal'
-                    }}</span>
-                    <span class="attention-context-value-inline">{{
-                      attention.paymentConfirmationData.paymentFiscalNote
-                    }}</span>
-                  </div>
-                  <div
-                    v-if="attention.paymentConfirmationData?.paymentAmount"
-                    class="attention-context-item-inline"
-                  >
-                    <i class="bi bi-coin"></i>
-                    <span class="attention-context-label-inline">{{
-                      $t('collaboratorBookingsView.paymentAmount') || 'Valor Pagado'
-                    }}</span>
-                    <span class="attention-context-value-inline payment-amount-value">{{
-                      attention.paymentConfirmationData.paymentAmount
-                    }}</span>
-                  </div>
-                  <div
-                    v-if="attention.paymentConfirmationData?.totalAmount"
-                    class="attention-context-item-inline"
-                  >
-                    <i class="bi bi-cash-stack"></i>
-                    <span class="attention-context-label-inline">{{
-                      $t('collaboratorBookingsView.totalAmount') || 'Total'
-                    }}</span>
-                    <span class="attention-context-value-inline">{{
-                      attention.paymentConfirmationData.totalAmount
-                    }}</span>
-                  </div>
-                  <div
-                    v-if="attention.paymentConfirmationData?.paymentCommission"
-                    class="attention-context-item-inline"
-                  >
-                    <i class="bi bi-percent"></i>
-                    <span class="attention-context-label-inline">{{
-                      $t('collaboratorBookingsView.commission') || 'Comissão'
-                    }}</span>
-                    <span class="attention-context-value-inline payment-commission-value">{{
-                      attention.paymentConfirmationData.paymentCommission
-                    }}</span>
-                  </div>
-                  <div
-                    v-if="
-                      attention.paymentConfirmationData?.installments &&
-                      attention.paymentConfirmationData.installments > 1
-                    "
-                    class="attention-context-item-inline"
-                  >
-                    <i class="bi bi-calendar-check"></i>
-                    <span class="attention-context-label-inline">{{
-                      $t('collaboratorBookingsView.installments') || 'Parcelas'
-                    }}</span>
-                    <span class="attention-context-value-inline">{{
-                      attention.paymentConfirmationData.installments
-                    }}</span>
-                  </div>
-                  <div
-                    v-if="attention.paymentConfirmationData?.packageId && attention.packageName"
-                    class="attention-context-item-inline"
-                  >
-                    <i class="bi bi-box-seam"></i>
-                    <span class="attention-context-label-inline">{{
-                      $t('package.package') || 'Pacote'
-                    }}</span>
-                    <span class="attention-context-value-inline">{{ attention.packageName }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Survey Data Section -->
-              <div v-if="attention.rating || attention.nps" class="attention-confirmation-badges">
-                <div class="attention-confirmation-header">
-                  <i class="bi bi-star-fill"></i>
-                  <span>{{ $t('dashboard.surveyData') || 'Dados da Pesquisa' }}</span>
-                </div>
-                <div class="attention-confirmation-tags">
-                  <span v-if="attention.rating" class="badge-mini confirmation-tag">
-                    <i class="bi bi-star-fill yellow-icon"></i>
-                    CSAT: {{ attention.rating }}
-                  </span>
-                  <span v-if="attention.nps" class="badge-mini confirmation-tag">
-                    <i class="bi bi-emoji-smile-fill blue-icon"></i>
-                    NPS: {{ attention.nps }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Action Buttons -->
-              <div class="attention-actions-tabs">
-                <button
-                  v-if="getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')"
-                  class="attention-action-tab"
-                  :class="{
-                    'attention-action-tab-active': extendedPaymentEntity,
-                    'attention-action-tab-disabled': isAttentionTerminatedOrCancelled,
-                  }"
-                  :disabled="isAttentionTerminatedOrCancelled"
-                  @click.prevent="showPaymentDetails()"
-                >
-                  <i class="bi bi-cash-coin"></i>
-                  <span>{{ $t('collaboratorBookingsView.paymentConfirm') }}</span>
-                  <i
-                    :class="`bi ${extendedPaymentEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-                  ></i>
-                </button>
-                <button
-                  v-if="getActiveFeature(commerce, 'professional-assignment-enabled', 'PRODUCT')"
-                  class="attention-action-tab"
-                  :class="{
-                    'attention-action-tab-active': extendedProfessionalEntity,
-                    'attention-action-tab-disabled': isAttentionTerminatedOrCancelled,
-                  }"
-                  :disabled="isAttentionTerminatedOrCancelled"
-                  @click.prevent="showProfessionalDetails()"
-                >
-                  <i class="bi bi-person-badge"></i>
-                  <span>{{ $t('professionals.assignProfessional') }}</span>
-                  <i
-                    :class="`bi ${
-                      extendedProfessionalEntity ? 'bi-chevron-up' : 'bi-chevron-down'
-                    }`"
-                  ></i>
-                </button>
-                <button
-                  v-if="getActiveFeature(commerce, 'attention-transfer-queue', 'PRODUCT')"
-                  class="attention-action-tab"
-                  :class="{
-                    'attention-action-tab-active': extendedTransferEntity,
-                    'attention-action-tab-disabled': isAttentionTerminatedOrCancelled,
-                  }"
-                  :disabled="isAttentionTerminatedOrCancelled"
-                  @click.prevent="showTransferDetails()"
-                >
-                  <i class="bi bi-arrow-left-right"></i>
-                  <span>{{ $t('collaboratorBookingsView.transferQueue') }}</span>
-                  <i
-                    :class="`bi ${extendedTransferEntity ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-                  ></i>
-                </button>
-              </div>
-
-              <!-- PAYMENT -->
-              <Transition name="slide-fade">
-                <div
-                  v-if="
-                    extendedPaymentEntity &&
-                    getActiveFeature(commerce, 'attention-confirm-payment', 'PRODUCT')
-                  "
-                  class="attention-action-section"
-                >
-                  <div class="attention-action-content">
-                    <div v-if="!attention.paid" class="attention-action-form">
-                      <div class="attention-action-header">
-                        <i class="bi bi-cash-coin"></i>
-                        <span>{{ $t('collaboratorBookingsView.paymentConfirm') }}</span>
-                      </div>
-                      <PaymentForm
-                        v-if="(attention.servicesId && attention.servicesId.length > 0) || (attention.servicesDetails && attention.servicesDetails.length > 0)"
-                        :id="attention.id"
-                        :commerce="commerce"
-                        :client-id="attention.clientId"
-                        :service-id="attention.servicesId?.[0]"
-                        :service-ids="attention.servicesId || []"
-                        :services="attention.servicesDetails || []"
-                        :confirm-payment="true"
-                        :errors-add="errorsAdd"
-                        :receive-data="receiveData"
-                        :professional-id="attention.professionalId"
-                        :professional-name="attention.professionalName || professionalDisplayName"
-                        :professional-commission="computedProfessionalCommission || null"
-                        :professional-commission-type="professionalCommissionType"
-                        :suggested-commission-amount="0"
-                      >
-                      </PaymentForm>
-                      <!-- Warning cuando no hay servicios -->
-                      <div v-else class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle"></i>
-                        <span>
-                          {{ $t('collaboratorBookingsView.noServicesAssigned') || 'Atención sin servicios asignados.' }}
-                        </span>
-                      </div>
-                      <div class="attention-action-buttons">
-                        <button
-                          class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
-                          @click="goConfirm()"
-                          :disabled="!canConfirmPayment() || isAttentionTerminatedOrCancelled"
-                        >
-                          <i class="bi bi-person-check-fill"></i>
-                          {{ $t('collaboratorBookingsView.confirm') }}
-                        </button>
-                      </div>
-                      <AreYouSure
-                        :show="goToConfirm"
-                        :yes-disabled="
-                          isAttentionTerminatedOrCancelled ||
-                          (togglesLoaded && !hasCollaboratorAttentionPermission('confirm'))
-                        "
-                        :no-disabled="
-                          isAttentionTerminatedOrCancelled ||
-                          (togglesLoaded && !hasCollaboratorAttentionPermission('confirm'))
-                        "
-                        @actionYes="confirm()"
-                        @actionNo="confirmCancel()"
-                      >
-                      </AreYouSure>
+                <div class="attention-action-content">
+                  <div v-if="!attention.paid" class="attention-action-form">
+                    <div class="attention-action-header">
+                      <i class="bi bi-cash-coin"></i>
+                      <span>{{ $t('collaboratorBookingsView.paymentConfirm') }}</span>
                     </div>
-                    <div v-else class="attention-action-message">
-                      <Message
-                        :title="$t('collaboratorBookingsView.message.8.title')"
-                        :content="$t('collaboratorBookingsView.message.8.content')"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </Transition>
-
-              <!-- PROFESSIONAL ASSIGNMENT -->
-              <Transition name="slide-fade">
-                <div
-                  v-if="
-                    extendedProfessionalEntity &&
-                    getActiveFeature(commerce, 'professional-assignment-enabled', 'PRODUCT')
-                  "
-                  class="attention-action-section"
-                >
-                  <div class="attention-action-content">
-                    <div class="attention-action-form payment-form-modern">
-                      <div class="attention-action-header">
-                        <i class="bi bi-person-badge"></i>
-                        <span>Atribuir Profissional</span>
-                      </div>
-                      <div class="payment-form-content">
-                        <div v-if="isProfessionalAssigned" class="professional-assigned-alert">
-                          <i class="bi bi-person-badge-fill"></i>
-                          <span class="alert-text">
-                            Profissional já atribuído:
-                            <strong>{{ professionalDisplayName }}</strong>
-                            <span v-if="getAssignedProfessionalCommissionData().commission" class="commission-info">
-                              (Comissão: <strong>{{ getFormattedCommissionForDisplay() }}</strong>)
-                            </span>
-                          </span>
-                          <small class="alert-action">
-                            Você pode substituí-lo selecionando outro
-                          </small>
-                        </div>
-                        <div class="payment-form-field">
-                          <label class="payment-form-label">Selecionar profissional</label>
-                          <ProfessionalSelector
-                            v-model="selectedProfessionalId"
-                            :professionals="professionals"
-                            :filter-by-service="attention.servicesId"
-                            :show-commission="false"
-                            @professional-selected="handleProfessionalSelected"
-                          />
-                        </div>
-                        <div
-                          v-if="
-                            (selectedProfessional || isProfessionalAssigned) &&
-                            getActiveFeature(commerce, 'professional-commission-enabled', 'PRODUCT')
-                          "
-                          class="payment-form-field"
-                        >
-                          <label class="payment-form-label">Comissão</label>
-                          <div class="d-flex align-items-center gap-2">
-                            <input
-                              ref="commissionInputRef"
-                              v-model="professionalCommission"
-                              type="text"
-                              inputmode="decimal"
-                              class="payment-form-input commission-input-fix"
-                              :placeholder="getSuggestedCommission()"
-                              :value="computedProfessionalCommission || professionalCommission"
-                              @input="handleCommissionInput"
-                              @click="handleInputClick"
-                              @mousedown="handleInputMouseDown"
-                              tabindex="0"
-                            />
-                            <span class="text-muted">
-                              {{
-                                selectedProfessional?.financialInfo?.commissionType === 'PERCENTAGE'
-                                  ? '%'
-                                  : commerce.currency || 'BRL'
-                              }}
-                            </span>
-                          </div>
-                          <!-- Warning about suggested commission -->
-                          <div v-if="getSuggestedCommission()" class="alert alert-warning mt-2 commission-warning">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <span>Comissão sugerida: <strong>{{ getSuggestedCommission() }}</strong></span>
-                            <Popper :class="'dark'" arrow hover>
-                              <template #content>
-                                <div>
-                                  Esta é a comissão configurada para este profissional
-                                </div>
-                              </template>
-                              <i class="bi bi-question-circle ms-2"></i>
-                            </Popper>
-                          </div>
-                        </div>
-                        <div class="attention-action-buttons">
-                          <button
-                            class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
-                            @click="goAssignProfessional()"
-                            :disabled="(!selectedProfessional && !isProfessionalAssigned) || loading || isAttentionTerminatedOrCancelled"
-                          >
-                            <i class="bi bi-person-check-fill"></i>
-                            Atribuir Profissional
-                          </button>
-                        </div>
-                        <AreYouSure
-                          :show="goToAssignProfessional"
-                          :yes-disabled="
-                            !selectedProfessional || loading || isAttentionTerminatedOrCancelled
-                          "
-                          :no-disabled="
-                            !selectedProfessional || loading || isAttentionTerminatedOrCancelled
-                          "
-                          @actionYes="confirmAssignProfessional()"
-                          @actionNo="cancelAssignProfessional()"
-                        >
-                        </AreYouSure>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Transition>
-
-              <!-- TRANSFER -->
-              <Transition name="slide-fade">
-                <div
-                  v-if="
-                    extendedTransferEntity &&
-                    getActiveFeature(commerce, 'attention-transfer-queue', 'PRODUCT')
-                  "
-                  class="attention-action-section"
-                >
-                  <div class="attention-action-content">
-                    <div
-                      v-if="queuesToTransfer && queuesToTransfer.length > 0"
-                      class="attention-action-form"
+                    <PaymentForm
+                      v-if="
+                        (attention.servicesId && attention.servicesId.length > 0) ||
+                        (attention.servicesDetails && attention.servicesDetails.length > 0)
+                      "
+                      :id="attention.id"
+                      :commerce="commerce"
+                      :client-id="attention.clientId"
+                      :service-id="attention.servicesId?.[0]"
+                      :service-ids="attention.servicesId || []"
+                      :services="attention.servicesDetails || []"
+                      :confirm-payment="true"
+                      :errors-add="errorsAdd"
+                      :receive-data="receiveData"
+                      :professional-id="attention.professionalId"
+                      :professional-name="attention.professionalName || professionalDisplayName"
+                      :professional-commission="computedProfessionalCommission || null"
+                      :professional-commission-type="professionalCommissionType"
+                      :suggested-commission-amount="0"
                     >
-                      <div class="attention-action-header">
-                        <i class="bi bi-arrow-left-right"></i>
-                        <span>{{ $t('collaboratorBookingsView.transferQueue') }}</span>
-                      </div>
-                      <div class="attention-transfer-selector">
-                        <div class="attention-queue-info">
-                          <span class="attention-queue-label">{{
-                            $t('collaboratorBookingsView.selectQueueToTransfer')
-                          }}</span>
-                          <div class="attention-queue-current">
-                            <i class="bi bi-arrow-right"></i>
-                            <span class="fw-bold">{{ queue.name }}</span>
-                          </div>
-                        </div>
-                        <select
-                          class="attention-select-modern"
-                          aria-label="form-select-sm"
-                          v-model="queueToTransfer"
-                        >
-                          <option
-                            v-for="queue in queuesToTransfer"
-                            :key="queue.id"
-                            :value="queue.id"
+                    </PaymentForm>
+                    <!-- Warning cuando no hay servicios -->
+                    <div v-else class="alert alert-warning">
+                      <i class="bi bi-exclamation-triangle"></i>
+                      <span>
+                        {{
+                          $t('collaboratorBookingsView.noServicesAssigned') ||
+                          'Atención sin servicios asignados.'
+                        }}
+                      </span>
+                    </div>
+                    <div class="attention-action-buttons">
+                      <button
+                        class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
+                        @click="goConfirm()"
+                        :disabled="!canConfirmPayment() || isAttentionTerminatedOrCancelled"
+                      >
+                        <i class="bi bi-person-check-fill"></i>
+                        {{ $t('collaboratorBookingsView.confirm') }}
+                      </button>
+                    </div>
+                    <AreYouSure
+                      :show="goToConfirm"
+                      :yes-disabled="
+                        isAttentionTerminatedOrCancelled ||
+                        (togglesLoaded && !hasCollaboratorAttentionPermission('confirm'))
+                      "
+                      :no-disabled="
+                        isAttentionTerminatedOrCancelled ||
+                        (togglesLoaded && !hasCollaboratorAttentionPermission('confirm'))
+                      "
+                      @actionYes="confirm()"
+                      @actionNo="confirmCancel()"
+                    >
+                    </AreYouSure>
+                  </div>
+                  <div v-else class="attention-action-message">
+                    <Message
+                      :title="$t('collaboratorBookingsView.message.8.title')"
+                      :content="$t('collaboratorBookingsView.message.8.content')"
+                    />
+                  </div>
+                </div>
+              </div>
+            </Transition>
+
+            <!-- PROFESSIONAL ASSIGNMENT -->
+            <Transition name="slide-fade">
+              <div
+                v-if="
+                  extendedProfessionalEntity &&
+                  getActiveFeature(commerce, 'professional-assignment-enabled', 'PRODUCT')
+                "
+                class="attention-action-section"
+              >
+                <div class="attention-action-content">
+                  <div class="attention-action-form payment-form-modern">
+                    <div class="attention-action-header">
+                      <i class="bi bi-person-badge"></i>
+                      <span>Atribuir Profissional</span>
+                    </div>
+                    <div class="payment-form-content">
+                      <div v-if="isProfessionalAssigned" class="professional-assigned-alert">
+                        <i class="bi bi-person-badge-fill"></i>
+                        <span class="alert-text">
+                          Profissional já atribuído:
+                          <strong>{{ professionalDisplayName }}</strong>
+                          <span
+                            v-if="getAssignedProfessionalCommissionData().commission"
+                            class="commission-info"
                           >
-                            {{ queue.name }}
-                          </option>
-                        </select>
+                            (Comissão: <strong>{{ getFormattedCommissionForDisplay() }}</strong
+                            >)
+                          </span>
+                        </span>
+                        <small class="alert-action">
+                          Você pode substituí-lo selecionando outro
+                        </small>
+                      </div>
+                      <div class="payment-form-field">
+                        <label class="payment-form-label">Selecionar profissional</label>
+                        <ProfessionalSelector
+                          v-model="selectedProfessionalId"
+                          :professionals="professionals"
+                          :filter-by-service="attention.servicesId"
+                          :show-commission="false"
+                          @professional-selected="handleProfessionalSelected"
+                        />
+                      </div>
+                      <div
+                        v-if="
+                          (selectedProfessional || isProfessionalAssigned) &&
+                          getActiveFeature(commerce, 'professional-commission-enabled', 'PRODUCT')
+                        "
+                        class="payment-form-field"
+                      >
+                        <label class="payment-form-label">Comissão</label>
+                        <div class="d-flex align-items-center gap-2">
+                          <input
+                            ref="commissionInputRef"
+                            v-model="professionalCommission"
+                            type="text"
+                            inputmode="decimal"
+                            class="payment-form-input commission-input-fix"
+                            :placeholder="getSuggestedCommission()"
+                            :value="computedProfessionalCommission || professionalCommission"
+                            @input="handleCommissionInput"
+                            @click="handleInputClick"
+                            @mousedown="handleInputMouseDown"
+                            tabindex="0"
+                          />
+                          <span class="text-muted">
+                            {{
+                              selectedProfessional?.financialInfo?.commissionType === 'PERCENTAGE'
+                                ? '%'
+                                : commerce.currency || 'BRL'
+                            }}
+                          </span>
+                        </div>
+                        <!-- Warning about suggested commission -->
+                        <div
+                          v-if="getSuggestedCommission()"
+                          class="alert alert-warning mt-2 commission-warning"
+                        >
+                          <i class="bi bi-info-circle me-2"></i>
+                          <span
+                            >Comissão sugerida:
+                            <strong>{{ getSuggestedCommission() }}</strong></span
+                          >
+                          <Popper :class="'dark'" arrow hover>
+                            <template #content>
+                              <div>Esta é a comissão configurada para este profissional</div>
+                            </template>
+                            <i class="bi bi-question-circle ms-2"></i>
+                          </Popper>
+                        </div>
                       </div>
                       <div class="attention-action-buttons">
                         <button
                           class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
-                          @click="goTransfer()"
+                          @click="goAssignProfessional()"
                           :disabled="
-                            !queueToTransfer ||
+                            (!selectedProfessional && !isProfessionalAssigned) ||
                             loading ||
-                            isAttentionTerminatedOrCancelled ||
-                            (togglesLoaded && !hasCollaboratorAttentionPermission('transfer'))
+                            isAttentionTerminatedOrCancelled
                           "
                         >
                           <i class="bi bi-person-check-fill"></i>
-                          {{ $t('collaboratorBookingsView.transfer') }}
+                          Atribuir Profissional
                         </button>
                       </div>
                       <AreYouSure
-                        :show="goToTransfer"
+                        :show="goToAssignProfessional"
                         :yes-disabled="
-                          isAttentionTerminatedOrCancelled ||
-                          (togglesLoaded && !hasCollaboratorAttentionPermission('transfer'))
+                          !selectedProfessional || loading || isAttentionTerminatedOrCancelled
                         "
                         :no-disabled="
-                          isAttentionTerminatedOrCancelled ||
-                          (togglesLoaded && !hasCollaboratorAttentionPermission('transfer'))
+                          !selectedProfessional || loading || isAttentionTerminatedOrCancelled
                         "
-                        @actionYes="transfer()"
-                        @actionNo="cancelTransfer()"
+                        @actionYes="confirmAssignProfessional()"
+                        @actionNo="cancelAssignProfessional()"
                       >
                       </AreYouSure>
                     </div>
-                    <div v-else class="attention-action-message">
-                      <Message
-                        :title="$t('collaboratorBookingsView.message.6.title')"
-                        :content="$t('collaboratorBookingsView.message.6.content')"
-                      />
-                    </div>
                   </div>
                 </div>
-              </Transition>
-
-              <!-- Timeline Section -->
-              <div
-                v-if="attention && (attention.id || attention.attentionId)"
-                class="attention-timeline-section"
-              >
-                <AttentionTimeline
-                  :attention="getTimelineAttention()"
-                  :booking="booking"
-                  :commerce="commerce"
-                  :collaborators-map="collaboratorsMap"
-                />
               </div>
+            </Transition>
 
-              <!-- Actions Footer -->
-              <div class="attention-actions-footer" v-if="!loading">
-                <div class="attention-actions-confirmations">
-                  <AreYouSure
-                    :show="goToCancel"
-                    :yes-disabled="togglesLoaded && !hasCollaboratorAttentionPermission('cancel')"
-                    :no-disabled="togglesLoaded && !hasCollaboratorAttentionPermission('cancel')"
-                    @actionYes="cancel()"
-                    @actionNo="cancelCancel()"
+            <!-- TRANSFER -->
+            <Transition name="slide-fade">
+              <div
+                v-if="
+                  extendedTransferEntity &&
+                  getActiveFeature(commerce, 'attention-transfer-queue', 'PRODUCT')
+                "
+                class="attention-action-section"
+              >
+                <div class="attention-action-content">
+                  <div
+                    v-if="queuesToTransfer && queuesToTransfer.length > 0"
+                    class="attention-action-form"
                   >
-                  </AreYouSure>
+                    <div class="attention-action-header">
+                      <i class="bi bi-arrow-left-right"></i>
+                      <span>{{ $t('collaboratorBookingsView.transferQueue') }}</span>
+                    </div>
+                    <div class="attention-transfer-selector">
+                      <div class="attention-queue-info">
+                        <span class="attention-queue-label">{{
+                          $t('collaboratorBookingsView.selectQueueToTransfer')
+                        }}</span>
+                        <div class="attention-queue-current">
+                          <i class="bi bi-arrow-right"></i>
+                          <span class="fw-bold">{{ queue.name }}</span>
+                        </div>
+                      </div>
+                      <select
+                        class="attention-select-modern"
+                        aria-label="form-select-sm"
+                        v-model="queueToTransfer"
+                      >
+                        <option v-for="queue in queuesToTransfer" :key="queue.id" :value="queue.id">
+                          {{ queue.name }}
+                        </option>
+                      </select>
+                    </div>
+                    <div class="attention-action-buttons">
+                      <button
+                        class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-3 card-action"
+                        @click="goTransfer()"
+                        :disabled="
+                          !queueToTransfer ||
+                          loading ||
+                          isAttentionTerminatedOrCancelled ||
+                          (togglesLoaded && !hasCollaboratorAttentionPermission('transfer'))
+                        "
+                      >
+                        <i class="bi bi-person-check-fill"></i>
+                        {{ $t('collaboratorBookingsView.transfer') }}
+                      </button>
+                    </div>
+                    <AreYouSure
+                      :show="goToTransfer"
+                      :yes-disabled="
+                        isAttentionTerminatedOrCancelled ||
+                        (togglesLoaded && !hasCollaboratorAttentionPermission('transfer'))
+                      "
+                      :no-disabled="
+                        isAttentionTerminatedOrCancelled ||
+                        (togglesLoaded && !hasCollaboratorAttentionPermission('transfer'))
+                      "
+                      @actionYes="transfer()"
+                      @actionNo="cancelTransfer()"
+                    >
+                    </AreYouSure>
+                  </div>
+                  <div v-else class="attention-action-message">
+                    <Message
+                      :title="$t('collaboratorBookingsView.message.6.title')"
+                      :content="$t('collaboratorBookingsView.message.6.content')"
+                    />
+                  </div>
                 </div>
               </div>
+            </Transition>
 
-              <!-- Metadata Footer -->
-              <div class="attention-metadata-footer">
-                <span class="metric-card-details"
-                  ><strong>Id:</strong> {{ attention.attentionId || attention.id }}</span
+            <!-- Timeline Section -->
+            <div
+              v-if="attention && (attention.id || attention.attentionId)"
+              class="attention-timeline-section"
+            >
+              <AttentionTimeline
+                :attention="getTimelineAttention()"
+                :booking="booking"
+                :commerce="commerce"
+                :collaborators-map="collaboratorsMap"
+              />
+            </div>
+
+            <!-- Actions Footer -->
+            <div class="attention-actions-footer" v-if="!loading">
+              <div class="attention-actions-confirmations">
+                <AreYouSure
+                  :show="goToCancel"
+                  :yes-disabled="togglesLoaded && !hasCollaboratorAttentionPermission('cancel')"
+                  :no-disabled="togglesLoaded && !hasCollaboratorAttentionPermission('cancel')"
+                  @actionYes="cancel()"
+                  @actionNo="cancelCancel()"
                 >
-                <span class="metric-card-details"
-                  ><strong>Date:</strong>
-                  {{
-                    getDate(attention.createdAt || attention.createdDate || attention.date)
-                  }}</span
-                >
+                </AreYouSure>
               </div>
+            </div>
+
+            <!-- Metadata Footer -->
+            <div class="attention-metadata-footer">
+              <span class="metric-card-details"
+                ><strong>Id:</strong> {{ attention.attentionId || attention.id }}</span
+              >
+              <span class="metric-card-details"
+                ><strong>Date:</strong>
+                {{ getDate(attention.createdAt || attention.createdDate || attention.date) }}</span
+              >
             </div>
           </div>
         </div>
       </div>
-    </Teleport>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -3177,7 +3207,6 @@ export default {
   font-weight: 700;
 }
 
-
 .professional-assigned-alert {
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
   border: 1px solid #90caf9;
@@ -3320,7 +3349,6 @@ export default {
 .commission-warning {
   font-size: 0.85rem;
 }
-
 </style>
 
 <style>
@@ -3392,7 +3420,7 @@ export default {
 
 /* Fix para inputs de comisión */
 .commission-input-fix,
-input[ref="commissionInputRef"] {
+input[ref='commissionInputRef'] {
   pointer-events: auto !important;
   user-select: text !important;
   -webkit-user-select: text !important;
@@ -3408,17 +3436,16 @@ input[ref="commissionInputRef"] {
 }
 
 /* Fix para inputs de tipo number */
-input[type="number"] {
+input[type='number'] {
   pointer-events: auto !important;
   user-select: text !important;
   cursor: text !important;
   -moz-appearance: textfield !important;
 }
 
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none !important;
   margin: 0 !important;
 }
-
 </style>

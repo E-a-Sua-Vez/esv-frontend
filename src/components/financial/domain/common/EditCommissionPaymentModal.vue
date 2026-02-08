@@ -44,7 +44,6 @@ export default {
       try {
         loadingCurrentIncomes.value = true;
 
-
         // Convert period dates to YYYY-MM-DD format
         const periodFrom = props.payment.periodFrom
           ? new Date(props.payment.periodFrom).toISOString().split('T')[0]
@@ -53,31 +52,29 @@ export default {
           ? new Date(props.payment.periodTo).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0];
 
-
         // Use businessId if available, otherwise use commerceId
         const businessId = props.business?.id || props.commerce.id;
 
         // Fetch all incomes for the period and professional
         const allIncomes = await getIncomesDetails(
-          businessId,                           // businessId
-          props.commerce.id,                    // commerceId
-          periodFrom,                           // from
-          periodTo,                             // to
-          [props.commerce.id],                  // commerceIds
-          1,                                    // page
-          10000,                                // limit
-          undefined,                            // searchText
-          true,                                 // asc
-          undefined,                            // incomeStatus
-          undefined,                            // fiscalNote
-          undefined,                            // automatic
-          undefined,                            // minAmount
-          undefined,                            // maxAmount
-          undefined,                            // incomeTypeFilter
-          undefined,                            // paymentMethodFilter
-          props.payment.professionalId          // professionalFilter
+          businessId, // businessId
+          props.commerce.id, // commerceId
+          periodFrom, // from
+          periodTo, // to
+          [props.commerce.id], // commerceIds
+          1, // page
+          10000, // limit
+          undefined, // searchText
+          true, // asc
+          undefined, // incomeStatus
+          undefined, // fiscalNote
+          undefined, // automatic
+          undefined, // minAmount
+          undefined, // maxAmount
+          undefined, // incomeTypeFilter
+          undefined, // paymentMethodFilter
+          props.payment.professionalId // professionalFilter
         );
-
 
         // Filter to only include incomes that are in the payment's incomeIds
         if (Array.isArray(allIncomes)) {
@@ -94,7 +91,6 @@ export default {
 
         // If we couldn't get details, try alternative approach
         if (currentIncomeDetails.value.length === 0 && props.payment.incomeIds.length > 0) {
-
           // Try without professional filter
           const allIncomesAlt = await getIncomesDetails(
             businessId,
@@ -113,7 +109,7 @@ export default {
             undefined,
             undefined,
             undefined,
-            undefined  // No professional filter
+            undefined // No professional filter
           );
 
           if (Array.isArray(allIncomesAlt)) {
@@ -172,15 +168,10 @@ export default {
       Number(parseFloat(amount || 0).toFixed(2)).toLocaleString('de-DE');
 
     onMounted(async () => {
-
       currentIncomeIds.value = [...props.payment.incomeIds];
       notes.value = props.payment.notes || '';
 
-
-      await Promise.all([
-        loadCurrentIncomeDetails(),
-        loadAvailableIncomes()
-      ]);
+      await Promise.all([loadCurrentIncomeDetails(), loadAvailableIncomes()]);
     });
 
     return {
@@ -423,11 +414,14 @@ export default {
             </div>
 
             <!-- Table with Details -->
-            <div v-if="!loadingCurrentIncomes && currentIncomeDetails.length > 0" class="table-responsive">
+            <div
+              v-if="!loadingCurrentIncomes && currentIncomeDetails.length > 0"
+              class="table-responsive"
+            >
               <table class="table table-sm edit-payment-table">
                 <thead>
                   <tr>
-                    <th style="width: 50px;">
+                    <th style="width: 50px">
                       <i class="bi bi-trash text-danger"></i>
                     </th>
                     <th>{{ $t('commissionPayments.date') }}</th>
@@ -443,7 +437,9 @@ export default {
                       <input type="checkbox" v-model="incomeIdsToRemove" :value="income.id" />
                     </td>
                     <td>
-                      <small>{{ formatDate(income.paidAt || income.createdDate || income.paymentDate) }}</small>
+                      <small>{{
+                        formatDate(income.paidAt || income.createdDate || income.paymentDate)
+                      }}</small>
                     </td>
                     <td>
                       <span class="badge bg-info">
@@ -460,7 +456,15 @@ export default {
                     </td>
                     <td class="text-end text-success fw-bold">
                       ${{ formatCurrency(income.professionalCommission) }}
-                      <i v-if="income?.commissionPaid === true || income?.commissionPaid === 'true' || income?.commissionPaid === 1" class="bi bi-check-circle-fill text-success ms-2" :title="$t('commissionPayments.commissionPaid')"></i>
+                      <i
+                        v-if="
+                          income?.commissionPaid === true ||
+                          income?.commissionPaid === 'true' ||
+                          income?.commissionPaid === 1
+                        "
+                        class="bi bi-check-circle-fill text-success ms-2"
+                        :title="$t('commissionPayments.commissionPaid')"
+                      ></i>
                     </td>
                   </tr>
                 </tbody>
@@ -468,11 +472,18 @@ export default {
             </div>
 
             <!-- Fallback: Show IDs if details not available -->
-            <div v-if="!loadingCurrentIncomes && currentIncomeDetails.length === 0 && currentIncomeIds.length > 0" class="table-responsive">
+            <div
+              v-if="
+                !loadingCurrentIncomes &&
+                currentIncomeDetails.length === 0 &&
+                currentIncomeIds.length > 0
+              "
+              class="table-responsive"
+            >
               <table class="table table-sm edit-payment-table">
                 <thead>
                   <tr>
-                    <th style="width: 50px;">
+                    <th style="width: 50px">
                       <i class="bi bi-trash text-danger"></i>
                     </th>
                     <th>{{ $t('commissionPayments.incomeId') }}</th>
@@ -502,7 +513,7 @@ export default {
               <table class="table table-sm table-hover edit-payment-table">
                 <thead>
                   <tr>
-                    <th style="width: 50px;">
+                    <th style="width: 50px">
                       <i class="bi bi-plus-circle text-success"></i>
                     </th>
                     <th>{{ $t('commissionPayments.date') }}</th>
@@ -524,12 +535,18 @@ export default {
                         {{ $t(`incomeTypes.${income.type}`) }}
                       </span>
                     </td>
-                    <td class="text-end fw-bold">
-                      ${{ formatCurrency(income.amount) }}
-                    </td>
+                    <td class="text-end fw-bold">${{ formatCurrency(income.amount) }}</td>
                     <td class="text-end text-success fw-bold">
                       ${{ formatCurrency(income.professionalCommission) }}
-                      <i v-if="income?.commissionPaid === true || income?.commissionPaid === 'true' || income?.commissionPaid === 1" class="bi bi-check-circle-fill text-success ms-2" :title="$t('commissionPayments.commissionPaid')"></i>
+                      <i
+                        v-if="
+                          income?.commissionPaid === true ||
+                          income?.commissionPaid === 'true' ||
+                          income?.commissionPaid === 1
+                        "
+                        class="bi bi-check-circle-fill text-success ms-2"
+                        :title="$t('commissionPayments.commissionPaid')"
+                      ></i>
                     </td>
                   </tr>
                 </tbody>

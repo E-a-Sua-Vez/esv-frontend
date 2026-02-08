@@ -51,7 +51,10 @@
     </div>
 
     <!-- Booking Scheduled Time Card (if attention comes from a booking or block) -->
-    <div v-if="attention.bookingId || attention.booking || attention.block" class="stat-card stat-card-booking">
+    <div
+      v-if="attention.bookingId || attention.booking || attention.block"
+      class="stat-card stat-card-booking"
+    >
       <div class="stat-card-icon">
         <i class="bi bi-calendar-check"></i>
       </div>
@@ -70,7 +73,10 @@
       <div class="stat-card-content">
         <div class="stat-card-label">{{ $t('attentionStats.professional') || 'Profissional' }}</div>
         <div class="stat-card-value">{{ professionalName || 'Não atribuído' }}</div>
-        <div v-if="attention.bookingId || attention.booking || attention.block" class="stat-card-subvalue">
+        <div
+          v-if="attention.bookingId || attention.booking || attention.block"
+          class="stat-card-subvalue"
+        >
           <div :class="paymentStatusBadgeClass">
             <i :class="paymentStatusIcon"></i>
             <span class="paid-text">{{ paymentStatusText }}</span>
@@ -208,10 +214,11 @@ export default {
       if (!this.attention.number) return null;
 
       // Cálculo inteligente: contar atenciones realmente pendientes/confirmadas con número menor
-      const pendingAttentions = this.queuePendingDetails.filter(att =>
-        att.number &&
-        att.number < this.attention.number &&
-        (att.status === ATTENTION_STATUS.PENDING || att.status === ATTENTION_STATUS.CONFIRMED)
+      const pendingAttentions = this.queuePendingDetails.filter(
+        att =>
+          att.number &&
+          att.number < this.attention.number &&
+          (att.status === ATTENTION_STATUS.PENDING || att.status === ATTENTION_STATUS.CONFIRMED)
       );
 
       // Si no hay atenciones pendientes con número menor, verificar si estamos en procesamiento
@@ -221,10 +228,11 @@ export default {
           return 0;
         }
         // Si no hay pendientes pero sí hay en procesamiento, contar las que están antes
-        const processingAttentions = this.queueProcessingDetails.filter(att =>
-          att.number &&
-          att.number < this.attention.number &&
-          att.status === ATTENTION_STATUS.PROCESSING
+        const processingAttentions = this.queueProcessingDetails.filter(
+          att =>
+            att.number &&
+            att.number < this.attention.number &&
+            att.status === ATTENTION_STATUS.PROCESSING
         );
         return processingAttentions.length;
       }
@@ -251,17 +259,29 @@ export default {
     },
     paymentStatusText() {
       // Assuming attention has payment info
-      if (this.attention.status === 'CONFIRMED' || this.attention.confirmed || this.attention.paid) {
+      if (
+        this.attention.status === 'CONFIRMED' ||
+        this.attention.confirmed ||
+        this.attention.paid
+      ) {
         return 'Pago';
       } else {
         return 'Pendente';
       }
     },
     paymentStatusBadgeClass() {
-      return (this.attention.status === 'CONFIRMED' || this.attention.confirmed || this.attention.paid) ? 'attention-paid-badge' : 'attention-pending-badge';
+      return this.attention.status === 'CONFIRMED' ||
+        this.attention.confirmed ||
+        this.attention.paid
+        ? 'attention-paid-badge'
+        : 'attention-pending-badge';
     },
     paymentStatusIcon() {
-      return (this.attention.status === 'CONFIRMED' || this.attention.confirmed || this.attention.paid) ? 'bi bi-check-circle-fill' : 'bi bi-clock-history';
+      return this.attention.status === 'CONFIRMED' ||
+        this.attention.confirmed ||
+        this.attention.paid
+        ? 'bi bi-check-circle-fill'
+        : 'bi bi-clock-history';
     },
   },
 };

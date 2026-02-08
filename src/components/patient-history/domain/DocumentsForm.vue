@@ -120,9 +120,16 @@ export default {
               // Try to get documents by patient history first
               state.oldDocuments = await getDocumentsByPatientHistory(patientHistoryData.value.id);
               state.oldDocuments = state.oldDocuments.filter(doc => doc.available);
-              console.log('Patient history documents loaded:', state.oldDocuments.length, state.oldDocuments);
+              console.log(
+                'Patient history documents loaded:',
+                state.oldDocuments.length,
+                state.oldDocuments,
+              );
             } catch (error) {
-              console.warn('Failed to load patient history documents, falling back to client documents:', error);
+              console.warn(
+                'Failed to load patient history documents, falling back to client documents:',
+                error,
+              );
               // Fallback to client documents if patient history documents fail
               if (patientHistoryData.value.clientId) {
                 let docs = await getDocumentByCommerceIdAndClient(
@@ -132,18 +139,26 @@ export default {
                 // Filter by patientHistoryId to only show documents for this patient history
                 docs = docs.filter(doc => doc.patientHistoryId === patientHistoryData.value.id);
                 state.oldDocuments = docs.filter(doc => doc.available);
-                console.log('Client documents loaded as fallback:', state.oldDocuments.length, state.oldDocuments);
+                console.log(
+                  'Client documents loaded as fallback:',
+                  state.oldDocuments.length,
+                  state.oldDocuments,
+                );
               }
             }
           } else {
             // No patient history id, load all client documents
             if (patientHistoryData.value.clientId) {
-              let docs = await getDocumentByCommerceIdAndClient(
+              const docs = await getDocumentByCommerceIdAndClient(
                 patientHistoryData.value.commerceId,
-                patientHistoryData.value.clientId
+                patientHistoryData.value.clientId,
               );
               state.oldDocuments = docs.filter(doc => doc.available);
-              console.log('Client documents loaded (no patient history filter):', state.oldDocuments.length, state.oldDocuments);
+              console.log(
+                'Client documents loaded (no patient history filter):',
+                state.oldDocuments.length,
+                state.oldDocuments,
+              );
             }
           }
           state.filteredDocuments = state.oldDocuments.slice();
@@ -233,7 +248,7 @@ export default {
     const applySorting = () => {
       if (state.oldDocuments && state.oldDocuments.length > 0) {
         console.log('Applying sorting, asc:', state.asc);
-        let elementsSorted = [...state.oldDocuments]; // Create a copy to avoid mutating original
+        const elementsSorted = [...state.oldDocuments]; // Create a copy to avoid mutating original
         if (state.asc) {
           elementsSorted.sort(
             (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
@@ -243,7 +258,7 @@ export default {
           elementsSorted.sort(
             (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
-            console.log('Sorted descending by date');
+          console.log('Sorted descending by date');
         }
         state.oldDocuments = elementsSorted.filter(doc => doc.available);
         console.log('Documents sorted and filtered, new count:', state.oldDocuments.length);
@@ -332,8 +347,8 @@ export default {
           doc.active === true &&
           (patientHistoryData.value?.clientId ||
             (doc.details &&
-             doc.details.characteristics &&
-             doc.details.characteristics.document === true))
+              doc.details.characteristics &&
+              doc.details.characteristics.document === true))
       );
 
       // Apply search text filter
@@ -415,7 +430,10 @@ export default {
       // Find the index of the selected document in the image documents
       const imageDocuments = documents.filter(doc => {
         const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
-        return imageTypes.includes(doc.format) || (doc.name && /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(doc.name));
+        return (
+          imageTypes.includes(doc.format) ||
+          (doc.name && /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(doc.name))
+        );
       });
 
       const index = imageDocuments.findIndex(doc => doc.id === document.id);
@@ -606,7 +624,7 @@ export default {
         state.optionSelected = {
           name: state.newDocument.customTag.trim(),
           category: 'OTHER',
-          characteristics: { document: true }
+          characteristics: { document: true },
         };
 
         const documentMetadata = {
@@ -618,9 +636,10 @@ export default {
         };
         const time = new Date().getTime();
         state.newDocument.type = 'CLIENT';
-        state.newDocument.name = `${state.newDocument.customTag.trim().toLowerCase().replaceAll(' ', '-')}-${
-          clientData.value.id
-        }-${time}`;
+        state.newDocument.name = `${state.newDocument.customTag
+          .trim()
+          .toLowerCase()
+          .replaceAll(' ', '-')}-${clientData.value.id}-${time}`;
         state.newDocument.commerceId = commerce.value.id;
         state.newDocument.clientId = clientData.value.id;
         state.newDocument.documentMetadata = JSON.stringify(documentMetadata);
@@ -649,7 +668,12 @@ export default {
     const executeDownload = async item => {
       try {
         loading.value = true;
-        const fileToDownload = await getClientDocument(item.commerceId, item.clientId, 'patient_documents', item.name);
+        const fileToDownload = await getClientDocument(
+          item.commerceId,
+          item.clientId,
+          'patient_documents',
+          item.name,
+        );
         if (fileToDownload) {
           const file = new Blob([fileToDownload], { type: item.format });
           const fileURL = URL.createObjectURL(file);
@@ -707,9 +731,16 @@ export default {
             // Try to get documents by patient history first
             state.oldDocuments = await getDocumentsByPatientHistory(patientHistoryData.value.id);
             state.oldDocuments = state.oldDocuments.filter(doc => doc.available);
-            console.log('Patient history documents updated via watcher:', state.oldDocuments.length, state.oldDocuments);
+            console.log(
+              'Patient history documents updated via watcher:',
+              state.oldDocuments.length,
+              state.oldDocuments,
+            );
           } catch (error) {
-            console.warn('Failed to update patient history documents via watcher, falling back:', error);
+            console.warn(
+              'Failed to update patient history documents via watcher, falling back:',
+              error,
+            );
             // Fallback to client documents if patient history documents fail
             if (patientHistoryData.value.clientId) {
               let docs = await getDocumentByCommerceIdAndClient(
@@ -720,7 +751,11 @@ export default {
               docs = docs.filter(doc => doc.patientHistoryId === patientHistoryData.value.id);
               if (!isMounted.value) return;
               state.oldDocuments = docs.filter(doc => doc.available);
-              console.log('Client documents updated via watcher:', state.oldDocuments.length, state.oldDocuments);
+              console.log(
+                'Client documents updated via watcher:',
+                state.oldDocuments.length,
+                state.oldDocuments,
+              );
             } else {
               // Map PatientDocument to Document objects for display
               state.oldDocuments = patientHistoryData.value.patientDocument
@@ -742,12 +777,16 @@ export default {
           console.log('No id, loading all client documents via watcher');
           // No patient history id, load all client documents
           if (patientHistoryData.value.clientId) {
-            let docs = await getDocumentByCommerceIdAndClient(
+            const docs = await getDocumentByCommerceIdAndClient(
               patientHistoryData.value.commerceId,
-              patientHistoryData.value.clientId
+              patientHistoryData.value.clientId,
             );
             state.oldDocuments = docs.filter(doc => doc.available);
-            console.log('All client documents loaded via watcher:', state.oldDocuments.length, state.oldDocuments);
+            console.log(
+              'All client documents loaded via watcher:',
+              state.oldDocuments.length,
+              state.oldDocuments,
+            );
           } else {
             // Fallback to patientDocument if no clientId
             state.oldDocuments = patientHistoryData.value.patientDocument
@@ -761,7 +800,11 @@ export default {
                 doc.patientDocumentCreatedBy = patientDoc.createdBy;
                 return doc;
               });
-            console.log('Patient documents loaded via watcher:', state.oldDocuments.length, state.oldDocuments);
+            console.log(
+              'Patient documents loaded via watcher:',
+              state.oldDocuments.length,
+              state.oldDocuments,
+            );
           }
         }
         state.filteredDocuments = state.oldDocuments.slice();
@@ -783,14 +826,27 @@ export default {
           if (patientHistoryData.value.id) {
             console.log('Has id, calling getDocumentsByPatientHistory');
             try {
-              console.log('Calling getDocumentsByPatientHistory with id:', patientHistoryData.value.id);
+              console.log(
+                'Calling getDocumentsByPatientHistory with id:',
+                patientHistoryData.value.id,
+              );
               // Try to get documents by patient history first
               state.oldDocuments = await getDocumentsByPatientHistory(patientHistoryData.value.id);
               state.oldDocuments = state.oldDocuments.filter(doc => doc.available);
-              console.log('Patient history documents refreshed:', state.oldDocuments.length, state.oldDocuments);
+              console.log(
+                'Patient history documents refreshed:',
+                state.oldDocuments.length,
+                state.oldDocuments,
+              );
             } catch (error) {
-              console.warn('Failed to refresh patient history documents, falling back to client documents:', error);
-              console.log('Falling back to client documents, clientId:', patientHistoryData.value.clientId);
+              console.warn(
+                'Failed to refresh patient history documents, falling back to client documents:',
+                error,
+              );
+              console.log(
+                'Falling back to client documents, clientId:',
+                patientHistoryData.value.clientId,
+              );
               // Fallback to client documents if patient history documents fail
               if (patientHistoryData.value.clientId) {
                 let docs = await getDocumentByCommerceIdAndClient(
@@ -800,19 +856,27 @@ export default {
                 // Filter by patientHistoryId to only show documents for this patient history
                 docs = docs.filter(doc => doc.patientHistoryId === patientHistoryData.value.id);
                 state.oldDocuments = docs.filter(doc => doc.available);
-                console.log('Client documents loaded as fallback in refresh:', state.oldDocuments.length, state.oldDocuments);
+                console.log(
+                  'Client documents loaded as fallback in refresh:',
+                  state.oldDocuments.length,
+                  state.oldDocuments,
+                );
               }
             }
           } else {
             console.log('No id, using client documents fallback');
             // No patient history id, load all client documents
             if (patientHistoryData.value.clientId) {
-              let docs = await getDocumentByCommerceIdAndClient(
+              const docs = await getDocumentByCommerceIdAndClient(
                 patientHistoryData.value.commerceId,
-                patientHistoryData.value.clientId
+                patientHistoryData.value.clientId,
               );
               state.oldDocuments = docs.filter(doc => doc.available);
-              console.log('Client documents loaded (no patient history filter):', state.oldDocuments.length, state.oldDocuments);
+              console.log(
+                'Client documents loaded (no patient history filter):',
+                state.oldDocuments.length,
+                state.oldDocuments,
+              );
             }
           }
           state.filteredDocuments = state.oldDocuments.slice();
@@ -928,7 +992,11 @@ export default {
     />
 
     <!-- Upload Modal -->
-    <div v-if="state.showUploadModal" class="upload-modal-overlay" @click="state.showUploadModal = false">
+    <div
+      v-if="state.showUploadModal"
+      class="upload-modal-overlay"
+      @click="state.showUploadModal = false"
+    >
       <div class="upload-modal-content" @click.stop>
         <div class="modal-header border-0 active-name modern-modal-header">
           <div class="modern-modal-header-inner">
@@ -936,11 +1004,19 @@ export default {
               <i class="bi bi-cloud-upload"></i>
             </div>
             <div class="modern-modal-title-wrapper">
-              <h5 class="modal-title fw-bold modern-modal-title">{{ $t('businessDocument.uploadNewDocument') }}</h5>
-              <p class="modern-modal-client-name">{{ patientHistoryData?.clientName || 'Paciente' }}</p>
+              <h5 class="modal-title fw-bold modern-modal-title">
+                {{ $t('businessDocument.uploadNewDocument') }}
+              </h5>
+              <p class="modern-modal-client-name">
+                {{ patientHistoryData?.clientName || 'Paciente' }}
+              </p>
             </div>
           </div>
-          <button @click="state.showUploadModal = false" class="modern-modal-close-btn" type="button">
+          <button
+            @click="state.showUploadModal = false"
+            class="modern-modal-close-btn"
+            type="button"
+          >
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -989,10 +1065,7 @@ export default {
               </small>
             </div>
 
-            <div
-              v-if="state.optionSelected"
-              class="upload-actions-modern"
-            >
+            <div v-if="state.optionSelected" class="upload-actions-modern">
               <DragDropFileUpload
                 :model-value="state.newDocument.file"
                 :disabled="!state.togglesDocuments['document-client.admin.edit']"
@@ -1013,7 +1086,11 @@ export default {
               <button
                 id="modal-document-add-button"
                 v-if="state.newDocument.file"
-                :disabled="!state.togglesDocuments['document-client.admin.edit'] || loading || !state.optionSelected"
+                :disabled="
+                  !state.togglesDocuments['document-client.admin.edit'] ||
+                  loading ||
+                  !state.optionSelected
+                "
                 class="btn-save-file-modern"
                 @click="add()"
               >
@@ -1024,10 +1101,7 @@ export default {
           </div>
 
           <!-- Fallback upload when no document types are available -->
-          <div
-            v-else
-            class="upload-form-modern"
-          >
+          <div v-else class="upload-form-modern">
             <div class="form-field-modern">
               <label class="form-label-modern" for="modal-document-tag-input-fallback">
                 <i class="bi bi-tag me-1"></i>
@@ -1068,7 +1142,11 @@ export default {
               <button
                 id="modal-document-add-button-fallback"
                 v-if="state.newDocument.file && state.newDocument.customTag"
-                :disabled="!state.togglesDocuments['document-client.admin.edit'] || loading || !state.newDocument.customTag"
+                :disabled="
+                  !state.togglesDocuments['document-client.admin.edit'] ||
+                  loading ||
+                  !state.newDocument.customTag
+                "
                 class="btn-save-file-modern"
                 @click="addWithoutType()"
               >
@@ -1107,58 +1185,62 @@ export default {
           </div>
 
           <div class="history-actions">
-              <button
-                @click="refreshDocuments"
-                class="refresh-btn"
-                :disabled="loading"
-                title="Actualizar documentos"
-              >
-                <i class="bi bi-arrow-clockwise"></i>
-              </button>
+            <button
+              @click="refreshDocuments"
+              class="refresh-btn"
+              :disabled="loading"
+              title="Actualizar documentos"
+            >
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
 
-              <button
-                @click="toggleSortOrder"
-                class="sort-btn"
-                :class="{ active: state.asc }"
-                :title="state.asc ? 'Ordenar descendente (más recientes primero)' : 'Ordenar ascendente (más antiguos primero)'"
-              >
-                <i :class="state.asc ? 'bi bi-sort-down' : 'bi bi-sort-up'"></i>
-              </button>
+            <button
+              @click="toggleSortOrder"
+              class="sort-btn"
+              :class="{ active: state.asc }"
+              :title="
+                state.asc
+                  ? 'Ordenar descendente (más recientes primero)'
+                  : 'Ordenar ascendente (más antiguos primero)'
+              "
+            >
+              <i :class="state.asc ? 'bi bi-sort-down' : 'bi bi-sort-up'"></i>
+            </button>
 
-              <button
-                v-if="state.viewMode !== 'grid'"
-                @click="toggleSelectionMode"
-                class="selection-mode-btn"
-                :class="{ active: selectionMode }"
-                :title="selectionMode ? 'Salir del modo selección' : 'Modo selección'"
-              >
-                <i :class="selectionMode ? 'bi bi-check-square-fill' : 'bi bi-check-square'"></i>
-              </button>
+            <button
+              v-if="state.viewMode !== 'grid'"
+              @click="toggleSelectionMode"
+              class="selection-mode-btn"
+              :class="{ active: selectionMode }"
+              :title="selectionMode ? 'Salir del modo selección' : 'Modo selección'"
+            >
+              <i :class="selectionMode ? 'bi bi-check-square-fill' : 'bi bi-check-square'"></i>
+            </button>
 
-              <button
-                v-if="selectionMode && state.filteredDocuments.length > 0"
-                @click="selectAllDocuments"
-                class="select-all-btn"
-                title="Seleccionar todos"
-              >
-                <i class="bi bi-check-all"></i>
-              </button>
-            </div>
+            <button
+              v-if="selectionMode && state.filteredDocuments.length > 0"
+              @click="selectAllDocuments"
+              class="select-all-btn"
+              title="Seleccionar todos"
+            >
+              <i class="bi bi-check-all"></i>
+            </button>
           </div>
+        </div>
 
-          <div class="history-timeline">
-            <!-- Tree View Component -->
-            <DocumentTreeView
-              :documents="state.filteredDocuments"
-              :selection-mode="selectionMode"
-              :selected-documents="state.selectedDocuments"
-              @document-selected="selectDocument"
-              @document-preview="selectDocument"
-              @document-download="downloadDocument"
-              @document-toggle-selection="toggleDocumentSelection"
-              @view-mode-changed="onViewModeChanged"
-            />
-          </div>
+        <div class="history-timeline">
+          <!-- Tree View Component -->
+          <DocumentTreeView
+            :documents="state.filteredDocuments"
+            :selection-mode="selectionMode"
+            :selected-documents="state.selectedDocuments"
+            @document-selected="selectDocument"
+            @document-preview="selectDocument"
+            @document-download="downloadDocument"
+            @document-toggle-selection="toggleDocumentSelection"
+            @view-mode-changed="onViewModeChanged"
+          />
+        </div>
       </div>
     </div>
 

@@ -140,7 +140,9 @@ export default {
       // Show fully terminated attentions (TERMINATED/RATED/SKIPED that have passed checkout)
       if (!this.isStagesEnabled) {
         // When stages disabled: show TERMINATED/RATED/SKIPED status
-        return this.terminatedList.filter(a => ['TERMINATED', 'RATED', 'SKIPED'].includes(a?.status));
+        return this.terminatedList.filter(a =>
+          ['TERMINATED', 'RATED', 'SKIPED'].includes(a?.status),
+        );
       }
       // When stages enabled: show TERMINATED stage OR TERMINATED/RATED/SKIPED status without currentStage (backward compatibility)
       return this.allAttentions.filter(
@@ -234,7 +236,9 @@ export default {
           // Get pending attentions from Firebase
           const pendingArray = this.pendingAttentionsRef?.value || [];
           const pendingList = Array.isArray(pendingArray) ? pendingArray : [];
-          const filteredPending = [...pendingList].filter(att => att && ['PENDING', 'CONFIRMED'].includes(att.status));
+          const filteredPending = [...pendingList].filter(
+            att => att && ['PENDING', 'CONFIRMED'].includes(att.status),
+          );
           const sortedPending = [...filteredPending].sort((a, b) => {
             const numA = a.number || 0;
             const numB = b.number || 0;

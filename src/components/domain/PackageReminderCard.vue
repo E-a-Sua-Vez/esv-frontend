@@ -6,7 +6,9 @@
     <div v-else-if="packageInfo">
       <div class="choose-attention py-2 mb-2">
         <i class="bi bi-list-check h5 m-1"></i>
-        <span class="fw-bold h6">{{ $t('attentionCreation.packageReminder') || 'Package Reminder' }}</span>
+        <span class="fw-bold h6">{{
+          $t('attentionCreation.packageReminder') || 'Package Reminder'
+        }}</span>
       </div>
       <div class="detailed-data">
         <!-- Package Overview Section -->
@@ -20,19 +22,31 @@
             <div class="package-stat-card">
               <div class="stat-card-header">
                 <i class="bi bi-tag-fill"></i>
-                <span class="stat-card-label">{{ $t('attentionCreation.packageName') || 'Package Name' }}</span>
+                <span class="stat-card-label">{{
+                  $t('attentionCreation.packageName') || 'Package Name'
+                }}</span>
               </div>
               <div class="stat-card-value">{{ packageInfo.name || 'N/A' }}</div>
               <div class="stat-card-details">
                 <div class="detail-item">
                   <i class="bi bi-calendar-check"></i>
-                  <span class="detail-label">{{ $t('attentionCreation.lastSession') || 'Last Session' }}:</span>
-                  <span class="detail-value">{{ packageInfo.lastAttentionDate ? formatDate(packageInfo.lastAttentionDate) : 'N/A' }}</span>
+                  <span class="detail-label"
+                    >{{ $t('attentionCreation.lastSession') || 'Last Session' }}:</span
+                  >
+                  <span class="detail-value">{{
+                    packageInfo.lastAttentionDate
+                      ? formatDate(packageInfo.lastAttentionDate)
+                      : 'N/A'
+                  }}</span>
                 </div>
                 <div class="detail-item">
                   <i class="bi bi-calendar-event"></i>
-                  <span class="detail-label">{{ $t('attentionCreation.nextExpected') || 'Next Expected' }}:</span>
-                  <span class="detail-value">{{ packageInfo.nextExpectedDate ? formatDate(packageInfo.nextExpectedDate) : 'N/A' }}</span>
+                  <span class="detail-label"
+                    >{{ $t('attentionCreation.nextExpected') || 'Next Expected' }}:</span
+                  >
+                  <span class="detail-value">{{
+                    packageInfo.nextExpectedDate ? formatDate(packageInfo.nextExpectedDate) : 'N/A'
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -40,7 +54,9 @@
             <div class="package-stat-card">
               <div class="stat-card-header">
                 <i class="bi bi-graph-up-arrow"></i>
-                <span class="stat-card-label">{{ $t('attentionCreation.sessionsUsed') || 'Sessions' }}</span>
+                <span class="stat-card-label">{{
+                  $t('attentionCreation.sessionsUsed') || 'Sessions'
+                }}</span>
               </div>
               <div class="stat-card-value">
                 <span class="stat-number">{{ sessionsUsed }}</span>
@@ -49,11 +65,19 @@
               </div>
               <div class="stat-card-progress">
                 <div class="progress-bar-full">
-                  <div class="progress-bar-fill" :style="{ width: progressPercentage + '%', backgroundColor: 'rgb(0, 194, 203)' }"></div>
+                  <div
+                    class="progress-bar-fill"
+                    :style="{
+                      width: progressPercentage + '%',
+                      backgroundColor: 'rgb(0, 194, 203)',
+                    }"
+                  ></div>
                 </div>
               </div>
               <div class="stat-card-footer">
-                <span class="stat-footer-text">{{ packageInfo.sessionsRemaining || 0 }} Sessões Restantes</span>
+                <span class="stat-footer-text"
+                  >{{ packageInfo.sessionsRemaining || 0 }} Sessões Restantes</span
+                >
               </div>
             </div>
           </div>
@@ -61,7 +85,10 @@
         <!-- Alert Message -->
         <div class="alert alert-info" role="alert">
           <i class="bi bi-exclamation-triangle-fill me-2"></i>
-          {{ $t('attentionCreation.packageBookingNote') || 'This booking will be made within your active package. If you agree, press Continue.' }}
+          {{
+            $t('attentionCreation.packageBookingNote') ||
+            'This booking will be made within your active package. If you agree, press Continue.'
+          }}
         </div>
       </div>
     </div>

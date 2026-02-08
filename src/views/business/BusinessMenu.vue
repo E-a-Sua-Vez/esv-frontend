@@ -55,14 +55,14 @@ export default {
         'client-portal',
       ],
       menuIcons: {
-        'dashboard': 'bi-speedometer2',
-        'reports': 'bi-bar-chart',
+        dashboard: 'bi-speedometer2',
+        reports: 'bi-bar-chart',
         'booking-manage': 'bi-calendar-check',
         'control-admin': 'bi-gear',
         'manage-admin': 'bi-people',
         'medical-management': 'bi-heart-pulse',
-        'configuration': 'bi-sliders',
-        'documents': 'bi-file-earmark-text',
+        configuration: 'bi-sliders',
+        documents: 'bi-file-earmark-text',
         'your-plan': 'bi-credit-card',
         'business-resume': 'bi-building',
         'go-minisite': 'bi-globe',
@@ -70,6 +70,7 @@ export default {
       },
       manageControlSubMenuOptions: [
         'tracing',
+        'lead-pipeline',
         'product-stock',
         'financial',
         //'patients',
@@ -149,6 +150,15 @@ export default {
             state.manageControlSubMenuOption = false;
             loading.value = false;
           } else {
+            // Verificar permisos antes de navegar
+            const permissionKey = `business.main-menu.${option}`;
+            if (state.toggles && state.toggles[permissionKey] === false) {
+              // No tiene permisos, mostrar error y no navegar
+              loading.value = false;
+              alertError.value = 'No tienes permisos para acceder a esta sección';
+              return;
+            }
+
             try {
               await router.push({ path: `/interno/negocio/${option}` });
               loading.value = false;
@@ -190,7 +200,7 @@ export default {
       state.showMobileSpySide = true;
     };
 
-    const getSubmenuIcon = (opt) => {
+    const getSubmenuIcon = opt => {
       const iconMap = {
         'commerce-admin': 'bi-building',
         'service-admin': 'bi-tools',
@@ -205,9 +215,10 @@ export default {
         'forms-admin': 'bi-file-text',
         'lgpd-consent-admin': 'bi-shield-check',
         'permissions-admin': 'bi-key',
-        'tracing': 'bi-search',
+        tracing: 'bi-search',
+        'lead-pipeline': 'bi-funnel',
         'product-stock': 'bi-boxes',
-        'financial': 'bi-cash',
+        financial: 'bi-cash',
         'patient-history-admin': 'bi-file-medical',
         'medications-admin': 'bi-capsule',
         'medical-exams-admin': 'bi-clipboard-data',
@@ -226,7 +237,7 @@ export default {
     };
 
     // Función para manejar click outside
-    const handleClickOutside = (event) => {
+    const handleClickOutside = event => {
       closeAllSubmenus();
     };
 
@@ -297,7 +308,9 @@ export default {
                 <!-- Main menu options (excluding portal and minisite) -->
                 <div class="row mobile-cards-grid">
                   <div
-                    v-for="option in state.menuOptions.filter(opt => opt !== 'go-minisite' && opt !== 'client-portal')"
+                    v-for="option in state.menuOptions.filter(
+                      opt => opt !== 'go-minisite' && opt !== 'client-portal'
+                    )"
                     :key="option"
                     class="col-12 mobile-card-wrapper"
                   >
@@ -346,7 +359,9 @@ export default {
                       >
                         <div
                           class="mobile-submenu-card"
-                          @click="goToOption(opt)"
+                          @click="
+                            state.toggles[`business.main-menu.${opt}`] ? goToOption(opt) : null
+                          "
                           :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
                           :title="
                             !state.toggles[`business.main-menu.${opt}`]
@@ -364,9 +379,7 @@ export default {
                       </div>
                     </div>
                     <div
-                      v-if="
-                        option === 'control-admin' && state.manageControlSubMenuOption === true
-                      "
+                      v-if="option === 'control-admin' && state.manageControlSubMenuOption === true"
                       class="mobile-submenu-container"
                     >
                       <div
@@ -376,7 +389,9 @@ export default {
                       >
                         <div
                           class="mobile-submenu-card"
-                          @click="goToOption(opt)"
+                          @click="
+                            state.toggles[`business.main-menu.${opt}`] ? goToOption(opt) : null
+                          "
                           :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
                         >
                           <div class="card-icon">
@@ -402,7 +417,9 @@ export default {
                       >
                         <div
                           class="mobile-submenu-card"
-                          @click="goToOption(opt)"
+                          @click="
+                            state.toggles[`business.main-menu.${opt}`] ? goToOption(opt) : null
+                          "
                           :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
                         >
                           <div class="card-icon">
@@ -494,7 +511,9 @@ export default {
             <!-- Main menu options (excluding portal and minisite) -->
             <div class="row menu-cards-grid">
               <div
-                v-for="option in state.menuOptions.filter(opt => opt !== 'go-minisite' && opt !== 'client-portal')"
+                v-for="option in state.menuOptions.filter(
+                  opt => opt !== 'go-minisite' && opt !== 'client-portal'
+                )"
                 :key="option"
                 class="col-12 menu-card-wrapper"
               >
@@ -502,7 +521,7 @@ export default {
                   class="menu-card"
                   @click.stop="goToOption(option)"
                   :class="{
-                    disabled: !state.toggles[`business.main-menu.${option}`]
+                    disabled: !state.toggles[`business.main-menu.${option}`],
                   }"
                 >
                   <div class="card-icon">
@@ -539,14 +558,10 @@ export default {
                     v-if="option === 'manage-admin' && state.manageSubMenuOption === true"
                     class="submenu-container"
                   >
-                    <div
-                      v-for="opt in state.manageSubMenuOptions"
-                      :key="opt"
-                      class="submenu-item"
-                    >
+                    <div v-for="opt in state.manageSubMenuOptions" :key="opt" class="submenu-item">
                       <div
                         class="submenu-card"
-                        @click="goToOption(opt)"
+                        @click="state.toggles[`business.main-menu.${opt}`] ? goToOption(opt) : null"
                         :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
                       >
                         <div class="card-icon">
@@ -571,7 +586,7 @@ export default {
                     >
                       <div
                         class="submenu-card"
-                        @click="goToOption(opt)"
+                        @click="state.toggles[`business.main-menu.${opt}`] ? goToOption(opt) : null"
                         :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
                       >
                         <div class="card-icon">
@@ -599,7 +614,7 @@ export default {
                     >
                       <div
                         class="submenu-card"
-                        @click="goToOption(opt)"
+                        @click="state.toggles[`business.main-menu.${opt}`] ? goToOption(opt) : null"
                         :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
                       >
                         <div class="card-icon">

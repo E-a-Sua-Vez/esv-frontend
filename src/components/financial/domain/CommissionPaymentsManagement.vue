@@ -80,7 +80,7 @@ export default {
 
     // Filtros para tipo de servicios
     const includeExecutedServices = ref(true); // Incluir servicios ya ejecutados (con atención)
-    const includePendingServices = ref(true);  // Incluir servicios pendientes (solo reserva)
+    const includePendingServices = ref(true); // Incluir servicios pendientes (solo reserva)
 
     // Modales
     const showEditModal = ref(false);
@@ -109,7 +109,9 @@ export default {
 
       // Filtrar por profesional seleccionado
       if (searchProfessionalId.value) {
-        payments = payments.filter(payment => payment.professionalId === searchProfessionalId.value);
+        payments = payments.filter(
+          payment => payment.professionalId === searchProfessionalId.value,
+        );
       }
 
       // Filtrar por fecha desde
@@ -167,11 +169,11 @@ export default {
       return getFilteredPayments.value.slice(start, end);
     });
 
-    const totalPages = computed(() => {
-      return Math.ceil(getFilteredPayments.value.length / itemsPerPage.value);
-    });
+    const totalPages = computed(() =>
+      Math.ceil(getFilteredPayments.value.length / itemsPerPage.value)
+    );
 
-    const toggleRowExpansion = (paymentId) => {
+    const toggleRowExpansion = paymentId => {
       if (expandedRows.value.has(paymentId)) {
         expandedRows.value.delete(paymentId);
       } else {
@@ -179,11 +181,9 @@ export default {
       }
     };
 
-    const isRowExpanded = (paymentId) => {
-      return expandedRows.value.has(paymentId);
-    };
+    const isRowExpanded = paymentId => expandedRows.value.has(paymentId);
 
-    const changeSort = (field) => {
+    const changeSort = field => {
       if (sortBy.value === field) {
         sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
       } else {
@@ -385,7 +385,6 @@ export default {
         // Switch to created tab to show the new payment
         activeTab.value = 'created';
         loading.value = false;
-
       } catch (error) {
         console.error('[createPayment] Error creating payment:', error);
         console.error('[createPayment] Error details:', {
@@ -429,7 +428,7 @@ export default {
     };
 
     const downloadingPdf = ref(false);
-    const handleDownloadPdf = async (payment) => {
+    const handleDownloadPdf = async payment => {
       if (downloadingPdf.value) return;
 
       try {
@@ -459,7 +458,7 @@ export default {
       Number(parseFloat(amount || 0).toFixed(2)).toLocaleString('de-DE');
 
     // Función para determinar el estado de la reserva/atención
-    const getIncomeStatus = (income) => {
+    const getIncomeStatus = income => {
       if (income.attentionId) {
         // Si tiene attentionId, es un servicio ya ejecutado
         return {
@@ -467,7 +466,7 @@ export default {
           status: 'completed',
           icon: 'bi bi-check-circle-fill',
           class: 'service-status-badge executed',
-          text: 'Ejecutado'
+          text: 'Ejecutado',
         };
       } else if (income.bookingId) {
         // Si solo tiene bookingId sin attentionId, es un servicio pendiente de ejecución
@@ -476,7 +475,7 @@ export default {
           status: 'pending',
           icon: 'bi bi-clock-fill',
           class: 'service-status-badge pending',
-          text: 'Pendiente'
+          text: 'Pendiente',
         };
       } else {
         // Otros casos (paquetes, pagos directos, etc.)
@@ -485,14 +484,14 @@ export default {
           status: 'other',
           icon: 'bi bi-cash-coin',
           class: 'service-status-badge direct',
-          text: 'Directo'
+          text: 'Directo',
         };
       }
     };
 
     // Función para filtrar incomes según el estado de ejecución
-    const getFilteredIncomes = computed(() => {
-      return unpaidIncomes.value.filter(income => {
+    const getFilteredIncomes = computed(() =>
+      unpaidIncomes.value.filter(income => {
         const status = getIncomeStatus(income);
 
         // Aplicar filtros
@@ -505,8 +504,8 @@ export default {
         }
 
         return true; // Incluir otros tipos y los que pasan los filtros
-      });
-    });
+      })
+    );
     const getFirstDayOfMonth = () => {
       const now = new Date();
       const year = now.getFullYear();
@@ -736,7 +735,9 @@ export default {
             <!-- Título con contador -->
             <h5 class="metric-card-title">
               <i class="bi bi-list-check"></i> {{ $t('commissionPayments.selectedIncomes') }}
-              <span class="badge bg-secondary ms-2">{{ getFilteredIncomes.length }}/{{ unpaidIncomes.length }}</span>
+              <span class="badge bg-secondary ms-2"
+                >{{ getFilteredIncomes.length }}/{{ unpaidIncomes.length }}</span
+              >
             </h5>
 
             <!-- Tabla cuando hay resultados filtrados -->
@@ -751,74 +752,98 @@ export default {
                           @change="selectAll"
                           :checked="
                             selectedIncomeIds.length === getFilteredIncomes.length &&
-                          getFilteredIncomes.length > 0
-                        "
-                      />
-                    </th>
-                    <th>{{ $t('commissionPayments.date') }}</th>
-                    <th>{{ $t('commissionPayments.type') }}</th>
-                    <th>{{ $t('commissionPayments.statuss') }}</th>
-                    <th>{{ $t('commissionPayments.amount') }}</th>
-                    <th>{{ $t('commissionPayments.commission') }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="income in getFilteredIncomes" :key="income.id">
-                    <td>
-                      <input type="checkbox" v-model="selectedIncomeIds" :value="income.id" />
-                    </td>
-                    <td>{{ formatDate(income.createdAt) }}</td>
-                    <td>
-                      <span class="badge bg-info">
-                        {{ $t(`incomeTypes.${income.type}`) }}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        :class="`${getIncomeStatus(income).class}`"
-                        :title="getIncomeStatus(income).type === 'executed' ? $t('commissionPayments.filterHelp.executed') : getIncomeStatus(income).type === 'pending' ? $t('commissionPayments.filterHelp.pending') : $t('commissionPayments.filterHelp.direct')"
-                      >
-                        <i :class="getIncomeStatus(income).icon"></i>
-                        {{ $t(`commissionPayments.serviceStatus.${getIncomeStatus(income).type}`) }}
-                      </span>
-                    </td>
-                    <td class="fw-bold">${{ formatCurrency(income.amount) }}</td>
-                    <td class="text-success fw-bold">
-                      ${{ formatCurrency(income.professionalCommission) }}
-                      <i v-if="income?.commissionPaid === true || income?.commissionPaid === 'true' || income?.commissionPaid === 1" class="bi bi-check-circle-fill text-success ms-2" :title="$t('commissionPayments.commissionPaid')"></i>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                            getFilteredIncomes.length > 0
+                          "
+                        />
+                      </th>
+                      <th>{{ $t('commissionPayments.date') }}</th>
+                      <th>{{ $t('commissionPayments.type') }}</th>
+                      <th>{{ $t('commissionPayments.statuss') }}</th>
+                      <th>{{ $t('commissionPayments.amount') }}</th>
+                      <th>{{ $t('commissionPayments.commission') }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="income in getFilteredIncomes" :key="income.id">
+                      <td>
+                        <input type="checkbox" v-model="selectedIncomeIds" :value="income.id" />
+                      </td>
+                      <td>{{ formatDate(income.createdAt) }}</td>
+                      <td>
+                        <span class="badge bg-info">
+                          {{ $t(`incomeTypes.${income.type}`) }}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          :class="`${getIncomeStatus(income).class}`"
+                          :title="
+                            getIncomeStatus(income).type === 'executed'
+                              ? $t('commissionPayments.filterHelp.executed')
+                              : getIncomeStatus(income).type === 'pending'
+                              ? $t('commissionPayments.filterHelp.pending')
+                              : $t('commissionPayments.filterHelp.direct')
+                          "
+                        >
+                          <i :class="getIncomeStatus(income).icon"></i>
+                          {{
+                            $t(`commissionPayments.serviceStatus.${getIncomeStatus(income).type}`)
+                          }}
+                        </span>
+                      </td>
+                      <td class="fw-bold">${{ formatCurrency(income.amount) }}</td>
+                      <td class="text-success fw-bold">
+                        ${{ formatCurrency(income.professionalCommission) }}
+                        <i
+                          v-if="
+                            income?.commissionPaid === true ||
+                            income?.commissionPaid === 'true' ||
+                            income?.commissionPaid === 1
+                          "
+                          class="bi bi-check-circle-fill text-success ms-2"
+                          :title="$t('commissionPayments.commissionPaid')"
+                        ></i>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
-            <!-- Resumen -->
-            <div class="row mt-3">
-              <div class="col-12">
-                <div class="commission-summary-card">
-                  <div class="row g-3">
-                    <div class="col-12 col-md-4">
-                      <div class="summary-item">
-                        <div class="summary-label">{{ $t('commissionPayments.selectedCount') }}</div>
-                        <div class="summary-value">{{ selectedIncomeIds.length }}</div>
+              <!-- Resumen -->
+              <div class="row mt-3">
+                <div class="col-12">
+                  <div class="commission-summary-card">
+                    <div class="row g-3">
+                      <div class="col-12 col-md-4">
+                        <div class="summary-item">
+                          <div class="summary-label">
+                            {{ $t('commissionPayments.selectedCount') }}
+                          </div>
+                          <div class="summary-value">{{ selectedIncomeIds.length }}</div>
+                        </div>
                       </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                      <div class="summary-item">
-                        <div class="summary-label">{{ $t('commissionPayments.totalAmount') }}</div>
-                        <div class="summary-value">${{ formatCurrency(totalAmount) }}</div>
+                      <div class="col-12 col-md-4">
+                        <div class="summary-item">
+                          <div class="summary-label">
+                            {{ $t('commissionPayments.totalAmount') }}
+                          </div>
+                          <div class="summary-value">${{ formatCurrency(totalAmount) }}</div>
+                        </div>
                       </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                      <div class="summary-item">
-                        <div class="summary-label">{{ $t('commissionPayments.totalCommission') }}</div>
-                        <div class="summary-value text-success">${{ formatCurrency(totalCommission) }}</div>
+                      <div class="col-12 col-md-4">
+                        <div class="summary-item">
+                          <div class="summary-label">
+                            {{ $t('commissionPayments.totalCommission') }}
+                          </div>
+                          <div class="summary-value text-success">
+                            ${{ formatCurrency(totalCommission) }}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
             </div>
 
             <!-- Mensaje cuando no hay resultados filtrados -->
@@ -878,19 +903,19 @@ export default {
       <!-- Barra de herramientas: Filtros, Vista y Refresh -->
       <div class="row mb-3">
         <div class="col-12 col-md-3 mb-2 mb-md-0">
-          <label class="form-label metric-card-subtitle fw-bold mb-2">{{ $t('commissionPayments.professional') || 'Profesional' }}</label>
+          <label class="form-label metric-card-subtitle fw-bold mb-2">{{
+            $t('commissionPayments.professional') || 'Profesional'
+          }}</label>
           <div class="select-wrapper">
             <select
               class="form-control metric-controls"
               v-model="searchProfessionalId"
               @change="currentPage = 1"
             >
-              <option :value="null">{{ $t('commissionPayments.allProfessionals') || 'Todos los Profesionales' }}</option>
-              <option
-                v-for="prof in professionals"
-                :key="prof.id"
-                :value="prof.id"
-              >
+              <option :value="null">
+                {{ $t('commissionPayments.allProfessionals') || 'Todos los Profesionales' }}
+              </option>
+              <option v-for="prof in professionals" :key="prof.id" :value="prof.id">
                 {{ prof.personalInfo?.name || prof.name || prof.id }}
               </option>
             </select>
@@ -944,7 +969,8 @@ export default {
             class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
             :disabled="loading"
           >
-            <i class="bi bi-arrow-clockwise"></i> {{ $t('commissionPayments.refresh') || 'Atualizar' }}
+            <i class="bi bi-arrow-clockwise"></i>
+            {{ $t('commissionPayments.refresh') || 'Atualizar' }}
           </button>
         </div>
       </div>
@@ -991,14 +1017,16 @@ export default {
                       :class="
                         sortBy === 'totalCommission'
                           ? sortOrder === 'asc'
-                          ? 'bi-arrow-up'
-                          : 'bi-arrow-down'
-                        : 'bi-arrow-down-up'
+                            ? 'bi-arrow-up'
+                            : 'bi-arrow-down'
+                          : 'bi-arrow-down-up'
                       "
                     ></i>
                   </th>
-                  <th class="text-center" style="width: 120px;">{{ $t('commissionPayments.actions') || 'Acciones' }}</th>
-                  <th style="width: 40px;"></th>
+                  <th class="text-center" style="width: 120px">
+                    {{ $t('commissionPayments.actions') || 'Acciones' }}
+                  </th>
+                  <th style="width: 40px"></th>
                 </tr>
               </thead>
               <tbody>
@@ -1008,14 +1036,15 @@ export default {
                     class="commission-payment-row"
                     :class="{ 'table-active': isRowExpanded(payment.id) }"
                     @click="toggleRowExpansion(payment.id)"
-                    style="cursor: pointer;"
+                    style="cursor: pointer"
                   >
                     <td>
                       <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-person-badge text-primary"></i>
                         <strong>
                           {{
-                            professionals.find(p => p.id === payment.professionalId)?.personalInfo?.name ||
+                            professionals.find(p => p.id === payment.professionalId)?.personalInfo
+                              ?.name ||
                             professionals.find(p => p.id === payment.professionalId)?.name ||
                             payment.professionalId
                           }}
@@ -1035,7 +1064,9 @@ export default {
                       <span class="badge bg-info">{{ payment.totalIncomes || 0 }}</span>
                     </td>
                     <td class="text-end">
-                      <strong class="text-success">${{ formatCurrency(payment.totalCommission) }}</strong>
+                      <strong class="text-success"
+                        >${{ formatCurrency(payment.totalCommission) }}</strong
+                      >
                     </td>
                     <td class="text-center" @click.stop>
                       <div class="btn-group btn-group-sm" role="group">
@@ -1070,7 +1101,12 @@ export default {
                           :title="$t('commissionPayments.downloadPdf') || 'Descargar PDF'"
                           :disabled="downloadingPdf"
                         >
-                          <span v-if="downloadingPdf" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                          <span
+                            v-if="downloadingPdf"
+                            class="spinner-border spinner-border-sm me-1"
+                            role="status"
+                            aria-hidden="true"
+                          ></span>
                           <i v-else class="bi bi-file-earmark-pdf-fill"></i>
                         </button>
                       </div>
@@ -1079,7 +1115,11 @@ export default {
                       <button
                         class="btn btn-sm btn-link p-0"
                         @click="toggleRowExpansion(payment.id)"
-                        :title="isRowExpanded(payment.id) ? $t('commissionPayments.hideDetails') : $t('commissionPayments.showDetails')"
+                        :title="
+                          isRowExpanded(payment.id)
+                            ? $t('commissionPayments.hideDetails')
+                            : $t('commissionPayments.showDetails')
+                        "
                       >
                         <i
                           class="bi"
@@ -1093,14 +1133,16 @@ export default {
                     <td colspan="7" class="p-0">
                       <div class="commission-payment-details p-3 bg-light">
                         <CommissionPaymentCard
-                          :ref="el => {
-                            if (!paymentCardRefs.value) paymentCardRefs.value = {};
-                            if (el) {
-                              paymentCardRefs.value[payment.id] = el;
-                            } else if (paymentCardRefs.value) {
-                              delete paymentCardRefs.value[payment.id];
+                          :ref="
+                            el => {
+                              if (!paymentCardRefs.value) paymentCardRefs.value = {};
+                              if (el) {
+                                paymentCardRefs.value[payment.id] = el;
+                              } else if (paymentCardRefs.value) {
+                                delete paymentCardRefs.value[payment.id];
+                              }
                             }
-                          }"
+                          "
                           :key="`payment-${payment.id}-${payment.updatedAt || payment.createdAt}`"
                           :payment="payment"
                           :professionals="professionals"
@@ -1125,7 +1167,9 @@ export default {
             <div class="col-12 d-flex justify-content-between align-items-center">
               <div>
                 <small class="text-muted">
-                  Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, getFilteredPayments.length) }} de {{ getFilteredPayments.length }}
+                  Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} -
+                  {{ Math.min(currentPage * itemsPerPage, getFilteredPayments.length) }} de
+                  {{ getFilteredPayments.length }}
                 </small>
               </div>
               <nav>
@@ -1162,14 +1206,16 @@ export default {
       <div v-else-if="viewMode === 'cards' && getFilteredPayments.length > 0" class="row">
         <div v-for="payment in paginatedPayments" :key="payment.id" class="col-12 mb-3">
           <CommissionPaymentCard
-            :ref="el => {
-              if (!paymentCardRefs.value) paymentCardRefs.value = {};
-              if (el) {
-                paymentCardRefs.value[payment.id] = el;
-              } else if (paymentCardRefs.value) {
-                delete paymentCardRefs.value[payment.id];
+            :ref="
+              el => {
+                if (!paymentCardRefs.value) paymentCardRefs.value = {};
+                if (el) {
+                  paymentCardRefs.value[payment.id] = el;
+                } else if (paymentCardRefs.value) {
+                  delete paymentCardRefs.value[payment.id];
+                }
               }
-            }"
+            "
             :key="`payment-${payment.id}-${payment.updatedAt || payment.createdAt}`"
             :payment="payment"
             :professionals="professionals"
@@ -1195,19 +1241,19 @@ export default {
       <!-- Barra de herramientas: Filtros, Vista y Refresh -->
       <div class="row mb-3">
         <div class="col-12 col-md-3 mb-2 mb-md-0">
-          <label class="form-label metric-card-subtitle fw-bold mb-2">{{ $t('commissionPayments.professional') || 'Profesional' }}</label>
+          <label class="form-label metric-card-subtitle fw-bold mb-2">{{
+            $t('commissionPayments.professional') || 'Profesional'
+          }}</label>
           <div class="select-wrapper">
             <select
               class="form-control metric-controls"
               v-model="searchProfessionalId"
               @change="currentPage = 1"
             >
-              <option :value="null">{{ $t('commissionPayments.allProfessionals') || 'Todos los Profesionales' }}</option>
-              <option
-                v-for="prof in professionals"
-                :key="prof.id"
-                :value="prof.id"
-              >
+              <option :value="null">
+                {{ $t('commissionPayments.allProfessionals') || 'Todos los Profesionales' }}
+              </option>
+              <option v-for="prof in professionals" :key="prof.id" :value="prof.id">
                 {{ prof.personalInfo?.name || prof.name || prof.id }}
               </option>
             </select>
@@ -1261,7 +1307,8 @@ export default {
             class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
             :disabled="loading"
           >
-            <i class="bi bi-arrow-clockwise"></i> {{ $t('commissionPayments.refresh') || 'Atualizar' }}
+            <i class="bi bi-arrow-clockwise"></i>
+            {{ $t('commissionPayments.refresh') || 'Atualizar' }}
           </button>
         </div>
       </div>
@@ -1315,8 +1362,10 @@ export default {
                     ></i>
                   </th>
                   <th>{{ $t('commissionPayments.paidAt') || 'Data de Pagamento' }}</th>
-                  <th class="text-center" style="width: 80px;">{{ $t('commissionPayments.actions') || 'Ações' }}</th>
-                  <th style="width: 40px;"></th>
+                  <th class="text-center" style="width: 80px">
+                    {{ $t('commissionPayments.actions') || 'Ações' }}
+                  </th>
+                  <th style="width: 40px"></th>
                 </tr>
               </thead>
               <tbody>
@@ -1326,14 +1375,15 @@ export default {
                     class="commission-payment-row"
                     :class="{ 'table-active': isRowExpanded(payment.id) }"
                     @click="toggleRowExpansion(payment.id)"
-                    style="cursor: pointer;"
+                    style="cursor: pointer"
                   >
                     <td>
                       <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-person-badge text-success"></i>
                         <strong>
                           {{
-                            professionals.find(p => p.id === payment.professionalId)?.personalInfo?.name ||
+                            professionals.find(p => p.id === payment.professionalId)?.personalInfo
+                              ?.name ||
                             professionals.find(p => p.id === payment.professionalId)?.name ||
                             payment.professionalId
                           }}
@@ -1353,7 +1403,9 @@ export default {
                       <span class="badge bg-info">{{ payment.totalIncomes || 0 }}</span>
                     </td>
                     <td class="text-end">
-                      <strong class="text-success">${{ formatCurrency(payment.totalCommission) }}</strong>
+                      <strong class="text-success"
+                        >${{ formatCurrency(payment.totalCommission) }}</strong
+                      >
                     </td>
                     <td>
                       <small class="text-success">
@@ -1375,7 +1427,11 @@ export default {
                       <button
                         class="btn btn-sm btn-link p-0"
                         @click="toggleRowExpansion(payment.id)"
-                        :title="isRowExpanded(payment.id) ? $t('commissionPayments.hideDetails') : $t('commissionPayments.showDetails')"
+                        :title="
+                          isRowExpanded(payment.id)
+                            ? $t('commissionPayments.hideDetails')
+                            : $t('commissionPayments.showDetails')
+                        "
                       >
                         <i
                           class="bi"
@@ -1409,7 +1465,9 @@ export default {
             <div class="col-12 d-flex justify-content-between align-items-center">
               <div>
                 <small class="text-muted">
-                  Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, getFilteredPayments.length) }} de {{ getFilteredPayments.length }}
+                  Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} -
+                  {{ Math.min(currentPage * itemsPerPage, getFilteredPayments.length) }} de
+                  {{ getFilteredPayments.length }}
                 </small>
               </div>
               <nav>
@@ -1468,19 +1526,19 @@ export default {
       <!-- Barra de herramientas: Filtros, Vista y Refresh -->
       <div class="row mb-3">
         <div class="col-12 col-md-3 mb-2 mb-md-0">
-          <label class="form-label metric-card-subtitle fw-bold mb-2">{{ $t('commissionPayments.professional') || 'Profesional' }}</label>
+          <label class="form-label metric-card-subtitle fw-bold mb-2">{{
+            $t('commissionPayments.professional') || 'Profesional'
+          }}</label>
           <div class="select-wrapper">
             <select
               class="form-control metric-controls"
               v-model="searchProfessionalId"
               @change="currentPage = 1"
             >
-              <option :value="null">{{ $t('commissionPayments.allProfessionals') || 'Todos los Profesionales' }}</option>
-              <option
-                v-for="prof in professionals"
-                :key="prof.id"
-                :value="prof.id"
-              >
+              <option :value="null">
+                {{ $t('commissionPayments.allProfessionals') || 'Todos los Profesionales' }}
+              </option>
+              <option v-for="prof in professionals" :key="prof.id" :value="prof.id">
                 {{ prof.personalInfo?.name || prof.name || prof.id }}
               </option>
             </select>
@@ -1534,7 +1592,8 @@ export default {
             class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
             :disabled="loading"
           >
-            <i class="bi bi-arrow-clockwise"></i> {{ $t('commissionPayments.refresh') || 'Atualizar' }}
+            <i class="bi bi-arrow-clockwise"></i>
+            {{ $t('commissionPayments.refresh') || 'Atualizar' }}
           </button>
         </div>
       </div>
@@ -1588,7 +1647,7 @@ export default {
                     ></i>
                   </th>
                   <th>{{ $t('commissionPayments.cancelledAt') || 'Fecha Cancelación' }}</th>
-                  <th style="width: 40px;"></th>
+                  <th style="width: 40px"></th>
                 </tr>
               </thead>
               <tbody>
@@ -1598,14 +1657,15 @@ export default {
                     class="commission-payment-row"
                     :class="{ 'table-active': isRowExpanded(payment.id) }"
                     @click="toggleRowExpansion(payment.id)"
-                    style="cursor: pointer;"
+                    style="cursor: pointer"
                   >
                     <td>
                       <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-person-badge text-danger"></i>
                         <strong>
                           {{
-                            professionals.find(p => p.id === payment.professionalId)?.personalInfo?.name ||
+                            professionals.find(p => p.id === payment.professionalId)?.personalInfo
+                              ?.name ||
                             professionals.find(p => p.id === payment.professionalId)?.name ||
                             payment.professionalId
                           }}
@@ -1625,7 +1685,9 @@ export default {
                       <span class="badge bg-info">{{ payment.totalIncomes || 0 }}</span>
                     </td>
                     <td class="text-end">
-                      <strong class="text-danger">${{ formatCurrency(payment.totalCommission) }}</strong>
+                      <strong class="text-danger"
+                        >${{ formatCurrency(payment.totalCommission) }}</strong
+                      >
                     </td>
                     <td>
                       <small class="text-danger">
@@ -1636,7 +1698,11 @@ export default {
                       <button
                         class="btn btn-sm btn-link p-0"
                         @click="toggleRowExpansion(payment.id)"
-                        :title="isRowExpanded(payment.id) ? $t('commissionPayments.hideDetails') : $t('commissionPayments.showDetails')"
+                        :title="
+                          isRowExpanded(payment.id)
+                            ? $t('commissionPayments.hideDetails')
+                            : $t('commissionPayments.showDetails')
+                        "
                       >
                         <i
                           class="bi"
@@ -1670,7 +1736,9 @@ export default {
             <div class="col-12 d-flex justify-content-between align-items-center">
               <div>
                 <small class="text-muted">
-                  Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, getFilteredPayments.length) }} de {{ getFilteredPayments.length }}
+                  Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} -
+                  {{ Math.min(currentPage * itemsPerPage, getFilteredPayments.length) }} de
+                  {{ getFilteredPayments.length }}
                 </small>
               </div>
               <nav>
@@ -1991,7 +2059,7 @@ export default {
   color: rgba(0, 0, 0, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  line-height: .8rem;
+  line-height: 0.8rem;
 }
 
 .summary-value {
@@ -2022,7 +2090,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0.25rem .5rem;
+  padding: 0.25rem 0.5rem;
   background-color: transparent;
   border: none;
   border-radius: 6px;

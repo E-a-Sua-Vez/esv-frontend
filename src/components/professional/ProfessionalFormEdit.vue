@@ -70,7 +70,7 @@ export default {
             telemedicine: false,
             canSignDocuments: false,
             languages: [],
-            insuranceProviders: []
+            insuranceProviders: [],
           };
         }
         return prof;
@@ -95,7 +95,7 @@ export default {
             telemedicine: false,
             canSignDocuments: false,
             languages: [],
-            insuranceProviders: []
+            insuranceProviders: [],
           };
         }
         this.$emit('update:professional', value);
@@ -157,7 +157,6 @@ export default {
       // Deep clone medicalData to ensure reactivity
       updated.medicalData = { ...updated.medicalData };
       updated.medicalData[field] = value;
-
 
       this.$emit('update:professional', updated);
     },

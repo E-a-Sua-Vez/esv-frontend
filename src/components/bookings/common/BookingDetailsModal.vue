@@ -32,30 +32,27 @@ export default {
       this.$emit('close');
     },
     restoreMainModal() {
-      
       const mainModal = document.querySelector('#modalAgenda');
       if (mainModal) {
-        
         // Restaurar estilos
         mainModal.style.display = '';
         mainModal.style.pointerEvents = '';
         mainModal.style.opacity = '';
         mainModal.style.visibility = '';
-        
+
         // IMPORTANTE: Reactivar el modal de Bootstrap si está inactivo
         if (!mainModal.classList.contains('show')) {
           mainModal.classList.add('show');
           mainModal.style.display = 'block';
         }
-        
+
         // Asegurar que el body tenga las clases correctas para modals
         if (!document.body.classList.contains('modal-open')) {
           document.body.classList.add('modal-open');
         }
-        
       } else {
       }
-      
+
       // Restaurar o crear backdrop si es necesario
       let backdrop = document.querySelector('.modal-backdrop');
       if (!backdrop) {
@@ -95,12 +92,12 @@ export default {
             mainModal.setAttribute('aria-modal', 'true');
             mainModal.setAttribute('role', 'dialog');
             mainModal.style.paddingLeft = '0px';
-            
+
             // Asegurar que el body tenga las clases correctas
             document.body.classList.add('modal-open');
             document.body.style.overflow = 'hidden';
             document.body.style.paddingRight = '0px';
-            
+
             // Crear o mostrar backdrop
             let backdrop = document.querySelector('.modal-backdrop');
             if (!backdrop) {
@@ -111,11 +108,10 @@ export default {
               backdrop.style.display = 'block';
               backdrop.classList.add('show');
             }
-            
           }
         }, 50);
       }
-    }
+    },
   },
 };
 </script>
@@ -162,7 +158,7 @@ export default {
                 :selected-date="selectedDate"
                 @getAvailableDatesByCalendarMonth="handleGetAvailableDatesByCalendarMonth"
                 @booking-updated="handleBookingUpdated"
-                style="pointer-events: auto !important; user-select: auto !important;"
+                style="pointer-events: auto !important; user-select: auto !important"
               >
               </BookingDetailsCard>
             </div>
@@ -207,8 +203,6 @@ export default {
   border-radius: 0.5rem !important;
   box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
 }
-
-
 
 /* Modal Header - Matching Attention Style */
 .modal-header {
@@ -264,8 +258,8 @@ export default {
   user-select: auto !important;
 }
 
-.modal-body input[type="text"],
-.modal-body input[type="number"] {
+.modal-body input[type='text'],
+.modal-body input[type='number'] {
   pointer-events: auto !important;
   user-select: text !important;
   cursor: text !important;

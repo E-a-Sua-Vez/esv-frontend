@@ -106,7 +106,6 @@ export default {
 
     // Load form to personal data
     const loadToPersonalData = async form => {
-
       if (!canLoadFormToProntuario(form)) {
         alertError.value =
           t('dashboard.preprontuarioHistory.cannotLoad') ||
@@ -157,7 +156,6 @@ export default {
 
     // Load form to anamnese
     const loadToAnamnese = async form => {
-
       if (!canLoadFormToProntuario(form)) {
         alertError.value =
           t('dashboard.preprontuarioHistory.cannotLoad') ||

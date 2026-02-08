@@ -21,7 +21,11 @@
         <button @click="expandAll" class="control-btn" :title="$t('documentTreeView.expandAll')">
           <i class="bi bi-plus-square"></i>
         </button>
-        <button @click="collapseAll" class="control-btn" :title="$t('documentTreeView.collapseAll')">
+        <button
+          @click="collapseAll"
+          class="control-btn"
+          :title="$t('documentTreeView.collapseAll')"
+        >
           <i class="bi bi-dash-square"></i>
         </button>
       </div>
@@ -128,8 +132,11 @@
                         v-if="doc.urgency && doc.urgency !== 'NORMAL'"
                         :class="[
                           'badge',
-                          doc.urgency === 'HIGH' ? 'badge-warning' :
-                          doc.urgency === 'CRITICAL' ? 'badge-danger' : 'badge-secondary'
+                          doc.urgency === 'HIGH'
+                            ? 'badge-warning'
+                            : doc.urgency === 'CRITICAL'
+                            ? 'badge-danger'
+                            : 'badge-secondary',
                         ]"
                         :title="`Urgencia: ${getUrgencyLabel(doc.urgency)}`"
                       >
@@ -219,9 +226,7 @@
                 }`"
               >
                 <i
-                  :class="`bi ${
-                    getGeneratedDocumentType(doc)?.icon || 'bi-file-earmark-pdf'
-                  } me-1`"
+                  :class="`bi ${getGeneratedDocumentType(doc)?.icon || 'bi-file-earmark-pdf'} me-1`"
                 ></i>
                 {{ getGeneratedDocumentType(doc)?.label }}
               </span>
@@ -239,8 +244,11 @@
                 v-if="doc.urgency && doc.urgency !== 'NORMAL'"
                 :class="[
                   'badge',
-                  doc.urgency === 'HIGH' ? 'badge-warning' :
-                  doc.urgency === 'CRITICAL' ? 'badge-danger' : 'badge-secondary'
+                  doc.urgency === 'HIGH'
+                    ? 'badge-warning'
+                    : doc.urgency === 'CRITICAL'
+                    ? 'badge-danger'
+                    : 'badge-secondary',
                 ]"
                 :title="`Urgencia: ${getUrgencyLabel(doc.urgency)}`"
               >
@@ -334,15 +342,9 @@
                 getGeneratedDocumentType(doc)?.color || 'badge-success',
                 'badge-generated',
               ]"
-              :title="`Documento generado automáticamente: ${
-                getGeneratedDocumentType(doc)?.label
-              }`"
+              :title="`Documento generado automáticamente: ${getGeneratedDocumentType(doc)?.label}`"
             >
-              <i
-                :class="`bi ${
-                  getGeneratedDocumentType(doc)?.icon || 'bi-file-earmark-pdf'
-                }`"
-              ></i>
+              <i :class="`bi ${getGeneratedDocumentType(doc)?.icon || 'bi-file-earmark-pdf'}`"></i>
             </span>
             <!-- Category Badge -->
             <span
@@ -357,8 +359,11 @@
               v-if="doc.urgency && doc.urgency !== 'NORMAL'"
               :class="[
                 'badge',
-                doc.urgency === 'HIGH' ? 'badge-warning' :
-                doc.urgency === 'CRITICAL' ? 'badge-danger' : 'badge-secondary'
+                doc.urgency === 'HIGH'
+                  ? 'badge-warning'
+                  : doc.urgency === 'CRITICAL'
+                  ? 'badge-danger'
+                  : 'badge-secondary',
               ]"
               :title="`Urgencia: ${getUrgencyLabel(doc.urgency)}`"
             >
@@ -380,20 +385,27 @@
               class="badge badge-primary"
               :title="doc.details.tag"
             >
-              {{ doc.details.tag?.length > 3 ? doc.details.tag.substring(0, 3) + '...' : doc.details.tag }}
+              {{
+                doc.details.tag?.length > 3
+                  ? doc.details.tag.substring(0, 3) + '...'
+                  : doc.details.tag
+              }}
             </span>
             <span
               v-if="doc.details?.name && !isGeneratedDocument(doc)"
               class="badge badge-secondary"
               :title="doc.details.name"
             >
-              {{ doc.details.name?.length > 3 ? doc.details.name.substring(0, 3) + '...' : doc.details.name }}
+              {{
+                doc.details.name?.length > 3
+                  ? doc.details.name.substring(0, 3) + '...'
+                  : doc.details.name
+              }}
             </span>
           </div>
           <div class="grid-date">{{ getDateAndHour(doc.createdAt) }}</div>
         </div>
-        <div class="grid-actions">
-        </div>
+        <div class="grid-actions"></div>
       </div>
     </div>
   </div>
@@ -420,7 +432,13 @@ export default {
       default: () => [],
     },
   },
-  emits: ['document-selected', 'document-preview', 'document-download', 'document-toggle-selection', 'view-mode-changed'],
+  emits: [
+    'document-selected',
+    'document-preview',
+    'document-download',
+    'document-toggle-selection',
+    'view-mode-changed',
+  ],
   setup(props, { emit }) {
     const { t } = useI18n();
     const viewMode = ref('list');
@@ -568,9 +586,7 @@ export default {
       emit('view-mode-changed', mode);
     };
 
-    const getCategoryLabel = category => {
-      return t('documents.categories.' + category, category);
-    };
+    const getCategoryLabel = category => t('documents.categories.' + category, category);
 
     const getCategoryIcon = category => {
       const icons = {
@@ -612,7 +628,10 @@ export default {
 
     const isImage = doc => {
       const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      return imageTypes.includes(doc?.format) || (doc?.name && /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.name));
+      return (
+        imageTypes.includes(doc?.format) ||
+        (doc?.name && /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.name))
+      );
     };
 
     const getDocumentThumbnail = doc =>
@@ -1194,7 +1213,7 @@ export default {
   align-items: center;
 }
 
-.selection-checkbox input[type="checkbox"] {
+.selection-checkbox input[type='checkbox'] {
   width: 16px;
   height: 16px;
   cursor: pointer;

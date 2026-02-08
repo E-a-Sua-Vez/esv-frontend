@@ -45,14 +45,14 @@ export default {
         'client-portal',
       ],
       menuIcons: {
-        'dashboard': 'bi-speedometer2',
-        'reports': 'bi-bar-chart',
+        dashboard: 'bi-speedometer2',
+        reports: 'bi-bar-chart',
         'bookings-master-admin': 'bi-calendar-check',
         'control-master-admin': 'bi-gear',
         'manage-master-admin': 'bi-people',
         'medical-management': 'bi-heart-pulse',
-        'configuration': 'bi-sliders',
-        'documents': 'bi-file-earmark-text',
+        configuration: 'bi-sliders',
+        documents: 'bi-file-earmark-text',
         'your-plan': 'bi-credit-card',
         'business-master-resume': 'bi-building',
         'go-minisite': 'bi-globe',
@@ -261,7 +261,7 @@ export default {
       return `/public/portal/${keyName}/login`;
     };
 
-    const getSubmenuIcon = (opt) => {
+    const getSubmenuIcon = opt => {
       const iconMap = {
         'commerce-master-admin': 'bi-building',
         'service-master-admin': 'bi-tools',
@@ -275,9 +275,9 @@ export default {
         'company-master-admin': 'bi-building',
         'product-master-admin': 'bi-box-seam',
         'permissions-master-admin': 'bi-key',
-        'tracing': 'bi-search',
+        tracing: 'bi-search',
         'product-stock': 'bi-boxes',
-        'financial': 'bi-cash',
+        financial: 'bi-cash',
         'patient-history-item-master-admin': 'bi-file-medical',
         'medications-admin': 'bi-capsule',
         'medical-exams-admin': 'bi-clipboard-data',
@@ -296,7 +296,7 @@ export default {
     };
 
     // Función para manejar click outside
-    const handleClickOutside = (event) => {
+    const handleClickOutside = event => {
       closeAllSubmenus();
     };
 
@@ -394,14 +394,13 @@ export default {
                 <div class="col-12 col-md-10 col-lg-8">
                   <div class="row">
                     <div
-                      v-for="option in state.businessMenuOptions.filter(opt => opt !== 'go-minisite' && opt !== 'client-portal')"
+                      v-for="option in state.businessMenuOptions.filter(
+                        opt => opt !== 'go-minisite' && opt !== 'client-portal'
+                      )"
                       :key="option"
                       class="col-12"
                     >
-                      <div
-                        class="menu-card mb-2"
-                        @click.stop="goToOption(option)"
-                      >
+                      <div class="menu-card mb-2" @click.stop="goToOption(option)">
                         <div class="card-icon">
                           <i :class="`bi ${state.menuIcons[option]}`"></i>
                         </div>
@@ -410,7 +409,9 @@ export default {
                           <i
                             v-if="option === 'manage-master-admin'"
                             :class="`chevron bi ${
-                              state.manageSubMenuOption === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                              state.manageSubMenuOption === true
+                                ? 'bi-chevron-up'
+                                : 'bi-chevron-down'
                             }`"
                           ></i>
                           <i
@@ -432,7 +433,9 @@ export default {
                         </div>
                       </div>
                       <div
-                        v-if="option === 'manage-master-admin' && state.manageSubMenuOption === true"
+                        v-if="
+                          option === 'manage-master-admin' && state.manageSubMenuOption === true
+                        "
                         class="submenu-container"
                       >
                         <div
@@ -440,10 +443,7 @@ export default {
                           :key="opt"
                           class="submenu-item"
                         >
-                          <div
-                            class="submenu-card"
-                            @click="goToOption(opt)"
-                          >
+                          <div class="submenu-card" @click="goToOption(opt)">
                             <div class="card-icon">
                               <i :class="getSubmenuIcon(opt)"></i>
                             </div>
@@ -465,10 +465,7 @@ export default {
                           :key="opt"
                           class="submenu-item"
                         >
-                          <div
-                            class="submenu-card"
-                            @click="goToOption(opt)"
-                          >
+                          <div class="submenu-card" @click="goToOption(opt)">
                             <div class="card-icon">
                               <i :class="getSubmenuIcon(opt)"></i>
                             </div>
@@ -490,10 +487,7 @@ export default {
                           :key="opt"
                           class="submenu-item"
                         >
-                          <div
-                            class="submenu-card"
-                            @click="goToOption(opt)"
-                          >
+                          <div class="submenu-card" @click="goToOption(opt)">
                             <div class="card-icon">
                               <i :class="getSubmenuIcon(opt)"></i>
                             </div>
@@ -508,32 +502,26 @@ export default {
                       <div class="row portal-row">
                         <div class="col-6 portal-card-wrapper">
                           <div class="menu-card portal-card">
-                            <a
-                              class="menu-link"
-                              :href="`${getBusinessLink()}`"
-                              target="_blank"
-                            >
+                            <a class="menu-link" :href="`${getBusinessLink()}`" target="_blank">
                               <div class="card-icon">
                                 <i class="bi bi-globe"></i>
                               </div>
                               <div class="card-text">
-                                {{ $t(`masterMenu.go-minisite`) }} <i class="bi bi-box-arrow-up-right ms-2"></i>
+                                {{ $t(`masterMenu.go-minisite`) }}
+                                <i class="bi bi-box-arrow-up-right ms-2"></i>
                               </div>
                             </a>
                           </div>
                         </div>
                         <div class="col-6 portal-card-wrapper">
                           <div class="menu-card portal-card">
-                            <a
-                              class="menu-link"
-                              :href="`${getClientPortalLink()}`"
-                              target="_blank"
-                            >
+                            <a class="menu-link" :href="`${getClientPortalLink()}`" target="_blank">
                               <div class="card-icon">
                                 <i class="bi bi-person-circle"></i>
                               </div>
                               <div class="card-text">
-                                {{ $t(`masterMenu.client-portal`) }} <i class="bi bi-box-arrow-up-right ms-2"></i>
+                                {{ $t(`masterMenu.client-portal`) }}
+                                <i class="bi bi-box-arrow-up-right ms-2"></i>
                               </div>
                             </a>
                           </div>
