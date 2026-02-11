@@ -198,6 +198,23 @@ export default {
         else financialScore += Math.max(-25, growth);
       }
 
+      // Refund rate impact (negative factor)
+      if (metrics['outcome.refund']) {
+        const refundMetrics = metrics['outcome.refund'];
+        const totalTransactions = attention.attentionNumber || 1;
+        const refundRate = (refundMetrics.totalRefunds || 0) / totalTransactions;
+
+        // High refund rate negatively impacts financial health
+        // 0% refunds = no penalty, 5%+ refunds = -20 points, 10%+ = -30 points
+        if (refundRate > 0.10) {
+          financialScore -= 30;
+        } else if (refundRate > 0.05) {
+          financialScore -= 20;
+        } else if (refundRate > 0.02) {
+          financialScore -= 10;
+        }
+      }
+
       financialScore = Math.min(100, Math.max(0, financialScore));
 
       // Total Health Score (weighted average)

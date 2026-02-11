@@ -7,10 +7,12 @@ import Spinner from '../../../common/Spinner.vue';
 import { formatIdNumber } from '../../../../shared/utils/idNumber';
 import { confirmPendingIncome } from '../../../../application/services/income';
 import AreYouSure from '../../../common/AreYouSure.vue';
+import PeriodStatusBadge from '../../common/PeriodStatusBadge.vue';
 
 export default {
   name: 'IncomeDetailsCard',
-  components: { Popper, Spinner, AreYouSure },
+  components: { Popper, Spinner, AreYouSure, PeriodStatusBadge },
+  emits: ['refresh', 'open-refund-modal'],
   props: {
     show: { type: Boolean, default: true },
     toggles: { type: Object, default: undefined },
@@ -18,6 +20,9 @@ export default {
     detailsOpened: { type: Boolean, default: false },
     commerce: { type: Object, default: undefined },
     professionals: { type: Array, default: () => [] },
+    isRefund: { type: Boolean, default: false },
+    refundType: { type: String, default: null },
+    canRefund: { type: Function, default: () => false },
   },
   data() {
     return {
@@ -82,6 +87,9 @@ export default {
     },
     manualIncome() {
       return this.income && ['STANDARD', 'FUND_INCREASE'].includes(this.income.type);
+    },
+    openRefundModal() {
+      this.$emit('open-refund-modal', this.income);
     },
     getProfessionalName(professionalId) {
       if (!professionalId || !this.professionals || this.professionals.length === 0) {
@@ -289,6 +297,18 @@ export default {
           }}</span>
         </div>
 
+        <!-- Closed Period Badge -->
+        <div v-if="income?.isClosed" class="status-inline" @click.stop>
+          <Popper :class="'dark'" arrow disable-click-away hover>
+            <template #content>
+              <div>{{ $t('financial.periods.transactionInClosedPeriod') }}</div>
+            </template>
+            <span class="badge bg-secondary">
+              <i class="bi bi-lock-fill"></i> {{ $t('financial.periods.status.closed') }}
+            </span>
+          </Popper>
+        </div>
+
         <!-- Details Toggle -->
         <Popper :class="'dark'" arrow disable-click-away hover>
           <template #content>
@@ -309,6 +329,30 @@ export default {
     <!-- Details Expandable Section -->
     <div v-if="extendedEntity" class="details-expandable-section">
       <div class="detailed-data">
+        <!-- Action Buttons -->
+        <div class="action-buttons-section" style="margin-bottom: 1rem;">
+          <!-- Confirm Payment Button -->
+          <button
+            v-if="income?.status === 'PENDING' && !manualIncome() && toggles['financial.incomes.confirm']"
+            @click="goConfirm()"
+            class="action-btn primary"
+          >
+            <i class="bi bi-check-circle"></i>
+            <span>{{ $t('collaboratorBookingsView.confirmPayment') }}</span>
+          </button>
+
+          <!-- Refund Button -->
+          <button
+            v-if="!isRefund && canRefund && canRefund(income) && toggles['financial.outcomes.add']"
+            @click="openRefundModal()"
+            class="action-btn warning"
+            :title="$t('financial.refunds.processRefund')"
+          >
+            <i class="bi bi-arrow-counterclockwise"></i>
+            <span>{{ $t('financial.refunds.refund') }}</span>
+          </button>
+        </div>
+
         <!-- Client Contact Information -->
         <div class="info-section">
           <div class="info-section-header">
@@ -488,18 +532,6 @@ export default {
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div v-if="income?.status === 'PENDING' && !manualIncome()" class="action-buttons-section">
-          <button
-            v-if="toggles['financial.incomes.confirm']"
-            @click="goConfirm()"
-            class="action-btn primary"
-          >
-            <i class="bi bi-check-circle"></i>
-            <span>{{ $t('collaboratorBookingsView.confirmPayment') }}</span>
-          </button>
         </div>
       </div>
     </div>

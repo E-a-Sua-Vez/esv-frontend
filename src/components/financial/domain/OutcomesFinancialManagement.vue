@@ -11,10 +11,12 @@ import { getOutcomeTypesByCommerceId } from '../../../application/services/outco
 import { createOutcome } from '../../../application/services/outcome';
 import { getDate } from '../../../shared/utils/date';
 import { getOutcomesDetails } from '../../../application/services/query-stack';
+import { createRefund } from '../../../application/services/query-stack';
 import { getProductByCommerce } from '../../../application/services/product';
 import { getProfessionalsByCommerce } from '../../../application/services/professional';
 import { getCompanyByCommerce } from '../../../application/services/company';
 import OutcomeDetailsCard from './common/OutcomeDetailsCard.vue';
+import RefundModal from '../RefundModal.vue';
 import Toggle from '@vueform/toggle';
 import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
 import { DateModel } from '../../../shared/utils/date.model';
@@ -29,6 +31,7 @@ export default {
     Alert,
     Warning,
     OutcomeDetailsCard,
+    RefundModal,
     Toggle,
     SimpleDownloadButton,
   },
@@ -85,6 +88,12 @@ export default {
       paymentMethodFilter: undefined,
       professionalFilter: undefined,
       professionals: [],
+      // Refund specific filters
+      refundTypeFilter: undefined,
+      showRefundsOnly: false,
+      // Refund modal
+      showRefundModal: false,
+      selectedTransactionForRefund: null,
     };
   },
   async beforeMount() {
@@ -106,14 +115,13 @@ export default {
       this.searchText = undefined;
       this.limit = 10;
       this.page = 1;
-      this.startDate = undefined;
-      this.endDate = undefined;
       this.minAmount = undefined;
       this.maxAmount = undefined;
       this.outcomeTypeFilter = undefined;
       this.paymentMethodFilter = undefined;
       this.professionalFilter = undefined;
-      await this.refresh();
+      // Set dates to current month
+      await this.getCurrentMonth();
     },
     async checkAsc(event) {
       if (event.target.checked) {
@@ -146,7 +154,11 @@ export default {
           this.minAmount,
           this.maxAmount,
           this.outcomeTypeFilter,
-          this.paymentMethodFilter
+          undefined, // outcomeSystemTypeFilter
+          this.paymentMethodFilter,
+          undefined, // professionalFilter
+          this.showRefundsOnly,
+          this.refundTypeFilter
         );
 
         // Load professionals if there are outcomes with professional data
@@ -209,9 +221,27 @@ export default {
           this.outcomeTypeFilter,
           this.paymentMethodFilter
         );
+
         if (result && result.length > 0) {
-          csvAsBlob = jsonToCsv(result);
+          // Enriquecer los datos con información de refunds
+          const enrichedData = result.map(outcome => {
+            const isRefundItem = this.isRefund(outcome);
+            const refundType = isRefundItem ? this.getRefundType(outcome) : null;
+
+            return {
+              ...outcome,
+              isRefund: isRefundItem,
+              refundType: refundType,
+              refundTypeText: refundType === 'PAYMENT_REFUND' ? 'Reembolso de Pago' :
+                             refundType === 'COMMISSION_REVERSAL' ? 'Reversión de Comisión' : '',
+              netAmount: isRefundItem ? -Math.abs(outcome.amount) : outcome.amount,
+              transactionType: isRefundItem ? 'REFUND' : 'OUTCOME'
+            };
+          });
+
+          csvAsBlob = jsonToCsv(enrichedData);
         }
+
         const blobURL = URL.createObjectURL(new Blob([csvAsBlob]));
         const a = document.createElement('a');
         a.style = 'display: none';
@@ -338,6 +368,189 @@ export default {
         }
       }
     },
+
+    // ========== REFUND METHODS ==========
+    openRefundModal(transaction) {
+      this.selectedTransactionForRefund = transaction;
+      this.showRefundModal = true;
+    },
+
+    closeRefundModal() {
+      this.showRefundModal = false;
+      this.selectedTransactionForRefund = null;
+    },
+
+    async onRefundProcessed(result) {
+      try {
+        console.log('Refund processed successfully:', result);
+
+        // Agregar el refund a la lista de outcomes
+        if (result.data) {
+          // El refund se agrega como un nuevo outcome con tipo REFUND
+          const refundOutcome = {
+            ...result.data,
+            type: 'REFUND',
+            refundType: result.data.type,
+            originalTransactionId: result.originalTransaction.id,
+            createdAt: new Date().toISOString(),
+            amount: -Math.abs(result.data.amount), // Negativo para los refunds
+            description: `Refund: ${result.data.reason} - ${result.data.description || ''}`,
+            status: 'CONFIRMED'
+          };
+
+          // Agregar al inicio de la lista
+          this.financialOutcomes.unshift(refundOutcome);
+
+          // Actualizar el contador
+          this.counter += 1;
+
+          // Recalcular páginas si es necesario
+          this.updatePagination();
+        }
+
+        // Cerrar modal
+        this.closeRefundModal();
+
+        // Mostrar mensaje de éxito
+        this.$toast.success(this.$t('financial.refunds.successMessage'));
+
+        // Refrescar la lista completa para asegurar consistencia
+        await this.refresh();
+
+      } catch (error) {
+        console.error('Error handling refund result:', error);
+        this.$toast.error(this.$t('financial.refunds.errors.processError'));
+      }
+    },
+
+    updatePagination() {
+      const total = this.counter / this.limit;
+      const totalB = Math.trunc(total);
+      this.totalPages = totalB <= 0 ? 1 : this.counter % this.limit === 0 ? totalB : totalB + 1;
+    },
+
+    // Método para incluir refunds en el export de datos
+    getOutcomesForExport() {
+      return this.financialOutcomes.map(outcome => {
+        return {
+          ...outcome,
+          isRefund: this.isRefund(outcome),
+          refundType: this.getRefundType(outcome),
+          originalTransactionId: outcome.originalTransactionId || null,
+          netAmount: this.isRefund(outcome) ? -Math.abs(outcome.amount) : outcome.amount
+        };
+      });
+    },
+
+    // Calcular totales incluyendo refunds
+    calculateFinancialTotals() {
+      const totals = {
+        totalOutcomes: 0,
+        totalRefunds: 0,
+        netTotal: 0,
+        count: this.financialOutcomes.length,
+        refundCount: 0
+      };
+
+      this.financialOutcomes.forEach(outcome => {
+        const amount = parseFloat(outcome.amount) || 0;
+
+        if (this.isRefund(outcome)) {
+          totals.totalRefunds += Math.abs(amount);
+          totals.refundCount += 1;
+          totals.netTotal -= Math.abs(amount); // Los refunds restan del total neto
+        } else {
+          totals.totalOutcomes += amount;
+          totals.netTotal += amount;
+        }
+      });
+
+      return totals;
+    },
+
+    canRefund(outcome) {
+      // Verificar si el outcome puede ser reembolsado
+      // No se puede reembolsar si ya es un refund
+      const isAlreadyRefund = this.isRefund(outcome);
+
+      // No se puede reembolsar si el monto es 0 o negativo
+      const hasValidAmount = outcome.amount && outcome.amount > 0;
+
+      // Solo se pueden reembolsar ciertos tipos de outcomes
+      const isRefundable = !isAlreadyRefund && hasValidAmount;
+
+      return isRefundable;
+    },
+
+    isRefund(outcome) {
+      // Verificar si el outcome es un refund basado en múltiples criterios
+
+      // 1. Verificar conceptType
+      if (outcome.conceptType) {
+        const conceptType = outcome.conceptType.toLowerCase();
+        if (conceptType.includes('refund') || conceptType.includes('reversal')) {
+          return true;
+        }
+      }
+
+      // 2. Verificar descripción
+      if (outcome.description) {
+        const description = outcome.description.toLowerCase();
+        if (description.includes('reembolso') ||
+            description.includes('refund') ||
+            description.includes('reversión') ||
+            description.includes('reversão')) {
+          return true;
+        }
+      }
+
+      // 3. Verificar si tiene auxiliaryId (indica que es refund de otra transacción)
+      if (outcome.auxiliaryId) {
+        return true;
+      }
+
+      return false;
+    },
+
+    getRefundType(outcome) {
+      // Determinar el tipo de refund basado en las propiedades del outcome
+      if (!this.isRefund(outcome)) {
+        return null;
+      }
+
+      // Verificar por conceptType primero (más confiable)
+      if (outcome.conceptType) {
+        const conceptType = outcome.conceptType.toLowerCase();
+        if (conceptType.includes('commission') || conceptType === 'commission-reversal') {
+          return 'COMMISSION_REVERSAL';
+        }
+        if (conceptType.includes('payment') || conceptType === 'payment-refund') {
+          return 'PAYMENT_REFUND';
+        }
+      }
+
+      // Verificar por descripción
+      if (outcome.description) {
+        const description = outcome.description.toLowerCase();
+        if (description.includes('comisión') || description.includes('comissão') || description.includes('commission')) {
+          return 'COMMISSION_REVERSAL';
+        }
+      }
+
+      // Verificar por tipo de outcome
+      if (outcome.type === 'PROFESSIONAL_COMMISSION') {
+        return 'COMMISSION_REVERSAL';
+      }
+
+      // Si tiene attentionId o bookingId, es un refund de pago
+      if (outcome.attentionId || outcome.bookingId) {
+        return 'PAYMENT_REFUND';
+      }
+
+      // Default: payment refund
+      return 'PAYMENT_REFUND';
+    },
+
   },
   computed: {
     changeData() {
@@ -348,6 +561,12 @@ export default {
         queueId,
         limit,
       };
+    },
+    getRefundBadgeClass(outcome) {
+      if (!this.isRefund(outcome)) return '';
+
+      const refundType = this.getRefundType(outcome);
+      return refundType === 'PAYMENT_REFUND' ? 'badge-warning' : 'badge-danger';
     },
   },
   watch: {
@@ -691,6 +910,49 @@ export default {
                         </select>
                       </div>
                     </div>
+                    <!-- Sección de filtros para Refunds -->
+                    <div class="row mt-3 border-top pt-3">
+                      <div class="col-12">
+                        <h6 class="text-muted mb-2">
+                          <i class="bi bi-arrow-counterclockwise"></i>
+                          {{ $t('businessFinancial.filters.refundsSection') }}
+                        </h6>
+                      </div>
+                      <div class="col-6">
+                        <div class="form-check form-switch">
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            v-model="showRefundsOnly"
+                            id="showRefundsOnly"
+                            @change="refresh()"
+                          />
+                          <label class="form-check-label fw-bold" for="showRefundsOnly">
+                            {{ $t('businessFinancial.filters.showRefundsOnly') }}
+                          </label>
+                        </div>
+                      </div>
+                      <div class="col-6" v-if="showRefundsOnly">
+                        <label class="form-label metric-card-subtitle fw-bold">
+                          {{ $t('businessFinancial.filters.refundType') }}
+                        </label>
+                        <select
+                          class="form-control metric-controls"
+                          v-model="refundTypeFilter"
+                          @change="refresh()"
+                        >
+                          <option :value="undefined">
+                            {{ $t('businessFinancial.filters.allRefundTypes') }}
+                          </option>
+                          <option value="PAYMENT_REFUND">
+                            {{ $t('businessFinancial.refunds.types.payment') }}
+                          </option>
+                          <option value="COMMISSION_REVERSAL">
+                            {{ $t('businessFinancial.refunds.types.commission') }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -770,6 +1032,18 @@ export default {
                   v-for="(outcome, index) in financialOutcomes"
                   :key="`financialOutcomes-${index}`"
                 >
+                  <!-- Badge especial para refunds -->
+                  <div v-if="isRefund(outcome)" class="col-12 text-end mb-1">
+                    <span
+                      class="badge rounded-pill"
+                      :class="getRefundBadgeClass(outcome)"
+                    >
+                      <i class="bi bi-arrow-counterclockwise"></i>
+                      {{ getRefundType(outcome) === 'PAYMENT_REFUND'
+                           ? $t('businessFinancial.refunds.types.payment')
+                           : $t('businessFinancial.refunds.types.commission') }}
+                    </span>
+                  </div>
                   <OutcomeDetailsCard
                     :show="true"
                     :outcome="outcome"
@@ -777,7 +1051,11 @@ export default {
                     :commerces="commerces"
                     :toggles="toggles"
                     :professionals="professionals"
+                    :isRefund="isRefund(outcome)"
+                    :refundType="getRefundType(outcome)"
+                    :canRefund="canRefund"
                     @refresh="refresh"
+                    @open-refund-modal="openRefundModal"
                   >
                   </OutcomeDetailsCard>
                 </div>
@@ -806,15 +1084,26 @@ export default {
         >
           <div class="modal-dialog modal-xl">
             <div class="modal-content">
-              <div class="modal-header border-0 centered active-name">
-                <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
+              <div class="modal-header border-0 active-name modern-modal-header">
+                <div class="modern-modal-header-inner">
+                  <div class="modern-modal-icon-wrapper">
+                    <i class="bi bi-plus-lg"></i>
+                  </div>
+                  <div class="modern-modal-title-wrapper">
+                    <h5 class="modal-title fw-bold modern-modal-title">
+                      {{ $t('add') }}
+                    </h5>
+                  </div>
+                </div>
                 <button
                   id="close-modal"
-                  class="btn-close"
+                  class="modern-modal-close-btn"
                   type="button"
                   data-bs-dismiss="modal"
                   aria-label="Close"
-                ></button>
+                >
+                  <i class="bi bi-x-lg"></i>
+                </button>
               </div>
               <div class="modal-body text-center mb-0" id="attentions-component">
                 <Spinner :show="loading"></Spinner>
@@ -1021,6 +1310,15 @@ export default {
         :content="$t('dashboard.message.1.content')"
       />
     </div>
+
+    <!-- Refund Modal -->
+    <RefundModal
+      v-if="selectedTransactionForRefund"
+      :transaction="selectedTransactionForRefund"
+      :show="showRefundModal"
+      @refund-processed="onRefundProcessed"
+      @close="closeRefundModal"
+    />
   </div>
 </template>
 
@@ -1094,5 +1392,82 @@ export default {
 
 .modal-backdrop {
   z-index: 1050 !important;
+}
+
+/* Modern Modal Styles */
+.modern-modal-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  border-radius: 0;
+  min-height: auto;
+  position: relative;
+}
+
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.modern-modal-icon-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-modal-icon-wrapper i {
+  font-size: 1.125rem;
+  color: #ffffff;
+}
+
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-background);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.modern-modal-close-btn {
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #ffffff;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.modern-modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.modern-modal-close-btn i {
+  font-size: 0.875rem;
+  color: #ffffff;
 }
 </style>

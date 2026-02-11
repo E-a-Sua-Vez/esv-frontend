@@ -690,7 +690,7 @@ export default {
             <div class="col-12">
               <div class="filter-section-compact">
                 <div class="d-flex align-items-center gap-3 flex-wrap">
-                  <span class="fw-bold text-muted">
+                  <span class="fw-bold text-muted" style="font-size: 0.85rem;">
                     <i class="bi bi-funnel"></i> {{ $t('commissionPayments.serviceFilters') }}:
                   </span>
                   <div class="d-flex gap-3 flex-wrap">

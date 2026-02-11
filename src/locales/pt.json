@@ -4391,6 +4391,7 @@
     "resume": "Resumo",
     "incomes": "Recebidos",
     "outcomes": "Despesas",
+    "periods": "Períodos",
     "profit": "Lucros",
     "all": "Todos",
     "evolution": "Evolução",
@@ -4425,6 +4426,8 @@
       "profitMargin": "Margem de Lucro",
       "averageDailyIncome": "Média Diária de Receitas",
       "daysUntilMonthEnd": "Dias até o Fim do Mês",
+      "totalRefunds": "Reembolsos Totais",
+      "refundRate": "Taxa de Reembolsos",
       "vsPreviousMonth": "vs mês anterior",
       "vsPreviousPeriod": "vs período anterior",
       "tooltips": {
@@ -4433,7 +4436,9 @@
         "netProfit": "Lucro líquido após deduzir todas as despesas das receitas totais. Indica o ganho real do negócio no período. Fórmula: Receitas Totais - Despesas Totais. As comissões já estão incluídas como parte das receitas.",
         "profitMargin": "Percentual que representa quanto do lucro representa em relação às receitas totais. Quanto maior, melhor a eficiência financeira. Fórmula: (Lucro Líquido / Receitas Totais) × 100.",
         "averageDailyIncome": "Média de receitas líquidas (após comissões) por dia no período selecionado. Útil para projeções e análise de desempenho diário. Fórmula: (Receitas Totais - Comissões) / Número de Dias no Período.",
-        "daysUntilMonthEnd": "Quantidade de dias restantes até o final do mês atual. Usado para cálculos de projeções e planejamento financeiro mensal."
+        "daysUntilMonthEnd": "Quantidade de dias restantes até o final do mês atual. Usado para cálculos de projeções e planejamento financeiro mensal.",
+        "totalRefunds": "Soma total de reembolsos processados no período selecionado. Inclui reembolsos de pagamentos e reversões de comissões. Representa dinheiro que sai do negócio.",
+        "refundRate": "Percentual que representam os reembolsos em relação às receitas totais. Uma taxa baixa indica boa qualidade de serviço. Fórmula: (Total Reembolsos / Receitas Totais) × 100."
       }
     },
     "distribution": {
@@ -4615,10 +4620,17 @@
           "view": "Ver Despesas",
           "add": "Adicionar Despesa"
         },
+        "periods": {
+          "view": "Ver Períodos Contábeis"
+        },
         "reports": {
           "resume": "Baixar arquivo relatório Resumo Financeiro",
           "incomes": "Baixar arquivo relatório de Recebidos",
-          "outcomes": "Baixar arquivo relatório de Despesas"
+          "outcomes": "Baixar arquivo relatório de Despesas",
+          "mostProfitableClients": "Clientes Mais Lucrativos",
+          "expensesByProvider": "Despesas por Fornecedor",
+          "cashFlow": "Fluxo de Caixa",
+          "serviceProfitability": "Rentabilidade por Serviço"
         }
       }
     },
@@ -9055,6 +9067,146 @@
         "message": "📊 Você tem {contactCount} leads em contato mas 0 em negociação. Taxa Contato→Negócio: {contactToDealRate}%. Oportunidade potencial: Converter pelo menos 1-2 leads.",
         "action": "Focar em qualificar e mover leads interessados adiante"
       }
+    }
+  },
+  "financial": {
+    "refunds": {
+      "processRefund": "Processar Reembolso",
+      "refund": "Reembolso",
+      "originalTransaction": "Transação Original",
+      "transactionId": "ID da Transação",
+      "originalAmount": "Valor Original",
+      "date": "Data",
+      "type": "Tipo",
+      "refundAmount": "Valor do Reembolso",
+      "maxAmount": "Máximo disponível",
+      "refundType": "Tipo de Reembolso",
+      "selectType": "Selecionar tipo...",
+      "reason": "Motivo",
+      "selectReason": "Selecionar motivo...",
+      "description": "Descrição",
+      "descriptionPlaceholder": "Descrição detalhada do motivo do reembolso...",
+      "confirmationTitle": "Confirmação",
+      "confirmationMessage": "Será processado um reembolso de {amount}. Esta ação não pode ser desfeita.",
+      "processing": "Processando...",
+      "successMessage": "Reembolso processado com sucesso",
+      "types": {
+        "paymentRefund": "Devolução de Pagamento",
+        "commissionReversal": "Reversão de Comissão",
+        "serviceRefund": "Reembolso de Serviço",
+        "cancellationRefund": "Reembolso por Cancelamento"
+      },
+      "reasons": {
+        "customerRequest": "Solicitação do Cliente",
+        "serviceIssue": "Problema com o Serviço",
+        "technicalError": "Erro Técnico",
+        "duplicatePayment": "Pagamento Duplicado",
+        "policyViolation": "Violação de Políticas",
+        "other": "Outro"
+      },
+      "errors": {
+        "invalidAmount": "Valor inválido",
+        "amountExceedsLimit": "O valor excede o limite disponível",
+        "typeRequired": "Tipo de reembolso obrigatório",
+        "reasonRequired": "Motivo do reembolso obrigatório",
+        "processError": "Erro ao processar o reembolso"
+      }
+    },
+    "periods": {
+      "title": "Períodos Contábeis",
+      "newPeriod": "Novo Período",
+      "periodName": "Nome do Período",
+      "startDate": "Data de Início",
+      "endDate": "Data de Término",
+      "status": {
+        "open": "Aberto",
+        "closed": "Fechado",
+        "locked": "Bloqueado"
+      },
+      "actions": {
+        "close": "Fechar Período",
+        "reopen": "Reabrir Período",
+        "lock": "Bloquear Período",
+        "viewDetails": "Ver Detalhes"
+      },
+      "totals": {
+        "incomes": "Receitas",
+        "outcomes": "Despesas",
+        "commissions": "Comissões",
+        "refunds": "Reembolsos",
+        "commissionReversals": "Reversões de Comissão",
+        "netAmount": "Valor Líquido",
+        "transactions": "Transações"
+      },
+      "close": {
+        "title": "Fechar Período Contábil",
+        "step1": "Pré-validação",
+        "step2": "Resumo do Período",
+        "step3": "Confirmação",
+        "validating": "Validando...",
+        "allConfirmed": "Todas as transações estão confirmadas",
+        "pendingTransactions": "{count} transações pendentes de confirmação",
+        "noRefundsPending": "Não há reembolsos sem processar",
+        "commissionsCalculated": "Todas as comissões calculadas",
+        "periodSummary": "Resumo do período {name}",
+        "dateRange": "{startDate} - {endDate}",
+        "bankBalance": "Saldo Bancário",
+        "systemBalance": "Saldo do Sistema",
+        "difference": "Diferença",
+        "notes": "Notas",
+        "notesPlaceholder": "Notas sobre o fechamento do período...",
+        "confirmTitle": "Confirmar Fechamento",
+        "confirmMessage": "Tem certeza que deseja fechar o período {name}? Uma vez fechado, você não poderá modificar as transações deste período.",
+        "confirmCheckbox": "Revisei todos os números",
+        "confirmBankReconciliation": "Conciliei com o banco",
+        "confirmPeriodClose": "Confirmo o fechamento do período",
+        "closing": "Fechando período...",
+        "successMessage": "Período fechado com sucesso",
+        "errorMessage": "Erro ao fechar o período"
+      },
+      "reopen": {
+        "title": "Reabrir Período",
+        "reason": "Motivo da Reabertura",
+        "reasonRequired": "Você deve fornecer um motivo para reabrir o período",
+        "reasonPlaceholder": "Explique por que você precisa reabrir este período...",
+        "confirmMessage": "Tem certeza que deseja reabrir o período {name}?",
+        "reopening": "Reabrindo período...",
+        "successMessage": "Período reaberto com sucesso"
+      },
+      "lock": {
+        "title": "Bloquear Período",
+        "reason": "Motivo do Bloqueio",
+        "reasonRequired": "Você deve fornecer um motivo para bloquear o período",
+        "reasonPlaceholder": "Ex: Período auditado, conformidade fiscal...",
+        "confirmMessage": "Tem certeza que deseja bloquear o período {name}? Um período bloqueado NÃO pode ser reaberto.",
+        "locking": "Bloqueando período...",
+        "successMessage": "Período bloqueado com sucesso"
+      },
+      "create": {
+        "title": "Criar Novo Período",
+        "namePlaceholder": "Ex: Janeiro 2026",
+        "nameRequired": "O nome é obrigatório",
+        "startDateRequired": "A data de início é obrigatória",
+        "endDateRequired": "A data de término é obrigatória",
+        "creating": "Criando período...",
+        "successMessage": "Período criado com sucesso"
+      },
+      "errors": {
+        "loadError": "Erro ao carregar períodos",
+        "createError": "Erro ao criar período",
+        "closeError": "Erro ao fechar período",
+        "reopenError": "Erro ao reabrir período",
+        "lockError": "Erro ao bloquear período",
+        "periodNotFound": "Período não encontrado",
+        "periodOverlap": "O período se sobrepõe a outro período existente",
+        "anotherPeriodOpen": "Já existe um período aberto",
+        "cannotModifyClosed": "Não é possível modificar um período fechado",
+        "cannotReopenLocked": "Não é possível reabrir um período bloqueado",
+        "laterPeriodsClosed": "Há períodos posteriores fechados"
+      },
+      "closedBadge": "Fechado",
+      "transactionInClosedPeriod": "Esta transação pertence a um período fechado",
+      "cannotModifyClosedTransaction": "Não é possível modificar. Se você precisa fazer um ajuste, crie um reembolso ou ajuste no período atual."
     }
   }
 }

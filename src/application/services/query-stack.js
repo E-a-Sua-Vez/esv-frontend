@@ -76,6 +76,24 @@ export const getOutcomesCategoryAnalysis = async (commercesId, from, to) => {
   return (await requestQuery.get('metrics/financial/outcomes/categories', options)).data;
 };
 
+export const getRefundAnalytics = async (commercesId, from, to) => {
+  const options = {};
+  options.params = { from, to, commercesId };
+  options.paramsSerializer = params => qs.stringify(params);
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('metrics/refunds', options)).data;
+};
+
+export const getRefundTrends = async (commercesId, from, to) => {
+  const options = {};
+  options.params = { from, to, commercesId };
+  options.paramsSerializer = params => qs.stringify(params);
+  const { headers } = await getHeaders();
+  options.headers = headers;
+  return (await requestQuery.get('metrics/refunds/trends', options)).data;
+};
+
 export const getAttentions = async (commerceId, from, to) => {
   const options = {};
   options.params = { from, to, commerceId, orderByDCreatedAt: 'true' };
@@ -866,7 +884,9 @@ export const getOutcomesDetails = async (
   outcomeTypeFilter = undefined,
   outcomeSystemTypeFilter = undefined,
   paymentMethodFilter = undefined,
-  professionalFilter = undefined
+  professionalFilter = undefined,
+  refundsOnly = undefined,
+  refundTypeFilter = undefined
 ) => {
   const options = {};
   options.params = {
@@ -888,6 +908,8 @@ export const getOutcomesDetails = async (
     outcomeSystemTypeFilter,
     paymentMethodFilter,
     professionalFilter,
+    refundsOnly,
+    refundTypeFilter,
     // Add timestamp to prevent caching
     _t: Date.now(),
   };
@@ -922,4 +944,87 @@ export const getDocumentsDetails = async (
   const { headers } = await getHeaders();
   options.headers = headers;
   return (await requestQuery.get('documents/details', options)).data;
+};
+
+// ========== REFUND SERVICES ==========
+
+export const createRefund = async (refundData) => {
+  const options = {};
+  const { headers } = await getHeaders();
+  options.headers = headers;
+
+  try {
+    const response = await requestQuery.post('refunds', refundData, options);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating refund:', error);
+    throw error;
+  }
+};
+
+export const getRefunds = async (page = 1, limit = 10, type = undefined, status = undefined) => {
+  const options = {};
+  options.params = { page, limit, type, status };
+  options.paramsSerializer = params => qs.stringify(params);
+  const { headers } = await getHeaders();
+  options.headers = headers;
+
+  try {
+    const response = await requestQuery.get('refunds', options);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching refunds:', error);
+    throw error;
+  }
+};
+
+export const getRefundById = async (refundId) => {
+  const options = {};
+  const { headers } = await getHeaders();
+  options.headers = headers;
+
+  try {
+    const response = await requestQuery.get(`refunds/${refundId}`, options);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching refund details:', error);
+    throw error;
+  }
+};
+
+export const approveRefund = async (refundId) => {
+  const options = {};
+  const { headers } = await getHeaders();
+  options.headers = headers;
+
+  try {
+    const response = await requestQuery.post(`refunds/${refundId}/approve`, {}, options);
+    return response.data;
+  } catch (error) {
+    console.error('Error approving refund:', error);
+    throw error;
+  }
+};
+
+export const rejectRefund = async (refundId, reason) => {
+  const options = {};
+  const { headers } = await getHeaders();
+  options.headers = headers;
+
+  try {
+    const response = await requestQuery.post(`refunds/${refundId}/reject`, { reason }, options);
+    return response.data;
+  } catch (error) {
+    console.error('Error rejecting refund:', error);
+    throw error;
+  }
+};
+
+// Financial service object for backwards compatibility
+export const financialService = {
+  createRefund,
+  getRefunds,
+  getRefundById,
+  approveRefund,
+  rejectRefund,
 };

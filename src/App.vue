@@ -89,4 +89,32 @@ export default {
 .pulse-btn {
   animation: pulse 2s infinite;
 }
+
+/* Estilos para Refunds */
+.badge-warning {
+  background: linear-gradient(135deg, #f9c322 0%, #f39c12 100%) !important;
+  color: white !important;
+}
+
+.badge-danger {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+  color: white !important;
+}
+
+.warning-icon {
+  color: #f9c322 !important;
+}
+
+.refund-card {
+  border-left: 4px solid #f9c322 !important;
+  background: linear-gradient(135deg, rgba(249, 195, 34, 0.05) 0%, rgba(249, 195, 34, 0.02) 100%);
+}
+
+.refund-indicator {
+  background: linear-gradient(135deg, #f9c322 0%, #f39c12 100%);
+  color: white;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+}
 </style>

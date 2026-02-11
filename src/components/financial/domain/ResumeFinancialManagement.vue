@@ -24,6 +24,8 @@ import {
   getMostProfitableClientsReport,
   getExpensesByProviderReport,
   getIncomesDetails,
+  getRefundAnalytics,
+  getRefundTrends,
 } from '../../../application/services/query-stack';
 import { getProfessionalsByCommerce } from '../../../application/services/professional';
 import CollectionDetails from '../../dashboard/domain/CollectionDetails.vue';
@@ -99,6 +101,8 @@ export default {
       healthStatus: 'good',
       reportsCollapsed: true, // Reports section collapsed by default
       lastRefreshParams: null, // Cache for last refresh parameters to avoid duplicate calls
+      refundAnalytics: null, // Refund analytics data
+      refundTrends: null, // Refund trends data
     };
   },
   async beforeMount() {
@@ -142,7 +146,7 @@ export default {
 
         // Get current metrics, comparison, trends, and category analysis in parallel
         // Using catch to prevent one failure from blocking others
-        const [metricsResult, comparisonResult, trendsResult, categoryAnalysisResult] =
+        const [metricsResult, comparisonResult, trendsResult, categoryAnalysisResult, refundAnalyticsResult, refundTrendsResult] =
           await Promise.all([
             getFinancialMetrics(commerceIds, this.startDate, this.endDate),
             getFinancialComparison(commerceIds, this.startDate, this.endDate).catch(() => null),
@@ -150,6 +154,8 @@ export default {
             getOutcomesCategoryAnalysis(commerceIds, this.startDate, this.endDate).catch(
               () => null,
             ),
+            getRefundAnalytics(commerceIds, this.startDate, this.endDate).catch(() => null),
+            getRefundTrends(commerceIds, this.startDate, this.endDate).catch(() => null),
           ]);
 
         const { calculatedMetrics } = metricsResult;
@@ -166,6 +172,8 @@ export default {
         this.comparison = comparisonResult;
         this.trends = trendsResult;
         this.outcomesCategoryAnalysis = categoryAnalysisResult;
+        this.refundAnalytics = refundAnalyticsResult;
+        this.refundTrends = refundTrendsResult;
 
         const incomes = calculatedMetrics['incomes.created'];
         const outcomes = calculatedMetrics['outcomes.created'];
@@ -1628,6 +1636,38 @@ export default {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return diffDays >= 0 ? diffDays : 0;
     },
+    getRefundMetrics() {
+      if (!this.refundAnalytics || !this.refundAnalytics.analytics) {
+        return {
+          totalAmount: 0,
+          count: 0,
+          refundRate: 0,
+          averageRefundAmount: 0
+        };
+      }
+
+      const analytics = this.refundAnalytics.analytics;
+      return {
+        totalAmount: analytics.totalRefundAmount || 0,
+        count: analytics.totalRefunds || 0,
+        refundRate: analytics.refundRate || 0,
+        averageRefundAmount: analytics.avgRefundAmount || 0
+      };
+    },
+    getRefundTrend() {
+      if (!this.refundTrends || !this.refundTrends.trends) {
+        return 0;
+      }
+
+      return this.refundTrends.trends.refundAmountGrowth || 0;
+    },
+    getAdjustedNetProfit() {
+      const incomes = this.calculatedMetrics?.['incomes.created']?.paymentData?.paymentAmountSum || 0;
+      const outcomes = this.calculatedMetrics?.['outcomes.created']?.paymentData?.paymentAmountSum || 0;
+
+      // Profit = Incomes - Outcomes (outcomes ya incluye refunds automáticamente)
+      return incomes - outcomes;
+    },
     getTrendsChartData() {
       if (!this.trends || !this.trends.monthlyData || this.trends.monthlyData.length === 0) {
         return { labels: [], datasets: [] };
@@ -2454,6 +2494,36 @@ export default {
                         :format-currency="false"
                         :show-tooltip="true"
                         :description="$t('businessFinancial.kpis.tooltips.daysUntilMonthEnd')"
+                        class="w-100 h-100"
+                      />
+                    </div>
+
+                    <!-- Nuevas KPI Cards para Refunds -->
+                    <div class="col-12 col-md-6 mb-3 d-flex">
+                      <FinancialKPICard
+                        :show="true"
+                        :title="$t('businessFinancial.kpis.totalRefunds')"
+                        :value="getRefundMetrics().totalAmount"
+                        :change="getRefundTrend()"
+                        :change-label="$t('businessFinancial.kpis.vsPreviousMonth')"
+                        icon="bi-arrow-counterclockwise"
+                        icon-style-class="warning-icon"
+                        :format-currency="true"
+                        :show-tooltip="true"
+                        :description="$t('businessFinancial.kpis.tooltips.totalRefunds')"
+                        class="w-100 h-100"
+                      />
+                    </div>
+                    <div class="col-12 col-md-6 mb-3 d-flex">
+                      <FinancialKPICard
+                        :show="true"
+                        :title="$t('businessFinancial.kpis.refundRate')"
+                        :value="getRefundMetrics().refundRate"
+                        icon="bi-percent"
+                        icon-style-class="warning-icon"
+                        :format-percentage="true"
+                        :show-tooltip="true"
+                        :description="$t('businessFinancial.kpis.tooltips.refundRate')"
                         class="w-100 h-100"
                       />
                     </div>

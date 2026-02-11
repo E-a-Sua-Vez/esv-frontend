@@ -10,6 +10,7 @@ import { globalStore } from '../../../stores';
 import { getIncomesDetails } from '../../../application/services/query-stack';
 import { getDate } from '../../../shared/utils/date';
 import IncomeDetailsCard from './common/IncomeDetailsCard.vue';
+import RefundModal from '../RefundModal.vue';
 import SimpleDownloadButton from '../../reports/SimpleDownloadButton.vue';
 import { getIncomeTypesToIncrease } from '../../../shared/utils/data.ts';
 import { createIncome } from '../../../application/services/income';
@@ -26,6 +27,7 @@ export default {
     Alert,
     Warning,
     IncomeDetailsCard,
+    RefundModal,
     SimpleDownloadButton,
   },
   props: {
@@ -82,6 +84,10 @@ export default {
       incomeTypeFilter: undefined,
       paymentMethodFilter: undefined,
       professionalFilter: undefined,
+      // Refund system
+      selectedTransactionForRefund: null,
+      showRefundModal: false,
+      canRefund: true, // Los incomes pueden ser reembolsados
       professionals: [],
       // Cache para profesionales por commerceId
       professionalCache: new Map(),
@@ -108,8 +114,6 @@ export default {
       this.searchText = undefined;
       this.limit = 20; // Use the default limit from data()
       this.page = 1;
-      this.startDate = undefined;
-      this.endDate = undefined;
       this.incomeStatus = undefined;
       this.fiscalNote = undefined;
       this.automatic = undefined;
@@ -119,7 +123,8 @@ export default {
       this.incomeTypeFilter = undefined;
       this.paymentMethodFilter = undefined;
       this.professionalFilter = undefined;
-      await this.refresh();
+      // Set dates to current month
+      await this.getCurrentMonth();
     },
     async checkAsc(event) {
       if (event.target.checked) {
@@ -496,6 +501,78 @@ export default {
       this.startDate = new DateModel(date).substractMonths(3).toString();
       this.endDate = new DateModel(date).substractMonths(1).endOfMonth().toString();
       await this.refresh();
+    },
+
+    // ========== REFUND METHODS ==========
+    openRefundModal(transaction) {
+      this.selectedTransactionForRefund = transaction;
+      this.showRefundModal = true;
+    },
+
+    closeRefundModal() {
+      this.showRefundModal = false;
+      this.selectedTransactionForRefund = null;
+    },
+
+    async onRefundProcessed(result) {
+      try {
+        console.log('Refund processed successfully:', result);
+
+        // Refrescar la lista completa para asegurar consistencia
+        await this.refresh();
+
+        // Cerrar modal
+        this.closeRefundModal();
+
+        // Mostrar mensaje de éxito
+        this.$toast.success(this.$t('financial.refunds.successMessage'));
+
+      } catch (error) {
+        console.error('Error handling refund result:', error);
+        this.$toast.error(this.$t('financial.refunds.errors.processError'));
+      }
+    },
+
+    canRefundIncome(income) {
+      // Verificar si el income puede ser reembolsado
+      // No se puede reembolsar si ya es un refund
+      const isAlreadyRefund = this.isRefund(income);
+
+      // No se puede reembolsar si el monto es 0 o negativo
+      const hasValidAmount = income.amount && income.amount > 0;
+
+      // Solo se pueden reembolsar incomes CONFIRMED
+      const isConfirmed = income.status === 'CONFIRMED';
+
+      // Verificar si ya fue refunded (total o parcialmente)
+      const notRefunded = !income.refundMetadata || !income.refundMetadata.isRefunded;
+
+      const isRefundable = !isAlreadyRefund && hasValidAmount && isConfirmed && notRefunded;
+
+      return isRefundable;
+    },
+
+    isRefund(income) {
+      // Los incomes no tienen refunds directamente, pero se puede verificar
+      // si el income tiene metadata de refund
+      if (income.refundMetadata && income.refundMetadata.isRefunded) {
+        return true;
+      }
+
+      // Verificar por descripción
+      if (income.description && income.description.toLowerCase().includes('reembolso')) {
+        return true;
+      }
+
+      return false;
+    },
+
+    getRefundType(income) {
+      // Los refunds de incomes siempre son payment refunds
+      if (!this.isRefund(income)) {
+        return null;
+      }
+      return 'PAYMENT_REFUND';
     },
   },
   computed: {
@@ -1199,7 +1276,11 @@ export default {
                     :commerces="commerces"
                     :toggles="toggles"
                     :professionals="professionals"
+                    :isRefund="isRefund(income)"
+                    :refundType="getRefundType(income)"
+                    :canRefund="canRefundIncome"
                     @refresh="refresh"
+                    @open-refund-modal="openRefundModal"
                   >
                   </IncomeDetailsCard>
                 </div>
@@ -1237,15 +1318,26 @@ export default {
       >
         <div class="modal-dialog modal-xl">
           <div class="modal-content">
-            <div class="modal-header border-0 centered active-name">
-              <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
+            <div class="modal-header border-0 active-name modern-modal-header">
+              <div class="modern-modal-header-inner">
+                <div class="modern-modal-icon-wrapper">
+                  <i class="bi bi-plus-lg"></i>
+                </div>
+                <div class="modern-modal-title-wrapper">
+                  <h5 class="modal-title fw-bold modern-modal-title">
+                    {{ $t('add') }}
+                  </h5>
+                </div>
+              </div>
               <button
                 id="close-modal"
-                class="btn-close"
+                class="modern-modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
-              ></button>
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
             </div>
             <div class="modal-body text-center mb-0" id="attentions-component">
               <Spinner :show="loading"></Spinner>
@@ -1364,6 +1456,15 @@ export default {
         </div>
       </div>
     </Teleport>
+
+    <!-- Refund Modal -->
+    <RefundModal
+      v-if="selectedTransactionForRefund"
+      :transaction="selectedTransactionForRefund"
+      :show="showRefundModal"
+      @refund-processed="onRefundProcessed"
+      @close="closeRefundModal"
+    />
   </div>
 </template>
 
@@ -1437,5 +1538,82 @@ export default {
 
 .modal-backdrop {
   z-index: 1050 !important;
+}
+
+/* Modern Modal Styles */
+.modern-modal-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  border-radius: 0;
+  min-height: auto;
+  position: relative;
+}
+
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.modern-modal-icon-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-modal-icon-wrapper i {
+  font-size: 1.125rem;
+  color: #ffffff;
+}
+
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-background);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.modern-modal-close-btn {
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #ffffff;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.modern-modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.modern-modal-close-btn i {
+  font-size: 0.875rem;
+  color: #ffffff;
 }
 </style>

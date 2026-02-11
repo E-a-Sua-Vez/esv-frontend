@@ -14,6 +14,7 @@ import ResumeFinancialManagement from '../../components/financial/domain/ResumeF
 import IncomesFinancialManagement from '../../components/financial/domain/IncomesFinancialManagement.vue';
 import OutcomesFinancialManagement from '../../components/financial/domain/OutcomesFinancialManagement.vue';
 import CommissionPaymentsManagement from '../../components/financial/domain/CommissionPaymentsManagement.vue';
+import AccountingPeriodsManagement from '../../components/financial/domain/AccountingPeriodsManagement.vue';
 import DesktopContentLayout from '../../components/common/desktop/DesktopContentLayout.vue';
 import DesktopFiltersPanel from '../../components/common/desktop/DesktopFiltersPanel.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
@@ -32,6 +33,7 @@ export default {
     IncomesFinancialManagement,
     OutcomesFinancialManagement,
     CommissionPaymentsManagement,
+    AccountingPeriodsManagement,
     DesktopContentLayout,
     DesktopPageHeader,
     DesktopFiltersPanel,
@@ -51,6 +53,8 @@ export default {
     const outcomesContentRef = ref(null);
     const resumeFilterRef = ref(null);
     const resumeContentRef = ref(null);
+    const accountingPeriodsFilterRef = ref(null);
+    const accountingPeriodsRef = ref(null);
 
     // Refs for timeout management
     const timeoutRefIncomes = ref(null);
@@ -82,6 +86,7 @@ export default {
       showResume: true,
       showIncomes: false,
       showOutcomes: false,
+      showAccountingPeriods: false,
       toggles: {},
       allCommerces: ref([]),
       // Shared filter state
@@ -194,19 +199,28 @@ export default {
     const showResume = () => {
       state.showResume = true;
       state.showIncomes = false;
-      state.showOutcomes = false;
+      state.showAccountingPeriods = false;
     };
 
     const showIncomes = () => {
       state.showResume = false;
       state.showIncomes = true;
       state.showOutcomes = false;
+      state.showAccountingPeriods = false;
     };
 
     const showOutcomes = () => {
       state.showResume = false;
       state.showIncomes = false;
       state.showOutcomes = true;
+      state.showAccountingPeriods = false;
+    };
+
+    const showAccountingPeriods = () => {
+      state.showResume = false;
+      state.showIncomes = false;
+      state.showOutcomes = false;
+      state.showAccountingPeriods = true;
     };
 
     const closeCommissionPaymentsModal = () => {
@@ -657,6 +671,7 @@ export default {
       showResume,
       showIncomes,
       showOutcomes,
+      showAccountingPeriods,
       closeCommissionPaymentsModal,
       handleViewOutcome,
       getLocalHour,
@@ -673,6 +688,8 @@ export default {
       outcomesContentRef,
       resumeFilterRef,
       resumeContentRef,
+      accountingPeriodsFilterRef,
+      accountingPeriodsRef,
       // Functions to sync filters to content
       refreshIncomesContent,
       refreshIncomesContentDelayed,
@@ -721,7 +738,7 @@ export default {
             </div>
             <div v-if="!loading" id="businessFinancial-result" class="mt-2">
               <div class="row col mx-1 mt-3 mb-1 tabs-header-divider">
-                <div class="col-4 centered">
+                <div class="col-3 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showResume ? 'btn-selected' : ''"
@@ -732,7 +749,7 @@ export default {
                     <i class="bi bi-graph-up"></i>
                   </button>
                 </div>
-                <div class="col-4 centered">
+                <div class="col-3 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showIncomes ? 'btn-selected' : ''"
@@ -743,7 +760,7 @@ export default {
                     <i class="bi bi-arrow-down-circle-fill"></i>
                   </button>
                 </div>
-                <div class="col-4 centered">
+                <div class="col-3 centered">
                   <button
                     class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                     :class="state.showOutcomes ? 'btn-selected' : ''"
@@ -752,6 +769,17 @@ export default {
                   >
                     {{ $t('businessFinancial.outcomes') }} <br />
                     <i class="bi bi-arrow-up-circle-fill"></i>
+                  </button>
+                </div>
+                <div class="col-3 centered">
+                  <button
+                    class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                    :class="state.showAccountingPeriods ? 'btn-selected' : ''"
+                    @click="showAccountingPeriods()"
+                    :disabled="!state.toggles['financial.periods.view']"
+                  >
+                    Contabilidad <br />
+                    <i class="bi bi-calendar-check"></i>
                   </button>
                 </div>
               </div>
@@ -786,6 +814,11 @@ export default {
                   filters-location="component"
                 >
                 </OutcomesFinancialManagement>
+                <AccountingPeriodsManagement
+                  :show-accounting-periods-management="state.showAccountingPeriods"
+                  :commerce="commerce"
+                >
+                </AccountingPeriodsManagement>
               </div>
             </div>
           </div>
@@ -2076,13 +2109,156 @@ export default {
                         </div>
                       </template>
                     </OutcomesFinancialManagement>
+
+                    <!-- Filters for Accounting Periods tab -->
+                    <AccountingPeriodsManagement
+                      v-if="state.showAccountingPeriods"
+                      :show-accounting-periods-management="false"
+                      :toggles="state.toggles"
+                      :commerce="commerce"
+                      :business="state.business"
+                      filters-location="slot"
+                      ref="accountingPeriodsFilterRef"
+                    >
+                      <template #filters-exposed="filterProps">
+                        <div class="filters-content-wrapper">
+                          <div class="mb-3">
+                            <label class="form-label fw-bold mb-2">{{ $t('dashboard.search') }}</label>
+                            <input
+                              type="text"
+                              class="form-control metric-controls"
+                              :placeholder="$t('dashboard.search')"
+                              :value="filterProps.searchText"
+                              @input="(e) => {
+                                filterProps.searchText = e.target.value;
+                                if (accountingPeriodsRef) {
+                                  accountingPeriodsRef.searchPeriods({
+                                    searchText: e.target.value || undefined,
+                                    status: filterProps.statusFilter || undefined,
+                                    year: filterProps.yearFilter || undefined,
+                                    startDate: filterProps.startDateFilter || undefined,
+                                    endDate: filterProps.endDateFilter || undefined,
+                                  });
+                                }
+                              }"
+                            />
+                          </div>
+
+                          <div class="mb-3">
+                            <label class="form-label fw-bold mb-2">Estado</label>
+                            <select 
+                              class="form-select metric-controls" 
+                              :value="filterProps.statusFilter"
+                              @change="(e) => {
+                                filterProps.statusFilter = e.target.value;
+                                if (accountingPeriodsRef) {
+                                  accountingPeriodsRef.searchPeriods({
+                                    searchText: filterProps.searchText || undefined,
+                                    status: e.target.value || undefined,
+                                    year: filterProps.yearFilter || undefined,
+                                    startDate: filterProps.startDateFilter || undefined,
+                                    endDate: filterProps.endDateFilter || undefined,
+                                  });
+                                }
+                              }"
+                            >
+                              <option value="">{{ $t('dashboard.all') || 'Todos' }}</option>
+                              <option value="OPEN">Aberto</option>
+                              <option value="CLOSED">Fechado</option>
+                              <option value="LOCKED">Bloqueado</option>
+                            </select>
+                          </div>
+
+                          <div class="mb-3">
+                            <label class="form-label fw-bold mb-2">Año</label>
+                            <input
+                              type="number"
+                              class="form-control metric-controls"
+                              placeholder="2026"
+                              min="2020"
+                              max="2030"
+                              :value="filterProps.yearFilter"
+                              @input="(e) => {
+                                filterProps.yearFilter = e.target.value;
+                                if (accountingPeriodsRef) {
+                                  accountingPeriodsRef.searchPeriods({
+                                    searchText: filterProps.searchText || undefined,
+                                    status: filterProps.statusFilter || undefined,
+                                    year: e.target.value || undefined,
+                                    startDate: filterProps.startDateFilter || undefined,
+                                    endDate: filterProps.endDateFilter || undefined,
+                                  });
+                                }
+                              }"
+                            />
+                          </div>
+
+                          <div class="mb-3">
+                            <label class="form-label fw-bold mb-2">Desde</label>
+                            <input
+                              type="date"
+                              class="form-control metric-controls"
+                              :value="filterProps.startDateFilter"
+                              @change="(e) => {
+                                filterProps.startDateFilter = e.target.value;
+                                if (accountingPeriodsRef) {
+                                  accountingPeriodsRef.searchPeriods({
+                                    searchText: filterProps.searchText || undefined,
+                                    status: filterProps.statusFilter || undefined,
+                                    year: filterProps.yearFilter || undefined,
+                                    startDate: e.target.value || undefined,
+                                    endDate: filterProps.endDateFilter || undefined,
+                                  });
+                                }
+                              }"
+                            />
+                          </div>
+
+                          <div class="mb-3">
+                            <label class="form-label fw-bold mb-2">Até</label>
+                            <input
+                              type="date"
+                              class="form-control metric-controls"
+                              :value="filterProps.endDateFilter"
+                              @change="(e) => {
+                                filterProps.endDateFilter = e.target.value;
+                                if (accountingPeriodsRef) {
+                                  accountingPeriodsRef.searchPeriods({
+                                    searchText: filterProps.searchText || undefined,
+                                    status: filterProps.statusFilter || undefined,
+                                    year: filterProps.yearFilter || undefined,
+                                    startDate: filterProps.startDateFilter || undefined,
+                                    endDate: e.target.value || undefined,
+                                  });
+                                }
+                              }"
+                            />
+                          </div>
+
+                          <div class="mb-3 mt-3">
+                            <button
+                              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill w-100"
+                              @click="() => {
+                                filterProps.clearFilters();
+                                if (accountingPeriodsRef) {
+                                  accountingPeriodsRef.clearFilters();
+                                }
+                              }"
+                            >
+                              <i class="bi bi-eraser-fill"></i>
+                              {{ $t('dashboard.clear') || 'Limpiar' }}
+                            </button>
+                          </div>
+                        </div>
+                      </template>
+                    </AccountingPeriodsManagement>
                   </template>
                 </DesktopFiltersPanel>
               </template>
               <template #content>
                 <!-- Header with tabs -->
                 <div class="row col mx-1 mt-3 mb-3 tabs-header-divider">
-                  <div class="col-4 centered">
+                  <div class="col-3 centered">
                     <button
                       class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                       :class="state.showResume ? 'btn-selected' : ''"
@@ -2093,7 +2269,7 @@ export default {
                       <i class="bi bi-graph-up"></i>
                     </button>
                   </div>
-                  <div class="col-4 centered">
+                  <div class="col-3 centered">
                     <button
                       class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                       :class="state.showIncomes ? 'btn-selected' : ''"
@@ -2104,7 +2280,7 @@ export default {
                       <i class="bi bi-arrow-down-circle-fill"></i>
                     </button>
                   </div>
-                  <div class="col-4 centered">
+                  <div class="col-3 centered">
                     <button
                       class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
                       :class="state.showOutcomes ? 'btn-selected' : ''"
@@ -2113,6 +2289,17 @@ export default {
                     >
                       {{ $t('businessFinancial.outcomes') }} <br />
                       <i class="bi bi-arrow-up-circle-fill"></i>
+                    </button>
+                  </div>
+                  <div class="col-3 centered">
+                    <button
+                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
+                      :class="state.showAccountingPeriods ? 'btn-selected' : ''"
+                      @click="showAccountingPeriods()"
+                      :disabled="!state.toggles['financial.periods.view']"
+                    >
+                      Contabilidad <br />
+                      <i class="bi bi-calendar-check"></i>
                     </button>
                   </div>
                 </div>
@@ -2153,6 +2340,14 @@ export default {
                   @open-commission-payments="() => (state.showCommissionPaymentsModal = true)"
                 >
                 </OutcomesFinancialManagement>
+                <AccountingPeriodsManagement
+                  :show-accounting-periods-management="state.showAccountingPeriods"
+                  :commerce="commerce"
+                  :business="state.business"
+                  filters-location="slot"
+                  ref="accountingPeriodsRef"
+                >
+                </AccountingPeriodsManagement>
               </template>
             </DesktopContentLayout>
           </div>
@@ -2175,15 +2370,25 @@ export default {
     >
       <div class="modal-dialog modal-xl">
         <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold">
-              <i class="bi bi-cash-coin"></i> {{ $t('commissionPayments.title') }}
-            </h5>
+          <div class="modal-header border-0 active-name modern-modal-header">
+            <div class="modern-modal-header-inner">
+              <div class="modern-modal-icon-wrapper">
+                <i class="bi bi-cash-coin"></i>
+              </div>
+              <div class="modern-modal-title-wrapper">
+                <h5 class="modal-title fw-bold modern-modal-title">
+                  {{ $t('commissionPayments.title') }}
+                </h5>
+              </div>
+            </div>
             <button
               type="button"
-              class="btn-close"
+              class="modern-modal-close-btn"
               @click="closeCommissionPaymentsModal()"
-            ></button>
+              aria-label="Close"
+            >
+              <i class="bi bi-x-lg"></i>
+            </button>
           </div>
           <div class="modal-body text-center mb-0">
             <CommissionPaymentsManagement
@@ -2292,5 +2497,82 @@ export default {
   .filters-content-wrapper {
     width: 100%;
   }
+}
+
+/* Modern Modal Styles */
+.modern-modal-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  border-radius: 0;
+  min-height: auto;
+  position: relative;
+}
+
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.modern-modal-icon-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-modal-icon-wrapper i {
+  font-size: 1.125rem;
+  color: #ffffff;
+}
+
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-background);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.modern-modal-close-btn {
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #ffffff;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.modern-modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.modern-modal-close-btn i {
+  font-size: 0.875rem;
+  color: #ffffff;
 }
 </style>
