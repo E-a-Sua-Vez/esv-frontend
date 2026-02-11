@@ -380,18 +380,26 @@ export default {
              confirmations.value.periodClose;
     });
 
+    const loadPeriodSummary = async () => {
+      try {
+        console.log('📊 Loading period summary for:', props.period.id);
+        const summary = await getPeriodSummary(props.period.id);
+        console.log('✅ Period summary received:', summary);
+        periodSummary.value = summary;
+        
+        // Set system balance
+        reconciliation.value.systemBalance = summary.netAmount;
+      } catch (error) {
+        console.error('Error loading period summary:', error);
+        alertError.value = error.response?.data?.message || 'Error al cargar el resumen del período';
+      }
+    };
+
     const validatePeriod = async () => {
       validating.value = true;
       alertError.value = '';
 
       try {
-        // Get period summary
-        const summary = await getPeriodSummary(props.period.id);
-        periodSummary.value = summary;
-
-        // Set system balance
-        reconciliation.value.systemBalance = summary.netAmount;
-
         // Mock validation - in real scenario, this should come from backend
         validation.value = {
           allConfirmed: true,
@@ -413,9 +421,13 @@ export default {
       }
     };
 
-    const nextStep = () => {
+    const nextStep = async () => {
       if (currentStep.value < 3) {
         currentStep.value++;
+        // Cargar resumen cuando se avanza al step 2
+        if (currentStep.value === 2 && !periodSummary.value.totalIncomes) {
+          await loadPeriodSummary();
+        }
       }
     };
 
@@ -498,6 +510,8 @@ export default {
       nextStep,
       previousStep,
       closePeriod,
+      validatePeriod,
+      loadPeriodSummary,
       formatDate,
       formatCurrency,
     };

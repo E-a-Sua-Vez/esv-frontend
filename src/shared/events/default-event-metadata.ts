@@ -1,6 +1,6 @@
 export class DefaultEventMetadata {
   constructor() {
-    this.origin = 'ETT-PUBLIC';
+    this.origin = 'HUB-PUBLIC';
   }
   origin: string;
 }

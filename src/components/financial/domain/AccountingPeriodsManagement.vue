@@ -204,28 +204,13 @@
       </div>
 
       <!-- Empty State -->
-      <div v-if="!loading && paginatedPeriods.length === 0 && totalPeriods === 0" class="col-12">
-        <div class="text-center py-5">
-          <i class="bi bi-calendar-x" style="font-size: 2.5rem; color: #6c757d; opacity: 0.5;"></i>
-          <h6 class="mt-3 fw-bold">No hay períodos contables</h6>
-          <p class="text-muted" style="font-size: 0.9rem;">Crea tu primer período para comenzar el control contable</p>
-          <button class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 mt-2" @click="showCreateModal = true">
-            <i class="bi bi-plus-lg me-1"></i>
-            {{ $t('financial.periods.newPeriod') }}
-          </button>
-        </div>
-      </div>
-
-      <!-- No Results from Filters -->
-      <div v-if="!loading && paginatedPeriods.length === 0 && totalPeriods > 0" class="col-12">
-        <div class="text-center py-5">
-          <i class="bi bi-funnel" style="font-size: 2.5rem; color: #6c757d; opacity: 0.5;"></i>
-          <h6 class="mt-3 fw-bold">No se encontraron períodos con los filtros aplicados</h6>
-          <button class="btn btn-sm btn-outline-secondary rounded-pill px-4 mt-2" @click="clearFilters">
-            <i class="bi bi-x-lg me-1"></i>
-            Limpiar filtros
-          </button>
-        </div>
+      <div v-if="!loading && paginatedPeriods.length === 0" class="col-12">
+        <Message
+          title="Ups!"
+          content="Não temos data, verifique os filtros e tente novamente."
+          icon="bi-graph-up-arrow"
+          type="normal"
+        />
       </div>
     </div>
 
@@ -497,6 +482,7 @@
 import { ref, onBeforeMount, computed, watch } from 'vue';
 import Spinner from '../../common/Spinner.vue';
 import Alert from '../../common/Alert.vue';
+import Message from '../../common/Message.vue';
 import PeriodStatusBadge from '../common/PeriodStatusBadge.vue';
 import PeriodDetailsCard from './common/PeriodDetailsCard.vue';
 import ClosePeriodModal from './ClosePeriodModal.vue';
@@ -514,6 +500,7 @@ export default {
   components: {
     Spinner,
     Alert,
+    Message,
     PeriodStatusBadge,
     PeriodDetailsCard,
     ClosePeriodModal,
@@ -611,8 +598,6 @@ export default {
           endDate: endDateFilter.value || undefined,
         };
 
-        console.log('🔍 Searching periods with filters:', filters);
-
         // Get paginated results with filters
         const paginatedFilters = {
           ...filters,
@@ -625,8 +610,6 @@ export default {
         // Get total count with filters but without pagination
         const allPeriods = await getPeriodsByCommerce(props.commerce.id, filters);
         totalPeriods.value = allPeriods.length;
-
-        console.log('✅ Periods found:', periods.value.length, 'of', totalPeriods.value);
       } catch (error) {
         console.error('❌ Error searching periods:', error);
         alertError.value = error.response?.data?.message || 'Error al buscar períodos';
@@ -728,7 +711,6 @@ export default {
     };
 
     const viewPeriodDetails = (period) => {
-      console.log('View period details:', period);
       selectedPeriod.value = period;
       showReportModal.value = true;
     };

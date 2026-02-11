@@ -28,6 +28,9 @@ export const getPeriodById = async (id) =>
 export const getPeriodSummary = async (id) =>
   (await requestBackend.get(`/${entity}/${id}/summary`, await getHeaders())).data;
 
+export const getPeriodTransactions = async (id) =>
+  (await requestBackend.get(`/${entity}/${id}/transactions`, await getHeaders())).data;
+
 export const createPeriod = async (body) =>
   (await requestBackend.post(`/${entity}`, body, await getHeaders())).data;
 

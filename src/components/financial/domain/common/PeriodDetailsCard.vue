@@ -1,7 +1,9 @@
 <script>
+import { ref, watch } from 'vue';
 import { getDate } from '../../../../shared/utils/date';
 import Popper from 'vue3-popper';
 import PeriodStatusBadge from '../../common/PeriodStatusBadge.vue';
+import { getPeriodSummary } from '../../../../application/services/accountingPeriod';
 
 export default {
   name: 'PeriodDetailsCard',
@@ -11,9 +13,52 @@ export default {
     period: { type: Object, required: true },
     detailsOpened: { type: Boolean, default: false },
   },
-  data() {
+  setup(props) {
+    const extendedEntity = ref(false);
+    const periodTotals = ref(null);
+    const loadingTotals = ref(false);
+
+    const loadPeriodTotals = async () => {
+      if (!props.period?.id) return;
+      
+      loadingTotals.value = true;
+      try {
+        const data = await getPeriodSummary(props.period.id);
+        periodTotals.value = data;
+      } catch (error) {
+        console.error('Error loading period totals:', error);
+        periodTotals.value = {
+          totalIncomes: 0,
+          totalOutcomes: 0,
+          totalCommissions: 0,
+          netAmount: 0,
+          incomesCount: 0,
+          outcomesCount: 0,
+        };
+      } finally {
+        loadingTotals.value = false;
+      }
+    };
+
+    // Cargar totales cuando se abre el card
+    watch(extendedEntity, (newVal) => {
+      if (newVal && !periodTotals.value) {
+        loadPeriodTotals();
+      }
+    });
+
+    // Cargar totales si el card viene abierto
+    watch(() => props.detailsOpened, (newVal) => {
+      extendedEntity.value = newVal;
+      if (newVal && !periodTotals.value) {
+        loadPeriodTotals();
+      }
+    }, { immediate: true });
+
     return {
-      extendedEntity: false,
+      extendedEntity,
+      periodTotals,
+      loadingTotals,
     };
   },
   methods: {
@@ -59,14 +104,6 @@ export default {
       return 'icon-success';
     },
   },
-  watch: {
-    detailsOpened: {
-      immediate: true,
-      handler() {
-        this.extendedEntity = this.detailsOpened;
-      },
-    },
-  },
 };
 </script>
 
@@ -100,14 +137,6 @@ export default {
                 <PeriodStatusBadge :status="period.status" />
               </span>
             </Popper>
-          </div>
-        </div>
-
-        <!-- Totals Summary Inline -->
-        <div class="status-inline">
-          <div class="status-badge-inline">
-            <span class="amount-label">Líquido:</span>
-            <span class="amount-value">{{ formatAmount(period.totals?.netAmount || 0) }}</span>
           </div>
         </div>
 
@@ -174,27 +203,27 @@ export default {
           <div class="info-badges">
             <span class="info-badge success">
               <span class="badge-label">Total Receitas::</span>
-              <span class="badge-value"><i class="bi bi-coin"></i> {{ formatAmount(period.totals?.totalIncomes || 0) }}</span>
+              <span class="badge-value"><i class="bi bi-coin"></i> {{ formatAmount(periodTotals?.totalIncomes || 0) }}</span>
             </span>
             <span class="info-badge">
               <span class="badge-label">Nº Receitas::</span>
-              <span class="badge-value">{{ period.totals?.incomesCount || 0 }}</span>
+              <span class="badge-value">{{ periodTotals?.incomesCount || 0 }}</span>
             </span>
             <span class="info-badge error">
               <span class="badge-label">Total Despesas::</span>
-              <span class="badge-value"><i class="bi bi-coin"></i> {{ formatAmount(period.totals?.totalOutcomes || 0) }}</span>
+              <span class="badge-value"><i class="bi bi-coin"></i> {{ formatAmount(periodTotals?.totalOutcomes || 0) }}</span>
             </span>
             <span class="info-badge">
               <span class="badge-label">Nº Despesas::</span>
-              <span class="badge-value">{{ period.totals?.outcomesCount || 0 }}</span>
+              <span class="badge-value">{{ periodTotals?.outcomesCount || 0 }}</span>
             </span>
             <span class="info-badge info">
               <span class="badge-label">Total Comissões::</span>
-              <span class="badge-value"><i class="bi bi-coin"></i> {{ formatAmount(period.totals?.totalCommissions || 0) }}</span>
+              <span class="badge-value"><i class="bi bi-coin"></i> {{ formatAmount(periodTotals?.totalCommissions || 0) }}</span>
             </span>
             <span class="info-badge warning">
               <span class="badge-label">Valor Líquido::</span>
-              <span class="badge-value"><i class="bi bi-coin"></i> {{ formatAmount(period.totals?.netAmount || 0) }}</span>
+              <span class="badge-value"><i class="bi bi-coin"></i> {{ formatAmount(periodTotals?.netAmount || 0) }}</span>
             </span>
           </div>
         </div>

@@ -186,7 +186,7 @@
 
 <script>
 import { ref, watch } from 'vue';
-import { getPeriodSummary } from '../../../application/services/accountingPeriod';
+import { getPeriodSummary, getPeriodTransactions } from '../../../application/services/accountingPeriod';
 import { lazyLoadJsPDF } from '../../../shared/utils/lazyLoad';
 
 export default {
@@ -208,6 +208,11 @@ export default {
       outcomesCount: 0,
     });
 
+    const transactions = ref({
+      incomes: [],
+      outcomes: [],
+    });
+
     const loadSummary = async () => {
       if (!props.period?.id) return;
       
@@ -215,6 +220,10 @@ export default {
       try {
         const data = await getPeriodSummary(props.period.id);
         summary.value = data;
+        
+        // Cargar transacciones
+        const txData = await getPeriodTransactions(props.period.id);
+        transactions.value = txData;
       } catch (error) {
         console.error('Error loading period summary:', error);
       } finally {
@@ -226,7 +235,7 @@ export default {
       if (newVal) {
         loadSummary();
       }
-    });
+    }, { immediate: true });
 
     const formatDate = (date) => {
       if (!date) return '';
@@ -253,7 +262,23 @@ export default {
         const jsPDF = await lazyLoadJsPDF();
         const doc = new jsPDF();
         
-        // Header
+        // Header with logo
+        // Logo Hub (usando logo horizontal transparente)
+        const logoUrl = '/images/hub/logo/hub-color-transparente.png';
+        try {
+          const img = new Image();
+          img.src = logoUrl;
+          await new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve; // Continue even if logo fails
+          });
+          if (img.complete && img.width > 0) {
+            doc.addImage(img, 'PNG', 160, 10, 30, 10);
+          }
+        } catch (e) {
+          console.warn('Could not load logo:', e);
+        }
+        
         doc.setFontSize(18);
         doc.setFont(undefined, 'bold');
         doc.text('Relatório do Período Contábil', 14, 20);
@@ -324,8 +349,114 @@ export default {
         doc.text(formatCurrency(summary.value.netAmount), 80, yPos);
         yPos += 12;
         
+        // Transactions Section - Incomes
+        if (transactions.value.incomes.length > 0) {
+          if (yPos > 220) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          doc.setDrawColor(200);
+          doc.line(14, yPos, 196, yPos);
+          yPos += 8;
+          
+          doc.setFontSize(14);
+          doc.setFont(undefined, 'bold');
+          doc.text('Receitas Detalhadas', 14, yPos);
+          yPos += 8;
+          
+          doc.setFontSize(8);
+          doc.setFont(undefined, 'bold');
+          doc.text('Data', 14, yPos);
+          doc.text('Cliente', 38, yPos);
+          doc.text('Profissional', 85, yPos);
+          doc.text('Valor', 140, yPos);
+          doc.text('Comissão', 166, yPos);
+          yPos += 4;
+          doc.setDrawColor(150);
+          doc.line(14, yPos, 196, yPos);
+          yPos += 4;
+          
+          doc.setFont(undefined, 'normal');
+          transactions.value.incomes.forEach((income) => {
+            if (yPos > 270) {
+              doc.addPage();
+              yPos = 20;
+            }
+            
+            const date = new Date(income.paidAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+            const clientName = (income.clientName || 'N/A').substring(0, 20);
+            const professionalName = (income.professionalName || 'N/A').substring(0, 20);
+            const amount = formatCurrencyValue(income.amount);
+            const commission = formatCurrencyValue(income.professionalCommission);
+            
+            doc.text(date, 14, yPos);
+            doc.text(clientName, 38, yPos);
+            doc.text(professionalName, 85, yPos);
+            doc.text(`R$ ${amount}`, 140, yPos);
+            doc.text(`R$ ${commission}`, 166, yPos);
+            yPos += 5;
+          });
+          
+          yPos += 4;
+        }
+        
+        // Transactions Section - Outcomes
+        if (transactions.value.outcomes.length > 0) {
+          if (yPos > 220) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          doc.setDrawColor(200);
+          doc.line(14, yPos, 196, yPos);
+          yPos += 8;
+          
+          doc.setFontSize(14);
+          doc.setFont(undefined, 'bold');
+          doc.text('Despesas Detalhadas', 14, yPos);
+          yPos += 8;
+          
+          doc.setFontSize(8);
+          doc.setFont(undefined, 'bold');
+          doc.text('Data', 14, yPos);
+          doc.text('Conceito', 38, yPos);
+          doc.text('Descrição', 100, yPos);
+          doc.text('Valor', 170, yPos);
+          yPos += 4;
+          doc.setDrawColor(150);
+          doc.line(14, yPos, 196, yPos);
+          yPos += 4;
+          
+          doc.setFont(undefined, 'normal');
+          transactions.value.outcomes.forEach((outcome) => {
+            if (yPos > 270) {
+              doc.addPage();
+              yPos = 20;
+            }
+            
+            const date = new Date(outcome.paidAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+            const concept = (outcome.concept || 'N/A').substring(0, 25);
+            const description = (outcome.description || 'N/A').substring(0, 25);
+            const amount = formatCurrencyValue(outcome.amount);
+            
+            doc.text(date, 14, yPos);
+            doc.text(concept, 38, yPos);
+            doc.text(description, 100, yPos);
+            doc.text(`R$ ${amount}`, 170, yPos);
+            yPos += 5;
+          });
+          
+          yPos += 4;
+        }
+        
         // Notes
         if (props.period.notes) {
+          if (yPos > 240) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
           doc.setDrawColor(200);
           doc.line(14, yPos, 196, yPos);
           yPos += 8;
@@ -389,6 +520,12 @@ export default {
             285
           );
           doc.text(`Página ${i} de ${pageCount}`, 196 - 20, 285, { align: 'right' });
+          
+          // "Generado por Hub" centered at bottom
+          doc.setFontSize(7);
+          doc.setTextColor(100, 100, 100);
+          doc.text('Gerado por Hub', 105, 292, { align: 'center' });
+          doc.setTextColor(0, 0, 0); // Reset color
         }
         
         // Save
@@ -401,6 +538,11 @@ export default {
 
     const exportExcel = () => {
       try {
+        console.log('📊 Exporting Excel with transactions:', {
+          incomesCount: transactions.value.incomes.length,
+          outcomesCount: transactions.value.outcomes.length,
+        });
+        
         // Create CSV content
         let csv = 'Relatório do Período Contábil\n\n';
         csv += `Período:,${props.period.name}\n`;
@@ -415,6 +557,38 @@ export default {
         csv += `Comissões,${formatCurrencyValue(summary.value.totalCommissions)},\n`;
         csv += `Reembolsos,${formatCurrencyValue(summary.value.totalRefunds)},\n`;
         csv += `Valor Líquido,${formatCurrencyValue(summary.value.netAmount)},\n\n`;
+        
+        // Detailed Incomes
+        if (transactions.value.incomes.length > 0) {
+          csv += 'Receitas Detalhadas\n';
+          csv += 'Data,Cliente,Profissional,Valor,Comissão,Status\n';
+          transactions.value.incomes.forEach((income) => {
+            const date = new Date(income.paidAt).toLocaleDateString('pt-BR');
+            const clientName = (income.clientName || 'N/A').replace(/,/g, ' ');
+            const professionalName = (income.professionalName || 'N/A').replace(/,/g, ' ');
+            const amount = formatCurrencyValue(income.amount);
+            const commission = formatCurrencyValue(income.professionalCommission);
+            const status = income.status || '';
+            csv += `${date},"${clientName}","${professionalName}",${amount},${commission},${status}\n`;
+          });
+          csv += '\n';
+        }
+        
+        // Detailed Outcomes
+        if (transactions.value.outcomes.length > 0) {
+          csv += 'Despesas Detalhadas\n';
+          csv += 'Data,Conceito,Descrição,Valor,Status,Método Pagamento\n';
+          transactions.value.outcomes.forEach((outcome) => {
+            const date = new Date(outcome.paidAt).toLocaleDateString('pt-BR');
+            const concept = (outcome.concept || 'N/A').replace(/,/g, ' ');
+            const description = (outcome.description || 'N/A').replace(/,/g, ' ').replace(/"/g, '""');
+            const amount = formatCurrencyValue(outcome.amount);
+            const status = outcome.status || '';
+            const paymentMethod = outcome.paymentMethod || '';
+            csv += `${date},"${concept}","${description}",${amount},${status},${paymentMethod}\n`;
+          });
+          csv += '\n';
+        }
         
         if (props.period.notes) {
           csv += 'Notas\n';
