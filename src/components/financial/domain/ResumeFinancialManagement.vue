@@ -168,7 +168,7 @@ export default {
             getRefundTrends(commerceIds, this.startDate, this.endDate).catch(() => null),
           ]);
 
-        const { calculatedMetrics } = metricsResult;
+        const { calculatedMetrics, financialSummary } = metricsResult;
         if (
           !calculatedMetrics ||
           !calculatedMetrics['incomes.created'] ||
@@ -473,31 +473,55 @@ export default {
           this.financialResume.incomeDistribution = null;
         }
 
-        // Calculate financial metrics with proper validation
-        const totalIncomes = +(incomes.paymentData?.paymentAmountSum || 0);
-        const totalCommissions = +(incomes.paymentData?.paymentCommissionSum || 0);
-        const totalOutcomes = +(outcomes.paymentData?.paymentAmountSum || 0);
-        const netIncomes = totalIncomes - totalCommissions;
-        // Net profit = Total Incomes - Total Outcomes (comisiones ya están incluidas en las receitas)
-        const diff = totalIncomes - totalOutcomes; // Net profit
+        // ✨ NUEVO: Verificar si el backend envía métricas calculadas
+        console.log('📡 RESPONSE FROM BACKEND:', { calculatedMetrics, financialSummary });
 
-        this.financialResume.resume.diff = diff;
-        // Calculate margin: (profit / total incomes) * 100
-        const avg = totalIncomes > 0 ? this.getPercentage(diff, totalIncomes) : 0;
-        this.financialResume.resume.avg = avg;
+        if (financialSummary) {
+          console.log('💰 USING BACKEND CALCULATED METRICS:');
+          console.log('Financial Summary:', financialSummary);
+          console.log('Net Profit from backend:', financialSummary.netProfit);
 
-        // Calculate additional metrics
-        const daysInPeriod = this.calculateDaysInPeriod(this.startDate, this.endDate);
-        // Use net incomes (after commissions) for average daily income
-        this.financialResume.resume.averageDailyIncome =
-          daysInPeriod > 0 ? netIncomes / daysInPeriod : 0;
+          // Usar todas las métricas ya calculadas del backend
+          this.financialResume.resume.diff = financialSummary.netProfit;
+          this.financialResume.resume.avg = financialSummary.margin;
+          this.financialResume.resume.averageDailyIncome = financialSummary.averageDailyIncome;
+          this.financialResume.resume.daysUntilMonthEnd = financialSummary.daysUntilMonthEnd;
+
+          console.log('✅ Values assigned:');
+          console.log('  - diff (net profit):', this.financialResume.resume.diff);
+          console.log('  - avg (margin):', this.financialResume.resume.avg);
+
+          // Usar alertas del backend si están disponibles
+          if (financialSummary.alerts) {
+            this.alerts = financialSummary.alerts;
+          }
+        } else {
+          console.log('⚠️ Fallback to frontend calculations');
+          // FALLBACK: Mantener cálculos del frontend si el backend no los envía
+          const totalIncomes = +(incomes.paymentData?.paymentAmountSum || 0);
+          const totalCommissions = +(incomes.paymentData?.paymentCommissionSum || 0);
+          const totalOutcomes = +(outcomes.paymentData?.paymentAmountSum || 0);
+          const netIncomes = totalIncomes - totalCommissions;
+
+          const totalRefunds = this.getTotalRefunds(outcomes.paymentTypeDistribution || {});
+          const totalCommissionReversals = this.getTotalCommissionReversals(outcomes.paymentTypeDistribution || {});
+          const nonRefundOutcomes = totalOutcomes - totalRefunds;
+
+          const diff = totalIncomes - nonRefundOutcomes - totalCommissions - totalRefunds + totalCommissionReversals;
+          const avg = totalIncomes > 0 ? this.getPercentage(diff, totalIncomes) : 0;
+          const daysInPeriod = this.calculateDaysInPeriod(this.startDate, this.endDate);
+
+          this.financialResume.resume.diff = diff;
+          this.financialResume.resume.avg = avg;
+          this.financialResume.resume.averageDailyIncome = daysInPeriod > 0 ? netIncomes / daysInPeriod : 0;
+          this.financialResume.resume.daysUntilMonthEnd = this.calculateDaysUntilMonthEnd();
+
+          // Calculate alerts
+          this.calculateAlerts(incomes, outcomes, diff, avg);
+        }
 
         // Calculate professional incomes
         await this.calculateProfessionalIncomes();
-        this.financialResume.resume.daysUntilMonthEnd = this.calculateDaysUntilMonthEnd();
-
-        // Calculate alerts
-        this.calculateAlerts(incomes, outcomes, diff, avg);
 
         this.loading = false;
       } catch (error) {
@@ -1620,6 +1644,24 @@ export default {
       const percentage = (value * 100) / total;
       return parseFloat(percentage.toFixed(2), 2) || 0;
     },
+    getTotalRefunds(paymentTypeDistribution) {
+      // Calcular total de refunds de todos los tipos
+      let totalRefunds = 0;
+      const refundTypes = ['PAYMENT_REFUND', 'SERVICE_REFUND', 'CANCELLATION_REFUND'];
+
+      refundTypes.forEach(type => {
+        if (paymentTypeDistribution[type]) {
+          totalRefunds += +(paymentTypeDistribution[type].totalAmount || 0);
+        }
+      });
+
+      return totalRefunds;
+    },
+    getTotalCommissionReversals(paymentTypeDistribution) {
+      // Calcular total de commission reversals
+      const commissionReversal = paymentTypeDistribution['COMMISSION_REVERSAL'];
+      return +(commissionReversal?.totalAmount || 0);
+    },
     calculateDaysInPeriod(startDate, endDate) {
       if (!startDate || !endDate) return 0;
       const start = new Date(startDate);
@@ -1804,12 +1846,16 @@ export default {
         return null;
       }
 
-      const categories = Object.keys(this.outcomesCategoryAnalysis.current);
+      // Filtrar para excluir el total 'REFUND' y mantener solo subcategorías específicas
+      const allCategories = this.outcomesCategoryAnalysis.current;
+      const filteredCategories = Object.keys(allCategories).filter(cat => cat !== 'REFUND');
+
+      const categories = filteredCategories;
       const labels = categories.map(
         cat => this.translateOutcomeType(cat)
       );
       const data = categories.map(
-        cat => +this.outcomesCategoryAnalysis.current[cat]?.totalAmount || 0
+        cat => +allCategories[cat]?.totalAmount || 0
       );
 
       return {
@@ -2077,6 +2123,8 @@ export default {
   border: 1px solid rgba(169, 169, 169, 0.2);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
+  line-height: .9rem;
+  min-height: 80px;
 }
 
 .modern-metric-mini-card:hover {
@@ -3018,8 +3066,8 @@ export default {
                               {{ $t('businessFinancial.trends.yearOverYear') }}
                             </h6>
                             <div class="row">
-                              <div class="col-6 col-md-3 mb-2">
-                                <div class="text-center p-2 modern-metric-mini-card">
+                              <div class="col-6 col-md-3 mb-2 d-flex">
+                                <div class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center">
                                   <div class="small text-muted">
                                     {{ $t('businessFinancial.kpis.totalIncomes') }}
                                   </div>
@@ -3042,8 +3090,8 @@ export default {
                                   </div>
                                 </div>
                               </div>
-                              <div class="col-6 col-md-3 mb-2">
-                                <div class="text-center p-2 modern-metric-mini-card">
+                              <div class="col-6 col-md-3 mb-2 d-flex">
+                                <div class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center">
                                   <div class="small text-muted">
                                     {{ $t('businessFinancial.kpis.totalOutcomes') }}
                                   </div>
@@ -3066,8 +3114,8 @@ export default {
                                   </div>
                                 </div>
                               </div>
-                              <div class="col-6 col-md-3 mb-2">
-                                <div class="text-center p-2 modern-metric-mini-card">
+                              <div class="col-6 col-md-3 mb-2 d-flex">
+                                <div class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center">
                                   <div class="small text-muted">
                                     {{ $t('businessFinancial.kpis.netProfit') }}
                                   </div>
@@ -3090,8 +3138,8 @@ export default {
                                   </div>
                                 </div>
                               </div>
-                              <div class="col-6 col-md-3 mb-2">
-                                <div class="text-center p-2 modern-metric-mini-card">
+                              <div class="col-6 col-md-3 mb-2 d-flex">
+                                <div class="text-center p-2 modern-metric-mini-card w-100 h-100 d-flex flex-column justify-content-center">
                                   <div class="small text-muted">
                                     {{ $t('businessFinancial.kpis.profitMargin') }}
                                   </div>
@@ -3217,7 +3265,7 @@ export default {
 
                         <div class="row">
                           <!-- Category Distribution Chart -->
-                          <div class="col-12 col-lg-6 mb-3">
+                          <div class="col-12 col-lg-7 mb-3 outcome-title">
                             <h6 class="fw-bold mb-3">
                               {{ $t('businessFinancial.categories.distribution') }}
                             </h6>
@@ -3230,7 +3278,7 @@ export default {
                           </div>
 
                           <!-- Top 5 Categories -->
-                          <div class="col-12 col-lg-6 mb-3">
+                          <div class="col-12 col-lg-5 mb-3 outcome-title">
                             <h6 class="fw-bold mb-3">
                               {{ $t('businessFinancial.categories.topCategories') }}
                             </h6>
@@ -3285,7 +3333,7 @@ export default {
                           <h6 class="fw-bold mb-3">
                             {{ $t('businessFinancial.categories.comparison') }}
                           </h6>
-                          <div class="table-responsive">
+                          <div class="table-responsive outcome-title">
                             <table class="table table-sm table-hover">
                               <thead>
                                 <tr>
@@ -3471,5 +3519,10 @@ export default {
   overflow: visible !important;
   position: relative;
   z-index: 1;
+}
+
+.outcome-title {
+  font-size: .9rem;
+  line-height: .9rem;
 }
 </style>

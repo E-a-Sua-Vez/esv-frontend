@@ -64,61 +64,88 @@
             </div>
 
             <!-- Financial Summary Cards -->
-            <div class="row g-3 mb-4">
-              <div class="col-md-3">
-                <div class="summary-card success">
-                  <div class="summary-icon">
-                    <i class="bi bi-arrow-down-circle"></i>
+            <div class="financial-kpis-grid mb-4">
+              <!-- Primera fila: Ingresos y Gastos -->
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6">
+                  <div class="modern-financial-card success">
+                    <div class="card-header">
+                      <div class="icon-container success">
+                        <i class="bi bi-arrow-down-circle"></i>
+                      </div>
+                      <div class="header-content">
+                        <div class="card-title">{{ $t('financial.periods.totals.incomes') }}</div>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                      <div class="primary-value">{{ formatCurrency(summary.totalIncomes) }}</div>
+                      <div class="secondary-info">{{ summary.incomesCount }} {{ $t('financial.periods.report.transactions') }}</div>
+                    </div>
                   </div>
-                  <div class="summary-content">
-                    <div class="summary-label">{{ $t('financial.periods.totals.incomes') }}</div>
-                    <div class="summary-value">{{ formatCurrency(summary.totalIncomes) }}</div>
-                    <div class="summary-count">{{ summary.incomesCount }} {{ $t('financial.periods.report.transactions') }}</div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="modern-financial-card danger">
+                    <div class="card-header">
+                      <div class="icon-container danger">
+                        <i class="bi bi-arrow-up-circle"></i>
+                      </div>
+                      <div class="header-content">
+                        <div class="card-title">{{ $t('financial.periods.totals.outcomes') }}</div>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                      <div class="primary-value">{{ formatCurrency(summary.totalOutcomes) }}</div>
+                      <div class="secondary-info">{{ summary.outcomesCount }} {{ $t('financial.periods.report.transactions') }}</div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="col-md-3">
-                <div class="summary-card danger">
-                  <div class="summary-icon">
-                    <i class="bi bi-arrow-up-circle"></i>
-                  </div>
-                  <div class="summary-content">
-                    <div class="summary-label">{{ $t('financial.periods.totals.outcomes') }}</div>
-                    <div class="summary-value">{{ formatCurrency(summary.totalOutcomes) }}</div>
-                    <div class="summary-count">{{ summary.outcomesCount }} {{ $t('financial.periods.report.transactions') }}</div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-2">
-                <div class="summary-card info">
-                  <div class="summary-icon">
-                    <i class="bi bi-percent"></i>
-                  </div>
-                  <div class="summary-content">
-                    <div class="summary-label">{{ $t('financial.periods.totals.commissions') }}</div>
-                    <div class="summary-value">{{ formatCurrency(summary.totalCommissions) }}</div>
+
+              <!-- Segunda fila: Comisiones, Reembolsos y Valor Líquido -->
+              <div class="row g-3">
+                <div class="col-12 col-md-4">
+                  <div class="modern-financial-card info">
+                    <div class="card-header">
+                      <div class="icon-container info">
+                        <i class="bi bi-percent"></i>
+                      </div>
+                      <div class="header-content">
+                        <div class="card-title">{{ $t('financial.periods.totals.commissions') }}</div>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                      <div class="primary-value">{{ formatCurrency(summary.totalCommissions) }}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div v-if="summary.totalRefunds > 0" class="col-md-2">
-                <div class="summary-card warning">
-                  <div class="summary-icon">
-                    <i class="bi bi-arrow-counterclockwise"></i>
-                  </div>
-                  <div class="summary-content">
-                    <div class="summary-label">{{ $t('financial.periods.totals.refunds') }}</div>
-                    <div class="summary-value">{{ formatCurrency(summary.totalRefunds) }}</div>
+                <div v-if="summary.totalRefunds > 0" class="col-12 col-md-4">
+                  <div class="modern-financial-card warning">
+                    <div class="card-header">
+                      <div class="icon-container warning">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                      </div>
+                      <div class="header-content">
+                        <div class="card-title">{{ $t('financial.periods.totals.refunds') }}</div>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                      <div class="primary-value">{{ formatCurrency(summary.totalRefunds) }}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div class="col-md-2">
-                <div class="summary-card primary">
-                  <div class="summary-icon">
-                    <i class="bi bi-currency-dollar"></i>
-                  </div>
-                  <div class="summary-content">
-                    <div class="summary-label">{{ $t('financial.periods.totals.netAmount') }}</div>
-                    <div class="summary-value fw-bold">{{ formatCurrency(summary.netAmount) }}</div>
+                <div class="col-12" :class="summary.totalRefunds > 0 ? 'col-md-4' : 'col-md-8 offset-md-2'">
+                  <div class="modern-financial-card primary highlight">
+                    <div class="card-header">
+                      <div class="icon-container primary">
+                        <i class="bi bi-currency-dollar"></i>
+                      </div>
+                      <div class="header-content">
+                        <div class="card-title">{{ $t('financial.periods.totals.netAmount') }}</div>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                      <div class="primary-value fw-bold">{{ formatCurrency(summary.netAmount) }}</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -235,6 +262,19 @@ export default {
         // Cargar transacciones
         const txData = await getPeriodTransactions(props.period.id);
         transactions.value = txData;
+        
+        console.log('📋 Period Transactions received:');
+        console.log('- Incomes:', txData.incomes?.length || 0);
+        console.log('- Outcomes:', txData.outcomes?.length || 0);
+        console.log('- Outcome details:', txData.outcomes?.map(o => ({
+          id: o.id,
+          conceptType: o.conceptType,
+          type: o.type,
+          amount: o.amount,
+          paidAt: o.paidAt,
+          createdAt: o.createdAt,
+          description: o.description
+        })) || []);
       } catch (error) {
         console.error('Error loading period summary:', error);
       } finally {
@@ -466,8 +506,12 @@ export default {
               yPos = 20;
             }
 
-            const date = new Date(outcome.paidAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-            const concept = (outcome.concept || 'N/A').substring(0, 25);
+            // Usar paidAt o createdAt como fallback
+            const effectiveDate = outcome.paidAt || outcome.createdAt;
+            const date = effectiveDate 
+              ? new Date(effectiveDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+              : 'N/A';
+            const concept = (outcome.concept || outcome.conceptType || outcome.type || 'N/A').substring(0, 25);
             const description = (outcome.description || 'N/A').substring(0, 25);
             const amount = formatCurrencyValue(outcome.amount);
 
@@ -610,8 +654,12 @@ export default {
           csv += 'Despesas Detalhadas\n';
           csv += 'Data,Conceito,Descrição,Valor,Status,Método Pagamento\n';
           transactions.value.outcomes.forEach((outcome) => {
-            const date = new Date(outcome.paidAt).toLocaleDateString('pt-BR');
-            const concept = (outcome.concept || 'N/A').replace(/,/g, ' ');
+            // Usar paidAt o createdAt como fallback
+            const effectiveDate = outcome.paidAt || outcome.createdAt;
+            const date = effectiveDate 
+              ? new Date(effectiveDate).toLocaleDateString('pt-BR')
+              : 'N/A';
+            const concept = (outcome.concept || outcome.conceptType || outcome.type || 'N/A').replace(/,/g, ' ');
             const description = (outcome.description || 'N/A').replace(/,/g, ' ').replace(/"/g, '""');
             const amount = formatCurrencyValue(outcome.amount);
             const status = outcome.status || '';
@@ -757,105 +805,207 @@ export default {
   padding: 1rem;
 }
 
-/* Summary Cards */
-.row.g-3 {
-  display: flex;
-  align-items: stretch;
+/* Financial KPI Grid */
+.financial-kpis-grid {
+  margin-bottom: 1.5rem;
 }
 
-.summary-card {
-  padding: 0.75rem;
-  border-radius: 8px;
+/* Modern Financial Cards - Inspired by Dashboard KPI Cards */
+.modern-financial-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(169, 169, 169, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.modern-financial-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-color: rgba(169, 169, 169, 0.3);
+}
+
+/* Card Header */
+.card-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  border: 1px solid rgba(169, 169, 169, 0.15);
-  transition: all 0.2s ease;
-  height: 100%;
-  min-height: 5rem;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
 }
 
-.summary-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.summary-card.success {
-  background: rgba(0, 194, 203, 0.05);
-  border-color: rgba(0, 194, 203, 0.2);
-}
-
-.summary-card.danger {
-  background: rgba(165, 42, 42, 0.05);
-  border-color: rgba(165, 42, 42, 0.2);
-}
-
-.summary-card.info {
-  background: rgba(249, 195, 34, 0.05);
-  border-color: rgba(249, 195, 34, 0.2);
-}
-
-.summary-card.primary {
-  background: rgba(0, 194, 203, 0.1);
-  border-color: rgba(0, 194, 203, 0.3);
-}
-
-.summary-icon {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 8px;
+.icon-container {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 1.25rem;
+  font-size: 1.375rem;
 }
 
-.success .summary-icon {
+.icon-container.success {
   background: rgba(0, 194, 203, 0.15);
   color: #00c2cb;
 }
 
-.danger .summary-icon {
-  background: rgba(165, 42, 42, 0.15);
-  color: #a52a2a;
+.icon-container.danger {
+  background: rgba(220, 53, 69, 0.15);
+  color: #dc3545;
 }
 
-.info .summary-icon {
+.icon-container.info {
+  background: rgba(13, 110, 253, 0.15);
+  color: #0d6efd;
+}
+
+.icon-container.warning {
   background: rgba(249, 195, 34, 0.15);
   color: #f9c322;
 }
 
-.primary .summary-icon {
+.icon-container.primary {
   background: rgba(0, 194, 203, 0.2);
   color: #00c2cb;
 }
 
-.summary-content {
+.header-content {
   flex: 1;
   min-width: 0;
 }
 
-.summary-label {
-  font-size: 0.6875rem;
+.card-title {
+  font-size: 0.75rem;
   color: rgba(0, 0, 0, 0.6);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
-  margin-bottom: 0.25rem;
-}
-
-.summary-value {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.85);
+  letter-spacing: 0.5px;
   line-height: 1.2;
 }
 
-.summary-count {
-  font-size: 0.6875rem;
+/* Card Body */
+.card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.primary-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.85);
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+
+.secondary-info {
+  font-size: 0.75rem;
   color: rgba(0, 0, 0, 0.5);
-  margin-top: 0.125rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* Card Type Variations */
+.modern-financial-card.success {
+  border-left: 3px solid #00c2cb;
+}
+
+.modern-financial-card.success:hover {
+  background: linear-gradient(135deg, rgba(0, 194, 203, 0.05) 0%, rgba(0, 194, 203, 0.02) 100%);
+}
+
+.modern-financial-card.danger {
+  border-left: 3px solid #dc3545;
+}
+
+.modern-financial-card.danger:hover {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.05) 0%, rgba(220, 53, 69, 0.02) 100%);
+}
+
+.modern-financial-card.info {
+  border-left: 3px solid #0d6efd;
+}
+
+.modern-financial-card.info:hover {
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.05) 0%, rgba(13, 110, 253, 0.02) 100%);
+}
+
+.modern-financial-card.warning {
+  border-left: 3px solid #f9c322;
+}
+
+.modern-financial-card.warning:hover {
+  background: linear-gradient(135deg, rgba(249, 195, 34, 0.05) 0%, rgba(249, 195, 34, 0.02) 100%);
+}
+
+.modern-financial-card.primary {
+  border-left: 3px solid #00c2cb;
+}
+
+.modern-financial-card.primary:hover {
+  background: linear-gradient(135deg, rgba(0, 194, 203, 0.08) 0%, rgba(0, 194, 203, 0.04) 100%);
+}
+
+/* Highlight card (for net amount) */
+.modern-financial-card.highlight {
+  border: 2px solid rgba(0, 194, 203, 0.4);
+  background: linear-gradient(135deg, rgba(0, 194, 203, 0.08) 0%, rgba(0, 194, 203, 0.04) 100%);
+}
+
+.modern-financial-card.highlight .primary-value {
+  font-size: 1.75rem;
+  color: #00c2cb;
+}
+
+.modern-financial-card.highlight:hover {
+  border-color: rgba(0, 194, 203, 0.6);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0, 194, 203, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .modern-financial-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .card-header {
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .icon-container {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+  }
+  
+  .card-title {
+    font-size: 0.6875rem;
+  }
+  
+  .primary-value {
+    font-size: 1.25rem;
+  }
+  
+  .secondary-info {
+    font-size: 0.6875rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .primary-value {
+    font-size: 1.375rem;
+  }
 }
 
 /* Notes Section */

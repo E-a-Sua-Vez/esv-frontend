@@ -341,8 +341,8 @@ export default {
           <!-- Action Buttons Section - First, No Title -->
           <div v-if="toggles && (toggles['financial.outcomes.view'] || canRefund(outcome))" class="info-section">
             <div class="action-buttons-grid">
-              <!-- Refund Button -->
-              <Popper v-if="canRefund(outcome)" :class="'dark'" arrow disable-click-away hover>
+              <!-- Refund Button - HIDDEN -->
+              <Popper v-if="false" :class="'dark'" arrow disable-click-away hover>
                 <template #content>
                   <div>{{ $t('financial.refunds.processRefund') }}</div>
                 </template>
