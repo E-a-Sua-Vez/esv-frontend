@@ -12,7 +12,6 @@ import {
   updateBusinessLeadStage,
   updateBusinessLead,
   addBusinessLeadContact,
-  getBusinessLeadContacts,
   getBusinessLeadContactsFromBackend,
   getBusinessLeadById,
   getBusinessLeadByIdFromBackend,
@@ -443,9 +442,9 @@ export default {
       nextTick(() => {
         loadLeads(true);
       });
-    }, { 
+    }, {
       // Don't trigger on initial setup
-      flush: 'post' 
+      flush: 'post'
     });
 
     // Refresh function
@@ -6559,16 +6558,26 @@ const onBirthdayInput = (val) => {
     >
       <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-plus-lg"></i> {{ $t('add') }}</h5>
+          <div class="modal-header border-0 active-name modern-modal-header">
+            <div class="modern-modal-header-inner">
+              <div class="modern-modal-icon-wrapper">
+                <i class="bi bi-plus-lg"></i>
+              </div>
+              <div class="modern-modal-title-wrapper">
+                <h5 class="modal-title fw-bold modern-modal-title">{{ $t('add') }}</h5>
+                <p class="modern-modal-subtitle">{{ $t('businessLeadPipeline.addNewLead') || 'Novo Lead' }}</p>
+              </div>
+            </div>
             <button
               id="close-modal"
-              class="btn-close"
               type="button"
+              class="modern-modal-close-btn"
               data-bs-dismiss="modal"
               aria-label="Close"
               @click="resetAddForm"
-            ></button>
+            >
+              <i class="bi bi-x-lg"></i>
+            </button>
           </div>
           <div class="modal-body p-4" id="attentions-component">
             <Spinner :show="loading"></Spinner>
@@ -6906,16 +6915,26 @@ const onBirthdayInput = (val) => {
     >
       <div class="modal-dialog modal-xl">
         <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold"><i class="bi bi-person-circle"></i> {{ $t('businessLeadPipeline.leadDetails') || 'Lead Details' }} - {{ selectedLead?.name }}</h5>
+          <div class="modal-header border-0 active-name modern-modal-header">
+            <div class="modern-modal-header-inner">
+              <div class="modern-modal-icon-wrapper">
+                <i class="bi bi-person-circle"></i>
+              </div>
+              <div class="modern-modal-title-wrapper">
+                <h5 class="modal-title fw-bold modern-modal-title">{{ $t('businessLeadPipeline.leadDetails') || 'Lead Details' }}</h5>
+                <p class="modern-modal-subtitle">{{ selectedLead?.name }}</p>
+              </div>
+            </div>
             <button
               id="close-modal"
-              class="btn-close"
               type="button"
+              class="modern-modal-close-btn"
               data-bs-dismiss="modal"
               aria-label="Close"
               @click="closeLeadDetails"
-            ></button>
+            >
+              <i class="bi bi-x-lg"></i>
+            </button>
           </div>
           <div class="modal-body text-center mb-0" id="lead-details-component">
             <Spinner :show="loading"></Spinner>
@@ -7743,17 +7762,24 @@ const onBirthdayInput = (val) => {
     >
       <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header border-0 centered active-name">
-            <h5 class="modal-title fw-bold">
-              <i class="bi bi-graph-up-arrow me-2"></i>
-              {{ $t('businessLeadPipeline.analytics.title') || 'Pipeline Analytics & Insights' }}
-            </h5>
+          <div class="modal-header border-0 active-name modern-modal-header">
+            <div class="modern-modal-header-inner">
+              <div class="modern-modal-icon-wrapper">
+                <i class="bi bi-graph-up-arrow"></i>
+              </div>
+              <div class="modern-modal-title-wrapper">
+                <h5 class="modal-title fw-bold modern-modal-title">{{ $t('businessLeadPipeline.analytics.title') || 'Pipeline Analytics & Insights' }}</h5>
+                <p class="modern-modal-subtitle">{{ $t('businessLeadPipeline.analytics.subtitle') || 'Análise e Insights' }}</p>
+              </div>
+            </div>
             <button
               type="button"
-              class="btn-close"
+              class="modern-modal-close-btn"
               @click="showAnalytics = false"
               aria-label="Close"
-            ></button>
+            >
+              <i class="bi bi-x-lg"></i>
+            </button>
           </div>
           <div class="modal-body p-4">
             <!-- AI-Powered Insights Section -->
@@ -8194,15 +8220,15 @@ const onBirthdayInput = (val) => {
 }
 
 .analytics-modal .modal-header {
-  background-color: var(--azul-turno, #004aad);
-  color: white;
-  border-radius: 16px 16px 0 0;
-  padding: 1rem 1.25rem;
-  border-bottom: none;
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  border-radius: .5rem .5rem 0 0;
+  min-height: auto;
+  position: relative;
 }
 
 .analytics-modal .modal-title {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -8916,7 +8942,7 @@ const onBirthdayInput = (val) => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  cursor: pointer;
+  cursor: pointer !important;
   width: 100%;
   flex-shrink: 0;
 }
@@ -10189,7 +10215,7 @@ const onBirthdayInput = (val) => {
 .modal-loading .modern-lead-card {
   opacity: 0.6;
   pointer-events: none;
-  cursor: not-allowed;
+  cursor: pointer;
   transition: opacity 0.2s ease;
 }
 
@@ -10209,5 +10235,85 @@ const onBirthdayInput = (val) => {
   background-color: #dc3545;
   border-color: #dc3545;
   color: white;
+}
+
+/* Modern Modal Header Styles */
+.modern-modal-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  border-radius: .5rem .5rem 0 0;
+  min-height: auto;
+  position: relative;
+}
+
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.modern-modal-icon-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-modal-icon-wrapper i {
+  font-size: 1.125rem;
+  color: #ffffff;
+}
+
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-background);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.modern-modal-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.modern-modal-close-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+}
+
+.modern-modal-close-btn i {
+  color: white;
+  font-size: 1rem;
 }
 </style>

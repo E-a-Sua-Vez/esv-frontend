@@ -8111,5 +8111,55 @@
         "content": "You don't have permissions to convert leads to clients"
       }
     }
+  },
+  "financial": {
+    "periods": {
+      "actions": {
+        "close": "Close Period",
+        "reopen": "Reopen Period",
+        "lock": "Lock Period",
+        "viewDetails": "View Details",
+        "viewReport": "Report"
+      },
+      "labels": {
+        "accountingPeriod": "Accounting Period",
+        "periodStatus": "Period Status",
+        "hideDetails": "Hide Details",
+        "showDetails": "View Details",
+        "financialSummary": "Financial Summary",
+        "totalIncomes": "Total Incomes",
+        "numIncomes": "# Incomes",
+        "totalOutcomes": "Total Expenses",
+        "numOutcomes": "# Expenses",
+        "totalCommissions": "Total Commissions",
+        "totalRefunds": "Total Refunds",
+        "totalCommissionReversals": "Total Commission Reversals",
+        "netAmount": "Net Amount",
+        "periodInfo": "Period Information",
+        "closedBy": "Closed by",
+        "closureDate": "Closure Date",
+        "lockedBy": "Locked by",
+        "lockDate": "Lock Date",
+        "reopenedBy": "Reopened by",
+        "reopenDate": "Reopen Date"
+      },
+      "report": {
+        "title": "Period Report",
+        "until": "until",
+        "loading": "Loading...",
+        "loadingReport": "Loading report...",
+        "status": {
+          "open": "Open",
+          "closed": "Closed",
+          "locked": "Locked"
+        },
+        "notes": "Notes",
+        "bankReconciliation": "Bank Reconciliation",
+        "bankBalance": "Bank Balance",
+        "systemBalance": "System Balance",
+        "difference": "Difference",
+        "transactions": "transactions"
+      }
+    }
   }
 }

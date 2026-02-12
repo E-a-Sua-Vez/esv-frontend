@@ -100,6 +100,11 @@ export default {
         startDate: undefined,
         endDate: undefined,
       },
+      // User-entered dates (independent from filterProps which can reset)
+      userIncomesStartDate: undefined,
+      userIncomesEndDate: undefined,
+      userOutcomesStartDate: undefined,
+      userOutcomesEndDate: undefined,
       // Modal states
       showCommissionPaymentsModal: false,
     });
@@ -291,8 +296,11 @@ export default {
             };
 
             // Sync all filter values - EXACTLY as they are in filterInstance
+            // Important: Always sync dates from override first, then filterInstance
+            // This prevents dates from being reset when other filters change
             contentInstance.startDate = normalizeString(getValue('startDate'));
             contentInstance.endDate = normalizeString(getValue('endDate'));
+
             contentInstance.searchText = normalizeString(getValue('searchText'));
             contentInstance.incomeStatus = getValue('incomeStatus');
 
@@ -307,6 +315,9 @@ export default {
             const commissionPaidValue = getValue('commissionPaid');
             contentInstance.commissionPaid =
               commissionPaidValue !== undefined ? commissionPaidValue : undefined;
+
+            const hasRefundValue = getValue('hasRefund');
+            contentInstance.hasRefund = hasRefundValue !== undefined ? hasRefundValue : undefined;
 
             const ascValue = getValue('asc');
             contentInstance.asc = ascValue !== undefined ? ascValue : false;
@@ -354,20 +365,32 @@ export default {
     };
 
     // Helper function to get all current filter values from filterProps
-    const getAllFilterValues = (filterProps, override = {}) => ({
-        startDate: override.startDate !== undefined ? override.startDate : filterProps.startDate,
-        endDate: override.endDate !== undefined ? override.endDate : filterProps.endDate,
+    const getAllFilterValues = (filterProps, override = {}) => {
+      // Get dates - prioritize override, then user-entered dates, then filterProps
+      const startDate = override.startDate !== undefined
+        ? override.startDate
+        : (state.userIncomesStartDate !== undefined ? state.userIncomesStartDate : filterProps.startDate);
+      const endDate = override.endDate !== undefined
+        ? override.endDate
+        : (state.userIncomesEndDate !== undefined ? state.userIncomesEndDate : filterProps.endDate);
+
+      return {
+        startDate,
+        endDate,
         searchText: override.searchText !== undefined ? override.searchText : filterProps.searchText,
         incomeStatus: override.incomeStatus !== undefined ? override.incomeStatus : filterProps.incomeStatus,
         fiscalNote: override.fiscalNote !== undefined ? override.fiscalNote : filterProps.fiscalNote,
         automatic: override.automatic !== undefined ? override.automatic : filterProps.automatic,
+        commissionPaid: override.commissionPaid !== undefined ? override.commissionPaid : filterProps.commissionPaid,
+        hasRefund: override.hasRefund !== undefined ? override.hasRefund : filterProps.hasRefund,
         asc: override.asc !== undefined ? override.asc : filterProps.asc,
         minAmount: override.minAmount !== undefined ? override.minAmount : filterProps.minAmount,
         maxAmount: override.maxAmount !== undefined ? override.maxAmount : filterProps.maxAmount,
         incomeTypeFilter: override.incomeTypeFilter !== undefined ? override.incomeTypeFilter : filterProps.incomeTypeFilter,
         paymentMethodFilter: override.paymentMethodFilter !== undefined ? override.paymentMethodFilter : filterProps.paymentMethodFilter,
         professionalFilter: override.professionalFilter !== undefined ? override.professionalFilter : filterProps.professionalFilter,
-      });
+      };
+    };
 
     // Helper function to refresh incomes content with delay (debounce)
     const refreshIncomesContentDelayed = (filterPropsOverride = null, delay = 50) => {
@@ -381,9 +404,19 @@ export default {
     };
 
     // Helper function to get all current filter values for Outcomes
-    const getAllOutcomesFilterValues = (filterProps, override = {}) => ({
-        startDate: override.startDate !== undefined ? override.startDate : filterProps.startDate,
-        endDate: override.endDate !== undefined ? override.endDate : filterProps.endDate,
+    const getAllOutcomesFilterValues = (filterProps, override = {}) => {
+      // Get dates - prioritize override, then filterProps (which are updated by @update events)
+      // Note: outcomesFilterRef.value might be undefined when using filters-location="slot"
+      const startDate = override.startDate !== undefined
+        ? override.startDate
+        : (state.userOutcomesStartDate !== undefined ? state.userOutcomesStartDate : filterProps.startDate);
+      const endDate = override.endDate !== undefined
+        ? override.endDate
+        : (state.userOutcomesEndDate !== undefined ? state.userOutcomesEndDate : filterProps.endDate);
+
+      return {
+        startDate,
+        endDate,
         searchText: override.searchText !== undefined ? override.searchText : filterProps.searchText,
         asc: override.asc !== undefined ? override.asc : filterProps.asc,
         minAmount: override.minAmount !== undefined ? override.minAmount : filterProps.minAmount,
@@ -392,7 +425,9 @@ export default {
         outcomeSystemTypeFilter: override.outcomeSystemTypeFilter !== undefined ? override.outcomeSystemTypeFilter : filterProps.outcomeSystemTypeFilter,
         paymentMethodFilter: override.paymentMethodFilter !== undefined ? override.paymentMethodFilter : filterProps.paymentMethodFilter,
         professionalFilter: override.professionalFilter !== undefined ? override.professionalFilter : filterProps.professionalFilter,
-      });
+        hasRefund: override.hasRefund !== undefined ? override.hasRefund : filterProps.hasRefund,
+      };
+    };
 
     // Wrapper function to refresh outcomes content instance when filters change
     const refreshOutcomesContent = (filterPropsOverride = null) => {
@@ -431,13 +466,23 @@ export default {
 
             // Sync all filter values
             contentInstance.page = 1;
+
+            // Always sync dates from filterInstance unless explicitly overridden
+            // Sync all filter values - EXACTLY as they are in filterInstance
+            // Important: Always sync dates from override first, then filterInstance
+            // This prevents dates from being reset when other filters change
             contentInstance.startDate = normalizeString(getValue('startDate'));
             contentInstance.endDate = normalizeString(getValue('endDate'));
+
             contentInstance.searchText = normalizeString(getValue('searchText'));
             const ascValue = getValue('asc');
             contentInstance.asc = ascValue !== undefined ? ascValue : true;
             contentInstance.minAmount = getValue('minAmount');
             contentInstance.maxAmount = getValue('maxAmount');
+
+            const hasRefundValue = getValue('hasRefund');
+            contentInstance.hasRefund = hasRefundValue !== undefined ? hasRefundValue : undefined;
+
             const outcomeTypeValue = getValue('outcomeTypeFilter');
             contentInstance.outcomeTypeFilter =
               outcomeTypeValue !== undefined && outcomeTypeValue !== null && outcomeTypeValue !== ''
@@ -1133,18 +1178,28 @@ export default {
                             :show-search-button="true"
                             @update:startDate="
                               val => {
+                                // Save to state so it persists even if filterProps resets
+                                state.userIncomesStartDate = val;
                                 filterProps.startDate = val;
-                                if (incomesFilterRef.value) {
-                                  incomesFilterRef.value.startDate = val;
-                                }
+                                // Force update in the next tick
+                                nextTick(() => {
+                                  if (incomesFilterRef.value) {
+                                    incomesFilterRef.value.startDate = val;
+                                  }
+                                });
                               }
                             "
                             @update:endDate="
                               val => {
+                                // Save to state so it persists even if filterProps resets
+                                state.userIncomesEndDate = val;
                                 filterProps.endDate = val;
-                                if (incomesFilterRef.value) {
-                                  incomesFilterRef.value.endDate = val;
-                                }
+                                // Force update in the next tick
+                                nextTick(() => {
+                                  if (incomesFilterRef.value) {
+                                    incomesFilterRef.value.endDate = val;
+                                  }
+                                });
                               }
                             "
                             @search="refreshIncomesContentDelayed(getAllFilterValues(filterProps))"
@@ -1317,6 +1372,38 @@ export default {
                               />
                               <label class="form-check-label">{{
                                 $t('commissionPayments.commissionPaid') || 'Comisión Pagada'
+                              }}</label>
+                            </div>
+                            <div class="form-check form-switch">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                :checked="filterProps.hasRefund"
+                                @change="
+                                  e => {
+                                    const newValue = e.target.checked ? true : undefined;
+                                    // Update filterProps first
+                                    filterProps.hasRefund = newValue;
+                                    if (filterProps.checkHasRefund) {
+                                      filterProps.checkHasRefund(e);
+                                    }
+                                    // Update filter instance
+                                    if (incomesFilterRef.value) {
+                                      incomesFilterRef.value.hasRefund = newValue;
+                                    }
+                                    // Use the new value directly instead of filterProps
+                                    nextTick(() => {
+                                      refreshIncomesContentDelayed(
+                                        getAllFilterValues(filterProps, {
+                                          hasRefund: newValue,
+                                        })
+                                      );
+                                    });
+                                  }
+                                "
+                              />
+                              <label class="form-check-label">{{
+                                $t('incomesList.withRefund') || 'Com Reembolso'
                               }}</label>
                             </div>
                             <div class="form-check form-switch">
@@ -1636,52 +1723,27 @@ export default {
                                   await nextTick();
 
                                   if (incomesFilterRef.value) {
-                                    // Explicitly sync ALL cleared values to filter instance
-                                    // This ensures both filter and content instances are in sync
-                                    incomesFilterRef.value.startDate = undefined;
-                                    incomesFilterRef.value.endDate = undefined;
-                                    incomesFilterRef.value.searchText = undefined;
-                                    incomesFilterRef.value.incomeStatus = undefined;
-                                    incomesFilterRef.value.fiscalNote = undefined;
-                                    incomesFilterRef.value.automatic = undefined;
-                                    incomesFilterRef.value.asc = false; // Default to false
-                                    incomesFilterRef.value.minAmount = undefined;
-                                    incomesFilterRef.value.maxAmount = undefined;
-                                    incomesFilterRef.value.incomeTypeFilter = undefined;
-                                    incomesFilterRef.value.paymentMethodFilter = undefined;
-                                    incomesFilterRef.value.professionalFilter = undefined;
-
-                                    // Also update filterProps to ensure consistency
-                                    filterProps.startDate = undefined;
-                                    filterProps.endDate = undefined;
-                                    filterProps.searchText = undefined;
-                                    filterProps.incomeStatus = undefined;
-                                    filterProps.fiscalNote = undefined;
-                                    filterProps.automatic = undefined;
-                                    filterProps.asc = false;
-                                    filterProps.minAmount = undefined;
-                                    filterProps.maxAmount = undefined;
-                                    filterProps.incomeTypeFilter = undefined;
-                                    filterProps.paymentMethodFilter = undefined;
-                                    filterProps.professionalFilter = undefined;
+                                    // Sync the cleared values from filter instance to filterProps
+                                    // This ensures desktop filters UI shows the correct values after clear
+                                    filterProps.startDate = incomesFilterRef.value.startDate;
+                                    filterProps.endDate = incomesFilterRef.value.endDate;
+                                    filterProps.searchText = incomesFilterRef.value.searchText;
+                                    filterProps.incomeStatus = incomesFilterRef.value.incomeStatus;
+                                    filterProps.fiscalNote = incomesFilterRef.value.fiscalNote;
+                                    filterProps.automatic = incomesFilterRef.value.automatic;
+                                    filterProps.commissionPaid = incomesFilterRef.value.commissionPaid;
+                                    filterProps.hasRefund = incomesFilterRef.value.hasRefund;
+                                    filterProps.asc = incomesFilterRef.value.asc;
+                                    filterProps.minAmount = incomesFilterRef.value.minAmount;
+                                    filterProps.maxAmount = incomesFilterRef.value.maxAmount;
+                                    filterProps.incomeTypeFilter = incomesFilterRef.value.incomeTypeFilter;
+                                    filterProps.paymentMethodFilter = incomesFilterRef.value.paymentMethodFilter;
+                                    filterProps.professionalFilter = incomesFilterRef.value.professionalFilter;
                                   }
 
-                                  // Refresh content with all cleared values
+                                  // Explicitly refresh the content with the current filter values
                                   await nextTick();
-                                  refreshIncomesContentDelayed({
-                                    startDate: undefined,
-                                    endDate: undefined,
-                                    searchText: undefined,
-                                    incomeStatus: undefined,
-                                    fiscalNote: undefined,
-                                    automatic: undefined,
-                                    asc: false,
-                                    minAmount: undefined,
-                                    maxAmount: undefined,
-                                    incomeTypeFilter: undefined,
-                                    paymentMethodFilter: undefined,
-                                    professionalFilter: undefined,
-                                  });
+                                  refreshIncomesContent(getAllFilterValues(filterProps));
                                 }
                               "
                             >
@@ -1800,18 +1862,28 @@ export default {
                             :show-search-button="true"
                             @update:startDate="
                               val => {
+                                // Save to state so it persists even if filterProps resets
+                                state.userOutcomesStartDate = val;
                                 filterProps.startDate = val;
-                                if (outcomesFilterRef.value) {
-                                  outcomesFilterRef.value.startDate = val;
-                                }
+                                // Force update in the next tick
+                                nextTick(() => {
+                                  if (outcomesFilterRef.value) {
+                                    outcomesFilterRef.value.startDate = val;
+                                  }
+                                });
                               }
                             "
                             @update:endDate="
                               val => {
+                                // Save to state so it persists even if filterProps resets
+                                state.userOutcomesEndDate = val;
                                 filterProps.endDate = val;
-                                if (outcomesFilterRef.value) {
-                                  outcomesFilterRef.value.endDate = val;
-                                }
+                                // Force update in the next tick
+                                nextTick(() => {
+                                  if (outcomesFilterRef.value) {
+                                    outcomesFilterRef.value.endDate = val;
+                                  }
+                                });
                               }
                             "
                             @search="
@@ -2004,6 +2076,9 @@ export default {
                               <option value="OTHER">
                                 {{ $t('outcomeTypes.OTHER') || 'Outro' }}
                               </option>
+                              <option value="payment-refund">
+                                {{ $t('outcomeTypes.REFUND') || 'Reembolso' }}
+                              </option>
                             </select>
                           </div>
 
@@ -2079,6 +2154,7 @@ export default {
                                     outcomesFilterRef.value.maxAmount = undefined;
                                     outcomesFilterRef.value.outcomeSystemTypeFilter = undefined;
                                     outcomesFilterRef.value.professionalFilter = undefined;
+                                    outcomesFilterRef.value.hasRefund = undefined;
                                     filterProps.startDate = undefined;
                                     filterProps.endDate = undefined;
                                     filterProps.searchText = undefined;
@@ -2087,6 +2163,7 @@ export default {
                                     filterProps.maxAmount = undefined;
                                     filterProps.outcomeSystemTypeFilter = undefined;
                                     filterProps.professionalFilter = undefined;
+                                    filterProps.hasRefund = undefined;
                                   }
                                   await nextTick();
                                   refreshOutcomesContentDelayed({
@@ -2098,6 +2175,7 @@ export default {
                                     maxAmount: undefined,
                                     outcomeSystemTypeFilter: undefined,
                                     professionalFilter: undefined,
+                                    hasRefund: undefined,
                                   });
                                 }
                               "
@@ -2146,8 +2224,8 @@ export default {
 
                           <div class="mb-3">
                             <label class="form-label fw-bold mb-2">Estado</label>
-                            <select 
-                              class="form-select metric-controls" 
+                            <select
+                              class="form-select metric-controls"
                               :value="filterProps.statusFilter"
                               @change="(e) => {
                                 filterProps.statusFilter = e.target.value;

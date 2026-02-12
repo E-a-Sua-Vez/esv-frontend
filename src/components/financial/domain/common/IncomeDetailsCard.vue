@@ -109,6 +109,10 @@ export default {
       }
       return false;
     },
+    hasRefund(income) {
+      if (!income) return false;
+      return income.refundMetadata?.isRefunded === true || income.refundMetadata?.isRefunded === 'true';
+    },
     // New methods for modernized component
     formatAmount(amount) {
       return Number(parseFloat(amount || 0).toFixed(2)).toLocaleString('de-DE');
@@ -272,6 +276,24 @@ export default {
               <span class="badge-mini commission-status" @click.stop>
                 <span v-if="isCommissionPaid(income)" class="badge bg-success"> $ </span>
                 <span v-else class="badge bg-warning"> $ </span>
+              </span>
+            </Popper>
+
+            <!-- Refund Status Indicator -->
+            <Popper
+              v-if="hasRefund(income)"
+              :class="'dark'"
+              arrow
+              disable-click-away
+              hover
+            >
+              <template #content>
+                <div>{{ $t('financial.refunds.refunded') || 'Reembolsado' }}</div>
+              </template>
+              <span class="badge-mini refund-status" @click.stop>
+                <span class="badge bg-danger">
+                  <i class="bi bi-arrow-counterclockwise"></i>
+                </span>
               </span>
             </Popper>
           </div>
@@ -743,6 +765,27 @@ export default {
 .badge-mini.commission-status .badge.bg-warning {
   background-color: #ffc107 !important;
   color: #000 !important;
+}
+
+.badge-mini.refund-status {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.badge-mini.refund-status .badge {
+  font-size: 0.5rem;
+  padding: 0.125rem 0.25rem;
+  min-width: 1rem;
+  height: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.badge-mini.refund-status .badge.bg-danger {
+  background-color: #dc3545 !important;
+  color: white !important;
 }
 
 /* Increase z-index for popper to avoid being covered by cards */

@@ -85,12 +85,14 @@ export default {
       minAmount: undefined,
       maxAmount: undefined,
       outcomeTypeFilter: undefined,
+      outcomeSystemTypeFilter: undefined,
       paymentMethodFilter: undefined,
       professionalFilter: undefined,
       professionals: [],
       // Refund specific filters
       refundTypeFilter: undefined,
       showRefundsOnly: false,
+      hasRefund: undefined,
       // Refund modal
       showRefundModal: false,
       selectedTransactionForRefund: null,
@@ -118,8 +120,10 @@ export default {
       this.minAmount = undefined;
       this.maxAmount = undefined;
       this.outcomeTypeFilter = undefined;
+      this.outcomeSystemTypeFilter = undefined;
       this.paymentMethodFilter = undefined;
       this.professionalFilter = undefined;
+      this.hasRefund = undefined;
       // Set dates to current month
       await this.getCurrentMonth();
     },
@@ -128,6 +132,18 @@ export default {
         this.asc = true;
       } else {
         this.asc = false;
+      }
+    },
+    async checkHasRefund(event) {
+      if (event.target.checked) {
+        this.hasRefund = true;
+      } else {
+        this.hasRefund = undefined;
+      }
+      if (this.filtersLocation === 'component') {
+        this.$nextTick(() => {
+          this.refresh();
+        });
       }
     },
     async refresh() {
@@ -154,11 +170,12 @@ export default {
           this.minAmount,
           this.maxAmount,
           this.outcomeTypeFilter,
-          undefined, // outcomeSystemTypeFilter
+          this.outcomeSystemTypeFilter,
           this.paymentMethodFilter,
           undefined, // professionalFilter
           this.showRefundsOnly,
-          this.refundTypeFilter
+          this.refundTypeFilter,
+          this.hasRefund
         );
 
         // Load professionals if there are outcomes with professional data
@@ -470,41 +487,63 @@ export default {
 
     canRefund(outcome) {
       // Verificar si el outcome puede ser reembolsado
+
       // No se puede reembolsar si ya es un refund
       const isAlreadyRefund = this.isRefund(outcome);
+      if (isAlreadyRefund) {
+        return false;
+      }
 
       // No se puede reembolsar si el monto es 0 o negativo
       const hasValidAmount = outcome.amount && outcome.amount > 0;
+      if (!hasValidAmount) {
+        return false;
+      }
 
-      // Solo se pueden reembolsar ciertos tipos de outcomes
-      const isRefundable = !isAlreadyRefund && hasValidAmount;
+      // Solo se pueden reembolsar outcomes CONFIRMED
+      const isConfirmed = outcome.status === 'CONFIRMED';
+      if (!isConfirmed) {
+        return false;
+      }
 
-      return isRefundable;
+      return true;
     },
 
     isRefund(outcome) {
       // Verificar si el outcome es un refund basado en múltiples criterios
 
-      // 1. Verificar conceptType
+      // 1. Verificar conceptType (payment-refund, commission-reversal, etc.)
       if (outcome.conceptType) {
         const conceptType = outcome.conceptType.toLowerCase();
-        if (conceptType.includes('refund') || conceptType.includes('reversal')) {
+        if (conceptType.includes('refund') ||
+            conceptType.includes('reversal') ||
+            conceptType.includes('reembolso')) {
           return true;
         }
       }
 
-      // 2. Verificar descripción
-      if (outcome.description) {
-        const description = outcome.description.toLowerCase();
-        if (description.includes('reembolso') ||
-            description.includes('refund') ||
-            description.includes('reversión') ||
-            description.includes('reversão')) {
+      // 2. Verificar type field también
+      if (outcome.type) {
+        const type = outcome.type.toLowerCase();
+        if (type.includes('refund') ||
+            type.includes('reversal') ||
+            type.includes('reembolso')) {
           return true;
         }
       }
 
-      // 3. Verificar si tiene auxiliaryId (indica que es refund de otra transacción)
+      // 3. Verificar descripción/comment
+      if (outcome.description || outcome.comment) {
+        const text = ((outcome.description || '') + ' ' + (outcome.comment || '')).toLowerCase();
+        if (text.includes('reembolso') ||
+            text.includes('refund') ||
+            text.includes('reversión') ||
+            text.includes('reversão')) {
+          return true;
+        }
+      }
+
+      // 4. Verificar si tiene auxiliaryId (indica que es refund de otra transacción)
       if (outcome.auxiliaryId) {
         return true;
       }
@@ -551,6 +590,13 @@ export default {
       return 'PAYMENT_REFUND';
     },
 
+    getRefundBadgeClass(outcome) {
+      if (!this.isRefund(outcome)) return '';
+
+      const refundType = this.getRefundType(outcome);
+      return refundType === 'PAYMENT_REFUND' ? 'badge-warning' : 'badge-danger';
+    },
+
   },
   computed: {
     changeData() {
@@ -561,12 +607,6 @@ export default {
         queueId,
         limit,
       };
-    },
-    getRefundBadgeClass(outcome) {
-      if (!this.isRefund(outcome)) return '';
-
-      const refundType = this.getRefundType(outcome);
-      return refundType === 'PAYMENT_REFUND' ? 'badge-warning' : 'badge-danger';
     },
   },
   watch: {
@@ -867,6 +907,37 @@ export default {
                       </div>
                       <div class="col-6">
                         <label class="form-label metric-card-subtitle fw-bold">
+                          {{ $t('businessFinancial.filters.outcomeSystemType') || 'Tipo de Despesa' }}
+                        </label>
+                        <select
+                          class="form-control metric-controls"
+                          v-model="outcomeSystemTypeFilter"
+                          @change="refresh()"
+                        >
+                          <option :value="undefined">
+                            {{ $t('businessFinancial.filters.all') }}
+                          </option>
+                          <option value="PROFESSIONAL_COMMISSION">
+                            {{ $t('outcomeTypes.PROFESSIONAL_COMMISSION') || 'Comissão Profissional' }}
+                          </option>
+                          <option value="PRODUCT">
+                            {{ $t('outcomeTypes.PRODUCT') || 'Produto' }}
+                          </option>
+                          <option value="SERVICE">
+                            {{ $t('outcomeTypes.SERVICE') || 'Serviço' }}
+                          </option>
+                          <option value="OTHER">
+                            {{ $t('outcomeTypes.OTHER') || 'Outro' }}
+                          </option>
+                          <option value="REFUND">
+                            {{ $t('outcomeTypes.REFUND') || 'Reembolso' }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="row mt-2">
+                      <div class="col-6">
+                        <label class="form-label metric-card-subtitle fw-bold">
                           {{ $t('businessFinancial.filters.paymentMethod') }}
                         </label>
                         <select
@@ -910,6 +981,23 @@ export default {
                         </select>
                       </div>
                     </div>
+                    <!-- Toggle Com Reembolso -->
+                    <div class="row mt-2">
+                      <div class="col-12">
+                        <div class="form-check form-switch">
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            id="hasRefundOutcomes"
+                            :checked="hasRefund === true"
+                            @change="checkHasRefund"
+                          />
+                          <label class="form-check-label metric-card-subtitle" for="hasRefundOutcomes">
+                            {{ $t('outcomesList.withRefund') || 'Com Reembolso' }}
+                          </label>
+                        </div>
+                      </div>
+                    </div>
                     <!-- Sección de filtros para Refunds -->
                     <div class="row mt-3 border-top pt-3">
                       <div class="col-12">
@@ -944,7 +1032,7 @@ export default {
                           <option :value="undefined">
                             {{ $t('businessFinancial.filters.allRefundTypes') }}
                           </option>
-                          <option value="PAYMENT_REFUND">
+                          <option value="payment-refund">
                             {{ $t('businessFinancial.refunds.types.payment') }}
                           </option>
                           <option value="COMMISSION_REVERSAL">
@@ -1032,18 +1120,6 @@ export default {
                   v-for="(outcome, index) in financialOutcomes"
                   :key="`financialOutcomes-${index}`"
                 >
-                  <!-- Badge especial para refunds -->
-                  <div v-if="isRefund(outcome)" class="col-12 text-end mb-1">
-                    <span
-                      class="badge rounded-pill"
-                      :class="getRefundBadgeClass(outcome)"
-                    >
-                      <i class="bi bi-arrow-counterclockwise"></i>
-                      {{ getRefundType(outcome) === 'PAYMENT_REFUND'
-                           ? $t('businessFinancial.refunds.types.payment')
-                           : $t('businessFinancial.refunds.types.commission') }}
-                    </span>
-                  </div>
                   <OutcomeDetailsCard
                     :show="true"
                     :outcome="outcome"

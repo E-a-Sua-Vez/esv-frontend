@@ -119,6 +119,16 @@ export default {
     await this.getCurrentMonth();
   },
   methods: {
+    formatCurrencyForAlert(amount) {
+      // Format currency based on current locale
+      const locale = this.$i18n.locale || 'pt';
+      const formatted = amount.toLocaleString('de-DE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      // Return just the number - the currency symbol is in the translation string
+      return formatted;
+    },
     getDate(dateIn, timeZoneIn) {
       return getDate(dateIn, timeZoneIn);
     },
@@ -533,10 +543,7 @@ export default {
           icon: 'bi-clock-fill',
           message: this.$t('businessFinancial.alerts.pendingIncomes', {
             count: pendingIncomesCount,
-            amount: pendingIncomes.toLocaleString('de-DE', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }),
+            amount: this.formatCurrencyForAlert(pendingIncomes),
             days: pendingDaysThreshold,
           }),
           params: {
@@ -553,10 +560,7 @@ export default {
           icon: 'bi-clock-fill',
           message: this.$t('businessFinancial.alerts.pendingOutcomes', {
             count: pendingOutcomesCount,
-            amount: pendingOutcomes.toLocaleString('de-DE', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }),
+            amount: this.formatCurrencyForAlert(pendingOutcomes),
             days: pendingDaysThreshold,
           }),
           params: {
@@ -603,10 +607,7 @@ export default {
           type: 'warning',
           icon: 'bi-cash-stack',
           message: this.$t('businessFinancial.alerts.negativeProjectedCashFlow', {
-            amount: Math.abs(projectedCashFlow).toLocaleString('de-DE', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }),
+            amount: this.formatCurrencyForAlert(Math.abs(projectedCashFlow)),
           }),
           params: { amount: Math.abs(projectedCashFlow) },
         });
@@ -1661,6 +1662,16 @@ export default {
 
       return this.refundTrends.trends.refundAmountGrowth || 0;
     },
+    translateOutcomeType(typeName) {
+      if (!typeName) return this.$t('businessFinancial.categories.uncategorized');
+
+      // Check if translation exists in outcomeTypes
+      const translationKey = `outcomeTypes.${typeName}`;
+      const translated = this.$t(translationKey);
+
+      // If translation is the same as key, it doesn't exist, return original
+      return translated !== translationKey ? translated : typeName;
+    },
     getAdjustedNetProfit() {
       const incomes = this.calculatedMetrics?.['incomes.created']?.paymentData?.paymentAmountSum || 0;
       const outcomes = this.calculatedMetrics?.['outcomes.created']?.paymentData?.paymentAmountSum || 0;
@@ -1795,7 +1806,7 @@ export default {
 
       const categories = Object.keys(this.outcomesCategoryAnalysis.current);
       const labels = categories.map(
-        cat => cat || this.$t('businessFinancial.categories.uncategorized'),
+        cat => this.translateOutcomeType(cat)
       );
       const data = categories.map(
         cat => +this.outcomesCategoryAnalysis.current[cat]?.totalAmount || 0
@@ -2494,6 +2505,34 @@ export default {
                         :format-currency="false"
                         :show-tooltip="true"
                         :description="$t('businessFinancial.kpis.tooltips.daysUntilMonthEnd')"
+                        class="w-100 h-100"
+                      />
+                    </div>
+                    <div class="col-12 col-md-6 mb-3 d-flex">
+                      <FinancialKPICard
+                        :show="true"
+                        :title="$t('businessFinancial.kpis.totalRefunds') || 'Total Reembolsos'"
+                        :value="getRefundMetrics().totalAmount"
+                        :change="getRefundTrend()"
+                        :change-label="$t('businessFinancial.kpis.vsPreviousMonth')"
+                        icon="bi-arrow-counterclockwise"
+                        icon-style-class="red-icon"
+                        :format-currency="true"
+                        :show-tooltip="true"
+                        :description="$t('businessFinancial.kpis.tooltips.totalRefunds') || 'Total de dinero reembolsado a clientes en el período'"
+                        class="w-100 h-100"
+                      />
+                    </div>
+                    <div class="col-12 col-md-6 mb-3 d-flex">
+                      <FinancialKPICard
+                        :show="true"
+                        :title="$t('businessFinancial.kpis.refundCount') || 'Cantidad Reembolsos'"
+                        :value="getRefundMetrics().count"
+                        icon="bi-hash"
+                        icon-style-class="orange-icon"
+                        :format-currency="false"
+                        :show-tooltip="true"
+                        :description="$t('businessFinancial.kpis.tooltips.refundCount') || 'Número de transacciones reembolsadas'"
                         class="w-100 h-100"
                       />
                     </div>
@@ -3206,7 +3245,7 @@ export default {
                                     category.rank
                                   }}</span>
                                   <div>
-                                    <div class="fw-bold">{{ category.name }}</div>
+                                    <div class="fw-bold">{{ translateOutcomeType(category.name) }}</div>
                                     <div class="small text-muted">
                                       {{ category.count }}
                                       {{ $t('businessFinancial.categories.transactions') }}
@@ -3270,10 +3309,7 @@ export default {
                                   :key="categoryName"
                                 >
                                   <td>
-                                    {{
-                                      categoryName ||
-                                      $t('businessFinancial.categories.uncategorized')
-                                    }}
+                                    {{ translateOutcomeType(categoryName) }}
                                   </td>
                                   <td class="text-end">
                                     {{

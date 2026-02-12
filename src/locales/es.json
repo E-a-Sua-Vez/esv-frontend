@@ -268,7 +268,12 @@
     "PROFESSIONAL_COMMISSION": "Comisión Profesional",
     "PRODUCT": "Producto",
     "SERVICE": "Servicio",
-    "OTHER": "Otro"
+    "OTHER": "Otro",
+    "REFUND": "Reembolso",
+    "payment-refund": "Reembolso de Pago",
+    "commission-reversal": "Reversión de Comisión",
+    "service-refund": "Reembolso de Servicio",
+    "cancellation-refund": "Reembolso por Cancelación"
   },
   "incomeStatus": {
     "CONFIRMED": "Confirmado",
@@ -4690,6 +4695,7 @@
       "averageDailyIncome": "Promedio Diario de Ingresos",
       "daysUntilMonthEnd": "Días hasta Fin de Mes",
       "totalRefunds": "Reembolsos Totales",
+      "refundCount": "Cantidad de Reembolsos",
       "refundRate": "Tasa de Reembolsos",
       "vsPreviousMonth": "vs mes anterior",
       "vsPreviousPeriod": "vs período anterior",
@@ -4701,6 +4707,7 @@
         "averageDailyIncome": "Promedio de ingresos netos (después de comisiones) por día en el período seleccionado. Útil para proyecciones y análisis de desempeño diario. Fórmula: (Ingresos Totales - Comisiones) / Número de Días en el Período.",
         "daysUntilMonthEnd": "Cantidad de días restantes hasta el final del mes actual. Usado para cálculos de proyecciones y planificación financiera mensual.",
         "totalRefunds": "Suma total de reembolsos procesados en el período seleccionado. Incluye reembolsos de pagos y reversiones de comisiones. Representa dinero que sale del negocio.",
+        "refundCount": "Número total de transacciones reembolsadas en el período. Útil para identificar frecuencia de devoluciones y problemas de calidad.",
         "refundRate": "Porcentaje que representan los reembolsos respecto a los ingresos totales. Una tasa baja indica buena calidad de servicio. Fórmula: (Total Reembolsos / Ingresos Totales) × 100."
       }
     },
@@ -8930,6 +8937,7 @@
     "interested": "Interesado",
     "rejected": "Rechazado",
     "addLead": "Agregar Lead",
+    "addNewLead": "Nuevo Lead",
     "exportCSV": "Exportar CSV",
     "newLeads": "Nuevos Leads",
     "noLeadsDesc": "No hay leads en esta etapa",
@@ -8994,6 +9002,7 @@
     },
     "analytics": {
       "title": "Analytics y Métricas",
+      "subtitle": "Análisis e Insights",
       "conversionFunnel": "Embudo de Conversión",
       "keyMetrics": "Indicadores Clave",
       "totalLeads": "Total de Leads",
@@ -9170,8 +9179,12 @@
   },
   "financial": {
     "refunds": {
+      "refunded": "Reembolsado",
       "processRefund": "Procesar Reembolso",
       "refund": "Reembolso",
+      "refunded": "Reembolsado",
+      "withRefund": "Con Reembolso",
+      "withoutRefund": "Sin Reembolso",
       "originalTransaction": "Transacción Original",
       "transactionId": "ID de Transacción",
       "originalAmount": "Monto Original",
@@ -9226,7 +9239,47 @@
         "close": "Cerrar Período",
         "reopen": "Reabrir Período",
         "lock": "Bloquear Período",
-        "viewDetails": "Ver Detalles"
+        "viewDetails": "Ver Detalles",
+        "viewReport": "Reporte"
+      },
+      "labels": {
+        "accountingPeriod": "Período Contable",
+        "periodStatus": "Estado del Período",
+        "hideDetails": "Ocultar Detalles",
+        "showDetails": "Ver Detalles",
+        "financialSummary": "Resumen Financiero",
+        "totalIncomes": "Total Ingresos",
+        "numIncomes": "Nº Ingresos",
+        "totalOutcomes": "Total Egresos",
+        "numOutcomes": "Nº Egresos",
+        "totalCommissions": "Total Comisiones",
+        "totalRefunds": "Total Reembolsos",
+        "totalCommissionReversals": "Total Reversiones de Comisión",
+        "netAmount": "Monto Neto",
+        "periodInfo": "Información del Período",
+        "closedBy": "Cerrado por",
+        "closureDate": "Fecha de Cierre",
+        "lockedBy": "Bloqueado por",
+        "lockDate": "Fecha de Bloqueo",
+        "reopenedBy": "Reabierto por",
+        "reopenDate": "Fecha de Reapertura"
+      },
+      "report": {
+        "title": "Reporte del Período",
+        "until": "hasta",
+        "loading": "Cargando...",
+        "loadingReport": "Cargando reporte...",
+        "status": {
+          "open": "Abierto",
+          "closed": "Cerrado",
+          "locked": "Bloqueado"
+        },
+        "notes": "Notas",
+        "bankReconciliation": "Conciliación Bancaria",
+        "bankBalance": "Saldo Bancario",
+        "systemBalance": "Saldo del Sistema",
+        "difference": "Diferencia",
+        "transactions": "transacciones"
       },
       "totals": {
         "incomes": "Ingresos",
@@ -9307,5 +9360,13 @@
       "transactionInClosedPeriod": "Esta transacción pertenece a un período cerrado",
       "cannotModifyClosedTransaction": "No se puede modificar. Si necesitas hacer un ajuste, crea un refund o ajuste en el período actual."
     }
+  },
+  "incomesList": {
+    "withRefund": "Con Reembolso",
+    "withoutRefund": "Sin Reembolso"
+  },
+  "outcomesList": {
+    "withRefund": "Con Reembolso",
+    "withoutRefund": "Sin Reembolso"
   }
 }

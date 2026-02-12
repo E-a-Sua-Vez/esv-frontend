@@ -59,11 +59,11 @@
                   </div>
                   <div class="col-md-6">
                     <strong>{{ $t('financial.refunds.date') }}:</strong>
-                    <span class="text-muted ms-1">{{ formatDate(transaction.createdAt) }}</span>
+                    <span class="text-muted ms-1">{{ formatDate(transaction.date || transaction.createdAt || transaction.updatedAt) }}</span>
                   </div>
                   <div class="col-md-6">
                     <strong>{{ $t('financial.refunds.type') }}:</strong>
-                    <span class="text-muted ms-1">{{ transaction.conceptType }}</span>
+                    <span class="text-muted ms-1">{{ getTransactionType(transaction) }}</span>
                   </div>
                 </div>
               </div>
@@ -152,6 +152,12 @@
               </div>
             </div>
 
+            <!-- Alert de error -->
+            <div v-if="errorMessage" class="alert alert-danger d-flex align-items-center mb-3" role="alert">
+              <i class="bi bi-exclamation-circle-fill me-2"></i>
+              <div>{{ errorMessage }}</div>
+            </div>
+
             <!-- Alert de confirmación -->
             <div class="alert alert-warning d-flex align-items-center">
               <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -166,7 +172,7 @@
         <div class="modal-footer">
           <button
             type="button"
-            class="btn btn-outline-secondary"
+            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
             @click="$emit('close')"
             :disabled="loading"
           >
@@ -174,7 +180,7 @@
           </button>
           <button
             type="button"
-            class="btn btn-primary"
+            class="btn btn-sm btn-size fw-bold btn-primary rounded-pill px-4"
             :disabled="loading || !isFormValid"
             @click="processRefund"
           >
@@ -220,6 +226,7 @@ export default {
   setup(props, { emit }) {
     const { t } = useI18n();
     const loading = ref(false);
+    const errorMessage = ref('');
     const errors = reactive({});
 
     const formData = reactive({
@@ -248,12 +255,14 @@ export default {
         formData.type = '';
         formData.reason = '';
         formData.description = '';
+        errorMessage.value = '';
         clearErrors();
       }
     });
 
     const clearErrors = () => {
       Object.keys(errors).forEach(key => delete errors[key]);
+      errorMessage.value = '';
     };
 
     const validateForm = () => {
@@ -289,11 +298,12 @@ export default {
       }
 
       loading.value = true;
+      errorMessage.value = ''; // Limpiar mensaje de error previo
 
       try {
         const refundData = {
           originalTransactionId: props.transaction.id,
-          amount: formData.amount,
+          amount: Number(formData.amount),
           type: formData.type,
           reason: formData.reason,
           description: formData.description || undefined,
@@ -303,20 +313,35 @@ export default {
 
         const result = await financialService.createRefund(refundData);
 
-        if (result.success) {
+        if (result && result.success) {
           emit('refund-processed', {
+            success: true,
             ...result,
             originalTransaction: props.transaction,
             refundData
           });
-          emit('close'); // Cerrar el modal después de procesar exitosamente
+          // No cerrar el modal aquí - dejar que el parent lo haga después de refresh
         } else {
-          throw new Error(result.errorMessage || t('financial.refunds.errors.processError'));
+          throw new Error(result?.errorMessage || t('financial.refunds.errors.processError'));
         }
       } catch (error) {
         console.error('Error processing refund:', error);
-        // Aquí podrías mostrar un toast o alert de error
-        alert(error.message || t('financial.refunds.errors.processError'));
+
+        // Extraer el mensaje de error correcto
+        let extractedErrorMessage = t('financial.refunds.errors.processError');
+
+        if (error.response?.data?.message) {
+          // Si el mensaje es un array, tomar el primer elemento
+          if (Array.isArray(error.response.data.message)) {
+            extractedErrorMessage = error.response.data.message[0];
+          } else {
+            extractedErrorMessage = error.response.data.message;
+          }
+        } else if (error.message) {
+          extractedErrorMessage = error.message;
+        }
+
+        errorMessage.value = extractedErrorMessage;
       } finally {
         loading.value = false;
       }
@@ -330,7 +355,22 @@ export default {
     };
 
     const formatDate = (date) => {
-      return new Date(date).toLocaleDateString('es-AR', {
+      if (!date) return '-';
+
+      // Manejar Firebase Timestamp
+      let dateObj;
+      if (date.toDate && typeof date.toDate === 'function') {
+        dateObj = date.toDate();
+      } else if (date.seconds) {
+        dateObj = new Date(date.seconds * 1000);
+      } else {
+        dateObj = new Date(date);
+      }
+
+      // Verificar si la fecha es válida
+      if (isNaN(dateObj.getTime())) return '-';
+
+      return dateObj.toLocaleDateString('es-AR', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -339,15 +379,39 @@ export default {
       });
     };
 
+    const getTransactionType = (transaction) => {
+      if (!transaction) return '-';
+
+      // Intentar obtener el tipo de diferentes campos posibles
+      const type = transaction.conceptType || transaction.type || transaction.incomeType;
+
+      if (!type) return '-';
+
+      // Traducir tipos conocidos
+      const typeTranslations = {
+        'STANDARD': t('incomeTypes.STANDARD') || 'Recibimiento Normal',
+        'FUND_INCREASE': t('incomeTypes.FUND_INCREASE') || 'Aumento de Fondo',
+        'UNIQUE': t('incomeTypes.UNIQUE') || 'Pago Único',
+        'FIRST_PAYMENT': t('incomeTypes.FIRST_PAYMENT') || 'Primer Pago',
+        'INSTALLMENT': t('incomeTypes.INSTALLMENT') || 'Cuotas',
+        'income': 'Ingreso',
+        'outcome': 'Egreso'
+      };
+
+      return typeTranslations[type] || type;
+    };
+
     return {
       loading,
+      errorMessage,
       errors,
       formData,
       maxRefundAmount,
       isFormValid,
       processRefund,
       formatCurrency,
-      formatDate
+      formatDate,
+      getTransactionType
     };
   }
 };
@@ -395,18 +459,19 @@ export default {
 }
 
 .modal-body {
-  padding: 1.5rem 1.25rem;
+  padding: 1rem;
+  font-size: 0.8125rem;
   background: #ffffff;
 }
 
 .modal-footer {
-  background: #f8f9fa;
-  border-top: 1px solid #e9ecef;
-  border-radius: 0 0 12px 12px;
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgba(169, 169, 169, 0.15);
   display: flex;
+  gap: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 0 0 12px 12px;
   justify-content: flex-end;
-  gap: 0.75rem;
 }
 
 .card {

@@ -179,6 +179,12 @@ export default {
     },
     beneficiaryName() {
       if (!this.outcome) return 'N/I';
+
+      // Si ya tiene beneficiaryName en el outcome, usarlo directamente
+      if (this.outcome.beneficiaryName) {
+        return this.outcome.beneficiaryName.toUpperCase();
+      }
+
       // Si es un ID de profesional, intentar obtener el nombre
       if (this.outcome.beneficiary && this.outcome.type === 'PROFESSIONAL_COMMISSION') {
         const professionalName = this.getProfessionalName(this.outcome.beneficiary);

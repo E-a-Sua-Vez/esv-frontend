@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import qs from 'qs';
-import { requestQuery, getHeaders } from '../api';
+import { requestQuery, requestBackend, getHeaders } from '../api';
 
 export const getDailyMetrics = async (type, subtype, from, to, events = false) => {
   const options = {};
@@ -826,7 +826,8 @@ export const getIncomesDetails = async (
   maxAmount = undefined,
   incomeTypeFilter = undefined,
   paymentMethodFilter = undefined,
-  professionalFilter = undefined
+  professionalFilter = undefined,
+  hasRefund = undefined,
 ) => {
   const options = {};
   options.params = {
@@ -843,13 +844,19 @@ export const getIncomesDetails = async (
     fiscalNote: fiscalNote !== undefined ? fiscalNote.toString() : undefined,
     automatic: automatic !== undefined ? automatic.toString() : undefined,
     commissionPaid: commissionPaid !== undefined ? commissionPaid.toString() : undefined,
-    minAmount,
-    maxAmount,
     incomeTypeFilter,
     paymentMethodFilter,
-    // Add timestamp to prevent caching
-    _t: Date.now(),
   };
+
+  // Only include minAmount if it has a value and is greater than 0
+  if (minAmount !== undefined && minAmount !== null && minAmount > 0) {
+    options.params.minAmount = minAmount;
+  }
+
+  // Only include maxAmount if it has a value
+  if (maxAmount !== undefined && maxAmount !== null) {
+    options.params.maxAmount = maxAmount;
+  }
 
   // Only include professionalFilter if it has a value
   if (
@@ -858,6 +865,11 @@ export const getIncomesDetails = async (
     professionalFilter !== ''
   ) {
     options.params.professionalFilter = professionalFilter;
+  }
+
+  // Only include hasRefund if it has a value
+  if (hasRefund !== undefined) {
+    options.params.hasRefund = hasRefund.toString();
   }
 
   options.paramsSerializer = params => qs.stringify(params);
@@ -886,7 +898,8 @@ export const getOutcomesDetails = async (
   paymentMethodFilter = undefined,
   professionalFilter = undefined,
   refundsOnly = undefined,
-  refundTypeFilter = undefined
+  refundTypeFilter = undefined,
+  hasRefund = undefined
 ) => {
   const options = {};
   options.params = {
@@ -902,17 +915,32 @@ export const getOutcomesDetails = async (
     incomeStatus,
     fiscalNote: fiscalNote !== undefined ? fiscalNote.toString() : undefined,
     automatic: automatic !== undefined ? automatic.toString() : undefined,
-    minAmount,
-    maxAmount,
-    outcomeTypeFilter,
-    outcomeSystemTypeFilter,
-    paymentMethodFilter,
-    professionalFilter,
     refundsOnly,
     refundTypeFilter,
-    // Add timestamp to prevent caching
-    _t: Date.now(),
   };
+
+  // Conditionally add parameters that should only be sent when valid
+  if (minAmount !== undefined && minAmount !== null && minAmount > 0) {
+    options.params.minAmount = minAmount;
+  }
+  if (maxAmount !== undefined && maxAmount !== null && maxAmount > 0) {
+    options.params.maxAmount = maxAmount;
+  }
+  if (outcomeTypeFilter !== undefined && outcomeTypeFilter !== null) {
+    options.params.outcomeTypeFilter = outcomeTypeFilter;
+  }
+  if (outcomeSystemTypeFilter !== undefined && outcomeSystemTypeFilter !== null) {
+    options.params.outcomeSystemTypeFilter = outcomeSystemTypeFilter;
+  }
+  if (paymentMethodFilter !== undefined && paymentMethodFilter !== null) {
+    options.params.paymentMethodFilter = paymentMethodFilter;
+  }
+  if (professionalFilter !== undefined && professionalFilter !== null) {
+    options.params.professionalFilter = professionalFilter;
+  }
+  if (hasRefund !== undefined) {
+    options.params.hasRefund = hasRefund.toString();
+  }
   options.paramsSerializer = params => qs.stringify(params);
   const { headers } = await getHeaders();
   options.headers = headers;
@@ -954,7 +982,7 @@ export const createRefund = async (refundData) => {
   options.headers = headers;
 
   try {
-    const response = await requestQuery.post('refunds', refundData, options);
+    const response = await requestBackend.post('refunds', refundData, options);
     return response.data;
   } catch (error) {
     console.error('Error creating refund:', error);
@@ -998,7 +1026,7 @@ export const approveRefund = async (refundId) => {
   options.headers = headers;
 
   try {
-    const response = await requestQuery.post(`refunds/${refundId}/approve`, {}, options);
+    const response = await requestBackend.post(`refunds/${refundId}/approve`, {}, options);
     return response.data;
   } catch (error) {
     console.error('Error approving refund:', error);
@@ -1012,7 +1040,7 @@ export const rejectRefund = async (refundId, reason) => {
   options.headers = headers;
 
   try {
-    const response = await requestQuery.post(`refunds/${refundId}/reject`, { reason }, options);
+    const response = await requestBackend.post(`refunds/${refundId}/reject`, { reason }, options);
     return response.data;
   } catch (error) {
     console.error('Error rejecting refund:', error);

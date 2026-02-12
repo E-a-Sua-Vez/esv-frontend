@@ -21,13 +21,22 @@
             <i class="bi bi-calendar-check me-2"></i>
             {{ $t('financial.periods.title') }}
           </h5>
-          <button
-            class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
-            @click="showCreateModal = true"
-          >
-            <i class="bi bi-plus-lg me-1"></i>
-            {{ $t('financial.periods.newPeriod') }}
-          </button>
+          <div>
+            <button
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+              @click="clear()"
+              :disabled="loading"
+            >
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 ms-2"
+              @click="showCreateModal = true"
+            >
+              <i class="bi bi-plus-lg me-1"></i>
+              {{ $t('financial.periods.newPeriod') }}
+            </button>
+          </div>
         </div>
 
         <!-- Desktop Filters Slot (when shown inline with content) -->
@@ -525,11 +534,12 @@ export default {
     const totalPeriods = ref(0);
 
     // Filters
+    const currentYear = new Date().getFullYear();
     const searchText = ref('');
     const statusFilter = ref('');
-    const yearFilter = ref('');
-    const startDateFilter = ref('');
-    const endDateFilter = ref('');
+    const yearFilter = ref(currentYear.toString());
+    const startDateFilter = ref(`${currentYear}-01-01`);
+    const endDateFilter = ref(`${currentYear}-12-31`);
 
     // Mobile filters toggle
     const showFilterOptions = ref(false);
@@ -717,6 +727,24 @@ export default {
 
     const formatDate = (date) => {
       if (!date) return '';
+      // Parsear la fecha como fecha local sin conversión de timezone
+      if (date.toDate) {
+        return date.toDate().toLocaleDateString('es-ES', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      }
+      // Si es string ISO, extraer año/mes/día directamente para evitar conversión UTC
+      if (typeof date === 'string' && date.includes('-')) {
+        const [year, month, day] = date.split('T')[0].split('-');
+        const localDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        return localDate.toLocaleDateString('es-ES', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      }
       return new Date(date).toLocaleDateString('es-ES', {
         year: 'numeric',
         month: 'long',
@@ -767,6 +795,17 @@ export default {
       loadPeriods(); // Recargar sin filtros
     };
 
+    const clear = async () => {
+      const currentYear = new Date().getFullYear();
+      searchText.value = '';
+      statusFilter.value = '';
+      yearFilter.value = currentYear.toString();
+      startDateFilter.value = `${currentYear}-01-01`;
+      endDateFilter.value = `${currentYear}-12-31`;
+      page.value = 1;
+      await searchPeriods(); // Recargar con filtros por defecto
+    };
+
     const changePage = (newPage) => {
       if (newPage >= 1 && newPage <= totalPages.value) {
         page.value = newPage;
@@ -810,7 +849,8 @@ export default {
 
     onBeforeMount(async () => {
       if (props.commerce?.id) {
-        await loadPeriods();
+        // Use searchPeriods with default filters instead of loadPeriods
+        await searchPeriods();
       }
     });
 
@@ -829,6 +869,7 @@ export default {
       endDateFilter,
       showFilterOptions,
       clearFilters,
+      clear,
       changePage,
       searchPeriods,
       showCreateModal,

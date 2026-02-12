@@ -15,10 +15,10 @@
             </div>
             <div class="modern-modal-title-wrapper">
               <h5 class="modal-title fw-bold modern-modal-title">
-                Relatório do Período
+                {{ $t('financial.periods.report.title') }}
               </h5>
               <p v-if="period" class="modern-modal-subtitle">
-                {{ period.name }} - {{ formatDate(period.startDate) }} até {{ formatDate(period.endDate) }}
+                {{ period.name }} - {{ formatDate(period.startDate) }} {{ $t('financial.periods.report.until') }} {{ formatDate(period.endDate) }}
               </p>
             </div>
           </div>
@@ -35,9 +35,9 @@
         <div class="modal-body">
           <div v-if="loading" class="text-center py-5">
             <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Carregando...</span>
+              <span class="visually-hidden">{{ $t('financial.periods.report.loading') }}</span>
             </div>
-            <p class="mt-3 text-muted">Carregando relatório...</p>
+            <p class="mt-3 text-muted">{{ $t('financial.periods.report.loadingReport') }}</p>
           </div>
 
           <div v-else>
@@ -59,7 +59,7 @@
                     'bi-shield-lock': period.status === 'LOCKED'
                   }"
                 ></i>
-                {{ period.status === 'OPEN' ? 'Aberto' : period.status === 'CLOSED' ? 'Fechado' : 'Bloqueado' }}
+                {{ $t(`financial.periods.report.status.${period.status.toLowerCase()}`) }}
               </span>
             </div>
 
@@ -71,9 +71,9 @@
                     <i class="bi bi-arrow-down-circle"></i>
                   </div>
                   <div class="summary-content">
-                    <div class="summary-label">Receitas</div>
+                    <div class="summary-label">{{ $t('financial.periods.totals.incomes') }}</div>
                     <div class="summary-value">{{ formatCurrency(summary.totalIncomes) }}</div>
-                    <div class="summary-count">{{ summary.incomesCount }} transações</div>
+                    <div class="summary-count">{{ summary.incomesCount }} {{ $t('financial.periods.report.transactions') }}</div>
                   </div>
                 </div>
               </div>
@@ -83,30 +83,41 @@
                     <i class="bi bi-arrow-up-circle"></i>
                   </div>
                   <div class="summary-content">
-                    <div class="summary-label">Despesas</div>
+                    <div class="summary-label">{{ $t('financial.periods.totals.outcomes') }}</div>
                     <div class="summary-value">{{ formatCurrency(summary.totalOutcomes) }}</div>
-                    <div class="summary-count">{{ summary.outcomesCount }} transações</div>
+                    <div class="summary-count">{{ summary.outcomesCount }} {{ $t('financial.periods.report.transactions') }}</div>
                   </div>
                 </div>
               </div>
-              <div class="col-md-3">
+              <div class="col-md-2">
                 <div class="summary-card info">
                   <div class="summary-icon">
                     <i class="bi bi-percent"></i>
                   </div>
                   <div class="summary-content">
-                    <div class="summary-label">Comissões</div>
+                    <div class="summary-label">{{ $t('financial.periods.totals.commissions') }}</div>
                     <div class="summary-value">{{ formatCurrency(summary.totalCommissions) }}</div>
                   </div>
                 </div>
               </div>
-              <div class="col-md-3">
+              <div v-if="summary.totalRefunds > 0" class="col-md-2">
+                <div class="summary-card warning">
+                  <div class="summary-icon">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                  </div>
+                  <div class="summary-content">
+                    <div class="summary-label">{{ $t('financial.periods.totals.refunds') }}</div>
+                    <div class="summary-value">{{ formatCurrency(summary.totalRefunds) }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-2">
                 <div class="summary-card primary">
                   <div class="summary-icon">
                     <i class="bi bi-currency-dollar"></i>
                   </div>
                   <div class="summary-content">
-                    <div class="summary-label">Valor Líquido</div>
+                    <div class="summary-label">{{ $t('financial.periods.totals.netAmount') }}</div>
                     <div class="summary-value fw-bold">{{ formatCurrency(summary.netAmount) }}</div>
                   </div>
                 </div>
@@ -117,7 +128,7 @@
             <div v-if="period.notes" class="notes-section mb-4">
               <h6 class="notes-title">
                 <i class="bi bi-journal-text me-2"></i>
-                Notas
+                {{ $t('financial.periods.report.notes') }}
               </h6>
               <p class="notes-content">{{ period.notes }}</p>
             </div>
@@ -126,24 +137,24 @@
             <div v-if="period.reconciliationData && period.status !== 'OPEN'" class="reconciliation-section mb-4">
               <h6 class="reconciliation-title">
                 <i class="bi bi-bank me-2"></i>
-                Conciliação Bancária
+                {{ $t('financial.periods.report.bankReconciliation') }}
               </h6>
               <div class="row g-3">
                 <div class="col-md-4">
                   <div class="reconciliation-item">
-                    <label>Saldo Bancário</label>
+                    <label>{{ $t('financial.periods.report.bankBalance') }}</label>
                     <div class="value">{{ formatCurrency(period.reconciliationData.bankBalance) }}</div>
                   </div>
                 </div>
                 <div class="col-md-4">
                   <div class="reconciliation-item">
-                    <label>Saldo do Sistema</label>
+                    <label>{{ $t('financial.periods.report.systemBalance') }}</label>
                     <div class="value">{{ formatCurrency(period.reconciliationData.systemBalance) }}</div>
                   </div>
                 </div>
                 <div class="col-md-4">
                   <div class="reconciliation-item">
-                    <label>Diferença</label>
+                    <label>{{ $t('financial.periods.report.difference') }}</label>
                     <div class="value" :class="{ 'text-danger': period.reconciliationData.difference !== 0 }">
                       {{ formatCurrency(period.reconciliationData.difference) }}
                     </div>
@@ -215,12 +226,12 @@ export default {
 
     const loadSummary = async () => {
       if (!props.period?.id) return;
-      
+
       loading.value = true;
       try {
         const data = await getPeriodSummary(props.period.id);
         summary.value = data;
-        
+
         // Cargar transacciones
         const txData = await getPeriodTransactions(props.period.id);
         transactions.value = txData;
@@ -239,7 +250,27 @@ export default {
 
     const formatDate = (date) => {
       if (!date) return '';
-      return new Date(date).toLocaleDateString('pt-BR', {
+      // Parsear la fecha como fecha local sin conversión de timezone
+      const d = new Date(date);
+      // Si la fecha viene de Firestore (Timestamp) o ya es Date, usar directamente
+      if (date.toDate) {
+        return date.toDate().toLocaleDateString('pt-BR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      }
+      // Si es string ISO, extraer año/mes/día directamente para evitar conversión UTC
+      if (typeof date === 'string' && date.includes('-')) {
+        const [year, month, day] = date.split('T')[0].split('-');
+        const localDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        return localDate.toLocaleDateString('pt-BR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      }
+      return d.toLocaleDateString('pt-BR', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -261,7 +292,7 @@ export default {
       try {
         const jsPDF = await lazyLoadJsPDF();
         const doc = new jsPDF();
-        
+
         // Header with logo
         // Logo Hub (usando logo horizontal transparente)
         const logoUrl = '/images/hub/logo/hub-color-transparente.png';
@@ -278,35 +309,35 @@ export default {
         } catch (e) {
           console.warn('Could not load logo:', e);
         }
-        
+
         doc.setFontSize(18);
         doc.setFont(undefined, 'bold');
         doc.text('Relatório do Período Contábil', 14, 20);
-        
+
         doc.setFontSize(12);
         doc.setFont(undefined, 'normal');
         doc.text(props.period.name, 14, 28);
         doc.setFontSize(10);
         doc.text(`${formatDate(props.period.startDate)} até ${formatDate(props.period.endDate)}`, 14, 34);
-        
+
         // Status
-        const statusText = props.period.status === 'OPEN' ? 'Aberto' : 
+        const statusText = props.period.status === 'OPEN' ? 'Aberto' :
                           props.period.status === 'CLOSED' ? 'Fechado' : 'Bloqueado';
         doc.text(`Status: ${statusText}`, 14, 40);
-        
+
         // Line separator
         doc.setDrawColor(200);
         doc.line(14, 44, 196, 44);
-        
+
         // Financial Summary
         doc.setFontSize(14);
         doc.setFont(undefined, 'bold');
         doc.text('Resumo Financeiro', 14, 52);
-        
+
         doc.setFontSize(11);
         doc.setFont(undefined, 'normal');
         let yPos = 60;
-        
+
         doc.text(`Receitas:`, 14, yPos);
         doc.setFont(undefined, 'bold');
         doc.text(formatCurrency(summary.value.totalIncomes), 80, yPos);
@@ -315,7 +346,7 @@ export default {
         doc.text(`(${summary.value.incomesCount} transações)`, 120, yPos);
         doc.setFontSize(11);
         yPos += 8;
-        
+
         doc.text(`Despesas:`, 14, yPos);
         doc.setFont(undefined, 'bold');
         doc.text(formatCurrency(summary.value.totalOutcomes), 80, yPos);
@@ -324,47 +355,47 @@ export default {
         doc.text(`(${summary.value.outcomesCount} transações)`, 120, yPos);
         doc.setFontSize(11);
         yPos += 8;
-        
+
         doc.text(`Comissões:`, 14, yPos);
         doc.setFont(undefined, 'bold');
         doc.text(formatCurrency(summary.value.totalCommissions), 80, yPos);
         doc.setFont(undefined, 'normal');
         yPos += 8;
-        
+
         doc.text(`Reembolsos:`, 14, yPos);
         doc.setFont(undefined, 'bold');
         doc.text(formatCurrency(summary.value.totalRefunds), 80, yPos);
         doc.setFont(undefined, 'normal');
         yPos += 10;
-        
+
         // Line
         doc.setDrawColor(200);
         doc.line(14, yPos, 196, yPos);
         yPos += 8;
-        
+
         doc.setFontSize(12);
         doc.setFont(undefined, 'bold');
         doc.text(`Valor Líquido:`, 14, yPos);
         doc.setFontSize(14);
         doc.text(formatCurrency(summary.value.netAmount), 80, yPos);
         yPos += 12;
-        
+
         // Transactions Section - Incomes
         if (transactions.value.incomes.length > 0) {
           if (yPos > 220) {
             doc.addPage();
             yPos = 20;
           }
-          
+
           doc.setDrawColor(200);
           doc.line(14, yPos, 196, yPos);
           yPos += 8;
-          
+
           doc.setFontSize(14);
           doc.setFont(undefined, 'bold');
           doc.text('Receitas Detalhadas', 14, yPos);
           yPos += 8;
-          
+
           doc.setFontSize(8);
           doc.setFont(undefined, 'bold');
           doc.text('Data', 14, yPos);
@@ -376,20 +407,20 @@ export default {
           doc.setDrawColor(150);
           doc.line(14, yPos, 196, yPos);
           yPos += 4;
-          
+
           doc.setFont(undefined, 'normal');
           transactions.value.incomes.forEach((income) => {
             if (yPos > 270) {
               doc.addPage();
               yPos = 20;
             }
-            
+
             const date = new Date(income.paidAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
             const clientName = (income.clientName || 'N/A').substring(0, 20);
             const professionalName = (income.professionalName || 'N/A').substring(0, 20);
             const amount = formatCurrencyValue(income.amount);
             const commission = formatCurrencyValue(income.professionalCommission);
-            
+
             doc.text(date, 14, yPos);
             doc.text(clientName, 38, yPos);
             doc.text(professionalName, 85, yPos);
@@ -397,26 +428,26 @@ export default {
             doc.text(`R$ ${commission}`, 166, yPos);
             yPos += 5;
           });
-          
+
           yPos += 4;
         }
-        
+
         // Transactions Section - Outcomes
         if (transactions.value.outcomes.length > 0) {
           if (yPos > 220) {
             doc.addPage();
             yPos = 20;
           }
-          
+
           doc.setDrawColor(200);
           doc.line(14, yPos, 196, yPos);
           yPos += 8;
-          
+
           doc.setFontSize(14);
           doc.setFont(undefined, 'bold');
           doc.text('Despesas Detalhadas', 14, yPos);
           yPos += 8;
-          
+
           doc.setFontSize(8);
           doc.setFont(undefined, 'bold');
           doc.text('Data', 14, yPos);
@@ -427,68 +458,68 @@ export default {
           doc.setDrawColor(150);
           doc.line(14, yPos, 196, yPos);
           yPos += 4;
-          
+
           doc.setFont(undefined, 'normal');
           transactions.value.outcomes.forEach((outcome) => {
             if (yPos > 270) {
               doc.addPage();
               yPos = 20;
             }
-            
+
             const date = new Date(outcome.paidAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
             const concept = (outcome.concept || 'N/A').substring(0, 25);
             const description = (outcome.description || 'N/A').substring(0, 25);
             const amount = formatCurrencyValue(outcome.amount);
-            
+
             doc.text(date, 14, yPos);
             doc.text(concept, 38, yPos);
             doc.text(description, 100, yPos);
             doc.text(`R$ ${amount}`, 170, yPos);
             yPos += 5;
           });
-          
+
           yPos += 4;
         }
-        
+
         // Notes
         if (props.period.notes) {
           if (yPos > 240) {
             doc.addPage();
             yPos = 20;
           }
-          
+
           doc.setDrawColor(200);
           doc.line(14, yPos, 196, yPos);
           yPos += 8;
-          
+
           doc.setFontSize(12);
           doc.setFont(undefined, 'bold');
           doc.text('Notas', 14, yPos);
           yPos += 6;
-          
+
           doc.setFontSize(10);
           doc.setFont(undefined, 'normal');
           const splitNotes = doc.splitTextToSize(props.period.notes, 180);
           doc.text(splitNotes, 14, yPos);
           yPos += (splitNotes.length * 5) + 6;
         }
-        
+
         // Reconciliation
         if (props.period.reconciliationData && props.period.status !== 'OPEN') {
           if (yPos > 240) {
             doc.addPage();
             yPos = 20;
           }
-          
+
           doc.setDrawColor(200);
           doc.line(14, yPos, 196, yPos);
           yPos += 8;
-          
+
           doc.setFontSize(12);
           doc.setFont(undefined, 'bold');
           doc.text('Conciliação Bancária', 14, yPos);
           yPos += 8;
-          
+
           doc.setFontSize(10);
           doc.setFont(undefined, 'normal');
           doc.text(`Saldo Bancário: ${formatCurrency(props.period.reconciliationData.bankBalance)}`, 14, yPos);
@@ -497,7 +528,7 @@ export default {
           yPos += 6;
           doc.text(`Diferença: ${formatCurrency(props.period.reconciliationData.difference)}`, 14, yPos);
           yPos += 8;
-          
+
           if (props.period.reconciliationData.notes) {
             doc.setFont(undefined, 'bold');
             doc.text('Observações da Conciliação:', 14, yPos);
@@ -507,7 +538,7 @@ export default {
             doc.text(splitRecNotes, 14, yPos);
           }
         }
-        
+
         // Footer
         const pageCount = doc.internal.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {
@@ -520,14 +551,14 @@ export default {
             285
           );
           doc.text(`Página ${i} de ${pageCount}`, 196 - 20, 285, { align: 'right' });
-          
+
           // "Generado por Hub" centered at bottom
           doc.setFontSize(7);
           doc.setTextColor(100, 100, 100);
           doc.text('Gerado por Hub', 105, 292, { align: 'center' });
           doc.setTextColor(0, 0, 0); // Reset color
         }
-        
+
         // Save
         doc.save(`Relatorio_${props.period.name}_${new Date().toISOString().split('T')[0]}.pdf`);
       } catch (error) {
@@ -542,14 +573,14 @@ export default {
           incomesCount: transactions.value.incomes.length,
           outcomesCount: transactions.value.outcomes.length,
         });
-        
+
         // Create CSV content
         let csv = 'Relatório do Período Contábil\n\n';
         csv += `Período:,${props.period.name}\n`;
         csv += `Data Início:,${formatDate(props.period.startDate)}\n`;
         csv += `Data Fim:,${formatDate(props.period.endDate)}\n`;
         csv += `Status:,${props.period.status === 'OPEN' ? 'Aberto' : props.period.status === 'CLOSED' ? 'Fechado' : 'Bloqueado'}\n\n`;
-        
+
         csv += 'Resumo Financeiro\n';
         csv += 'Categoria,Valor,Transações\n';
         csv += `Receitas,${formatCurrencyValue(summary.value.totalIncomes)},${summary.value.incomesCount}\n`;
@@ -557,7 +588,7 @@ export default {
         csv += `Comissões,${formatCurrencyValue(summary.value.totalCommissions)},\n`;
         csv += `Reembolsos,${formatCurrencyValue(summary.value.totalRefunds)},\n`;
         csv += `Valor Líquido,${formatCurrencyValue(summary.value.netAmount)},\n\n`;
-        
+
         // Detailed Incomes
         if (transactions.value.incomes.length > 0) {
           csv += 'Receitas Detalhadas\n';
@@ -573,7 +604,7 @@ export default {
           });
           csv += '\n';
         }
-        
+
         // Detailed Outcomes
         if (transactions.value.outcomes.length > 0) {
           csv += 'Despesas Detalhadas\n';
@@ -589,12 +620,12 @@ export default {
           });
           csv += '\n';
         }
-        
+
         if (props.period.notes) {
           csv += 'Notas\n';
           csv += `"${props.period.notes.replace(/"/g, '""')}"\n\n`;
         }
-        
+
         if (props.period.reconciliationData && props.period.status !== 'OPEN') {
           csv += 'Conciliação Bancária\n';
           csv += `Saldo Bancário,${formatCurrencyValue(props.period.reconciliationData.bankBalance)}\n`;
@@ -604,7 +635,7 @@ export default {
             csv += `Observações,"${props.period.reconciliationData.notes.replace(/"/g, '""')}"\n`;
           }
         }
-        
+
         // Create blob and download
         const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');

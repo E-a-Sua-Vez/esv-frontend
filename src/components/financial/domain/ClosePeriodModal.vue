@@ -202,7 +202,7 @@
               {{ $t('financial.periods.close.confirmMessage', { name: period.name }) }}
             </div>
 
-            <div class="form-check mb-3">
+            <div class="form-check form-switch mb-3">
               <input
                 v-model="confirmations.reviewedNumbers"
                 class="form-check-input"
@@ -214,7 +214,7 @@
               </label>
             </div>
 
-            <div class="form-check mb-3">
+            <div class="form-check form-switch mb-3">
               <input
                 v-model="confirmations.bankReconciliation"
                 class="form-check-input"
@@ -226,7 +226,7 @@
               </label>
             </div>
 
-            <div class="form-check mb-3">
+            <div class="form-check form-switch mb-3">
               <input
                 v-model="confirmations.periodClose"
                 class="form-check-input"
@@ -386,7 +386,7 @@ export default {
         const summary = await getPeriodSummary(props.period.id);
         console.log('✅ Period summary received:', summary);
         periodSummary.value = summary;
-        
+
         // Set system balance
         reconciliation.value.systemBalance = summary.netAmount;
       } catch (error) {
@@ -466,6 +466,24 @@ export default {
 
     const formatDate = (date) => {
       if (!date) return '';
+      // Parsear la fecha como fecha local sin conversión de timezone
+      if (date.toDate) {
+        return date.toDate().toLocaleDateString('es-ES', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      }
+      // Si es string ISO, extraer año/mes/día directamente para evitar conversión UTC
+      if (typeof date === 'string' && date.includes('-')) {
+        const [year, month, day] = date.split('T')[0].split('-');
+        const localDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        return localDate.toLocaleDateString('es-ES', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      }
       return new Date(date).toLocaleDateString('es-ES', {
         year: 'numeric',
         month: 'long',

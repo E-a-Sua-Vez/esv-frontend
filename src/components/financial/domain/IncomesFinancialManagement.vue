@@ -78,6 +78,7 @@ export default {
       fiscalNote: undefined,
       automatic: undefined,
       commissionPaid: undefined,
+      hasRefund: undefined,
       incomeTypes: [],
       minAmount: undefined,
       maxAmount: undefined,
@@ -118,6 +119,7 @@ export default {
       this.fiscalNote = undefined;
       this.automatic = undefined;
       this.commissionPaid = undefined;
+      this.hasRefund = undefined;
       this.minAmount = undefined;
       this.maxAmount = undefined;
       this.incomeTypeFilter = undefined;
@@ -132,12 +134,24 @@ export default {
       } else {
         this.asc = false;
       }
+      // Force refresh when filter changes
+      if (this.filtersLocation === 'component') {
+        this.$nextTick(() => {
+          this.refresh();
+        });
+      }
     },
     async checkFiscalNote(event) {
       if (event.target.checked) {
         this.fiscalNote = true;
       } else {
         this.fiscalNote = false;
+      }
+      // Force refresh when filter changes
+      if (this.filtersLocation === 'component') {
+        this.$nextTick(() => {
+          this.refresh();
+        });
       }
     },
     async checkAutomatic(event) {
@@ -146,12 +160,31 @@ export default {
       } else {
         this.automatic = false;
       }
+      // Force refresh when filter changes
+      if (this.filtersLocation === 'component') {
+        this.$nextTick(() => {
+          this.refresh();
+        });
+      }
     },
     async checkCommissionPaid(event) {
       if (event.target.checked) {
         this.commissionPaid = true;
       } else {
         this.commissionPaid = false;
+      }
+      // Force refresh when filter changes
+      if (this.filtersLocation === 'component') {
+        this.$nextTick(() => {
+          this.refresh();
+        });
+      }
+    },
+    async checkHasRefund(event) {
+      if (event.target.checked) {
+        this.hasRefund = true;
+      } else {
+        this.hasRefund = undefined; // Reset to show all when unchecked
       }
       // Force refresh when filter changes
       if (this.filtersLocation === 'component') {
@@ -242,6 +275,7 @@ export default {
           this.incomeTypeFilter,
           this.paymentMethodFilter,
           this.professionalFilter,
+          this.hasRefund,
         );
 
         // Clear first to force UI update
@@ -253,7 +287,9 @@ export default {
         await this.$nextTick();
 
         // Force reactivity by creating a new array reference
-        this.financialIncomes = Array.isArray(incomes) ? [...incomes] : [];
+        const incomesArray = Array.isArray(incomes) ? [...incomes] : [];
+
+        this.financialIncomes = incomesArray;
 
         // Set default minAmount to 0 and maxAmount to maximum value from records if not already set
         // Only set these values if they haven't been explicitly set by the user
@@ -518,18 +554,28 @@ export default {
       try {
         console.log('Refund processed successfully:', result);
 
-        // Refrescar la lista completa para asegurar consistencia
-        await this.refresh();
+        // Validar que recibimos el resultado esperado
+        if (!result || !result.success) {
+          console.error('Invalid refund result:', result);
+          throw new Error('Invalid refund result received');
+        }
 
-        // Cerrar modal
+        // Cerrar modal primero para mejor UX
         this.closeRefundModal();
 
         // Mostrar mensaje de éxito
-        this.$toast.success(this.$t('financial.refunds.successMessage'));
+        if (this.$toast && this.$toast.success) {
+          this.$toast.success(this.$t('financial.refunds.successMessage'));
+        }
+
+        // Refrescar la lista completa para asegurar consistencia
+        await this.refresh();
 
       } catch (error) {
         console.error('Error handling refund result:', error);
-        this.$toast.error(this.$t('financial.refunds.errors.processError'));
+        if (this.$toast && this.$toast.error) {
+          this.$toast.error(this.$t('financial.refunds.errors.processError'));
+        }
       }
     },
 
@@ -747,11 +793,13 @@ export default {
       :fiscal-note="fiscalNote"
       :automatic="automatic"
       :commission-paid="commissionPaid"
+      :has-refund="hasRefund"
       :asc="asc"
       :loading="loading"
       :check-fiscal-note="checkFiscalNote"
       :check-automatic="checkAutomatic"
       :check-commission-paid="checkCommissionPaid"
+      :check-has-refund="checkHasRefund"
       :check-asc="checkAsc"
       :set-income-status="setIncomeStatus"
       :min-amount="minAmount"
@@ -1039,6 +1087,28 @@ export default {
                       </div>
                     </div>
                     <div class="row">
+                      <div class="col">
+                        <div class="form-check form-switch centered">
+                          <input
+                            class="form-check-input m-1"
+                            :class="hasRefund === false ? 'bg-danger' : ''"
+                            type="checkbox"
+                            name="hasRefund"
+                            id="hasRefund"
+                            v-model="hasRefund"
+                            @click="checkHasRefund($event)"
+                          />
+                          <label
+                            class="form-check-label metric-card-subtitle"
+                            for="hasRefund"
+                            >{{
+                              hasRefund
+                                ? $t('financial.refunds.withRefund') || 'Com Reembolso'
+                                : $t('financial.refunds.withoutRefund') || 'Sem Reembolso'
+                            }}</label
+                          >
+                        </div>
+                      </div>
                       <div class="col">
                         <div class="form-check form-switch centered">
                           <input

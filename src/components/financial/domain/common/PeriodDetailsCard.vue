@@ -20,7 +20,7 @@ export default {
 
     const loadPeriodTotals = async () => {
       if (!props.period?.id) return;
-      
+
       loadingTotals.value = true;
       try {
         const data = await getPeriodSummary(props.period.id);
@@ -115,7 +115,7 @@ export default {
         <!-- Period Type Icon -->
         <Popper :class="'dark'" arrow disable-click-away hover>
           <template #content>
-            <div>Período Contábil</div>
+            <div>{{ $t('financial.periods.labels.accountingPeriod') }}</div>
           </template>
           <div class="client-icon-mini" :class="getPeriodIconClass()" @click.stop>
             <i class="bi bi-calendar-check"></i>
@@ -131,7 +131,7 @@ export default {
             <span class="client-id-inline">{{ getDate(period.startDate) }} - {{ getDate(period.endDate) }}</span>
             <Popper :class="'dark'" arrow disable-click-away hover>
               <template #content>
-                <div>Status do Período</div>
+                <div>{{ $t('financial.periods.labels.periodStatus') }}</div>
               </template>
               <span class="badge-mini period-status">
                 <PeriodStatusBadge :status="period.status" />
@@ -143,7 +143,7 @@ export default {
         <!-- Details Toggle -->
         <Popper :class="'dark'" arrow disable-click-away hover>
           <template #content>
-            <div>{{ extendedEntity ? 'Ocultar Detalhes' : 'Ver Detalhes' }}</div>
+            <div>{{ extendedEntity ? $t('financial.periods.labels.hideDetails') : $t('financial.periods.labels.showDetails') }}</div>
           </template>
           <div class="collapse-icon-wrapper">
             <i class="collapse-icon" :class="extendedEntity ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
@@ -161,36 +161,36 @@ export default {
             v-if="period.status === 'OPEN'"
             class="action-btn warning"
             @click.stop="$emit('close-period', period)"
-            title="Fechar Período"
+            :title="$t('financial.periods.actions.close')"
           >
             <i class="bi bi-lock"></i>
-            <span>Fechar Período</span>
+            <span>{{ $t('financial.periods.actions.close') }}</span>
           </button>
           <button
             v-if="period.status === 'CLOSED'"
             class="action-btn info"
             @click.stop="$emit('reopen-period', period)"
-            title="Reabrir Período"
+            :title="$t('financial.periods.actions.reopen')"
           >
             <i class="bi bi-unlock"></i>
-            <span>Reabrir</span>
+            <span>{{ $t('financial.periods.actions.reopen') }}</span>
           </button>
           <button
             v-if="period.status === 'CLOSED'"
             class="action-btn secondary"
             @click.stop="$emit('lock-period', period)"
-            title="Bloquear Período"
+            :title="$t('financial.periods.actions.lock')"
           >
             <i class="bi bi-shield-lock"></i>
-            <span>Bloquear</span>
+            <span>{{ $t('financial.periods.actions.lock') }}</span>
           </button>
           <button
             class="action-btn primary"
             @click.stop="$emit('view-details', period)"
-            title="Ver Relatório Completo"
+            :title="$t('financial.periods.actions.viewReport')"
           >
             <i class="bi bi-eye"></i>
-            <span>Relatório</span>
+            <span>{{ $t('financial.periods.actions.viewReport') }}</span>
           </button>
         </div>
 
@@ -198,31 +198,39 @@ export default {
         <div class="info-section">
           <div class="info-section-header">
             <i class="bi bi-receipt"></i>
-            <span class="info-section-title">Resumo Financeiro</span>
+            <span class="info-section-title">{{ $t('financial.periods.labels.financialSummary') }}</span>
           </div>
           <div class="info-badges">
             <span class="info-badge success">
-              <span class="badge-label">Total Receitas::</span>
+              <span class="badge-label">{{ $t('financial.periods.labels.totalIncomes') }}::</span>
               <span class="badge-value"><i class="bi bi-coin"></i> {{ formatAmount(periodTotals?.totalIncomes || 0) }}</span>
             </span>
             <span class="info-badge">
-              <span class="badge-label">Nº Receitas::</span>
+              <span class="badge-label">{{ $t('financial.periods.labels.numIncomes') }}::</span>
               <span class="badge-value">{{ periodTotals?.incomesCount || 0 }}</span>
             </span>
             <span class="info-badge error">
-              <span class="badge-label">Total Despesas::</span>
+              <span class="badge-label">{{ $t('financial.periods.labels.totalOutcomes') }}::</span>
               <span class="badge-value"><i class="bi bi-coin"></i> {{ formatAmount(periodTotals?.totalOutcomes || 0) }}</span>
             </span>
             <span class="info-badge">
-              <span class="badge-label">Nº Despesas::</span>
+              <span class="badge-label">{{ $t('financial.periods.labels.numOutcomes') }}::</span>
               <span class="badge-value">{{ periodTotals?.outcomesCount || 0 }}</span>
             </span>
             <span class="info-badge info">
-              <span class="badge-label">Total Comissões::</span>
+              <span class="badge-label">{{ $t('financial.periods.labels.totalCommissions') }}::</span>
               <span class="badge-value"><i class="bi bi-coin"></i> {{ formatAmount(periodTotals?.totalCommissions || 0) }}</span>
             </span>
+            <span class="info-badge" :class="(periodTotals?.totalRefunds || 0) > 0 ? 'error' : ''">
+              <span class="badge-label">{{ $t('financial.periods.labels.totalRefunds') }}::</span>
+              <span class="badge-value"><i class="bi bi-arrow-counterclockwise"></i> {{ formatAmount(periodTotals?.totalRefunds || 0) }}</span>
+            </span>
+            <span class="info-badge" :class="(periodTotals?.totalCommissionReversals || 0) > 0 ? 'success' : ''">
+              <span class="badge-label">{{ $t('financial.periods.labels.totalCommissionReversals') }}::</span>
+              <span class="badge-value"><i class="bi bi-arrow-return-left"></i> {{ formatAmount(periodTotals?.totalCommissionReversals || 0) }}</span>
+            </span>
             <span class="info-badge warning">
-              <span class="badge-label">Valor Líquido::</span>
+              <span class="badge-label">{{ $t('financial.periods.labels.netAmount') }}::</span>
               <span class="badge-value"><i class="bi bi-coin"></i> {{ formatAmount(periodTotals?.netAmount || 0) }}</span>
             </span>
           </div>
@@ -232,23 +240,23 @@ export default {
         <div v-if="period.status !== 'OPEN'" class="info-section">
           <div class="info-section-header">
             <i class="bi bi-info-circle"></i>
-            <span class="info-section-title">Informação do Período</span>
+            <span class="info-section-title">{{ $t('financial.periods.labels.periodInfo') }}</span>
           </div>
           <div class="info-badges">
             <span v-if="period.status === 'CLOSED' && period.closedBy" class="info-badge">
-              <span class="badge-label">Fechado por::</span>
+              <span class="badge-label">{{ $t('financial.periods.labels.closedBy') }}::</span>
               <span class="badge-value"><i class="bi bi-person-fill"></i> {{ period.closedBy }}</span>
             </span>
             <span v-if="period.status === 'CLOSED' && period.closedAt" class="info-badge">
-              <span class="badge-label">Data de Fechamento::</span>
+              <span class="badge-label">{{ $t('financial.periods.labels.closureDate') }}::</span>
               <span class="badge-value">{{ formatDateTime(period.closedAt) }}</span>
             </span>
             <span v-if="period.status === 'LOCKED' && period.lockedBy" class="info-badge">
-              <span class="badge-label">Bloqueado por::</span>
+              <span class="badge-label">{{ $t('financial.periods.labels.lockedBy') }}::</span>
               <span class="badge-value"><i class="bi bi-shield-check"></i> {{ period.lockedBy }}</span>
             </span>
             <span v-if="period.status === 'LOCKED' && period.lockedAt" class="info-badge">
-              <span class="badge-label">Data de Bloqueio::</span>
+              <span class="badge-label">{{ $t('financial.periods.labels.lockDate') }}::</span>
               <span class="badge-value">{{ formatDateTime(period.lockedAt) }}</span>
             </span>
             <span v-if="period.notes" class="info-badge">
