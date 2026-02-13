@@ -112,6 +112,8 @@ export default {
       showSurveyResults: false,
       showPackageMetrics: false,
       showLgpdCompliance: false,
+      graphsSubsection: 'attentions', // attentions or bookings
+      surveysSubsection: 'results', // results or consolidated
       calculatedMetrics: {
         'attention.created': attentionCreated,
         'survey.created': surveyCreated,
@@ -206,6 +208,7 @@ export default {
         }
 
         await refresh();
+        activateTabFromHash(); // Activar pestaña desde hash si existe
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -422,12 +425,83 @@ export default {
       router.back();
     };
 
+    const formatDateDisplay = (dateStr) => {
+      if (!dateStr) return '';
+      const [year, month, day] = dateStr.split('-');
+      return `${day}-${month}-${year}`;
+    };
+
+    const currentMainTitle = computed(() => {
+      if (state.showIndicators) return 'dashboard.indicators';
+      if (state.showGraphs) return 'dashboard.graph';
+      if (state.showSurveyResults) return 'dashboard.surveys';
+      if (state.showPackageMetrics) return 'package.metrics.title';
+      if (state.showLgpdCompliance) return 'dashboard.lgpdCompliance.title';
+      return '';
+    });
+
+    const currentSubsection = computed(() => {
+      if (state.showGraphs && state.graphsSubsection === 'attentions') {
+        return 'dashboard.attentions';
+      }
+      if (state.showGraphs && state.graphsSubsection === 'bookings') {
+        return 'dashboard.bookings';
+      }
+      if (state.showSurveyResults && state.surveysSubsection === 'results') {
+        return 'dashboard.resume';
+      }
+      if (state.showSurveyResults && state.surveysSubsection === 'consolidated') {
+        return 'dashboard.consolidated';
+      }
+      return null;
+    });
+
+    const handleGraphsSubsectionChanged = (subsection) => {
+      state.graphsSubsection = subsection;
+    };
+
+    const handleSurveysSubsectionChanged = (subsection) => {
+      state.surveysSubsection = subsection;
+    };
+
+    const activateTabFromHash = () => {
+      const hash = window.location.hash.replace('#', '').toLowerCase();
+      if (!hash) return;
+
+      switch (hash) {
+        case 'indicadores':
+        case 'dashboard':
+        case 'indicators':
+          showIndicators();
+          break;
+        case 'tendencias':
+        case 'graficos':
+        case 'graphs':
+          showGraphs();
+          break;
+        case 'pesquisas':
+        case 'encuestas':
+        case 'surveys':
+          showSurvey();
+          break;
+        case 'lgpd':
+        case 'compliance':
+          showLgpdCompliance();
+          break;
+        case 'paquetes':
+        case 'packages':
+          showPackageMetrics();
+          break;
+      }
+    };
+
     const showIndicators = () => {
       state.showIndicators = true;
       state.showGraphs = false;
       state.showSurveyResults = false;
       state.showPackageMetrics = false;
       state.showLgpdCompliance = false;
+      window.location.hash = 'indicadores';
     };
 
     const showGraphs = () => {
@@ -436,6 +510,7 @@ export default {
       state.showSurveyResults = false;
       state.showPackageMetrics = false;
       state.showLgpdCompliance = false;
+      window.location.hash = 'tendencias';
     };
 
     const showSurvey = () => {
@@ -444,6 +519,7 @@ export default {
       state.showSurveyResults = true;
       state.showPackageMetrics = false;
       state.showLgpdCompliance = false;
+      window.location.hash = 'pesquisas';
     };
 
     const showPackageMetrics = () => {
@@ -452,6 +528,7 @@ export default {
       state.showSurveyResults = false;
       state.showPackageMetrics = true;
       state.showLgpdCompliance = false;
+      window.location.hash = 'paquetes';
     };
 
     const showLgpdCompliance = () => {
@@ -460,6 +537,7 @@ export default {
       state.showSurveyResults = false;
       state.showPackageMetrics = false;
       state.showLgpdCompliance = true;
+      window.location.hash = 'lgpd';
     };
 
     const surveyLabel = label => {
@@ -999,6 +1077,12 @@ export default {
       isActiveBusiness,
       refresh,
       commerce,
+      formatDateDisplay,
+      activateTabFromHash,
+      currentMainTitle,
+      currentSubsection,
+      handleGraphsSubsectionChanged,
+      handleSurveysSubsectionChanged,
       showIndicators,
       showSurvey,
       showGraphs,
@@ -1052,11 +1136,11 @@ export default {
               />
             </div>
             <div v-else class="control-box">
-              <div id="dashboard-controls">
-                <div class="row my-2">
+              <div id="dashboard-controls" class="text-center px-3 py-3">
+                <div class="row my-2 g-2">
                   <div class="col-3">
                     <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      class="btn btn-dark rounded-pill px-2 metric-filters w-100"
                       @click="getToday()"
                       :disabled="loading"
                     >
@@ -1065,7 +1149,7 @@ export default {
                   </div>
                   <div class="col-3">
                     <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      class="btn btn-dark rounded-pill px-2 metric-filters w-100"
                       @click="getCurrentMonth()"
                       :disabled="loading"
                     >
@@ -1074,7 +1158,7 @@ export default {
                   </div>
                   <div class="col-3">
                     <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      class="btn btn-dark rounded-pill px-2 metric-filters w-100"
                       @click="getLastMonth()"
                       :disabled="loading"
                     >
@@ -1083,7 +1167,7 @@ export default {
                   </div>
                   <div class="col-3">
                     <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
+                      class="btn btn-dark rounded-pill px-2 metric-filters w-100"
                       @click="getLastThreeMonths()"
                       :disabled="loading"
                     >
@@ -1091,7 +1175,7 @@ export default {
                     </button>
                   </div>
                 </div>
-                <div class="row">
+                <div class="row g-2">
                   <div class="col-6">
                     <input
                       id="startDate"
@@ -1109,33 +1193,20 @@ export default {
                     />
                   </div>
                 </div>
-                <div class="col">
-                  <button
-                    class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                    @click="refresh()"
-                    :disabled="loading"
-                  >
-                    <i class="bi bi-search"></i> {{ $t('dashboard.refresh') }}
-                  </button>
+                <div class="row">
+                  <div class="col-12">
+                    <button
+                      class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                      @click="refresh()"
+                      :disabled="loading"
+                    >
+                      <i class="bi bi-search"></i> {{ $t('dashboard.refresh') }}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
             <div v-if="!loading" id="dashboard-result" class="mt-2">
-              <div id="title" class="metric-title">
-                <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
-                <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
-                <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
-                <span v-else-if="state.showLgpdCompliance">{{
-                  $t('dashboard.lgpdCompliance.title') || 'Compliance LGPD'
-                }}</span>
-                <span v-else-if="state.showPackageMetrics">{{
-                  $t('package.metrics.title') || 'Métricas de Paquetes'
-                }}</span>
-              </div>
-              <div id="sub-title" class="metric-subtitle">
-                ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
-                {{ $t('dashboard.dates.to') }} {{ state.endDate }})
-              </div>
               <div class="row col mx-1 mt-3 mb-1">
                 <div class="col-3 centered">
                   <button
@@ -1144,7 +1215,7 @@ export default {
                     @click="showIndicators()"
                     :disabled="!state.toggles['dashboard.indicators.view']"
                   >
-                    {{ $t('dashboard.indicators') }} <br />
+                    <span class="d-none d-lg-inline">{{ $t('dashboard.indicators') }} <br /></span>
                     <i class="bi bi-stoplights-fill"></i>
                   </button>
                 </div>
@@ -1155,7 +1226,7 @@ export default {
                     @click="showGraphs()"
                     :disabled="!state.toggles['dashboard.graphs.view']"
                   >
-                    {{ $t('dashboard.graph') }} <br />
+                    <span class="d-none d-lg-inline">{{ $t('dashboard.graph') }} <br /></span>
                     <i class="bi bi-bar-chart-line-fill"></i>
                   </button>
                 </div>
@@ -1166,7 +1237,7 @@ export default {
                     @click="showSurvey()"
                     :disabled="false"
                   >
-                    {{ $t('dashboard.surveys') }} <br />
+                    <span class="d-none d-lg-inline">{{ $t('dashboard.surveys') }} <br /></span>
                     <i class="bi bi-patch-question-fill"></i>
                   </button>
                 </div>
@@ -1177,10 +1248,22 @@ export default {
                     @click="showLgpdCompliance()"
                     :disabled="false"
                   >
-                    {{ $t('dashboard.lgpdCompliance.title') || 'LGPD' }} <br />
+                    <span class="d-none d-lg-inline">{{ $t('dashboard.lgpdCompliance.title') || 'LGPD' }} <br /></span>
                     <i class="bi bi-shield-check"></i>
                   </button>
                 </div>
+              </div>
+              <div id="title" class="metric-title mt-4">
+                <span>
+                  {{ $t(currentMainTitle) }}
+                  <span v-if="currentSubsection" class="metric-subsection">
+                    / {{ $t(currentSubsection) }}
+                  </span>
+                </span>
+              </div>
+              <div id="sub-title" class="metric-subtitle">
+                ({{ $t('dashboard.dates.from') }} <strong>{{ formatDateDisplay(state.startDate) }}</strong>
+                {{ $t('dashboard.dates.to') }} <strong>{{ formatDateDisplay(state.endDate) }}</strong>)
               </div>
               <div>
                 <DashboardIndicators
@@ -1215,6 +1298,7 @@ export default {
                   :start-date="state.startDate"
                   :end-date="state.endDate"
                   :commerce="commerce"
+                  @subsection-changed="handleGraphsSubsectionChanged"
                 >
                 </DashboardGraphs>
                 <DashboardSurveys
@@ -1225,6 +1309,7 @@ export default {
                   :end-date="state.endDate"
                   :commerce="commerce"
                   :queues="state.queues"
+                  @subsection-changed="handleSurveysSubsectionChanged"
                 >
                 </DashboardSurveys>
                 <DashboardLgpdCompliance
@@ -1365,22 +1450,7 @@ export default {
 
               <template #content>
                 <div v-if="!loading" id="dashboard-result">
-                  <div id="title" class="metric-title">
-                    <span v-if="state.showIndicators">{{ $t('dashboard.indicators') }}</span>
-                    <span v-else-if="state.showGraphs">{{ $t('dashboard.graph') }}</span>
-                    <span v-else-if="state.showSurveyResults">{{ $t('dashboard.surveys') }}</span>
-                    <span v-else-if="state.showPackageMetrics">{{
-                      $t('package.metrics.title') || 'Métricas de Paquetes'
-                    }}</span>
-                    <span v-else-if="state.showLgpdCompliance">{{
-                      $t('dashboard.lgpdCompliance.title') || 'Compliance LGPD'
-                    }}</span>
-                  </div>
-                  <div id="sub-title" class="metric-subtitle">
-                    ({{ $t('dashboard.dates.from') }} {{ state.startDate }}
-                    {{ $t('dashboard.dates.to') }} {{ state.endDate }})
-                  </div>
-                  <div class="row col mx-1 mt-3 mb-1">
+                  <div class="row col mx-1 mb-1">
                     <div class="col-3 centered">
                       <button
                         class="btn btn-md btn-size fw-bold btn-dark rounded-pill"
@@ -1426,6 +1496,18 @@ export default {
                       </button>
                     </div>
                   </div>
+                  <div id="title" class="metric-title mt-4">
+                    <span>
+                      {{ $t(currentMainTitle) }}
+                      <span v-if="currentSubsection" class="metric-subsection">
+                        / {{ $t(currentSubsection) }}
+                      </span>
+                    </span>
+                  </div>
+                  <div id="sub-title" class="metric-subtitle">
+                    ({{ $t('dashboard.dates.from') }} <strong>{{ formatDateDisplay(state.startDate) }}</strong>
+                    {{ $t('dashboard.dates.to') }} <strong>{{ formatDateDisplay(state.endDate) }}</strong>)
+                  </div>
                   <div>
                     <DashboardIndicators
                       :show-indicators="state.showIndicators"
@@ -1458,6 +1540,7 @@ export default {
                       :start-date="state.startDate"
                       :end-date="state.endDate"
                       :commerce="commerce"
+                      @subsection-changed="handleGraphsSubsectionChanged"
                     >
                     </DashboardGraphs>
                     <DashboardSurveys
@@ -1469,6 +1552,7 @@ export default {
                       :commerce="commerce"
                       :queues="Array.isArray(state.queues) ? state.queues : []"
                       filters-location="slot"
+                      @subsection-changed="handleSurveysSubsectionChanged"
                     >
                     </DashboardSurveys>
                     <DashboardPackageMetrics
@@ -1506,7 +1590,6 @@ export default {
   font-size: 1.5rem;
   font-weight: 700;
   color: #000;
-  margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -1520,13 +1603,18 @@ export default {
   border-radius: 2px;
 }
 
+.metric-subsection {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.65);
+  margin-left: 0.5rem;
+}
+
 .metric-subtitle {
   text-align: left;
   font-size: 0.95rem;
   font-weight: 500;
   color: rgba(0, 0, 0, 0.6);
-  margin-bottom: 1.5rem;
-  padding-left: 1rem;
 }
 .select {
   border-radius: 0.5rem;

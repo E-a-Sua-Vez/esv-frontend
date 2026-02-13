@@ -399,8 +399,6 @@ export default {
 
     async onRefundProcessed(result) {
       try {
-        console.log('Refund processed successfully:', result);
-
         // Agregar el refund a la lista de outcomes
         if (result.data) {
           // El refund se agrega como un nuevo outcome con tipo REFUND

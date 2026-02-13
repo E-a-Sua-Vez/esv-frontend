@@ -172,21 +172,24 @@ export default {
 <style scoped>
 .modern-collection-details-content {
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
 /* Notification Details Style - matching AttentionNotificationDetails */
 .notification-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.625rem;
+  margin-bottom: 0.75rem;
 }
 
 .notification-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
+  gap: 0.5rem;
+  padding: 0.5rem;
   background: rgba(255, 255, 255, 0.5);
   border-radius: 8px;
   border: 1px solid rgba(169, 169, 169, 0.1);
@@ -200,9 +203,9 @@ export default {
 }
 
 .notification-icon-container {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -210,7 +213,7 @@ export default {
 }
 
 .notification-icon-container i {
-  font-size: 1.1rem;
+  font-size: 0.875rem;
 }
 
 .icon-blue {
@@ -246,22 +249,22 @@ export default {
 }
 
 .notification-label {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.6);
   line-height: 1.3;
 }
 
 .notification-value {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #000000;
   line-height: 1.2;
 }
 
 .details-expandable-section {
-  margin-top: 1rem;
-  border-radius: 10px;
+  margin-top: auto;
+  border-radius: 8px;
   overflow: hidden;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
   border: 1px solid rgba(169, 169, 169, 0.2);
@@ -270,7 +273,7 @@ export default {
 
 .details-toggle-btn {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.375rem 0.5rem;
   background: transparent;
   border: none;
   display: flex;
@@ -291,13 +294,13 @@ export default {
 }
 
 .details-toggle-text {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #000000;
 }
 
 .details-toggle-icon {
-  font-size: 1rem;
+  font-size: 0.875rem;
   color: #a9a9a9;
   transition: transform 0.2s ease;
 }
@@ -307,13 +310,13 @@ export default {
 }
 
 .detailed-data {
-  padding: 1rem;
+  padding: 0.75rem;
   max-height: 800px;
   overflow-y: auto;
   background: rgba(250, 251, 252, 0.5);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .details-expand-enter-active,
@@ -338,14 +341,14 @@ export default {
 
 /* Distribution Sections */
 .distribution-section {
-  padding: 1rem;
+  padding: 0.75rem;
   background: rgba(255, 255, 255, 0.6);
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid rgba(169, 169, 169, 0.1);
 }
 
 .distribution-section-title {
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #000000;
   margin-bottom: 1rem;
@@ -356,16 +359,16 @@ export default {
 .distribution-items {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .distribution-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem;
+  padding: 0.5rem;
   background: rgba(255, 255, 255, 0.8);
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid rgba(169, 169, 169, 0.1);
   transition: all 0.2s ease;
 }
@@ -377,26 +380,26 @@ export default {
 }
 
 .distribution-item-label {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.7);
 }
 
 .distribution-item-badge {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  padding: 0.35rem 0.75rem;
+  padding: 0.25rem 0.5rem;
   border-radius: 9999px;
   color: white;
   white-space: nowrap;
 }
 
 .distribution-item-badge-secondary {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.6);
   background: rgba(169, 169, 169, 0.12);
-  padding: 0.35rem 0.75rem;
+  padding: 0.25rem 0.5rem;
   border-radius: 9999px;
   white-space: nowrap;
 }
@@ -404,10 +407,10 @@ export default {
 .distribution-item-with-progress {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem;
+  gap: 0.375rem;
+  padding: 0.5rem;
   background: rgba(255, 255, 255, 0.8);
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid rgba(169, 169, 169, 0.1);
   transition: all 0.2s ease;
 }
@@ -426,8 +429,8 @@ export default {
 
 .modern-progress-bar-small {
   display: flex;
-  height: 28px;
-  border-radius: 8px;
+  height: 22px;
+  border-radius: 6px;
   overflow: hidden;
   background: rgba(169, 169, 169, 0.1);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -445,11 +448,11 @@ export default {
 }
 
 .progress-segment-value-small {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   white-space: nowrap;
-  padding: 0 0.5rem;
+  padding: 0 0.375rem;
 }
 
 .details-empty-state {

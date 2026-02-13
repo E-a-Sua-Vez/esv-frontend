@@ -16,6 +16,7 @@ export default {
     DashboardSurveysResult,
     DashboardSurveysConsolidated,
   },
+  emits: ['subsection-changed'],
   props: {
     showSurvey: { type: Boolean, default: false },
     calculatedMetrics: { type: Object, default: undefined },
@@ -34,14 +35,24 @@ export default {
       showSurveyConsolidated: false,
     };
   },
+  mounted() {
+    // Emit initial subsection state
+    if (this.showSurveyResults) {
+      this.$emit('subsection-changed', 'results');
+    } else if (this.showSurveyConsolidated) {
+      this.$emit('subsection-changed', 'consolidated');
+    }
+  },
   methods: {
     showSurveysResults() {
       this.showSurveyResults = true;
       this.showSurveyConsolidated = false;
+      this.$emit('subsection-changed', 'results');
     },
     showSurveysConsolidated() {
       this.showSurveyResults = false;
       this.showSurveyConsolidated = true;
+      this.$emit('subsection-changed', 'consolidated');
     },
   },
 };

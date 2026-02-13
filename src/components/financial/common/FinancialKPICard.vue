@@ -103,8 +103,8 @@ export default {
 .modern-metric-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.98) 100%);
   backdrop-filter: blur(10px);
-  padding: 0.875rem 0.75rem;
-  margin: 0.5rem;
+  padding: 0.625rem 0.5rem;
+  margin: 0.375rem;
   border-radius: 12px;
   border: 1px solid rgba(169, 169, 169, 0.2);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -177,13 +177,13 @@ export default {
 .metric-card-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .metric-icon-container {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -222,7 +222,7 @@ export default {
 }
 
 .metric-icon-container i {
-  font-size: 1.25rem;
+  font-size: 1rem;
 }
 
 .metric-title-section {
@@ -233,7 +233,7 @@ export default {
 }
 
 .metric-label {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.7);
   letter-spacing: 0.01em;
@@ -300,7 +300,7 @@ export default {
 .metric-value-container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .metric-value-section {
@@ -314,7 +314,7 @@ export default {
 }
 
 .metric-value {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #000000;
   line-height: 1.2;
@@ -381,40 +381,40 @@ export default {
 /* Responsive */
 @media (max-width: 768px) {
   .modern-metric-card {
-    padding: 0.75rem 0.625rem;
-  }
-
-  .metric-value {
-    font-size: 1.25rem;
-  }
-
-  .metric-icon-container {
-    width: 32px;
-    height: 32px;
-  }
-
-  .metric-icon-container i {
-    font-size: 1.1rem;
-  }
-}
-
-@media (max-width: 576px) {
-  .modern-metric-card {
-    padding: 0.625rem 0.5rem;
-    margin: 0.25rem;
+    padding: 0.5rem 0.375rem;
   }
 
   .metric-value {
     font-size: 1.125rem;
   }
 
+  .metric-icon-container {
+    width: 28px;
+    height: 28px;
+  }
+
+  .metric-icon-container i {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .modern-metric-card {
+    padding: 0.5rem 0.375rem;
+    margin: 0.25rem;
+  }
+
+  .metric-value {
+    font-size: 1rem;
+  }
+
   .metric-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
   }
 
   .metric-change {
-    font-size: 0.65rem;
-    padding: 0.15rem 0.35rem;
+    font-size: 0.625rem;
+    padding: 0.125rem 0.3rem;
   }
 }
 </style>

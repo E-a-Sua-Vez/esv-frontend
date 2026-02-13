@@ -552,8 +552,6 @@ export default {
 
     async onRefundProcessed(result) {
       try {
-        console.log('Refund processed successfully:', result);
-
         // Validar que recibimos el resultado esperado
         if (!result || !result.success) {
           console.error('Invalid refund result:', result);

@@ -474,29 +474,18 @@ export default {
         }
 
         // ✨ NUEVO: Verificar si el backend envía métricas calculadas
-        console.log('📡 RESPONSE FROM BACKEND:', { calculatedMetrics, financialSummary });
-
         if (financialSummary) {
-          console.log('💰 USING BACKEND CALCULATED METRICS:');
-          console.log('Financial Summary:', financialSummary);
-          console.log('Net Profit from backend:', financialSummary.netProfit);
-
           // Usar todas las métricas ya calculadas del backend
           this.financialResume.resume.diff = financialSummary.netProfit;
           this.financialResume.resume.avg = financialSummary.margin;
           this.financialResume.resume.averageDailyIncome = financialSummary.averageDailyIncome;
           this.financialResume.resume.daysUntilMonthEnd = financialSummary.daysUntilMonthEnd;
 
-          console.log('✅ Values assigned:');
-          console.log('  - diff (net profit):', this.financialResume.resume.diff);
-          console.log('  - avg (margin):', this.financialResume.resume.avg);
-
           // Usar alertas del backend si están disponibles
           if (financialSummary.alerts) {
             this.alerts = financialSummary.alerts;
           }
         } else {
-          console.log('⚠️ Fallback to frontend calculations');
           // FALLBACK: Mantener cálculos del frontend si el backend no los envía
           const totalIncomes = +(incomes.paymentData?.paymentAmountSum || 0);
           const totalCommissions = +(incomes.paymentData?.paymentCommissionSum || 0);
@@ -2460,12 +2449,13 @@ export default {
                 >
                 </PDFHeader>
                 <div>
-                  <!-- KPIs Section - 2 per row with same height -->
+                  <!-- KPIs Section - 3 per row (4+3+3 layout) -->
                   <div
                     v-if="calculatedMetrics && Object.keys(calculatedMetrics).length > 0"
                     class="row mb-3 kpi-cards-container"
                   >
-                    <div class="col-12 col-md-6 mb-3 d-flex">
+                    <!-- Primera fila: 4 cards principales -->
+                    <div class="col-12 col-md-6 col-lg-3 mb-3 d-flex">
                       <FinancialKPICard
                         :show="true"
                         :title="$t('businessFinancial.kpis.totalIncomes')"
@@ -2482,7 +2472,7 @@ export default {
                         class="w-100 h-100"
                       />
                     </div>
-                    <div class="col-12 col-md-6 mb-3 d-flex">
+                    <div class="col-12 col-md-6 col-lg-3 mb-3 d-flex">
                       <FinancialKPICard
                         :show="true"
                         :title="$t('businessFinancial.kpis.totalOutcomes')"
@@ -2499,7 +2489,7 @@ export default {
                         class="w-100 h-100"
                       />
                     </div>
-                    <div class="col-12 col-md-6 mb-3 d-flex">
+                    <div class="col-12 col-md-6 col-lg-3 mb-3 d-flex">
                       <FinancialKPICard
                         :show="true"
                         :title="$t('businessFinancial.kpis.netProfit')"
@@ -2514,7 +2504,7 @@ export default {
                         class="w-100 h-100"
                       />
                     </div>
-                    <div class="col-12 col-md-6 mb-3 d-flex">
+                    <div class="col-12 col-md-6 col-lg-3 mb-3 d-flex">
                       <FinancialKPICard
                         :show="true"
                         :title="$t('businessFinancial.kpis.profitMargin')"
@@ -2530,7 +2520,9 @@ export default {
                         class="w-100 h-100"
                       />
                     </div>
-                    <div class="col-12 col-md-6 mb-3 d-flex">
+
+                    <!-- Segunda fila: 3 cards -->
+                    <div class="col-12 col-md-6 col-lg-4 mb-3 d-flex">
                       <FinancialKPICard
                         :show="true"
                         :title="$t('businessFinancial.kpis.averageDailyIncome')"
@@ -2543,7 +2535,7 @@ export default {
                         class="w-100 h-100"
                       />
                     </div>
-                    <div class="col-12 col-md-6 mb-3 d-flex">
+                    <div class="col-12 col-md-6 col-lg-4 mb-3 d-flex">
                       <FinancialKPICard
                         :show="true"
                         :title="$t('businessFinancial.kpis.daysUntilMonthEnd')"
@@ -2556,7 +2548,7 @@ export default {
                         class="w-100 h-100"
                       />
                     </div>
-                    <div class="col-12 col-md-6 mb-3 d-flex">
+                    <div class="col-12 col-md-6 col-lg-4 mb-3 d-flex">
                       <FinancialKPICard
                         :show="true"
                         :title="$t('businessFinancial.kpis.totalRefunds') || 'Total Reembolsos'"
@@ -2571,7 +2563,9 @@ export default {
                         class="w-100 h-100"
                       />
                     </div>
-                    <div class="col-12 col-md-6 mb-3 d-flex">
+
+                    <!-- Tercera fila: 3 cards -->
+                    <div class="col-12 col-md-6 col-lg-4 mb-3 d-flex">
                       <FinancialKPICard
                         :show="true"
                         :title="$t('businessFinancial.kpis.refundCount') || 'Cantidad Reembolsos'"
@@ -2584,9 +2578,7 @@ export default {
                         class="w-100 h-100"
                       />
                     </div>
-
-                    <!-- Nuevas KPI Cards para Refunds -->
-                    <div class="col-12 col-md-6 mb-3 d-flex">
+                    <div class="col-12 col-md-6 col-lg-4 mb-3 d-flex">
                       <FinancialKPICard
                         :show="true"
                         :title="$t('businessFinancial.kpis.totalRefunds')"
@@ -2601,7 +2593,7 @@ export default {
                         class="w-100 h-100"
                       />
                     </div>
-                    <div class="col-12 col-md-6 mb-3 d-flex">
+                    <div class="col-12 col-md-6 col-lg-4 mb-3 d-flex">
                       <FinancialKPICard
                         :show="true"
                         :title="$t('businessFinancial.kpis.refundRate')"
@@ -2743,10 +2735,11 @@ export default {
                     </div>
                   </div>
 
-                  <div class="row">
-                    <div v-if="calculatedMetrics && Object.keys(calculatedMetrics).length > 0">
-                      <div class="modern-card m-2" v-if="calculatedMetrics['incomes.created']">
-                        <div class="fw-bold mb-2">
+                  <!-- Collection Details - 2 columns layout -->
+                  <div class="row mb-3" v-if="calculatedMetrics && Object.keys(calculatedMetrics).length > 0">
+                    <div class="col-12 col-lg-6 mb-3" v-if="calculatedMetrics['incomes.created']">
+                      <div class="modern-card m-1 h-100">
+                        <div class="fw-bold mb-2" style="font-size: 0.875rem;">
                           <span> {{ $t('dashboard.incomes') }} </span>
                         </div>
                         <IncomesCollectionDetails
@@ -2771,8 +2764,10 @@ export default {
                         >
                         </IncomesCollectionDetails>
                       </div>
-                      <div class="modern-card m-2" v-if="calculatedMetrics['outcomes.created']">
-                        <div class="fw-bold mb-2">
+                    </div>
+                    <div class="col-12 col-lg-6 mb-3" v-if="calculatedMetrics['outcomes.created']">
+                      <div class="modern-card m-1 h-100">
+                        <div class="fw-bold mb-2" style="font-size: 0.875rem;">
                           <span> {{ $t('dashboard.outcomes') }} </span>
                         </div>
                         <OutcomesCollectionDetails

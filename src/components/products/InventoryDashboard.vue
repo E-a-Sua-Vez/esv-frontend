@@ -132,14 +132,46 @@ export default {
         maximumFractionDigits: decimals,
       }).format(value);
     },
+    formatDateString(dateStr) {
+      if (!dateStr) return '';
+      // Format YYYY-MM-DD to DD/MM/YYYY without timezone issues
+      const [year, month, day] = dateStr.split('-');
+      return `${day}/${month}/${year}`;
+    },
+    formatDateShort(dateStr) {
+      if (!dateStr) return '';
+      // Format YYYY-MM-DD to DD/MM without timezone issues
+      const parts = dateStr.split('T')[0].split('-'); // Handle both "YYYY-MM-DD" and "YYYY-MM-DDTHH:mm:ss"
+      const day = parts[2];
+      const month = parts[1];
+      return `${day}/${month}`;
+    },
     getDisplayTrends() {
       if (!this.kpis || !this.kpis.trends) return [];
-      // Mostrar todos los puntos o máximo 30 para mejor visualización
-      return this.kpis.trends.length > 30
-        ? this.kpis.trends.filter(
-            (_, index) => index % Math.ceil(this.kpis.trends.length / 30) === 0,
-          )
-        : this.kpis.trends;
+
+      // Asegurar que trends están ordenados por fecha ascendente
+      const sortedTrends = [...this.kpis.trends].sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateA - dateB;
+      });
+
+      // Si hay 30 o menos puntos, mostrar todos
+      if (sortedTrends.length <= 30) {
+        return sortedTrends;
+      }
+
+      // Si hay más de 30, filtrar pero siempre incluir el último
+      const step = Math.ceil(sortedTrends.length / 30);
+      const filtered = sortedTrends.filter((_, index) => index % step === 0);
+
+      // Asegurar que el último día siempre está incluido
+      const lastTrend = sortedTrends[sortedTrends.length - 1];
+      if (filtered[filtered.length - 1].date !== lastTrend.date) {
+        filtered.push(lastTrend);
+      }
+
+      return filtered;
     },
     getMaxValue(type = 'both') {
       if (!this.kpis || !this.kpis.trends) return 1;
@@ -428,8 +460,8 @@ export default {
               </div>
             </div>
 
-            <!-- KPI: Valor Total -->
-            <div class="kpi-card kpi-value-card">
+            <!-- KPI: Valor Total - Oculto temporalmente -->
+            <!-- <div class="kpi-card kpi-value-card">
               <div class="kpi-icon">
                 <i class="bi bi-currency-dollar"></i>
               </div>
@@ -442,7 +474,7 @@ export default {
                   {{ $t('inventoryDashboard.totalValueDesc') || 'Valor del inventario' }}
                 </div>
               </div>
-            </div>
+            </div> -->
           </div>
         </div>
 
@@ -828,8 +860,7 @@ export default {
               <i class="bi bi-bar-chart"></i>
               {{ $t('inventoryDashboard.comparativeChart') || 'Comparativo Consumo vs Recarga' }}
               <span v-if="startDate && endDate" class="trends-period">
-                ({{ new Date(startDate).toLocaleDateString() }} -
-                {{ new Date(endDate).toLocaleDateString() }})
+                ({{ formatDateString(startDate) }} - {{ formatDateString(endDate) }})
               </span>
             </h4>
             <div class="trends-chart">
@@ -850,24 +881,19 @@ export default {
                   class="trend-bar-group"
                 >
                   <div class="trend-date">
-                    {{
-                      new Date(trend.date).toLocaleDateString('es-ES', {
-                        day: '2-digit',
-                        month: '2-digit',
-                      })
-                    }}
+                    {{ formatDateShort(trend.date) }}
                   </div>
                   <div class="trend-bars-container">
                     <div
                       class="trend-bar consumption-bar"
-                      :style="getBarHeight(trend.consumption, 'consumption')"
+                      :style="getBarHeight(trend.consumption, 'both')"
                       :title="`${$t('inventoryDashboard.consumption') || 'Consumo'}: ${formatNumber(
                         trend.consumption
                       )}`"
                     ></div>
                     <div
                       class="trend-bar replacement-bar"
-                      :style="getBarHeight(trend.replacement, 'replacement')"
+                      :style="getBarHeight(trend.replacement, 'both')"
                       :title="`${
                         $t('inventoryDashboard.replacement') || 'Recargas'
                       }: ${formatNumber(trend.replacement)}`"
@@ -912,9 +938,7 @@ export default {
                       r="4"
                       fill="#dc3545"
                       class="line-chart-point"
-                      :title="`${formatNumber(point.value)} - ${new Date(
-                        point.date
-                      ).toLocaleDateString()}`"
+                      :title="`${formatNumber(point.value)} - ${formatDateString(point.date)}`"
                     />
                   </g>
                 </svg>
@@ -924,12 +948,7 @@ export default {
                     :key="index"
                     class="line-chart-label"
                   >
-                    {{
-                      new Date(trend.date).toLocaleDateString('es-ES', {
-                        day: '2-digit',
-                        month: '2-digit',
-                      })
-                    }}
+                    {{ formatDateShort(trend.date) }}
                   </div>
                 </div>
               </div>
@@ -970,9 +989,7 @@ export default {
                       r="4"
                       fill="#28a745"
                       class="line-chart-point"
-                      :title="`${formatNumber(point.value)} - ${new Date(
-                        point.date
-                      ).toLocaleDateString()}`"
+                      :title="`${formatNumber(point.value)} - ${formatDateString(point.date)}`"
                     />
                   </g>
                 </svg>
@@ -982,12 +999,7 @@ export default {
                     :key="index"
                     class="line-chart-label"
                   >
-                    {{
-                      new Date(trend.date).toLocaleDateString('es-ES', {
-                        day: '2-digit',
-                        month: '2-digit',
-                      })
-                    }}
+                    {{ formatDateShort(trend.date) }}
                   </div>
                 </div>
               </div>
@@ -1009,52 +1021,52 @@ export default {
 
 <style scoped>
 .inventory-dashboard {
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
 }
 
 .dashboard-title {
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
   color: #000;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .dashboard-title i {
   color: var(--azul-turno);
+  font-size: 0.9rem;
 }
 
 /* KPIs Grid */
 .kpis-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .kpis-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .kpi-card {
   background: #ffffff;
-  border-radius: 0.75rem;
-  padding: 1.25rem;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  gap: 0.625rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  border-left: 4px solid;
+  border-left: 3px solid;
 }
 
 .kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .kpi-critical {
@@ -1078,7 +1090,7 @@ export default {
 }
 
 .kpi-icon {
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   opacity: 0.8;
 }
 
@@ -1107,64 +1119,69 @@ export default {
 }
 
 .kpi-label {
-  font-size: 0.875rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.6);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.25rem;
+  letter-spacing: 0.3px;
+  margin-bottom: 0.125rem;
 }
 
 .kpi-value {
-  font-size: 2rem;
+  font-size: 1.375rem;
   font-weight: 700;
   color: #000;
-  line-height: 1.2;
-  margin-bottom: 0.25rem;
+  line-height: 1.1;
+  margin-bottom: 0.125rem;
 }
 
 .kpi-description {
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   color: rgba(0, 0, 0, 0.5);
+  line-height: 1.2;
 }
 
 /* Sections */
 .section-title {
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
   font-weight: 700;
-  margin-bottom: 1rem;
+  margin-bottom: 0.625rem;
   color: #000;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
+}
+
+.section-title i {
+  font-size: 0.875rem;
 }
 
 /* Critical Products */
 .critical-products-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .critical-products-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .critical-product-card {
   background: #ffffff;
-  border-radius: 0.5rem;
-  padding: 1rem;
+  border-radius: 0.375rem;
+  padding: 0.625rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-  border-left: 4px solid #dc3545;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  border-left: 3px solid #dc3545;
   transition: all 0.2s ease;
 }
 
 .critical-product-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateX(2px);
 }
 
 .product-info {
@@ -1172,20 +1189,20 @@ export default {
 }
 
 .product-name {
-  font-size: 1rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: #000;
-  margin-bottom: 0.5rem;
-}
-
-.product-stock {
-  font-size: 0.875rem;
-  color: rgba(0, 0, 0, 0.7);
   margin-bottom: 0.25rem;
 }
 
+.product-stock {
+  font-size: 0.6875rem;
+  color: rgba(0, 0, 0, 0.7);
+  margin-bottom: 0.125rem;
+}
+
 .stock-level {
-  margin-right: 0.5rem;
+  margin-right: 0.375rem;
 }
 
 .stock-percentage {
@@ -1193,7 +1210,7 @@ export default {
 }
 
 .product-prediction {
-  font-size: 0.8125rem;
+  font-size: 0.625rem;
   color: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
@@ -1201,80 +1218,80 @@ export default {
 }
 
 .product-actions {
-  margin-left: 1rem;
+  margin-left: 0.625rem;
 }
 
 /* Expiring Products */
 .expiring-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .expiring-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .expiring-product-card {
   background: #ffffff;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-  border-left: 4px solid #ffc107;
+  border-radius: 0.375rem;
+  padding: 0.625rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  border-left: 3px solid #ffc107;
 }
 
 .expiration-info {
-  font-size: 0.875rem;
+  font-size: 0.6875rem;
   color: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .expiration-date {
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   color: rgba(0, 0, 0, 0.5);
-  margin-left: 0.5rem;
+  margin-left: 0.375rem;
 }
 
 /* Charts Section */
 .charts-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .chart-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .trends-chart {
   background: #ffffff;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 0.375rem;
+  padding: 0.875rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .trends-legend {
   display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
+  gap: 1rem;
+  margin-bottom: 0.625rem;
   justify-content: center;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
   color: rgba(0, 0, 0, 0.7);
 }
 
 .legend-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
 }
 
 .legend-color.consumption {
@@ -1287,10 +1304,10 @@ export default {
 
 .trends-bars {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.375rem;
   align-items: flex-end;
-  height: 200px;
-  padding: 1rem 0;
+  height: 140px;
+  padding: 0.625rem 0;
 }
 
 .trend-bar-group {
@@ -1302,25 +1319,25 @@ export default {
 }
 
 .trend-date {
-  font-size: 0.6875rem;
+  font-size: 0.5625rem;
   color: rgba(0, 0, 0, 0.5);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
   writing-mode: horizontal-tb;
 }
 
 .trend-bars-container {
   flex: 1;
   display: flex;
-  gap: 2px;
+  gap: 1px;
   align-items: flex-end;
   width: 100%;
-  max-width: 40px;
+  max-width: 32px;
 }
 
 .trend-bar {
   flex: 1;
-  border-radius: 3px 3px 0 0;
-  min-height: 5px;
+  border-radius: 2px 2px 0 0;
+  min-height: 3px;
   transition: all 0.3s ease;
   cursor: pointer;
 }
@@ -1340,20 +1357,20 @@ export default {
 /* Line Charts */
 .line-chart-container {
   background: #ffffff;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 0.375rem;
+  padding: 0.875rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .line-chart {
   position: relative;
   width: 100%;
-  min-height: 250px;
+  min-height: 180px;
 }
 
 .line-chart-svg {
   width: 100%;
-  height: 200px;
+  height: 150px;
   overflow: visible;
 }
 
@@ -1378,12 +1395,12 @@ export default {
 .line-chart-labels {
   display: flex;
   justify-content: space-between;
-  margin-top: 0.5rem;
-  padding: 0 1rem;
+  margin-top: 0.375rem;
+  padding: 0 0.5rem;
 }
 
 .line-chart-label {
-  font-size: 0.6875rem;
+  font-size: 0.5625rem;
   color: rgba(0, 0, 0, 0.5);
   text-align: center;
   flex: 1;
@@ -1391,30 +1408,30 @@ export default {
 
 /* Alerts Section */
 .alerts-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .alerts-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .alert-item {
   background: #ffffff;
-  border-radius: 0.5rem;
-  padding: 1rem;
+  border-radius: 0.375rem;
+  padding: 0.625rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-  border-left: 4px solid;
+  gap: 0.625rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  border-left: 3px solid;
   transition: all 0.2s ease;
 }
 
 .alert-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateX(2px);
 }
 
 .alert-critical {
@@ -1434,7 +1451,7 @@ export default {
 }
 
 .alert-item i {
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   flex-shrink: 0;
 }
 
@@ -1459,90 +1476,90 @@ export default {
 }
 
 .alert-title {
-  font-size: 0.9375rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #000;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.125rem;
 }
 
 .alert-description {
-  font-size: 0.8125rem;
+  font-size: 0.6875rem;
   color: rgba(0, 0, 0, 0.6);
 }
 
 .alert-count {
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: rgba(0, 0, 0, 0.8);
-  padding: 0.5rem 1rem;
+  padding: 0.375rem 0.625rem;
   background: rgba(0, 0, 0, 0.05);
-  border-radius: 0.5rem;
-  min-width: 50px;
+  border-radius: 0.375rem;
+  min-width: 40px;
   text-align: center;
 }
 
 .alert-detail {
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   color: rgba(0, 0, 0, 0.6);
-  margin-top: 0.25rem;
+  margin-top: 0.125rem;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.125rem;
 }
 
 .alert-action {
-  margin-left: 1rem;
+  margin-left: 0.625rem;
   flex-shrink: 0;
 }
 
 .trends-period {
-  font-size: 0.875rem;
+  font-size: 0.6875rem;
   font-weight: 400;
   color: rgba(0, 0, 0, 0.6);
-  margin-left: 0.5rem;
+  margin-left: 0.375rem;
 }
 
 /* Period Metrics Section */
 .period-metrics-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .period-metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .period-metric-card {
   background: #ffffff;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 0.375rem;
+  padding: 0.625rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  border-left: 4px solid;
+  border-left: 3px solid;
 }
 
 .period-metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .period-metric-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .period-metric-icon {
-  font-size: 2rem;
-  width: 50px;
-  height: 50px;
+  font-size: 1.125rem;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.5rem;
+  border-radius: 0.3rem;
 }
 
 .period-metric-icon.consumption {
@@ -1576,30 +1593,30 @@ export default {
 }
 
 .period-metric-title {
-  font-size: 1rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.7);
   flex: 1;
 }
 
 .period-metric-value {
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #000;
-  margin-bottom: 1rem;
-  line-height: 1.2;
+  margin-bottom: 0.5rem;
+  line-height: 1.1;
 }
 
 .period-metric-details {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .period-metric-detail {
   display: flex;
   justify-content: space-between;
-  font-size: 0.875rem;
+  font-size: 0.625rem;
   color: rgba(0, 0, 0, 0.6);
 }
 
@@ -1615,12 +1632,12 @@ export default {
 .period-metric-comparison {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
+  gap: 0.375rem;
+  padding: 0.375rem;
+  border-radius: 0.375rem;
+  font-size: 0.6875rem;
   font-weight: 600;
-  margin-top: 0.5rem;
+  margin-top: 0.375rem;
 }
 
 .period-metric-comparison.trend-up {
@@ -1639,7 +1656,7 @@ export default {
 }
 
 .period-metric-comparison i {
-  font-size: 1.25rem;
+  font-size: 0.875rem;
 }
 
 /* Responsive */
@@ -1651,7 +1668,7 @@ export default {
   .critical-product-card {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 0.625rem;
   }
 
   .product-actions {
@@ -1664,7 +1681,7 @@ export default {
   }
 
   .trends-bars {
-    height: 150px;
+    height: 120px;
   }
 
   .alert-item {
@@ -1673,7 +1690,19 @@ export default {
 
   .alert-count {
     width: 100%;
-    margin-top: 0.5rem;
+    margin-top: 0.375rem;
+  }
+
+  .period-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .line-chart {
+    min-height: 150px;
+  }
+
+  .line-chart-svg {
+    height: 120px;
   }
 }
 </style>

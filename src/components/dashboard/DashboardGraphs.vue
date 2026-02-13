@@ -19,6 +19,7 @@ export default {
     PDFFooter,
     Spinner,
   },
+  emits: ['subsection-changed'],
   props: {
     showGraphs: { type: Boolean, default: false },
     calculatedMetrics: { type: Object, default: undefined },
@@ -35,6 +36,14 @@ export default {
       showAttentions: true,
       showBookings: false,
     };
+  },
+  mounted() {
+    // Emit initial subsection state
+    if (this.showAttentions) {
+      this.$emit('subsection-changed', 'attentions');
+    } else if (this.showBookings) {
+      this.$emit('subsection-changed', 'bookings');
+    }
   },
   methods: {
     getPastPeriodPercentage(period) {
@@ -169,10 +178,12 @@ export default {
     showAttentionsMenu() {
       this.showAttentions = true;
       this.showBookings = false;
+      this.$emit('subsection-changed', 'attentions');
     },
     showBookingsMenu() {
       this.showAttentions = false;
       this.showBookings = true;
+      this.$emit('subsection-changed', 'bookings');
     },
     async handleDownload() {
       try {
@@ -225,7 +236,6 @@ export default {
           // Force minimum dimensions on all canvases to prevent PDF errors
           document.querySelectorAll('#graphs-component canvas').forEach(canvas => {
             if (canvas.width === 0 || canvas.height === 0) {
-              console.log('Forcing dimensions on empty canvas');
               canvas.width = 400;
               canvas.height = 200;
               // Clear the canvas to avoid rendering artifacts

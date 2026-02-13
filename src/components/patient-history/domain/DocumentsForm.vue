@@ -106,7 +106,6 @@ export default {
       try {
         loading.value = true;
         state.togglesDocuments = await getPermissions('document-client', 'admin');
-        console.log('patientHistoryData:', patientHistoryData.value);
         if (patientHistoryItems.value && patientHistoryItems.value.length > 0) {
           state.documentList = patientHistoryItems.value.filter(item =>
             ['PATIENT_DOCUMENTS'].includes(item.type)
@@ -120,16 +119,7 @@ export default {
               // Try to get documents by patient history first
               state.oldDocuments = await getDocumentsByPatientHistory(patientHistoryData.value.id);
               state.oldDocuments = state.oldDocuments.filter(doc => doc.available);
-              console.log(
-                'Patient history documents loaded:',
-                state.oldDocuments.length,
-                state.oldDocuments,
-              );
             } catch (error) {
-              console.warn(
-                'Failed to load patient history documents, falling back to client documents:',
-                error,
-              );
               // Fallback to client documents if patient history documents fail
               if (patientHistoryData.value.clientId) {
                 let docs = await getDocumentByCommerceIdAndClient(
@@ -139,11 +129,6 @@ export default {
                 // Filter by patientHistoryId to only show documents for this patient history
                 docs = docs.filter(doc => doc.patientHistoryId === patientHistoryData.value.id);
                 state.oldDocuments = docs.filter(doc => doc.available);
-                console.log(
-                  'Client documents loaded as fallback:',
-                  state.oldDocuments.length,
-                  state.oldDocuments,
-                );
               }
             }
           } else {
@@ -154,11 +139,6 @@ export default {
                 patientHistoryData.value.clientId,
               );
               state.oldDocuments = docs.filter(doc => doc.available);
-              console.log(
-                'Client documents loaded (no patient history filter):',
-                state.oldDocuments.length,
-                state.oldDocuments,
-              );
             }
           }
           state.filteredDocuments = state.oldDocuments.slice();
@@ -247,21 +227,17 @@ export default {
 
     const applySorting = () => {
       if (state.oldDocuments && state.oldDocuments.length > 0) {
-        console.log('Applying sorting, asc:', state.asc);
         const elementsSorted = [...state.oldDocuments]; // Create a copy to avoid mutating original
         if (state.asc) {
           elementsSorted.sort(
             (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
           );
-          console.log('Sorted ascending by date');
         } else {
           elementsSorted.sort(
             (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
-          console.log('Sorted descending by date');
         }
         state.oldDocuments = elementsSorted.filter(doc => doc.available);
-        console.log('Documents sorted and filtered, new count:', state.oldDocuments.length);
         applyFilters();
       }
     };
@@ -337,7 +313,6 @@ export default {
     };
 
     const applyFilters = () => {
-      console.log('Applying filters, oldDocuments length:', state.oldDocuments.length);
       let filtered = state.oldDocuments.slice();
 
       // Apply basic filters first
@@ -391,7 +366,6 @@ export default {
       }
 
       state.filteredDocuments = filtered;
-      console.log('Filters applied, filteredDocuments length:', state.filteredDocuments.length);
     };
 
     const selectDocument = async document => {
@@ -561,7 +535,6 @@ export default {
         if (validateAdd()) {
           const body = state.newDocument;
           const uploadedDocument = await addClientDocument(body, file.value);
-          console.log('Document uploaded successfully:', uploadedDocument.id);
 
           // Refresh documents from server to ensure the new document appears
           await refreshDocuments();
@@ -592,7 +565,6 @@ export default {
         if (validateAddWithoutType()) {
           const body = state.newDocument;
           const uploadedDocument = await addClientDocument(body, file.value);
-          console.log('Document uploaded successfully:', uploadedDocument.id);
 
           // Refresh documents from server to ensure the new document appears
           await refreshDocuments();
@@ -724,18 +696,11 @@ export default {
       if (!isMounted.value || isUpdatingFromComponent.value) return;
       loading.value = true;
       if (patientHistoryData.value) {
-        console.log('Watcher triggered, patientHistoryData:', patientHistoryData.value);
         if (patientHistoryData.value.id) {
-          console.log('Has id, trying patient history documents');
           try {
             // Try to get documents by patient history first
             state.oldDocuments = await getDocumentsByPatientHistory(patientHistoryData.value.id);
             state.oldDocuments = state.oldDocuments.filter(doc => doc.available);
-            console.log(
-              'Patient history documents updated via watcher:',
-              state.oldDocuments.length,
-              state.oldDocuments,
-            );
           } catch (error) {
             console.warn(
               'Failed to update patient history documents via watcher, falling back:',
@@ -751,11 +716,6 @@ export default {
               docs = docs.filter(doc => doc.patientHistoryId === patientHistoryData.value.id);
               if (!isMounted.value) return;
               state.oldDocuments = docs.filter(doc => doc.available);
-              console.log(
-                'Client documents updated via watcher:',
-                state.oldDocuments.length,
-                state.oldDocuments,
-              );
             } else {
               // Map PatientDocument to Document objects for display
               state.oldDocuments = patientHistoryData.value.patientDocument
@@ -774,7 +734,6 @@ export default {
             }
           }
         } else {
-          console.log('No id, loading all client documents via watcher');
           // No patient history id, load all client documents
           if (patientHistoryData.value.clientId) {
             const docs = await getDocumentByCommerceIdAndClient(
@@ -782,11 +741,6 @@ export default {
               patientHistoryData.value.clientId,
             );
             state.oldDocuments = docs.filter(doc => doc.available);
-            console.log(
-              'All client documents loaded via watcher:',
-              state.oldDocuments.length,
-              state.oldDocuments,
-            );
           } else {
             // Fallback to patientDocument if no clientId
             state.oldDocuments = patientHistoryData.value.patientDocument
@@ -800,11 +754,6 @@ export default {
                 doc.patientDocumentCreatedBy = patientDoc.createdBy;
                 return doc;
               });
-            console.log(
-              'Patient documents loaded via watcher:',
-              state.oldDocuments.length,
-              state.oldDocuments,
-            );
           }
         }
         state.filteredDocuments = state.oldDocuments.slice();
@@ -815,37 +764,20 @@ export default {
     });
 
     const refreshDocuments = async () => {
-      console.log('refreshDocuments called');
       try {
-        console.log('Starting refresh, patientHistoryData:', patientHistoryData.value);
         isUpdatingFromComponent.value = true;
         loading.value = true;
         // Re-load documents using the same logic as onBeforeMount
         if (patientHistoryData.value) {
-          console.log('Has patientHistoryData, proceeding with refresh');
           if (patientHistoryData.value.id) {
-            console.log('Has id, calling getDocumentsByPatientHistory');
             try {
-              console.log(
-                'Calling getDocumentsByPatientHistory with id:',
-                patientHistoryData.value.id,
-              );
               // Try to get documents by patient history first
               state.oldDocuments = await getDocumentsByPatientHistory(patientHistoryData.value.id);
               state.oldDocuments = state.oldDocuments.filter(doc => doc.available);
-              console.log(
-                'Patient history documents refreshed:',
-                state.oldDocuments.length,
-                state.oldDocuments,
-              );
             } catch (error) {
               console.warn(
                 'Failed to refresh patient history documents, falling back to client documents:',
                 error,
-              );
-              console.log(
-                'Falling back to client documents, clientId:',
-                patientHistoryData.value.clientId,
               );
               // Fallback to client documents if patient history documents fail
               if (patientHistoryData.value.clientId) {
@@ -856,15 +788,9 @@ export default {
                 // Filter by patientHistoryId to only show documents for this patient history
                 docs = docs.filter(doc => doc.patientHistoryId === patientHistoryData.value.id);
                 state.oldDocuments = docs.filter(doc => doc.available);
-                console.log(
-                  'Client documents loaded as fallback in refresh:',
-                  state.oldDocuments.length,
-                  state.oldDocuments,
-                );
               }
             }
           } else {
-            console.log('No id, using client documents fallback');
             // No patient history id, load all client documents
             if (patientHistoryData.value.clientId) {
               const docs = await getDocumentByCommerceIdAndClient(
@@ -872,16 +798,9 @@ export default {
                 patientHistoryData.value.clientId,
               );
               state.oldDocuments = docs.filter(doc => doc.available);
-              console.log(
-                'Client documents loaded (no patient history filter):',
-                state.oldDocuments.length,
-                state.oldDocuments,
-              );
             }
           }
           state.filteredDocuments = state.oldDocuments.slice();
-        } else {
-          console.log('No patientHistoryData, skipping refresh');
         }
         loading.value = false;
         isUpdatingFromComponent.value = false;

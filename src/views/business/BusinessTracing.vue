@@ -96,6 +96,7 @@ export default {
       showClients: true,
       showAttentions: false,
       showSurveyManagement: false,
+      attentionsSubsection: 'attentions', // attentions or bookings
       calculatedMetrics: {
         'attention.created': attentionCreated,
         'survey.created': surveyCreated,
@@ -224,6 +225,7 @@ export default {
         }
 
         loading.value = false;
+        activateTabFromHash();
       } catch (error) {
         loading.value = false;
       }
@@ -245,6 +247,61 @@ export default {
       }
     };
 
+    const formatDateDisplay = (dateStr) => {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      }
+      return dateStr;
+    };
+
+    const currentMainTitle = computed(() => {
+      if (state.showClients) return 'dashboard.clients';
+      if (state.showAttentions) return 'dashboard.attentions';
+      if (state.showSurveyManagement) return 'dashboard.satisfaction';
+      return '';
+    });
+
+    const currentSubsection = computed(() => {
+      if (state.showAttentions && state.attentionsSubsection === 'attentions') {
+        return 'dashboard.attentions';
+      }
+      if (state.showAttentions && state.attentionsSubsection === 'bookings') {
+        return 'dashboard.bookings';
+      }
+      return null;
+    });
+
+    const handleAttentionsSubsectionChanged = (subsection) => {
+      state.attentionsSubsection = subsection;
+    };
+
+    const activateTabFromHash = () => {
+      const hash = window.location.hash.replace('#', '');
+      switch (hash) {
+        case 'clientes':
+        case 'clients':
+        case 'customers':
+          showClients();
+          break;
+        case 'atenciones':
+        case 'attentions':
+        case 'atendimentos':
+          showAttentions();
+          break;
+        case 'pesquisas':
+        case 'encuestas':
+        case 'surveys':
+        case 'satisfaccion':
+        case 'satisfaction':
+          showSurveys();
+          break;
+        default:
+          break;
+      }
+    };
+
     const goBack = () => {
       router.back();
     };
@@ -252,6 +309,7 @@ export default {
     const showClients = async () => {
       state.showClients = true;
       (state.showAttentions = false), (state.showSurveyManagement = false);
+      window.location.hash = 'clientes';
       // Lazy load services when clients tab is shown
       if (commerce.value && commerce.value.id) {
         await loadServices(commerce.value.id);
@@ -261,6 +319,7 @@ export default {
     const showSurveys = () => {
       state.showClients = false;
       (state.showAttentions = false), (state.showSurveyManagement = true);
+      window.location.hash = 'pesquisas';
       // Set default date range: one month ago to today
       nextTick(() => {
         const today = new Date().toISOString().slice(0, 10);
@@ -288,6 +347,7 @@ export default {
     const showAttentions = async () => {
       state.showClients = false;
       (state.showAttentions = true), (state.showSurveyManagement = false);
+      window.location.hash = 'atenciones';
       // Lazy load services when attentions tab is shown
       if (commerce.value && commerce.value.id) {
         await loadServices(commerce.value.id);
@@ -1112,6 +1172,11 @@ export default {
       showClients,
       showSurveys,
       showAttentions,
+      formatDateDisplay,
+      activateTabFromHash,
+      currentMainTitle,
+      currentSubsection,
+      handleAttentionsSubsectionChanged,
       getLocalHour,
       handleFiltersToggle,
       handleDateQuickSelect,
@@ -1185,7 +1250,7 @@ export default {
                     @click="showClients()"
                     :disabled="!state.toggles['dashboard.clients-management.view']"
                   >
-                    {{ $t('dashboard.clients') }} <br />
+                    <span class="d-none d-lg-inline">{{ $t('dashboard.clients') }} <br /></span>
                     <i class="bi bi-person-fill"></i>
                   </button>
                 </div>
@@ -1196,7 +1261,7 @@ export default {
                     @click="showAttentions()"
                     :disabled="!state.toggles['dashboard.attentions-management.view']"
                   >
-                    {{ $t('dashboard.attentions') }} <br />
+                    <span class="d-none d-lg-inline">{{ $t('dashboard.attentions') }} <br /></span>
                     <i class="bi bi-qr-code"></i>
                   </button>
                 </div>
@@ -1207,9 +1272,23 @@ export default {
                     @click="showSurveys()"
                     :disabled="!state.toggles['dashboard.surveys-management.view']"
                   >
-                    {{ $t('dashboard.satisfaction') }} <br />
+                    <span class="d-none d-lg-inline">{{ $t('dashboard.satisfaction') }} <br /></span>
                     <i class="bi bi-chat-heart-fill"></i>
                   </button>
+                </div>
+                <div class="col-12 mt-3">
+                  <div id="title" class="metric-title">
+                    <span>
+                      {{ $t(currentMainTitle) }}
+                      <span v-if="currentSubsection" class="metric-subsection">
+                        / {{ $t(currentSubsection) }}
+                      </span>
+                    </span>
+                  </div>
+                  <div v-if="state.startDate && state.endDate" id="sub-title" class="metric-subtitle">
+                    ({{ $t('dashboard.dates.from') }} <strong>{{ formatDateDisplay(state.startDate) }}</strong>
+                    {{ $t('dashboard.dates.to') }} <strong>{{ formatDateDisplay(state.endDate) }}</strong>)
+                  </div>
                 </div>
               </div>
               <div>
@@ -1231,6 +1310,7 @@ export default {
                   :queues="state.queues"
                   :commerces="selectedCommerces"
                   :services="state.services"
+                  @subsection-changed="handleAttentionsSubsectionChanged"
                 >
                 </DashboardAttentionsAndBookingsManagement>
                 <DashboardSurveysManagement
@@ -3791,6 +3871,20 @@ export default {
                       <i class="bi bi-chat-heart-fill"></i>
                     </button>
                   </div>
+                  <div class="col-12 mt-3">
+                    <div id="title" class="metric-title">
+                      <span>
+                        {{ $t(currentMainTitle) }}
+                        <span v-if="currentSubsection" class="metric-subsection">
+                          / {{ $t(currentSubsection) }}
+                        </span>
+                      </span>
+                    </div>
+                    <div v-if="state.startDate && state.endDate" id="sub-title" class="metric-subtitle">
+                      ({{ $t('dashboard.dates.from') }} <strong>{{ formatDateDisplay(state.startDate) }}</strong>
+                      {{ $t('dashboard.dates.to') }} <strong>{{ formatDateDisplay(state.endDate) }}</strong>)
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <DashboardClientsManagement
@@ -3815,6 +3909,7 @@ export default {
                     :commerces="selectedCommerces"
                     :services="state.services"
                     filters-location="slot"
+                    @subsection-changed="handleAttentionsSubsectionChanged"
                     @tab-changed="handleAttentionsTabChanged"
                   >
                   </DashboardAttentionsAndBookingsManagement>
@@ -3849,8 +3944,27 @@ export default {
 <style scoped>
 .metric-title {
   text-align: left;
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   font-weight: 700;
+  color: #000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.metric-title::before {
+  content: '';
+  width: 4px;
+  height: 2rem;
+  background: linear-gradient(180deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  border-radius: 2px;
+}
+
+.metric-subsection {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.65);
+  margin-left: 0.5rem;
 }
 
 .tabs-header-divider {

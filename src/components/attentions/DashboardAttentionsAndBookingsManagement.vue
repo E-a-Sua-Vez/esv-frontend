@@ -15,6 +15,7 @@ export default {
     DashboardAttentionsManagement,
     DashboardBookingsManagement,
   },
+  emits: ['subsection-changed', 'tab-changed'],
   props: {
     showAttentionManagement: { type: Boolean, default: false },
     toggles: { type: Object, default: undefined },
@@ -54,6 +55,14 @@ export default {
   watch: {
     // REMOVED: Watchers were causing state resets. States are now managed directly in showAttentions() and showBookings() methods.
   },
+  mounted() {
+    // Emit initial subsection state
+    if (this.showAttentionsResults) {
+      this.$emit('subsection-changed', 'attentions');
+    } else if (this.showBookingsResults) {
+      this.$emit('subsection-changed', 'bookings');
+    }
+  },
   methods: {
     showAttentions() {
       // SIMPLE: Just set the states - no complex logic
@@ -61,6 +70,7 @@ export default {
       this.showBookingsResults = false;
 
       // Emit event to notify parent to sync filter instance
+      this.$emit('subsection-changed', 'attentions');
       this.$emit('tab-changed', { type: 'attentions' });
 
       // Set default date range: one month ago to today
@@ -95,6 +105,7 @@ export default {
       this.showBookingsResults = true;
 
       // Emit event to notify parent to sync filter instance
+      this.$emit('subsection-changed', 'bookings');
       this.$emit('tab-changed', { type: 'bookings' });
 
       // Set default date range: one month ago to today

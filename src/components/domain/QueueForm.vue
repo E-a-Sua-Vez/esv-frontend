@@ -193,10 +193,6 @@ export default {
               groupedQueues.value['PROFESSIONAL'] = queueAux;
             }
             state.filteredCollaboratorQueues = groupedQueues.value['PROFESSIONAL'];
-            console.log(
-              '🔍 DEBUG: Final state.filteredCollaboratorQueues:',
-              state.filteredCollaboratorQueues,
-            );
             refresh(state.filteredCollaboratorQueues);
           }
         }
@@ -310,7 +306,6 @@ export default {
     };
 
     const showByProfessional = () => {
-      console.log('🔍 DEBUG: showByProfessional called');
       state.showProfessional = true;
       state.showService = false;
       state.showSelectServices = false;
@@ -343,7 +338,6 @@ export default {
     };
 
     const showServices = () => {
-      console.log('🔍 DEBUG: showServices called');
       state.showService = false;
       state.showProfessional = false;
       state.showSelectServices = true;

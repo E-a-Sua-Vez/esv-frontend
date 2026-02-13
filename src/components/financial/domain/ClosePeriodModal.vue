@@ -382,9 +382,7 @@ export default {
 
     const loadPeriodSummary = async () => {
       try {
-        console.log('📊 Loading period summary for:', props.period.id);
         const summary = await getPeriodSummary(props.period.id);
-        console.log('✅ Period summary received:', summary);
         periodSummary.value = summary;
 
         // Set system balance

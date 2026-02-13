@@ -61,6 +61,8 @@ export default {
       showProducts: false,
       showAttentions: false,
       toggles: {},
+      startDate: undefined,
+      endDate: undefined,
     });
 
     // Use global commerce from store
@@ -68,6 +70,13 @@ export default {
     const selectedCommerces = computed(() =>
       commerce.value && commerce.value.id ? [commerce.value] : []
     );
+
+    const currentTabTitle = computed(() => {
+      if (state.showDashboard) return 'businessProductStockAdmin.dashboard';
+      if (state.showProducts) return 'businessProductStockAdmin.products';
+      if (state.showAttentions) return 'businessProductStockAdmin.attentions';
+      return '';
+    });
 
     // Load commerce-dependent data
     const loadCommerceData = async commerceId => {
@@ -129,6 +138,7 @@ export default {
         }
 
         loading.value = false;
+        activateTabFromHash();
       } catch (error) {
         loading.value = false;
       }
@@ -140,22 +150,57 @@ export default {
       router.back();
     };
 
+    const formatDateDisplay = (dateStr) => {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      }
+      return dateStr;
+    };
+
+    const activateTabFromHash = () => {
+      const hash = window.location.hash.replace('#', '');
+      switch (hash) {
+        case 'dashboard':
+        case 'indicadores':
+        case 'indicators':
+          showDashboard();
+          break;
+        case 'productos':
+        case 'products':
+        case 'items':
+          showProducts();
+          break;
+        case 'atenciones':
+        case 'attentions':
+        case 'atendimentos':
+          showAttentions();
+          break;
+        default:
+          break;
+      }
+    };
+
     const showDashboard = () => {
       state.showDashboard = true;
       state.showProducts = false;
       state.showAttentions = false;
+      window.location.hash = 'dashboard';
     };
 
     const showProducts = () => {
       state.showDashboard = false;
       state.showProducts = true;
       state.showAttentions = false;
+      window.location.hash = 'productos';
     };
 
     const showAttentions = () => {
       state.showDashboard = false;
       state.showProducts = false;
       state.showAttentions = true;
+      window.location.hash = 'atenciones';
     };
 
     const handleQuickRecharge = productId => {
@@ -197,6 +242,9 @@ export default {
       alertError,
       goBack,
       isActiveBusiness,
+      formatDateDisplay,
+      activateTabFromHash,
+      currentTabTitle,
       showDashboard,
       showProducts,
       showAttentions,
@@ -247,7 +295,7 @@ export default {
                     :class="state.showDashboard ? 'btn-selected' : ''"
                     @click="showDashboard()"
                   >
-                    {{ $t('businessProductStockAdmin.dashboard') || 'Dashboard' }} <br />
+                    <span class="d-none d-lg-inline">{{ $t('businessProductStockAdmin.dashboard') || 'Dashboard' }} <br /></span>
                     <i class="bi bi-bar-chart-fill"></i>
                   </button>
                 </div>
@@ -258,7 +306,7 @@ export default {
                     @click="showProducts()"
                     :disabled="!state.toggles['products-stock.products.view']"
                   >
-                    {{ $t('businessProductStockAdmin.products') }} <br />
+                    <span class="d-none d-lg-inline">{{ $t('businessProductStockAdmin.products') }} <br /></span>
                     <i class="bi bi-eyedropper"></i>
                   </button>
                 </div>
@@ -269,9 +317,18 @@ export default {
                     @click="showAttentions()"
                     :disabled="!state.toggles['products-stock.attentions.view']"
                   >
-                    {{ $t('businessProductStockAdmin.attentions') }} <br />
+                    <span class="d-none d-lg-inline">{{ $t('businessProductStockAdmin.attentions') }} <br /></span>
                     <i class="bi bi-qr-code"></i>
                   </button>
+                </div>
+                <div class="col-12 mt-3">
+                  <div id="title" class="metric-title">
+                    <span>{{ $t(currentTabTitle) }}</span>
+                  </div>
+                  <div v-if="state.startDate && state.endDate" id="sub-title" class="metric-subtitle">
+                    ({{ $t('dashboard.dates.from') }} <strong>{{ formatDateDisplay(state.startDate) }}</strong>
+                    {{ $t('dashboard.dates.to') }} <strong>{{ formatDateDisplay(state.endDate) }}</strong>)
+                  </div>
                 </div>
               </div>
               <div>
@@ -1224,9 +1281,19 @@ export default {
                       <i class="bi bi-qr-code"></i>
                     </button>
                   </div>
+                  <div class="col-12 mt-3">
+                    <div id="title" class="metric-title">
+                      <span>{{ $t(currentTabTitle) }}</span>
+                    </div>
+                    <div v-if="state.startDate && state.endDate" id="sub-title" class="metric-subtitle">
+                      ({{ $t('dashboard.dates.from') }} <strong>{{ formatDateDisplay(state.startDate) }}</strong>
+                      {{ $t('dashboard.dates.to') }} <strong>{{ formatDateDisplay(state.endDate) }}</strong>)
+                    </div>
+                  </div>
                 </div>
                 <!-- Main content components -->
                 <InventoryDashboard
+                  ref="dashboardContentRef"
                   v-if="state.showDashboard"
                   :show="state.showDashboard"
                   :commerce="commerce"
@@ -1274,8 +1341,20 @@ export default {
 <style scoped>
 .metric-title {
   text-align: left;
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   font-weight: 700;
+  color: #000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.metric-title::before {
+  content: '';
+  width: 4px;
+  height: 2rem;
+  background: linear-gradient(180deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  border-radius: 2px;
 }
 
 .tabs-header-divider {
@@ -1284,8 +1363,9 @@ export default {
 }
 .metric-subtitle {
   text-align: left;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
 }
 .select {
   border-radius: 0.5rem;

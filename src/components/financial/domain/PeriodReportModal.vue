@@ -262,19 +262,8 @@ export default {
         // Cargar transacciones
         const txData = await getPeriodTransactions(props.period.id);
         transactions.value = txData;
-        
-        console.log('📋 Period Transactions received:');
-        console.log('- Incomes:', txData.incomes?.length || 0);
-        console.log('- Outcomes:', txData.outcomes?.length || 0);
-        console.log('- Outcome details:', txData.outcomes?.map(o => ({
-          id: o.id,
-          conceptType: o.conceptType,
-          type: o.type,
-          amount: o.amount,
-          paidAt: o.paidAt,
-          createdAt: o.createdAt,
-          description: o.description
-        })) || []);
+
+        // Load period summary
       } catch (error) {
         console.error('Error loading period summary:', error);
       } finally {
@@ -508,7 +497,7 @@ export default {
 
             // Usar paidAt o createdAt como fallback
             const effectiveDate = outcome.paidAt || outcome.createdAt;
-            const date = effectiveDate 
+            const date = effectiveDate
               ? new Date(effectiveDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
               : 'N/A';
             const concept = (outcome.concept || outcome.conceptType || outcome.type || 'N/A').substring(0, 25);
@@ -613,11 +602,6 @@ export default {
 
     const exportExcel = () => {
       try {
-        console.log('📊 Exporting Excel with transactions:', {
-          incomesCount: transactions.value.incomes.length,
-          outcomesCount: transactions.value.outcomes.length,
-        });
-
         // Create CSV content
         let csv = 'Relatório do Período Contábil\n\n';
         csv += `Período:,${props.period.name}\n`;
@@ -656,7 +640,7 @@ export default {
           transactions.value.outcomes.forEach((outcome) => {
             // Usar paidAt o createdAt como fallback
             const effectiveDate = outcome.paidAt || outcome.createdAt;
-            const date = effectiveDate 
+            const date = effectiveDate
               ? new Date(effectiveDate).toLocaleDateString('pt-BR')
               : 'N/A';
             const concept = (outcome.concept || outcome.conceptType || outcome.type || 'N/A').replace(/,/g, ' ');
@@ -977,26 +961,26 @@ export default {
     padding: 1rem;
     margin-bottom: 1rem;
   }
-  
+
   .card-header {
     gap: 0.75rem;
     margin-bottom: 0.75rem;
   }
-  
+
   .icon-container {
     width: 2.5rem;
     height: 2.5rem;
     font-size: 1.25rem;
   }
-  
+
   .card-title {
     font-size: 0.6875rem;
   }
-  
+
   .primary-value {
     font-size: 1.25rem;
   }
-  
+
   .secondary-info {
     font-size: 0.6875rem;
   }

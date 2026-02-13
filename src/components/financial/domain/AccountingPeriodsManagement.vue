@@ -17,10 +17,15 @@
       <div class="row g-3">
         <!-- Header with Create Button -->
         <div class="col-12 d-flex justify-content-between align-items-center mb-2">
-          <h5 class="mb-0 fw-bold">
-            <i class="bi bi-calendar-check me-2"></i>
-            {{ $t('financial.periods.title') }}
-          </h5>
+          <div>
+            <button
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
+              @click="showCreateModal = true"
+            >
+              <i class="bi bi-plus-lg me-1"></i>
+              {{ $t('financial.periods.newPeriod') }}
+            </button>
+          </div>
           <div>
             <button
               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
@@ -28,13 +33,6 @@
               :disabled="loading"
             >
               <i class="bi bi-arrow-clockwise"></i>
-            </button>
-            <button
-              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4 ms-2"
-              @click="showCreateModal = true"
-            >
-              <i class="bi bi-plus-lg me-1"></i>
-              {{ $t('financial.periods.newPeriod') }}
             </button>
           </div>
         </div>

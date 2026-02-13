@@ -760,12 +760,6 @@ export default {
               if (state.professional && state.professional.id) {
                 // Filter queues by professional
                 queues = allQueues.filter(queue => queue.professionalId === state.professional.id);
-                console.log(
-                  '✅ getDedicatedQueues: FULL with professional filter:',
-                  queues.length,
-                  'for professional:',
-                  state.professional.id,
-                );
               } else {
                 // No professional filter - show all queues
                 queues = allQueues;
@@ -789,16 +783,7 @@ export default {
           }
         }
 
-        console.log(
-          '🎯 getDedicatedQueues: Final queues assigned:',
-          queues.length,
-          queues.map(q => ({
-            id: q.id,
-            name: q.name || q.tag,
-            type: q.type,
-            professionalId: q.professionalId,
-          })),
-        );
+
         state.dedicatedQueues = queues;
       } catch (error) {
         state.dedicatedQueues = [];
@@ -897,16 +882,7 @@ export default {
           }
         }
 
-        console.log(
-          '🎯 getDedicatedQueuesForAllCommerces: Final allQueues:',
-          allQueues.length,
-          allQueues.map(q => ({
-            id: q.id,
-            name: q.name || q.tag,
-            commerceId: q.commerceId,
-            professionalId: q.professionalId,
-          })),
-        );
+
         state.dedicatedQueues = allQueues;
         initializeQueueStatus();
       } catch (error) {

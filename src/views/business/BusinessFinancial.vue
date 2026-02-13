@@ -175,6 +175,8 @@ export default {
           await loadQueues(commerceToUse.id);
         }
 
+        activateTabFromHash();
+
         loading.value = false;
       } catch (error) {
         loading.value = false;
@@ -201,10 +203,58 @@ export default {
       router.back();
     };
 
+    const formatDateDisplay = dateStr => {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return dateStr;
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    };
+
+    const activateTabFromHash = () => {
+      const hash = window.location.hash.replace('#', '');
+      switch (hash) {
+        case 'resumen':
+        case 'resume':
+        case 'resumo':
+          showResume();
+          break;
+        case 'ingresos':
+        case 'incomes':
+        case 'ingressos':
+          showIncomes();
+          break;
+        case 'egresos':
+        case 'outcomes':
+        case 'gastos':
+          showOutcomes();
+          break;
+        case 'periodos':
+        case 'periods':
+        case 'contabilidad':
+        case 'accounting':
+          showAccountingPeriods();
+          break;
+        default:
+          if (hash === '') {
+            showResume();
+          }
+      }
+    };
+
+    const currentTabTitle = computed(() => {
+      if (state.showResume) return 'businessFinancial.resume';
+      if (state.showIncomes) return 'businessFinancial.incomes';
+      if (state.showOutcomes) return 'businessFinancial.outcomes';
+      if (state.showAccountingPeriods) return 'Contabilidad';
+      return '';
+    });
+
     const showResume = () => {
       state.showResume = true;
       state.showIncomes = false;
+      state.showOutcomes = false;
       state.showAccountingPeriods = false;
+      window.location.hash = 'resumen';
     };
 
     const showIncomes = () => {
@@ -212,6 +262,7 @@ export default {
       state.showIncomes = true;
       state.showOutcomes = false;
       state.showAccountingPeriods = false;
+      window.location.hash = 'ingresos';
     };
 
     const showOutcomes = () => {
@@ -219,6 +270,7 @@ export default {
       state.showIncomes = false;
       state.showOutcomes = true;
       state.showAccountingPeriods = false;
+      window.location.hash = 'egresos';
     };
 
     const showAccountingPeriods = () => {
@@ -226,6 +278,7 @@ export default {
       state.showIncomes = false;
       state.showOutcomes = false;
       state.showAccountingPeriods = true;
+      window.location.hash = 'periodos';
     };
 
     const closeCommissionPaymentsModal = () => {
@@ -726,6 +779,8 @@ export default {
       setSharedFiscalNote,
       setSharedAutomatic,
       setSharedCommissionPaid,
+      formatDateDisplay,
+      currentTabTitle,
       // Refs for filter and content instances
       incomesFilterRef,
       incomesContentRef,
@@ -790,7 +845,8 @@ export default {
                     @click="showResume()"
                     :disabled="!state.toggles['financial.resume.view']"
                   >
-                    {{ $t('businessFinancial.resume') }} <br />
+                    <span class="d-none d-lg-inline">{{ $t('businessFinancial.resume') }}</span>
+                    <span class="d-none d-lg-inline"><br /></span>
                     <i class="bi bi-graph-up"></i>
                   </button>
                 </div>
@@ -801,7 +857,8 @@ export default {
                     @click="showIncomes()"
                     :disabled="!state.toggles['financial.incomes.view']"
                   >
-                    {{ $t('businessFinancial.incomes') }} <br />
+                    <span class="d-none d-lg-inline">{{ $t('businessFinancial.incomes') }}</span>
+                    <span class="d-none d-lg-inline"><br /></span>
                     <i class="bi bi-arrow-down-circle-fill"></i>
                   </button>
                 </div>
@@ -812,7 +869,8 @@ export default {
                     @click="showOutcomes()"
                     :disabled="!state.toggles['financial.outcomes.view']"
                   >
-                    {{ $t('businessFinancial.outcomes') }} <br />
+                    <span class="d-none d-lg-inline">{{ $t('businessFinancial.outcomes') }}</span>
+                    <span class="d-none d-lg-inline"><br /></span>
                     <i class="bi bi-arrow-up-circle-fill"></i>
                   </button>
                 </div>
@@ -823,9 +881,17 @@ export default {
                     @click="showAccountingPeriods()"
                     :disabled="!state.toggles['financial.periods.view']"
                   >
-                    Contabilidad <br />
+                    <span class="d-none d-lg-inline">Contabilidad</span>
+                    <span class="d-none d-lg-inline"><br /></span>
                     <i class="bi bi-calendar-check"></i>
                   </button>
+                </div>
+                <div class="col-12 mt-3">
+                  <div class="metric-title">{{ currentTabTitle === 'Contabilidad' ? currentTabTitle : $t(currentTabTitle) }}</div>
+                  <div v-if="state.sharedIncomeFilters?.startDate && state.sharedIncomeFilters?.endDate" class="metric-subtitle">
+                    <strong>{{ formatDateDisplay(state.sharedIncomeFilters.startDate) }}</strong> -
+                    <strong>{{ formatDateDisplay(state.sharedIncomeFilters.endDate) }}</strong>
+                  </div>
                 </div>
               </div>
               <div>
@@ -2343,7 +2409,8 @@ export default {
                       @click="showResume()"
                       :disabled="!state.toggles['financial.resume.view']"
                     >
-                      {{ $t('businessFinancial.resume') }} <br />
+                      <span class="d-none d-lg-inline">{{ $t('businessFinancial.resume') }}</span>
+                      <span class="d-none d-lg-inline"><br /></span>
                       <i class="bi bi-graph-up"></i>
                     </button>
                   </div>
@@ -2354,7 +2421,8 @@ export default {
                       @click="showIncomes()"
                       :disabled="!state.toggles['financial.incomes.view']"
                     >
-                      {{ $t('businessFinancial.incomes') }} <br />
+                      <span class="d-none d-lg-inline">{{ $t('businessFinancial.incomes') }}</span>
+                      <span class="d-none d-lg-inline"><br /></span>
                       <i class="bi bi-arrow-down-circle-fill"></i>
                     </button>
                   </div>
@@ -2365,7 +2433,8 @@ export default {
                       @click="showOutcomes()"
                       :disabled="!state.toggles['financial.outcomes.view']"
                     >
-                      {{ $t('businessFinancial.outcomes') }} <br />
+                      <span class="d-none d-lg-inline">{{ $t('businessFinancial.outcomes') }}</span>
+                      <span class="d-none d-lg-inline"><br /></span>
                       <i class="bi bi-arrow-up-circle-fill"></i>
                     </button>
                   </div>
@@ -2376,9 +2445,17 @@ export default {
                       @click="showAccountingPeriods()"
                       :disabled="!state.toggles['financial.periods.view']"
                     >
-                      Contabilidad <br />
+                      <span class="d-none d-lg-inline">Contabilidad</span>
+                      <span class="d-none d-lg-inline"><br /></span>
                       <i class="bi bi-calendar-check"></i>
                     </button>
+                  </div>
+                  <div class="col-12 mt-3">
+                    <div class="metric-title">{{ currentTabTitle === 'Contabilidad' ? currentTabTitle : $t(currentTabTitle) }}</div>
+                    <div v-if="state.sharedIncomeFilters?.startDate && state.sharedIncomeFilters?.endDate" class="metric-subtitle">
+                      <strong>{{ formatDateDisplay(state.sharedIncomeFilters.startDate) }}</strong> -
+                      <strong>{{ formatDateDisplay(state.sharedIncomeFilters.endDate) }}</strong>
+                    </div>
                   </div>
                 </div>
 
@@ -2652,5 +2729,30 @@ export default {
 .modern-modal-close-btn i {
   font-size: 0.875rem;
   color: #ffffff;
+}
+
+.metric-title {
+  text-align: left;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.metric-title::before {
+  content: '';
+  width: 4px;
+  height: 2rem;
+  background: linear-gradient(180deg, var(--azul-turno) 0%, var(--verde-tu) 100%);
+  border-radius: 2px;
+}
+
+.metric-subtitle {
+  text-align: left;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
 }
 </style>

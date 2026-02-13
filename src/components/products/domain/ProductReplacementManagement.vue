@@ -99,6 +99,8 @@ export default {
           this.startDate,
           this.endDate
         );
+        // Immediately update productReplacements
+        this.productReplacements = this.newProductReplacements;
         this.updatePaginationData();
         this.loading = false;
       } catch (error) {
@@ -255,8 +257,20 @@ export default {
     this.endDate = today;
     const oneMonthAgo = new DateModel(today).substractMonths(1).toString();
     this.startDate = oneMonthAgo;
+    // Load data on mount
+    if (this.showProductReplacementManagement) {
+      this.refresh();
+    }
   },
   watch: {
+    showProductReplacementManagement: {
+      immediate: true,
+      handler(newVal) {
+        if (newVal === true) {
+          this.refresh();
+        }
+      },
+    },
     changeData: {
       immediate: true,
       deep: true,
