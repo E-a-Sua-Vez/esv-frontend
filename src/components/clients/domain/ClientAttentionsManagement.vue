@@ -104,7 +104,7 @@ export default {
     },
     async setPage(pageIn) {
       this.page = pageIn;
-      await this.refresh();
+      // Don't call refresh here - the page watcher will handle it
     },
     async clear() {
       this.daysSinceType = undefined;
@@ -314,19 +314,35 @@ export default {
     },
   },
   watch: {
+    limit: {
+      immediate: false,
+      async handler(newLimit, oldLimit) {
+        if (oldLimit !== undefined && newLimit !== oldLimit) {
+          this.page = 1;
+          this.attentionsLoaded = false;
+          await this.refresh(true);
+        }
+      },
+    },
+    page: {
+      immediate: false,
+      async handler(newPage, oldPage) {
+        if (oldPage !== undefined && newPage !== oldPage && this.attentionsLoaded) {
+          await this.refresh(true);
+        }
+      },
+    },
     changeData: {
       immediate: false, // Don't trigger on mount - attentions load lazily when modal opens
       deep: true,
-      async handler(oldData, newData) {
+      async handler(newData, oldData) {
         // Only refresh if oldData exists (not initial mount) and something actually changed
         if (
           oldData &&
           newData &&
-          (oldData.client !== newData.client ||
-            oldData.daysSinceType !== newData.daysSinceType ||
+          (oldData.daysSinceType !== newData.daysSinceType ||
             oldData.survey !== newData.survey ||
             oldData.asc !== newData.asc ||
-            oldData.limit !== newData.limit ||
             oldData.queueId !== newData.queueId ||
             oldData.serviceId !== newData.serviceId ||
             oldData.status !== newData.status)
@@ -611,6 +627,18 @@ export default {
                 </div>
               </div>
             </div>
+
+            <!-- Refresh Button -->
+            <div class="my-3 d-flex align-items-center justify-content-end">
+              <button
+                @click="refresh"
+                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                :disabled="loading"
+              >
+                <i class="bi bi-arrow-clockwise"></i> Pesquisar
+              </button>
+            </div>
+
             <div class="my-3 text-center">
               <span class="badge bg-secondary px-3 py-2 m-1"
                 >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
@@ -806,7 +834,6 @@ export default {
   padding: 0.5rem;
   margin: 0.5rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--gris-default);
 }
 .filter-card {
   background-color: var(--color-background);
@@ -814,7 +841,6 @@ export default {
   padding-bottom: 0.2rem;
   margin: 0.2rem;
   border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
 }
 .metric-card-title {
   font-size: 0.9rem;

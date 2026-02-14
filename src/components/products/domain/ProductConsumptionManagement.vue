@@ -4,7 +4,6 @@ import Alert from '../../common/Alert.vue';
 import Warning from '../../common/Warning.vue';
 import Popper from 'vue3-popper';
 import Message from '../../common/Message.vue';
-import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { globalStore } from '../../../stores';
 import { getProductsConsumptionsDetails } from '../../../application/services/query-stack';
@@ -21,7 +20,6 @@ export default {
   name: 'ProductConsumptionManagement',
   components: {
     Message,
-    SimpleDownloadCard,
     Spinner,
     Popper,
     Alert,
@@ -337,326 +335,337 @@ export default {
 </script>
 
 <template>
-  <div
-    id="productConsumptions-management"
-    class="row"
-    v-if="
-      showProductConsumptionManagement === true &&
-      toggles['products-stock.products.view-consumption']
-    "
-  >
-    <div class="col">
-      <div id="attention-management-component">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-        <div v-if="!loading">
-          <div>
-            <div class="my-2 row metric-card">
-              <div class="col-12">
-                <span class="metric-card-subtitle">
-                  <span class="form-check-label" @click="showAdd()">
-                    <i class="bi bi-arrow-up-circle-fill"></i>
-                    {{ $t('businessProductStockAdmin.addConsuption') }}
-                    <i
-                      :class="`bi ${showAddOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-                    ></i>
-                  </span>
-                </span>
-              </div>
-              <div v-if="showAddOption">
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t('businessProductStockAdmin.replacementSel') }}
-                  </div>
-                  <div class="col-8">
-                    <select
-                      class="btn btn-sm btn-light fw-bold text-dark select"
-                      v-model="selectedProductReplacement"
-                    >
-                      <option
-                        v-for="rep in productReplacements"
-                        :key="rep.id"
-                        :value="rep"
-                        id="select-replacement"
-                      >
-                        {{ rep.replacementActualLevel }}
-                        {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }} - ({{
-                          getDate(rep.replacementExpirationDate)
-                        }})
-                      </option>
-                    </select>
-                  </div>
-                </div>
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t('businessProductStockAdmin.amount') }}
-                  </div>
-                  <div class="col-8">
-                    <input
-                      :min="0"
-                      type="number"
-                      class="form-control"
-                      v-model="newProductConsumption.consumptionAmount"
-                      v-bind:class="{ 'is-invalid': consumptionAmountError }"
-                      placeholder="1"
-                    />
-                  </div>
-                </div>
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t('businessProductStockAdmin.consumptionDate') }}
-                  </div>
-                  <div class="col-8">
-                    <input
-                      type="date"
-                      class="form-control"
-                      v-model="newProductConsumption.consumptionDate"
-                      v-bind:class="{ 'is-invalid': consumptionDateError }"
-                      placeholder="1"
-                    />
-                  </div>
-                </div>
-                <div class="row m-1">
-                  <div class="col-12 text-label">
-                    <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(newProductConsumption)"
-                    >
-                      {{ $t('dashboard.add') }} <i class="bi bi-save"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="row g-1 errors" id="feedback" v-if="errorsAdd.length > 0">
-                  <Warning>
-                    <template v-slot:message>
-                      <li v-for="(error, index) in errorsAdd" :key="index">
-                        {{ $t(error) }}
-                      </li>
-                    </template>
-                  </Warning>
-                </div>
-              </div>
-            </div>
-            <div class="my-1 row metric-card compact-filters-card">
-              <div class="col-12">
-                <div class="d-flex align-items-center justify-content-between">
+  <div>
+    <div
+      id="productConsumptions-management"
+      class="row"
+      v-if="
+        showProductConsumptionManagement === true &&
+        toggles['products-stock.products.view-consumption']
+      "
+    >
+      <div class="col">
+        <div id="attention-management-component">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+          <div v-if="!loading">
+            <div>
+              <div class="my-2 row metric-card">
+                <div class="col-12">
                   <span class="metric-card-subtitle">
-                    <span class="form-check-label metric-keyword-subtitle" @click="showFilters()">
-                      <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
+                    <span class="form-check-label" @click="showAdd()" style="cursor: pointer;">
+                      <i class="bi bi-arrow-up-circle-fill"></i>
+                      {{ $t('businessProductStockAdmin.addConsuption') }}
                       <i
-                        :class="`bi ${
-                          showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                        }`"
+                        :class="`bi ${showAddOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"
                       ></i>
                     </span>
                   </span>
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2 py-1"
-                    @click="clear()"
-                  >
-                    <i class="bi bi-eraser-fill"></i>
-                  </button>
                 </div>
-              </div>
-              <div v-if="showFilterOptions">
-                <div class="row my-1">
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getToday()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.today') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getCurrentMonth()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.thisMonth') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getLastMonth()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.lastMonth') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getLastThreeMonths()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.lastThreeMonths') }}
-                    </button>
-                  </div>
-                </div>
-                <div class="m-1">
-                  <div class="row">
-                    <div class="col-5">
-                      <input
-                        id="startDate"
-                        class="form-control metric-controls"
-                        type="date"
-                        v-model="startDate"
-                      />
+                <div v-if="showAddOption">
+                  <div class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t('businessProductStockAdmin.replacementSel') }}
                     </div>
-                    <div class="col-5">
-                      <input
-                        id="endDate"
-                        class="form-control metric-controls"
-                        type="date"
-                        v-model="endDate"
-                      />
-                    </div>
-                    <div class="col-2">
-                      <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                        @click="refresh()"
+                    <div class="col-8">
+                      <select
+                        class="btn btn-sm btn-light fw-bold text-dark select"
+                        v-model="selectedProductReplacement"
                       >
-                        <span><i class="bi bi-search"></i></span>
+                        <option
+                          v-for="rep in productReplacements"
+                          :key="rep.id"
+                          :value="rep"
+                          id="select-replacement"
+                        >
+                          {{ rep.replacementActualLevel }}
+                          {{ $t(`productMeasuresTypesShort.${product.productMeasureType}`) }} - ({{
+                            getDate(rep.replacementExpirationDate)
+                          }})
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t('businessProductStockAdmin.amount') }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        :min="0"
+                        type="number"
+                        class="form-control-modern"
+                        v-model="newProductConsumption.consumptionAmount"
+                        v-bind:class="{ 'is-invalid': consumptionAmountError }"
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
+                  <div class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t('businessProductStockAdmin.consumptionDate') }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        type="date"
+                        class="form-control-modern"
+                        v-model="newProductConsumption.consumptionDate"
+                        v-bind:class="{ 'is-invalid': consumptionDateError }"
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
+                  <div class="row m-1">
+                    <div class="col-12 text-label">
+                      <button
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                        @click="add(newProductConsumption)"
+                      >
+                        {{ $t('dashboard.add') }} <i class="bi bi-save"></i>
                       </button>
                     </div>
                   </div>
+                  <div class="row g-1 errors" id="feedback" v-if="errorsAdd.length > 0">
+                    <Warning>
+                      <template v-slot:message>
+                        <li v-for="(error, index) in errorsAdd" :key="index">
+                          {{ $t(error) }}
+                        </li>
+                      </template>
+                    </Warning>
+                  </div>
                 </div>
-                <div class="row">
-                  <div class="col-12">
-                    <div class="form-check form-switch centered">
-                      <input
-                        class="form-check-input m-1"
-                        :class="asc === false ? 'bg-danger' : ''"
-                        type="checkbox"
-                        name="asc"
-                        id="asc"
-                        v-model="asc"
-                        @click="checkAsc($event)"
-                      />
-                      <label class="form-check-label metric-card-subtitle" for="asc">{{
-                        asc ? $t('dashboard.asc') : $t('dashboard.desc')
-                      }}</label>
+              </div>
+              <div class="my-1 row metric-card compact-filters-card">
+                <div class="col-12">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <span class="metric-card-subtitle">
+                      <span class="form-check-label metric-keyword-subtitle" @click="showFilters()" style="cursor: pointer;">
+                        <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
+                        <i
+                          :class="`bi ${
+                            showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                          }`"
+                        ></i>
+                      </span>
+                    </span>
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2 py-1"
+                      @click="clear()"
+                    >
+                      <i class="bi bi-eraser-fill"></i>
+                    </button>
+                  </div>
+                </div>
+                <div v-if="showFilterOptions">
+                  <div class="row my-1">
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getToday()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.today') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getCurrentMonth()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.thisMonth') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getLastMonth()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.lastMonth') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getLastThreeMonths()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.lastThreeMonths') }}
+                      </button>
+                    </div>
+                  </div>
+                  <div class="m-1">
+                    <div class="row g-2 align-items-center justify-content-center">
+                      <div class="col-5">
+                        <input
+                          id="startDate"
+                          class="form-control-modern"
+                          type="date"
+                          v-model="startDate"
+                        />
+                      </div>
+                      <div class="col-5">
+                        <input
+                          id="endDate"
+                          class="form-control-modern"
+                          type="date"
+                          v-model="endDate"
+                        />
+                      </div>
+                      <div class="col-2 text-center">
+                        <button
+                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                          @click="refresh()"
+                        >
+                          <span><i class="bi bi-search"></i></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-12">
+                      <div class="form-check form-switch d-flex align-items-center justify-content-center gap-2">
+                        <input
+                          class="form-check-input m-0"
+                          :class="asc === false ? 'bg-danger' : ''"
+                          type="checkbox"
+                          name="asc"
+                          id="asc"
+                          v-model="asc"
+                          @click="checkAsc($event)"
+                        />
+                        <label class="form-check-label metric-card-subtitle m-0" for="asc">{{
+                          asc ? $t('dashboard.asc') : $t('dashboard.desc')
+                        }}</label>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div
-              class="my-2 d-flex align-items-center justify-content-center flex-wrap gap-2 compact-pagination-info"
-            >
-              <span class="badge bg-secondary px-2 py-1 compact-badge"
-                >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
-              </span>
-              <span class="badge bg-secondary px-2 py-1 compact-badge">
-                {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
-              </span>
-              <select
-                class="btn btn-sm btn-light fw-bold text-dark select compact-select"
-                v-model="limit"
-              >
-                <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
-                  {{ lim }}
-                </option>
-              </select>
-            </div>
-            <div class="centered mt-2">
-              <nav>
-                <ul class="pagination">
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="First"
-                      @click="setPage(1)"
-                      :disabled="page === 1 || totalPages === 0"
-                    >
-                      <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
-                    </button>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Previous"
-                      @click="setPage(page - 1)"
-                      :disabled="page === 1 || totalPages === 0"
-                    >
-                      <span aria-hidden="true">&laquo;</span>
-                    </button>
-                  </li>
-                  <li>
-                    <select
-                      class="btn btn-md btn-light fw-bold text-dark select mx-1"
-                      v-model="page"
-                      :disabled="totalPages === 0"
-                    >
-                      <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">
-                        {{ pag }}
-                      </option>
-                    </select>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Next"
-                      @click="setPage(page + 1)"
-                      :disabled="page === totalPages || totalPages === 0"
-                    >
-                      <span aria-hidden="true">&raquo;</span>
-                    </button>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="First"
-                      @click="setPage(totalPages)"
-                      :disabled="page === totalPages || totalPages === 0"
-                    >
-                      <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-            <div v-if="this.productConsumptions && this.productConsumptions.length > 0">
-              <div
-                class="row"
-                v-for="(product, index) in productConsumptions"
-                :key="`productConsumptions-${index}`"
-              >
-                <ProductConsumptionDetailsCard
-                  :show="true"
-                  :details-opened="false"
-                  :product="product"
+              <div class="my-3 d-flex align-items-center justify-content-end">
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                  @click="refresh()"
+                  :disabled="loading"
                 >
-                </ProductConsumptionDetailsCard>
+                  <i class="bi bi-arrow-clockwise"></i> {{ $t('dashboard.refresh') }}
+                </button>
               </div>
-            </div>
-            <div v-else>
-              <Message
-                :icon="'graph-up-arrow'"
-                :title="$t('dashboard.message.2.title')"
-                :content="$t('dashboard.message.2.content')"
-              />
+              <div
+                class="my-2 d-flex align-items-center justify-content-center flex-wrap gap-2 compact-pagination-info"
+              >
+                <span class="badge bg-secondary px-2 py-1 compact-badge"
+                  >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
+                </span>
+                <span class="badge bg-secondary px-2 py-1 compact-badge">
+                  {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
+                </span>
+                <select
+                  class="btn btn-sm btn-light fw-bold text-dark select compact-select"
+                  v-model="limit"
+                >
+                  <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
+                    {{ lim }}
+                  </option>
+                </select>
+              </div>
+              <div class="centered mt-2">
+                <nav>
+                  <ul class="pagination">
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(1)"
+                        :disabled="page === 1 || totalPages === 0"
+                      >
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Previous"
+                        @click="setPage(page - 1)"
+                        :disabled="page === 1 || totalPages === 0"
+                      >
+                        <span aria-hidden="true">&laquo;</span>
+                      </button>
+                    </li>
+                    <li>
+                      <select
+                        class="btn btn-md btn-light fw-bold text-dark select mx-1"
+                        v-model="page"
+                        :disabled="totalPages === 0"
+                      >
+                        <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">
+                          {{ pag }}
+                        </option>
+                      </select>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Next"
+                        @click="setPage(page + 1)"
+                        :disabled="page === totalPages || totalPages === 0"
+                      >
+                        <span aria-hidden="true">&raquo;</span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(totalPages)"
+                        :disabled="page === totalPages || totalPages === 0"
+                      >
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+              <div v-if="this.productConsumptions && this.productConsumptions.length > 0">
+                <div
+                  class="row"
+                  v-for="(product, index) in productConsumptions"
+                  :key="`productConsumptions-${index}`"
+                >
+                  <ProductConsumptionDetailsCard
+                    :show="true"
+                    :details-opened="false"
+                    :product="product"
+                  >
+                  </ProductConsumptionDetailsCard>
+                </div>
+              </div>
+              <div v-else>
+                <Message
+                  :icon="'graph-up-arrow'"
+                  :title="$t('dashboard.message.2.title')"
+                  :content="$t('dashboard.message.2.content')"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <div
-    v-if="
-      showProductConsumptionManagement === true &&
-      !toggles['products-stock.products.view-consumption']
-    "
-  >
-    <Message
-      :icon="'graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
-    />
+    <div
+      v-if="
+        showProductConsumptionManagement === true &&
+        !toggles['products-stock.products.view-consumption']
+      "
+    >
+      <Message
+        :icon="'graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
+    </div>
   </div>
 </template>
 
@@ -834,6 +843,49 @@ export default {
   border-color: var(--azul-turno);
   box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.1);
   outline: none;
+}
+
+.text-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.7);
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
+
+/* Modern Form Controls */
+.form-control-modern {
+  flex: 1;
+  padding: 0.4rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #000000;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid rgba(169, 169, 169, 0.25);
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.form-control-modern:focus {
+  outline: none;
+  border-color: rgba(0, 194, 203, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 194, 203, 0.1);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.form-control-modern:hover:not(:disabled) {
+  border-color: rgba(169, 169, 169, 0.4);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.form-control-modern.is-invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
 }
 
 /* Modern Filter Buttons */

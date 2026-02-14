@@ -638,17 +638,28 @@ export default {
         <div class="modal-dialog modal-dialog-scrollable modal-lg attention-modal-dialog">
           <div class="modal-content attention-modal-content">
             <!-- Modal Header -->
-            <div class="modal-header">
-              <h5 class="modal-title" id="bookingDetailsModalLabel">
-                <i class="bi bi-calendar-fill"></i>
-                {{ $t('dashboard.bookingDetails') || 'Detalles de la Reserva' }}
-              </h5>
+            <div class="modal-header border-0 active-name modern-modal-header">
+              <div class="modern-modal-header-inner">
+                <div class="modern-modal-icon-wrapper">
+                  <i class="bi bi-calendar-fill"></i>
+                </div>
+                <div class="modern-modal-title-wrapper">
+                  <h5 class="modal-title fw-bold modern-modal-title" id="bookingDetailsModalLabel">
+                    {{ $t('dashboard.bookingDetails') || 'Detalles de la Reserva' }}
+                  </h5>
+                  <p v-if="booking && booking.clientName" class="modern-modal-client-name">
+                    {{ booking.clientName }}
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
-                class="btn-close"
+                class="modern-modal-close-btn"
                 data-bs-dismiss="modal"
                 aria-label="Close"
-              ></button>
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
             </div>
 
             <!-- Modal Body -->
@@ -857,6 +868,96 @@ export default {
 </template>
 
 <style scoped>
+/* Modal Header - Modern Style */
+.modern-modal-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  border-radius: 0.75rem 0.75rem 0 0;
+  min-height: auto;
+  position: relative;
+}
+
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.modern-modal-icon-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-modal-icon-wrapper i {
+  font-size: 1.125rem;
+  color: #ffffff;
+}
+
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-background);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.modern-modal-client-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modern-modal-close-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+}
+
+.modern-modal-close-btn i {
+  font-size: 1rem;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.modern-modal-close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
+}
+
 /* Ultra Compact Booking Row */
 .client-row-card {
   background: rgba(255, 255, 255, 0.95);

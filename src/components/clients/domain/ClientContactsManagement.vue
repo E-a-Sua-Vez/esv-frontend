@@ -511,65 +511,58 @@ export default {
                 </div>
                 <div v-if="showAddOption" class="mt-3">
                   <div class="row g-2 mb-2">
-                    <div class="col-12 col-md-4 d-flex align-items-center">
-                      <label class="text-label mb-0">
+                    <div class="col-12 col-md-4">
+                      <label class="form-label metric-card-subtitle fw-bold mb-1">
+                        <i class="bi bi-shop me-1"></i>
                         {{ $t('dashboard.commerce') }}
                       </label>
-                    </div>
-                    <div class="col-12 col-md-8">
                       <select
-                        class="btn btn-sm btn-light fw-bold text-dark select w-100"
+                        class="form-select form-select-sm metric-controls"
                         v-model="newContact.commerceId"
                       >
+                        <option value="" disabled>{{ $t('select') }}</option>
                         <option
                           v-for="com in availableCommerces"
                           :key="com.id"
                           :value="com.id"
-                          id="select-commerce"
                         >
                           {{ com.tag || com.name }}
                         </option>
                       </select>
                     </div>
-                  </div>
-                  <div class="row g-2 mb-2">
-                    <div class="col-12 col-md-4 d-flex align-items-center">
-                      <label class="text-label mb-0">
+                    <div class="col-12 col-md-4">
+                      <label class="form-label metric-card-subtitle fw-bold mb-1">
+                        <i class="bi bi-tag me-1"></i>
                         {{ $t('dashboard.type') }}
                       </label>
-                    </div>
-                    <div class="col-12 col-md-8">
                       <select
-                        class="btn btn-sm btn-light fw-bold text-dark select w-100"
+                        class="form-select form-select-sm metric-controls"
                         v-model="newContact.type"
                       >
+                        <option value="" disabled>{{ $t('select') }}</option>
                         <option
                           v-for="typ in contactTypes"
                           :key="typ.name"
                           :value="typ.id"
-                          id="select-type"
                         >
                           {{ $t(`contactTypes.${typ.name}`) }}
                         </option>
                       </select>
                     </div>
-                  </div>
-                  <div class="row g-2 mb-2">
-                    <div class="col-12 col-md-4 d-flex align-items-center">
-                      <label class="text-label mb-0">
+                    <div class="col-12 col-md-4">
+                      <label class="form-label metric-card-subtitle fw-bold mb-1">
+                        <i class="bi bi-check-circle me-1"></i>
                         {{ $t('dashboard.result') }}
                       </label>
-                    </div>
-                    <div class="col-12 col-md-8">
                       <select
-                        class="btn btn-sm btn-light fw-bold text-dark select w-100"
+                        class="form-select form-select-sm metric-controls"
                         v-model="newContact.result"
                       >
+                        <option value="" disabled>{{ $t('select') }}</option>
                         <option
                           v-for="typ in contactResultTypes"
                           :key="typ.name"
                           :value="typ.id"
-                          id="select-result"
                         >
                           {{ $t(`contactResultTypes.${typ.name}`) }}
                         </option>
@@ -578,13 +571,13 @@ export default {
                   </div>
                   <div class="row g-2 mb-2">
                     <div class="col-12">
-                      <label class="text-label d-block mb-1">
+                      <label class="form-label metric-card-subtitle fw-bold mb-1">
+                        <i class="bi bi-chat-square-text me-1"></i>
                         {{ $t('dashboard.comment') || 'Comentario' }}
                       </label>
                       <textarea
-                        class="form-control"
-                        id="commennt"
-                        rows="3"
+                        class="form-control form-control-sm metric-controls"
+                        rows="2"
                         v-model="newContact.comment"
                         :placeholder="$t('dashboard.comment')"
                       ></textarea>
@@ -641,71 +634,81 @@ export default {
                     <span><i class="bi bi-eraser-fill"></i></span>
                   </button>
                 </div>
-                <div v-if="showFilterOptions">
-                  <div class="row my-1">
-                    <div class="col-3">
+                <div v-if="showFilterOptions" class="mt-3">
+                  <div class="row g-2 mb-2">
+                    <div class="col-6 col-md-3">
                       <button
-                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        class="btn btn-dark rounded-pill w-100 btn-sm metric-filters px-2 py-1"
                         @click="getToday()"
                         :disabled="loading"
                       >
-                        {{ $t('dashboard.today') }}
+                        <i class="bi bi-calendar-day"></i>
+                        <span class="d-none d-md-inline ms-1">{{ $t('dashboard.today') }}</span>
                       </button>
                     </div>
-                    <div class="col-3">
+                    <div class="col-6 col-md-3">
                       <button
-                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        class="btn btn-dark rounded-pill w-100 btn-sm metric-filters px-2 py-1"
                         @click="getCurrentMonth()"
                         :disabled="loading"
                       >
-                        {{ $t('dashboard.thisMonth') }}
+                        <i class="bi bi-calendar-month"></i>
+                        <span class="d-none d-md-inline ms-1">{{ $t('dashboard.thisMonth') }}</span>
                       </button>
                     </div>
-                    <div class="col-3">
+                    <div class="col-6 col-md-3">
                       <button
-                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        class="btn btn-dark rounded-pill w-100 btn-sm metric-filters px-2 py-1"
                         @click="getLastMonth()"
                         :disabled="loading"
                       >
-                        {{ $t('dashboard.lastMonth') }}
+                        <i class="bi bi-calendar-minus"></i>
+                        <span class="d-none d-md-inline ms-1">{{ $t('dashboard.lastMonth') }}</span>
                       </button>
                     </div>
-                    <div class="col-3">
+                    <div class="col-6 col-md-3">
                       <button
-                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        class="btn btn-dark rounded-pill w-100 btn-sm metric-filters px-2 py-1"
                         @click="getLastThreeMonths()"
                         :disabled="loading"
                       >
-                        {{ $t('dashboard.lastThreeMonths') }}
+                        <i class="bi bi-calendar-range"></i>
+                        <span class="d-none d-md-inline ms-1">{{ $t('dashboard.lastThreeMonths') }}</span>
                       </button>
                     </div>
                   </div>
-                  <div class="m-1">
-                    <div class="row">
-                      <div class="col-5">
-                        <input
-                          id="startDate"
-                          class="form-control metric-controls"
-                          type="date"
-                          v-model="startDate"
-                        />
-                      </div>
-                      <div class="col-5">
-                        <input
-                          id="endDate"
-                          class="form-control metric-controls"
-                          type="date"
-                          v-model="endDate"
-                        />
-                      </div>
-                      <div class="col-2">
-                        <button
-                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                          @click="refresh()"
-                        >
-                          <span><i class="bi bi-search"></i></span>
-                        </button>
-                      </div>
+                  <div class="row g-2 mb-2 mt-2">
+                    <div class="col-5">
+                      <label class="form-label metric-card-subtitle fw-bold mb-1">
+                        <i class="bi bi-calendar-event me-1"></i>
+                        {{ $t('dashboard.startDate') || 'Data Início' }}
+                      </label>
+                      <input
+                        id="startDate"
+                        class="form-control form-control-sm metric-controls"
+                        type="date"
+                        v-model="startDate"
+                      />
+                    </div>
+                    <div class="col-5">
+                      <label class="form-label metric-card-subtitle fw-bold mb-1">
+                        <i class="bi bi-calendar-check me-1"></i>
+                        {{ $t('dashboard.endDate') || 'Data Fim' }}
+                      </label>
+                      <input
+                        id="endDate"
+                        class="form-control form-control-sm metric-controls"
+                        type="date"
+                        v-model="endDate"
+                      />
+                    </div>
+                    <div class="col-2 d-flex align-items-end">
+                      <button
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2 w-100"
+                        @click="refresh()"
+                      >
+                        <i class="bi bi-search"></i>
+                      </button>
                     </div>
                   </div>
                   <div class="col-12 col-md my-1 filter-card">
@@ -821,6 +824,16 @@ export default {
                     </div>
                   </div>
                 </div>
+              </div>
+              <div class="my-3 d-flex align-items-center justify-content-end">
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                  @click="refresh()"
+                  :disabled="loading"
+                >
+                  <i class="bi bi-arrow-clockwise"></i>
+                  {{ $t('dashboard.refresh') || 'Atualizar' }}
+                </button>
               </div>
               <div class="my-3 text-center">
                 <span class="badge bg-secondary px-3 py-2 m-1"
@@ -951,7 +964,6 @@ export default {
   padding: 0.5rem;
   margin: 0.5rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--gris-default);
 }
 .filter-card {
   background-color: var(--color-background);
@@ -959,7 +971,6 @@ export default {
   padding-bottom: 0.2rem;
   margin: 0.2rem;
   border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
 }
 .metric-card-title {
   font-size: 0.9rem;

@@ -4,7 +4,6 @@ import Alert from '../../common/Alert.vue';
 import Warning from '../../common/Warning.vue';
 import Popper from 'vue3-popper';
 import Message from '../../common/Message.vue';
-import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { globalStore } from '../../../stores';
 import { getProductsConsumptionsDetails } from '../../../application/services/query-stack';
@@ -23,7 +22,6 @@ export default {
   name: 'ProductAttentionManagement',
   components: {
     Message,
-    SimpleDownloadCard,
     Spinner,
     Popper,
     Alert,
@@ -92,6 +90,19 @@ export default {
     },
     getDate(dateIn, timeZoneIn) {
       return getDate(dateIn, timeZoneIn);
+    },
+    clearForm() {
+      this.selectedProduct = {};
+      this.selectedProductReplacement = {};
+      this.productReplacements = [];
+      this.newProductConsumption = {
+        consumptionDate: new Date().toISOString().slice(0, 10),
+      };
+      this.consumptionAmountError = false;
+      this.consumptionDateError = false;
+      this.consumptionProductId = false;
+      this.consumptionReplacementId = false;
+      this.errorsAdd = [];
     },
     async clear() {
       this.asc = true;
@@ -215,7 +226,7 @@ export default {
             await this.refresh();
           }, 5000);
           this.showAddOption = false;
-          this.newProductConsumption = {};
+          this.clearForm();
           this.extendedEntity = undefined;
         }
         this.alertError = '';
@@ -385,6 +396,8 @@ export default {
     this.endDate = today;
     const oneMonthAgo = new DateModel(today).substractMonths(1).toString();
     this.startDate = oneMonthAgo;
+    // Clear form on mount
+    this.clearForm();
   },
   watch: {
     changeData: {
@@ -463,13 +476,14 @@ export default {
 </script>
 
 <template>
-  <div
-    id="productAttentions-management"
-    class="row"
-    v-if="
-      showProductAttentionManagement === true && toggles['products-stock.products.view-attention']
-    "
-  >
+  <div>
+    <div
+      id="productAttentions-management"
+      class="row"
+      v-if="
+        showProductAttentionManagement === true && toggles['products-stock.products.view-attention']
+      "
+    >
     <div class="col">
       <div id="attention-management-component">
         <Spinner :show="loading || loadingSuggestions"></Spinner>
@@ -539,7 +553,7 @@ export default {
             <div class="my-2 row metric-card">
               <div class="col-12">
                 <span class="metric-card-subtitle">
-                  <span class="form-check-label" @click="showAdd()">
+                  <span class="form-check-label" @click="showAdd()" style="cursor: pointer;">
                     <i class="bi bi-arrow-up-circle-fill"></i>
                     {{ $t('businessProductStockAdmin.addConsuption') }}
                     <i
@@ -600,7 +614,7 @@ export default {
                     <input
                       :min="0"
                       type="number"
-                      class="form-control"
+                      class="form-control-modern"
                       v-model="newProductConsumption.consumptionAmount"
                       v-bind:class="{ 'is-invalid': consumptionAmountError }"
                       placeholder="1"
@@ -614,7 +628,7 @@ export default {
                   <div class="col-8">
                     <input
                       type="date"
-                      class="form-control"
+                      class="form-control-modern"
                       v-model="newProductConsumption.consumptionDate"
                       v-bind:class="{ 'is-invalid': consumptionDateError }"
                       placeholder="1"
@@ -642,7 +656,7 @@ export default {
                 </div>
               </div>
             </div>
-            <div>
+            <div v-if="showSearchFilters">
               <div class="my-1 row metric-card compact-filters-card">
                 <div class="col-12">
                   <div class="d-flex align-items-center justify-content-between">
@@ -704,11 +718,11 @@ export default {
                     </div>
                   </div>
                   <div class="m-1">
-                    <div class="row">
+                    <div class="row g-2 align-items-center justify-content-center">
                       <div class="col-5">
                         <input
                           id="startDate"
-                          class="form-control metric-controls"
+                          class="form-control-modern"
                           type="date"
                           v-model="startDate"
                         />
@@ -716,12 +730,12 @@ export default {
                       <div class="col-5">
                         <input
                           id="endDate"
-                          class="form-control metric-controls"
+                          class="form-control-modern"
                           type="date"
                           v-model="endDate"
                         />
                       </div>
-                      <div class="col-2">
+                      <div class="col-2 text-center">
                         <button
                           class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
                           @click="refresh()"
@@ -733,9 +747,9 @@ export default {
                   </div>
                   <div class="row">
                     <div class="col-12">
-                      <div class="form-check form-switch centered">
+                      <div class="form-check form-switch d-flex align-items-center justify-content-center gap-2">
                         <input
-                          class="form-check-input m-1"
+                          class="form-check-input m-0"
                           :class="asc === false ? 'bg-danger' : ''"
                           type="checkbox"
                           name="asc"
@@ -743,7 +757,7 @@ export default {
                           v-model="asc"
                           @click="checkAsc($event)"
                         />
-                        <label class="form-check-label metric-card-subtitle" for="asc">{{
+                        <label class="form-check-label metric-card-subtitle m-0" for="asc">{{
                           asc ? $t('dashboard.asc') : $t('dashboard.desc')
                         }}</label>
                       </div>
@@ -751,6 +765,16 @@ export default {
                   </div>
                 </div>
               </div>
+            </div>
+            <div class="my-3 d-flex align-items-center justify-content-end">
+              <button
+                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                @click="refresh()"
+                :disabled="loading"
+              >
+                <i class="bi bi-arrow-clockwise"></i>
+                {{ $t('dashboard.refresh') || 'Atualizar' }}
+              </button>
             </div>
             <div
               class="my-2 d-flex align-items-center justify-content-center flex-wrap gap-2 compact-pagination-info"
@@ -863,6 +887,7 @@ export default {
       :title="$t('dashboard.message.1.title')"
       :content="$t('dashboard.message.1.content')"
     />
+  </div>
   </div>
 </template>
 
@@ -1017,6 +1042,57 @@ export default {
 
 .metric-controls:hover {
   border-color: rgba(0, 74, 173, 0.3);
+}
+
+.text-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.7);
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
+
+/* Modern Form Controls */
+.form-control-modern {
+  flex: 1;
+  padding: 0.4rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #000000;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid rgba(169, 169, 169, 0.25);
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.form-control-modern:focus {
+  outline: none;
+  border-color: rgba(0, 194, 203, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 194, 203, 0.1);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.form-control-modern:hover:not(:disabled) {
+  border-color: rgba(169, 169, 169, 0.4);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.form-control-modern.is-invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
+}
+
+.metric-controls {
+  border-radius: 0.5rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .metric-controls:focus {

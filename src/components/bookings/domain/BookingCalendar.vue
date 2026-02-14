@@ -1798,6 +1798,7 @@ export default {
     };
 
     const openAttentionModal = attention => {
+      console.log('[BookingCalendar] openAttentionModal called with attention:', attention);
       // Close the booking calendar drawer if it's open (only if drawerOpen exists in state)
       if (state.hasOwnProperty('drawerOpen') && state.drawerOpen) {
         state.drawerWasOpen = true;
@@ -1809,20 +1810,24 @@ export default {
       // Hide main modal before opening attention modal
       const mainModal = document.querySelector('#modalAgenda');
       if (mainModal) {
+        console.log('[BookingCalendar] Hiding main modal');
         mainModal.style.display = 'none';
       }
 
       state.selectedAttention = attention;
       state.showAttentionModal = true;
+      console.log('[BookingCalendar] showAttentionModal set to true');
     };
 
     const closeAttentionModal = () => {
+      console.log('[BookingCalendar] closeAttentionModal called');
       state.showAttentionModal = false;
       state.selectedAttention = undefined;
 
       // Restore main modal
       const mainModal = document.querySelector('#modalAgenda');
       if (mainModal) {
+        console.log('[BookingCalendar] Restoring main modal in closeAttentionModal');
         mainModal.style.display = '';
         mainModal.style.pointerEvents = '';
         mainModal.style.opacity = '';
@@ -2842,6 +2847,7 @@ export default {
       :commerce="commerce"
       :queues="queues"
       :toggles="toggles"
+      :handle-main-modal="true"
       @close="closeAttentionModal"
       @attention-updated="handleAttentionUpdated"
     />

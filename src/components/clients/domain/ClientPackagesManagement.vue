@@ -664,7 +664,6 @@ export default {
   padding-bottom: 0.2rem;
   margin: 0.2rem;
   border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
 }
 
 .metric-card-subtitle {

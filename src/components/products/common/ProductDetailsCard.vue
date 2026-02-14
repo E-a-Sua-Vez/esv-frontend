@@ -522,16 +522,16 @@ export default {
             <div class="info-section-header">
               <i class="bi bi-graph-up-arrow"></i>
               <span class="info-section-title">{{
-                $t('dashboard.productCard.prediction') || 'Predicción y Análisis'
+                $t('dashboard.productCard.prediction')
               }}</span>
             </div>
             <div class="prediction-content">
               <div v-if="calculateDaysUntilStockout() !== null" class="prediction-item">
                 <i class="bi bi-clock-history"></i>
                 <div class="prediction-text-content">
-                  <span class="prediction-label"
-                    >{{ $t('dashboard.productCard.stockoutIn') || 'Se agotará en' }}:</span
-                  >
+                  <span class="prediction-label">{{
+                    $t('dashboard.productCard.stockoutIn')
+                  }}:</span>
                   <span
                     class="prediction-value"
                     :class="{
@@ -542,21 +542,21 @@ export default {
                     }"
                   >
                     <strong>{{ calculateDaysUntilStockout() }}</strong>
-                    {{ $t('dashboard.productCard.days') || 'días' }}
+                    {{ $t('dashboard.productCard.days') }}
                   </span>
                 </div>
               </div>
               <div v-if="getTrendIndicator()" class="prediction-item">
                 <i :class="`bi bi-arrow-${getTrendIndicator().direction}-circle`"></i>
                 <div class="prediction-text-content">
-                  <span class="prediction-label"
-                    >{{ $t('dashboard.productCard.trend') || 'Tendencia' }}:</span
-                  >
+                  <span class="prediction-label">{{
+                    $t('dashboard.productCard.trend')
+                  }}:</span>
                   <span class="prediction-value" :class="getTrendIndicator().class">
                     <strong>{{
                       getTrendIndicator().direction === 'up'
-                        ? $t('dashboard.productCard.increasing') || 'Aumentando'
-                        : $t('dashboard.productCard.decreasing') || 'Disminuyendo'
+                        ? $t('dashboard.productCard.increasing')
+                        : $t('dashboard.productCard.decreasing')
                     }}</strong>
                   </span>
                 </div>
@@ -564,8 +564,7 @@ export default {
               <div v-if="product?.productStatus === 'LOW'" class="prediction-recommendation">
                 <i class="bi bi-lightbulb-fill"></i>
                 <span>{{
-                  $t('dashboard.productCard.recommendation') ||
-                  'Se recomienda recargar urgentemente'
+                  $t('dashboard.productCard.recommendation')
                 }}</span>
               </div>
             </div>
@@ -789,20 +788,7 @@ export default {
               </ProductConsumptionManagement>
             </div>
             <div class="modal-footer border-0 modern-modal-footer">
-              <div class="d-flex align-items-center justify-content-between w-100 gap-3">
-                <div class="flex-grow-1">
-                  <SimpleDownloadCard
-                    :download="toggles['products-stock.reports.consumption-details']"
-                    :title="$t('businessProductStockAdmin.reports.consumption-details.title')"
-                    :show-tooltip="true"
-                    :description="
-                      $t('businessProductStockAdmin.reports.consumption-details.description')
-                    "
-                    :icon="'file-earmark-spreadsheet'"
-                    @download="handleExportConsumptionCSV"
-                    :can-download="toggles['products-stock.reports.consumption-details'] === true"
-                  ></SimpleDownloadCard>
-                </div>
+              <div class="d-flex align-items-center justify-content-end w-100">
                 <button
                   class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
                   type="button"
@@ -869,20 +855,7 @@ export default {
               </ProductReplacementManagement>
             </div>
             <div class="modal-footer border-0 modern-modal-footer">
-              <div class="d-flex align-items-center justify-content-between w-100 gap-3">
-                <div class="flex-grow-1">
-                  <SimpleDownloadCard
-                    :download="toggles['products-stock.reports.replacement-details']"
-                    :title="$t('businessProductStockAdmin.reports.replacement-details.title')"
-                    :show-tooltip="true"
-                    :description="
-                      $t('businessProductStockAdmin.reports.replacement-details.description')
-                    "
-                    :icon="'file-earmark-spreadsheet'"
-                    @download="handleExportReplacementCSV"
-                    :can-download="toggles['products-stock.reports.replacement-details'] === true"
-                  ></SimpleDownloadCard>
-                </div>
+              <div class="d-flex align-items-center justify-content-end w-100">
                 <button
                   class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
                   type="button"
@@ -1205,8 +1178,6 @@ export default {
 
 /* NUEVO: Sección de Predicción en Vista Expandida */
 .prediction-section {
-  background: linear-gradient(135deg, rgba(0, 74, 173, 0.03) 0%, rgba(0, 194, 203, 0.02) 100%);
-  border-left: 3px solid var(--azul-turno);
 }
 
 .prediction-content {

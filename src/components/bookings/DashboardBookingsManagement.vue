@@ -384,6 +384,13 @@ export default {
                     @download="exportToCSV"
                     :can-download="toggles['dashboard.reports.bookings-management'] === true"
                   ></SimpleDownloadButton>
+                  <button
+                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 ms-2"
+                    @click="refresh()"
+                    :disabled="loading"
+                  >
+                    <i class="bi bi-arrow-clockwise"></i>
+                  </button>
                 </div>
               </div>
               <!-- Filters Section - Only show when filtersLocation === 'component' (mobile) -->

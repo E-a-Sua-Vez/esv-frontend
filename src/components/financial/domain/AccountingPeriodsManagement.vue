@@ -16,8 +16,8 @@
     <div v-if="showAccountingPeriodsManagement">
       <div class="row g-3">
         <!-- Header with Create Button -->
-        <div class="col-12 d-flex justify-content-between align-items-center mb-2">
-          <div>
+        <div class="col-12 mb-2">
+          <div class="d-flex align-items-center">
             <button
               class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-4"
               @click="showCreateModal = true"
@@ -25,10 +25,8 @@
               <i class="bi bi-plus-lg me-1"></i>
               {{ $t('financial.periods.newPeriod') }}
             </button>
-          </div>
-          <div>
             <button
-              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 ms-2"
               @click="clear()"
               :disabled="loading"
             >

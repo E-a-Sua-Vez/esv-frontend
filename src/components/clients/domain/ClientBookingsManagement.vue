@@ -4,6 +4,7 @@ import Popper from 'vue3-popper';
 import Message from '../../common/Message.vue';
 import SimpleDownloadCard from '../../reports/SimpleDownloadCard.vue';
 import AttentionDetailsCard from '../common/AttentionDetailsCard.vue';
+import AttentionDetailsModal from '../../attentions/common/AttentionDetailsModal.vue';
 import { getBookingsDetails } from '../../../application/services/query-stack';
 import jsonToCsv from '../../../shared/utils/jsonToCsv';
 import { DateModel } from '../../../shared/utils/date.model';
@@ -19,6 +20,7 @@ export default {
     Spinner,
     Popper,
     AttentionDetailsCard,
+    AttentionDetailsModal,
     BookingDetailsCard,
     BookingDetailsCardFull,
   },
@@ -65,6 +67,8 @@ export default {
       selectedBookingForModal: null,
       showBookingDetailsModal: false,
       bookingsLoaded: false, // Flag to track if bookings have been loaded
+      showAttentionModal: false,
+      selectedAttention: undefined,
     };
   },
   methods: {
@@ -106,7 +110,7 @@ export default {
     },
     async setPage(pageIn) {
       this.page = pageIn;
-      await this.refresh();
+      // Don't call refresh here - the page watcher will handle it
     },
     openBookingDetailsModal(booking) {
       try {
@@ -181,6 +185,18 @@ export default {
 
       // Emit event when modal is closed
       this.$emit('booking-modal-closed');
+    },
+    openAttentionModal(attention) {
+      this.selectedAttention = attention;
+      this.showAttentionModal = true;
+    },
+    closeAttentionModal() {
+      this.showAttentionModal = false;
+      this.selectedAttention = undefined;
+    },
+    async handleAttentionUpdated() {
+      await this.refresh(true); // Force refresh after updating attention
+      this.closeAttentionModal();
     },
     handleBookingUpdated(updatedBooking) {
       // Refresh bookings list when a booking is updated
@@ -385,20 +401,37 @@ export default {
     },
   },
   watch: {
+    limit: {
+      immediate: false,
+      async handler(newLimit, oldLimit) {
+        if (oldLimit !== undefined && newLimit !== oldLimit) {
+          this.page = 1;
+          this.bookingsLoaded = false;
+          await this.refresh(true);
+        }
+      },
+    },
+    page: {
+      immediate: false,
+      async handler(newPage, oldPage) {
+        if (oldPage !== undefined && newPage !== oldPage && this.bookingsLoaded) {
+          await this.refresh(true);
+        }
+      },
+    },
     changeData: {
       immediate: false, // Don't trigger on mount - bookings load lazily when modal opens
       deep: true,
-      async handler(oldData, newData) {
+      async handler(newData, oldData) {
         // Only refresh if oldData exists (not initial mount) and something actually changed
         if (
           oldData &&
           newData &&
-          (oldData.client !== newData.client ||
-            oldData.asc !== newData.asc ||
-            oldData.limit !== newData.limit ||
+          (oldData.asc !== newData.asc ||
             oldData.queueId !== newData.queueId ||
             oldData.serviceId !== newData.serviceId ||
-            oldData.packageId !== newData.packageId)
+            oldData.packageId !== newData.packageId ||
+            oldData.status !== newData.status)
         ) {
           this.page = 1;
           this.bookingsLoaded = false; // Reset flag when filters change
@@ -671,6 +704,18 @@ export default {
                   </div>
                 </div>
               </div>
+
+              <!-- Refresh Button -->
+              <div class="my-3 d-flex align-items-center justify-content-end">
+                <button
+                  @click="refresh"
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                  :disabled="loading"
+                >
+                  <i class="bi bi-arrow-clockwise"></i> Pesquisar
+                </button>
+              </div>
+
               <div class="my-3 text-center">
                 <span class="badge bg-secondary px-3 py-2 m-1"
                   >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
@@ -870,17 +915,28 @@ export default {
           @click.stop
         >
           <div class="modal-content attention-modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="bookingDetailsModalLabel">
-                <i class="bi bi-calendar-fill"></i>
-                {{ $t('dashboard.bookingDetails') || 'Detalhes da Reserva' }}
-              </h5>
+            <div class="modal-header border-0 active-name modern-modal-header">
+              <div class="modern-modal-header-inner">
+                <div class="modern-modal-icon-wrapper">
+                  <i class="bi bi-calendar-fill"></i>
+                </div>
+                <div class="modern-modal-title-wrapper">
+                  <h5 class="modal-title fw-bold modern-modal-title" id="bookingDetailsModalLabel">
+                    {{ $t('dashboard.bookingDetails') || 'Detalhes da Reserva' }}
+                  </h5>
+                  <p v-if="selectedBookingForModal && selectedBookingForModal.clientName" class="modern-modal-client-name">
+                    {{ selectedBookingForModal.clientName }}
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
-                class="btn-close"
+                class="modern-modal-close-btn"
                 @click="closeBookingDetailsModal"
                 aria-label="Close"
-              ></button>
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
             </div>
             <div class="modal-body">
               <Spinner :show="loading"></Spinner>
@@ -900,6 +956,18 @@ export default {
         </div>
       </div>
     </Teleport>
+
+    <!-- Attention Details Modal -->
+    <AttentionDetailsModal
+      :show="showAttentionModal"
+      :attention="selectedAttention"
+      :commerce="commerce"
+      :queues="queues"
+      :toggles="toggles"
+      :opened-from-booking-modal="true"
+      @close="closeAttentionModal"
+      @attention-updated="handleAttentionUpdated"
+    />
   </div>
 </template>
 
@@ -915,36 +983,94 @@ export default {
   box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
 }
 
-/* Modal Header - Matching Attention Style */
-.modal-header {
-  background-color: var(--azul-turno, #004aad);
-  color: white !important;
-  border-bottom: none !important;
-  padding: 1rem 1.25rem !important;
-  border-radius: 0.5rem 0.5rem 0 0 !important;
+/* Modal Header - Modern Style */
+.modern-modal-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  border-radius: 0.75rem 0.75rem 0 0;
+  min-height: auto;
+  position: relative;
 }
 
-.modal-title {
-  color: white !important;
-  font-weight: 700 !important;
-  margin: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.5rem !important;
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
 }
 
-.modal-title i {
-  color: white !important;
-  font-size: 1.125rem !important;
+.modern-modal-icon-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.btn-close {
-  filter: invert(1) grayscale(100%) brightness(200%) !important;
-  opacity: 0.9 !important;
+.modern-modal-icon-wrapper i {
+  font-size: 1.125rem;
+  color: #ffffff;
 }
 
-.btn-close:hover {
-  opacity: 1 !important;
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-background);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.modern-modal-client-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modern-modal-close-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+}
+
+.modern-modal-close-btn i {
+  font-size: 1rem;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.modern-modal-close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* Modal Body */
@@ -958,7 +1084,6 @@ export default {
   padding: 0.5rem;
   margin: 0.5rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--gris-default);
 }
 .filter-card {
   background-color: var(--color-background);
@@ -966,7 +1091,6 @@ export default {
   padding-bottom: 0.2rem;
   margin: 0.2rem;
   border-radius: 0.5rem;
-  border: 0.5px solid var(--gris-default);
 }
 .metric-card-title {
   font-size: 0.9rem;

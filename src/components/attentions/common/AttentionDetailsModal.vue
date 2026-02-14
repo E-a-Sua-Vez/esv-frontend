@@ -50,6 +50,7 @@ export default {
     queues: { type: Array, default: undefined },
     toggles: { type: Object, default: undefined },
     handleMainModal: { type: Boolean, default: false },
+    openedFromBookingModal: { type: Boolean, default: false },
   },
   emits: ['close', 'attention-updated'],
   data() {
@@ -398,17 +399,29 @@ export default {
       this.$emit('close');
     },
     hideMainModal() {
+      console.log('[AttentionDetailsModal] hideMainModal called, handleMainModal:', this.handleMainModal);
       if (!this.handleMainModal) return;
 
       const mainModal = document.querySelector('#modalAgenda');
+      console.log('[AttentionDetailsModal] Hiding main modal, element found:', !!mainModal);
       if (mainModal) {
         mainModal.style.display = 'none';
       }
     },
+    hideBookingModal() {
+      if (!this.openedFromBookingModal) return;
+
+      const bookingModal = document.querySelector('#bookingDetailsModal');
+      if (bookingModal) {
+        bookingModal.style.display = 'none';
+      }
+    },
     restoreMainModal() {
+      console.log('[AttentionDetailsModal] restoreMainModal called, handleMainModal:', this.handleMainModal);
       if (!this.handleMainModal) return;
 
       const mainModal = document.querySelector('#modalAgenda');
+      console.log('[AttentionDetailsModal] Restoring main modal, element found:', !!mainModal);
       if (mainModal) {
         // Restaurar estilos
         mainModal.style.display = '';
@@ -441,6 +454,51 @@ export default {
           backdrop.classList.add('show');
         }
       }
+    },
+    restoreBookingModal() {
+      if (!this.openedFromBookingModal) return;
+
+      setTimeout(() => {
+        const bookingModal = document.querySelector('#bookingDetailsModal');
+        if (bookingModal) {
+          console.log('[AttentionDetailsModal] Restoring booking modal');
+
+          // Restaurar estilos
+          bookingModal.style.display = 'block';
+          bookingModal.style.pointerEvents = '';
+          bookingModal.style.opacity = '';
+          bookingModal.style.visibility = '';
+
+          // IMPORTANTE: Reactivar el modal de Bootstrap si está inactivo
+          if (!bookingModal.classList.contains('show')) {
+            bookingModal.classList.add('show');
+          }
+
+          // Asegurar que el body tenga las clases correctas para modals
+          if (!document.body.classList.contains('modal-open')) {
+            document.body.classList.add('modal-open');
+          }
+
+          // Asegurar que el body mantenga overflow hidden
+          document.body.style.overflow = 'hidden';
+        } else {
+          console.warn('[AttentionDetailsModal] Booking modal element not found');
+        }
+
+        // Restaurar o crear backdrop si es necesario
+        let backdrop = document.querySelector('.modal-backdrop');
+        if (!backdrop) {
+          backdrop = document.createElement('div');
+          backdrop.className = 'modal-backdrop fade show';
+          document.body.appendChild(backdrop);
+        } else {
+          backdrop.style.display = 'block';
+          backdrop.style.visibility = '';
+          if (!backdrop.classList.contains('show')) {
+            backdrop.classList.add('show');
+          }
+        }
+      }, 100);
     },
     getDate(dateIn, timeZoneIn) {
       return getDate(dateIn, timeZoneIn);
@@ -1711,10 +1769,15 @@ export default {
   },
   watch: {
     show(newVal) {
+      console.log('[AttentionDetailsModal] show changed:', newVal, 'handleMainModal:', this.handleMainModal, 'openedFromBookingModal:', this.openedFromBookingModal);
       if (newVal) {
+        this.hideMainModal();
+        this.hideBookingModal();
         document.body.classList.add('modal-open');
         document.body.style.overflow = 'hidden';
       } else {
+        this.restoreMainModal();
+        this.restoreBookingModal();
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
         // Remove backdrop when modal closes
@@ -1759,12 +1822,28 @@ export default {
       <div class="modal-dialog modal-dialog-scrollable modal-lg attention-modal-dialog" @click.stop>
         <div class="modal-content attention-modal-content">
           <!-- Modal Header -->
-          <div class="modal-header">
-            <h5 class="modal-title" id="attentionDetailsModalLabel">
-              <i class="bi bi-qr-code"></i>
-              {{ $t('dashboard.attentionDetails') || 'Detalles del Atendimiento' }}
-            </h5>
-            <button type="button" class="btn-close" @click="closeModal" aria-label="Close"></button>
+          <div class="modal-header border-0 active-name modern-modal-header">
+            <div class="modern-modal-header-inner">
+              <div class="modern-modal-icon-wrapper">
+                <i class="bi bi-qr-code"></i>
+              </div>
+              <div class="modern-modal-title-wrapper">
+                <h5 class="modal-title fw-bold modern-modal-title" id="attentionDetailsModalLabel">
+                  {{ $t('dashboard.attentionDetails') || 'Detalles del Atendimiento' }}
+                </h5>
+                <p v-if="attention && attention.clientName" class="modern-modal-client-name">
+                  {{ attention.clientName }}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="modern-modal-close-btn"
+              @click="closeModal"
+              aria-label="Close"
+            >
+              <i class="bi bi-x-lg"></i>
+            </button>
           </div>
 
           <!-- Modal Body -->
@@ -2445,27 +2524,94 @@ export default {
   box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
 }
 
-/* Modal Header - Matching Booking Style */
-.modal-header {
-  background-color: var(--azul-turno, #004aad);
-  color: white !important;
-  border-bottom: none !important;
-  padding: 1rem 1.25rem !important;
-  border-radius: 0.5rem 0.5rem 0 0 !important;
+/* Modal Header - Modern Style */
+.modern-modal-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--azul-turno);
+  color: var(--color-background);
+  border-radius: 0.75rem 0.75rem 0 0;
+  min-height: auto;
+  position: relative;
 }
 
-.modal-title {
-  color: white !important;
-  font-weight: 700 !important;
-  margin: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.5rem !important;
+.modern-modal-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
 }
 
-.modal-title i {
-  color: white !important;
-  font-size: 1.125rem !important;
+.modern-modal-icon-wrapper {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-modal-icon-wrapper i {
+  font-size: 1.125rem;
+  color: #ffffff;
+}
+
+.modern-modal-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-background);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.modern-modal-client-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modern-modal-close-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+}
+
+.modern-modal-close-btn i {
+  font-size: 1rem;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.modern-modal-close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .attention-number-badge-inline {

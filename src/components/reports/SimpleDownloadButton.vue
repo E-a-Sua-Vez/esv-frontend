@@ -23,7 +23,7 @@ export default {
 </script>
 
 <template>
-  <div v-if="show" class="col lefted">
+  <div v-if="show" class="d-inline-flex align-items-center">
     <button
       class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
       @click="executeDownload()"

@@ -2339,33 +2339,15 @@ export default {
               </ClientPackagesManagement>
             </div>
             <div class="modal-footer border-0 modern-modal-footer">
-              <div class="d-flex align-items-center justify-content-between w-100 gap-3">
-                <div class="flex-grow-1">
-                  <SimpleDownloadCard
-                    :download="toggles['dashboard.reports.packages-management']"
-                    :title="
-                      $t('dashboard.reports.packages-management.title') || 'Exportar Paquetes'
-                    "
-                    :show-tooltip="true"
-                    :description="
-                      $t('dashboard.reports.packages-management.description') ||
-                      'Exportar lista de paquetes'
-                    "
-                    :icon="'file-earmark-spreadsheet'"
-                    @download="handleExportPackagesCSV"
-                    :can-download="toggles['dashboard.reports.packages-management'] === true"
-                  ></SimpleDownloadCard>
-                </div>
-                <button
-                  class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
-                  type="button"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                >
-                  <i class="bi bi-check-lg"></i>
-                  {{ $t('notificationConditions.action') || $t('close') }}
-                </button>
-              </div>
+              <button
+                class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                <i class="bi bi-check-lg"></i>
+                {{ $t('notificationConditions.action') || $t('close') }}
+              </button>
             </div>
           </div>
         </div>
@@ -2487,28 +2469,15 @@ export default {
               </ClientContactsManagement>
             </div>
             <div class="modal-footer border-0 modern-modal-footer">
-              <div class="d-flex align-items-center justify-content-between w-100 gap-3">
-                <div class="flex-grow-1">
-                  <SimpleDownloadCard
-                    :download="toggles['dashboard.reports.contacts-management']"
-                    :title="$t('dashboard.reports.contacts-management.title')"
-                    :show-tooltip="true"
-                    :description="$t('dashboard.reports.contacts-management.description')"
-                    :icon="'file-earmark-spreadsheet'"
-                    @download="handleExportContactsCSV"
-                    :can-download="toggles['dashboard.reports.contacts-management'] === true"
-                  ></SimpleDownloadCard>
-                </div>
-                <button
-                  class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
-                  type="button"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                >
-                  <i class="bi bi-check-lg"></i>
-                  {{ $t('notificationConditions.action') || $t('close') }}
-                </button>
-              </div>
+              <button
+                class="btn btn-sm fw-bold btn-dark text-white rounded-pill px-4 modern-modal-close-button"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                <i class="bi bi-check-lg"></i>
+                {{ $t('notificationConditions.action') || $t('close') }}
+              </button>
             </div>
           </div>
         </div>

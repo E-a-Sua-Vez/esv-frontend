@@ -31,6 +31,7 @@ export default {
     commerces: { type: Array, default: undefined },
     queues: { type: Array, default: undefined },
     productReplacementsIn: { type: Array, default: [] },
+    showSearchFilters: { type: Boolean, default: true },
   },
   emits: ['getProductReplacements'],
   data() {
@@ -71,6 +72,17 @@ export default {
     async setPage(pageIn) {
       this.page = pageIn;
       await this.refresh();
+    },
+    clearForm() {
+      this.newProductReplacement = {
+        replacementDate: new Date().toISOString().slice(0, 10),
+        replacementExpirationDate: new Date().toISOString().slice(0, 10),
+        nextReplacementDate: new Date().toISOString().slice(0, 10),
+      };
+      this.replacementAmountError = false;
+      this.replacementDateError = false;
+      this.replacementExpirationDateError = false;
+      this.errorsAdd = [];
     },
     async clear() {
       this.asc = false;
@@ -171,6 +183,7 @@ export default {
           this.showAddOption = false;
           this.newProductReplacement = {};
           this.extendedEntity = undefined;
+          this.clearForm();
         }
         this.alertError = '';
         this.loading = false;
@@ -261,6 +274,7 @@ export default {
     if (this.showProductReplacementManagement) {
       this.refresh();
     }
+    this.clearForm();
   },
   watch: {
     showProductReplacementManagement: {
@@ -318,357 +332,369 @@ export default {
 </script>
 
 <template>
-  <div
-    id="productReplacements-management"
-    class="row"
-    v-if="
-      showProductReplacementManagement === true &&
-      toggles['products-stock.products.view-consumption']
-    "
-  >
-    <div class="col">
-      <div id="attention-management-component">
-        <Spinner :show="loading"></Spinner>
-        <Alert :show="loading" :stack="alertError"></Alert>
-        <div v-if="!loading">
-          <div>
-            <div class="my-2 row metric-card">
-              <div class="col-12">
-                <span class="metric-card-subtitle">
-                  <span class="form-check-label" @click="showAdd()">
-                    <i class="bi bi-arrow-down-circle-fill"></i>
-                    {{ $t('businessProductStockAdmin.addReplacement') }}
-                    <i
-                      :class="`bi ${showAddOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"
-                    ></i>
-                  </span>
-                </span>
-              </div>
-              <div v-if="showAddOption">
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t('businessProductStockAdmin.amount') }}
-                  </div>
-                  <div class="col-8">
-                    <input
-                      :min="0"
-                      type="number"
-                      class="form-control"
-                      v-model="newProductReplacement.replacementAmount"
-                      v-bind:class="{ 'is-invalid': replacementAmountError }"
-                      placeholder="1"
-                    />
-                  </div>
-                </div>
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t('businessProductStockAdmin.price') }}
-                  </div>
-                  <div class="col-8">
-                    <input
-                      :min="0"
-                      type="number"
-                      class="form-control"
-                      v-model="newProductReplacement.price"
-                      placeholder="1"
-                    />
-                  </div>
-                </div>
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t('businessProductStockAdmin.date') }}
-                  </div>
-                  <div class="col-8">
-                    <input
-                      type="date"
-                      class="form-control"
-                      v-model="newProductReplacement.replacementDate"
-                      v-bind:class="{ 'is-invalid': replacementDateError }"
-                      placeholder="1"
-                    />
-                  </div>
-                </div>
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t('businessProductStockAdmin.expireDate') }}
-                  </div>
-                  <div class="col-8">
-                    <input
-                      type="date"
-                      class="form-control"
-                      v-model="newProductReplacement.replacementExpirationDate"
-                      v-bind:class="{ 'is-invalid': replacementExpirationDateError }"
-                      placeholder="1"
-                    />
-                  </div>
-                </div>
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t('businessProductStockAdmin.nextDate') }}
-                  </div>
-                  <div class="col-8">
-                    <input
-                      type="date"
-                      class="form-control"
-                      v-model="newProductReplacement.nextReplacementDate"
-                      placeholder="1"
-                    />
-                  </div>
-                </div>
-                <div class="row mt-1">
-                  <div class="col-4 text-label">
-                    {{ $t('businessProductStockAdmin.code') }}
-                  </div>
-                  <div class="col-8">
-                    <input
-                      type="text"
-                      class="form-control"
-                      v-model="newProductReplacement.code"
-                      placeholder="Code/Batch"
-                    />
-                  </div>
-                </div>
-                <div class="row m-1">
-                  <div class="col-12 text-label">
-                    <button
-                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                      @click="add(newProductReplacement)"
-                    >
-                      {{ $t('dashboard.add') }} <i class="bi bi-save"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="row g-1 errors" id="feedback" v-if="errorsAdd.length > 0">
-                  <Warning>
-                    <template v-slot:message>
-                      <li v-for="(error, index) in errorsAdd" :key="index">
-                        {{ $t(error) }}
-                      </li>
-                    </template>
-                  </Warning>
-                </div>
-              </div>
-            </div>
-            <div class="my-1 row metric-card compact-filters-card">
-              <div class="col-12">
-                <div class="d-flex align-items-center justify-content-between">
+  <div>
+    <div
+      id="productReplacements-management"
+      class="row"
+      v-if="
+        showProductReplacementManagement === true &&
+        toggles['products-stock.products.view-consumption']
+      "
+    >
+      <div class="col">
+        <div id="attention-management-component">
+          <Spinner :show="loading"></Spinner>
+          <Alert :show="loading" :stack="alertError"></Alert>
+          <div v-if="!loading">
+            <div>
+              <div class="my-2 row metric-card">
+                <div class="col-12">
                   <span class="metric-card-subtitle">
-                    <span class="form-check-label metric-keyword-subtitle" @click="showFilters()">
-                      <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
+                    <span class="form-check-label" @click="showAdd()" style="cursor: pointer;">
+                      <i class="bi bi-arrow-down-circle-fill"></i>
+                      {{ $t('businessProductStockAdmin.addReplacement') }}
                       <i
-                        :class="`bi ${
-                          showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
-                        }`"
+                        :class="`bi ${showAddOption === true ? 'bi-chevron-up' : 'bi-chevron-down'}`"
                       ></i>
                     </span>
                   </span>
-                  <button
-                    class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2 py-1"
-                    @click="clear()"
-                  >
-                    <i class="bi bi-eraser-fill"></i>
-                  </button>
                 </div>
-              </div>
-              <div v-if="showFilterOptions">
-                <div class="row my-1">
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getToday()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.today') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getCurrentMonth()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.thisMonth') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getLastMonth()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.lastMonth') }}
-                    </button>
-                  </div>
-                  <div class="col-3">
-                    <button
-                      class="btn btn-dark rounded-pill px-2 metric-filters"
-                      @click="getLastThreeMonths()"
-                      :disabled="loading"
-                    >
-                      {{ $t('dashboard.lastThreeMonths') }}
-                    </button>
-                  </div>
-                </div>
-                <div class="m-1">
-                  <div class="row">
-                    <div class="col-5">
+                <div v-if="showAddOption">
+                  <div class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t('businessProductStockAdmin.amount') }}
+                    </div>
+                    <div class="col-8">
                       <input
-                        id="startDate"
-                        class="form-control metric-controls"
-                        type="date"
-                        v-model="startDate"
+                        :min="0"
+                        type="number"
+                        class="form-control-modern"
+                        v-model="newProductReplacement.replacementAmount"
+                        v-bind:class="{ 'is-invalid': replacementAmountError }"
+                        placeholder="1"
                       />
                     </div>
-                    <div class="col-5">
+                  </div>
+                  <div class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t('businessProductStockAdmin.price') }}
+                    </div>
+                    <div class="col-8">
                       <input
-                        id="endDate"
-                        class="form-control metric-controls"
-                        type="date"
-                        v-model="endDate"
+                        :min="0"
+                        type="number"
+                        class="form-control-modern"
+                        v-model="newProductReplacement.price"
+                        placeholder="1"
                       />
                     </div>
-                    <div class="col-2">
+                  </div>
+                  <div class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t('businessProductStockAdmin.date') }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        type="date"
+                        class="form-control-modern"
+                        v-model="newProductReplacement.replacementDate"
+                        v-bind:class="{ 'is-invalid': replacementDateError }"
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
+                  <div class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t('businessProductStockAdmin.expireDate') }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        type="date"
+                        class="form-control-modern"
+                        v-model="newProductReplacement.replacementExpirationDate"
+                        v-bind:class="{ 'is-invalid': replacementExpirationDateError }"
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
+                  <div class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t('businessProductStockAdmin.nextDate') }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        type="date"
+                        class="form-control-modern"
+                        v-model="newProductReplacement.nextReplacementDate"
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
+                  <div class="row mt-1">
+                    <div class="col-4 text-label">
+                      {{ $t('businessProductStockAdmin.code') }}
+                    </div>
+                    <div class="col-8">
+                      <input
+                        type="text"
+                        class="form-control-modern"
+                        v-model="newProductReplacement.code"
+                        placeholder="Code/Batch"
+                      />
+                    </div>
+                  </div>
+                  <div class="row m-1">
+                    <div class="col-12 text-label">
                       <button
-                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
-                        @click="refresh()"
+                        class="btn btn-sm btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
+                        @click="add(newProductReplacement)"
                       >
-                        <span><i class="bi bi-search"></i></span>
+                        {{ $t('dashboard.add') }} <i class="bi bi-save"></i>
                       </button>
                     </div>
                   </div>
+                  <div class="row g-1 errors" id="feedback" v-if="errorsAdd.length > 0">
+                    <Warning>
+                      <template v-slot:message>
+                        <li v-for="(error, index) in errorsAdd" :key="index">
+                          {{ $t(error) }}
+                        </li>
+                      </template>
+                    </Warning>
+                  </div>
                 </div>
-                <div class="row">
-                  <div class="col-12">
-                    <div class="form-check form-switch centered">
-                      <input
-                        class="form-check-input m-1"
-                        :class="asc === false ? 'bg-danger' : ''"
-                        type="checkbox"
-                        name="asc"
-                        id="asc"
-                        v-model="asc"
-                        @click="checkAsc($event)"
-                      />
-                      <label class="form-check-label metric-card-subtitle" for="asc">{{
-                        asc ? $t('dashboard.asc') : $t('dashboard.desc')
-                      }}</label>
+              </div>
+              <div class="my-1 row metric-card compact-filters-card">
+                <div class="col-12">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <span class="metric-card-subtitle">
+                      <span class="form-check-label metric-keyword-subtitle" @click="showFilters()" style="cursor: pointer;">
+                        <i class="bi bi-search"></i> {{ $t('dashboard.aditionalFilters') }}
+                        <i
+                          :class="`bi ${
+                            showFilterOptions === true ? 'bi-chevron-up' : 'bi-chevron-down'
+                          }`"
+                        ></i>
+                      </span>
+                    </span>
+                    <button
+                      class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-2 py-1"
+                      @click.stop="clear()"
+                    >
+                      <i class="bi bi-eraser-fill"></i>
+                    </button>
+                  </div>
+                </div>
+                <div v-if="showFilterOptions">
+                  <div class="row my-1">
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getToday()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.today') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getCurrentMonth()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.thisMonth') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getLastMonth()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.lastMonth') }}
+                      </button>
+                    </div>
+                    <div class="col-3">
+                      <button
+                        class="btn btn-dark rounded-pill px-2 metric-filters"
+                        @click="getLastThreeMonths()"
+                        :disabled="loading"
+                      >
+                        {{ $t('dashboard.lastThreeMonths') }}
+                      </button>
+                    </div>
+                  </div>
+                  <div class="m-1">
+                    <div class="row g-2 align-items-center justify-content-center">
+                      <div class="col-5">
+                        <input
+                          id="startDate"
+                          class="form-control-modern"
+                          type="date"
+                          v-model="startDate"
+                        />
+                      </div>
+                      <div class="col-5">
+                        <input
+                          id="endDate"
+                          class="form-control-modern"
+                          type="date"
+                          v-model="endDate"
+                        />
+                      </div>
+                      <div class="col-2 text-center">
+                        <button
+                          class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3 py-2"
+                          @click="refresh()"
+                        >
+                          <span><i class="bi bi-search"></i></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-12">
+                      <div class="form-check form-switch d-flex align-items-center justify-content-center gap-2">
+                        <input
+                          class="form-check-input m-0"
+                          :class="asc === false ? 'bg-danger' : ''"
+                          type="checkbox"
+                          name="asc"
+                          id="asc"
+                          v-model="asc"
+                          @click="checkAsc($event)"
+                        />
+                        <label class="form-check-label metric-card-subtitle m-0" for="asc">{{
+                          asc ? $t('dashboard.asc') : $t('dashboard.desc')
+                        }}</label>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div
-              class="my-2 d-flex align-items-center justify-content-center flex-wrap gap-2 compact-pagination-info"
-            >
-              <span class="badge bg-secondary px-2 py-1 compact-badge"
-                >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
-              </span>
-              <span class="badge bg-secondary px-2 py-1 compact-badge">
-                {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
-              </span>
-              <select
-                class="btn btn-sm btn-light fw-bold text-dark select compact-select"
-                v-model="limit"
-              >
-                <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
-                  {{ lim }}
-                </option>
-              </select>
-            </div>
-            <div class="centered mt-2">
-              <nav>
-                <ul class="pagination">
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="First"
-                      @click="setPage(1)"
-                      :disabled="page === 1 || totalPages === 0"
-                    >
-                      <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
-                    </button>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Previous"
-                      @click="setPage(page - 1)"
-                      :disabled="page === 1 || totalPages === 0"
-                    >
-                      <span aria-hidden="true">&laquo;</span>
-                    </button>
-                  </li>
-                  <li>
-                    <select
-                      class="btn btn-md btn-light fw-bold text-dark select mx-1"
-                      v-model="page"
-                      :disabled="totalPages === 0"
-                    >
-                      <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">
-                        {{ pag }}
-                      </option>
-                    </select>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="Next"
-                      @click="setPage(page + 1)"
-                      :disabled="page === totalPages || totalPages === 0"
-                    >
-                      <span aria-hidden="true">&raquo;</span>
-                    </button>
-                  </li>
-                  <li class="page-item">
-                    <button
-                      class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
-                      aria-label="First"
-                      @click="setPage(totalPages)"
-                      :disabled="page === totalPages || totalPages === 0"
-                    >
-                      <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-            <div v-if="this.productReplacements && this.productReplacements.length > 0">
-              <div
-                class="row"
-                v-for="(product, index) in productReplacements"
-                :key="`productReplacements-${index}`"
-              >
-                <ProductReplacementDetailsCard
-                  :show="true"
-                  :details-opened="false"
-                  :product="product"
+              <div class="my-3 d-flex align-items-center justify-content-end">
+                <button
+                  class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                  @click="refresh()"
+                  :disabled="loading"
                 >
-                </ProductReplacementDetailsCard>
+                  <i class="bi bi-arrow-clockwise"></i>
+                  {{ $t('dashboard.refresh') || 'Atualizar' }}
+                </button>
               </div>
-            </div>
-            <div v-else>
-              <Message
-                :icon="'graph-up-arrow'"
-                :title="$t('dashboard.message.2.title')"
-                :content="$t('dashboard.message.2.content')"
-              />
+              <div
+                class="my-2 d-flex align-items-center justify-content-center flex-wrap gap-2 compact-pagination-info"
+              >
+                <span class="badge bg-secondary px-2 py-1 compact-badge"
+                  >{{ $t('businessAdmin.listResult') }} {{ this.counter }}
+                </span>
+                <span class="badge bg-secondary px-2 py-1 compact-badge">
+                  {{ $t('page') }} {{ this.page }} {{ $t('of') }} {{ this.totalPages }}
+                </span>
+                <select
+                  class="btn btn-sm btn-light fw-bold text-dark select compact-select"
+                  v-model="limit"
+                >
+                  <option v-for="lim in limits" :key="lim" :value="lim" id="select-queue">
+                    {{ lim }}
+                  </option>
+                </select>
+              </div>
+              <div class="centered mt-2">
+                <nav>
+                  <ul class="pagination">
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(1)"
+                        :disabled="page === 1 || totalPages === 0"
+                      >
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-left"></i></span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Previous"
+                        @click="setPage(page - 1)"
+                        :disabled="page === 1 || totalPages === 0"
+                      >
+                        <span aria-hidden="true">&laquo;</span>
+                      </button>
+                    </li>
+                    <li>
+                      <select
+                        class="btn btn-md btn-light fw-bold text-dark select mx-1"
+                        v-model="page"
+                        :disabled="totalPages === 0"
+                      >
+                        <option v-for="pag in totalPages" :key="pag" :value="pag" id="select-queue">
+                          {{ pag }}
+                        </option>
+                      </select>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="Next"
+                        @click="setPage(page + 1)"
+                        :disabled="page === totalPages || totalPages === 0"
+                      >
+                        <span aria-hidden="true">&raquo;</span>
+                      </button>
+                    </li>
+                    <li class="page-item">
+                      <button
+                        class="btn btn-md btn-size fw-bold btn-dark rounded-pill px-3"
+                        aria-label="First"
+                        @click="setPage(totalPages)"
+                        :disabled="page === totalPages || totalPages === 0"
+                      >
+                        <span aria-hidden="true"><i class="bi bi-arrow-bar-right"></i></span>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+              <div v-if="this.productReplacements && this.productReplacements.length > 0">
+                <div
+                  class="row"
+                  v-for="(product, index) in productReplacements"
+                  :key="`productReplacements-${index}`"
+                >
+                  <ProductReplacementDetailsCard
+                    :show="true"
+                    :details-opened="false"
+                    :product="product"
+                  >
+                  </ProductReplacementDetailsCard>
+                </div>
+              </div>
+              <div v-else>
+                <Message
+                  :icon="'graph-up-arrow'"
+                  :title="$t('dashboard.message.2.title')"
+                  :content="$t('dashboard.message.2.content')"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <div
-    v-if="
-      showProductReplacementManagement === true &&
-      !toggles['products-stock.products.view-consumption']
-    "
-  >
-    <Message
-      :icon="'graph-up-arrow'"
-      :title="$t('dashboard.message.1.title')"
-      :content="$t('dashboard.message.1.content')"
-    />
+    <div
+      v-if="
+        showProductReplacementManagement === true &&
+        !toggles['products-stock.products.view-consumption']
+      "
+    >
+      <Message
+        :icon="'graph-up-arrow'"
+        :title="$t('dashboard.message.1.title')"
+        :content="$t('dashboard.message.1.content')"
+      />
+    </div>
   </div>
 </template>
 
@@ -825,6 +851,46 @@ export default {
   border-color: rgba(0, 74, 173, 0.3);
 }
 
+/* Modern Form Controls */
+.form-control-modern {
+  flex: 1;
+  padding: 0.4rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #000000;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid rgba(169, 169, 169, 0.25);
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.form-control-modern:focus {
+  outline: none;
+  border-color: rgba(0, 194, 203, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 194, 203, 0.1);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.form-control-modern:hover:not(:disabled) {
+  border-color: rgba(169, 169, 169, 0.4);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.form-control-modern.is-invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
+}
+
+.metric-controls {
+  border-radius: 0.5rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
 .metric-controls:focus {
   border-color: var(--azul-turno);
   box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.1);
@@ -849,8 +915,11 @@ export default {
 }
 
 .text-label {
-  font-size: 0.9rem;
-  line-height: 0.9rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.7);
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
   align-items: center;
   justify-content: center;
   display: flex;
