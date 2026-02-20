@@ -68,7 +68,8 @@
     "remove": "Eliminar",
     "save": "Guardar",
     "previous": "Anterior",
-    "next": "Siguiente"
+    "next": "Siguiente",
+    "disabled": "Deshabilitado"
   },
   "yes": "Sí",
   "YES": "Sí",
@@ -84,6 +85,8 @@
   "update": "Actualizar",
   "cancel": "Cancelar",
   "delete": "Eliminar",
+  "copy": "Copiar",
+  "optional": "Opcional",
   "preview": "Vista Previa",
   "active": "Activo",
   "inactive": "Inactivo",
@@ -1207,7 +1210,7 @@
     },
     "telemedicine-active": {
       "title": "Teleconsulta Activa",
-      "description": "Activa la funcionalidad de telemedicina para reservas y atenciones"
+      "description": "Activa la funcionalidad de teleconsulta para reservas y atenciones"
     },
     "attention-stock-register": {
       "title": "Registrar Stock",
@@ -1597,7 +1600,11 @@
     "noAvailability": "Sin disponibilidad próxima",
     "noAvailabilityDetails": "No hay horarios disponibles en los próximos {days} días",
     "inDays": "en {days} días",
-    "orSelectMoreOptions": "O selecciona más opciones:"
+    "orSelectMoreOptions": "O selecciona más opciones:",
+    "slotTaken": "¡Este horario acaba de ser reservado!",
+    "searchingNew": "Buscando próximo horario disponible...",
+    "servicesNotTelemedicine": "Los siguientes servicios no están habilitados para atención online: {services}",
+    "servicesNotPresential": "Los siguientes servicios no están habilitados para atención presencial: {services}"
   },
   "attentionNumber": {
     "waitingTime": "Tiempo de espera:",
@@ -1795,7 +1802,7 @@
     },
     "telemedicine": {
       "title": "Consulta por Teleconsulta",
-      "subtitle": "Esta es una consulta por telemedicina. No necesitas asistir presencialmente.",
+      "subtitle": "Esta es una consulta por teleconsulta. No necesitas asistir presencialmente.",
       "typeVideo": "Video",
       "typeChat": "Chat",
       "typeBoth": "Video y Chat",
@@ -2388,7 +2395,7 @@
       "title": "Mis Sesiones de Teleconsulta",
       "backToMenu": "Volver al Menú",
       "loading": "Cargando sesiones...",
-      "noSessions": "No hay sesiones de telemedicina registradas",
+      "noSessions": "No hay sesiones de teleconsulta registradas",
       "loadError": "Error al cargar sesiones",
       "sessionNotAvailable": "Sesión no disponible",
       "accessSession": "Acceder a Sesión",
@@ -2516,6 +2523,107 @@
     }
   },
   "telemedicineSession": {
+    "listTitle": "Sesiones de Teleconsulta",
+    "loading": "Cargando...",
+    "refresh": "Actualizar",
+    "filterStatus": "Estado",
+    "filterAll": "Todos",
+    "filterScheduled": "Programadas",
+    "filterActive": "Activas",
+    "filterEnded": "Finalizadas",
+    "filterCancelled": "Canceladas",
+    "filterFrom": "Desde",
+    "filterTo": "Hasta",
+    "clearFilters": "Limpiar",
+    "noSessions": "No hay sesiones de teleconsulta",
+    "scheduler": {
+      "title": "Programar Consulta de Teleconsulta",
+      "subtitle": "Agende una consulta virtual con el paciente",
+      "dateTime": "Fecha y Hora",
+      "cancel": "Cancelar",
+      "schedule": "Programar Consulta",
+      "errorScheduling": "Error al programar la consulta"
+    },
+    "floatingWindow": {
+      "title": "Consulta Teleconsulta",
+      "connected": "Conectado",
+      "connecting": "Conectando...",
+      "disconnected": "Desconectado",
+      "clientConnected": "Cliente conectado",
+      "maximize": "Maximizar",
+      "minimize": "Minimizar",
+      "restore": "Restaurar",
+      "close": "Cerrar"
+    },
+    "chat": {
+      "title": "Chat de Consulta",
+      "connected": "Conectado",
+      "connecting": "Conectando...",
+      "noMessages": "No hay mensajes aún. Comienza la conversación.",
+      "doctor": "Médico",
+      "patient": "Paciente",
+      "placeholder": "Escribe un mensaje...",
+      "deviceError": "No se encontraron dispositivos de cámara o micrófono. Por favor, verifica que estén conectados.",
+      "permissionDenied": "Permisos de cámara y micrófono denegados. Por favor, permite el acceso en la configuración de tu navegador.",
+      "deviceInUse": "No se puede acceder a la cámara o micrófono. Puede estar siendo usado por otra aplicación.",
+      "deviceConstraints": "Los dispositivos de cámara y micrófono no cumplen con los requerimientos necesarios."
+    },
+    "sessionStarter": {
+      "startSession": "Iniciar Sesión",
+      "title": "Iniciar Consulta Virtual",
+      "sessionType": "Tipo de Consulta",
+      "video": "Video",
+      "chat": "Chat",
+      "cancel": "Cancelar",
+      "start": "Iniciar"
+    },
+    "videoCall": {
+      "title": "Consulta Virtual",
+      "connected": "Conectado",
+      "connecting": "Conectando...",
+      "clientConnected": "Cliente conectado",
+      "recording": "Grabando",
+      "startingCall": "Iniciando videollamada...",
+      "you": "Tú",
+      "patient": "Paciente",
+      "doctor": "Médico",
+      "waitingConnection": "Esperando conexión...",
+      "muteAudio": "Silenciar audio",
+      "unmuteAudio": "Activar audio",
+      "disableVideo": "Desactivar video",
+      "enableVideo": "Activar video",
+      "shareScreen": "Compartir pantalla",
+      "stopSharing": "Detener compartir",
+      "startRecording": "Iniciar grabación",
+      "stopRecording": "Detener grabación",
+      "endCall": "Finalizar llamada",
+      "callEnded": "Llamada finalizada"
+    },
+    "card": {
+      "startSession": "Iniciar sesión",
+      "start": "Iniciar",
+      "joinSession": "Unirse a la sesión",
+      "join": "Unirse",
+      "endSession": "Finalizar sesión",
+      "end": "Finalizar",
+      "cancelSession": "Cancelar sesión",
+      "patient": "Paciente:",
+      "doctor": "Médico:",
+      "duration": "Duración:",
+      "minutes": "minutos",
+      "viewRecording": "Ver grabación",
+      "notes": "Notas:",
+      "diagnosis": "Diagnóstico:",
+      "room": "Sala:",
+      "statusScheduled": "Programada",
+      "statusActive": "En curso",
+      "statusEnded": "Finalizada",
+      "statusCompleted": "Completada",
+      "statusCancelled": "Cancelada",
+      "typeVideo": "Video",
+      "typeChat": "Chat",
+      "typeBoth": "Video + Chat"
+    },
     "patientWelcome": "Acceso a Consulta Teleconsulta",
     "sessionStatus": "Estado de la Sesión",
     "status": "Estado:",
@@ -2545,7 +2653,7 @@
     "statusCancelled": "Cancelada",
     "verifyingAccess": "Verificando acceso...",
     "sessionNotAvailable": "Sesión No Disponible",
-    "sessionEndedMessage": "Esta sesión de telemedicina ya ha finalizado y no está disponible para acceso.",
+    "sessionEndedMessage": "Esta sesión de teleconsulta ya ha finalizado y no está disponible para acceso.",
     "sessionCompletedMessage": "La consulta fue completada exitosamente.",
     "sessionCancelledMessage": "La sesión fue cancelada.",
     "enterAccessKey": "Ingrese su Clave de Acceso",
@@ -3945,6 +4053,7 @@
     "forms-admin": "Formularios",
     "lgpd-consent-admin": "Consentimientos LGPD",
     "manage-admin": "Perfil Empresa",
+    "business-info": "Datos de la Empresa",
     "control-admin": "Gestión",
     "company-admin": "Compañías",
     "go-minisite": "Minisite",
@@ -4003,8 +4112,30 @@
           "medical-templates-admin": "Gestionar Plantillas Médicas",
           "pdf-templates-admin": "Gestionar Plantillas PDF",
           "lgpd-consent-admin": "Administrar Consentimientos LGPD",
-          "audit-log": "Auditoría y Cumplimiento"
+          "audit-log": "Auditoría y Cumplimiento",
+          "business-info": "Editar Datos de la Empresa"
         }
+      }
+    },
+    "permissionRequired": "Permiso requerido para acceder a esta opción"
+  },
+  "businessInfo": {
+    "title": "Información de la Empresa",
+    "currentInfo": "Información Actual",
+    "name": "Nombre",
+    "keyName": "Clave",
+    "email": "Email",
+    "phone": "Teléfono",
+    "country": "País",
+    "validate": {
+      "phone": "El teléfono debe tener entre 10 y 15 dígitos",
+      "country": "El país es requerido",
+      "address": "La dirección debe tener entre 5 y 200 caracteres"
+    },
+    "message": {
+      "1": {
+        "title": "Sin Permisos",
+        "content": "No tienes permisos para ver la información de la empresa"
       }
     }
   },
@@ -4132,6 +4263,12 @@
   },
   "businessQueuesAdmin": {
     "title": "Filas",
+    "edit": "Editar Fila",
+    "basicInfo": "Información Básica",
+    "general": "General",
+    "serviceInfo": "Información del Servicio",
+    "blocks": "Bloques",
+    "nonWorkingDates": "Días No Laborables",
     "commerce": "Selecciona el comercio:",
     "return": "Volver",
     "name": "Nombre:",
@@ -4142,7 +4279,7 @@
     "active": "Activo:",
     "online": "Online:",
     "telemedicine": "Teleconsulta:",
-    "telemedicineHelp": "Habilita la opción de telemedicina para esta fila",
+    "telemedicineHelp": "Habilita la opción de teleconsulta para esta fila",
     "presential": "Atención presencial:",
     "presentialHelp": "Habilita la atención presencial para esta fila",
     "estimated": "Tiempo estimado (min):",
@@ -4263,6 +4400,10 @@
     "orderHelp": "Servicio será listado al usuario en esta posición respecto al resto.",
     "nameHelp": "Nombre del servicio tal como se mostrará a los usuarios en el minisite y canales digitales.",
     "activeHelp": "Indica si el servicio está disponible para ser reservado o mostrado.",
+    "telemedicineEnabled": "Teleconsulta Habilitada:",
+    "telemedicineEnabledHelp": "Indica si este servicio puede ser prestado por teleconsulta (videoconsulta).",
+    "presentialEnabled": "Atención Presencial Habilitada:",
+    "presentialEnabledHelp": "Indica si este servicio puede ser prestado de forma presencial.",
     "shortDescriptionHelp": "Frase corta que se muestra en listas y tarjetas del servicio.",
     "longDescriptionHelp": "Descripción detallada del servicio. Puedes incluir beneficios, condiciones, etc.",
     "priceHelp": "Precio presencial o base del servicio en la moneda configurada.",
@@ -5359,6 +5500,22 @@
   },
   "businessCommercesAdmin": {
     "title": "Sucursales",
+    "edit": "Editar Sucursal",
+    "basicInfo": "Información Básica",
+    "basicFields": "Campos Básicos",
+    "serviceConfig": "Configuración del Servicio",
+    "nonWorkingDates": "Días No Laborables",
+    "selectNonWorkingDate": "Seleccionar fecha no laborable",
+    "markAsNonWorking": "Marcar como No Laborable",
+    "markedDates": "Fechas marcadas",
+    "inThisMonth": "en este mes",
+    "noNonWorkingDatesThisMonth": "No hay fechas no laborables en este mes",
+    "nonWorkingDatesInfo": "Los días marcados como no laborables no estarán disponibles en el calendario de atenciones/reservas.",
+    "pleaseSelectDate": "Por favor selecciona una fecha",
+    "dateAlreadyMarked": "Esta fecha ya está marcada como no laborable",
+    "levelBusiness": "Negocio",
+    "levelCommerce": "Comercio",
+    "levelQueue": "Fila/Profesional",
     "return": "Volver",
     "name": "Nombre:",
     "keyName": "Nombre Web:",
@@ -5390,7 +5547,7 @@
     "add": "Agregar",
     "logo": "Logo",
     "telemedicineRecordingEnabled": "Grabación de Sesiones de Teleconsulta",
-    "telemedicineRecordingEnabledDescription": "Habilitar grabación automática de sesiones de telemedicina (configuración a nivel de comercio)",
+    "telemedicineRecordingEnabledDescription": "Habilitar grabación automática de sesiones de teleconsulta (configuración a nivel de comercio)",
     "link": "URL Web:",
     "go": "Minisite",
     "break": "Descanso:",
@@ -5982,6 +6139,12 @@
   },
   "businessAdmin": {
     "title": "Negocios",
+    "edit": "Editar Negocio",
+    "basicInfo": "Información Básica",
+    "general": "General",
+    "serviceInfo": "Información del Servicio",
+    "serviceInfoHelp": "Configure las opciones de servicio del negocio",
+    "nonWorkingDates": "Días No Laborables",
     "return": "Volver",
     "name": "Nombre:",
     "keyName": "Nombre Web:",
@@ -6892,6 +7055,36 @@
         "add": "Agregar datos - Sección Administrar Clientes"
       }
     },
+    "client-portal": {
+      "menu": {
+        "consents": "Ver Menú - Consentimientos Portal Cliente",
+        "telemedicine": "Ver Menú - Teleconsulta Portal Cliente",
+        "profile": "Ver Menú - Perfil Portal Cliente",
+        "documents": "Ver Menú - Documentos Portal Cliente",
+        "history": "Ver Menú - Historial Portal Cliente"
+      },
+      "consents": {
+        "view": "Ver Consentimientos - Portal Cliente",
+        "accept": "Aceptar Consentimientos - Portal Cliente",
+        "reject": "Rechazar Consentimientos - Portal Cliente"
+      },
+      "telemedicine": {
+        "view": "Ver Teleconsulta - Portal Cliente",
+        "schedule": "Programar Consultas - Portal Cliente"
+      },
+      "profile": {
+        "view": "Ver Perfil - Portal Cliente",
+        "edit": "Editar Perfil - Portal Cliente"
+      },
+      "documents": {
+        "view": "Ver Documentos - Portal Cliente",
+        "download": "Descargar Documentos - Portal Cliente"
+      },
+      "history": {
+        "view": "Ver Historial Médico - Portal Cliente",
+        "details": "Ver Detalles del Historial - Portal Cliente"
+      }
+    },
     "businesses": {
       "admin": {
         "view": "Ver Sección - Administrar Negocios",
@@ -6938,7 +7131,8 @@
         "pdf-templates-admin": "Habilitar Gestionar Plantillas PDF - Menú Principal Negocio",
         "audit-log": "Habilitar Auditoría y Cumplimiento - Menú Principal Negocio",
         "documents": "Habilitar Documentos - Menú Principal Negocio",
-        "lead-pipeline": "Habilitar Pipeline de Ventas - Menú Principal Negocio"
+        "lead-pipeline": "Habilitar Pipeline de Ventas - Menú Principal Negocio",
+        "professionals-admin": "Habilitar Administrar Profesionales - Menú Principal Negocio"
       },
       "lead-pipeline": {
         "view": "Ver Pipeline de Ventas",
@@ -7179,10 +7373,25 @@
       "reports": {
         "incomes": "Ver Reporte de Ingresos - Sección Financiera",
         "outcomes": "Ver Reporte de Egresos - Sección Financiera",
-        "resume": "Ver Resumen Financiero - Sección Financiera"
+        "resume": "Ver Resumen Financiero - Sección Financiera",
+        "expensesByProvider": "Ver Reporte de Gastos por Proveedor - Sección Financiera",
+        "mostProfitableClients": "Ver Reporte de Clientes Más Rentables - Sección Financiera",
+        "serviceProfitability": "Ver Reporte de Rentabilidad de Servicios - Sección Financiera",
+        "cashFlow": "Ver Reporte de Flujo de Caja - Sección Financiera"
       },
       "resume": {
         "view": "Ver Resumen Financiero - Sección Financiera"
+      },
+      "periods": {
+        "view": "Ver Períodos Financieros - Sección Financiera"
+      }
+    },
+    "messages": {
+      "admin": {
+        "view": "Ver Mensajes - Sección Mensajes",
+        "read": "Leer Mensajes - Sección Mensajes",
+        "send": "Enviar Mensajes - Sección Mensajes",
+        "delete": "Eliminar Mensajes - Sección Mensajes"
       }
     },
     "modules": {
@@ -7238,7 +7447,8 @@
         "cancel": "Cancelar Atención - Sección Atenciones del Colaborador",
         "patient-history": "Historial Médico - Sección Atenciones del Colaborador",
         "products": "Registrar Stock - Sección Atenciones del Colaborador",
-        "transfer": "Transferir Atención - Sección Atenciones del Colaborador"
+        "transfer": "Transferir Atención - Sección Atenciones del Colaborador",
+        "edit": "Editar Atención - Sección Atenciones del Colaborador"
       },
       "bookings": {
         "cancel": "Cancelar Reserva",
@@ -7256,7 +7466,13 @@
         "dashboard": "Habilitar Performance Hub - Menú Principal Colaborador",
         "queue-manage": "Habilitar Atender Filas del Día - Menú Principal Colaborador",
         "tracing": "Habilitar Gestión de Clientes - Menú Principal Colaborador",
-        "product-stock": "Habilitar Gestionar Stock - Menú Principal Colaborador"
+        "product-stock": "Habilitar Gestionar Stock - Menú Principal Colaborador",
+        "lead-pipeline": "Habilitar Pipeline de Ventas - Menú Principal Colaborador"
+      },
+      "lead-pipeline": {
+        "view": "Ver Pipeline de Ventas",
+        "add": "Agregar Leads al Pipeline",
+        "edit": "Editar Leads del Pipeline"
       }
     },
     "roles": {
@@ -7335,6 +7551,17 @@
         "add": "Agregar datos - Sección Administrar Productos",
         "limit": "Límite de datos - Sección Administrar Productos",
         "unavailable": "Eliminar Productos - Sección Administrar Productos"
+      }
+    },
+    "professionals": {
+      "admin": {
+        "view": "Ver Sección - Administrar Profesionales",
+        "read": "Leer datos - Sección Administrar Profesionales",
+        "edit": "Editar datos - Sección Administrar Profesionales",
+        "update": "Actualizar datos - Sección Administrar Profesionales",
+        "add": "Agregar datos - Sección Administrar Profesionales",
+        "limit": "Límite de datos - Sección Administrar Profesionales",
+        "unavailable": "Eliminar Profesionales - Sección Administrar Profesionales"
       }
     },
     "products-stock": {
@@ -7518,6 +7745,15 @@
         "view": "Ver Historial Médico - Portal Cliente",
         "details": "Ver Detalles del Historial - Portal Cliente"
       }
+    },
+    "chats": {
+      "admin": {
+        "participate": "Participar en chats",
+        "start": "Iniciar chats",
+        "view": "Ver chats",
+        "moderate": "Moderar chats",
+        "start-cross-business": "Iniciar chats entre negocios"
+      }
     }
   },
   "attentionCreation": {
@@ -7525,8 +7761,8 @@
     "preselectedQueue": "Fila Preseleccionada",
     "canChangeBelow": "Puede cambiar la selección a continuación si es necesario",
     "telemedicineConsultation": "Consulta por Teleconsulta",
-    "telemedicineDisclaimer": "Cuando la telemedicina no está seleccionada, la atención será presencial.",
-    "telemedicineSelectedDisclaimer": "Esta atención se realizará por telemedicina; si desactiva esta opción, la atención será presencial.",
+    "telemedicineDisclaimer": "Cuando la teleconsulta no está seleccionada, la atención será presencial.",
+    "telemedicineSelectedDisclaimer": "Esta atención se realizará por teleconsulta; si desactiva esta opción, la atención será presencial.",
     "scheduledDateTime": "Fecha y Hora Programada",
     "usingSelectedBlockDateTime": "Usando la fecha y hora del bloque seleccionado",
     "selectBlockDateTimeFirst": "Por favor, seleccione primero la fecha y hora del bloque",
@@ -8444,15 +8680,6 @@
       "hint": "Presiona Enter para enviar, Shift + Enter para nueva línea"
     }
   },
-  "permissions": {
-    "chats": {
-      "admin": {
-        "participate": "Participar en chats",
-        "start": "Iniciar chats",
-        "view": "Ver chats"
-      }
-    }
-  },
   "professionals": {
     "title": "Profesionales",
     "addNew": "Agregar Profesional",
@@ -8589,6 +8816,16 @@
     "personalInfo": "Información Personal",
     "professionalInfo": "Información Profesional",
     "financialInfo": "Información Financiera",
+    "basicInfo": "Datos Básicos",
+    "workConfig": "Configuración",
+    "modules": "Módulos",
+    "modulesComingSoon": "Configuración de módulos disponible próximamente",
+    "modulesHelp": "Selecciona los módulos que este profesional puede utilizar",
+    "selectModule": "Seleccionar módulo",
+    "medicalData": "Datos Médicos",
+    "medicalInfo": "Info Médica",
+    "financial": "Información Financiera",
+    "payment": "Pagos",
     "specialties": "Especialidades",
     "status": {
       "active": "Activo",
@@ -8629,6 +8866,7 @@
   "businessProfessionalsAdmin": {
     "title": "Gestión de Profesionales",
     "professional": "Profesional",
+    "edit": "Editar Profesional",
     "update": "Actualizar",
     "noProfessional": "N/I",
     "tooltip": {
@@ -8638,7 +8876,9 @@
     },
     "validate": {
       "name": "El nombre es requerido",
+      "idNumber": "El número de identificación es requerido",
       "email": "El email es requerido",
+      "phone": "El teléfono es requerido",
       "type": "El tipo de profesional es requerido"
     },
     "message": {

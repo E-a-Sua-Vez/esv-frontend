@@ -97,7 +97,7 @@ export default {
 
       <div class="form-group-modern">
         <label class="form-label-modern">
-          {{ $t('professionals.idNumber') }} ({{ $t('optional') }}):
+          {{ $t('professionals.idNumber') }}:
           <Popper :class="'dark p-1'" arrow :disable-click-away="false">
             <template #content>
               <div>{{ $t('professionals.idNumberHelp') }}</div>
@@ -108,6 +108,7 @@ export default {
         <input
           type="text"
           class="form-control-modern"
+          :class="{ 'is-invalid': errors.idNumberError }"
           :value="professional.personalInfo?.idNumber"
           @input="updatePersonalInfo('idNumber', $event.target.value)"
           :placeholder="$t('professionals.idNumberPlaceholder')"
@@ -139,7 +140,7 @@ export default {
 
       <div class="form-group-modern">
         <label class="form-label-modern">
-          {{ $t('professionals.phone') }} ({{ $t('optional') }}):
+          {{ $t('professionals.phone') }}:
           <Popper :class="'dark p-1'" arrow :disable-click-away="false">
             <template #content>
               <div>{{ $t('professionals.phoneHelp') }}</div>
@@ -150,6 +151,7 @@ export default {
         <input
           type="tel"
           class="form-control-modern"
+          :class="{ 'is-invalid': errors.phoneError }"
           :value="professional.personalInfo?.phone"
           @input="updatePersonalInfo('phone', $event.target.value)"
           :placeholder="$t('professionals.phonePlaceholder')"
@@ -270,32 +272,6 @@ export default {
           :placeholder="$t('professionals.commissionValuePlaceholder')"
         />
       </div>
-
-      <div class="form-group-modern form-group-toggle">
-        <label class="form-label-modern">
-          {{ $t('professionals.active') }}:
-          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-            <template #content>
-              <div>{{ $t('professionals.activeHelp') }}</div>
-            </template>
-            <i class="bi bi-info-circle-fill h7"></i>
-          </Popper>
-        </label>
-        <Toggle v-model="localProfessional.active" on-label=" " off-label=" " />
-      </div>
-
-      <div class="form-group-modern form-group-toggle">
-        <label class="form-label-modern">
-          {{ $t('professionals.available') }}:
-          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-            <template #content>
-              <div>{{ $t('professionals.availableHelp') }}</div>
-            </template>
-            <i class="bi bi-info-circle-fill h7"></i>
-          </Popper>
-        </label>
-        <Toggle v-model="localProfessional.available" on-label=" " off-label=" " />
-      </div>
     </div>
   </div>
 </template>
@@ -308,7 +284,6 @@ export default {
 .form-fields-container {
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
   margin-bottom: 1rem;
 }
 

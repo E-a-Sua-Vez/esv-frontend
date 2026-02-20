@@ -1,6 +1,7 @@
 <script>
 import { ref, reactive, computed, onBeforeMount, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import * as bootstrap from 'bootstrap';
 import { globalStore } from '../../stores';
 import {
   getActiveCommercesByBusinessId,
@@ -24,6 +25,7 @@ import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import SpecificCalendarForm from '../../components/domain/SpecificCalendarForm.vue';
 import CommerceFormEdit from '../../components/commerce/CommerceFormEdit.vue';
 import CommerceFormAdd from '../../components/commerce/CommerceFormAdd.vue';
+import CommerceEditModal from '../../components/commerce/CommerceEditModal.vue';
 
 export default {
   name: 'BusinessCommerceAdmin',
@@ -43,6 +45,7 @@ export default {
     SpecificCalendarForm,
     CommerceFormEdit,
     CommerceFormAdd,
+    CommerceEditModal,
   },
   async setup() {
     const router = useRouter();
@@ -116,6 +119,7 @@ export default {
         'supermarket',
       ],
       filtered: [],
+      selectedCommerceForEdit: null,
     });
 
     onBeforeMount(async () => {
@@ -130,7 +134,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     });
@@ -258,7 +262,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     };
@@ -273,12 +277,13 @@ export default {
           await updateCommerce(commerce.id, commerce);
           const commerces = await getActiveCommercesByBusinessId(state.business.id);
           state.commerces = commerces;
+          state.filtered = commerces;
           state.extendedEntity = undefined;
         }
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     };
@@ -298,7 +303,7 @@ export default {
         alertError.value = '';
         loading.value = false;
       } catch (error) {
-        alertError.value = error.response.status || 500;
+        alertError.value = error.response?.status || 500;
         loading.value = false;
       }
     };
@@ -555,6 +560,18 @@ export default {
       }
     };
 
+    const openCommerceEditModal = commerce => {
+      state.selectedCommerceForEdit = commerce;
+      // Wait for next tick to ensure the modal element is rendered
+      setTimeout(() => {
+        const modalEl = document.getElementById(`commerce-edit-modal-${commerce.id}`);
+        if (modalEl) {
+          const modal = new bootstrap.Modal(modalEl);
+          modal.show();
+        }
+      }, 0);
+    };
+
     onMounted(() => {
       const addModal = document.getElementById('add-commerce');
       const closeButton = document.getElementById('close-modal');
@@ -620,6 +637,7 @@ export default {
       deleteSpecificDate,
       updateDeleteSpecificDate,
       timeConvert,
+      openCommerceEditModal,
     };
   },
 };
@@ -676,9 +694,11 @@ export default {
                     :receive-filtered-items="receiveFilteredItems"
                   >
                   </SearchAdminItem>
-                  <div v-for="(commerce, index) in state.filtered" :key="index" class="result-card">
+                  <div v-for="(commerce, index) in state.filtered" :key="index" class="result-card"
+                       @click="openCommerceEditModal(commerce)"
+                       style="cursor: pointer;">
                     <div class="row">
-                      <div class="col-10">
+                      <div class="col-12 d-flex justify-content-between align-items-center">
                         <CommerceName
                           :name="commerce.name"
                           :tag="commerce.tag"
@@ -686,76 +706,6 @@ export default {
                           :key-name="commerce.keyName"
                         ></CommerceName>
                       </div>
-                      <div class="col-2">
-                        <a href="#" @click.prevent="showUpdateForm(index)">
-                          <i
-                            :id="index"
-                            :class="`bi ${
-                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                            }`"
-                          ></i>
-                        </a>
-                      </div>
-                    </div>
-                    <CommerceFormEdit
-                      v-if="state.toggles['commerces.admin.read']"
-                      :class="{ show: state.extendedEntity === index }"
-                      :commerce="commerce"
-                      :categories="state.categories"
-                      :toggles="state.toggles"
-                      :business-id="state.business.id"
-                      :business-logo="state.business?.logo"
-                      :errors="{
-                        tagUpdateError: state.tagUpdateError,
-                        phoneUpdateError: state.phoneUpdateError,
-                        urlUpdateError: state.urlUpdateError,
-                        addressAddError: state.addressAddError,
-                        errorsUpdate: state.errorsUpdate,
-                      }"
-                      :locale="state.locale"
-                      :on-initialized-specific-calendar="initializedSpecificCalendar"
-                      :on-initialized-personalized-hours="initializedParsonalizedHours"
-                      @update:commerce="commerce = $event"
-                    />
-                    <div
-                      v-if="state.toggles['commerces.admin.read'] && state.extendedEntity === index"
-                      class="row g-1 mt-2"
-                    >
-                      <div class="col">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(commerce)"
-                          :disabled="!state.toggles['commerces.admin.update']"
-                        >
-                          {{ $t('businessCommercesAdmin.update') }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                          @click="goToUnavailable()"
-                          v-if="state.toggles['commerces.admin.unavailable']"
-                        >
-                          {{ $t('businessQueuesAdmin.unavailable') }}
-                          <i class="bi bi-trash-fill"></i>
-                        </button>
-                        <AreYouSure
-                          :show="state.goToUnavailable"
-                          :yes-disabled="state.toggles['commerces.admin.unavailable']"
-                          :no-disabled="state.toggles['commerces.admin.unavailable']"
-                          @actionYes="unavailable(commerce)"
-                          @actionNo="unavailableCancel()"
-                        >
-                        </AreYouSure>
-                      </div>
-                    </div>
-                    <div
-                      v-if="
-                        (!isActiveBusiness() || !state.toggles['commerces.admin.read']) && !loading
-                      "
-                    >
-                      <Message
-                        :title="$t('businessCommercesAdmin.message.1.title')"
-                        :content="$t('businessCommercesAdmin.message.1.content')"
-                      />
                     </div>
                   </div>
                 </div>
@@ -822,9 +772,11 @@ export default {
                     :receive-filtered-items="receiveFilteredItems"
                   >
                   </SearchAdminItem>
-                  <div v-for="(commerce, index) in state.filtered" :key="index" class="result-card">
+                  <div v-for="(commerce, index) in state.filtered" :key="index" class="result-card"
+                       @click="openCommerceEditModal(commerce)"
+                       style="cursor: pointer;">
                     <div class="row">
-                      <div class="col-10">
+                      <div class="col-12 d-flex justify-content-between align-items-center">
                         <CommerceName
                           :name="commerce.name"
                           :tag="commerce.tag"
@@ -832,76 +784,6 @@ export default {
                           :key-name="commerce.keyName"
                         ></CommerceName>
                       </div>
-                      <div class="col-2">
-                        <a href="#" @click.prevent="showUpdateForm(index)">
-                          <i
-                            :id="index"
-                            :class="`bi ${
-                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                            }`"
-                          ></i>
-                        </a>
-                      </div>
-                    </div>
-                    <CommerceFormEdit
-                      v-if="state.toggles['commerces.admin.read']"
-                      :class="{ show: state.extendedEntity === index }"
-                      :commerce="commerce"
-                      :categories="state.categories"
-                      :toggles="state.toggles"
-                      :business-id="state.business.id"
-                      :business-logo="state.business?.logo"
-                      :errors="{
-                        tagUpdateError: state.tagUpdateError,
-                        phoneUpdateError: state.phoneUpdateError,
-                        urlUpdateError: state.urlUpdateError,
-                        addressAddError: state.addressAddError,
-                        errorsUpdate: state.errorsUpdate,
-                      }"
-                      :locale="state.locale"
-                      :on-initialized-specific-calendar="initializedSpecificCalendar"
-                      :on-initialized-personalized-hours="initializedParsonalizedHours"
-                      @update:commerce="commerce = $event"
-                    />
-                    <div
-                      v-if="state.toggles['commerces.admin.read'] && state.extendedEntity === index"
-                      class="row g-1 mt-2"
-                    >
-                      <div class="col">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(commerce)"
-                          :disabled="!state.toggles['commerces.admin.update']"
-                        >
-                          {{ $t('businessCommercesAdmin.update') }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                          @click="goToUnavailable()"
-                          v-if="state.toggles['commerces.admin.unavailable']"
-                        >
-                          {{ $t('businessQueuesAdmin.unavailable') }}
-                          <i class="bi bi-trash-fill"></i>
-                        </button>
-                        <AreYouSure
-                          :show="state.goToUnavailable"
-                          :yes-disabled="state.toggles['commerces.admin.unavailable']"
-                          :no-disabled="state.toggles['commerces.admin.unavailable']"
-                          @actionYes="unavailable(commerce)"
-                          @actionNo="unavailableCancel()"
-                        >
-                        </AreYouSure>
-                      </div>
-                    </div>
-                    <div
-                      v-if="
-                        (!isActiveBusiness() || !state.toggles['commerces.admin.read']) && !loading
-                      "
-                    >
-                      <Message
-                        :title="$t('businessCommercesAdmin.message.1.title')"
-                        :content="$t('businessCommercesAdmin.message.1.content')"
-                      />
                     </div>
                   </div>
                 </div>
@@ -1006,6 +888,63 @@ export default {
         </div>
       </div>
     </div>
+
+    <!-- Commerce Edit Modal -->
+    <Teleport to="body">
+      <CommerceEditModal
+        v-if="state.selectedCommerceForEdit"
+        :commerce="state.selectedCommerceForEdit"
+        :categories="state.categories"
+        :toggles="state.toggles"
+        :business-logo="state.business?.logo"
+        :locale="state.locale"
+        :on-initialized-specific-calendar="initializedSpecificCalendar"
+        :on-initialized-personalized-hours="initializedParsonalizedHours"
+        @update="update"
+        @delete="async (commerceId) => {
+          try {
+            // Find the commerce to delete
+            const commerce = state.commerces.find(c => c.id === commerceId);
+            if (commerce) {
+              // Call unavailable to mark as inactive
+              await unavailable(commerce);
+              // Refresh the list
+              state.commerces = await getActiveCommercesByBusinessId(state.business.id);
+              state.filtered = state.commerces;
+            }
+            state.selectedCommerceForEdit = null;
+            // Close modal and cleanup
+            if (typeof document !== 'undefined') {
+              const modalEl = document.getElementById(`commerce-edit-modal-${commerceId}`);
+              if (modalEl) {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+              }
+              // Clean up backdrop
+              const backdrops = document.querySelectorAll('.modal-backdrop');
+              backdrops.forEach(backdrop => backdrop.remove());
+              document.body.classList.remove('modal-open');
+            }
+          } catch (error) {
+            console.error('Error in delete handler:', error);
+            alertError.value = error.response?.status || 500;
+          }
+        }"
+        @close="() => {
+          try {
+            state.selectedCommerceForEdit = null;
+            // Clean up backdrop
+            if (typeof document !== 'undefined') {
+              const backdrops = document.querySelectorAll('.modal-backdrop');
+              backdrops.forEach(backdrop => backdrop.remove());
+              document.body.classList.remove('modal-open');
+            }
+          } catch (error) {
+            console.error('Error in close handler:', error);
+          }
+        }"
+      />
+    </Teleport>
   </div>
 </template>
 

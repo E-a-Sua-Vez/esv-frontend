@@ -6,10 +6,10 @@
           <i class="bi bi-camera-video"></i>
         </div>
         <div class="header-title">
-          <h5>Sesiones de Telemedicina</h5>
+          <h5>{{ $t('telemedicineSession.listTitle') }}</h5>
           <span v-if="loading" class="status-badge badge-modern badge-modern-warning">
             <i class="bi bi-circle-fill me-1"></i>
-            Cargando...
+            {{ $t('telemedicineSession.loading') }}
           </span>
         </div>
       </div>
@@ -21,7 +21,7 @@
         :disabled="loading"
       >
         <i class="bi bi-arrow-clockwise"></i>
-        Actualizar
+        {{ $t('telemedicineSession.refresh') }}
       </button>
     </div>
 
@@ -29,21 +29,21 @@
       <div class="filter-group">
         <label class="form-label-modern">
           <i class="bi bi-funnel"></i>
-          Estado
+          {{ $t('telemedicineSession.filterStatus') }}
         </label>
         <select class="form-control-modern" v-model="filters.status" @change="applyFilters">
-          <option value="">Todos</option>
-          <option value="SCHEDULED">Programadas</option>
-          <option value="ACTIVE">Activas</option>
-          <option value="ENDED">Finalizadas</option>
-          <option value="CANCELLED">Canceladas</option>
+          <option value="">{{ $t('telemedicineSession.filterAll') }}</option>
+          <option value="SCHEDULED">{{ $t('telemedicineSession.filterScheduled') }}</option>
+          <option value="ACTIVE">{{ $t('telemedicineSession.filterActive') }}</option>
+          <option value="ENDED">{{ $t('telemedicineSession.filterEnded') }}</option>
+          <option value="CANCELLED">{{ $t('telemedicineSession.filterCancelled') }}</option>
         </select>
       </div>
 
       <div class="filter-group">
         <label class="form-label-modern">
           <i class="bi bi-calendar"></i>
-          Desde
+          {{ $t('telemedicineSession.filterFrom') }}
         </label>
         <input
           type="date"
@@ -56,7 +56,7 @@
       <div class="filter-group">
         <label class="form-label-modern">
           <i class="bi bi-calendar"></i>
-          Hasta
+          {{ $t('telemedicineSession.filterTo') }}
         </label>
         <input
           type="date"
@@ -69,7 +69,7 @@
       <div class="filter-group">
         <button type="button" class="btn-modern btn-sm" @click="clearFilters">
           <i class="bi bi-x-circle me-1"></i>
-          Limpiar
+          {{ $t('telemedicineSession.clearFilters') }}
         </button>
       </div>
     </div>
@@ -83,7 +83,7 @@
         <div class="empty-state-modern-icon">
           <i class="bi bi-camera-video-off"></i>
         </div>
-        <div class="empty-state-modern-text">No hay sesiones de telemedicina</div>
+        <div class="empty-state-modern-text">{{ $t('telemedicineSession.noSessions') }}</div>
       </div>
 
       <div v-else class="sessions-grid">

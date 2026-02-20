@@ -20,20 +20,20 @@
           type="button"
           class="btn btn-sm btn-primary"
           @click="handleStartSession"
-          title="Iniciar sesión"
+          :title="$t('telemedicineSession.card.startSession')"
         >
           <i class="bi bi-play-circle me-1"></i>
-          Iniciar
+          {{ $t('telemedicineSession.card.start') }}
         </button>
         <button
           v-if="session.status === 'ACTIVE' || session.status === 'active'"
           type="button"
           class="btn btn-sm btn-success"
           @click="handleJoinSession"
-          title="Unirse a la sesión"
+          :title="$t('telemedicineSession.card.joinSession')"
         >
           <i class="bi bi-camera-video me-1"></i>
-          Unirse
+          {{ $t('telemedicineSession.card.join') }}
         </button>
         <button
           v-if="
@@ -42,10 +42,10 @@
           type="button"
           class="btn btn-sm btn-outline-danger"
           @click="$emit('end', session.id)"
-          title="Finalizar sesión"
+          :title="$t('telemedicineSession.card.endSession')"
         >
           <i class="bi bi-stop-circle me-1"></i>
-          Finalizar
+          {{ $t('telemedicineSession.card.end') }}
         </button>
         <button
           v-if="
@@ -55,7 +55,7 @@
           type="button"
           class="btn btn-sm btn-outline-secondary"
           @click="$emit('cancel', session.id)"
-          title="Cancelar sesión"
+          :title="$t('telemedicineSession.card.cancelSession')"
         >
           <i class="bi bi-x-circle"></i>
         </button>
@@ -66,32 +66,32 @@
       <div class="session-info">
         <div class="session-info-item">
           <i class="bi bi-person-circle me-2"></i>
-          <span>Paciente: {{ clientName || 'N/A' }}</span>
+          <span>{{ $t('telemedicineSession.card.patient') }} {{ clientName || 'N/A' }}</span>
         </div>
         <div class="session-info-item">
           <i class="bi bi-person-badge me-2"></i>
-          <span>Médico: {{ doctorName || session.doctorId }}</span>
+          <span>{{ $t('telemedicineSession.card.doctor') }} {{ doctorName || session.doctorId }}</span>
         </div>
         <div v-if="session.duration" class="session-info-item">
           <i class="bi bi-clock-history me-2"></i>
-          <span>Duración: {{ session.duration }} minutos</span>
+          <span>{{ $t('telemedicineSession.card.duration') }} {{ session.duration }} {{ $t('telemedicineSession.card.minutes') }}</span>
         </div>
         <div v-if="session.recordingUrl" class="session-info-item">
           <i class="bi bi-camera-reels me-2"></i>
           <a :href="session.recordingUrl" target="_blank" class="recording-link">
-            Ver grabación
+            {{ $t('telemedicineSession.card.viewRecording') }}
             <i class="bi bi-box-arrow-up-right ms-1"></i>
           </a>
         </div>
       </div>
 
       <div v-if="session.notes" class="session-notes">
-        <strong>Notas:</strong>
+        <strong>{{ $t('telemedicineSession.card.notes') }}</strong>
         <p>{{ session.notes }}</p>
       </div>
 
       <div v-if="session.diagnosis" class="session-diagnosis">
-        <strong>Diagnóstico:</strong>
+        <strong>{{ $t('telemedicineSession.card.diagnosis') }}</strong>
         <p>{{ session.diagnosis }}</p>
       </div>
     </div>
@@ -99,7 +99,7 @@
     <div v-if="session.status === 'active'" class="session-card-footer">
       <div class="session-room-info">
         <i class="bi bi-door-open me-1"></i>
-        <span>Sala: {{ session.roomId }}</span>
+        <span>{{ $t('telemedicineSession.card.room') }} {{ session.roomId }}</span>
       </div>
     </div>
   </div>
@@ -138,7 +138,7 @@ export default {
     },
   },
   emits: ['start', 'join', 'end', 'cancel', 'session-selected', 'start-session'],
-  setup() {
+  setup(props, { emit }) {
     const formatDate = date => {
       if (!date) return '';
       return getDate(date);
@@ -160,22 +160,6 @@ export default {
       return classes[normalizedStatus] || classes[status] || 'badge-modern';
     };
 
-    const getStatusLabel = status => {
-      const normalizedStatus = status?.toUpperCase() || status;
-      const labels = {
-        SCHEDULED: 'Programada',
-        scheduled: 'Programada',
-        ACTIVE: 'En curso',
-        active: 'En curso',
-        ENDED: 'Finalizada',
-        ended: 'Finalizada',
-        completed: 'Completada',
-        CANCELLED: 'Cancelada',
-        cancelled: 'Cancelada',
-      };
-      return labels[normalizedStatus] || labels[status] || status;
-    };
-
     const getTypeClass = type => {
       const normalizedType = type?.toUpperCase() || type;
       const classes = {
@@ -187,19 +171,6 @@ export default {
         both: 'badge-modern badge-modern-success',
       };
       return classes[normalizedType] || classes[type] || 'badge-modern';
-    };
-
-    const getTypeLabel = type => {
-      const normalizedType = type?.toUpperCase() || type;
-      const labels = {
-        VIDEO: 'Video',
-        video: 'Video',
-        CHAT: 'Chat',
-        chat: 'Chat',
-        BOTH: 'Video + Chat',
-        both: 'Video + Chat',
-      };
-      return labels[normalizedType] || labels[type] || type;
     };
 
     const getTypeIcon = type => {
@@ -226,13 +197,42 @@ export default {
     return {
       formatDate,
       getStatusClass,
-      getStatusLabel,
       getTypeClass,
-      getTypeLabel,
       getTypeIcon,
       handleStartSession,
       handleJoinSession,
     };
+  },
+  methods: {
+    getStatusLabel(status) {
+      const normalizedStatus = status?.toUpperCase() || status;
+      const labelMap = {
+        SCHEDULED: 'telemedicineSession.card.statusScheduled',
+        scheduled: 'telemedicineSession.card.statusScheduled',
+        ACTIVE: 'telemedicineSession.card.statusActive',
+        active: 'telemedicineSession.card.statusActive',
+        ENDED: 'telemedicineSession.card.statusEnded',
+        ended: 'telemedicineSession.card.statusEnded',
+        completed: 'telemedicineSession.card.statusCompleted',
+        CANCELLED: 'telemedicineSession.card.statusCancelled',
+        cancelled: 'telemedicineSession.card.statusCancelled',
+      };
+      const key = labelMap[normalizedStatus] || labelMap[status];
+      return key ? this.$t(key) : status;
+    },
+    getTypeLabel(type) {
+      const normalizedType = type?.toUpperCase() || type;
+      const labelMap = {
+        VIDEO: 'telemedicineSession.card.typeVideo',
+        video: 'telemedicineSession.card.typeVideo',
+        CHAT: 'telemedicineSession.card.typeChat',
+        chat: 'telemedicineSession.card.typeChat',
+        BOTH: 'telemedicineSession.card.typeBoth',
+        both: 'telemedicineSession.card.typeBoth',
+      };
+      const key = labelMap[normalizedType] || labelMap[type];
+      return key ? this.$t(key) : type;
+    }
   },
 };
 </script>

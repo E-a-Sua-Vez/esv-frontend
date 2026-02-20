@@ -25,6 +25,7 @@ import { getProfessionalTypes } from '../../shared/utils/data.ts';
 import ProfessionalFormEdit from '../../components/professional/ProfessionalFormEdit.vue';
 import ProfessionalFormAdd from '../../components/professional/ProfessionalFormAdd.vue';
 import ProfessionalName from '../../components/common/ProfessionalName.vue';
+import ProfessionalEditModal from '../../components/professional/ProfessionalEditModal.vue';
 
 export default {
   name: 'BusinessProfessionalsAdmin',
@@ -43,6 +44,7 @@ export default {
     ProfessionalFormEdit,
     ProfessionalFormAdd,
     ProfessionalName,
+    ProfessionalEditModal,
   },
   async setup() {
     const router = useRouter();
@@ -50,6 +52,8 @@ export default {
 
     const loading = ref(false);
     const alertError = ref('');
+    const showEditModal = ref(false);
+    const professionalForEdit = ref(null);
 
     const state = reactive({
       currentUser: {},
@@ -71,6 +75,8 @@ export default {
       nameError: false,
       emailError: false,
       typeError: false,
+      idNumberError: false,
+      phoneError: false,
       licenseError: false,
       toggles: {},
       filtered: [],
@@ -166,11 +172,23 @@ export default {
       } else {
         state.nameError = false;
       }
+      if (!professional.personalInfo?.idNumber || professional.personalInfo.idNumber.length === 0) {
+        state.idNumberError = true;
+        state.errorsAdd.push('businessProfessionalsAdmin.validate.idNumber');
+      } else {
+        state.idNumberError = false;
+      }
       if (!professional.personalInfo?.email || professional.personalInfo.email.length < 10) {
         state.emailError = true;
         state.errorsAdd.push('businessProfessionalsAdmin.validate.email');
       } else {
         state.emailError = false;
+      }
+      if (!professional.personalInfo?.phone || professional.personalInfo.phone.length === 0) {
+        state.phoneError = true;
+        state.errorsAdd.push('businessProfessionalsAdmin.validate.phone');
+      } else {
+        state.phoneError = false;
       }
       if (
         !professional.professionalInfo?.professionalType ||
@@ -195,11 +213,23 @@ export default {
       } else {
         state.nameError = false;
       }
+      if (!professional.personalInfo?.idNumber || professional.personalInfo.idNumber.length === 0) {
+        state.idNumberError = true;
+        state.errorsUpdate.push('businessProfessionalsAdmin.validate.idNumber');
+      } else {
+        state.idNumberError = false;
+      }
       if (!professional.personalInfo?.email || professional.personalInfo.email.length < 10) {
         state.emailError = true;
         state.errorsUpdate.push('businessProfessionalsAdmin.validate.email');
       } else {
         state.emailError = false;
+      }
+      if (!professional.personalInfo?.phone || professional.personalInfo.phone.length === 0) {
+        state.phoneError = true;
+        state.errorsUpdate.push('businessProfessionalsAdmin.validate.phone');
+      } else {
+        state.phoneError = false;
       }
       if (
         !professional.professionalInfo?.professionalType ||
@@ -257,7 +287,13 @@ export default {
             }
           }
 
+          // Mapear professionalType a role (el backend requiere role)
+          if (state.newProfessional.professionalInfo?.professionalType) {
+            state.newProfessional.professionalInfo.role = state.newProfessional.professionalInfo.professionalType;
+          }
+
           await addProfessional(state.newProfessional);
+          alertError.value = '';
           closeAddModal();
           await loadCommerceData(commerce.value.id);
         }
@@ -354,8 +390,49 @@ export default {
     };
 
     const showUpdateForm = index => {
-      state.extendedEntity = state.extendedEntity !== index ? index : undefined;
+      // Open modal instead of expanding card
+      openProfessionalEditModal(index);
+    };
+
+    const openProfessionalEditModal = (index) => {
+      const professional = state.filtered[index];
+      if (professional) {
+        professionalForEdit.value = { ...professional, _index: index };
+        showEditModal.value = true;
+      }
+    };
+
+    const closeEditModal = () => {
+      showEditModal.value = false;
+      professionalForEdit.value = null;
       state.errorsUpdate = [];
+
+      // Clean modal backdrop if any
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(backdrop => backdrop.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style = '';
+    };
+
+    const handleModalUpdate = async (professional) => {
+      // Update the professional in the list
+      if (professional._index !== undefined) {
+        state.filtered[professional._index] = professional;
+      }
+      // Call the update function
+      await update(professional);
+      closeEditModal();
+    };
+
+    const handleModalDelete = async (professionalId) => {
+      // Find the professional object by ID
+      const professional = state.professionals.find(p => p.id === professionalId);
+      if (!professional) {
+        console.error('Professional not found:', professionalId);
+        return;
+      }
+      // Call unavailable function
+      await unavailable(professional);
     };
 
     const showAdd = () => {
@@ -437,6 +514,35 @@ export default {
       }
     };
 
+    const selectModule = (professional, module) => {
+      if (professional?.professionalInfo && module?.id) {
+        if (!professional.professionalInfo.modulesId) {
+          professional.professionalInfo.modulesId = [];
+        }
+        if (!professional.professionalInfo.modulesId.includes(module.id)) {
+          professional.professionalInfo.modulesId.push(module.id);
+        }
+      }
+    };
+
+    const deleteModule = (professional, moduleId) => {
+      if (professional?.professionalInfo?.modulesId?.length >= 0) {
+        if (professional.professionalInfo.modulesId.includes(moduleId)) {
+          const filtered = professional.professionalInfo.modulesId.filter(id => id !== moduleId);
+          professional.professionalInfo.modulesId = filtered;
+        }
+      }
+    };
+
+    const showModule = moduleId => {
+      if (state.modules && state.modules.length >= 1) {
+        const module = state.modules.find(m => m.id === moduleId);
+        if (module) {
+          return module.name;
+        }
+      }
+    };
+
     const receiveFilteredItems = items => {
       state.filtered = items;
     };
@@ -486,7 +592,10 @@ export default {
       state.nameError = false;
       state.emailError = false;
       state.typeError = false;
+      state.idNumberError = false;
+      state.phoneError = false;
       state.licenseError = false;
+      alertError.value = '';
     };
 
     const handleModalHide = () => {
@@ -521,6 +630,8 @@ export default {
       state,
       loading,
       alertError,
+      showEditModal,
+      professionalForEdit,
       showUpdateForm,
       update,
       showAdd,
@@ -532,6 +643,9 @@ export default {
       deleteService,
       showService,
       selectServiceIndex,
+      selectModule,
+      deleteModule,
+      showModule,
       showCommerce: () => {},
       deleteCommerce: () => {},
       selectCommerceSelected: () => {},
@@ -540,6 +654,10 @@ export default {
       unavailable,
       unavailableCancel,
       goToUnavailable,
+      openProfessionalEditModal,
+      closeEditModal,
+      handleModalUpdate,
+      handleModalDelete,
     };
   },
 };
@@ -608,10 +726,12 @@ export default {
                   <div
                     v-for="(professional, index) in state.filtered"
                     :key="index"
-                    class="result-card"
+                    class="result-card-2"
+                    @click="openProfessionalEditModal(index)"
+                    style="cursor: pointer;"
                   >
                     <div class="row">
-                      <div class="col-10">
+                      <div class="col-12">
                         <ProfessionalName
                           :name="professional.personalInfo?.name"
                           :email="professional.personalInfo?.email"
@@ -621,89 +741,6 @@ export default {
                           :professional="professional"
                         />
                       </div>
-                      <div class="col-2">
-                        <a href="#" @click.prevent="showUpdateForm(index)">
-                          <i
-                            :id="index"
-                            :class="`bi ${
-                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                            }`"
-                          ></i>
-                        </a>
-                      </div>
-                    </div>
-                    <div
-                      v-if="state.toggles['professionals.admin.read']"
-                      :class="{ show: state.extendedEntity === index }"
-                      class="detailed-data transition-slow"
-                    >
-                      <ProfessionalFormEdit
-                        :professional="professional"
-                        :commerce-id="commerce?.id"
-                        :types="state.types"
-                        :modules="state.modules"
-                        :services="state.services"
-                        :toggles="state.toggles"
-                        :errors="{
-                          nameError: false,
-                          emailError: false,
-                          typeError: false,
-                          licenseError: false,
-                        }"
-                        :on-select-service="(prof, service) => selectServiceIndex(index, service)"
-                        :on-delete-service="(prof, serviceId) => deleteService(prof, serviceId)"
-                        :show-service="showService"
-                        @update:professional="state.filtered[index] = $event"
-                      />
-                      <div class="col centered d-flex justify-content-center gap-3">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(professional)"
-                          :disabled="!state.toggles['professionals.admin.update']"
-                        >
-                          {{ $t('businessProfessionalsAdmin.update') }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                          @click="goToUnavailable()"
-                          v-if="state.toggles['professionals.admin.unavailable']"
-                        >
-                          {{ $t('businessQueuesAdmin.unavailable') }}
-                          <i class="bi bi-trash-fill"></i>
-                        </button>
-                        <AreYouSure
-                          :show="state.goToUnavailable"
-                          :yes-disabled="!state.toggles['professionals.admin.unavailable']"
-                          :no-disabled="!state.toggles['professionals.admin.unavailable']"
-                          @actionYes="unavailable(professional)"
-                          @actionNo="unavailableCancel()"
-                        >
-                        </AreYouSure>
-                      </div>
-                      <div
-                        class="row g-1 errors"
-                        id="feedback"
-                        v-if="state.errorsUpdate.length > 0"
-                      >
-                        <Warning>
-                          <template v-slot:message>
-                            <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                              {{ $t(error) }}
-                            </li>
-                          </template>
-                        </Warning>
-                      </div>
-                    </div>
-                    <div
-                      v-if="
-                        (!isActiveBusiness() || !state.toggles['professionals.admin.read']) &&
-                        !loading
-                      "
-                    >
-                      <Message
-                        :title="$t('businessProfessionalsAdmin.message.1.title')"
-                        :content="$t('businessProfessionalsAdmin.message.1.content')"
-                      />
                     </div>
                   </div>
                 </div>
@@ -784,10 +821,12 @@ export default {
                   <div
                     v-for="(professional, index) in state.filtered"
                     :key="index"
-                    class="result-card"
+                    class="result-card-2"
+                    @click="openProfessionalEditModal(index)"
+                    style="cursor: pointer;"
                   >
                     <div class="row">
-                      <div class="col-10">
+                      <div class="col-12">
                         <ProfessionalName
                           :name="professional.personalInfo?.name"
                           :email="professional.personalInfo?.email"
@@ -796,78 +835,6 @@ export default {
                           :has-collaborator="!!professional.collaboratorId"
                           :professional="professional"
                         />
-                      </div>
-                      <div class="col-2">
-                        <a href="#" @click.prevent="showUpdateForm(index)">
-                          <i
-                            :id="index"
-                            :class="`bi ${
-                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                            }`"
-                          ></i>
-                        </a>
-                      </div>
-                    </div>
-                    <div
-                      v-if="state.toggles['professionals.admin.read']"
-                      :class="{ show: state.extendedEntity === index }"
-                      class="detailed-data transition-slow"
-                    >
-                      <ProfessionalFormEdit
-                        :professional="professional"
-                        :commerce-id="commerce?.id"
-                        :types="state.types"
-                        :modules="state.modules"
-                        :services="state.services"
-                        :toggles="state.toggles"
-                        :errors="{
-                          nameError: false,
-                          emailError: false,
-                          typeError: false,
-                          licenseError: false,
-                        }"
-                        :on-select-service="(prof, service) => selectServiceIndex(index, service)"
-                        :on-delete-service="(prof, serviceId) => deleteService(prof, serviceId)"
-                        :show-service="showService"
-                        @update:professional="state.filtered[index] = $event"
-                      />
-                      <div class="col centered d-flex justify-content-center gap-3">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(state.filtered[index])"
-                          :disabled="!state.toggles['professionals.admin.update']"
-                        >
-                          {{ $t('businessProfessionalsAdmin.update') }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                          @click="goToUnavailable()"
-                          v-if="state.toggles['professionals.admin.unavailable']"
-                        >
-                          {{ $t('businessQueuesAdmin.unavailable') }}
-                          <i class="bi bi-trash-fill"></i>
-                        </button>
-                        <AreYouSure
-                          :show="state.goToUnavailable"
-                          :yes-disabled="!state.toggles['professionals.admin.unavailable']"
-                          :no-disabled="!state.toggles['professionals.admin.unavailable']"
-                          @actionYes="unavailable(professional)"
-                          @actionNo="unavailableCancel()"
-                        >
-                        </AreYouSure>
-                      </div>
-                      <div
-                        class="row g-1 errors"
-                        id="feedback"
-                        v-if="state.errorsUpdate.length > 0"
-                      >
-                        <Warning>
-                          <template v-slot:message>
-                            <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                              {{ $t(error) }}
-                            </li>
-                          </template>
-                        </Warning>
                       </div>
                     </div>
                   </div>
@@ -924,10 +891,7 @@ export default {
             <div class="text-center">
               <Spinner :show="loading"></Spinner>
             </div>
-            <Alert :show="alertError" :variant="'danger'">
-              <i class="bi bi-exclamation-triangle-fill"></i>
-              {{ $t(`error.${alertError}`) }}
-            </Alert>
+            <Alert :show="false" :stack="alertError"></Alert>
             <div id="add-professional" class="result-card mb-4">
               <div>
                 <ProfessionalFormAdd
@@ -939,7 +903,9 @@ export default {
                   :toggles="state.toggles"
                   :errors="{
                     nameError: state.nameError,
+                    idNumberError: state.idNumberError,
                     emailError: state.emailError,
+                    phoneError: state.phoneError,
                     typeError: state.typeError,
                     licenseError: state.licenseError,
                   }"
@@ -958,6 +924,15 @@ export default {
                   {{ $t('add') }} <i class="bi bi-save"></i>
                 </button>
               </div>
+              <div class="row g-1 errors" id="feedback" v-if="state.errorsAdd.length > 0">
+                <Warning>
+                  <template v-slot:message>
+                    <li v-for="(error, index) in state.errorsAdd" :key="index">
+                      {{ $t(error) }}
+                    </li>
+                  </template>
+                </Warning>
+              </div>
             </div>
           </div>
           <div class="mx-2 mb-4 text-center">
@@ -972,6 +947,33 @@ export default {
         </div>
       </div>
     </div>
+
+    <!-- Professional Edit Modal -->
+    <ProfessionalEditModal
+      v-if="showEditModal && professionalForEdit"
+      :show="showEditModal"
+      :professional="professionalForEdit"
+      :commerce-id="commerce?.id"
+      :types="state.types"
+      :modules="state.modules"
+      :services="state.services"
+      :toggles="state.toggles"
+      :errors="{
+        nameError: state.nameError,
+        emailError: state.emailError,
+        typeError: state.typeError,
+        licenseError: state.licenseError,
+      }"
+      :on-select-service="(prof, service) => selectServiceIndex(professionalForEdit._index, service)"
+      :on-delete-service="(prof, serviceId) => deleteService(prof, serviceId)"
+      :show-service="showService"
+      :on-select-module="(prof, module) => selectModule(prof, module)"
+      :on-delete-module="(prof, moduleId) => deleteModule(prof, moduleId)"
+      :show-module="showModule"
+      @update="handleModalUpdate"
+      @delete="handleModalDelete"
+      @close="closeEditModal"
+    />
   </div>
 </template>
 
@@ -990,10 +992,15 @@ export default {
   border-radius: 0.5rem;
   margin-bottom: 1rem;
   transition: all 0.3s ease;
+  padding: 1rem;
 }
 
-.result-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.result-card-2 {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
 }
 
 .detailed-data {
@@ -1048,7 +1055,6 @@ export default {
 .form-fields-container {
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
   margin-bottom: 1rem;
 }
 

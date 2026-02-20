@@ -81,7 +81,7 @@ export const revokeConsent = async (consentId, reason) => {
 };
 
 /**
- * Obtém sessões de telemedicina do cliente (via sessão)
+ * Obtém sessões de teleconsulta do cliente (via sessão)
  */
 export const getClientTelemedicineSessions = async (commerceId, clientId) => {
   const token = localStorage.getItem('clientPortalSessionToken');

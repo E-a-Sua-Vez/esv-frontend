@@ -70,17 +70,18 @@ export default {
 <template>
   <div>
     <button
+      v-if="isAdd"
       class="section-toggle-button"
       type="button"
       data-bs-toggle="collapse"
-      :aria-expanded="true"
+      :aria-expanded="!isAdd"
       :aria-controls="`${prefix}location`"
       :data-bs-target="`#${prefix}location`"
     >
       <span class="section-toggle-text">{{ $t('businessCommercesAdmin.location') }}</span>
       <i class="bi bi-chevron-down section-toggle-icon"></i>
     </button>
-    <div :id="`${prefix}location`" class="collapse">
+    <div :id="`${prefix}location`" :class="isAdd ? ['collapse', { show: !isAdd }] : ''">
       <div class="form-fields-container">
         <div class="form-group-modern">
           <label class="form-label-modern">

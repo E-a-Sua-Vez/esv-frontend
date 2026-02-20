@@ -33,7 +33,7 @@
               </span>
               <span v-if="clientConnected" class="client-status ms-2">
                 <i class="bi bi-person-check-fill text-success"></i>
-                Cliente conectado
+                {{ $t('telemedicineSession.floatingWindow.clientConnected') }}
               </span>
             </div>
           </div>
@@ -44,7 +44,7 @@
             type="button"
             class="btn-window-action"
             @click="toggleMinimize"
-            :title="isMinimized ? 'Maximizar' : 'Minimizar'"
+            :title="isMinimized ? $t('telemedicineSession.floatingWindow.maximize') : $t('telemedicineSession.floatingWindow.minimize')"
           >
             <i :class="isMinimized ? 'bi bi-arrows-angle-expand' : 'bi bi-dash-lg'"></i>
           </button>
@@ -53,7 +53,7 @@
             type="button"
             class="btn-window-action"
             @click="toggleMaximize"
-            :title="isMaximized ? 'Restaurar' : 'Maximizar'"
+            :title="isMaximized ? $t('telemedicineSession.floatingWindow.restore') : $t('telemedicineSession.floatingWindow.maximize')"
           >
             <i :class="isMaximized ? 'bi bi-arrows-angle-contract' : 'bi bi-square'"></i>
           </button>
@@ -61,7 +61,7 @@
             type="button"
             class="btn-window-action btn-window-action-close"
             @click="$emit('close')"
-            title="Cerrar"
+            :title="$t('telemedicineSession.floatingWindow.close')"
           >
             <i class="bi bi-x-lg"></i>
           </button>
@@ -88,7 +88,7 @@ export default {
     },
     title: {
       type: String,
-      default: 'Consulta Telemedicina',
+      default: 'Consulta Teleconsulta',
     },
     iconClass: {
       type: String,

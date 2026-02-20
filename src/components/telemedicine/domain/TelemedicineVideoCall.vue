@@ -6,21 +6,21 @@
           <i class="bi bi-camera-video"></i>
         </div>
         <div class="video-call-header-title">
-          <h5>Consulta Virtual</h5>
+          <h5>{{ $t('telemedicineSession.videoCall.title') }}</h5>
           <span v-if="connected" class="status-badge badge-modern badge-modern-success">
             <i class="bi bi-circle-fill me-1"></i>
-            Conectado
+            {{ $t('telemedicineSession.videoCall.connected') }}
           </span>
           <span v-else class="status-badge badge-modern badge-modern-warning">
             <i class="bi bi-circle-fill me-1"></i>
-            Conectando...
+            {{ $t('telemedicineSession.videoCall.connecting') }}
           </span>
           <span
             v-if="clientConnected && userType === 'doctor'"
             class="status-badge badge-modern badge-modern-success ms-2"
           >
             <i class="bi bi-person-check-fill me-1"></i>
-            Cliente conectado
+            {{ $t('telemedicineSession.videoCall.clientConnected') }}
           </span>
           <span
             v-if="isRecording"
@@ -28,7 +28,7 @@
             style="background: #ef4444; color: white"
           >
             <i class="bi bi-record-circle-fill me-1"></i>
-            Grabando {{ formatRecordingTime(recordingTime) }}
+            {{ $t('telemedicineSession.videoCall.recording') }} {{ formatRecordingTime(recordingTime) }}
           </span>
         </div>
       </div>
@@ -38,7 +38,7 @@
     <div class="video-call-body">
       <div v-if="loading" class="text-center py-5">
         <Spinner />
-        <p class="mt-3">Iniciando videollamada...</p>
+        <p class="mt-3">{{ $t('telemedicineSession.videoCall.startingCall') }}</p>
       </div>
 
       <div v-else-if="error" class="error-state">
@@ -62,7 +62,7 @@
             preload="metadata"
           ></video>
           <div class="video-overlay">
-            <span class="video-label">Tú</span>
+            <span class="video-label">{{ $t('telemedicineSession.videoCall.you') }}</span>
             <span v-if="!localStream" class="video-status">
               <i class="bi bi-camera-video-off"></i>
             </span>
@@ -82,11 +82,11 @@
           ></video>
           <div class="video-overlay">
             <span class="video-label">
-              {{ userType === 'doctor' ? 'Paciente' : 'Médico' }}
+              {{ userType === 'doctor' ? $t('telemedicineSession.videoCall.patient') : $t('telemedicineSession.videoCall.doctor') }}
             </span>
             <span v-if="!remoteStream" class="video-status">
               <i class="bi bi-camera-video-off"></i>
-              Esperando conexión...
+              {{ $t('telemedicineSession.videoCall.waitingConnection') }}
             </span>
           </div>
         </div>
@@ -101,7 +101,7 @@
           :class="{ 'btn-control-active': !isMuted }"
           @click="toggleMute"
           :disabled="!localStream"
-          title="Microfono"
+          :title="isMuted ? $t('telemedicineSession.videoCall.unmuteAudio') : $t('telemedicineSession.videoCall.muteAudio')"
         >
           <i :class="isMuted ? 'bi bi-mic-mute-fill' : 'bi bi-mic-fill'"></i>
         </button>
@@ -111,7 +111,7 @@
           :class="{ 'btn-control-active': !isVideoOff }"
           @click="toggleVideo"
           :disabled="!localStream"
-          title="Cámara"
+          :title="isVideoOff ? $t('telemedicineSession.videoCall.enableVideo') : $t('telemedicineSession.videoCall.disableVideo')"
         >
           <i :class="isVideoOff ? 'bi bi-camera-video-off' : 'bi bi-camera-video-fill'"></i>
         </button>
@@ -121,7 +121,7 @@
           :class="{ 'btn-control-active': isScreenSharing }"
           @click="toggleScreenShare"
           :disabled="!localStream"
-          title="Compartir pantalla"
+          :title="isScreenSharing ? $t('telemedicineSession.videoCall.stopSharing') : $t('telemedicineSession.videoCall.shareScreen')"
         >
           <i class="bi bi-display"></i>
         </button>
@@ -132,7 +132,7 @@
           :class="{ 'btn-control-active': isRecording, 'btn-control-recording': isRecording }"
           @click="toggleRecording"
           :disabled="!localStream || !remoteStream"
-          title="Grabar sesión"
+          :title="isRecording ? $t('telemedicineSession.videoCall.stopRecording') : $t('telemedicineSession.videoCall.startRecording')"
         >
           <i :class="isRecording ? 'bi bi-record-circle-fill' : 'bi bi-record-circle'"></i>
           <span v-if="isRecording" class="recording-indicator"></span>
@@ -145,7 +145,7 @@
           type="button"
           class="btn-control btn-control-danger"
           @click="endCall"
-          title="Finalizar llamada"
+          :title="$t('telemedicineSession.videoCall.endCall')"
         >
           <i class="bi bi-telephone-x-fill"></i>
         </button>

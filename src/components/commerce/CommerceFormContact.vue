@@ -31,17 +31,18 @@ export default {
 <template>
   <div>
     <button
+      v-if="isAdd"
       class="section-toggle-button"
       type="button"
       data-bs-toggle="collapse"
-      :aria-expanded="false"
+      :aria-expanded="!isAdd"
       :aria-controls="`${prefix}contact`"
       :data-bs-target="`#${prefix}contact`"
     >
       <span class="section-toggle-text">{{ $t('businessCommercesAdmin.contact') }}</span>
       <i class="bi bi-chevron-down section-toggle-icon"></i>
     </button>
-    <div :id="`${prefix}contact`" class="collapse">
+    <div :id="`${prefix}contact`" :class="isAdd ? ['collapse', { show: !isAdd }] : ''">
       <div class="form-fields-container">
         <div class="form-group-modern">
           <label class="form-label-modern">

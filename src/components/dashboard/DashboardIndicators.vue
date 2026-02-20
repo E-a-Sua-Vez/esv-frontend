@@ -1376,10 +1376,10 @@ export default {
             <DetailsCard
               :show="!!toggles['dashboard.telemedicine.view']"
               :data="calculatedMetrics['telemedicine.created']?.total || 0"
-              :title="$t('dashboard.telemedicine.title') || 'Sesiones de Telemedicina'"
+              :title="$t('dashboard.telemedicine.title') || 'Sesiones de Teleconsulta'"
               :show-tooltip="true"
               :description="
-                $t('dashboard.telemedicine.description') || 'Métricas de sesiones de telemedicina'
+                $t('dashboard.telemedicine.description') || 'Métricas de sesiones de teleconsulta'
               "
               :icon="'camera-video-fill'"
               :icon-style-class="'blue-icon'"

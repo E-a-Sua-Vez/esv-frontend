@@ -14,6 +14,7 @@ import { useChatConversations } from '@/composables/useChatConversations';
 import { USER_TYPES, ENVIRONMENTS } from '../../shared/constants';
 import { getPermissions } from '../../application/services/permissions';
 import { getClientPortalPermissions } from '../../application/services/client-portal-permissions';
+import { getBusinessById, updateBusiness } from '../../application/services/business';
 import LocaleSelector from './LocaleSelector.vue';
 import CommerceSelector from './CommerceSelector.vue';
 import ModuleSelector from './ModuleSelector.vue';
@@ -24,6 +25,7 @@ import ChatNotificationBadge from '../messages/ChatNotificationBadge.vue';
 import MessageInbox from '../messages/MessageInbox.vue';
 import ChatInbox from '../messages/ChatInbox.vue';
 import ProfessionalProfileModal from '../professional/ProfessionalProfileModal.vue';
+import BusinessEditModal from '../business/BusinessEditModal.vue';
 
 export default {
   components: {
@@ -37,6 +39,7 @@ export default {
     MessageInbox,
     ChatInbox,
     ProfessionalProfileModal,
+    BusinessEditModal,
   },
   name: 'Header',
   async setup() {
@@ -48,6 +51,11 @@ export default {
 
     // Professional Profile Modal state
     const isProfessionalModalOpen = ref(false);
+
+    // Business Edit Modal state
+    const showEditModal = ref(false);
+    const businessForEdit = ref(null);
+    const errorsUpdate = ref([]);
 
     // Initialize permissions composable
     const {
@@ -111,6 +119,7 @@ export default {
       manageControlSubMenuOption: false,
       medicalManagementSubMenuOption: false,
       toggles: {},
+      businessAdminToggles: {},
       clientPortalPermissions: {},
     });
 
@@ -290,8 +299,10 @@ export default {
       if (state.currentUserType === USER_TYPES.BUSINESS) {
         try {
           state.toggles = await getPermissions('business', 'main-menu');
+          state.businessAdminToggles = await getPermissions('businesses', 'admin');
         } catch (error) {
           state.toggles = {};
+          state.businessAdminToggles = {};
         }
       }
       // Reload available commerces and modules when user data changes
@@ -816,6 +827,7 @@ export default {
     const getManageSubMenuOptions = () => {
       if (state.currentUserType === USER_TYPES.BUSINESS) {
         return [
+          'business-info',
           'commerce-admin',
           'service-admin',
           'modules-admin',
@@ -938,6 +950,15 @@ export default {
               closeDesktopMenu();
             }
             return;
+          } else if (option === 'business-info') {
+            // Special handling for business-info - open modal
+            await openBusinessEditModal();
+            // Close menus if requested
+            if (closeMenu) {
+              closeMobileMenu();
+              closeDesktopMenu();
+            }
+            return;
           } else {
             // Verificar permisos antes de navegar
             const permissionKey = `business.main-menu.${option}`;
@@ -1026,7 +1047,7 @@ export default {
 
     const getSubmenuIcon = opt => {
       const iconMap = {
-        'commerce-admin': 'bi-building',
+        'business-info': 'bi-building',
         'service-admin': 'bi-tools',
         'modules-admin': 'bi-layers',
         'queues-admin': 'bi-list-check',
@@ -1075,6 +1096,71 @@ export default {
         // Try to redirect anyway
         const commerceSlug = router.currentRoute.value.params.commerceSlug;
         router.push({ name: 'client-portal-login', params: { commerceSlug } });
+      }
+    };
+
+    const openBusinessEditModal = async () => {
+      try {
+        loading.value = true;
+        const currentBusiness = state.currentBusiness || await store.getCurrentBusiness;
+
+        if (!currentBusiness || !currentBusiness.id) {
+          console.error('No business found');
+          loading.value = false;
+          return;
+        }
+
+        const businessData = await getBusinessById(currentBusiness.id);
+        businessForEdit.value = businessData;
+        showEditModal.value = true;
+        loading.value = false;
+      } catch (error) {
+        console.error('Error loading business:', error);
+        loading.value = false;
+      }
+    };
+
+    const closeEditModal = () => {
+      showEditModal.value = false;
+      businessForEdit.value = null;
+      // Clean modal backdrop
+      const modals = document.querySelectorAll('.modal-backdrop');
+      modals.forEach(modal => modal.remove());
+      document.body.classList.remove('modal-open');
+    };
+
+    const validateUpdate = business => {
+      errorsUpdate.value = [];
+      if (business.contactInfo?.phone && !business.contactInfo.phone.match(/^[0-9]{10,15}$/)) {
+        errorsUpdate.value.push('businessInfo.validate.phone');
+      }
+      if (!business.localeInfo?.country || business.localeInfo.country.length === 0) {
+        errorsUpdate.value.push('businessInfo.validate.country');
+      }
+      if (
+        business.localeInfo?.address &&
+        (business.localeInfo.address.length < 5 || business.localeInfo.address.length > 200)
+      ) {
+        errorsUpdate.value.push('businessInfo.validate.address');
+      }
+      return errorsUpdate.value.length === 0;
+    };
+
+    const updateBusinessData = async business => {
+      try {
+        loading.value = true;
+        if (validateUpdate(business)) {
+          business.contactInfo.phone = business.phone;
+          await updateBusiness(business);
+          await store.renewActualBusiness();
+          closeEditModal();
+          loading.value = false;
+        } else {
+          loading.value = false;
+        }
+      } catch (error) {
+        console.error('Error updating business:', error);
+        loading.value = false;
       }
     };
 
@@ -1143,6 +1229,14 @@ export default {
 
       // Message count for menu
       menuUnreadCount,
+
+      // Business Edit Modal
+      showEditModal,
+      businessForEdit,
+      errorsUpdate,
+      openBusinessEditModal,
+      closeEditModal,
+      updateBusinessData,
     };
   },
 };
@@ -2279,6 +2373,20 @@ export default {
       :collaborator-id="state.currentUser?.id"
       @close="closeProfessionalModal"
     />
+
+    <!-- Business Edit Modal -->
+    <Teleport to="body">
+      <BusinessEditModal
+        v-if="showEditModal && businessForEdit"
+        :business="businessForEdit"
+        :show="showEditModal"
+        :toggles="state.businessAdminToggles"
+        :is-own-business="true"
+        :errors="errorsUpdate"
+        @update="updateBusinessData"
+        @close="closeEditModal"
+      />
+    </Teleport>
 
     <!-- Internal Messages and Chat Inboxes -->
     <MessageInbox

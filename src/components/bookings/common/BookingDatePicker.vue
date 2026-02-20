@@ -4,6 +4,7 @@ import { getActiveFeature } from '../../../shared/features';
 import { bookingCollection } from '../../../application/firebase';
 import { query, where, onSnapshot } from 'firebase/firestore';
 import { DateModel } from '../../../shared/utils/date.model';
+import { getNonWorkingDates } from '../../../shared/utils/nonWorkingDates';
 import Message from '../../common/Message.vue';
 import Alert from '../../common/Alert.vue';
 import Spinner from '../../common/Spinner.vue';
@@ -60,6 +61,14 @@ export default {
         key: 'Reserves',
         highlight: {
           color: 'blue',
+          fillMode: 'light',
+        },
+        dates: [],
+      },
+      {
+        key: 'NonWorking',
+        highlight: {
+          color: 'gray',
           fillMode: 'light',
         },
         dates: [],
@@ -267,6 +276,7 @@ export default {
       calendarAttributes.value[0].dates = [];
       calendarAttributes.value[1].dates = [];
       calendarAttributes.value[2].dates = [];
+      calendarAttributes.value[3].dates = [];
       const [year, month] = date.split('-');
       const thisMonth = +month - 1;
       const nextMonth = +month;
@@ -307,6 +317,11 @@ export default {
       }
       const forDeletion = [];
       const forReserves = [];
+
+      // Filter non-working dates (business + commerce + queue)
+      const nonWorkingDates = getNonWorkingDates(null, commerce.value, queue.value);
+      const filteredAvailableDates = availableDates.filter(date => !nonWorkingDates.includes(date));
+
       if (dates && dates.length > 0) {
         dates.forEach(date => {
           const bookings = bookingsGroupedByDate[date];
@@ -345,7 +360,7 @@ export default {
           }
         });
       }
-      const availability = await availableDates.filter(item => !forDeletion.includes(item));
+      const availability = await filteredAvailableDates.filter(item => !forDeletion.includes(item));
       const avaliableToCalendar = await availability.map(date => {
         const [year, month, day] = date.split('-');
         return new Date(+year, +month - 1, +day);
@@ -356,12 +371,46 @@ export default {
         return new Date(+year, +month - 1, +day);
       });
       calendarAttributes.value[1].dates.push(...forDeletionToCalendar);
-      loadingHours.value = false;
+
       const avaliableToReserve = forReserves.map(date => {
         const [year, month, day] = date.split('-');
         return new Date(+year, +month - 1, +day);
       });
       calendarAttributes.value[2].dates.push(...avaliableToReserve);
+
+      // Add non-working dates to calendar (gray highlight)
+      const nonWorkingDatesToCalendar = nonWorkingDates.map(date => {
+        const [year, month, day] = date.split('-');
+        return new Date(+year, +month - 1, +day);
+      });
+
+      // Calculate unavailable weekdays (days not in attentionDays)
+      const unavailableWeekdayDates = [];
+      if (attentionDays.length > 0 && attentionDays.length < 7) {
+        for (let i = 1; i <= dateTo.getDate(); i++) {
+          const currentDate = new Date(+year, thisMonth, i);
+          let dayOfWeek = currentDate.getDay();
+          if (dayOfWeek === 0) dayOfWeek = 7; // Sunday becomes 7
+
+          // If this day of week is not in attentionDays
+          if (!attentionDays.includes(dayOfWeek)) {
+            const dateStr = currentDate.toISOString().slice(0, 10);
+            // Only add if it's not already in available dates and is in the future
+            if (!availability.includes(dateStr) && currentDate > new Date()) {
+              unavailableWeekdayDates.push(currentDate);
+            }
+          }
+        }
+      }
+
+      // Combine non-working dates and unavailable weekdays for gray highlighting
+      calendarAttributes.value[3].dates.push(...nonWorkingDatesToCalendar, ...unavailableWeekdayDates);
+
+      // Update disabledDates with non-working dates AND unavailable weekday dates
+      const allDisabledDates = [...nonWorkingDatesToCalendar, ...unavailableWeekdayDates];
+      disabledDates.value = allDisabledDates;
+
+      loadingHours.value = false;
     };
 
     const getAvailableSpecificDatesByMonth = async date => {
@@ -371,6 +420,7 @@ export default {
         calendarAttributes.value[0].dates = [];
         calendarAttributes.value[1].dates = [];
         calendarAttributes.value[2].dates = [];
+        calendarAttributes.value[3].dates = [];
         const [year, month] = date.split('-');
         const thisMonth = +month - 1;
         const nextMonth = +month;
@@ -400,6 +450,11 @@ export default {
           const date = new Date(year, +month - 1, day);
           return new DateModel(date).toString();
         });
+
+        // Filter non-working dates (business + commerce + queue)
+        const nonWorkingDates = getNonWorkingDates(null, commerce.value, queue.value);
+        availableDates = availableDates.filter(date => !nonWorkingDates.includes(date));
+
         const forDeletion = [];
         const forReserves = [];
         if (availableDates && availableDates.length > 0) {
@@ -463,6 +518,39 @@ export default {
           return new Date(+year, +month - 1, +day);
         });
         calendarAttributes.value[2].dates.push(...avaliableToReserve);
+
+        // Add non-working dates to calendar (gray highlight)
+        const nonWorkingDatesToCalendar = nonWorkingDates.map(date => {
+          const [year, month, day] = date.split('-');
+          return new Date(+year, +month - 1, +day);
+        });
+
+        // Calculate unavailable weekdays (days not in attentionDays)
+        const unavailableWeekdayDates = [];
+        const attentionDays = queue.value.serviceInfo?.attentionDays || [];
+        if (attentionDays.length > 0 && attentionDays.length < 7) {
+          for (let i = 1; i <= dateTo.getDate(); i++) {
+            const currentDate = new Date(+year, thisMonth, i);
+            let dayOfWeek = currentDate.getDay();
+            if (dayOfWeek === 0) dayOfWeek = 7; // Sunday becomes 7
+
+            // If this day of week is not in attentionDays
+            if (!attentionDays.includes(dayOfWeek)) {
+              const dateStr = currentDate.toISOString().slice(0, 10);
+              // Only add if it's not already in available dates and is in the future
+              if (!availableDates.includes(dateStr) && currentDate > new Date()) {
+                unavailableWeekdayDates.push(currentDate);
+              }
+            }
+          }
+        }
+
+        // Combine non-working dates and unavailable weekdays for gray highlighting
+        calendarAttributes.value[3].dates.push(...nonWorkingDatesToCalendar, ...unavailableWeekdayDates);
+
+        // Update disabledDates with non-working dates AND unavailable weekday dates
+        const allDisabledDates = [...nonWorkingDatesToCalendar, ...unavailableWeekdayDates];
+        specificDisabledDates.value = allDisabledDates;
       }
       loadingHours.value = false;
     };

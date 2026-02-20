@@ -19,10 +19,15 @@ export default {
     onSelectService: { type: Function, default: null },
     onDeleteService: { type: Function, default: null },
     showService: { type: Function, default: null },
+    onSelectModule: { type: Function, default: null },
+    onDeleteModule: { type: Function, default: null },
+    showModule: { type: Function, default: null },
+    showOnly: { type: String, default: null },
   },
   emits: ['update:professional'],
   setup(props, { emit }) {
     const signatureFileInputRef = ref(null);
+    const digitalSignaturePreview = ref(null);
 
     // Load signature URL on mount
     onMounted(async () => {
@@ -33,27 +38,32 @@ export default {
             const updated = { ...props.professional };
             if (!updated.personalInfo) updated.personalInfo = {};
             updated.personalInfo.digitalSignature = response.signatureUrl;
+            digitalSignaturePreview.value = response.signatureUrl;
             emit('update:professional', updated);
           }
         } catch (e) {
           console.error('Error loading signature URL:', e);
         }
+      } else if (
+        props.professional?.personalInfo?.digitalSignature &&
+        typeof props.professional.personalInfo.digitalSignature === 'string'
+      ) {
+        digitalSignaturePreview.value = props.professional.personalInfo.digitalSignature;
       }
     });
 
     return {
       signatureFileInputRef,
+      digitalSignaturePreview,
     };
   },
   computed: {
     localProfessional: {
       get() {
-        // Crear una copia profunda para mantener reactividad
-        const prof = JSON.parse(JSON.stringify(this.professional));
-
-        // Asegurar que medicalData siempre existe (temporalmente para debug)
-        if (!prof.medicalData || typeof prof.medicalData !== 'object') {
-          prof.medicalData = {
+        // Return the prop directly without deep cloning to avoid infinite re-renders
+        // Ensure medicalData exists if needed
+        if (!this.professional.medicalData || typeof this.professional.medicalData !== 'object') {
+          this.professional.medicalData = {
             medicalLicense: '',
             medicalLicenseState: '',
             specialization: '',
@@ -73,31 +83,9 @@ export default {
             insuranceProviders: [],
           };
         }
-        return prof;
+        return this.professional;
       },
       set(value) {
-        // Asegurar que medicalData siempre existe cuando se actualiza (temporalmente para debug)
-        if (!value.medicalData || typeof value.medicalData !== 'object') {
-          value.medicalData = {
-            medicalLicense: '',
-            medicalLicenseState: '',
-            specialization: '',
-            subspecialization: '',
-            medicalSchool: '',
-            graduationYear: null,
-            professionalAddress: '',
-            professionalPhone: '',
-            professionalMobile: '',
-            professionalEmail: '',
-            emergencyPhone: '',
-            acceptsEmergencies: false,
-            homeVisits: false,
-            telemedicine: false,
-            canSignDocuments: false,
-            languages: [],
-            insuranceProviders: [],
-          };
-        }
         this.$emit('update:professional', value);
       },
     },
@@ -206,8 +194,8 @@ export default {
         // Store the File object in personalInfo so updateProfessional can detect and upload it
         if (!updated.personalInfo) updated.personalInfo = {};
         updated.personalInfo.digitalSignature = file;
-        // Also store preview URL for immediate display
-        updated.digitalSignaturePreview = e.target.result;
+        // Update local preview ref
+        this.digitalSignaturePreview = e.target.result;
         this.$emit('update:professional', updated);
       };
 
@@ -242,17 +230,23 @@ export default {
     },
   },
   watch: {
-    // Removido el watcher de professional.medicalData que causaba loops infinitos
-    // El binding correcto con localProfessional elimina la necesidad de este watcher
+    'professional.personalInfo.digitalSignature': {
+      handler(newVal) {
+        // Update preview when signature URL changes from backend
+        if (newVal && typeof newVal === 'string') {
+          this.digitalSignaturePreview = newVal;
+        }
+      },
+      immediate: true,
+    },
   },
 };
 </script>
 
 <template>
   <div class="professional-form-edit">
-    <!-- Form content starts here -->
-    <div class="form-fields-container">
-      <!-- Información Personal -->
+    <!-- PERSONAL INFO SECTION -->
+    <div v-if="!showOnly || showOnly === 'personal'" class="form-fields-container">
       <div class="form-group-modern">
         <label class="form-label-modern">
           {{ $t('professionals.name') }}:
@@ -314,6 +308,54 @@ export default {
 
       <div class="form-group-modern">
         <label class="form-label-modern">
+          {{ $t('professionals.phone') }} ({{ $t('optional') }}):
+          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+            <template #content>
+              <div>{{ $t('professionals.phoneHelp') }}</div>
+            </template>
+            <i class="bi bi-info-circle-fill h7"></i>
+          </Popper>
+        </label>
+        <input
+          type="tel"
+          class="form-control-modern"
+          :value="professional.personalInfo?.phone"
+          @input="updatePersonalInfo('phone', $event.target.value)"
+          :placeholder="$t('professionals.phonePlaceholder')"
+        />
+      </div>
+
+      <div class="form-group-modern form-group-toggle">
+        <label class="form-label-modern">
+          {{ $t('professionals.active') }}:
+          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+            <template #content>
+              <div>{{ $t('professionals.activeHelp') }}</div>
+            </template>
+            <i class="bi bi-info-circle-fill h7"></i>
+          </Popper>
+        </label>
+        <Toggle v-model="localProfessional.active" on-label=" " off-label=" " />
+      </div>
+
+      <div class="form-group-modern form-group-toggle">
+        <label class="form-label-modern">
+          {{ $t('professionals.available') }}:
+          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+            <template #content>
+              <div>{{ $t('professionals.availableHelp') }}</div>
+            </template>
+            <i class="bi bi-info-circle-fill h7"></i>
+          </Popper>
+        </label>
+        <Toggle v-model="localProfessional.available" on-label=" " off-label=" " />
+      </div>
+    </div>
+
+    <!-- PROFESSIONAL INFO SECTION -->
+    <div v-if="!showOnly || showOnly === 'professionalInfo'" class="form-fields-container">
+      <div class="form-group-modern">
+        <label class="form-label-modern">
           {{ $t('professionals.type') }}:
           <Popper :class="'dark p-1'" arrow :disable-click-away="false">
             <template #content>
@@ -337,25 +379,6 @@ export default {
 
       <div class="form-group-modern">
         <label class="form-label-modern">
-          {{ $t('professionals.phone') }} ({{ $t('optional') }}):
-          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-            <template #content>
-              <div>{{ $t('professionals.phoneHelp') }}</div>
-            </template>
-            <i class="bi bi-info-circle-fill h7"></i>
-          </Popper>
-        </label>
-        <input
-          type="tel"
-          class="form-control-modern"
-          :value="professional.personalInfo?.phone"
-          @input="updatePersonalInfo('phone', $event.target.value)"
-          :placeholder="$t('professionals.phonePlaceholder')"
-        />
-      </div>
-
-      <div class="form-group-modern">
-        <label class="form-label-modern">
           {{ $t('professionals.license') }} ({{ $t('optional') }}):
           <Popper :class="'dark p-1'" arrow :disable-click-away="false">
             <template #content>
@@ -372,10 +395,76 @@ export default {
           :placeholder="$t('professionals.licensePlaceholder')"
         />
       </div>
+
+      <!-- Foto de Perfil -->
+      <div class="mt-3">
+        <ProfessionalProfilePhotoUpload
+          :professional-id="professional.id"
+          :commerce-id="commerceId"
+          :existing-photo="professional.personalInfo?.profilePhoto"
+          @updated="handlePhotoUpdated"
+          @photo-captured="handlePhotoUpdated"
+          @photo-uploaded="handlePhotoUpdated"
+        />
+      </div>
+
+      <!-- Firma Digital -->
+      <div v-if="professional.id" class="mt-3 pb-3">
+        <div class="form-section">
+          <div class="d-flex align-items-center gap-3">
+            <!-- Signature Preview -->
+            <div class="signature-preview">
+              <img
+                v-if="
+                  digitalSignaturePreview ||
+                  (localProfessional.personalInfo?.digitalSignature &&
+                    typeof localProfessional.personalInfo.digitalSignature === 'string')
+                "
+                :src="
+                  digitalSignaturePreview ||
+                  localProfessional.personalInfo?.digitalSignature
+                "
+                :alt="$t('professionals.digitalSignature')"
+                class="signature-preview-img"
+              />
+              <div v-else class="signature-placeholder">
+                <i class="bi bi-pen"></i>
+              </div>
+            </div>
+
+            <!-- Upload Controls -->
+            <div class="d-flex flex-column gap-2">
+              <button
+                type="button"
+                class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
+                @click="triggerSignatureFileSelect"
+              >
+                <i class="bi bi-upload me-1"></i>
+                <span>{{
+                  digitalSignaturePreview ||
+                  typeof localProfessional.personalInfo?.digitalSignature === 'string'
+                    ? $t('collaborator.profilePhoto.update')
+                    : $t('collaborator.profilePhoto.upload')
+                }}</span>
+              </button>
+              <small class="text-muted">{{ $t('collaborator.profilePhoto.fileFormats') }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden file input for signature -->
+      <input
+        ref="signatureFileInputRef"
+        type="file"
+        accept=".jpg,.jpeg,.png,.webp,.pdf"
+        style="display: none"
+        @change="handleSignatureUpload"
+      />
     </div>
 
-    <div class="form-fields-container">
-      <!-- Servicios -->
+    <!-- SERVICES SECTION -->
+    <div v-if="!showOnly || showOnly === 'services'" class="form-fields-container">
       <div class="form-group-modern">
         <label class="form-label-modern">
           {{ $t('professionals.services') }}:
@@ -426,8 +515,64 @@ export default {
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Información Financiera -->
+    <!-- MODULES SECTION -->
+    <div v-if="!showOnly || showOnly === 'modules'" class="form-fields-container">
+      <div class="form-group-modern">
+        <label class="form-label-modern">
+          {{ $t('professionals.modules') }}:
+          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
+            <template #content>
+              <div>{{ $t('professionals.modulesHelp') || 'Selecciona los módulos que este profesional puede usar' }}</div>
+            </template>
+            <i class="bi bi-info-circle-fill h7"></i>
+          </Popper>
+        </label>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem">
+          <select
+            v-if="modules && modules.length > 0"
+            class="form-control-modern form-select-modern"
+            @change="
+              onSelectModule &&
+                onSelectModule(
+                  professional,
+                  modules.find(m => m.id === $event.target.value)
+                );
+              $event.target.value = '';
+            "
+          >
+            <option value="">{{ $t('professionals.selectModule') || 'Seleccionar módulo' }}</option>
+            <option v-for="module in modules" :key="module.id" :value="module.id">
+              {{ module.name }}
+            </option>
+          </select>
+          <div
+            v-if="
+              professional.professionalInfo?.modulesId &&
+              professional.professionalInfo.modulesId.length > 0
+            "
+            class="selected-items-modern"
+          >
+            <span
+              v-for="moduleId in professional.professionalInfo.modulesId"
+              :key="moduleId"
+              class="badge-modern"
+            >
+              {{ showModule ? showModule(moduleId) : moduleId }}
+              <i
+                class="bi bi-x-circle-fill"
+                style="cursor: pointer; margin-left: 0.25rem"
+                @click="onDeleteModule && onDeleteModule(professional, moduleId)"
+              ></i>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCIAL INFO SECTION -->
+    <div v-if="!showOnly || showOnly === 'financial'" class="form-fields-container">
       <div class="form-group-modern">
         <label class="form-label-modern">
           {{ $t('professionals.commissionType') }} ({{ $t('optional') }}):
@@ -491,48 +636,16 @@ export default {
           :placeholder="$t('professionals.paymentAccountPlaceholder')"
         />
       </div>
-
-      <div class="form-group-modern form-group-toggle">
-        <label class="form-label-modern">
-          {{ $t('professionals.active') }}:
-          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-            <template #content>
-              <div>{{ $t('professionals.activeHelp') }}</div>
-            </template>
-            <i class="bi bi-info-circle-fill h7"></i>
-          </Popper>
-        </label>
-        <Toggle v-model="localProfessional.active" on-label=" " off-label=" " />
-      </div>
-
-      <div class="form-group-modern form-group-toggle">
-        <label class="form-label-modern">
-          {{ $t('professionals.available') }}:
-          <Popper :class="'dark p-1'" arrow :disable-click-away="false">
-            <template #content>
-              <div>{{ $t('professionals.availableHelp') }}</div>
-            </template>
-            <i class="bi bi-info-circle-fill h7"></i>
-          </Popper>
-        </label>
-        <Toggle v-model="localProfessional.available" on-label=" " off-label=" " />
-      </div>
     </div>
 
-    <!-- Dados Médicos -->
-    <!-- Sección: Datos Médicos (temporalmente siempre visible para debug) -->
-    <div class="form-fields-container">
+    <!-- MEDICAL INFO SECTION -->
+    <div v-if="!showOnly || showOnly === 'medicalInfo'" class="form-fields-container">
       <!-- Sección: Información Profesional Médica -->
       <div class="form-section-group">
-        <h6 class="form-section-title mb-3">
-          <i class="bi bi-file-text me-2"></i>
-          {{ $t('professionals.medicalProfessionalInfo') || 'Información Profesional Médica' }}
-        </h6>
-
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('professionals.medicalLicense') || 'Permiso/Colegiatura Médica' }} ({{
-              $t('required')
+              $t('optional')
             }}):
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
@@ -656,18 +769,16 @@ export default {
           />
         </div>
       </div>
+    </div>
 
+    <!-- CONTACT SECTION -->
+    <div v-if="!showOnly || showOnly === 'contact'" class="form-fields-container">
       <!-- Sección: Datos de Contacto Profesional -->
       <div class="form-section-group">
-        <h6 class="form-section-title mb-3">
-          <i class="bi bi-telephone me-2"></i>
-          {{ $t('professionals.professionalContact') || 'Datos de Contacto Profesional' }}
-        </h6>
-
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('professionals.professionalAddress') || 'Dirección Profesional' }} ({{
-              $t('required')
+              $t('optional')
             }}):
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
@@ -688,7 +799,7 @@ export default {
         <div class="form-group-modern">
           <label class="form-label-modern">
             {{ $t('professionals.professionalPhone') || 'Teléfono Profesional' }} ({{
-              $t('required')
+              $t('optional')
             }}):
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
@@ -769,14 +880,12 @@ export default {
           />
         </div>
       </div>
+    </div>
 
+    <!-- PRACTICE CONFIGURATION SECTION -->
+    <div v-if="!showOnly || showOnly === 'practice'" class="form-fields-container">
       <!-- Sección: Configuraciones de Práctica -->
       <div class="form-section-group">
-        <h6 class="form-section-title mb-3">
-          <i class="bi bi-gear me-2"></i>
-          {{ $t('professionals.practiceConfig') || 'Configuraciones de Práctica' }}
-        </h6>
-
         <div class="form-group-modern form-group-toggle">
           <label class="form-label-modern">
             {{ $t('professionals.acceptsEmergencies') || 'Acepta Emergencias' }}:
@@ -815,7 +924,7 @@ export default {
 
         <div class="form-group-modern form-group-toggle">
           <label class="form-label-modern">
-            {{ $t('professionals.telemedicine') || 'Ofrece Telemedicina' }}:
+            {{ $t('professionals.telemedicine') || 'Ofrece Teleconsulta' }}:
             <Popper :class="'dark p-1'" arrow :disable-click-away="false">
               <template #content>
                 <div>{{ $t('professionals.telemedicineHelp') }}</div>
@@ -884,11 +993,6 @@ export default {
 
       <!-- Sección: Configuraciones de Documentos -->
       <div class="form-section-group">
-        <h6 class="form-section-title mb-3">
-          <i class="bi bi-file-earmark-pdf me-2"></i>
-          {{ $t('professionals.documentConfig') || 'Configuraciones de Documentos' }}
-        </h6>
-
         <div class="form-group-modern form-group-toggle">
           <label class="form-label-modern">
             {{ $t('collaborator.professional.canSignDocuments') || 'Puede Firmar Documentos' }}:
@@ -905,87 +1009,6 @@ export default {
             on-label=" "
             off-label=" "
           />
-        </div>
-      </div>
-    </div>
-
-    <!-- Foto de Perfil -->
-    <div class="mt-3">
-      <ProfessionalProfilePhotoUpload
-        :professional-id="professional.id"
-        :commerce-id="commerceId"
-        :existing-photo="professional.personalInfo?.profilePhoto"
-        @updated="handlePhotoUpdated"
-        @photo-captured="handlePhotoUpdated"
-        @photo-uploaded="handlePhotoUpdated"
-      />
-    </div>
-
-    <!-- Firma Digital -->
-    <div v-if="professional.id" class="mt-3 pb-3">
-      <div class="form-section">
-        <h6 class="form-section-title mb-3">
-          <i class="bi bi-pen me-2"></i>
-          {{ $t('professionals.digitalSignature') || 'Firma Digital' }}
-        </h6>
-        <div class="d-flex align-items-center gap-3">
-          <!-- Signature Preview -->
-          <div class="signature-preview">
-            <img
-              v-if="
-                localProfessional.digitalSignaturePreview ||
-                (localProfessional.personalInfo?.digitalSignature &&
-                  typeof localProfessional.personalInfo.digitalSignature === 'string')
-              "
-              :src="
-                localProfessional.digitalSignaturePreview ||
-                localProfessional.personalInfo?.digitalSignature
-              "
-              :alt="$t('professionals.digitalSignature')"
-              class="signature-preview-img"
-            />
-            <div v-else class="signature-placeholder">
-              <i class="bi bi-pen"></i>
-            </div>
-          </div>
-
-          <!-- Upload Controls -->
-          <div class="d-flex flex-column gap-2">
-            <button
-              type="button"
-              class="btn btn-sm btn-size fw-bold btn-dark rounded-pill px-3"
-              @click="triggerSignatureFileSelect"
-            >
-              <i class="bi bi-upload me-1"></i>
-              <span>{{
-                localProfessional.digitalSignaturePreview ||
-                typeof localProfessional.personalInfo?.digitalSignature === 'string'
-                  ? $t('collaborator.profilePhoto.update')
-                  : $t('collaborator.profilePhoto.upload')
-              }}</span>
-            </button>
-            <small class="text-muted">{{ $t('collaborator.profilePhoto.fileFormats') }}</small>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Hidden file input for signature -->
-    <input
-      ref="signatureFileInputRef"
-      type="file"
-      accept=".jpg,.jpeg,.png,.webp,.pdf"
-      style="display: none"
-      @change="handleSignatureUpload"
-    />
-
-    <!-- ID -->
-    <div v-if="professional && professional.id" class="form-section mt-3">
-      <div class="row -2 mb-g3 mt-2">
-        <div class="row professional-details-container justify-content-center">
-          <div class="col text-center">
-            <span><strong>Id:</strong> {{ professional.id }}</span>
-          </div>
         </div>
       </div>
     </div>
@@ -1011,7 +1034,6 @@ export default {
 .form-fields-container {
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
   margin-bottom: 1rem;
 }
 

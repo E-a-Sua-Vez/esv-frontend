@@ -650,7 +650,7 @@ export default {
     },
     handleTelemedicineError(error) {
       console.error('Telemedicine error:', error);
-      this.alertError = error.message || 'Error en telemedicina';
+      this.alertError = error.message || 'Error en teleconsulta';
     },
     closeTelemedicineVideo() {
       this.showTelemedicineVideo = false;

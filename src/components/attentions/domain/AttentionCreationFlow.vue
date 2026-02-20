@@ -15,6 +15,7 @@ import { getActiveFeature, isTelemedicineEnabled } from '../../../shared/feature
 import { getAlertsByClient } from '../../../application/services/clinical-alerts';
 import { globalStore } from '../../../stores';
 import { DateModel } from '../../../shared/utils/date.model';
+import { getNonWorkingDates } from '../../../shared/utils/nonWorkingDates';
 import {
   getQueueBlockDetailsByDay,
   getQueueBlockDetailsBySpecificDayByCommerceId,
@@ -2525,7 +2526,7 @@ export default {
           // Backend validation rejects nested arrays, so we clean the structure
           const convertedBlock = blockToUse ? (() => {
             const cleanBlock = {};
-            
+
             // Always include basic properties if they exist
             if (blockToUse.number !== undefined && blockToUse.number !== null) {
               cleanBlock.number = blockToUse.number;
@@ -2536,8 +2537,8 @@ export default {
             if (blockToUse.hourTo) {
               cleanBlock.hourTo = blockToUse.hourTo;
             }
-            
-            // Handle blockNumbers array (for super blocks) 
+
+            // Handle blockNumbers array (for super blocks)
             if (blockToUse.blockNumbers && Array.isArray(blockToUse.blockNumbers) && blockToUse.blockNumbers.length > 0) {
               // Only include blockNumbers, don't include blocks array to avoid nesting
               cleanBlock.blockNumbers = [...blockToUse.blockNumbers]; // Create copy
@@ -2546,7 +2547,7 @@ export default {
                 cleanBlock.number = blockToUse.blockNumbers[0];
               }
             }
-            
+
             // Only include blocks array if there are no blockNumbers (to avoid conflicts)
             if (!cleanBlock.blockNumbers && blockToUse.blocks && Array.isArray(blockToUse.blocks) && blockToUse.blocks.length > 0) {
               // Clean each nested block recursively
@@ -2562,7 +2563,7 @@ export default {
                 };
               });
             }
-            
+
             return cleanBlock;
           })() : undefined;
 
@@ -2677,7 +2678,7 @@ export default {
           // Backend validation rejects nested arrays, so we clean the structure
           const convertedBlock = blockToUse ? (() => {
             const cleanBlock = {};
-            
+
             // Always include basic properties if they exist
             if (blockToUse.number !== undefined && blockToUse.number !== null) {
               cleanBlock.number = blockToUse.number;
@@ -2688,8 +2689,8 @@ export default {
             if (blockToUse.hourTo) {
               cleanBlock.hourTo = blockToUse.hourTo;
             }
-            
-            // Handle blockNumbers array (for super blocks) 
+
+            // Handle blockNumbers array (for super blocks)
             if (blockToUse.blockNumbers && Array.isArray(blockToUse.blockNumbers) && blockToUse.blockNumbers.length > 0) {
               // Only include blockNumbers, don't include blocks array to avoid nesting
               cleanBlock.blockNumbers = [...blockToUse.blockNumbers]; // Create copy
@@ -2698,7 +2699,7 @@ export default {
                 cleanBlock.number = blockToUse.blockNumbers[0];
               }
             }
-            
+
             // Only include blocks array if there are no blockNumbers (to avoid conflicts)
             if (!cleanBlock.blockNumbers && blockToUse.blocks && Array.isArray(blockToUse.blocks) && blockToUse.blocks.length > 0) {
               // Clean each nested block recursively
@@ -2714,7 +2715,7 @@ export default {
                 };
               });
             }
-            
+
             return cleanBlock;
           })() : undefined;
 
@@ -3379,6 +3380,14 @@ export default {
         },
         dates: [],
       },
+      {
+        key: 'NonWorking',
+        highlight: {
+          color: 'gray',
+          fillMode: 'light',
+        },
+        dates: [],
+      },
     ]);
 
     const updateCalendarAttributesForMonth = async (year, month) => {
@@ -3399,6 +3408,7 @@ export default {
         calendarAttributes.value[0].dates = [];
         calendarAttributes.value[1].dates = [];
         calendarAttributes.value[2].dates = [];
+        calendarAttributes.value[3].dates = [];
 
         // Cargar reservas del mes para esta fila (mismo signature que BookingCalendar/CommerceQueuesView)
         const monthBookings =
@@ -3442,6 +3452,10 @@ export default {
 
           availableDates.push(key);
         }
+
+        // Filter non-working dates (business + commerce + queue)
+        const nonWorkingDates = getNonWorkingDates(null, props.commerce, state.queue);
+        availableDates = availableDates.filter(date => !nonWorkingDates.includes(date));
 
         const dates = Object.keys(bookingsGroupedByDate);
         if (dates && dates.length > 0) {
@@ -3496,6 +3510,31 @@ export default {
         calendarAttributes.value[0].dates.push(...mapToDateObjects(availableDates));
         calendarAttributes.value[1].dates.push(...mapToDateObjects(forDeletion));
         calendarAttributes.value[2].dates.push(...mapToDateObjects(forReserves));
+
+        // Add non-working dates to calendar (gray highlight)
+        const nonWorkingDatesToCalendar = mapToDateObjects(nonWorkingDates);
+
+        // Calculate unavailable weekdays (days not in attentionDays)
+        const unavailableWeekdayDates = [];
+        if (attentionDays.length > 0 && attentionDays.length < 7) {
+          for (let i = 1; i <= dateTo.getDate(); i++) {
+            const currentDate = new Date(+yearStr, thisMonth, i);
+            let dayOfWeek = currentDate.getDay();
+            if (dayOfWeek === 0) dayOfWeek = 7; // Sunday becomes 7
+
+            // If this day of week is not in attentionDays
+            if (!attentionDays.includes(dayOfWeek)) {
+              const dateStr = currentDate.toISOString().slice(0, 10);
+              // Only add if it's not already in available dates and is in the future
+              if (!availableDates.includes(dateStr) && currentDate > new Date()) {
+                unavailableWeekdayDates.push(currentDate);
+              }
+            }
+          }
+        }
+
+        // Combine non-working dates and unavailable weekdays for gray highlighting
+        calendarAttributes.value[3].dates.push(...nonWorkingDatesToCalendar, ...unavailableWeekdayDates);
       } catch (error) {
         console.error('📅 Error calculando atributos del calendario:', error);
       }
@@ -4143,7 +4182,7 @@ export default {
             <label class="form-check-label" :for="`telemedicine-${Date.now()}`">
               <i class="bi bi-camera-video me-2"></i>
               <strong>{{
-                $t('attentionCreation.telemedicineConsultation') || 'Consulta por Telemedicina'
+                $t('attentionCreation.telemedicineConsultation') || 'Consulta por Teleconsulta'
               }}</strong>
             </label>
           </div>
@@ -4152,9 +4191,9 @@ export default {
             v-html="
               state.isTelemedicine
                 ? $t('attentionCreation.telemedicineSelectedDisclaimer') ||
-                  'Ao desativar a telemedicina, o atendimento será <strong>presencial</strong>.'
+                  'Ao desativar a teleconsulta, o atendimento será <strong>presencial</strong>.'
                 : $t('attentionCreation.telemedicineDisclaimer') ||
-                  'Quando a telemedicina não estiver selecionada, o atendimento será <strong>presencial</strong>.'
+                  'Quando a teleconsulta não estiver selecionada, o atendimento será <strong>presencial</strong>.'
             "
           ></p>
           <!-- Telemedicine Configuration removed - not needed in modal -->

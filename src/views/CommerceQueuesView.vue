@@ -40,6 +40,7 @@ import NextAvailableSlot from '../components/bookings/common/NextAvailableSlot.v
 import { v4 as uuidv4 } from 'uuid';
 import { validateIdNumber } from '../shared/utils/idNumber';
 import { DateModel } from '../shared/utils/date.model';
+import { getNonWorkingDates, isNonWorkingDate } from '../shared/utils/nonWorkingDates';
 
 export default {
   name: 'CommerceQueuesView',
@@ -109,13 +110,7 @@ export default {
     const dateMask = ref({
       modelValue: 'YYYY-MM-DD',
     });
-    const disabledDates = ref([
-      {
-        repeat: {
-          weekdays: [],
-        },
-      },
-    ]);
+    const disabledDates = ref([]);
     const specificCalendarAttributes = ref([
       {
         key: 'Available',
@@ -129,6 +124,14 @@ export default {
         key: 'Unavailable',
         highlight: {
           color: 'red',
+          fillMode: 'light',
+        },
+        dates: [],
+      },
+      {
+        key: 'NonWorking',
+        highlight: {
+          color: 'gray',
           fillMode: 'light',
         },
         dates: [],
@@ -147,6 +150,14 @@ export default {
         key: 'Unavailable',
         highlight: {
           color: 'red',
+          fillMode: 'light',
+        },
+        dates: [],
+      },
+      {
+        key: 'NonWorking',
+        highlight: {
+          color: 'gray',
           fillMode: 'light',
         },
         dates: [],
@@ -479,6 +490,17 @@ export default {
       // force telemedicine mode on and keep the toggle locked.
       if (queue && queue.telemedicineEnabled && queue.presentialEnabled === false) {
         state.isTelemedicine = true;
+
+        // Initialize telemedicineConfig if not already present
+        if (!state.telemedicineConfig) {
+          state.telemedicineConfig = {
+            type: 'VIDEO',
+            scheduledAt: null,
+            notes: '',
+          };
+        }
+
+        console.log('🔄 Auto-enabled telemedicine for queue, config:', state.telemedicineConfig);
       } else {
         state.isTelemedicine = false;
       }
@@ -493,12 +515,36 @@ export default {
       alertError.value = '';
       state.errorsAdd = [];
       state.services = services;
+      // Apply filtering based on telemedicine mode
+      filterServicesBasedOnMode();
       setCanBook();
     };
 
     const receiveSelectedServices = async services => {
       try {
         state.selectedServices = services;
+
+        // Auto-enable telemedicine if all selected services only allow telemedicine
+        if (services && services.length > 0) {
+          const allServicesOnlyTelemedicine = services.every(
+            service => service.presentialEnabled === false && service.telemedicineEnabled === true
+          );
+
+          if (allServicesOnlyTelemedicine) {
+            state.isTelemedicine = true;
+
+            // Initialize telemedicineConfig if not already present
+            if (!state.telemedicineConfig) {
+              state.telemedicineConfig = {
+                type: 'VIDEO',
+                scheduledAt: null,
+                notes: '',
+              };
+            }
+
+            console.log('🔄 Auto-enabled telemedicine for online-only services, config:', state.telemedicineConfig);
+          }
+        }
 
         state.totalDurationRequested = state.selectedServices.reduce(
           (acc, service) =>
@@ -526,6 +572,55 @@ export default {
         setCanBook();
       } catch (error) {
         console.error('Error in receiveSelectedServices:', error);
+      }
+    };
+
+    // Filter services based on telemedicine/presential mode
+    const hasTelemedicineEnabledServices = () => {
+      // Check if there are any services with telemedicineEnabled = true
+      // This determines if the telemedicine toggle should be shown
+      if (!state.commerce || !state.queue) {
+        return false;
+      }
+
+      // Check commerce feature toggle
+      const commerceTelemedicineActive = getActiveFeature(state.commerce, 'telemedicine-active', 'PRODUCT');
+      if (!commerceTelemedicineActive) {
+        return false;
+      }
+
+      // Check queue telemedicineEnabled
+      if (state.queue.telemedicineEnabled !== true) {
+        return false;
+      }
+
+      // Check if at least one service has telemedicineEnabled = true
+      if (!state.queue.services || state.queue.services.length === 0) {
+        return false;
+      }
+
+      return state.queue.services.some(service => service.telemedicineEnabled === true);
+    };
+
+    const filterServicesBasedOnMode = () => {
+      if (!state.queue || !state.queue.services || state.queue.services.length === 0) {
+        return;
+      }
+
+      const allServices = state.queue.services;
+
+      if (state.isTelemedicine) {
+        // Filter only services with telemedicineEnabled = true
+        state.services = allServices.filter(service => service.telemedicineEnabled === true);
+      } else {
+        // Filter only services with presentialEnabled !== false (default to true for backward compatibility)
+        state.services = allServices.filter(service => service.presentialEnabled !== false);
+      }
+
+      // Remove selected services that are not in the filtered list
+      if (state.selectedServices && state.selectedServices.length > 0) {
+        const filteredServiceIds = state.services.map(s => s.id);
+        state.selectedServices = state.selectedServices.filter(s => filteredServiceIds.includes(s.id));
       }
     };
 
@@ -934,28 +1029,57 @@ export default {
             const selectedDate = state.date || state.specificCalendarDate || 'TODAY';
             const selectedBlock = state.attentionBlock || block;
 
-            // Compute scheduledAt from the selected block's date and time
-            let scheduledAt = new Date().toISOString(); // fallback
-            if (selectedDate && selectedBlock && selectedBlock.hourFrom) {
-              try {
-                let dateStr;
-                if (selectedDate === 'TODAY') {
-                  dateStr = new DateModel().toString();
-                } else {
-                  dateStr =
-                    typeof selectedDate === 'string'
-                      ? selectedDate
-                      : new DateModel(selectedDate).toString();
+            console.log('🔍 getAttention - telemedicine config:', {
+              selectedDate,
+              selectedBlock,
+              'state.attentionBlock': state.attentionBlock,
+              'block param': block,
+              'existing scheduledAt': state.telemedicineConfig.scheduledAt,
+            });
+
+            // Use existing scheduledAt if already set, otherwise compute from block
+            let scheduledAt = state.telemedicineConfig.scheduledAt;
+
+            if (!scheduledAt) {
+              if (selectedDate && selectedBlock && selectedBlock.hourFrom) {
+                try {
+                  let dateStr;
+                  if (selectedDate === 'TODAY') {
+                    dateStr = new DateModel().toString();
+                  } else {
+                    dateStr =
+                      typeof selectedDate === 'string'
+                        ? selectedDate
+                        : new DateModel(selectedDate).toString();
+                  }
+
+                  // Normalize hour format
+                  const [hours, minutes] = selectedBlock.hourFrom.split(':');
+                  const normalizedTime = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+
+                  const scheduledDateTime = new Date(
+                    dateStr + 'T' + normalizedTime + ':00'
+                  );
+                  if (!isNaN(scheduledDateTime.getTime())) {
+                    scheduledAt = scheduledDateTime.toISOString();
+                    console.log('✅ scheduledAt calculated:', scheduledAt);
+                  }
+                } catch (error) {
+                  console.error('Error computing scheduledAt from block:', error);
                 }
-                scheduledAt = new Date(
-                  dateStr + 'T' + selectedBlock.hourFrom + ':00'
-                ).toISOString();
-              } catch (error) {
-                console.error('Error computing scheduledAt from block:', error);
+              } else if (!selectedBlock || !selectedBlock.hourFrom) {
+                // For walkin without block, schedule for now or next available time
+                scheduledAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes from now
+                console.log('⏰ Walkin without block - scheduled for 15 minutes from now:', scheduledAt);
+              }
+
+              // If scheduledAt is still null and we need a block, there's a problem
+              if (!scheduledAt && selectedBlock && !selectedBlock.hourFrom) {
+                console.error('❌ Failed to calculate scheduledAt:', { selectedDate, selectedBlock });
+                throw new Error('No se pudo calcular la fecha/hora de teleconsulta. Por favor, selecciona un horario.');
               }
             } else {
-              // For walkin without block, schedule for now or next available time
-              scheduledAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes from now
+              console.log('♻️ Using existing scheduledAt from state:', scheduledAt);
             }
 
             body.type = 'TELEMEDICINE';
@@ -965,6 +1089,9 @@ export default {
               recordingEnabled: state.commerce?.telemedicineRecordingEnabled || false,
             };
           }
+
+          console.log('📤 About to send attention request with body:', JSON.parse(JSON.stringify(body)));
+
           state.date = undefined;
           state.specificCalendarDate = undefined;
           const attention = await createAttention(body);
@@ -1075,25 +1202,75 @@ export default {
             const selectedDate = state.date || state.specificCalendarDate;
             const selectedBlock = state.attentionBlock || state.block;
 
-            // Compute scheduledAt from the selected block's date and time
-            let scheduledAt = new Date().toISOString(); // fallback
-            if (selectedDate && selectedBlock && selectedBlock.hourFrom) {
-              try {
-                let dateStr;
-                if (selectedDate === 'TODAY') {
-                  dateStr = new DateModel().toString();
-                } else {
-                  dateStr =
-                    typeof selectedDate === 'string'
-                      ? selectedDate
-                      : new DateModel(selectedDate).toString();
+            console.log('🔍 getBooking - telemedicine config:', {
+              selectedDate,
+              selectedBlock,
+              'state.block': state.block,
+              'state.attentionBlock': state.attentionBlock,
+              'existing scheduledAt': state.telemedicineConfig.scheduledAt,
+            });
+
+            // Use existing scheduledAt if already set, otherwise compute from block
+            let scheduledAt = state.telemedicineConfig.scheduledAt;
+
+            if (!scheduledAt) {
+              console.log('🔎 Computing scheduledAt - initial check:', {
+                hasSelectedDate: !!selectedDate,
+                hasSelectedBlock: !!selectedBlock,
+                'selectedBlock.hourFrom': selectedBlock?.hourFrom,
+                selectedBlockKeys: selectedBlock ? Object.keys(selectedBlock) : [],
+              });
+
+              if (selectedDate && selectedBlock && selectedBlock.hourFrom) {
+                try {
+                  let dateStr;
+                  if (selectedDate === 'TODAY') {
+                    dateStr = new DateModel().toString();
+                  } else {
+                    dateStr =
+                      typeof selectedDate === 'string'
+                        ? selectedDate
+                        : new DateModel(selectedDate).toString();
+                  }
+
+                  console.log('📅 Date string:', dateStr, 'Hour from:', selectedBlock.hourFrom);
+
+                  // Normalize hour format
+                  const [hours, minutes] = selectedBlock.hourFrom.split(':');
+                  console.log('⏰ Split time:', { hours, minutes });
+                  const normalizedTime = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+                  console.log('🕐 Normalized time:', normalizedTime);
+
+                  const dateTimeString = dateStr + 'T' + normalizedTime + ':00';
+                  console.log('📝 Full datetime string:', dateTimeString);
+
+                  const scheduledDateTime = new Date(dateTimeString);
+                  console.log('📆 Created Date object:', scheduledDateTime, 'isValid:', !isNaN(scheduledDateTime.getTime()));
+
+                  if (!isNaN(scheduledDateTime.getTime())) {
+                    scheduledAt = scheduledDateTime.toISOString();
+                    console.log('✅ scheduledAt calculated:', scheduledAt);
+                  } else {
+                    console.error('❌ Invalid date object created');
+                  }
+                } catch (error) {
+                  console.error('💥 Error computing scheduledAt from block:', error);
                 }
-                scheduledAt = new Date(
-                  dateStr + 'T' + selectedBlock.hourFrom + ':00'
-                ).toISOString();
-              } catch (error) {
-                console.error('Error computing scheduledAt from block:', error);
+              } else {
+                console.log('⚠️ Missing required data:', {
+                  selectedDate,
+                  hasSelectedBlock: !!selectedBlock,
+                  hasHourFrom: selectedBlock?.hourFrom
+                });
               }
+
+              // If scheduledAt is still null, there's a problem - throw error
+              if (!scheduledAt) {
+                console.error('❌ Failed to calculate scheduledAt:', { selectedDate, selectedBlock });
+                throw new Error('No se pudo calcular la fecha/hora de teleconsulta. Por favor, selecciona un horario.');
+              }
+            } else {
+              console.log('♻️ Using existing scheduledAt from state:', scheduledAt);
             }
 
             body.type = 'TELEMEDICINE';
@@ -1108,6 +1285,9 @@ export default {
             state.queue.id,
             formattedDate(state.date || state.specificCalendarDate)
           );
+
+          console.log('📤 About to send booking request with body:', JSON.parse(JSON.stringify(body)));
+
           bookingTimeoutId.value = setTimeout(async () => {
             // Check if component is still mounted before updating state
             if (!isMounted.value) {
@@ -1308,21 +1488,23 @@ export default {
     };
 
     const getDisabledDates = () => {
-      let disabled = [1, 2, 3, 4, 5, 6, 7];
-      if (state.queue.serviceInfo && state.queue.serviceInfo.attentionDays) {
-        const availableDays = state.queue.serviceInfo.attentionDays;
-        if (availableDays.length < 7) {
-          const forDeletion = [];
-          availableDays.forEach(day => {
-            if (day === 7) {
-              forDeletion.push(1);
-            } else {
-              forDeletion.push(day + 1);
-            }
+      // Reset to empty array
+      disabledDates.value = [];
+
+      // Add non-working dates as specific disabled dates
+      const nonWorkingDates = getNonWorkingDates(null, state.commerce, state.queue);
+      if (nonWorkingDates && nonWorkingDates.length > 0) {
+        // Convert YYYY-MM-DD strings to Date objects (same format as available dates)
+        const nonWorkingDateObjects = nonWorkingDates
+          .filter(dateStr => dateStr && typeof dateStr === 'string' && dateStr.match(/^\d{4}-\d{2}-\d{2}$/))
+          .map(dateStr => {
+            const [year, month, day] = dateStr.split('-');
+            return new Date(+year, +month - 1, +day);
           });
-          disabled = disabled.filter(item => !forDeletion.includes(item));
-          disabledDates.value[0].repeat.weekdays = [];
-          disabledDates.value[0].repeat.weekdays.push(...disabled);
+
+        // Add as plain array of dates
+        if (nonWorkingDateObjects.length > 0) {
+          disabledDates.value = nonWorkingDateObjects;
         }
       }
     };
@@ -1343,6 +1525,11 @@ export default {
         if (!isTodayAvailable()) {
           return [];
         }
+        // Check if today is a non-working date
+        const todayStr = new DateModel().toString();
+        if (isNonWorkingDate(todayStr, null, state.commerce, state.queue)) {
+          return [];
+        }
         const day = new Date().getDay();
         const blocks = state.blocksByDay[day];
         return blocks || [];
@@ -1352,6 +1539,12 @@ export default {
           typeof state.date === 'string'
             ? state.date
             : new Date(state.date).toISOString().slice(0, 10);
+
+        // Check if selected date is a non-working date
+        if (isNonWorkingDate(dateString, null, state.commerce, state.queue)) {
+          return [];
+        }
+
         const [year, month, day] = dateString.split('-');
         let dayNumber = new Date(+year, +month - 1, +day).getDay();
         if (dayNumber === 0) {
@@ -1365,9 +1558,17 @@ export default {
     const getBlocksBySpecificDay = () => {
       if (!state.specificCalendarDate || state.specificCalendarDate === 'TODAY') {
         const date = formattedDate(new Date());
+        // Check if today is a non-working date
+        if (isNonWorkingDate(date, null, state.commerce, state.queue)) {
+          return [];
+        }
         return state.blocksBySpecificCalendarDate[date];
       } else {
         const date = formattedDate(state.specificCalendarDate);
+        // Check if selected date is a non-working date
+        if (isNonWorkingDate(date, null, state.commerce, state.queue)) {
+          return [];
+        }
         return state.blocksBySpecificCalendarDate[date];
       }
     };
@@ -1955,6 +2156,11 @@ export default {
         }
       }
       const forDeletion = [];
+
+      // Filter non-working dates (business + commerce + queue)
+      const nonWorkingDates = getNonWorkingDates(null, state.commerce, state.queue);
+      const filteredAvailableDates = availableDates.filter(date => !nonWorkingDates.includes(date));
+
       if (dates && dates.length > 0) {
         dates.forEach(date => {
           const bookings = bookingsGroupedByDate[date];
@@ -1969,8 +2175,30 @@ export default {
           }
         });
       }
-      const availability = await availableDates.filter(item => !forDeletion.includes(item));
-      const avaliableToCalendar = await availability.map(date => {
+      const availability = await filteredAvailableDates.filter(item => !forDeletion.includes(item));
+
+      // Filter out dates that are not in attentionDays
+      const unavailableWeekdayDateStrings = [];
+      let finalAvailability = availability;
+      if (state.queue.serviceInfo && state.queue.serviceInfo.attentionDays) {
+        const attentionDays = state.queue.serviceInfo.attentionDays;
+        if (attentionDays.length < 7) {
+          finalAvailability = availability.filter(dateStr => {
+            const [year, month, day] = dateStr.split('-');
+            const currentDate = new Date(+year, +month - 1, +day);
+            let dayOfWeek = currentDate.getDay();
+            if (dayOfWeek === 0) dayOfWeek = 7; // Sunday becomes 7
+
+            const isInAttentionDays = attentionDays.includes(dayOfWeek);
+            if (!isInAttentionDays) {
+              unavailableWeekdayDateStrings.push(dateStr);
+            }
+            return isInAttentionDays;
+          });
+        }
+      }
+
+      const avaliableToCalendar = await finalAvailability.map(date => {
         const [year, month, day] = date.split('-');
         return new Date(+year, +month - 1, +day);
       });
@@ -1982,6 +2210,54 @@ export default {
       });
       calendarAttributes.value[1].dates = [];
       calendarAttributes.value[1].dates.push(...forDeletionToCalendar);
+
+      // Add non-working dates to calendar (gray highlight)
+      const nonWorkingDatesToCalendar = nonWorkingDates.map(date => {
+        const [year, month, day] = date.split('-');
+        return new Date(+year, +month - 1, +day);
+      });
+
+      // Calculate unavailable weekdays (days not in attentionDays that don't have available blocks)
+      const unavailableWeekdayDates = [];
+
+      // Add dates that were filtered out from availability (e.g., Saturdays/Sundays with blocks but not in attentionDays)
+      unavailableWeekdayDateStrings.forEach(dateStr => {
+        const [year, month, day] = dateStr.split('-');
+        unavailableWeekdayDates.push(new Date(+year, +month - 1, +day));
+      });
+
+      // Also add all other dates in the month that fall on unavailable weekdays
+      if (state.queue.serviceInfo && state.queue.serviceInfo.attentionDays) {
+        const attentionDays = state.queue.serviceInfo.attentionDays;
+        if (attentionDays.length < 7) {
+          // Get all dates in the month
+          for (let i = 1; i <= dateTo.getDate(); i++) {
+            const currentDate = new Date(+year, thisMonth, i);
+            let dayOfWeek = currentDate.getDay();
+            if (dayOfWeek === 0) dayOfWeek = 7; // Sunday becomes 7
+
+            // If this day of week is not in attentionDays
+            if (!attentionDays.includes(dayOfWeek)) {
+              const dateStr = currentDate.toISOString().slice(0, 10);
+              // Only add if it's not already included and is in the future
+              if (!unavailableWeekdayDateStrings.includes(dateStr) &&
+                  !finalAvailability.includes(dateStr) &&
+                  currentDate > new Date()) {
+                unavailableWeekdayDates.push(currentDate);
+              }
+            }
+          }
+        }
+      }
+
+      // Combine non-working dates and unavailable weekdays for gray highlighting
+      calendarAttributes.value[2].dates = [];
+      calendarAttributes.value[2].dates.push(...nonWorkingDatesToCalendar, ...unavailableWeekdayDates);
+
+      // Update disabledDates with non-working dates AND unavailable weekday dates
+      const allDisabledDates = [...nonWorkingDatesToCalendar, ...unavailableWeekdayDates];
+      disabledDates.value = allDisabledDates;
+
       loadingHours.value = false;
     };
 
@@ -2115,7 +2391,12 @@ export default {
         }
       });
       const forDeletion = [];
-      if (availableDates && availableDates.length > 0) {
+
+      // Filter non-working dates (business + commerce + queue)
+      const nonWorkingDates = getNonWorkingDates(null, state.commerce, state.queue);
+      const filteredAvailableDates = availableDates.filter(date => !nonWorkingDates.includes(date));
+
+      if (filteredAvailableDates && filteredAvailableDates.length > 0) {
         let limit = 1;
         if (
           state.queue.serviceInfo !== undefined &&
@@ -2124,7 +2405,7 @@ export default {
         ) {
           limit = state.queue.serviceInfo.blockLimit;
         }
-        availableDates.forEach(date => {
+        filteredAvailableDates.forEach(date => {
           const bookings = bookingsGroupedByDate[date] || [];
           const blocks = state.blocksBySpecificCalendarDate[date] || [];
           const blocksNumbers = blocks.map(block => block.number);
@@ -2166,8 +2447,30 @@ export default {
           }
         });
       }
-      const availability = await availableDates.filter(item => !forDeletion.includes(item));
-      const avaliableToCalendar = await availability.map(date => {
+      const availability = await filteredAvailableDates.filter(item => !forDeletion.includes(item));
+
+      // Filter out dates that are not in attentionDays
+      const unavailableWeekdayDateStrings = [];
+      let finalAvailability = availability;
+      if (state.queue.serviceInfo && state.queue.serviceInfo.attentionDays) {
+        const attentionDays = state.queue.serviceInfo.attentionDays;
+        if (attentionDays.length < 7) {
+          finalAvailability = availability.filter(dateStr => {
+            const [year, month, day] = dateStr.split('-');
+            const currentDate = new Date(+year, +month - 1, +day);
+            let dayOfWeek = currentDate.getDay();
+            if (dayOfWeek === 0) dayOfWeek = 7; // Sunday becomes 7
+
+            const isInAttentionDays = attentionDays.includes(dayOfWeek);
+            if (!isInAttentionDays) {
+              unavailableWeekdayDateStrings.push(dateStr);
+            }
+            return isInAttentionDays;
+          });
+        }
+      }
+
+      const avaliableToCalendar = await finalAvailability.map(date => {
         const [year, month, day] = date.split('-');
         return new Date(+year, +month - 1, +day);
       });
@@ -2179,6 +2482,54 @@ export default {
       });
       specificCalendarAttributes.value[1].dates = [];
       specificCalendarAttributes.value[1].dates.push(...forDeletionToCalendar);
+
+      // Add non-working dates to calendar (gray highlight)
+      const nonWorkingDatesToCalendar = nonWorkingDates.map(date => {
+        const [year, month, day] = date.split('-');
+        return new Date(+year, +month - 1, +day);
+      });
+
+      // Calculate unavailable weekdays (days not in attentionDays that don't have available blocks)
+      const unavailableWeekdayDates = [];
+
+      // Add dates that were filtered out from availability (e.g., Saturdays/Sundays with blocks but not in attentionDays)
+      unavailableWeekdayDateStrings.forEach(dateStr => {
+        const [year, month, day] = dateStr.split('-');
+        unavailableWeekdayDates.push(new Date(+year, +month - 1, +day));
+      });
+
+      // Also add all other dates in the month that fall on unavailable weekdays
+      if (state.queue.serviceInfo && state.queue.serviceInfo.attentionDays) {
+        const attentionDays = state.queue.serviceInfo.attentionDays;
+        if (attentionDays.length < 7) {
+          // Get all dates in the month
+          for (let i = 1; i <= dateTo.getDate(); i++) {
+            const currentDate = new Date(+year, thisMonth, i);
+            let dayOfWeek = currentDate.getDay();
+            if (dayOfWeek === 0) dayOfWeek = 7; // Sunday becomes 7
+
+            // If this day of week is not in attentionDays
+            if (!attentionDays.includes(dayOfWeek)) {
+              const dateStr = currentDate.toISOString().slice(0, 10);
+              // Only add if it's not already included and is in the future
+              if (!unavailableWeekdayDateStrings.includes(dateStr) &&
+                  !finalAvailability.includes(dateStr) &&
+                  currentDate > new Date()) {
+                unavailableWeekdayDates.push(currentDate);
+              }
+            }
+          }
+        }
+      }
+
+      // Combine non-working dates and unavailable weekdays for gray highlighting
+      specificCalendarAttributes.value[2].dates = [];
+      specificCalendarAttributes.value[2].dates.push(...nonWorkingDatesToCalendar, ...unavailableWeekdayDates);
+
+      // Update disabledDates with non-working dates AND unavailable weekday dates
+      const allDisabledDates = [...nonWorkingDatesToCalendar, ...unavailableWeekdayDates];
+      specificDisabledDates.value = allDisabledDates;
+
       loadingHours.value = false;
     };
 
@@ -2218,6 +2569,8 @@ export default {
 
     // Handle quick slot selection from NextAvailableSlot component
     const handleQuickSlotSelection = async slotData => {
+      console.log('🚀 Quick slot selection - received slotData:', slotData);
+
       // Check if the selected date is today
       const today = new Date().toISOString().slice(0, 10);
       const isToday = slotData.date === today;
@@ -2225,20 +2578,61 @@ export default {
       // Set flag to protect state during quick selection
       state.isQuickSlotSelection = true;
 
+      // Ensure we're in the pick hours step
+      state.showFillForm = false;
+      state.showPickQueue = false;
+      state.showPickHours = true;
+
       if (isToday) {
         // For today: Set attention mode
         state.date = 'TODAY';
         state.specificCalendarDate = 'TODAY';
         state.attentionBlock = slotData.block;
+        console.log('📅 TODAY booking - attentionBlock set:', state.attentionBlock);
         state.showToday = true;
         state.showReserve = false;
+        // Clear booking mode state
+        state.block = {};
       } else {
         // For future dates: Set booking mode
         state.date = slotData.date;
         state.specificCalendarDate = slotData.date;
         state.block = slotData.block;
+        console.log('📅 FUTURE booking - block set:', state.block);
         state.showToday = false;
         state.showReserve = true;
+        // Clear attention mode state
+        state.attentionBlock = {};
+      }
+
+      // Update telemedicine scheduledAt if telemedicine is enabled - MUST BE BEFORE async operations
+      console.log('🔍 Checking telemedicine config:', {
+        isTelemedicine: state.isTelemedicine,
+        hasConfig: !!state.telemedicineConfig,
+        'telemedicineConfig': state.telemedicineConfig,
+        hasBlock: !!slotData.block,
+        hasHourFrom: slotData.block?.hourFrom
+      });
+
+      if (state.isTelemedicine && state.telemedicineConfig && slotData.block && slotData.block.hourFrom) {
+        const dateStr = isToday ? new DateModel().toString() : slotData.date;
+
+        // Normalize hour format to ensure HH:MM (pad with zero if needed)
+        const hourFrom = slotData.block.hourFrom;
+        const [hours, minutes] = hourFrom.split(':');
+        const normalizedTime = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+
+        const scheduledDateTime = new Date(dateStr + 'T' + normalizedTime + ':00');
+        console.log('🕐 Creating scheduledAt from:', { dateStr, hourFrom, normalizedTime, result: dateStr + 'T' + normalizedTime + ':00' });
+
+        if (!isNaN(scheduledDateTime.getTime())) {
+          state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+          console.log('✅ Telemedicine scheduledAt set in quick selection:', state.telemedicineConfig.scheduledAt);
+        } else {
+          console.error('❌ Invalid date created from:', dateStr, normalizedTime);
+        }
+      } else {
+        console.log('⚠️ Telemedicine scheduledAt NOT set - missing requirements');
       }
 
       // Load blocks and bookings for the selected date to ensure proper availability calculation
@@ -2829,67 +3223,89 @@ export default {
     });
 
     watch(changeAttentionBlock, async newData => {
-      // Update telemedicine scheduledAt when block is selected
-      if (
-        state.isTelemedicine &&
-        state.telemedicineConfig &&
-        newData.attentionBlock &&
-        newData.attentionBlock.hourFrom
-      ) {
-        const selectedDate = state.date || state.specificCalendarDate;
-        if (selectedDate) {
+      try {
+        // Update telemedicine scheduledAt when block is selected
+        if (
+          state.isTelemedicine &&
+          state.telemedicineConfig &&
+          newData.attentionBlock &&
+          newData.attentionBlock.hourFrom
+        ) {
+          const selectedDate = state.date || state.specificCalendarDate;
+
+          // Normalize hour format
+          const [hours, minutes] = newData.attentionBlock.hourFrom.split(':');
+          const normalizedTime = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+
           if (selectedDate === 'TODAY') {
             const today = new DateModel().toString();
             const scheduledDateTime = new Date(
-              today + 'T' + newData.attentionBlock.hourFrom + ':00'
+              today + 'T' + normalizedTime + ':00'
             );
-            state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
-          } else {
+            if (!isNaN(scheduledDateTime.getTime())) {
+              state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+            }
+          } else if (selectedDate) {
             const dateStr =
               typeof selectedDate === 'string'
                 ? selectedDate
                 : new DateModel(selectedDate).toString();
             const scheduledDateTime = new Date(
-              dateStr + 'T' + newData.attentionBlock.hourFrom + ':00'
+              dateStr + 'T' + normalizedTime + ':00'
             );
-            state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+            if (!isNaN(scheduledDateTime.getTime())) {
+              state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+            }
           }
         }
-      }
-      if (state.attentionBlock) {
-        attentionsAvailables();
-        getAvailableAttentionSuperBlocks();
+        if (state.attentionBlock) {
+          attentionsAvailables();
+          getAvailableAttentionSuperBlocks();
+        }
+      } catch (error) {
+        console.error('Error in changeAttentionBlock watcher:', error);
       }
     });
 
     watch(changeBlock, async newData => {
-      // Update telemedicine scheduledAt when block is selected
-      if (
-        state.isTelemedicine &&
-        state.telemedicineConfig &&
-        newData.block &&
-        newData.block.hourFrom
-      ) {
-        const selectedDate = state.date || state.specificCalendarDate;
-        if (selectedDate) {
-          if (selectedDate === 'TODAY') {
-            const today = new DateModel().toString();
-            const scheduledDateTime = new Date(today + 'T' + newData.block.hourFrom + ':00');
-            state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
-          } else {
+      try {
+        // Update telemedicine scheduledAt when block is selected
+        if (
+          state.isTelemedicine &&
+          state.telemedicineConfig &&
+          newData.block &&
+          newData.block.hourFrom
+        ) {
+          const selectedDate = state.date || state.specificCalendarDate;
+
+          // Normalize hour format
+          const [hours, minutes] = newData.block.hourFrom.split(':');
+          const normalizedTime = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+
+          if (selectedDate && selectedDate !== 'TODAY') {
             const dateStr =
               typeof selectedDate === 'string'
                 ? selectedDate
                 : new DateModel(selectedDate).toString();
-            const scheduledDateTime = new Date(dateStr + 'T' + newData.block.hourFrom + ':00');
-            state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+            const scheduledDateTime = new Date(dateStr + 'T' + normalizedTime + ':00');
+            if (!isNaN(scheduledDateTime.getTime())) {
+              state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+            }
+          } else if (selectedDate === 'TODAY') {
+            const today = new DateModel().toString();
+            const scheduledDateTime = new Date(today + 'T' + normalizedTime + ':00');
+            if (!isNaN(scheduledDateTime.getTime())) {
+              state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
+            }
           }
         }
-      }
-      if (state.attentionBlock) {
-        getAvailableBookingBlocks(state.bookings);
-        getAvailableBookingSuperBlocks();
-        bookingsAvailables();
+        if (state.attentionBlock) {
+          getAvailableBookingBlocks(state.bookings);
+          getAvailableBookingSuperBlocks();
+          bookingsAvailables();
+        }
+      } catch (error) {
+        console.error('Error in changeBlock watcher:', error);
       }
     });
 
@@ -2947,154 +3363,162 @@ export default {
     });
 
     watch(changeDate, async (newData, oldData) => {
-      if (state.date && state.date === 'TODAY') {
-        // Check if today is available
-        if (!isTodayAvailable()) {
-          state.availableAttentionBlocks = [];
-          state.availableAttentionSuperBlocks = [];
-          state.availableBookingBlocks = [];
-          state.blocks = [];
-          loadingHours.value = false;
-          return;
-        }
-
-        if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
-          // Ensure blocksByDay is loaded
-          if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
-            state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
+      try {
+        if (state.date && state.date === 'TODAY') {
+          // Check if today is available
+          if (!isTodayAvailable()) {
+            state.availableAttentionBlocks = [];
+            state.availableAttentionSuperBlocks = [];
+            state.availableBookingBlocks = [];
+            state.blocks = [];
+            loadingHours.value = false;
+            return;
           }
 
-          // Don't reset blocks/block if we're in quick slot selection
-          if (!state.isQuickSlotSelection) {
+          if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
+            // Ensure blocksByDay is loaded
+            if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
+              state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
+            }
+
+            // Don't reset blocks/block if we're in quick slot selection
+            if (!state.isQuickSlotSelection) {
+              state.blocks = getBlocksByDay();
+              state.block = {};
+            } else {
+            }
+            if (unsubscribeAttentions) {
+              unsubscribeAttentions();
+            }
+            getAttentions();
+            // Ensure blocks are loaded if attentions are already available
+            if (state.attentions && state.attentions.length >= 0) {
+              await getAvailableAttentionBlocks(state.attentions);
+              getAvailableAttentionSuperBlocks();
+              loadingHours.value = false;
+            }
+          } else {
+            await getAttention(undefined);
+          }
+        } else if (newData.date && newData.date !== oldData.date && newData.date !== 'TODAY') {
+          // Don't interfere if we're in the middle of a quick slot selection
+          if (state.isQuickSlotSelection) {
+            return;
+          }
+
+          // Only reset blocks if we don't have a valid block already selected
+          if (!state.block || !state.block.number) {
             state.blocks = getBlocksByDay();
             state.block = {};
           } else {
-          }
-          if (unsubscribeAttentions) {
-            unsubscribeAttentions();
-          }
-          getAttentions();
-          // Ensure blocks are loaded if attentions are already available
-          if (state.attentions && state.attentions.length >= 0) {
-            await getAvailableAttentionBlocks(state.attentions);
-            getAvailableAttentionSuperBlocks();
-            loadingHours.value = false;
-          }
-        } else {
-          await getAttention(undefined);
-        }
-      } else if (newData.date && newData.date !== oldData.date && newData.date !== 'TODAY') {
-        // Don't interfere if we're in the middle of a quick slot selection
-        if (state.isQuickSlotSelection) {
-          return;
-        }
-
-        // Only reset blocks if we don't have a valid block already selected
-        if (!state.block || !state.block.number) {
-          state.blocks = getBlocksByDay();
-          state.block = {};
-        } else {
-          // Still update blocks but don't reset the selected block
-          const newBlocks = getBlocksByDay();
-          if (newBlocks && newBlocks.length > 0) {
-            state.blocks = newBlocks;
-          }
-        }
-
-        if (unsubscribeBookings) {
-          unsubscribeBookings();
-        }
-        await getBookings();
-      }
-      // Always update blocks when date changes (including when switching to TODAY)
-      if (state.date && state.date !== 'TODAY') {
-        getAvailableBookingBlocks(state.bookings);
-        getAvailableBookingSuperBlocks();
-      }
-      // If showToday is active, ensure blocks are loaded
-      if (
-        state.showToday &&
-        state.date === 'TODAY' &&
-        (!state.blocks || state.blocks.length === 0)
-      ) {
-        if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
-          state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
-        }
-        state.blocks = getBlocksByDay();
-      }
-      getAvailableAttentionSuperBlocks();
-      bookingsAvailables();
-      await attentionsAvailables();
-
-      // Scroll to time selection card after date is selected
-      if (newData.date && newData.date !== oldData.date) {
-        nextTick(() => {
-          setTimeout(() => {
-            const timeCard = document.querySelector('.time-slot-grid');
-            if (timeCard) {
-              timeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-              const firstTimeButton = timeCard.querySelector('.time-slot-button');
-              if (firstTimeButton) {
-                firstTimeButton.focus();
-              }
+            // Still update blocks but don't reset the selected block
+            const newBlocks = getBlocksByDay();
+            if (newBlocks && newBlocks.length > 0) {
+              state.blocks = newBlocks;
             }
-          }, 600);
-        });
+          }
+
+          if (unsubscribeBookings) {
+            unsubscribeBookings();
+          }
+          await getBookings();
+        }
+        // Always update blocks when date changes (including when switching to TODAY)
+        if (state.date && state.date !== 'TODAY') {
+          getAvailableBookingBlocks(state.bookings);
+          getAvailableBookingSuperBlocks();
+        }
+        // If showToday is active, ensure blocks are loaded
+        if (
+          state.showToday &&
+          state.date === 'TODAY' &&
+          (!state.blocks || state.blocks.length === 0)
+        ) {
+          if (!state.blocksByDay || Object.keys(state.blocksByDay).length === 0) {
+            state.blocksByDay = await getQueueBlockDetailsByDay(state.queue.id);
+          }
+          state.blocks = getBlocksByDay();
+        }
+        getAvailableAttentionSuperBlocks();
+        bookingsAvailables();
+        await attentionsAvailables();
+
+        // Scroll to time selection card after date is selected
+        if (newData.date && newData.date !== oldData.date) {
+          nextTick(() => {
+            setTimeout(() => {
+              const timeCard = document.querySelector('.time-slot-grid');
+              if (timeCard) {
+                timeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                const firstTimeButton = timeCard.querySelector('.time-slot-button');
+                if (firstTimeButton) {
+                  firstTimeButton.focus();
+                }
+              }
+            }, 600);
+          });
+        }
+      } catch (error) {
+        console.error('Error in changeDate watcher:', error);
       }
     });
 
     watch(changeSpecificCalendarDate, async (newData, oldData) => {
-      if (state.specificCalendarDate && state.specificCalendarDate === 'TODAY') {
-        if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
-          state.blocks = getBlocksBySpecificDay();
-          state.block = {};
-          if (unsubscribeAttentions) {
-            unsubscribeAttentions();
-          }
-          getAttentions();
-        } else {
-          await getAttention(undefined);
-        }
-      } else if (
-        newData.specificCalendarDate &&
-        newData.specificCalendarDate !== oldData.specificCalendarDate
-      ) {
-        // Don't reset blocks/block if we're in quick slot selection
-        if (!state.isQuickSlotSelection) {
-          state.blocks = getBlocksBySpecificDay();
-          state.block = {};
-        }
-
-        if (unsubscribeBookings) {
-          unsubscribeBookings();
-        }
-        await getBookings();
-      }
-      getAvailableBookingBlocks(state.bookings);
-      getAvailableBookingSuperBlocks();
-      getAvailableAttentionSuperBlocks();
-      bookingsAvailables();
-      attentionsAvailables();
-
-      // Scroll to time selection card after date is selected
-      if (
-        newData.specificCalendarDate &&
-        newData.specificCalendarDate !== oldData.specificCalendarDate
-      ) {
-        nextTick(() => {
-          setTimeout(() => {
-            const timeCard = document.querySelector('.time-slot-grid');
-            if (timeCard) {
-              timeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-              const firstTimeButton = timeCard.querySelector('.time-slot-button');
-              if (firstTimeButton) {
-                firstTimeButton.focus();
-              }
+      try {
+        if (state.specificCalendarDate && state.specificCalendarDate === 'TODAY') {
+          if (getActiveFeature(state.commerce, 'booking-block-active', 'PRODUCT')) {
+            state.blocks = getBlocksBySpecificDay();
+            state.block = {};
+            if (unsubscribeAttentions) {
+              unsubscribeAttentions();
             }
-          }, 600);
-        });
+            getAttentions();
+          } else {
+            await getAttention(undefined);
+          }
+        } else if (
+          newData.specificCalendarDate &&
+          newData.specificCalendarDate !== oldData.specificCalendarDate
+        ) {
+          // Don't reset blocks/block if we're in quick slot selection
+          if (!state.isQuickSlotSelection) {
+            state.blocks = getBlocksBySpecificDay();
+            state.block = {};
+          }
+
+          if (unsubscribeBookings) {
+            unsubscribeBookings();
+          }
+          await getBookings();
+        }
+        getAvailableBookingBlocks(state.bookings);
+        getAvailableBookingSuperBlocks();
+        getAvailableAttentionSuperBlocks();
+        bookingsAvailables();
+        attentionsAvailables();
+
+        // Scroll to time selection card after date is selected
+        if (
+          newData.specificCalendarDate &&
+          newData.specificCalendarDate !== oldData.specificCalendarDate
+        ) {
+          nextTick(() => {
+            setTimeout(() => {
+              const timeCard = document.querySelector('.time-slot-grid');
+              if (timeCard) {
+                timeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                const firstTimeButton = timeCard.querySelector('.time-slot-button');
+                if (firstTimeButton) {
+                  firstTimeButton.focus();
+                }
+              }
+            }, 600);
+          });
+        }
+      } catch (error) {
+        console.error('Error in changeSpecificCalendarDate watcher:', error);
       }
     });
 
@@ -3122,6 +3546,20 @@ export default {
               (state.attentionBlock.number || state.attentionBlock.hourFrom) &&
               (state.date === 'TODAY' || state.specificCalendarDate === 'TODAY')));
 
+        // Check individual disabled conditions
+        const disabledReasons = {
+          noAccept: !state.accept,
+          noQueueId: !state.queue?.id,
+          invalidProcedureAmount: isProcedureAmountSelectionValid?.value === false,
+          loading: loadingService?.value,
+          todayNoAttentionBlock:
+            (state.date === 'TODAY' || state.specificCalendarDate === 'TODAY') &&
+            !state.attentionBlock,
+          telemedicineNoScheduledAt:
+            state.isTelemedicine &&
+            (!state.telemedicineConfig || !state.telemedicineConfig.scheduledAt),
+        };
+
         // Check if the button should be enabled (opposite of :disabled condition)
         const shouldEnableButton =
           state.accept &&
@@ -3136,6 +3574,22 @@ export default {
             state.isTelemedicine &&
             (!state.telemedicineConfig || !state.telemedicineConfig.scheduledAt)
           );
+
+        // Log disabled reasons if button should show but is disabled
+        if (shouldShowButton && !shouldEnableButton) {
+          console.log('🔴 Confirm button DISABLED. Reasons:', disabledReasons);
+          console.log('📊 State values:', {
+            'state.accept': state.accept,
+            'state.isTelemedicine': state.isTelemedicine,
+            'state.telemedicineConfig': state.telemedicineConfig,
+            'state.block': state.block,
+            'state.attentionBlock': state.attentionBlock,
+            'state.date': state.date,
+            'state.specificCalendarDate': state.specificCalendarDate,
+          });
+        } else if (shouldShowButton && shouldEnableButton) {
+          console.log('🟢 Confirm button ENABLED');
+        }
 
         // Expand summary if button is visible AND enabled, collapse otherwise
         const shouldExpand = shouldShowButton && shouldEnableButton;
@@ -3167,6 +3621,23 @@ export default {
 
     // Telemedicine toggle handler
     const handleTelemedicineToggle = () => {
+      // Prevent disabling telemedicine if there are selected services that only allow telemedicine
+      if (!state.isTelemedicine && state.selectedServices && state.selectedServices.length > 0) {
+        const hasOnlyTelemedicineServices = state.selectedServices.some(
+          service => service.presentialEnabled === false
+        );
+
+        if (hasOnlyTelemedicineServices) {
+          // Re-enable telemedicine and show warning
+          state.isTelemedicine = true;
+          alertError.value = 'No se puede desactivar la teleconsulta porque hay servicios seleccionados que solo permiten atención online. Deselecciona esos servicios primero.';
+          setTimeout(() => {
+            alertError.value = '';
+          }, 5000);
+          return;
+        }
+      }
+
       if (state.isTelemedicine) {
         // Initialize telemedicine config with default values
         if (!state.telemedicineConfig) {
@@ -3185,16 +3656,20 @@ export default {
         const selectedBlock = state.attentionBlock || state.block;
 
         if (selectedDate && selectedBlock && selectedBlock.hourFrom) {
+          // Normalize hour format
+          const [hours, minutes] = selectedBlock.hourFrom.split(':');
+          const normalizedTime = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+
           if (selectedDate === 'TODAY') {
             const today = new DateModel().toString();
-            const scheduledDateTime = new Date(today + 'T' + selectedBlock.hourFrom + ':00');
+            const scheduledDateTime = new Date(today + 'T' + normalizedTime + ':00');
             state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
           } else {
             const dateStr =
               typeof selectedDate === 'string'
                 ? selectedDate
                 : new DateModel(selectedDate).toString();
-            const scheduledDateTime = new Date(dateStr + 'T' + selectedBlock.hourFrom + ':00');
+            const scheduledDateTime = new Date(dateStr + 'T' + normalizedTime + ':00');
             state.telemedicineConfig.scheduledAt = scheduledDateTime.toISOString().slice(0, 16);
           }
         } else if (selectedDate && selectedDate !== 'TODAY') {
@@ -3223,6 +3698,9 @@ export default {
           state.telemedicineConfig.scheduledAt = null;
         }
       }
+
+      // Filter services based on new telemedicine mode
+      filterServicesBasedOnMode();
     };
 
     // Format selected block date/time for telemedicine display - uses the booking/attention block directly
@@ -3294,6 +3772,21 @@ export default {
         const totalQueues = Object.values(state.groupedQueues).flat();
         return totalQueues.length > 0;
       }
+      return false;
+    });
+
+    // Check if telemedicine toggle should be disabled
+    const isTelemedicineToggleDisabled = computed(() => {
+      // Disabled if queue only allows telemedicine
+      if (state.queue && state.queue.presentialEnabled === false) {
+        return true;
+      }
+
+      // Disabled if there are selected services that only allow telemedicine
+      if (state.selectedServices && state.selectedServices.length > 0) {
+        return state.selectedServices.some(service => service.presentialEnabled === false);
+      }
+
       return false;
     });
 
@@ -3490,6 +3983,9 @@ export default {
       isDataActive,
       getActiveFeature,
       isTelemedicineEnabled,
+      hasTelemedicineEnabledServices,
+      isTelemedicineToggleDisabled,
+      handleTelemedicineToggle,
       isActiveCommerce,
       isAvailableCommerce,
       hasAvailableQueues,
@@ -3683,14 +4179,14 @@ export default {
                   </div>
                 </div>
 
-                <!-- Telemedicine Option for Walkin Queues (shown when queue is selected and telemedicine is enabled) -->
+                <!-- Telemedicine Option for Walkin Queues (shown when queue is selected and there are telemedicine-enabled services) -->
                 <div
                   v-if="
                     state.queue &&
                     state.queue.id &&
                     state.queue.type !== 'NODEVICE' &&
                     isQueueWalkin() &&
-                    isTelemedicineEnabled(state.commerce, state.queue)
+                    hasTelemedicineEnabledServices()
                   "
                   class="row g-1 mt-2"
                 >
@@ -3702,7 +4198,7 @@ export default {
                           type="checkbox"
                           :id="`telemedicine-walkin-${state.queue.id}`"
                           v-model="state.isTelemedicine"
-                          :disabled="state.queue.presentialEnabled === false"
+                          :disabled="isTelemedicineToggleDisabled"
                           @change="handleTelemedicineToggle"
                         />
                         <label
@@ -3713,7 +4209,7 @@ export default {
                           <strong>
                             {{
                               $t('attentionCreation.telemedicineConsultation') ||
-                              'Consulta por Telemedicina'
+                              'Consulta por Teleconsulta'
                             }}
                           </strong>
                         </label>
@@ -3723,9 +4219,9 @@ export default {
                         v-html="
                           state.isTelemedicine
                             ? $t('attentionCreation.telemedicineSelectedDisclaimer') ||
-                              'Ao desativar a telemedicina, o atendimento será <strong>presencial</strong>.'
+                              'Ao desativar a teleconsulta, o atendimento será <strong>presencial</strong>.'
                             : $t('attentionCreation.telemedicineDisclaimer') ||
-                              'Quando a telemedicina não estiver selecionada, o atendimento será <strong>presencial</strong>.'
+                              'Quando a teleconsulta não estiver selecionada, o atendimento será <strong>presencial</strong>.'
                         "
                       ></p>
                     </div>
@@ -4264,6 +4760,7 @@ export default {
                                 type="checkbox"
                                 :id="`telemedicine-today-${Date.now()}`"
                                 v-model="state.isTelemedicine"
+                                :disabled="isTelemedicineToggleDisabled"
                                 @change="handleTelemedicineToggle"
                               />
                               <label
@@ -4271,7 +4768,7 @@ export default {
                                 :for="`telemedicine-today-${Date.now()}`"
                               >
                                 <i class="bi bi-camera-video me-2"></i>
-                                <strong>Consulta por Telemedicina</strong>
+                                <strong>Consulta por Teleconsulta</strong>
                               </label>
                             </div>
                           </div>
@@ -5102,6 +5599,7 @@ export default {
                                     type="checkbox"
                                     :id="`telemedicine-booking-${Date.now()}`"
                                     v-model="state.isTelemedicine"
+                                    :disabled="isTelemedicineToggleDisabled"
                                     @change="handleTelemedicineToggle"
                                   />
                                   <label
@@ -5109,7 +5607,7 @@ export default {
                                     :for="`telemedicine-booking-${Date.now()}`"
                                   >
                                     <i class="bi bi-camera-video me-2"></i>
-                                    <strong>Consulta por Telemedicina</strong>
+                                    <strong>Consulta por Teleconsulta</strong>
                                   </label>
                                 </div>
                               </div>

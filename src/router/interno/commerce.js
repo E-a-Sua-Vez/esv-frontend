@@ -27,6 +27,7 @@ const BusinessFormAdmin = () => import('@/views/business/BusinessFormAdmin.vue')
 const BusinessLgpdConsentAdmin = () => import('@/views/business/BusinessLgpdConsentAdmin.vue');
 const BusinessProfessionalsAdmin = () => import('@/views/business/BusinessProfessionalsAdmin.vue');
 const BusinessLeadPipeline = () => import('@/views/business/BusinessLeadPipeline.vue');
+const BusinessInfo = () => import('@/views/business/BusinessInfo.vue');
 
 const PrivateCommerceRoutes = [
   {
@@ -128,6 +129,11 @@ const PrivateCommerceRoutes = [
     path: '/interno/negocio/permissions-admin',
     name: 'permissions-admin',
     component: BusinessPermissionsAdmin,
+  },
+  {
+    path: '/interno/negocio/business-info',
+    name: 'business-info',
+    component: BusinessInfo,
   },
   {
     path: '/interno/negocio/commerce/:keyName/filas',

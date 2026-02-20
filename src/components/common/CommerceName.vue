@@ -12,6 +12,7 @@ export default {
     keyName: { type: String, default: '' },
     linkType: { type: String, default: 'commerce' }, // 'commerce' or 'business'
     businessData: { type: Object, default: null }, // Complete business object for copying
+    simple: { type: Boolean, default: false }, // Hide tags and action buttons
   },
   computed: {
     statusClass() {
@@ -72,7 +73,7 @@ export default {
     </span>
 
     <!-- Commerce Tag -->
-    <Popper v-if="tag" :class="'dark'" arrow hover>
+    <Popper v-if="tag && !simple" :class="'dark'" arrow hover>
       <template #content>
         <div>{{ $t('dashboard.clientCard.tooltip.commerceTag') || 'Tag do comércio' }}</div>
       </template>
@@ -83,7 +84,7 @@ export default {
     </Popper>
 
     <!-- Action Buttons -->
-    <Popper v-if="commerceLink" :class="'dark'" arrow hover>
+    <Popper v-if="commerceLink && !simple" :class="'dark'" arrow hover>
       <template #content>
         <div>
           {{
@@ -98,7 +99,7 @@ export default {
         <i class="bi bi-file-earmark-spreadsheet"></i>
       </button>
     </Popper>
-    <Popper v-if="commerceLink" :class="'dark'" arrow hover>
+    <Popper v-if="commerceLink && !simple" :class="'dark'" arrow hover>
       <template #content>
         <div>{{ $t('dashboard.clientCard.tooltip.openWebsite') || 'Abrir site do comércio' }}</div>
       </template>

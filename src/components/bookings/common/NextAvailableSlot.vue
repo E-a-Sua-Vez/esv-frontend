@@ -1,13 +1,16 @@
 <script>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { DateModel } from '../../../shared/utils/date.model';
+import { getNonWorkingDates } from '../../../shared/utils/nonWorkingDates';
 import {
   getQueueBlockDetailsByDay,
   getQueueBlockDetailsBySpecificDayByCommerceId,
 } from '../../../application/services/block';
 import { getPendingBookingsBetweenDates } from '../../../application/services/booking';
 import { getAttentionByDate } from '../../../application/services/attention';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '../../../application/firebase';
 
 export default {
   name: 'NextAvailableSlot',
@@ -25,6 +28,9 @@ export default {
     const loading = ref(false);
     const nextSlot = ref(null);
     const error = ref('');
+    const slotTakenWarning = ref(false);
+    let unsubscribeBookings = null;
+    let unsubscribeAttentions = null;
 
     // Check if specific calendar is enabled
     const isSpecificCalendar = computed(
@@ -128,6 +134,9 @@ export default {
         // Get attention days from queue
         const attentionDays = props.queue.serviceInfo?.attentionDays || [];
 
+        // Get non-working dates (business + commerce + queue)
+        const nonWorkingDates = getNonWorkingDates(null, props.commerce, props.queue);
+
         // Get today's day of week to check if it's in attentionDays
         const todayDateObj = new Date(todayStr + 'T00:00:00');
         let todayDayOfWeek = todayDateObj.getDay();
@@ -137,6 +146,11 @@ export default {
         for (let dayOffset = 0; dayOffset < props.daysAhead; dayOffset++) {
           const searchDate = new DateModel(today.addDays(dayOffset));
           const dateStr = searchDate.toString();
+
+          // Skip non-working dates
+          if (nonWorkingDates.includes(dateStr)) {
+            continue;
+          }
 
           // Filter by attention days if configured
           if (attentionDays.length > 0) {
@@ -180,6 +194,7 @@ export default {
 
           // Get reserved block numbers from bookings and attentions
           const reservedBlockNumbers = [];
+          const blockReservationCount = {}; // Track how many times each block is reserved
 
           // Add reserved blocks from bookings (excluding cancelled bookings)
           if (bookings && bookings.length > 0) {
@@ -195,11 +210,19 @@ export default {
               }
 
               if (booking.block) {
+                let blockNumbers = [];
                 if (booking.block.blockNumbers && Array.isArray(booking.block.blockNumbers)) {
+                  blockNumbers = booking.block.blockNumbers;
                   reservedBlockNumbers.push(...booking.block.blockNumbers);
                 } else if (booking.block.number) {
+                  blockNumbers = [booking.block.number];
                   reservedBlockNumbers.push(booking.block.number);
                 }
+
+                // Count reservations per block
+                blockNumbers.forEach(num => {
+                  blockReservationCount[num] = (blockReservationCount[num] || 0) + 1;
+                });
               }
             });
           }
@@ -215,19 +238,32 @@ export default {
               }
 
               if (attention.block) {
+                let blockNumbers = [];
                 if (attention.block.blockNumbers && Array.isArray(attention.block.blockNumbers)) {
+                  blockNumbers = attention.block.blockNumbers;
                   reservedBlockNumbers.push(...attention.block.blockNumbers);
                 } else if (attention.block.number) {
+                  blockNumbers = [attention.block.number];
                   reservedBlockNumbers.push(attention.block.number);
                 }
+
+                // Count reservations per block
+                blockNumbers.forEach(num => {
+                  blockReservationCount[num] = (blockReservationCount[num] || 0) + 1;
+                });
               }
             });
           }
 
-          // Find first available block
-          let availableBlocks = blocks.filter(
-            block => !reservedBlockNumbers.includes(block.number)
-          );
+          // Get block limit from queue (default to 1 if not configured)
+          const blockLimit = props.queue.serviceInfo?.blockLimit || 1;
+
+          // Find first available block considering blockLimit
+          let availableBlocks = blocks.filter(block => {
+            const reservationCount = blockReservationCount[block.number] || 0;
+            // Block is available if reservations haven't reached the limit
+            return reservationCount < blockLimit;
+          });
 
           // Check if it's today - compare with the todayStr we calculated at the start
           const isToday = dateStr === todayStr;
@@ -252,11 +288,18 @@ export default {
           }
 
           if (availableBlocks.length > 0) {
-            // Sort by time and get the earliest
+            // Sort by time properly (numeric, not alphabetic)
             const sortedBlocks = availableBlocks.sort((a, b) => {
-              const timeA = a.hourFrom || '';
-              const timeB = b.hourFrom || '';
-              return timeA.localeCompare(timeB);
+              const timeA = a.hourFrom || '00:00';
+              const timeB = b.hourFrom || '00:00';
+
+              // Convert to minutes for proper numeric comparison
+              const [hourA, minuteA] = timeA.split(':').map(Number);
+              const [hourB, minuteB] = timeB.split(':').map(Number);
+              const minutesA = hourA * 60 + (minuteA || 0);
+              const minutesB = hourB * 60 + (minuteB || 0);
+
+              return minutesA - minutesB;
             });
 
             // Find first block that can accommodate the service duration
@@ -266,17 +309,18 @@ export default {
 
               // Check if we have enough consecutive blocks
               if (hasConsecutiveBlocks(sortedBlocks, i, blocksNeeded)) {
-                // Check if any of the needed consecutive blocks are reserved
-                let hasReservedInSequence = false;
+                // Check if any of the needed consecutive blocks have reached blockLimit
+                let hasFullInSequence = false;
                 for (let j = 0; j < blocksNeeded; j++) {
                   const neededNumber = block.number + j;
-                  if (reservedBlockNumbers.includes(neededNumber)) {
-                    hasReservedInSequence = true;
+                  const reservationCount = blockReservationCount[neededNumber] || 0;
+                  if (reservationCount >= blockLimit) {
+                    hasFullInSequence = true;
                     break;
                   }
                 }
 
-                if (!hasReservedInSequence) {
+                if (!hasFullInSequence) {
                   // Create super block if multiple blocks are needed
                   if (blocksNeeded > 1) {
                     const consecutiveBlocks = [];
@@ -325,17 +369,18 @@ export default {
                   altBlock.number !== selectedBlock.number &&
                   hasConsecutiveBlocks(sortedBlocks, i, blocksNeeded)
                 ) {
-                  // Same logic as above but for alternative block
-                  let hasReservedInSequence = false;
+                  // Same logic as above but for alternative block - check blockLimit
+                  let hasFullInSequence = false;
                   for (let j = 0; j < blocksNeeded; j++) {
                     const neededNumber = altBlock.number + j;
-                    if (reservedBlockNumbers.includes(neededNumber)) {
-                      hasReservedInSequence = true;
+                    const reservationCount = blockReservationCount[neededNumber] || 0;
+                    if (reservationCount >= blockLimit) {
+                      hasFullInSequence = true;
                       break;
                     }
                   }
 
-                  if (!hasReservedInSequence) {
+                  if (!hasFullInSequence) {
                     if (blocksNeeded > 1) {
                       const consecutiveBlocks = [];
                       for (let j = 0; j < blocksNeeded; j++) {
@@ -391,6 +436,99 @@ export default {
       }
     };
 
+    // Setup real-time listeners for the found slot
+    const setupRealtimeListeners = () => {
+      // Cleanup previous listeners
+      cleanupListeners();
+
+      if (!nextSlot.value || !nextSlot.value.date || !nextSlot.value.queue) {
+        return;
+      }
+
+      slotTakenWarning.value = false;
+
+      try {
+        const dateStr = nextSlot.value.date;
+        const queueId = nextSlot.value.queue.id;
+        const blockNumber = nextSlot.value.block.number;
+        const blockNumbers = nextSlot.value.block.blockNumbers || [blockNumber];
+
+        // Listen to bookings for this specific date and queue
+        const bookingsQuery = query(
+          collection(db, 'bookings'),
+          where('queueId', '==', queueId),
+          where('date', '==', dateStr),
+          where('cancelled', '==', false)
+        );
+
+        unsubscribeBookings = onSnapshot(bookingsQuery, snapshot => {
+          // Check if any new booking affects our slot
+          snapshot.docChanges().forEach(change => {
+            if (change.type === 'added') {
+              const booking = change.doc.data();
+              const bookingBlockNumbers = booking.block?.blockNumbers ||
+                                         (booking.block?.number ? [booking.block.number] : []);
+
+              // Check if any of our block numbers are in this booking
+              const hasOverlap = blockNumbers.some(num => bookingBlockNumbers.includes(num));
+
+              if (hasOverlap) {
+                slotTakenWarning.value = true;
+                // Refresh to find next available slot
+                setTimeout(() => {
+                  findNextAvailableSlot();
+                }, 2000);
+              }
+            }
+          });
+        });
+
+        // Listen to attentions for this specific date and queue
+        const attentionsQuery = query(
+          collection(db, 'attentions'),
+          where('queueId', '==', queueId),
+          where('date', '==', dateStr),
+          where('cancelled', '==', false)
+        );
+
+        unsubscribeAttentions = onSnapshot(attentionsQuery, snapshot => {
+          // Check if any new attention affects our slot
+          snapshot.docChanges().forEach(change => {
+            if (change.type === 'added') {
+              const attention = change.doc.data();
+              const attentionBlockNumbers = attention.block?.blockNumbers ||
+                                           (attention.block?.number ? [attention.block.number] : []);
+
+              // Check if any of our block numbers are in this attention
+              const hasOverlap = blockNumbers.some(num => attentionBlockNumbers.includes(num));
+
+              if (hasOverlap) {
+                slotTakenWarning.value = true;
+                // Refresh to find next available slot
+                setTimeout(() => {
+                  findNextAvailableSlot();
+                }, 2000);
+              }
+            }
+          });
+        });
+      } catch (err) {
+        console.error('Error setting up realtime listeners:', err);
+      }
+    };
+
+    // Cleanup listeners
+    const cleanupListeners = () => {
+      if (unsubscribeBookings) {
+        unsubscribeBookings();
+        unsubscribeBookings = null;
+      }
+      if (unsubscribeAttentions) {
+        unsubscribeAttentions();
+        unsubscribeAttentions = null;
+      }
+    };
+
     // Handle slot selection
     const selectSlot = () => {
       if (nextSlot.value) {
@@ -438,14 +576,31 @@ export default {
       },
     );
 
+    // Watch for nextSlot changes to setup realtime listeners
+    watch(
+      () => nextSlot.value,
+      newSlot => {
+        if (newSlot) {
+          setupRealtimeListeners();
+        } else {
+          cleanupListeners();
+        }
+      },
+    );
+
     onMounted(() => {
       findNextAvailableSlot();
+    });
+
+    onBeforeUnmount(() => {
+      cleanupListeners();
     });
 
     return {
       loading,
       nextSlot,
       error,
+      slotTakenWarning,
       selectSlot,
       showManualSelection,
       formatSlotDate,
@@ -475,6 +630,20 @@ export default {
       <div class="alert alert-warning d-flex align-items-center">
         <i class="bi bi-exclamation-triangle me-2"></i>
         <span>{{ error }}</span>
+      </div>
+    </div>
+
+    <!-- Slot Taken Warning -->
+    <div v-if="slotTakenWarning && nextSlot" class="slot-taken-warning">
+      <div class="alert alert-danger d-flex align-items-center mb-2" role="alert">
+        <i class="bi bi-exclamation-diamond-fill me-2"></i>
+        <div>
+          <strong>{{ t('nextAvailableSlot.slotTaken') || '¡Este horario acaba de ser reservado!' }}</strong>
+          <br />
+          <small>{{
+            t('nextAvailableSlot.searchingNew') || 'Buscando próximo horario disponible...'
+          }}</small>
+        </div>
       </div>
     </div>
 
@@ -536,8 +705,8 @@ export default {
         <div>
           <strong>{{
             t('nextAvailableSlot.noAvailability') || 'Nenhuma disponibilidade encontrada'
-          }}</strong
-          ><br />
+          }}</strong>
+          <br />
           <small class="text-muted">{{
             t('nextAvailableSlot.noAvailabilityDetails', { days: daysAhead }) ||
             `Não há horários disponíveis nos próximos ${daysAhead} dias`
@@ -834,6 +1003,37 @@ export default {
   }
   50% {
     transform: translateX(5px);
+  }
+}
+
+/* Slot taken warning animation */
+.slot-taken-warning {
+  animation: shake 0.5s ease-in-out, fadeIn 0.3s ease-in;
+}
+
+.slot-taken-warning .alert {
+  border-left: 4px solid #dc3545;
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(220, 53, 69, 0.05) 100%);
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-10px);
+  }
+  75% {
+    transform: translateX(10px);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 </style>

@@ -1276,7 +1276,7 @@ export default {
                             ><strong>
                               {{
                                 $t('dashboard.telemedicine.evolution.title') ||
-                                'Evolución de Sesiones de Telemedicina'
+                                'Evolución de Sesiones de Teleconsulta'
                               }}
                             </strong></span
                           >

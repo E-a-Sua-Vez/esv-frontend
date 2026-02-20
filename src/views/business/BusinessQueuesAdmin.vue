@@ -1,6 +1,7 @@
 <script>
 import { ref, reactive, onBeforeMount, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import * as bootstrap from 'bootstrap';
 import { globalStore } from '../../stores';
 import {
   getQueueByCommerce,
@@ -32,6 +33,8 @@ import ComponentMenu from '../../components/common/ComponentMenu.vue';
 import DesktopPageHeader from '../../components/common/desktop/DesktopPageHeader.vue';
 import SearchAdminItem from '../../components/common/SearchAdminItem.vue';
 import SpecificCalendarForm from '../../components/domain/SpecificCalendarForm.vue';
+import NonWorkingDatesManager from '../../components/domain/NonWorkingDatesManager.vue';
+import QueueEditModal from '../../components/queue/QueueEditModal.vue';
 
 export default {
   name: 'BusinessQueuesAdmin',
@@ -51,6 +54,8 @@ export default {
     DesktopPageHeader,
     SearchAdminItem,
     SpecificCalendarForm,
+    NonWorkingDatesManager,
+    QueueEditModal,
   },
   async setup() {
     const router = useRouter();
@@ -135,6 +140,7 @@ export default {
       typeError: false,
       toggles: {},
       filtered: [],
+      selectedQueueForEdit: null,
     });
 
     // Use global commerce from store and ensure it has features loaded
@@ -430,6 +436,26 @@ export default {
           await updateQueue(queue.id, queue);
           state.queues = await getQueuesByCommerceId(commerce.value.id);
           state.extendedEntity = undefined;
+
+          // Cerrar el modal después de actualizar exitosamente
+          if (state.selectedQueueForEdit) {
+            setTimeout(() => {
+              if (typeof document !== 'undefined') {
+                const modalEl = document.getElementById(`queue-edit-modal-${queue.id}`);
+                if (modalEl) {
+                  const modal = bootstrap.Modal.getInstance(modalEl);
+                  if (modal) modal.hide();
+                }
+                // Limpiar backdrop
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => backdrop.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+              }
+              state.selectedQueueForEdit = null;
+            }, 300);
+          }
         }
         alertError.value = '';
         loading.value = false;
@@ -455,6 +481,53 @@ export default {
       } catch (error) {
         alertError.value = error.response.status || 500;
         loading.value = false;
+      }
+    };
+
+    const handleQueueDelete = async (queueId) => {
+      let cleanupCompleted = false;
+      
+      const cleanupBackdrop = () => {
+        if (cleanupCompleted) return;
+        cleanupCompleted = true;
+        
+        try {
+          if (typeof document !== 'undefined') {
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+              try {
+                if (backdrop && backdrop.parentNode) {
+                  backdrop.remove();
+                }
+              } catch (e) {
+                // Ignorar errores al remover backdrops individuales
+              }
+            });
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+          }
+        } catch (cleanupError) {
+          console.error('Error cleaning up backdrop:', cleanupError);
+        }
+      };
+
+      try {
+        const queue = state.queues.find(q => q.id === queueId);
+        if (queue) {
+          await unavailable(queue);
+        }
+        
+        // Limpiar state inmediatamente
+        state.selectedQueueForEdit = null;
+        
+        // Limpiar backdrop después de un delay para que el modal se cierre
+        setTimeout(cleanupBackdrop, 300);
+      } catch (error) {
+        console.error('Error in delete handler:', error);
+        // Forzar limpieza en caso de error
+        state.selectedQueueForEdit = null;
+        setTimeout(cleanupBackdrop, 300);
       }
     };
 
@@ -765,27 +838,26 @@ export default {
     };
 
     const closeAddModal = () => {
-      // Intentar múltiples métodos para cerrar el modal
-      const modalCloseButton = document.getElementById('close-modal');
-      if (modalCloseButton) {
-        modalCloseButton.click();
-        return;
-      }
+      try {
+        // Usar Bootstrap modal hide con el ID correcto
+        const modalElement = document.getElementById('add-queue');
+        if (modalElement) {
+          const modal = bootstrap.Modal.getInstance(modalElement);
+          if (modal) {
+            modal.hide();
+          }
+        }
 
-      // Si no hay botón de cierre, usar Bootstrap modal hide
-      const modalElement = document.getElementById('addModal');
-      if (modalElement) {
-        const modal =
-          window.bootstrap.Modal.getInstance(modalElement) ||
-          new window.bootstrap.Modal(modalElement);
-        modal.hide();
-        return;
-      }
-
-      // Como último recurso, buscar cualquier botón con data-bs-dismiss
-      const dismissButton = document.querySelector('[data-bs-dismiss="modal"]');
-      if (dismissButton) {
-        dismissButton.click();
+        // Limpiar backdrops manualmente
+        setTimeout(() => {
+          const backdrops = document.querySelectorAll('.modal-backdrop');
+          backdrops.forEach(backdrop => backdrop.remove());
+          document.body.classList.remove('modal-open');
+          document.body.style.overflow = '';
+          document.body.style.paddingRight = '';
+        }, 300);
+      } catch (error) {
+        console.error('Error closing add modal:', error);
       }
     };
 
@@ -852,6 +924,18 @@ export default {
       }
     };
 
+    const openQueueEditModal = queue => {
+      state.selectedQueueForEdit = queue;
+      // Wait for next tick to ensure the modal element is rendered
+      setTimeout(() => {
+        const modalEl = document.getElementById(`queue-edit-modal-${queue.id}`);
+        if (modalEl) {
+          const modal = new bootstrap.Modal(modalEl);
+          modal.show();
+        }
+      }, 0);
+    };
+
     onMounted(() => {
       const addModal = document.getElementById('add-queue');
       const closeButton = document.getElementById('close-modal');
@@ -913,6 +997,7 @@ export default {
       selectType,
       onAddQueueTypeChanged,
       unavailable,
+      handleQueueDelete,
       goToUnavailable,
       unavailableCancel,
       selectServiceMultiple,
@@ -927,6 +1012,7 @@ export default {
       updateDeleteSpecificDate,
       timeConvert,
       closeAddModal,
+      openQueueEditModal,
     };
   },
 };
@@ -993,438 +1079,16 @@ export default {
                     :receive-filtered-items="receiveFilteredItems"
                   >
                   </SearchAdminItem>
-                  <div v-for="(queue, index) in state.filtered" :key="index" class="result-card">
+                  <div v-for="(queue, index) in state.filtered" :key="index" class="result-card"
+                       @click="openQueueEditModal(queue)"
+                       style="cursor: pointer;">
                     <div class="row">
-                      <div class="col-10">
+                      <div class="col-12 d-flex justify-content-between align-items-center">
                         <QueueSimpleName
                           :queue="queue"
                           :commerce-key-name="commerce?.keyName || ''"
                         ></QueueSimpleName>
                       </div>
-                      <div class="col-2">
-                        <a href="#" @click.prevent="showUpdateForm(index)">
-                          <i
-                            :id="index"
-                            :class="`bi ${
-                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                            }`"
-                          ></i>
-                        </a>
-                      </div>
-                    </div>
-                    <QueueFormEdit
-                      v-if="state.toggles['queues.admin.read']"
-                      :queue="queue"
-                      :types="state.types"
-                      :toggles="state.toggles"
-                      :commerce="commerce"
-                      :errors="{
-                        nameError: state.nameUpdateError,
-                        limitError: state.limitUpdateError,
-                        blockError: state.blockUpdateError,
-                        orderError: state.orderUpdateError,
-                        timeError: state.timeUpdateError,
-                        errorsUpdate: state.errorsUpdate,
-                      }"
-                      :class="{ show: state.extendedEntity === index }"
-                    />
-                    <div
-                      v-if="state.toggles['queues.admin.read']"
-                      :class="{ show: state.extendedEntity === index }"
-                      class="detailed-data transition-slow"
-                    >
-                      <div class="form-fields-container">
-                        <div id="queue-services-form-update" class="form-group-modern">
-                          <label class="form-label-modern">
-                            {{ $t('businessCollaboratorsAdmin.services') }}
-                          </label>
-                          <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem">
-                            <select
-                              class="form-control-modern form-select-modern"
-                              v-model="state.service"
-                              @change="selectServiceIndex(index, state.service)"
-                              id="services"
-                            >
-                              <option :value="null">
-                                {{
-                                  $t('businessCollaboratorsAdmin.selectService') ||
-                                  'Seleccionar servicio'
-                                }}
-                              </option>
-                              <option v-for="com in state.services" :key="com.id" :value="com">
-                                {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                              </option>
-                            </select>
-                            <div
-                              v-if="queue.servicesId && queue.servicesId.length > 0"
-                              class="badges-container"
-                            >
-                              <span
-                                class="badge-modern"
-                                v-for="comId in queue.servicesId"
-                                :key="comId"
-                              >
-                                {{ showService(comId) }}
-                                <button
-                                  type="button"
-                                  class="badge-close"
-                                  aria-label="Close"
-                                  @click="deleteService(queue, comId)"
-                                >
-                                  <i class="bi bi-x"></i>
-                                </button>
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <!-- Datos de Servicio -->
-                        <button
-                          class="section-toggle-button"
-                          type="button"
-                          data-bs-toggle="collapse"
-                          :aria-expanded="false"
-                          aria-controls="update-service"
-                          data-bs-target="#update-service"
-                        >
-                          <span class="section-toggle-text">{{
-                            $t('businessCommercesAdmin.service')
-                          }}</span>
-                          <i class="bi bi-chevron-down section-toggle-icon"></i>
-                        </button>
-                        <div id="update-service" class="collapse row m-0">
-                          <div id="queue-blockLimit-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.blockLimit') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                :disabled="!state.toggles['queues.admin.edit']"
-                                min="1"
-                                type="number"
-                                class="form-control"
-                                v-model="queue.serviceInfo.blockLimit"
-                                placeholder="100"
-                              />
-                            </div>
-                          </div>
-                          <div id="update-queue-samecommerce-active-form" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.walkin') }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="queue.serviceInfo.walkin"
-                                :disabled="!state.toggles['queues.admin.edit']"
-                              />
-                            </div>
-                          </div>
-                          <div id="update-queue-samecommerce-active-form" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.sameCommeceHours') }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="queue.serviceInfo.sameCommeceHours"
-                                :disabled="!state.toggles['queues.admin.edit']"
-                                @click="initializedSameCommerceHours(queue.serviceInfo)"
-                              />
-                            </div>
-                          </div>
-                          <div id="queue-attentionHour-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.attentionHour') }}
-                            </div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="2"
-                                type="number"
-                                class="form-control"
-                                v-model="queue.serviceInfo.attentionHourFrom"
-                                placeholder="Ex. 8"
-                              />
-                            </div>
-                            <div class="col-2">-</div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="2"
-                                type="number"
-                                class="form-control"
-                                v-model="queue.serviceInfo.attentionHourTo"
-                                placeholder="Ex. 16"
-                              />
-                            </div>
-                          </div>
-                          <div id="update-queue-break-active-form" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.break') }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="queue.serviceInfo.break"
-                                :disabled="!state.toggles['queues.admin.edit']"
-                              />
-                            </div>
-                          </div>
-                          <div
-                            id="queue-attentionBreak-form-update"
-                            v-if="queue.serviceInfo.break"
-                            class="row g-1"
-                          >
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.breakHour') }}
-                            </div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="5"
-                                type="number"
-                                class="form-control"
-                                v-model="queue.serviceInfo.breakHourFrom"
-                                placeholder="Ex. 8"
-                              />
-                            </div>
-                            <div class="col-2">-</div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="5"
-                                type="number"
-                                class="form-control"
-                                v-model="queue.serviceInfo.breakHourTo"
-                                placeholder="Ex. 16"
-                              />
-                            </div>
-                          </div>
-                          <div id="queue-attentionDays-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.attentionDays') }}
-                            </div>
-                            <div class="col-8">
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="monday"
-                                  :checked="dayChecked(queue.serviceInfo, 1)"
-                                  @click="checkDay($event, queue.serviceInfo, 1)"
-                                />
-                                <label class="form-check-label" for="monday">{{
-                                  $t('days.1')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="tuesday"
-                                  :checked="dayChecked(queue.serviceInfo, 2)"
-                                  @click="checkDay($event, queue.serviceInfo, 2)"
-                                />
-                                <label class="form-check-label" for="tuesday">{{
-                                  $t('days.2')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="wednesday"
-                                  :checked="dayChecked(queue.serviceInfo, 3)"
-                                  @click="checkDay($event, queue.serviceInfo, 3)"
-                                />
-                                <label class="form-check-label" for="wednesday">{{
-                                  $t('days.3')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="thursday"
-                                  :checked="dayChecked(queue.serviceInfo, 4)"
-                                  @click="checkDay($event, queue.serviceInfo, 4)"
-                                />
-                                <label class="form-check-label" for="thursday">{{
-                                  $t('days.4')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="friday"
-                                  :checked="dayChecked(queue.serviceInfo, 5)"
-                                  @click="checkDay($event, queue.serviceInfo, 5)"
-                                />
-                                <label class="form-check-label" for="friday">{{
-                                  $t('days.5')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="sabado"
-                                  :checked="dayChecked(queue.serviceInfo, 6)"
-                                  @click="checkDay($event, queue.serviceInfo, 6)"
-                                />
-                                <label class="form-check-label" for="sabado">{{
-                                  $t('days.6')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="domingo"
-                                  :checked="dayChecked(queue.serviceInfo, 7)"
-                                  @click="checkDay($event, queue.serviceInfo, 7)"
-                                />
-                                <label class="form-check-label" for="domingo">{{
-                                  $t('days.7')
-                                }}</label>
-                              </div>
-                            </div>
-                          </div>
-                          <div id="update-queue-personalized-active-form" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.personalized') }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="queue.serviceInfo.personalized"
-                                :disabled="!state.toggles['queues.admin.edit']"
-                                @click="initializedParsonalizedHours(queue.serviceInfo)"
-                              />
-                            </div>
-                          </div>
-                          <div
-                            id="queue-personalized-form-update"
-                            v-if="queue.serviceInfo.personalized"
-                            class="row g-1"
-                          >
-                            <div
-                              class="row g-1"
-                              v-for="day in queue.serviceInfo.attentionDays"
-                              :key="day"
-                            >
-                              <div class="col-4 text-label">
-                                {{ $t(`days.${day}`) }}
-                              </div>
-                              <div class="col-3">
-                                <input
-                                  min="0"
-                                  max="24"
-                                  minlength="1"
-                                  maxlength="2"
-                                  type="number"
-                                  class="form-control form-control-sm"
-                                  v-model="
-                                    queue.serviceInfo.personalizedHours[day].attentionHourFrom
-                                  "
-                                  placeholder="Ex. 8"
-                                />
-                              </div>
-                              <div class="col-2">-</div>
-                              <div class="col-3">
-                                <input
-                                  min="0"
-                                  max="24"
-                                  minlength="1"
-                                  maxlength="2"
-                                  type="number"
-                                  class="form-control form-control-sm"
-                                  v-model="queue.serviceInfo.personalizedHours[day].attentionHourTo"
-                                  placeholder="Ex. 16"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <div id="queue-specificCalendar-active-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.specificCalendar') }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="queue.serviceInfo.specificCalendar"
-                                :disabled="!state.toggles['queues.admin.edit']"
-                                @click="initializedSpecificCalendar(queue.serviceInfo)"
-                              />
-                            </div>
-                          </div>
-                          <div
-                            id="queue-specificCalendarDays-form-update"
-                            v-if="queue.serviceInfo.specificCalendar"
-                            class="g-1"
-                          >
-                            <hr />
-                            <SpecificCalendarForm
-                              :show="queue.serviceInfo.specificCalendar"
-                              :locale="state.locale"
-                              :structure="queue"
-                            >
-                            </SpecificCalendarForm>
-                          </div>
-                        </div>
-                        <div class="col">
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                            @click="update(queue)"
-                            v-if="state.toggles['queues.admin.update']"
-                          >
-                            {{ $t('businessQueuesAdmin.update') }} <i class="bi bi-save"></i>
-                          </button>
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                            @click="goToUnavailable()"
-                            v-if="state.toggles['queues.admin.unavailable']"
-                          >
-                            {{ $t('businessQueuesAdmin.unavailable') }}
-                            <i class="bi bi-trash-fill"></i>
-                          </button>
-                          <AreYouSure
-                            :show="state.goToUnavailable"
-                            :yes-disabled="state.toggles['queues.admin.unavailable']"
-                            :no-disabled="state.toggles['queues.admin.unavailable']"
-                            @actionYes="unavailable(queue)"
-                            @actionNo="unavailableCancel()"
-                          >
-                          </AreYouSure>
-                        </div>
-                        <div
-                          class="row g-1 errors"
-                          id="feedback"
-                          v-if="state.errorsUpdate.length > 0"
-                        >
-                          <Warning>
-                            <template v-slot:message>
-                              <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                                {{ $t(error) }}
-                              </li>
-                            </template>
-                          </Warning>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      v-if="
-                        (!isActiveBusiness() || !state.toggles['queues.admin.read']) && !loading
-                      "
-                    >
-                      <Message
-                        :title="$t('businessQueuesAdmin.message.1.title')"
-                        :content="$t('businessQueuesAdmin.message.1.content')"
-                      />
                     </div>
                   </div>
                 </div>
@@ -1497,443 +1161,21 @@ export default {
                     :receive-filtered-items="receiveFilteredItems"
                   >
                   </SearchAdminItem>
-                  <div v-for="(queue, index) in state.filtered" :key="index" class="result-card">
+                  <div v-for="(queue, index) in state.filtered" :key="index" class="result-card"
+                       @click="openQueueEditModal(queue)"
+                       style="cursor: pointer;">
                     <div class="row">
-                      <div class="col-10">
+                      <div class="col-12 d-flex justify-content-between align-items-center">
                         <QueueSimpleName
                           :queue="queue"
                           :commerce-key-name="commerce?.keyName || ''"
                         ></QueueSimpleName>
                       </div>
-                      <div class="col-2">
-                        <a href="#" @click.prevent="showUpdateForm(index)">
-                          <i
-                            :id="index"
-                            :class="`bi ${
-                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                            }`"
-                          ></i>
-                        </a>
-                      </div>
-                    </div>
-                    <QueueFormEdit
-                      v-if="state.toggles['queues.admin.read']"
-                      :queue="queue"
-                      :types="state.types"
-                      :toggles="state.toggles"
-                      :commerce="commerce"
-                      :errors="{
-                        nameError: state.nameUpdateError,
-                        limitError: state.limitUpdateError,
-                        orderError: state.orderUpdateError,
-                        timeError: state.timeUpdateError,
-                        errorsUpdate: state.errorsUpdate,
-                      }"
-                      :class="{ show: state.extendedEntity === index }"
-                    />
-                    <div
-                      v-if="state.toggles['queues.admin.read']"
-                      :class="{ show: state.extendedEntity === index }"
-                      class="detailed-data transition-slow"
-                    >
-                      <div class="form-fields-container">
-                        <div id="queue-services-form-update" class="form-group-modern">
-                          <label class="form-label-modern">
-                            {{ $t('businessCollaboratorsAdmin.services') }}
-                          </label>
-                          <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem">
-                            <select
-                              class="form-control-modern form-select-modern"
-                              v-model="state.service"
-                              @change="selectServiceIndex(index, state.service)"
-                              id="services"
-                            >
-                              <option :value="null">
-                                {{
-                                  $t('businessCollaboratorsAdmin.selectService') ||
-                                  'Seleccionar servicio'
-                                }}
-                              </option>
-                              <option v-for="com in state.services" :key="com.id" :value="com">
-                                {{ com.active ? `🟢  ${com.tag}` : `🔴  ${com.tag}` }}
-                              </option>
-                            </select>
-                            <div
-                              v-if="queue.servicesId && queue.servicesId.length > 0"
-                              class="badges-container"
-                            >
-                              <span
-                                class="badge-modern"
-                                v-for="comId in queue.servicesId"
-                                :key="comId"
-                              >
-                                {{ showService(comId) }}
-                                <button
-                                  type="button"
-                                  class="badge-close"
-                                  aria-label="Close"
-                                  @click="deleteService(queue, comId)"
-                                >
-                                  <i class="bi bi-x"></i>
-                                </button>
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <!-- Datos de Servicio -->
-                        <button
-                          class="section-toggle-button"
-                          type="button"
-                          data-bs-toggle="collapse"
-                          :aria-expanded="false"
-                          aria-controls="update-service"
-                          data-bs-target="#update-service"
-                        >
-                          <span class="section-toggle-text">{{
-                            $t('businessCommercesAdmin.service')
-                          }}</span>
-                          <i class="bi bi-chevron-down section-toggle-icon"></i>
-                        </button>
-                        <div id="update-service" class="collapse row m-0">
-                          <div id="queue-blockLimit-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.blockLimit') }}
-                            </div>
-                            <div class="col-8">
-                              <input
-                                :disabled="!state.toggles['queues.admin.edit']"
-                                min="1"
-                                type="number"
-                                class="form-control"
-                                v-model="queue.serviceInfo.blockLimit"
-                                placeholder="100"
-                              />
-                            </div>
-                          </div>
-                          <div id="update-queue-samecommerce-active-form" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.walkin') }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="queue.serviceInfo.walkin"
-                                :disabled="!state.toggles['queues.admin.edit']"
-                              />
-                            </div>
-                          </div>
-                          <div id="update-queue-samecommerce-active-form" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.sameCommeceHours') }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="queue.serviceInfo.sameCommeceHours"
-                                :disabled="!state.toggles['queues.admin.edit']"
-                                @click="initializedSameCommerceHours(queue.serviceInfo)"
-                              />
-                            </div>
-                          </div>
-                          <div id="queue-attentionHour-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.attentionHour') }}
-                            </div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="2"
-                                type="number"
-                                class="form-control"
-                                v-model="queue.serviceInfo.attentionHourFrom"
-                                placeholder="Ex. 8"
-                              />
-                            </div>
-                            <div class="col-2">-</div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="2"
-                                type="number"
-                                class="form-control"
-                                v-model="queue.serviceInfo.attentionHourTo"
-                                placeholder="Ex. 16"
-                              />
-                            </div>
-                          </div>
-                          <div id="update-queue-break-active-form" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.break') }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="queue.serviceInfo.break"
-                                :disabled="!state.toggles['queues.admin.edit']"
-                              />
-                            </div>
-                          </div>
-                          <div
-                            id="queue-attentionBreak-form-update"
-                            v-if="queue.serviceInfo.break"
-                            class="row g-1"
-                          >
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.breakHour') }}
-                            </div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="5"
-                                type="number"
-                                class="form-control"
-                                v-model="queue.serviceInfo.breakHourFrom"
-                                placeholder="Ex. 8"
-                              />
-                            </div>
-                            <div class="col-2">-</div>
-                            <div class="col-3">
-                              <input
-                                min="0"
-                                max="24"
-                                minlength="1"
-                                maxlength="5"
-                                type="number"
-                                class="form-control"
-                                v-model="queue.serviceInfo.breakHourTo"
-                                placeholder="Ex. 16"
-                              />
-                            </div>
-                          </div>
-                          <div id="queue-attentionDays-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.attentionDays') }}
-                            </div>
-                            <div class="col-8">
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="monday"
-                                  :checked="dayChecked(queue.serviceInfo, 1)"
-                                  @click="checkDay($event, queue.serviceInfo, 1)"
-                                />
-                                <label class="form-check-label" for="monday">{{
-                                  $t('days.1')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="tuesday"
-                                  :checked="dayChecked(queue.serviceInfo, 2)"
-                                  @click="checkDay($event, queue.serviceInfo, 2)"
-                                />
-                                <label class="form-check-label" for="tuesday">{{
-                                  $t('days.2')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="wednesday"
-                                  :checked="dayChecked(queue.serviceInfo, 3)"
-                                  @click="checkDay($event, queue.serviceInfo, 3)"
-                                />
-                                <label class="form-check-label" for="wednesday">{{
-                                  $t('days.3')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="thursday"
-                                  :checked="dayChecked(queue.serviceInfo, 4)"
-                                  @click="checkDay($event, queue.serviceInfo, 4)"
-                                />
-                                <label class="form-check-label" for="thursday">{{
-                                  $t('days.4')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="friday"
-                                  :checked="dayChecked(queue.serviceInfo, 5)"
-                                  @click="checkDay($event, queue.serviceInfo, 5)"
-                                />
-                                <label class="form-check-label" for="friday">{{
-                                  $t('days.5')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="sabado"
-                                  :checked="dayChecked(queue.serviceInfo, 6)"
-                                  @click="checkDay($event, queue.serviceInfo, 6)"
-                                />
-                                <label class="form-check-label" for="sabado">{{
-                                  $t('days.6')
-                                }}</label>
-                              </div>
-                              <div class="form-check form-switch text-label">
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  id="domingo"
-                                  :checked="dayChecked(queue.serviceInfo, 7)"
-                                  @click="checkDay($event, queue.serviceInfo, 7)"
-                                />
-                                <label class="form-check-label" for="domingo">{{
-                                  $t('days.7')
-                                }}</label>
-                              </div>
-                            </div>
-                          </div>
-                          <div id="update-queue-personalized-active-form" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.personalized') }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="queue.serviceInfo.personalized"
-                                :disabled="!state.toggles['queues.admin.edit']"
-                                @click="initializedParsonalizedHours(queue.serviceInfo)"
-                              />
-                            </div>
-                          </div>
-                          <div
-                            id="queue-personalized-form-update"
-                            v-if="queue.serviceInfo.personalized"
-                            class="row g-1"
-                          >
-                            <div
-                              class="row g-1"
-                              v-for="day in queue.serviceInfo.attentionDays"
-                              :key="day"
-                            >
-                              <div class="col-4 text-label">
-                                {{ $t(`days.${day}`) }}
-                              </div>
-                              <div class="col-3">
-                                <input
-                                  min="0"
-                                  max="24"
-                                  minlength="1"
-                                  maxlength="2"
-                                  type="number"
-                                  class="form-control form-control-sm"
-                                  v-model="
-                                    queue.serviceInfo.personalizedHours[day].attentionHourFrom
-                                  "
-                                  placeholder="Ex. 8"
-                                />
-                              </div>
-                              <div class="col-2">-</div>
-                              <div class="col-3">
-                                <input
-                                  min="0"
-                                  max="24"
-                                  minlength="1"
-                                  maxlength="2"
-                                  type="number"
-                                  class="form-control form-control-sm"
-                                  v-model="queue.serviceInfo.personalizedHours[day].attentionHourTo"
-                                  placeholder="Ex. 16"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <div id="queue-specificCalendar-active-form-update" class="row g-1">
-                            <div class="col-4 text-label">
-                              {{ $t('businessQueuesAdmin.specificCalendar') }}
-                            </div>
-                            <div class="col-8">
-                              <Toggle
-                                v-model="queue.serviceInfo.specificCalendar"
-                                :disabled="!state.toggles['queues.admin.edit']"
-                                @click="initializedSpecificCalendar(queue.serviceInfo)"
-                              />
-                            </div>
-                          </div>
-                          <div
-                            id="queue-specificCalendarDays-form-update"
-                            v-if="queue.serviceInfo.specificCalendar"
-                            class="g-1"
-                          >
-                            <hr />
-                            <SpecificCalendarForm
-                              :show="queue.serviceInfo.specificCalendar"
-                              :locale="state.locale"
-                              :structure="queue"
-                            >
-                            </SpecificCalendarForm>
-                          </div>
-                        </div>
-                        <div class="col">
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                            @click="update(queue)"
-                            v-if="state.toggles['queues.admin.update']"
-                          >
-                            {{ $t('businessQueuesAdmin.update') }} <i class="bi bi-save"></i>
-                          </button>
-                          <button
-                            class="btn btn-lg btn-size fw-bold btn-danger rounded-pill mt-2 px-4"
-                            @click="goToUnavailable()"
-                            v-if="state.toggles['queues.admin.unavailable']"
-                          >
-                            {{ $t('businessQueuesAdmin.unavailable') }}
-                            <i class="bi bi-trash-fill"></i>
-                          </button>
-                          <AreYouSure
-                            :show="state.goToUnavailable"
-                            :yes-disabled="state.toggles['queues.admin.unavailable']"
-                            :no-disabled="state.toggles['queues.admin.unavailable']"
-                            @actionYes="unavailable(queue)"
-                            @actionNo="unavailableCancel()"
-                          >
-                          </AreYouSure>
-                        </div>
-                        <div
-                          class="row g-1 errors"
-                          id="feedback"
-                          v-if="state.errorsUpdate.length > 0"
-                        >
-                          <Warning>
-                            <template v-slot:message>
-                              <li v-for="(error, index) in state.errorsUpdate" :key="index">
-                                {{ $t(error) }}
-                              </li>
-                            </template>
-                          </Warning>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      v-if="
-                        (!isActiveBusiness() || !state.toggles['queues.admin.read']) && !loading
-                      "
-                    >
-                      <Message
-                        :title="$t('businessQueuesAdmin.message.1.title')"
-                        :content="$t('businessQueuesAdmin.message.1.content')"
-                      />
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
           <div v-if="(!isActiveBusiness() || !state.toggles['queues.admin.view']) && !loading">
             <Message
               :title="$t('businessQueuesAdmin.message.1.title')"
@@ -1943,6 +1185,7 @@ export default {
         </div>
       </div>
     </div>
+  </div>
     <!-- Modal Add - Use Teleport to render outside component to avoid overflow/position issues -->
     <Teleport to="body">
       <div
@@ -2505,6 +1748,44 @@ export default {
         </div>
       </div>
     </Teleport>
+
+    <!-- Queue Edit Modal -->
+    <Teleport to="body">
+      <QueueEditModal
+        v-if="state.selectedQueueForEdit"
+        :queue="state.selectedQueueForEdit"
+        :types="state.types"
+        :toggles="state.toggles"
+        :locale="state.locale || 'es'"
+        :commerce="commerce"
+        :errors="{
+          nameError: state.nameUpdateError,
+          limitError: state.limitUpdateError,
+          blockError: state.blockUpdateError,
+          orderError: state.orderUpdateError,
+          timeError: state.timeUpdateError,
+          typeError: state.typeError,
+          errorsUpdate: state.errorsUpdate
+        }"
+        @update="update"
+        @delete="handleQueueDelete"
+        @close="() => {
+          try {
+            state.selectedQueueForEdit = null;
+            // Clean up backdrop
+            if (typeof document !== 'undefined') {
+              const backdrops = document.querySelectorAll('.modal-backdrop');
+              backdrops.forEach(backdrop => backdrop.remove());
+              document.body.classList.remove('modal-open');
+              document.body.style.overflow = '';
+              document.body.style.paddingRight = '';
+            }
+          } catch (error) {
+            console.error('Error in close handler:', error);
+          }
+        }"
+      />
+    </Teleport>
   </div>
 </template>
 
@@ -2592,7 +1873,6 @@ export default {
 .form-fields-container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
   padding: 0.5rem;
 }
 
@@ -2846,5 +2126,22 @@ export default {
 .modern-modal-close-btn:hover {
   opacity: 1;
   background: rgba(255, 255, 255, 0.25);
+}
+
+/* Add Queue Modal Styles */
+#add-queue .modal-content {
+  max-width: none !important;
+  background: transparent !important;
+  border-radius: 1rem !important;
+}
+
+#add-queue .modal-body {
+  background: white;
+  padding: 1.5rem;
+}
+
+#add-queue .modal-footer {
+  background: white;
+  border-radius: 0 0 1rem 1rem;
 }
 </style>

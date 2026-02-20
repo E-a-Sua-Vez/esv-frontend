@@ -475,7 +475,7 @@
                   </div>
                   <div v-else>
                     <p class="completed-message">
-                      Gracias por usar nuestro servicio de telemedicina
+                      Gracias por usar nuestro servicio de teleconsulta
                     </p>
                     <p v-if="attention?.surveyId" class="completed-submessage">
                       Serás redirigido para completar la encuesta de satisfacción
@@ -553,7 +553,7 @@ export default {
           return false; // No hay sesión del portal
         }
 
-        // Validar sesión de telemedicina usando token del portal
+        // Validar sesión de teleconsulta usando token del portal
         const response = await requestBackend.post(
           `/telemedicine/sessions/${sessionId}/validate-portal-session`,
           { portalToken }

@@ -236,7 +236,7 @@ export default {
     };
 
     const accessSession = session => {
-      // Redirigir a la sesión de telemedicina
+      // Redirigir a la sesión de teleconsulta
       router.push({ path: `/publico/telemedicina/${session.id}` });
     };
 
@@ -337,7 +337,7 @@ export default {
         client.value = JSON.parse(storedClient);
         commerce.value = JSON.parse(storedCommerce);
 
-        // Obtener sesiones de telemedicina
+        // Obtener sesiones de teleconsulta
         const response = await getClientTelemedicineSessions(commerce.value.id, client.value.id);
         sessions.value = response || [];
       } catch (err) {

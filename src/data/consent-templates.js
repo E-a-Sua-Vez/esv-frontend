@@ -600,10 +600,10 @@ Ao aceitar este termo, você declara ter lido, compreendido e concordado com tod
 
   TELEMEDICINE: {
     formIntroText:
-      'Para realização de consultas por telemedicina, precisamos processar seus dados pessoais e de saúde, incluindo áudio e vídeo da consulta. Estes dados são essenciais para prestação do serviço e serão armazenados com segurança conforme exigências legais.',
+      'Para realização de consultas por teleconsulta, precisamos processar seus dados pessoais e de saúde, incluindo áudio e vídeo da consulta. Estes dados são essenciais para prestação do serviço e serão armazenados com segurança conforme exigências legais.',
     fullTerms: `**TERMO DE CONSENTIMENTO PARA TELEMEDICINA**
 
-De acordo com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018) e Resolução CFM nº 2.227/2018, solicitamos seu consentimento para realização de consultas por telemedicina.
+De acordo com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018) e Resolução CFM nº 2.227/2018, solicitamos seu consentimento para realização de consultas por teleconsulta.
 
 **1. DADOS PROCESSADOS:**
 
@@ -677,7 +677,7 @@ Este processamento baseia-se em:
 
 **8. COMPARTILHAMENTO:**
 
-Dados de telemedicina podem ser compartilhados com:
+Dados de teleconsulta podem ser compartilhados com:
 - Outros profissionais de saúde envolvidos no seu tratamento (com seu conhecimento)
 - Planos de saúde (para autorização de procedimentos)
 - Laboratórios e clínicas (para realização de exames)
@@ -694,9 +694,9 @@ Você tem direito a:
 **10. CONSEQUÊNCIAS DA NÃO AUTORIZAÇÃO:**
 
 A não autorização pode impedir:
-- Realização de consultas por telemedicina
+- Realização de consultas por teleconsulta
 - Continuidade de tratamento à distância
-- Alguns serviços que dependem de telemedicina
+- Alguns serviços que dependem de teleconsulta
 
 **11. REVOGAÇÃO:**
 
@@ -708,7 +708,7 @@ Ao aceitar este termo, você declara ter lido, compreendido e concordado com tod
 - Gravações de áudio e vídeo da consulta (quando aplicável)
 - Imagens e documentos compartilhados durante a consulta`,
     legalBasis:
-      'LGPD Art. 7º, I - Consentimento do titular\nLGPD Art. 7º, V - Execução de contrato\nLGPD Art. 7º, IX - Proteção da vida ou incolumidade física\nResolução CFM nº 2.227/2018 - Telemedicina',
+      'LGPD Art. 7º, I - Consentimento do titular\nLGPD Art. 7º, V - Execução de contrato\nLGPD Art. 7º, IX - Proteção da vida ou incolumidade física\nResolução CFM nº 2.227/2018 - Teleconsulta',
     retentionPeriod: `- Dados de consulta: Mínimo 20 anos (legislação de prontuários médicos)
 - Gravações: Conforme necessidade clínica e obrigações legais`,
     privacyPolicyLink: '',

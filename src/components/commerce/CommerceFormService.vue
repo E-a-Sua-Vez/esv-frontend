@@ -85,17 +85,18 @@ export default {
 <template>
   <div>
     <button
+      v-if="isAdd"
       class="section-toggle-button"
       type="button"
       data-bs-toggle="collapse"
-      :aria-expanded="false"
+      :aria-expanded="!isAdd"
       :aria-controls="`${prefix}service`"
       :data-bs-target="`#${prefix}service`"
     >
       <span class="section-toggle-text">{{ $t('businessCommercesAdmin.service') }}</span>
       <i class="bi bi-chevron-down section-toggle-icon"></i>
     </button>
-    <div :id="`${prefix}service`" class="collapse">
+    <div :id="`${prefix}service`" :class="isAdd ? ['collapse', { show: !isAdd }] : ''">
       <div class="form-fields-container">
         <div class="form-group-modern">
           <label class="form-label-modern">
@@ -394,6 +395,11 @@ export default {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+}
+
+.form-group-full-width {
+  flex-direction: column;
+  width: 100%;
 }
 
 .form-label-modern {

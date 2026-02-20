@@ -444,6 +444,7 @@ export default {
                   :number="state.booking.number"
                   :type="'secondary'"
                   :show-data="false"
+                  :attention="state.booking"
                 >
                 </AttentionNumber>
                 <Message
@@ -473,6 +474,7 @@ export default {
                 <AttentionNumber
                   :number="state.booking.number"
                   :show-data="false"
+                  :attention="state.booking"
                 ></AttentionNumber>
                 <div id="booking-data" class="to-goal">
                   <div class="row g-2 booking-details-container">

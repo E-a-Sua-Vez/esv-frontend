@@ -49,3 +49,68 @@ export const isTelemedicineEnabled = (commerce, queue) => {
 
   return queueTelemedicineEnabled;
 };
+
+/**
+ * Check if telemedicine is enabled for a specific service
+ * Validates at three levels:
+ * 1. Commerce has 'telemedicine-active' feature toggle enabled
+ * 2. Queue has telemedicineEnabled set to true
+ * 3. Service has telemedicineEnabled set to true
+ *
+ * @param {Object} commerce - Commerce object
+ * @param {Object} queue - Queue object
+ * @param {Object} service - Service object
+ * @returns {boolean} true if all three levels permit telemedicine
+ */
+export const isServiceTelemedicineEnabled = (commerce, queue, service) => {
+  // Early return if any required object is missing
+  if (!commerce || !queue || !service) {
+    return false;
+  }
+
+  // Check commerce feature toggle
+  const commerceTelemedicineActive = getActiveFeature(commerce, 'telemedicine-active', 'PRODUCT');
+  if (!commerceTelemedicineActive) {
+    return false;
+  }
+
+  // Check queue telemedicineEnabled field
+  const queueTelemedicineEnabled = queue.telemedicineEnabled === true;
+  if (!queueTelemedicineEnabled) {
+    return false;
+  }
+
+  // Check service telemedicineEnabled field
+  const serviceTelemedicineEnabled = service.telemedicineEnabled === true;
+
+  return serviceTelemedicineEnabled;
+};
+
+/**
+ * Check if presential attention is enabled for a specific service
+ * Validates at two levels:
+ * 1. Queue has presentialEnabled set to true (or undefined for backward compatibility)
+ * 2. Service has presentialEnabled set to true (or undefined for backward compatibility)
+ *
+ * @param {Object} queue - Queue object
+ * @param {Object} service - Service object
+ * @returns {boolean} true if both levels permit presential attention
+ */
+export const isServicePresentialEnabled = (queue, service) => {
+  // Early return if any required object is missing
+  if (!queue || !service) {
+    return true; // Default to true for backward compatibility
+  }
+
+  // Check queue presentialEnabled (default to true if undefined)
+  const queuePresentialEnabled = queue.presentialEnabled !== false;
+  if (!queuePresentialEnabled) {
+    return false;
+  }
+
+  // Check service presentialEnabled (default to true if undefined)
+  const servicePresentialEnabled = service.presentialEnabled !== false;
+
+  return servicePresentialEnabled;
+};
+

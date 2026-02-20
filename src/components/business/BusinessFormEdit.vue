@@ -1,7 +1,9 @@
 <template>
   <div class="business-form-edit" :class="{ show: show }">
     <div class="row">
-      <div id="business-name-form-update" class="row">
+      <!-- Basic Fields Section -->
+      <div v-if="!showOnly || showOnly === 'basic'" class="form-fields-container">
+      <div id="business-name-form-update" class="row g-2">
         <div class="col-4 text-label">
           {{ $t('businessAdmin.name') }}
           <Popper :class="'dark p-1'" arrow>
@@ -22,7 +24,7 @@
           />
         </div>
       </div>
-      <div id="business-keyName-form-update" class="row g-1">
+      <div id="business-keyName-form-update" class="row g-2">
         <div class="col-4 text-label">
           {{ $t('businessAdmin.keyName') }}
           <Popper :class="'dark p-1'" arrow>
@@ -43,7 +45,7 @@
           />
         </div>
       </div>
-      <div id="business-email-form-update" class="row g-1">
+      <div id="business-email-form-update" class="row g-2">
         <div class="col-4 text-label">
           {{ $t('businessAdmin.email') }}
           <Popper :class="'dark p-1'" arrow>
@@ -63,7 +65,7 @@
           />
         </div>
       </div>
-      <div id="business-logo-form-update" class="row g-1">
+      <div id="business-logo-form-update" class="row g-2">
         <div class="col-4 text-label">
           {{ $t('businessAdmin.logo') }}
           <Popper :class="'dark p-1'" arrow>
@@ -131,7 +133,7 @@
           </div>
         </div>
       </div>
-      <div id="business-category-form-update" class="row g-1">
+      <div id="business-category-form-update" class="row g-2">
         <div class="col-4 text-label">
           {{ $t('businessAdmin.category') }}
           <Popper :class="'dark p-1'" arrow>
@@ -153,7 +155,7 @@
           </select>
         </div>
       </div>
-      <div id="business-active-form" class="row g-1">
+      <div id="business-active-form" class="row g-2">
         <div class="col-4 text-label">
           {{ $t('businessCommercesAdmin.active') }}
           <Popper :class="'dark p-1'" arrow>
@@ -167,9 +169,11 @@
           <Toggle v-model="business.active" :disabled="!toggles['businesses.admin.edit']" />
         </div>
       </div>
+      </div>
 
       <!-- Datos de localización -->
-      <div class="row g-1">
+      <div v-if="!showOnly || showOnly === 'location'" class="form-fields-container">
+      <div class="row g-2" v-if="!showOnly">
         <a
           class="nav-link fw-bold section-toggle-button"
           data-bs-toggle="collapse"
@@ -181,8 +185,8 @@
           <i class="bi bi-chevron-down"></i>
         </a>
       </div>
-      <div :id="`update-location-${index}`" class="collapse row m-0">
-        <div id="business-country-form-update" class="row g-1">
+      <div :id="`update-location-${index}`" :class="showOnly === 'location' ? 'row m-0' : 'collapse row m-0'">
+        <div id="business-country-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.country') }}
             <Popper :class="'dark p-1'" arrow>
@@ -204,7 +208,7 @@
             />
           </div>
         </div>
-        <div id="business-language-form-update" class="row g-1">
+        <div id="business-language-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.language') }}
             <Popper :class="'dark p-1'" arrow>
@@ -225,7 +229,7 @@
             </select>
           </div>
         </div>
-        <div id="business-timezone-form-update" class="row g-1">
+        <div id="business-timezone-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.timezone') }}
             <Popper :class="'dark p-1'" arrow>
@@ -251,7 +255,7 @@
             </select>
           </div>
         </div>
-        <div id="business-zip-form-update" class="row g-1">
+        <div id="business-zip-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.zip') }}
             <Popper :class="'dark p-1'" arrow>
@@ -273,7 +277,7 @@
             />
           </div>
         </div>
-        <div id="business-address-form-update" class="row g-1">
+        <div id="business-address-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.address') }}
             <Popper :class="'dark p-1'" arrow>
@@ -295,7 +299,7 @@
             />
           </div>
         </div>
-        <div id="business-addressLat-form-update" class="row g-1">
+        <div id="business-addressLat-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.addressLat') }}
             <Popper :class="'dark p-1'" arrow>
@@ -316,7 +320,7 @@
             />
           </div>
         </div>
-        <div id="business-addressLng-form-update" class="row g-1">
+        <div id="business-addressLng-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.addressLng') }}
             <Popper :class="'dark p-1'" arrow>
@@ -338,9 +342,11 @@
           </div>
         </div>
       </div>
+      </div>
 
       <!-- Datos de Contacto -->
-      <div class="row g-1">
+      <div v-if="!showOnly || showOnly === 'contact'" class="form-fields-container">
+      <div class="row g-2" v-if="!showOnly">
         <a
           class="nav-link fw-bold section-toggle-button"
           data-bs-toggle="collapse"
@@ -352,8 +358,8 @@
           <i class="bi bi-chevron-down"></i>
         </a>
       </div>
-      <div :id="`update-contact-${index}`" class="collapse row m-0">
-        <div id="business-contact-email-form-update" class="row g-1">
+      <div :id="`update-contact-${index}`" :class="showOnly === 'contact' ? 'row m-0' : 'collapse row m-0'">
+        <div id="business-contact-email-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.email') }}
             <Popper :class="'dark p-1'" arrow>
@@ -374,7 +380,7 @@
             />
           </div>
         </div>
-        <div id="business-contact-url-form-update" class="row g-1">
+        <div id="business-contact-url-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.url') }}
             <Popper :class="'dark p-1'" arrow>
@@ -395,7 +401,7 @@
             />
           </div>
         </div>
-        <div id="business-phone-form-update" class="row g-1">
+        <div id="business-phone-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.phone') }}
             <Popper :class="'dark p-1'" arrow>
@@ -416,7 +422,7 @@
             />
           </div>
         </div>
-        <div id="business-contact-phone2-form-update" class="row g-1">
+        <div id="business-contact-phone2-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.phone2') }}
             <Popper :class="'dark p-1'" arrow>
@@ -437,7 +443,7 @@
             />
           </div>
         </div>
-        <div id="business-contact-whatsapp-form-update" class="row g-1">
+        <div id="business-contact-whatsapp-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.whatsapp') }}
             <Popper :class="'dark p-1'" arrow>
@@ -458,7 +464,7 @@
             />
           </div>
         </div>
-        <div id="business-contact-twitter-form-update" class="row g-1">
+        <div id="business-contact-twitter-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.twitter') }}
             <Popper :class="'dark p-1'" arrow>
@@ -479,7 +485,7 @@
             />
           </div>
         </div>
-        <div id="business-contact-instagram-form-update" class="row g-1">
+        <div id="business-contact-instagram-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.instagram') }}
             <Popper :class="'dark p-1'" arrow>
@@ -500,7 +506,7 @@
             />
           </div>
         </div>
-        <div id="business-contact-facebook-form-update" class="row g-1">
+        <div id="business-contact-facebook-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.facebook') }}
             <Popper :class="'dark p-1'" arrow>
@@ -522,9 +528,11 @@
           </div>
         </div>
       </div>
+      </div>
 
       <!-- Datos de Servicio -->
-      <div class="row g-1">
+      <div v-if="!showOnly || showOnly === 'service'" class="form-fields-container">
+      <div class="row g-2" v-if="!showOnly">
         <a
           class="nav-link fw-bold section-toggle-button"
           data-bs-toggle="collapse"
@@ -534,8 +542,8 @@
           <i class="bi bi-chevron-down"></i>
         </a>
       </div>
-      <div :id="`update-service-${index}`" class="collapse row m-0">
-        <div id="business-serviceUrl-form-update" class="row g-1">
+      <div :id="`update-service-${index}`" :class="showOnly === 'service' ? 'row m-0' : 'collapse row m-0'">
+        <div id="business-serviceUrl-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.serviceUrl') }}
             <Popper :class="'dark p-1'" arrow>
@@ -556,7 +564,7 @@
             />
           </div>
         </div>
-        <div id="business-attentionHour-form-update" class="row g-1">
+        <div id="business-attentionHour-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.attentionHour') }}
             <Popper :class="'dark p-1'" arrow>
@@ -578,7 +586,7 @@
               placeholder="Ex. 8"
             />
           </div>
-          <div class="col-2">{{ $t('businessAdmin.hourSeparator') }}</div>
+          <div class="col-2 text-center align-self-center">{{ $t('businessAdmin.hourSeparator') }}</div>
           <div class="col-3">
             <input
               min="0"
@@ -592,7 +600,7 @@
             />
           </div>
         </div>
-        <div id="add-business-break-active-form" class="row g-1">
+        <div id="add-business-break-active-form" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.break') }}
             <Popper :class="'dark p-1'" arrow>
@@ -612,7 +620,7 @@
         <div
           id="business-attentionBreak-form-update"
           v-if="business.serviceInfo.break"
-          class="row g-1"
+          class="row g-2"
         >
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.breakHour') }}
@@ -635,7 +643,7 @@
               placeholder="Ex. 8"
             />
           </div>
-          <div class="col-2">{{ $t('businessAdmin.hourSeparator') }}</div>
+          <div class="col-2 text-center align-self-center">{{ $t('businessAdmin.hourSeparator') }}</div>
           <div class="col-3">
             <input
               min="0"
@@ -649,7 +657,7 @@
             />
           </div>
         </div>
-        <div id="business-attentionDays-form-update" class="row g-1">
+        <div id="business-attentionDays-form-update" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.attentionDays') }}
             <Popper :class="'dark p-1'" arrow>
@@ -674,7 +682,7 @@
             </div>
           </div>
         </div>
-        <div id="update-business-personalized-active-form" class="row g-1">
+        <div id="update-business-personalized-active-form" class="row g-2">
           <div class="col-4 text-label">
             {{ $t('businessCommercesAdmin.personalized') }}
             <Popper :class="'dark p-1'" arrow>
@@ -695,9 +703,9 @@
         <div
           id="business-personalized-form-update"
           v-if="business.serviceInfo.personalized"
-          class="row g-1"
+          class="row g-2"
         >
-          <div class="row g-1" v-for="day in business.serviceInfo.attentionDays" :key="day">
+          <div class="row g-2" v-for="day in business.serviceInfo.attentionDays" :key="day">
             <div class="col-4 text-label">
               {{ $t(`days.${day}`) }}
             </div>
@@ -713,7 +721,7 @@
                 placeholder="Ex. 8"
               />
             </div>
-            <div class="col-2">{{ $t('businessAdmin.hourSeparator') }}</div>
+            <div class="col-2 text-center align-self-center">{{ $t('businessAdmin.hourSeparator') }}</div>
             <div class="col-3">
               <input
                 min="0"
@@ -728,8 +736,24 @@
             </div>
           </div>
         </div>
+        <!-- Non-Working Dates Manager - Only show when not in modal mode -->
+        <div v-if="!showOnly" id="business-nonWorkingDates-form-update" class="row g-2">
+          <div class="col-12">
+            <hr />
+            <NonWorkingDatesManager
+              :show="true"
+              :loading="false"
+              :serviceInfo="business.serviceInfo"
+              :level="'business'"
+              :readonly="!toggles['businesses.admin.edit']"
+              @update:serviceInfo="business.serviceInfo = $event"
+            />
+          </div>
+        </div>
       </div>
-      <div id="business-id-form" class="row -2 mb-g3">
+      </div>
+
+      <div v-if="!showOnly" id="business-id-form" class="row -2 mb-g3">
         <div class="row business-details-container">
           <div class="col">
             <span><strong>Id:</strong> {{ business.id }}</span>
@@ -752,6 +776,7 @@
 import { ref } from 'vue';
 import Toggle from '@vueform/toggle';
 import Popper from 'vue3-popper';
+import NonWorkingDatesManager from '../domain/NonWorkingDatesManager.vue';
 import { getAddressBR } from '../../application/services/address';
 
 export default {
@@ -759,6 +784,7 @@ export default {
   components: {
     Toggle,
     Popper,
+    NonWorkingDatesManager,
   },
   props: {
     business: {
@@ -788,6 +814,10 @@ export default {
     show: {
       type: Boolean,
       default: false,
+    },
+    showOnly: {
+      type: String,
+      default: null, // 'basic', 'location', 'contact', 'service'
     },
   },
   emits: ['openLogoUpload', 'loadLogo'],
@@ -940,39 +970,37 @@ export default {
   padding: 0.5rem;
 }
 
-.row.g-1 {
+.row.g-2 {
   --bs-gutter-x: 0.5rem;
   --bs-gutter-y: 0.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
 }
 
 .text-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.75);
-  text-transform: capitalize;
-  letter-spacing: 0.3px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #495057;
   display: flex;
   align-items: center;
-  padding: 0.5rem 0;
+  gap: 0.25rem;
 }
 
 .form-control {
   padding: 0.5rem 0.75rem;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.5;
   color: #212529;
   background-color: #fff;
-  border: 1.5px solid rgba(169, 169, 169, 0.3);
+  border: 1px solid #ced4da;
   border-radius: 0.375rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 .form-control:focus {
   outline: 0;
-  border-color: rgba(0, 194, 203, 0.6);
-  box-shadow: 0 0 0 0.2rem rgba(0, 194, 203, 0.15);
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 .form-control:hover:not(:disabled):not(:focus) {
@@ -980,8 +1008,8 @@ export default {
 }
 
 .form-control:disabled {
-  background-color: rgba(245, 246, 247, 0.9);
-  opacity: 0.7;
+  background-color: #e9ecef;
+  opacity: 0.6;
 }
 
 .form-control::placeholder {
@@ -990,19 +1018,23 @@ export default {
 }
 
 .form-control.is-invalid {
-  border-color: rgba(220, 53, 69, 0.6);
-  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
+  border-color: #dc3545;
+}
+
+.form-control.is-invalid:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
 
 .select {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.5;
   color: #212529;
   background-color: #fff;
-  border: 1.5px solid rgba(169, 169, 169, 0.3);
+  border: 1px solid #ced4da;
   border-radius: 0.375rem;
 }
 
@@ -1053,14 +1085,14 @@ export default {
 }
 
 .form-check {
-  padding: 0.35rem 0;
-  margin-bottom: 0.25rem;
+  padding: 0.1rem 0;
+  margin-bottom: 0;
 }
 
 .form-check-label {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.75);
+  color: #495057;
   margin-left: 0.5rem;
 }
 
@@ -1102,5 +1134,12 @@ export default {
 
 .logo-loading-placeholder i {
   font-size: 1.5rem;
+}
+
+.form-fields-container {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  padding: 0.25rem;
 }
 </style>

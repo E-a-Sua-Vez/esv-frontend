@@ -1376,7 +1376,7 @@ export default {
 
       if (
         !confirm(
-          '¿Está seguro de que desea finalizar definitivamente la sesión de telemedicina? Esta acción no se puede deshacer.'
+          '¿Está seguro de que desea finalizar definitivamente la sesión de teleconsulta? Esta acción no se puede deshacer.'
         )
       ) {
         return;
@@ -2737,7 +2737,7 @@ export default {
                   <div class="attention-card-content">
                     <div class="mb-2">
                       <strong class="attention-details-title">
-                        <i class="bi bi-camera-video me-2"></i> Consulta por Telemedicina
+                        <i class="bi bi-camera-video me-2"></i> Consulta por Teleconsulta
                       </strong>
                     </div>
                     <div class="mb-2">
@@ -2780,7 +2780,7 @@ export default {
                     <div v-if="isTelemedicineSessionEnded()" class="mt-3">
                       <div class="alert alert-secondary mb-0">
                         <i class="bi bi-check-circle-fill me-2"></i>
-                        <strong>La sesión de telemedicina ha sido finalizada</strong>
+                        <strong>La sesión de teleconsulta ha sido finalizada</strong>
                         <div
                           v-if="state.telemedicineSession?.endedAt"
                           class="mt-2 small text-muted"
@@ -2803,9 +2803,9 @@ export default {
                       >
                         <i class="bi bi-camera-video me-1"></i>
                         <span v-if="isTelemedicineSessionActive()"
-                          >Abrir Sesión de Telemedicina</span
+                          >Abrir Sesión de Teleconsulta</span
                         >
-                        <span v-else>Iniciar Sesión de Telemedicina</span>
+                        <span v-else>Iniciar Sesión de Teleconsulta</span>
                       </button>
                     </div>
                     <!-- Patient Connection Status -->
@@ -2825,7 +2825,7 @@ export default {
                         class="alert alert-info mb-2"
                       >
                         <i class="bi bi-info-circle me-2"></i>
-                        <strong>Ventana de telemedicina abierta</strong>
+                        <strong>Ventana de teleconsulta abierta</strong>
                         <div class="row mx-1 mt-2">
                           <button
                             type="button"

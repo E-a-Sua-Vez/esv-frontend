@@ -959,7 +959,7 @@ export default {
           }),
           datasets: [
             {
-              label: 'Sesiones de Telemedicina',
+              label: 'Sesiones de Teleconsulta',
               borderColor: '#00c2cb',
               backgroundColor: 'rgba(0, 194, 203, 0.7)',
               data: data.datasets || [],

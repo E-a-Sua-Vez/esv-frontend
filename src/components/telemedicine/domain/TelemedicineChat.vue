@@ -6,14 +6,14 @@
           <i class="bi bi-chat-dots"></i>
         </div>
         <div class="chat-header-title">
-          <h5>Chat de Consulta</h5>
+          <h5>{{ $t('telemedicineSession.chat.title') }}</h5>
           <span v-if="connected" class="status-badge badge-modern badge-modern-success">
             <i class="bi bi-circle-fill me-1"></i>
-            Conectado
+            {{ $t('telemedicineSession.chat.connected') }}
           </span>
           <span v-else class="status-badge badge-modern badge-modern-warning">
             <i class="bi bi-circle-fill me-1"></i>
-            Conectando...
+            {{ $t('telemedicineSession.chat.connecting') }}
           </span>
         </div>
       </div>
@@ -26,7 +26,7 @@
       </div>
 
       <div v-else-if="messages.length === 0" class="empty-state-modern">
-        <div class="empty-state-modern-text">No hay mensajes aún. Comienza la conversación.</div>
+        <div class="empty-state-modern-text">{{ $t('telemedicineSession.chat.noMessages') }}</div>
       </div>
 
       <div v-else class="messages-list">
@@ -42,7 +42,7 @@
           <div class="message-content">
             <div class="message-header">
               <span class="message-sender">
-                {{ message.senderType === 'doctor' ? 'Médico' : 'Paciente' }}
+                {{ getSenderLabel(message.senderType) }}
               </span>
               <span class="message-time">
                 {{ formatTime(message.timestamp) }}
@@ -76,7 +76,7 @@
           class="form-control-modern"
           v-model="newMessage"
           @keyup.enter="sendMessage"
-          placeholder="Escribe un mensaje..."
+          :placeholder="$t('telemedicineSession.chat.placeholder')"
           :disabled="!connected || sending"
         />
         <button

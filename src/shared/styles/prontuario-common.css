@@ -673,7 +673,6 @@
 }
 
 .modal-content {
-  background: white;
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-lg);
   max-width: 500px;
@@ -746,6 +745,7 @@
   padding: var(--spacing-xl);
   flex: 1;
   overflow-y: auto;
+  background-color: white !important;
 }
 
 .modal-body .form-group {

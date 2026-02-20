@@ -1088,7 +1088,7 @@ export default {
 
       if (isTelemedicine) {
         info.attentionType = 'telemedicine';
-        info.attentionTypeLabel = t('attentionStats.attentionType.telemedicine') || 'Telemedicina';
+        info.attentionTypeLabel = t('attentionStats.attentionType.telemedicine') || 'Teleconsulta';
       } else {
         info.attentionType = 'presential';
         info.attentionTypeLabel = t('attentionStats.attentionType.presential') || 'Presencial';

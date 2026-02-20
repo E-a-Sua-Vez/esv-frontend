@@ -4,7 +4,7 @@ import { VueRecaptcha } from 'vue-recaptcha';
 import Warning from '../common/Warning.vue';
 import Message from '../common/Message.vue';
 import QueueButton from '../common/QueueButton.vue';
-import { isTelemedicineEnabled, getActiveFeature } from '../../shared/features';
+import { isTelemedicineEnabled, isServiceTelemedicineEnabled, isServicePresentialEnabled, getActiveFeature } from '../../shared/features';
 import { useI18n } from 'vue-i18n';
 
 export default {
@@ -331,6 +331,8 @@ export default {
       getProcedureAmounts,
       convertDuration,
       isTelemedicineEnabled,
+      isServiceTelemedicineEnabled,
+      isServicePresentialEnabled,
       hasMultipleSessions,
       isMultipleSelectionAllowed,
     };
@@ -460,7 +462,7 @@ export default {
                         {{ service.serviceInfo.blockTime || service.serviceInfo.estimatedTime }}'
                         <span class="ms-2 service-channel-icons">
                           <i
-                            v-if="queue && queue.presentialEnabled !== false"
+                            v-if="isServicePresentialEnabled(queue, service)"
                             class="bi bi-person me-1"
                             :title="
                               $t('commerceQueuesView.presentialAvailable') ||
@@ -468,11 +470,11 @@ export default {
                             "
                           ></i>
                           <i
-                            v-if="isTelemedicineEnabled(commerce, queue)"
+                            v-if="isServiceTelemedicineEnabled(commerce, queue, service)"
                             class="bi bi-camera-video"
                             :title="
                               $t('commerceQueuesView.telemedicineAvailable') ||
-                              'Telemedicina disponible'
+                              'Teleconsulta disponible'
                             "
                           ></i>
                         </span>

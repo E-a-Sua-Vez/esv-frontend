@@ -10,6 +10,7 @@ import {
   nextTick,
 } from 'vue';
 import { useRouter } from 'vue-router';
+import * as bootstrap from 'bootstrap';
 import { globalStore } from '../../stores';
 import { getBusinesses, updateBusiness, addBusiness } from '../../application/services/business';
 import { getActiveCommercesByBusinessId } from '../../application/services/commerce';
@@ -27,6 +28,7 @@ import CommerceLogo from '../../components/common/CommerceLogo.vue';
 import BusinessLogoUpload from '../../components/business/common/BusinessLogoUpload.vue';
 import BusinessFormAdd from '../../components/business/BusinessFormAdd.vue';
 import BusinessFormEdit from '../../components/business/BusinessFormEdit.vue';
+import BusinessEditModal from '../../components/business/BusinessEditModal.vue';
 import Spinner from '../../components/common/Spinner.vue';
 import Alert from '../../components/common/Alert.vue';
 import Warning from '../../components/common/Warning.vue';
@@ -42,6 +44,7 @@ export default {
     BusinessLogoUpload,
     BusinessFormAdd,
     BusinessFormEdit,
+    BusinessEditModal,
     Message,
     Spinner,
     Alert,
@@ -130,7 +133,7 @@ export default {
       logoUploadBusinessId: null,
       businessLogos: {}, // Cache de logos por businessId
       selectedBusinessLogoUrl: null, // Logo URL para el modal
-      selectedBusinessLogoUrl: null, // Logo URL para el modal
+      selectedBusinessForEdit: null,
     });
 
     onBeforeMount(async () => {
@@ -843,6 +846,18 @@ export default {
       }
     };
 
+    const openBusinessEditModal = business => {
+      state.selectedBusinessForEdit = business;
+      // Wait for next tick to ensure the modal element is rendered
+      setTimeout(() => {
+        const modalEl = document.getElementById(`business-edit-modal-${business.id}`);
+        if (modalEl) {
+          const modal = new bootstrap.Modal(modalEl);
+          modal.show();
+        }
+      }, 0);
+    };
+
     // Lifecycle hooks for modal management
     onMounted(() => {
       const addModal = document.getElementById('add-business');
@@ -915,6 +930,7 @@ export default {
       loadBusinessLogoPreview,
       getBusinessLogoUrlForDisplay,
       closeAddModal,
+      openBusinessEditModal,
     };
   },
 };
@@ -1300,9 +1316,9 @@ export default {
                 </div>
                 <div>
                   <!-- SearchAdminItem removed - SearchBar now handles filtering -->
-                  <div v-for="(business, index) in paginatedItems" :key="index" class="result-card">
+                  <div v-for="(business, index) in paginatedItems" :key="index" class="result-card" @click="openBusinessEditModal(business)" style="cursor: pointer;">
                     <div class="row">
-                      <div class="col-10">
+                      <div class="col-12 d-flex justify-content-between align-items-center">
                         <CommerceName
                           :name="business.name"
                           :tag="business.tag || business.name"
@@ -1311,68 +1327,7 @@ export default {
                           link-type="business"
                           :business-data="business"
                         ></CommerceName>
-                      </div>
-                      <div class="col-2">
-                        <a href="#" @click.prevent="showUpdateForm(index)">
-                          <i
-                            :id="index"
-                            :class="`bi ${
-                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                            }`"
-                          ></i>
-                        </a>
-                      </div>
-                    </div>
-                    <BusinessFormEdit
-                      v-if="toggles['businesses.admin.read']"
-                      :business="business"
-                      :index="index"
-                      :errors="{
-                        countryUpdateError: state.countryUpdateError,
-                        phoneUpdateError: state.phoneUpdateError,
-                        addressUpdateError: state.addressUpdateError,
-                        errorsUpdate: state.errorsUpdate,
-                      }"
-                      :categories="state.categories"
-                      :toggles="toggles"
-                      :business-logos="state.businessLogos"
-                      :show="state.extendedEntity === index"
-                      @openLogoUpload="openLogoUpload"
-                      @loadLogo="loadBusinessLogoPreview"
-                    />
-                    <div
-                      class="col"
-                      v-if="state.extendedEntity === index && toggles['businesses.admin.read']"
-                    >
-                      <div class="d-flex gap-2 flex-wrap justify-content-center">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(business)"
-                          :disabled="!toggles['businesses.admin.update']"
-                        >
-                          {{ $t('businessAdmin.update') }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          type="button"
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="selectBusiness(business)"
-                        >
-                          <i class="bi bi-eye-fill me-2"></i>
-                          {{ $t('businessAdmin.viewAsBusiness') }}
-                        </button>
-                      </div>
-                      <div
-                        class="row g-1 errors mt-2"
-                        id="feedback"
-                        v-if="state.errorsUpdate.length > 0"
-                      >
-                        <Warning>
-                          <template v-slot:message>
-                            <li v-for="(error, errorIndex) in state.errorsUpdate" :key="errorIndex">
-                              {{ $t(error) }}
-                            </li>
-                          </template>
-                        </Warning>
+                        <i class="bi bi-pencil-square text-muted"></i>
                       </div>
                     </div>
                   </div>
@@ -1774,9 +1729,9 @@ export default {
                 </div>
                 <div>
                   <!-- SearchAdminItem removed - SearchBar now handles filtering -->
-                  <div v-for="(business, index) in paginatedItems" :key="index" class="result-card">
+                  <div v-for="(business, index) in paginatedItems" :key="index" class="result-card" @click="openBusinessEditModal(business)" style="cursor: pointer;">
                     <div class="row">
-                      <div class="col-10">
+                      <div class="col-12 d-flex justify-content-between align-items-center">
                         <CommerceName
                           :name="business.name"
                           :tag="business.tag || business.name"
@@ -1784,69 +1739,9 @@ export default {
                           :key-name="business.keyName"
                           link-type="business"
                           :business-data="business"
+                          :simple="true"
                         ></CommerceName>
-                      </div>
-                      <div class="col-2">
-                        <a href="#" @click.prevent="showUpdateForm(index)">
-                          <i
-                            :id="index"
-                            :class="`bi ${
-                              state.extendedEntity === index ? 'bi-chevron-up' : 'bi-chevron-down'
-                            }`"
-                          ></i>
-                        </a>
-                      </div>
-                    </div>
-                    <BusinessFormEdit
-                      v-if="toggles['businesses.admin.read']"
-                      :business="business"
-                      :index="index"
-                      :errors="{
-                        countryUpdateError: state.countryUpdateError,
-                        phoneUpdateError: state.phoneUpdateError,
-                        addressUpdateError: state.addressUpdateError,
-                        errorsUpdate: state.errorsUpdate,
-                      }"
-                      :categories="state.categories"
-                      :toggles="toggles"
-                      :business-logos="state.businessLogos"
-                      :show="state.extendedEntity === index"
-                      @openLogoUpload="openLogoUpload"
-                      @loadLogo="loadBusinessLogoPreview"
-                    />
-                    <div
-                      class="col"
-                      v-if="state.extendedEntity === index && toggles['businesses.admin.read']"
-                    >
-                      <div class="d-flex gap-2 flex-wrap justify-content-center">
-                        <button
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="update(business)"
-                          :disabled="!toggles['businesses.admin.update']"
-                        >
-                          {{ $t('businessAdmin.update') }} <i class="bi bi-save"></i>
-                        </button>
-                        <button
-                          type="button"
-                          class="btn btn-lg btn-size fw-bold btn-dark rounded-pill mt-2 px-4"
-                          @click="selectBusiness(business)"
-                        >
-                          <i class="bi bi-eye-fill me-2"></i>
-                          {{ $t('businessAdmin.viewAsBusiness') }}
-                        </button>
-                      </div>
-                      <div
-                        class="row g-1 errors mt-2"
-                        id="feedback"
-                        v-if="state.errorsUpdate.length > 0"
-                      >
-                        <Warning>
-                          <template v-slot:message>
-                            <li v-for="(error, errorIndex) in state.errorsUpdate" :key="errorIndex">
-                              {{ $t(error) }}
-                            </li>
-                          </template>
-                        </Warning>
+                        <i class="bi bi-pencil-square text-muted"></i>
                       </div>
                     </div>
                   </div>
@@ -1949,6 +1844,50 @@ export default {
         :business-id="state.logoUploadBusinessId"
         @close="closeLogoUpload"
         @logo-uploaded="handleLogoUploaded"
+      />
+    </Teleport>
+
+    <!-- Business Edit Modal - Using Teleport -->
+    <Teleport to="body">
+      <BusinessEditModal
+        v-if="state.selectedBusinessForEdit"
+        :business="state.selectedBusinessForEdit"
+        :toggles="toggles"
+        :business-logos="state.businessLogos"
+        @update="update"
+        @delete="(businessId) => {
+          try {
+            state.selectedBusinessForEdit = null;
+            if (typeof document !== 'undefined') {
+              const modalEl = document.getElementById(`business-edit-modal-${businessId}`);
+              if (modalEl) {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+              }
+              // Clean up backdrop
+              const backdrops = document.querySelectorAll('.modal-backdrop');
+              backdrops.forEach(backdrop => backdrop.remove());
+              document.body.classList.remove('modal-open');
+            }
+          } catch (error) {
+            console.error('Error in delete handler:', error);
+          }
+        }"
+        @close="() => {
+          try {
+            state.selectedBusinessForEdit = null;
+            // Clean up backdrop
+            if (typeof document !== 'undefined') {
+              const backdrops = document.querySelectorAll('.modal-backdrop');
+              backdrops.forEach(backdrop => backdrop.remove());
+              document.body.classList.remove('modal-open');
+            }
+          } catch (error) {
+            console.error('Error in close handler:', error);
+          }
+        }"
+        @openLogoUpload="openLogoUpload"
+        @loadLogo="loadBusinessLogoPreview"
       />
     </Teleport>
   </div>

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { globalStore } from '../../stores';
 import { getPermissions } from '../../application/services/permissions';
 import { getValidatedPlanActivationByBusinessId } from '../../application/services/plan-activation';
+import { getBusinessById, updateBusiness } from '../../application/services/business';
 import ToggleCapabilities from '../../components/common/ToggleCapabilities.vue';
 import Message from '../../components/common/Message.vue';
 import CommerceLogo from '../../components/common/CommerceLogo.vue';
@@ -12,6 +13,7 @@ import Alert from '../../components/common/Alert.vue';
 import PlanStatus from '../../components/plan/PlanStatus.vue';
 import WelcomeMenu from '../../components/common/WelcomeMenu.vue';
 import SpySection from '../../components/domain/SpySection.vue';
+import BusinessEditModal from '../../components/business/BusinessEditModal.vue';
 
 export default {
   name: 'BusinessMenu',
@@ -24,12 +26,14 @@ export default {
     ToggleCapabilities,
     WelcomeMenu,
     SpySection,
+    BusinessEditModal,
   },
   async setup() {
     const router = useRouter();
 
     const loading = ref(false);
     const alertError = ref('');
+    const showEditModal = ref(false);
 
     const store = globalStore();
 
@@ -37,9 +41,11 @@ export default {
       currentUser: {},
       business: {},
       commerces: [],
+      businessForEdit: null,
       manageSubMenuOption: false,
       manageControlSubMenuOption: false,
       medicalManagementSubMenuOption: false,
+      errorsUpdate: [],
       menuOptions: [
         'dashboard',
         'reports',
@@ -77,6 +83,7 @@ export default {
         //'marketing'
       ],
       manageSubMenuOptions: [
+        'business-info',
         'commerce-admin',
         'service-admin',
         'modules-admin',
@@ -101,6 +108,7 @@ export default {
       ],
       currentPlanActivation: {},
       toggles: {},
+      businessAdminToggles: {},
       showMobileMenuSide: true,
       showMobileSpySide: false,
     });
@@ -114,6 +122,7 @@ export default {
         state.currentPlanActivation =
           (await getValidatedPlanActivationByBusinessId(state.business.id, true)) || {};
         state.toggles = await getPermissions('business', 'main-menu');
+        state.businessAdminToggles = await getPermissions('businesses', 'admin');
         // Ensure lgpd-consent-admin permission exists (default to false if not found)
         if (state.toggles['business.main-menu.lgpd-consent-admin'] === undefined) {
           console.warn(
@@ -148,6 +157,10 @@ export default {
             state.medicalManagementSubMenuOption = !state.medicalManagementSubMenuOption;
             state.manageSubMenuOption = false;
             state.manageControlSubMenuOption = false;
+            loading.value = false;
+          } else if (option === 'business-info') {
+            // Abrir modal de edición de empresa
+            await openBusinessEditModal();
             loading.value = false;
           } else {
             // Verificar permisos antes de navegar
@@ -190,6 +203,72 @@ export default {
       return `/public/portal/${keyName}/login`;
     };
 
+    const validateUpdate = business => {
+      state.errorsUpdate = [];
+      if (business.contactInfo?.phone && !business.contactInfo.phone.match(/^[0-9]{10,15}$/)) {
+        state.errorsUpdate.push('businessInfo.validate.phone');
+      }
+      if (!business.localeInfo?.country || business.localeInfo.country.length === 0) {
+        state.errorsUpdate.push('businessInfo.validate.country');
+      }
+      if (
+        business.localeInfo?.address &&
+        (business.localeInfo.address.length < 5 || business.localeInfo.address.length > 200)
+      ) {
+        state.errorsUpdate.push('businessInfo.validate.address');
+      }
+      return state.errorsUpdate.length === 0;
+    };
+
+    const update = async business => {
+      try {
+        loading.value = true;
+        if (validateUpdate(business)) {
+          business.contactInfo.phone = business.phone;
+          await updateBusiness(business);
+          state.business = await store.renewActualBusiness();
+          closeEditModal();
+          loading.value = false;
+        } else {
+          alertError.value = 422;
+          loading.value = false;
+        }
+      } catch (error) {
+        console.error('Error updating business:', error);
+        alertError.value = error.response?.status || 500;
+        loading.value = false;
+      }
+    };
+
+    const openBusinessEditModal = async () => {
+      try {
+        loading.value = true;
+        const businessData = await getBusinessById(state.business.id);
+        state.businessForEdit = businessData;
+        showEditModal.value = true;
+        loading.value = false;
+      } catch (error) {
+        console.error('Error loading business:', error);
+        alertError.value = error.response?.status || 500;
+        loading.value = false;
+      }
+    };
+
+    const closeEditModal = () => {
+      showEditModal.value = false;
+      state.businessForEdit = null;
+      // Clean modal backdrop
+      const modals = document.querySelectorAll('.modal-backdrop');
+      modals.forEach(modal => modal.remove());
+      document.body.classList.remove('modal-open');
+    };
+
+    const handleSubmenuClick = (opt) => {
+      if (state.toggles[`business.main-menu.${opt}`] !== false) {
+        goToOption(opt);
+      }
+    };
+
     const onShowMobileMenuSide = () => {
       state.showMobileMenuSide = true;
       state.showMobileSpySide = false;
@@ -202,7 +281,8 @@ export default {
 
     const getSubmenuIcon = opt => {
       const iconMap = {
-        'commerce-admin': 'bi-building',
+        'business-info': 'bi-building',
+        'commerce-admin': 'bi-shop',
         'service-admin': 'bi-tools',
         'modules-admin': 'bi-layers',
         'queues-admin': 'bi-list-check',
@@ -211,7 +291,7 @@ export default {
         'surveys-admin': 'bi-clipboard-check',
         'product-admin': 'bi-box-seam',
         'outcome-types-admin': 'bi-check-circle',
-        'company-admin': 'bi-building',
+        'company-admin': 'bi-briefcase',
         'forms-admin': 'bi-file-text',
         'lgpd-consent-admin': 'bi-shield-check',
         'permissions-admin': 'bi-key',
@@ -238,6 +318,16 @@ export default {
 
     // Función para manejar click outside
     const handleClickOutside = event => {
+      // No cerrar si el modal está abierto
+      if (showEditModal.value) {
+        return;
+      }
+
+      // No hacer nada si se hizo click en una tarjeta de menú o submenú
+      const isMenuCard = event.target.closest('.menu-card, .submenu-card, .mobile-submenu-card');
+      if (isMenuCard) {
+        return;
+      }
       closeAllSubmenus();
     };
 
@@ -245,6 +335,8 @@ export default {
     onMounted(() => {
       document.addEventListener('click', handleClickOutside);
     });
+
+
 
     // Remover event listener al desmontar
     onUnmounted(() => {
@@ -255,6 +347,7 @@ export default {
       state,
       loading,
       alertError,
+      showEditModal,
       isActiveBusiness,
       goToOption,
       getBusinessLink,
@@ -262,6 +355,9 @@ export default {
       onShowMobileMenuSide,
       onShowMobileSpySide,
       getSubmenuIcon,
+      update,
+      closeEditModal,
+      handleSubmenuClick,
     };
   },
 };
@@ -359,12 +455,10 @@ export default {
                       >
                         <div
                           class="mobile-submenu-card"
-                          @click="
-                            state.toggles[`business.main-menu.${opt}`] ? goToOption(opt) : null
-                          "
-                          :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
+                          @click.prevent.stop="handleSubmenuClick(opt)"
+                          :class="{ disabled: state.toggles[`business.main-menu.${opt}`] === false }"
                           :title="
-                            !state.toggles[`business.main-menu.${opt}`]
+                            state.toggles[`business.main-menu.${opt}`] === false
                               ? $t('businessMenu.permissionRequired')
                               : ''
                           "
@@ -389,10 +483,8 @@ export default {
                       >
                         <div
                           class="mobile-submenu-card"
-                          @click="
-                            state.toggles[`business.main-menu.${opt}`] ? goToOption(opt) : null
-                          "
-                          :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
+                          @click.prevent.stop="handleSubmenuClick(opt)"
+                          :class="{ disabled: state.toggles[`business.main-menu.${opt}`] === false }"
                         >
                           <div class="card-icon">
                             <i :class="getSubmenuIcon(opt)"></i>
@@ -417,10 +509,8 @@ export default {
                       >
                         <div
                           class="mobile-submenu-card"
-                          @click="
-                            state.toggles[`business.main-menu.${opt}`] ? goToOption(opt) : null
-                          "
-                          :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
+                          @click.prevent.stop="handleSubmenuClick(opt)"
+                          :class="{ disabled: state.toggles[`business.main-menu.${opt}`] === false }"
                         >
                           <div class="card-icon">
                             <i :class="getSubmenuIcon(opt)"></i>
@@ -561,8 +651,8 @@ export default {
                     <div v-for="opt in state.manageSubMenuOptions" :key="opt" class="submenu-item">
                       <div
                         class="submenu-card"
-                        @click="state.toggles[`business.main-menu.${opt}`] ? goToOption(opt) : null"
-                        :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
+                        @click.prevent.stop="handleSubmenuClick(opt)"
+                        :class="{ disabled: state.toggles[`business.main-menu.${opt}`] === false }"
                       >
                         <div class="card-icon">
                           <i :class="getSubmenuIcon(opt)"></i>
@@ -586,8 +676,8 @@ export default {
                     >
                       <div
                         class="submenu-card"
-                        @click="state.toggles[`business.main-menu.${opt}`] ? goToOption(opt) : null"
-                        :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
+                        @click.prevent.stop="handleSubmenuClick(opt)"
+                        :class="{ disabled: state.toggles[`business.main-menu.${opt}`] === false }"
                       >
                         <div class="card-icon">
                           <i :class="getSubmenuIcon(opt)"></i>
@@ -614,8 +704,8 @@ export default {
                     >
                       <div
                         class="submenu-card"
-                        @click="state.toggles[`business.main-menu.${opt}`] ? goToOption(opt) : null"
-                        :class="{ disabled: !state.toggles[`business.main-menu.${opt}`] }"
+                        @click.prevent.stop="handleSubmenuClick(opt)"
+                        :class="{ disabled: state.toggles[`business.main-menu.${opt}`] === false }"
                       >
                         <div class="card-icon">
                           <i :class="getSubmenuIcon(opt)"></i>
@@ -669,6 +759,17 @@ export default {
         </div>
       </div>
     </div>
+
+    <!-- Business Edit Modal -->
+    <BusinessEditModal
+      v-if="showEditModal && state.businessForEdit"
+      :show="showEditModal"
+      :business="state.businessForEdit"
+      :toggles="state.businessAdminToggles"
+      :is-own-business="true"
+      @update="update"
+      @close="closeEditModal"
+    />
   </div>
 </template>
 

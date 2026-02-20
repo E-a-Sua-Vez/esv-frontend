@@ -6,7 +6,7 @@ import {
 } from '../application/services/telemedicine';
 
 /**
- * Composable para manejar conexión WebSocket de telemedicina
+ * Composable para manejar conexión WebSocket de teleconsulta
  */
 export function useTelemedicine(sessionId, userId, userType, accessKey = null) {
   const socket = ref(null);

@@ -118,10 +118,10 @@ export default {
                   arrow
                   hover
                   :content="
-                    $t('commerceQueuesView.telemedicineAvailable') || 'Telemedicina disponible'
+                    $t('commerceQueuesView.telemedicineAvailable') || 'Teleconsulta disponible'
                   "
                 >
-                  <span class="telemedicine-badge" aria-label="Telemedicina disponible">
+                  <span class="telemedicine-badge" aria-label="Teleconsulta disponible">
                     <i class="bi bi-camera-video"></i>
                   </span>
                 </Popper>
@@ -207,13 +207,13 @@ export default {
                 arrow
                 hover
                 :content="
-                  $t('commerceQueuesView.telemedicineAvailable') || 'Telemedicina disponible'
+                  $t('commerceQueuesView.telemedicineAvailable') || 'Teleconsulta disponible'
                 "
               >
                 <span
                   class="telemedicine-badge"
                   :aria-label="
-                    $t('commerceQueuesView.telemedicineAvailable') || 'Telemedicina disponible'
+                    $t('commerceQueuesView.telemedicineAvailable') || 'Teleconsulta disponible'
                   "
                 >
                   <div class="telemedicine-avatar">

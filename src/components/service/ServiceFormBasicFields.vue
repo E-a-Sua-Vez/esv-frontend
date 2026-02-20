@@ -140,6 +140,30 @@ export default {
       </label>
       <Toggle v-model="service.active" :disabled="!toggles['services.admin.edit']" />
     </div>
+    <div class="form-group-modern form-group-toggle" v-if="!isAdd">
+      <label class="form-label-modern">
+        {{ $t('businessServicesAdmin.telemedicineEnabled') }}
+        <Popper :class="'dark p-1'" arrow>
+          <template #content>
+            <div>{{ $t('businessServicesAdmin.telemedicineEnabledHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
+      </label>
+      <Toggle v-model="service.telemedicineEnabled" :disabled="!toggles['services.admin.edit']" />
+    </div>
+    <div class="form-group-modern form-group-toggle" v-if="!isAdd">
+      <label class="form-label-modern">
+        {{ $t('businessServicesAdmin.presentialEnabled') }}
+        <Popper :class="'dark p-1'" arrow>
+          <template #content>
+            <div>{{ $t('businessServicesAdmin.presentialEnabledHelp') }}</div>
+          </template>
+          <i class="bi bi-info-circle-fill h7"></i>
+        </Popper>
+      </label>
+      <Toggle v-model="service.presentialEnabled" :disabled="!toggles['services.admin.edit']" />
+    </div>
     <div class="form-group-modern">
       <label class="form-label-modern">
         {{ $t('businessServicesAdmin.order') }}

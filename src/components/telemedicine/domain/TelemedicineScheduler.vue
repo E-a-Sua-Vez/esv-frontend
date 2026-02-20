@@ -6,8 +6,8 @@
           <i class="bi bi-calendar-plus"></i>
         </div>
         <div class="scheduler-header-title">
-          <h4>Programar Consulta de Telemedicina</h4>
-          <p class="text-muted small mb-0">Agende una consulta virtual con el paciente</p>
+          <h4>{{ $t('telemedicineSession.scheduler.title') }}</h4>
+          <p class="text-muted small mb-0">{{ $t('telemedicineSession.scheduler.subtitle') }}</p>
         </div>
       </div>
     </div>
@@ -16,7 +16,7 @@
       <div class="form-field-modern">
         <label class="form-label-modern">
           <i class="bi bi-calendar3"></i>
-          Fecha y Hora *
+          {{ $t('telemedicineSession.scheduler.dateTime') }} *
         </label>
         <input
           type="datetime-local"
@@ -29,7 +29,7 @@
     </div>
 
     <div class="scheduler-footer">
-      <button type="button" class="btn btn-secondary" @click="$emit('cancel')">Cancelar</button>
+      <button type="button" class="btn btn-secondary" @click="$emit('cancel')">{{ $t('telemedicineSession.scheduler.cancel') }}</button>
       <button
         type="button"
         class="btn-modern"
@@ -37,7 +37,7 @@
         :disabled="saving || !isFormValid"
       >
         <i class="bi bi-calendar-check me-1"></i>
-        Programar Consulta
+        {{ $t('telemedicineSession.scheduler.schedule') }}
       </button>
     </div>
   </div>

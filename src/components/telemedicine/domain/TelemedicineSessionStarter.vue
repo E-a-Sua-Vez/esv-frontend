@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Botón para iniciar sesión de telemedicina -->
+    <!-- Botón para iniciar sesión de teleconsulta -->
     <button
       v-if="showButton && sessionId"
       type="button"
@@ -19,7 +19,7 @@
         <div class="modal-header">
           <h5>
             <i class="bi bi-camera-video me-2"></i>
-            Iniciar Consulta Virtual
+            {{ $t('telemedicineSession.sessionStarter.title') }}
           </h5>
           <button type="button" class="btn-close" @click="closeModal"></button>
         </div>
@@ -34,7 +34,7 @@
               <div class="form-field-modern">
                 <label class="form-label-modern">
                   <i class="bi bi-list-check"></i>
-                  Tipo de Consulta
+                  {{ $t('telemedicineSession.sessionStarter.sessionType') }}
                 </label>
                 <div class="session-type-options">
                   <button
@@ -44,7 +44,7 @@
                     @click="selectedType = 'video'"
                   >
                     <i class="bi bi-camera-video"></i>
-                    <span>Video</span>
+                    <span>{{ $t('telemedicineSession.sessionStarter.video') }}</span>
                   </button>
                   <button
                     type="button"
@@ -53,7 +53,7 @@
                     @click="selectedType = 'chat'"
                   >
                     <i class="bi bi-chat-dots"></i>
-                    <span>Chat</span>
+                    <span>{{ $t('telemedicineSession.sessionStarter.chat') }}</span>
                   </button>
                 </div>
               </div>
@@ -62,7 +62,7 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="closeModal">Cancelar</button>
+          <button type="button" class="btn btn-secondary" @click="closeModal">{{ $t('telemedicineSession.sessionStarter.cancel') }}</button>
           <button
             type="button"
             class="btn-modern"
@@ -70,7 +70,7 @@
             :disabled="starting || !selectedType"
           >
             <i class="bi bi-play-circle me-1"></i>
-            Iniciar
+            {{ $t('telemedicineSession.sessionStarter.start') }}
           </button>
         </div>
       </div>
@@ -140,7 +140,7 @@ export default {
 
     const startSession = async () => {
       if (!props.sessionId) {
-        emit('error', new Error('No hay sesión de telemedicina disponible'));
+        emit('error', new Error('No hay sesión de teleconsulta disponible'));
         return;
       }
 
